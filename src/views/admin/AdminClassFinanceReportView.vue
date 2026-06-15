@@ -18,6 +18,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { FinanceService } from '@/services/finance.service';
 import { StudentService } from '@/services/students.service';
 import { useAcademicYearStore } from '@/stores/academic-year';
@@ -34,6 +35,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 const route = useRoute();
 const router = useRouter();
 const ayStore = useAcademicYearStore();
+const { t } = useI18n();
 
 const classId = computed(() => String(route.params.classId ?? ''));
 const classNameQ = computed(() => String(route.query.className ?? '—'));
@@ -152,12 +154,12 @@ const summaries = computed<StudentBillSummary[]>(() => {
 type FilterKey = 'all' | 'lunas' | 'partial' | 'belum';
 const activeFilter = ref<FilterKey>('all');
 
-const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'belum', label: 'Belum bayar' },
-  { key: 'partial', label: 'Sebagian' },
-  { key: 'lunas', label: 'Lunas' },
-];
+const FILTERS = computed<{ key: FilterKey; label: string }[]>(() => [
+  { key: 'all', label: t('admin.sekolah.class_finance.filter_all') },
+  { key: 'belum', label: t('admin.sekolah.class_finance.filter_unpaid') },
+  { key: 'partial', label: t('admin.sekolah.class_finance.filter_partial') },
+  { key: 'lunas', label: t('admin.sekolah.class_finance.filter_paid') },
+]);
 
 const filtered = computed(() =>
   activeFilter.value === 'all'
@@ -195,25 +197,25 @@ const fmtIDR = (n: number) =>
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'users',
-    label: 'Siswa',
+    label: t('admin.sekolah.class_finance.kpi_students'),
     value: students.value.length,
     tone: 'brand',
   },
   {
     icon: 'wallet',
-    label: 'Total Tagihan',
+    label: t('admin.sekolah.class_finance.kpi_total'),
     value: fmtIDR(totals.value.total),
     tone: 'violet',
   },
   {
     icon: 'check-circle',
-    label: 'Sudah Bayar',
+    label: t('admin.sekolah.class_finance.kpi_paid'),
     value: fmtIDR(totals.value.paid),
     tone: 'green',
   },
   {
     icon: 'clock',
-    label: 'Outstanding',
+    label: t('admin.sekolah.class_finance.kpi_outstanding'),
     value: fmtIDR(totals.value.outstanding),
     tone: totals.value.outstanding > 0 ? 'amber' : 'slate',
   },
@@ -234,9 +236,9 @@ function bucketBadgeCls(bucket: StudentBillSummary['bucket']): string {
   return 'bg-red-100 text-red-700';
 }
 function bucketLabel(bucket: StudentBillSummary['bucket']): string {
-  if (bucket === 'lunas') return 'LUNAS';
-  if (bucket === 'partial') return 'SEBAGIAN';
-  return 'BELUM';
+  if (bucket === 'lunas') return t('admin.sekolah.class_finance.bucket_paid');
+  if (bucket === 'partial') return t('admin.sekolah.class_finance.bucket_partial');
+  return t('admin.sekolah.class_finance.bucket_unpaid');
 }
 function progressBarCls(bucket: StudentBillSummary['bucket']): string {
   if (bucket === 'lunas') return 'bg-emerald-500';
@@ -257,15 +259,15 @@ function openStudent(s: StudentBillSummary) {
 /** Status chip label + colour for a single bill in the expanded detail. */
 function billStatusChip(b: Bill): { label: string; cls: string } {
   if (b.status === 'paid') {
-    return { label: 'LUNAS', cls: 'text-emerald-600' };
+    return { label: t('admin.sekolah.class_finance.bill_paid'), cls: 'text-emerald-600' };
   }
   if (b.status === 'overdue' || b.is_overdue) {
-    return { label: 'TERLAMBAT', cls: 'text-red-600' };
+    return { label: t('admin.sekolah.class_finance.bill_overdue'), cls: 'text-red-600' };
   }
   if (b.latest_payment?.amount) {
-    return { label: 'SEBAGIAN', cls: 'text-amber-600' };
+    return { label: t('admin.sekolah.class_finance.bill_partial'), cls: 'text-amber-600' };
   }
-  return { label: 'BELUM', cls: 'text-slate-500' };
+  return { label: t('admin.sekolah.class_finance.bill_unpaid'), cls: 'text-slate-500' };
 }
 
 function goBack() {
@@ -281,14 +283,14 @@ function goBack() {
       @click="goBack"
     >
       <NavIcon name="chevron-left" :size="14" />
-      Keuangan
+      {{ t('admin.sekolah.class_finance.back_to_finance') }}
     </button>
 
     <BrandPageHeader
       role="admin"
-      kicker="Keuangan · Per Kelas"
-      :title="`Tagihan ${classNameQ}`"
-      :meta="`${students.length} siswa · ${bills.length} tagihan`"
+      :kicker="t('admin.sekolah.class_finance.header_kicker')"
+      :title="t('admin.sekolah.class_finance.header_title', { className: classNameQ })"
+      :meta="t('admin.sekolah.class_finance.header_meta', { studentCount: students.length, billCount: bills.length })"
       :live-dot="false"
     />
 
@@ -324,8 +326,8 @@ function goBack() {
 
     <AsyncView
       :state="listState"
-      empty-title="Tidak ada siswa di kategori ini"
-      empty-description="Coba ubah filter status pembayaran."
+      :empty-title="t('admin.sekolah.class_finance.empty_title')"
+      :empty-description="t('admin.sekolah.class_finance.empty_description')"
       empty-icon="users"
       @retry="reload"
     >
@@ -357,7 +359,7 @@ function goBack() {
                 </div>
                 <p class="text-[11px] text-slate-500 mt-0.5">
                   {{ s.student.student_number || '—' }}
-                  · {{ s.paid_count }}/{{ s.total_count }} tagihan lunas
+                  {{ t('admin.sekolah.class_finance.paid_summary', { paid: s.paid_count, total: s.total_count }) }}
                 </p>
                 <!-- Progress bar -->
                 <div class="mt-2 h-1.5 rounded-full overflow-hidden bg-slate-100 max-w-xs">
@@ -373,7 +375,7 @@ function goBack() {
                   {{ fmtIDR(s.outstanding_amount) }}
                 </p>
                 <p class="text-[10px] text-slate-500 tabular-nums">
-                  outstanding
+                  {{ t('admin.sekolah.class_finance.outstanding_label') }}
                 </p>
               </div>
               <NavIcon
@@ -393,7 +395,7 @@ function goBack() {
                 v-if="s.bills.length === 0"
                 class="text-[11.5px] text-slate-400 py-2"
               >
-                Belum ada tagihan untuk siswa ini.
+                {{ t('admin.sekolah.class_finance.no_bills_for_student') }}
               </p>
               <ul
                 v-else
@@ -412,7 +414,7 @@ function goBack() {
                       v-if="b.is_overdue"
                       class="text-[10px] font-bold text-red-500"
                     >
-                      Terlambat {{ b.overdue_days }} hari
+                      {{ t('admin.sekolah.class_finance.overdue_days', { days: b.overdue_days }) }}
                     </p>
                   </div>
                   <div class="text-right flex-shrink-0">

@@ -20,6 +20,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { ReportCardService } from '@/services/report-card.service';
 import type {
   AdminRaportPipeline,
@@ -38,6 +39,7 @@ import Toast from '@/components/ui/Toast.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const router = useRouter();
+const { t } = useI18n();
 
 // ── Data state ──
 const pipeline = ref<AdminRaportPipeline | null>(null);
@@ -113,25 +115,25 @@ const selectedCount = computed(() => selectedChipIds.value.size);
 
 const headerMeta = computed(() => {
   const p = pipeline.value;
-  if (!p) return 'Memuat ringkasan rapor sekolah…';
+  if (!p) return t('admin.sekolah.report_card_hub.header_meta_loading');
   const totalClasses = p.total_classes ?? 0;
-  return `${totalClasses} kelas · ${periodLabel.value}`;
+  return t('admin.sekolah.report_card_hub.header_meta', { count: totalClasses, period: periodLabel.value });
 });
 
 const periodLabel = computed(() => {
   const p = pipeline.value?.period;
-  if (!p) return 'Periode aktif';
+  if (!p) return t('admin.sekolah.report_card_hub.period_active');
   const ay = p.academic_year_label ?? '';
   const sem = p.semester_label ?? '';
-  return ay && sem ? `${ay} ${sem}` : 'Periode aktif';
+  return ay && sem ? `${ay} ${sem}` : t('admin.sekolah.report_card_hub.period_active');
 });
 
 const statusChipValue = computed(() => {
-  if (activeFilter.value === 'all') return 'Semua';
-  if (activeFilter.value === 'draft') return 'Draft';
-  if (activeFilter.value === 'reviewed') return 'Diperiksa';
-  if (activeFilter.value === 'published') return 'Terbit';
-  if (activeFilter.value === 'distributed') return 'Dibagikan';
+  if (activeFilter.value === 'all') return t('admin.sekolah.report_card_hub.status_all');
+  if (activeFilter.value === 'draft') return t('admin.sekolah.report_card_hub.status_draft');
+  if (activeFilter.value === 'reviewed') return t('admin.sekolah.report_card_hub.status_reviewed');
+  if (activeFilter.value === 'published') return t('admin.sekolah.report_card_hub.status_published');
+  if (activeFilter.value === 'distributed') return t('admin.sekolah.report_card_hub.status_distributed');
   return activeFilter.value;
 });
 
@@ -317,8 +319,8 @@ function chipBadgeClass(tone: string | undefined): string {
     <!-- HEADER -->
     <BrandPageHeader
       role="admin"
-      kicker="Akademik · Penilaian"
-      title="Hub Rapor Sekolah"
+      :kicker="t('admin.sekolah.report_card_hub.header_kicker')"
+      :title="t('admin.sekolah.report_card_hub.header_title')"
       :meta="headerMeta"
       :live-dot="false"
     >
@@ -348,7 +350,7 @@ function chipBadgeClass(tone: string | undefined): string {
             class="inline-flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 text-white/90 px-3 py-1.5 min-w-[150px]"
           >
             <span class="flex flex-col items-start min-w-0 leading-none">
-              <span class="text-[8.5px] font-bold text-white/50 uppercase tracking-widest">Periode</span>
+              <span class="text-[8.5px] font-bold text-white/50 uppercase tracking-widest">{{ t('admin.sekolah.report_card_hub.period_label') }}</span>
               <span class="text-[12.5px] font-bold truncate mt-0.5">{{ periodLabel }}</span>
             </span>
           </div>
@@ -360,7 +362,7 @@ function chipBadgeClass(tone: string | undefined): string {
             @click="showStatusModal = true"
           >
             <span class="flex flex-col items-start min-w-0 leading-none text-left">
-              <span class="text-[8.5px] font-bold text-white/50 uppercase tracking-widest">Status</span>
+              <span class="text-[8.5px] font-bold text-white/50 uppercase tracking-widest">{{ t('admin.sekolah.report_card_hub.status_label') }}</span>
               <span class="text-[12.5px] font-bold truncate mt-0.5">{{ statusChipValue }}</span>
             </span>
             <NavIcon name="chevron-down" :size="12" class="opacity-70 ml-1.5" />
@@ -375,7 +377,7 @@ function chipBadgeClass(tone: string | undefined): string {
       class="bg-white border border-slate-200 rounded-2xl p-3"
     >
       <p class="text-[9.5px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">
-        Pipeline Rapor
+        {{ t('admin.sekolah.report_card_hub.pipeline_label') }}
       </p>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <button
@@ -404,9 +406,9 @@ function chipBadgeClass(tone: string | undefined): string {
         v-if="activeFilter !== 'all'"
         class="text-[10px] text-slate-400 mt-2 text-center"
       >
-        Filter aktif: <strong>{{
+        {{ t('admin.sekolah.report_card_hub.active_filter_label') }} <strong>{{
           pipelineNodes.find((n) => n.key === activeFilter)?.label
-        }}</strong> — klik lagi untuk reset
+        }}</strong> {{ t('admin.sekolah.report_card_hub.click_to_reset') }}
       </p>
     </section>
 
@@ -415,10 +417,10 @@ function chipBadgeClass(tone: string | undefined): string {
       :state="listState"
       :empty-title="
         activeFilter !== 'all'
-          ? 'Tidak ada kelas cocok'
-          : 'Belum ada data rapor'
+          ? t('admin.sekolah.report_card_hub.empty_filter_title')
+          : t('admin.sekolah.report_card_hub.empty_title')
       "
-      empty-description="Pipeline ini akan terisi setelah guru mengajukan nilai akhir."
+      :empty-description="t('admin.sekolah.report_card_hub.empty_description')"
       empty-icon="users"
       @retry="reload"
     >
@@ -537,7 +539,7 @@ function chipBadgeClass(tone: string | undefined): string {
         :disabled="isPublishing"
         @click="bulkPrint"
       >
-        Cetak
+        {{ t('admin.sekolah.report_card_hub.print') }}
       </button>
       <button
         type="button"
@@ -545,7 +547,7 @@ function chipBadgeClass(tone: string | undefined): string {
         :disabled="isPublishing"
         @click="confirmBulkPublish = true"
       >
-        {{ isPublishing ? 'Menerbitkan…' : 'Terbit' }}
+        {{ isPublishing ? t('admin.sekolah.report_card_hub.publishing') : t('admin.sekolah.report_card_hub.publish') }}
       </button>
     </section>
 
@@ -553,45 +555,45 @@ function chipBadgeClass(tone: string | undefined): string {
     <Modal
       v-slot:default
       v-if="confirmBulkPublish"
-      title="Terbitkan Rapor"
-      :subtitle="`${selectedCount} kelas siap terbit`"
+      :title="t('admin.sekolah.report_card_hub.publish_modal_title')"
+      :subtitle="t('admin.sekolah.report_card_hub.publish_modal_subtitle', { count: selectedCount })"
       size="sm"
       @close="confirmBulkPublish = false"
     >
       <div class="space-y-4">
         <!-- Overview info -->
         <div class="bg-[#0A1F4D] text-white rounded-2xl p-4">
-          <p class="text-[10px] font-bold text-white/60 uppercase tracking-widest">Kelas Terpilih</p>
+          <p class="text-[10px] font-bold text-white/60 uppercase tracking-widest">{{ t('admin.sekolah.report_card_hub.selected_classes') }}</p>
           <p class="text-[12.5px] font-medium leading-relaxed mt-1">
-            {{ selectedClassesInfo.tingkatLabels }} · {{ selectedClassesInfo.names }} · {{ selectedClassesInfo.studentCount }} siswa
+            {{ selectedClassesInfo.tingkatLabels }} · {{ selectedClassesInfo.names }} · {{ t('admin.sekolah.report_card_hub.student_count', { count: selectedClassesInfo.studentCount }) }}
           </p>
         </div>
 
         <!-- Impact items -->
         <div class="space-y-2">
-          <p class="text-[9.5px] font-bold text-slate-400 uppercase tracking-widest">Dampak</p>
-          
+          <p class="text-[9.5px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.report_card_hub.impact_label') }}</p>
+
           <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
-            <p class="text-[11.5px] font-bold text-slate-800">Notifikasi otomatis</p>
-            <p class="text-[10.5px] text-slate-500 mt-0.5">{{ selectedClassesInfo.studentCount }} wali murid akan menerima push</p>
+            <p class="text-[11.5px] font-bold text-slate-800">{{ t('admin.sekolah.report_card_hub.impact_notify_title') }}</p>
+            <p class="text-[10.5px] text-slate-500 mt-0.5">{{ t('admin.sekolah.report_card_hub.impact_notify_desc', { count: selectedClassesInfo.studentCount }) }}</p>
           </div>
-          
+
           <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
-            <p class="text-[11.5px] font-bold text-slate-800">Akses parent role</p>
-            <p class="text-[10.5px] text-slate-500 mt-0.5">Rapor lengkap + ringkasan terbuka untuk di-download</p>
+            <p class="text-[11.5px] font-bold text-slate-800">{{ t('admin.sekolah.report_card_hub.impact_parent_title') }}</p>
+            <p class="text-[10.5px] text-slate-500 mt-0.5">{{ t('admin.sekolah.report_card_hub.impact_parent_desc') }}</p>
           </div>
 
           <div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-3">
-            <p class="text-[11.5px] font-bold text-amber-800">Tindakan tidak dapat dibatalkan</p>
-            <p class="text-[10.5px] text-amber-700/80 mt-0.5">Ubah kembali ke Diperiksa harus dilakukan manual per kelas</p>
+            <p class="text-[11.5px] font-bold text-amber-800">{{ t('admin.sekolah.report_card_hub.impact_irreversible_title') }}</p>
+            <p class="text-[10.5px] text-amber-700/80 mt-0.5">{{ t('admin.sekolah.report_card_hub.impact_irreversible_desc') }}</p>
           </div>
         </div>
 
         <!-- Toggle Switch -->
         <div class="border border-slate-200 rounded-xl p-3 flex items-center justify-between">
           <div class="flex flex-col">
-            <span class="text-[11.5px] font-bold text-slate-800">Kirim notifikasi push</span>
-            <span class="text-[10px] text-slate-500">Wali murid akan menerima alert di HP</span>
+            <span class="text-[11.5px] font-bold text-slate-800">{{ t('admin.sekolah.report_card_hub.notify_title') }}</span>
+            <span class="text-[10px] text-slate-500">{{ t('admin.sekolah.report_card_hub.notify_desc') }}</span>
           </div>
           <!-- Simple Toggle Switch -->
           <button
@@ -616,7 +618,7 @@ function chipBadgeClass(tone: string | undefined): string {
             :disabled="isPublishing"
             @click="confirmBulkPublish = false"
           >
-            Batal
+            {{ t('admin.sekolah.report_card_hub.cancel') }}
           </Button>
           <Button
             variant="primary"
@@ -625,7 +627,7 @@ function chipBadgeClass(tone: string | undefined): string {
             :disabled="isPublishing"
             @click="publishSelected"
           >
-            Terbitkan {{ selectedCount }} kelas
+            {{ t('admin.sekolah.report_card_hub.publish_count', { count: selectedCount }) }}
           </Button>
         </div>
       </div>

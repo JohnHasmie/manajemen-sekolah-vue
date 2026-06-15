@@ -454,14 +454,14 @@ async function doReschedule(
   force: boolean,
 ) {
   isRescheduling.value = true;
-  dragBanner.value = { kind: 'loading', message: 'Memindahkan slot...' };
+  dragBanner.value = { kind: 'loading', message: $t('admin.sekolah.schedule_management.moving_slot') };
   try {
     await ScheduleService.reschedule(src.id, {
       lesson_hour_days_id: targetHourId,
       force: force || undefined,
     });
-    dragBanner.value = { kind: 'success', message: 'Slot dipindahkan.' };
-    toast.value = { message: 'Slot dipindahkan.', tone: 'success' };
+    dragBanner.value = { kind: 'success', message: $t('admin.sekolah.schedule_management.slot_moved') };
+    toast.value = { message: $t('admin.sekolah.schedule_management.slot_moved'), tone: 'success' };
     dragConflictRow.value = null;
     dragConflicts.value = [];
     dragForceSave.value = false;
@@ -1016,30 +1016,30 @@ async function bulkDelete() {
         class="text-[11px] font-bold text-slate-600 hover:text-role-admin px-2"
         @click="selectAllVisible"
       >
-        {{ selectedIds.size === rows.length ? 'Batal pilih' : 'Pilih semua' }}
+        {{ selectedIds.size === rows.length ? $t('admin.sekolah.schedule_management.unselect_all') : $t('admin.sekolah.schedule_management.select_all') }}
       </button>
       <span class="text-[11px] text-slate-400">·</span>
       <p class="text-[11px] font-bold text-slate-700 flex-1">
-        {{ selectedIds.size }} dipilih
+        {{ $t('admin.sekolah.schedule_management.selected_count', { count: selectedIds.size }) }}
       </p>
       <Button variant="secondary" size="sm" :disabled="selectedIds.size === 0" @click="showBulkDay = true">
         <NavIcon name="move" :size="12" />
-        Pindah Hari
+        {{ $t('admin.sekolah.schedule_management.move_day') }}
       </Button>
       <Button variant="secondary" size="sm" :disabled="selectedIds.size === 0" @click="showBulkTeacher = true">
         <NavIcon name="user" :size="12" />
-        Ganti Guru
+        {{ $t('admin.sekolah.schedule_management.change_teacher') }}
       </Button>
       <Button variant="danger" size="sm" :disabled="selectedIds.size === 0" @click="showBulkDelete = true">
         <NavIcon name="trash-2" :size="12" />
-        Hapus ({{ selectedIds.size }})
+        {{ $t('admin.sekolah.schedule_management.bulk_delete', { count: selectedIds.size }) }}
       </Button>
     </section>
 
     <!-- Filter sheets -->
     <Modal
       v-if="showTeacherSheet"
-      title="Filter Guru"
+      :title="$t('admin.sekolah.schedule_management.filter_teacher_title')"
       size="sm"
       @close="showTeacherSheet = false"
     >
@@ -1050,24 +1050,24 @@ async function bulkDelete() {
           :class="!filterTeacherId ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
           @click="filterTeacherId = ''; showTeacherSheet = false"
         >
-          Semua guru
+          {{ $t('admin.sekolah.schedule_management.all_teachers') }}
         </button>
         <button
-          v-for="t in filterOptions?.teachers ?? []"
-          :key="t.id"
+          v-for="teacher in filterOptions?.teachers ?? []"
+          :key="teacher.id"
           type="button"
           class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
-          :class="filterTeacherId === t.id ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
-          @click="filterTeacherId = t.id; showTeacherSheet = false"
+          :class="filterTeacherId === teacher.id ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
+          @click="filterTeacherId = teacher.id; showTeacherSheet = false"
         >
-          {{ t.name }}
+          {{ teacher.name }}
         </button>
       </div>
     </Modal>
 
     <Modal
       v-if="showClassSheet"
-      title="Filter Kelas"
+      :title="$t('admin.sekolah.schedule_management.filter_class_title')"
       size="sm"
       @close="showClassSheet = false"
     >
@@ -1078,7 +1078,7 @@ async function bulkDelete() {
           :class="!filterClassId ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
           @click="filterClassId = ''; showClassSheet = false"
         >
-          Semua kelas
+          {{ $t('admin.sekolah.schedule_management.all_classes') }}
         </button>
         <button
           v-for="c in filterOptions?.classes ?? []"
@@ -1089,14 +1089,14 @@ async function bulkDelete() {
           @click="filterClassId = c.id; showClassSheet = false"
         >
           {{ c.name }}
-          <span v-if="c.grade_level" class="text-[10px] text-slate-500 font-medium ml-2">Tingkat {{ c.grade_level }}</span>
+          <span v-if="c.grade_level" class="text-[10px] text-slate-500 font-medium ml-2">{{ $t('admin.sekolah.schedule_management.tingkat', { grade: c.grade_level }) }}</span>
         </button>
       </div>
     </Modal>
 
     <Modal
       v-if="showDaySheet"
-      title="Filter Hari"
+      :title="$t('admin.sekolah.schedule_management.filter_day_title')"
       size="sm"
       @close="showDaySheet = false"
     >
@@ -1107,7 +1107,7 @@ async function bulkDelete() {
           :class="!filterDayId ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
           @click="filterDayId = ''; showDaySheet = false"
         >
-          Semua hari
+          {{ $t('admin.sekolah.schedule_management.all_days') }}
         </button>
         <button
           v-for="d in filterOptions?.days ?? []"

@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { AttendanceService } from '@/services/attendance.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SubjectService } from '@/services/subjects.service';
@@ -38,6 +39,7 @@ import AttendanceStatusPickerModal from '@/components/feature/AttendanceStatusPi
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
+const { t } = useI18n();
 
 const classId = computed(() => String(route.query.class_id ?? ''));
 const subjectId = computed(() => String(route.query.subject_id ?? ''));
@@ -328,13 +330,13 @@ const headerMeta = computed(() => {
       @click="goBack"
     >
       <NavIcon name="chevron-left" :size="14" />
-      Laporan Sesi
+      {{ t('admin.sekolah.attendance_detail.back_to_report') }}
     </button>
 
     <BrandPageHeader
       role="admin"
-      kicker="Akademik · Kehadiran"
-      title="Detail Presensi"
+      :kicker="t('admin.sekolah.attendance_detail.header_kicker')"
+      :title="t('admin.sekolah.attendance_detail.header_title')"
       :meta="headerMeta"
       :live-dot="false"
     >
@@ -346,7 +348,7 @@ const headerMeta = computed(() => {
           @click="editMode = true"
         >
           <NavIcon name="edit" :size="11" class="inline" />
-          Edit
+          {{ t('admin.sekolah.attendance_detail.edit') }}
         </button>
         <template v-else>
           <button
@@ -354,7 +356,7 @@ const headerMeta = computed(() => {
             class="text-[11px] font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
             @click="discardChanges"
           >
-            Batal
+            {{ t('admin.sekolah.attendance_detail.cancel') }}
           </button>
           <Button
             variant="primary"
@@ -364,7 +366,7 @@ const headerMeta = computed(() => {
             @click="saveChanges"
           >
             <NavIcon name="check" :size="12" />
-            Simpan ({{ dirty.size }})
+            {{ t('admin.sekolah.attendance_detail.save_count', { count: dirty.size }) }}
           </Button>
         </template>
       </div>
@@ -374,8 +376,8 @@ const headerMeta = computed(() => {
 
     <AsyncView
       :state="listState"
-      empty-title="Belum ada siswa di kelas"
-      empty-description="Pastikan kelas memiliki siswa terdaftar."
+      :empty-title="t('admin.sekolah.attendance_detail.empty_title')"
+      :empty-description="t('admin.sekolah.attendance_detail.empty_description')"
       empty-icon="users"
       @retry="load"
     >
@@ -401,9 +403,9 @@ const headerMeta = computed(() => {
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">{{ r.student_name }}</p>
               <p class="text-[10px] text-slate-500 truncate">
-                <template v-if="r.student_number">NIS {{ r.student_number }}</template>
-                <template v-else>Tanpa NIS</template>
-                · No {{ idx + 1 }}
+                <template v-if="r.student_number">{{ t('admin.sekolah.attendance_detail.nis_label', { nis: r.student_number }) }}</template>
+                <template v-else>{{ t('admin.sekolah.attendance_detail.no_nis') }}</template>
+                {{ t('admin.sekolah.attendance_detail.row_number', { index: idx + 1 }) }}
               </p>
               <p v-if="r.alert" class="text-[10px] font-bold text-amber-700 mt-0.5">
                 {{ r.alert }}
@@ -437,7 +439,7 @@ const headerMeta = computed(() => {
             @click="exportXlsx"
           >
             <NavIcon name="download" :size="13" />
-            Ekspor Excel
+            {{ t('admin.sekolah.attendance_detail.export_excel') }}
           </Button>
           <Button
             variant="danger"
@@ -446,7 +448,7 @@ const headerMeta = computed(() => {
             @click="showDeleteConfirm = true"
           >
             <NavIcon name="trash-2" :size="13" />
-            Hapus Sesi
+            {{ t('admin.sekolah.attendance_detail.delete_session') }}
           </Button>
         </section>
       </template>
@@ -464,9 +466,9 @@ const headerMeta = computed(() => {
 
     <ConfirmationDialog
       v-if="showDeleteConfirm"
-      title="Hapus Sesi Presensi"
-      :message="`Hapus semua record presensi pada ${headerMeta}? Tindakan ini tidak dapat dibatalkan.`"
-      confirm-label="Hapus"
+      :title="t('admin.sekolah.attendance_detail.delete_title')"
+      :message="t('admin.sekolah.attendance_detail.delete_message', { meta: headerMeta })"
+      :confirm-label="t('admin.sekolah.attendance_detail.delete')"
       danger
       :loading="isDeleting"
       @close="showDeleteConfirm = false"
@@ -475,9 +477,9 @@ const headerMeta = computed(() => {
 
     <ConfirmationDialog
       v-if="unsavedConfirm.open"
-      title="Perubahan belum disimpan"
-      message="Anda punya perubahan presensi yang belum disimpan. Lanjut keluar dan buang perubahan?"
-      confirm-label="Lanjut keluar"
+      :title="t('admin.sekolah.attendance_detail.unsaved_title')"
+      :message="t('admin.sekolah.attendance_detail.unsaved_message')"
+      :confirm-label="t('admin.sekolah.attendance_detail.unsaved_confirm')"
       danger
       @close="unsavedConfirm.open = false"
       @confirm="() => { const cb = unsavedConfirm.onConfirm; unsavedConfirm.open = false; cb(); }"

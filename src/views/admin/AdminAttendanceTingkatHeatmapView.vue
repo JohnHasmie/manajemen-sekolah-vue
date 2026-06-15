@@ -17,6 +17,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { AttendanceService } from '@/services/attendance.service';
 import type {
   HeatmapCellState,
@@ -32,17 +33,18 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const tingkat = computed(() => Number(route.params.tingkat ?? 0));
 
 type DaysOption = 30 | 60 | 90;
 const days = ref<DaysOption>(30);
 
-const DAYS_OPTIONS: { key: string; label: string }[] = [
-  { key: '30', label: '30 hari' },
-  { key: '60', label: '60 hari' },
-  { key: '90', label: '90 hari' },
-];
+const DAYS_OPTIONS = computed<{ key: string; label: string }[]>(() => [
+  { key: '30', label: t('admin.sekolah.attendance_tingkat_heatmap.days_30') },
+  { key: '60', label: t('admin.sekolah.attendance_tingkat_heatmap.days_60') },
+  { key: '90', label: t('admin.sekolah.attendance_tingkat_heatmap.days_90') },
+]);
 
 const data = ref<StudentHeatmapResponse | null>(null);
 const isLoading = ref(true);
@@ -102,14 +104,14 @@ const CELL_COLORS: Record<HeatmapCellState, string> = {
   none: '#F1F5F9',
 };
 
-const CELL_LABEL: Record<HeatmapCellState, string> = {
-  present: 'Hadir',
-  excused: 'Izin',
-  sick: 'Sakit',
-  alpha: 'Alpa',
-  holiday: 'Libur',
-  none: 'Belum',
-};
+const CELL_LABEL = computed<Record<HeatmapCellState, string>>(() => ({
+  present: t('admin.sekolah.attendance_tingkat_heatmap.cell_present'),
+  excused: t('admin.sekolah.attendance_tingkat_heatmap.cell_excused'),
+  sick: t('admin.sekolah.attendance_tingkat_heatmap.cell_sick'),
+  alpha: t('admin.sekolah.attendance_tingkat_heatmap.cell_alpha'),
+  holiday: t('admin.sekolah.attendance_tingkat_heatmap.cell_holiday'),
+  none: t('admin.sekolah.attendance_tingkat_heatmap.cell_none'),
+}));
 
 // Compute cell width based on days so wide rows still fit.
 const cellWidthClass = computed(() => {
@@ -124,7 +126,7 @@ function cellDateLabel(entry: StudentHeatmapEntry, cellIdx: number): string {
   const [y, m, d] = data.value.start_date.split('-').map(Number);
   const dt = new Date(y, (m ?? 1) - 1, (d ?? 1) + cellIdx);
   const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-  const status = CELL_LABEL[entry.cells[cellIdx]];
+  const status = CELL_LABEL.value[entry.cells[cellIdx]];
   return `${iso} — ${status}`;
 }
 
@@ -134,9 +136,16 @@ function goBack() {
 
 const headerMeta = computed(() => {
   if (!data.value) return '';
-  const n = data.value.students.length;
-  return `${n} siswa · ${data.value.start_date} → ${data.value.end_date}`;
+  return t('admin.sekolah.attendance_tingkat_heatmap.header_meta', {
+    count: data.value.students.length,
+    startDate: data.value.start_date,
+    endDate: data.value.end_date,
+  });
 });
+
+const headerTitle = computed(() =>
+  t('admin.sekolah.attendance_tingkat_heatmap.header_title', { tingkat: tingkat.value }),
+);
 </script>
 
 <template>
@@ -147,13 +156,13 @@ const headerMeta = computed(() => {
       @click="goBack"
     >
       <NavIcon name="chevron-left" :size="14" />
-      Dashboard Kehadiran
+      {{ t('admin.sekolah.attendance_tingkat_heatmap.back_to_dashboard') }}
     </button>
 
     <BrandPageHeader
       role="admin"
-      kicker="Akademik · Kehadiran"
-      :title="`Heatmap Tingkat ${tingkat}`"
+      :kicker="t('admin.sekolah.attendance_tingkat_heatmap.header_kicker')"
+      :title="headerTitle"
       :meta="headerMeta"
       :live-dot="false"
     >
@@ -187,7 +196,7 @@ const headerMeta = computed(() => {
         <input
           v-model="search"
           type="search"
-          placeholder="Cari nama atau NIS siswa..."
+          :placeholder="t('admin.sekolah.attendance_tingkat_heatmap.search_placeholder')"
           class="bg-transparent border-0 outline-none flex-1 text-[12px] font-medium text-slate-900 placeholder:text-slate-400"
         />
       </div>
@@ -195,8 +204,8 @@ const headerMeta = computed(() => {
 
     <AsyncView
       :state="state"
-      empty-title="Tidak ada siswa cocok"
-      empty-description="Coba ubah filter atau kata kunci pencarian."
+      :empty-title="t('admin.sekolah.attendance_tingkat_heatmap.empty_title')"
+      :empty-description="t('admin.sekolah.attendance_tingkat_heatmap.empty_description')"
       empty-icon="users"
       @retry="load"
     >
@@ -218,9 +227,9 @@ const headerMeta = computed(() => {
               <div class="flex-1 min-w-0">
                 <p class="text-[13px] font-bold text-slate-900 truncate">{{ s.name }}</p>
                 <p class="text-[10px] text-slate-500 truncate">
-                  <template v-if="s.student_number">NIS {{ s.student_number }}</template>
-                  <template v-else>Tanpa NIS</template>
-                  · {{ s.present_days }}/{{ s.total_days }} hari hadir
+                  <template v-if="s.student_number">{{ t('admin.sekolah.attendance_tingkat_heatmap.nis_label', { nis: s.student_number }) }}</template>
+                  <template v-else>{{ t('admin.sekolah.attendance_tingkat_heatmap.no_nis') }}</template>
+                  {{ t('admin.sekolah.attendance_tingkat_heatmap.present_summary', { present: s.present_days, total: s.total_days }) }}
                 </p>
                 <p
                   v-if="s.alert_copy"
@@ -242,7 +251,7 @@ const headerMeta = computed(() => {
                   {{ s.monthly_pct.toFixed(0) }}%
                 </p>
                 <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                  bulanan
+                  {{ t('admin.sekolah.attendance_tingkat_heatmap.monthly') }}
                 </p>
               </div>
             </header>

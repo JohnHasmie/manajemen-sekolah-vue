@@ -3,14 +3,16 @@
   Sections: school profile, levels, time periods, system, data backup.
 -->
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
 
 const router = useRouter();
+const { t } = useI18n();
 
 const showResetModal = ref(false);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
@@ -20,43 +22,43 @@ interface SettingsGroup {
   items: { icon: string; label: string; desc: string; to?: string; action?: () => void; danger?: boolean }[];
 }
 
-const groups: SettingsGroup[] = [
+const groups = computed<SettingsGroup[]>(() => [
   {
-    title: 'Profil Sekolah',
+    title: t('admin.sekolah.settings.group_school_profile'),
     items: [
-      { icon: 'home', label: 'Profil sekolah', desc: 'Nama, alamat, jenjang sekolah', to: '/admin/settings/school' },
-      { icon: 'calendar', label: 'Tahun ajaran', desc: 'Atur tahun ajaran aktif & semester', to: '/admin/settings/kelola-tahun-ajaran' },
+      { icon: 'home', label: t('admin.sekolah.settings.item_school_profile_label'), desc: t('admin.sekolah.settings.item_school_profile_desc'), to: '/admin/settings/school' },
+      { icon: 'calendar', label: t('admin.sekolah.settings.item_academic_year_label'), desc: t('admin.sekolah.settings.item_academic_year_desc'), to: '/admin/settings/kelola-tahun-ajaran' },
     ],
   },
   {
-    title: 'Operasional',
+    title: t('admin.sekolah.settings.group_operational'),
     items: [
-      { icon: 'calendar', label: 'Jam pelajaran', desc: 'Sesi mengajar, jam mulai-selesai, hari aktif', to: '/admin/schedule/lesson-hours' },
-      { icon: 'wallet', label: 'Tagihan & biaya', desc: 'Jenis tagihan, nominal default, jatuh tempo', to: '/admin/finance/jenis' },
+      { icon: 'calendar', label: t('admin.sekolah.settings.item_lesson_hours_label'), desc: t('admin.sekolah.settings.item_lesson_hours_desc'), to: '/admin/schedule/lesson-hours' },
+      { icon: 'wallet', label: t('admin.sekolah.settings.item_billing_label'), desc: t('admin.sekolah.settings.item_billing_desc'), to: '/admin/finance/jenis' },
     ],
   },
   {
-    title: 'Data',
+    title: t('admin.sekolah.settings.group_data'),
     items: [
-      { icon: 'layers', label: 'Manajemen data', desc: 'Siswa · Guru · Kelas · Mata pelajaran', to: '/admin/settings/data' },
-      { icon: 'file-text', label: 'Backup data', desc: 'Unduh backup database ke lokal' },
-      { icon: 'edit', label: 'Reset data demo', desc: 'Hapus semua data demo (tidak dapat dibatalkan)', danger: true },
+      { icon: 'layers', label: t('admin.sekolah.settings.item_data_management_label'), desc: t('admin.sekolah.settings.item_data_management_desc'), to: '/admin/settings/data' },
+      { icon: 'file-text', label: t('admin.sekolah.settings.item_backup_label'), desc: t('admin.sekolah.settings.item_backup_desc') },
+      { icon: 'edit', label: t('admin.sekolah.settings.item_reset_demo_label'), desc: t('admin.sekolah.settings.item_reset_demo_desc'), danger: true },
     ],
   },
   {
-    title: 'Sistem',
+    title: t('admin.sekolah.settings.group_system'),
     items: [
-      { icon: 'bell', label: 'Notifikasi', desc: 'Konfigurasi push notification & email' },
-      { icon: 'sparkles', label: 'AI integrations', desc: 'API key, kuota, penggunaan' },
+      { icon: 'bell', label: t('admin.sekolah.settings.item_notifications_label'), desc: t('admin.sekolah.settings.item_notifications_desc') },
+      { icon: 'sparkles', label: t('admin.sekolah.settings.item_ai_label'), desc: t('admin.sekolah.settings.item_ai_desc') },
     ],
   },
-];
+]);
 
 function open(it: SettingsGroup['items'][number]) {
   if (it.to) router.push(it.to);
   else if (it.action) it.action();
   else if (it.danger) showResetModal.value = true;
-  else toast.value = { message: 'Halaman pengaturan ini sedang dikerjakan.', tone: 'error' };
+  else toast.value = { message: t('admin.sekolah.settings.toast_under_construction'), tone: 'error' };
 }
 </script>
 
@@ -64,10 +66,10 @@ function open(it: SettingsGroup['items'][number]) {
   <div class="space-y-md">
     <header>
       <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-        Pengaturan Sekolah
+        {{ t('admin.sekolah.settings.page_title') }}
       </h1>
       <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
-        Konfigurasi sekolah, sistem, dan data
+        {{ t('admin.sekolah.settings.page_subtitle') }}
       </p>
     </header>
 
@@ -97,14 +99,14 @@ function open(it: SettingsGroup['items'][number]) {
       </section>
     </div>
 
-    <Modal v-if="showResetModal" title="Reset data demo" subtitle="Tindakan ini menghapus seluruh data demo dan tidak dapat dibatalkan." @close="showResetModal = false">
+    <Modal v-if="showResetModal" :title="t('admin.sekolah.settings.reset_modal_title')" :subtitle="t('admin.sekolah.settings.reset_modal_subtitle')" @close="showResetModal = false">
       <div class="space-y-md">
         <div class="bg-red-50 border border-red-200 rounded-xl p-3 text-[12px] text-red-700 leading-relaxed">
-          <strong>Peringatan:</strong> Semua data siswa, guru, nilai, dan kehadiran akan dihapus permanen.
+          <strong>{{ t('admin.sekolah.settings.reset_modal_warning_label') }}</strong> {{ t('admin.sekolah.settings.reset_modal_warning_body') }}
         </div>
         <div class="grid grid-cols-2 gap-2">
-          <Button variant="secondary" block @click="showResetModal = false">Batal</Button>
-          <Button variant="danger" block @click="showResetModal = false">Ya, reset</Button>
+          <Button variant="secondary" block @click="showResetModal = false">{{ t('admin.sekolah.settings.cancel') }}</Button>
+          <Button variant="danger" block @click="showResetModal = false">{{ t('admin.sekolah.settings.confirm_reset') }}</Button>
         </div>
       </div>
     </Modal>

@@ -22,6 +22,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { GradeService } from '@/services/grades.service';
 import type {
   AdminGradeOverview,
@@ -36,6 +37,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 
 const router = useRouter();
 const ayStore = useAcademicYearStore();
+const { t } = useI18n();
 
 const overview = ref<AdminGradeOverview | null>(null);
 const isLoading = ref(true);
@@ -133,10 +135,20 @@ function openTeacher(t: AdminOverviewTeacher) {
   });
 }
 
-function passRate(t: AdminOverviewTeacher): number {
-  if (t.total_grades === 0) return 0;
-  return Math.round((t.passed / t.total_grades) * 100);
+function passRate(row: AdminOverviewTeacher): number {
+  if (row.total_grades === 0) return 0;
+  return Math.round((row.passed / row.total_grades) * 100);
 }
+
+const headerMeta = computed(() =>
+  schoolStats.value
+    ? t('admin.sekolah.grade_overview.header_meta', {
+        teachers: schoolStats.value.total_teachers,
+        students: schoolStats.value.total_students,
+        grades: schoolStats.value.total_grades,
+      })
+    : t('admin.sekolah.grade_overview.header_meta_fallback'),
+);
 </script>
 
 <template>
@@ -145,13 +157,9 @@ function passRate(t: AdminOverviewTeacher): number {
          inside the gradient hero via bottomSlot). -->
     <BrandPageHeader
       role="admin"
-      kicker="AKADEMIK"
-      title="Buku Nilai"
-      :meta="
-        schoolStats
-          ? `${schoolStats.total_teachers} guru · ${schoolStats.total_students} siswa · ${schoolStats.total_grades} nilai`
-          : 'Ringkasan nilai sekolah'
-      "
+      :kicker="t('admin.sekolah.grade_overview.header_kicker')"
+      :title="t('admin.sekolah.grade_overview.header_title')"
+      :meta="headerMeta"
       :live-dot="false"
     >
       <template #default>
@@ -162,7 +170,7 @@ function passRate(t: AdminOverviewTeacher): number {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Cari guru..."
+            :placeholder="t('admin.sekolah.grade_overview.search_placeholder')"
             class="flex-1 text-[13px] text-slate-900 outline-none placeholder-slate-400 bg-transparent"
           />
         </div>
@@ -171,8 +179,8 @@ function passRate(t: AdminOverviewTeacher): number {
 
     <AsyncView
       :state="state"
-      empty-title="Belum Ada Data Nilai"
-      empty-description="Belum ada nilai yang dicatat untuk tahun ajaran ini."
+      :empty-title="t('admin.sekolah.grade_overview.empty_title')"
+      :empty-description="t('admin.sekolah.grade_overview.empty_description')"
       empty-icon="edit"
       @retry="load"
     >
@@ -191,7 +199,7 @@ function passRate(t: AdminOverviewTeacher): number {
               {{ schoolStats?.total_grades ?? 0 }}
             </p>
             <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
-              Nilai
+              {{ t('admin.sekolah.grade_overview.kpi_grades') }}
             </p>
           </div>
           <div class="text-center px-2">
@@ -199,7 +207,7 @@ function passRate(t: AdminOverviewTeacher): number {
               {{ (schoolStats?.avg_score ?? 0).toFixed(1) }}
             </p>
             <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
-              Rata-rata
+              {{ t('admin.sekolah.grade_overview.kpi_average') }}
             </p>
           </div>
           <div class="text-center px-2">
@@ -207,7 +215,7 @@ function passRate(t: AdminOverviewTeacher): number {
               {{ Math.round(schoolStats?.pass_rate ?? 0) }}%
             </p>
             <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
-              Lulus ≥75
+              {{ t('admin.sekolah.grade_overview.kpi_pass_rate') }}
             </p>
           </div>
         </section>
@@ -216,10 +224,10 @@ function passRate(t: AdminOverviewTeacher): number {
         <section class="bg-white border border-slate-200 rounded-2xl p-3.5">
           <header class="flex items-center justify-between mb-3">
             <h3 class="text-[13px] font-black text-slate-700 tracking-tight">
-              Sebaran Nilai
+              {{ t('admin.sekolah.grade_overview.distribution_title') }}
             </h3>
             <span class="text-[10px] font-bold text-slate-500 tracking-wider">
-              {{ schoolStats?.total_grades ?? 0 }} nilai · KKM 75
+              {{ t('admin.sekolah.grade_overview.distribution_meta', { count: schoolStats?.total_grades ?? 0 }) }}
             </span>
           </header>
 
@@ -254,7 +262,7 @@ function passRate(t: AdminOverviewTeacher): number {
                 </span>
               </div>
               <p class="text-[9px] font-bold text-slate-600 tracking-widest mt-1.5">
-                TUNTAS · ≥80
+                {{ t('admin.sekolah.grade_overview.dist_high') }}
               </p>
               <p class="text-[18px] font-black text-emerald-700 leading-none tracking-tight mt-1">
                 {{ schoolStats?.distribution.high ?? 0 }}
@@ -269,7 +277,7 @@ function passRate(t: AdminOverviewTeacher): number {
                 </span>
               </div>
               <p class="text-[9px] font-bold text-slate-600 tracking-widest mt-1.5">
-                PERLU · 60–79
+                {{ t('admin.sekolah.grade_overview.dist_mid') }}
               </p>
               <p class="text-[18px] font-black text-amber-700 leading-none tracking-tight mt-1">
                 {{ schoolStats?.distribution.mid ?? 0 }}
@@ -284,7 +292,7 @@ function passRate(t: AdminOverviewTeacher): number {
                 </span>
               </div>
               <p class="text-[9px] font-bold text-slate-600 tracking-widest mt-1.5">
-                REMEDIAL · &lt;60
+                {{ t('admin.sekolah.grade_overview.dist_low') }}
               </p>
               <p class="text-[18px] font-black text-red-700 leading-none tracking-tight mt-1">
                 {{ schoolStats?.distribution.low ?? 0 }}
@@ -298,13 +306,13 @@ function passRate(t: AdminOverviewTeacher): number {
               class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-700"
             >
               <NavIcon name="user" :size="11" class="text-slate-500" />
-              {{ schoolStats?.total_teachers ?? 0 }} guru
+              {{ t('admin.sekolah.grade_overview.teachers_count', { count: schoolStats?.total_teachers ?? 0 }) }}
             </span>
             <span
               class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-700"
             >
               <NavIcon name="users" :size="11" class="text-slate-500" />
-              {{ schoolStats?.total_students ?? 0 }} siswa
+              {{ t('admin.sekolah.grade_overview.students_count', { count: schoolStats?.total_students ?? 0 }) }}
             </span>
           </div>
         </section>
@@ -313,10 +321,10 @@ function passRate(t: AdminOverviewTeacher): number {
         <header class="flex items-center gap-2 px-1 pt-2">
           <NavIcon name="user" :size="12" class="text-slate-500" />
           <span class="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">
-            Per Guru
+            {{ t('admin.sekolah.grade_overview.per_teacher_label') }}
           </span>
           <span class="text-[9.5px] font-black text-slate-300 uppercase tracking-widest">
-            · {{ filteredTeachers.length }} orang
+            {{ t('admin.sekolah.grade_overview.per_teacher_count', { count: filteredTeachers.length }) }}
           </span>
           <span class="flex-1 h-px bg-slate-100" />
         </header>
@@ -326,81 +334,80 @@ function passRate(t: AdminOverviewTeacher): number {
           v-if="filteredTeachers.length === 0"
           class="text-center py-8 text-[12px] text-slate-400 bg-white border border-slate-200 rounded-2xl"
         >
-          Tidak ada guru yang cocok dengan pencarian
+          {{ t('admin.sekolah.grade_overview.no_matching_teachers') }}
         </div>
 
         <!-- 6. Per-teacher cards -->
         <article
-          v-for="t in filteredTeachers"
-          :key="t.teacher_id"
+          v-for="row in filteredTeachers"
+          :key="row.teacher_id"
           class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex"
-          @click="openTeacher(t)"
+          @click="openTeacher(row)"
         >
           <!-- 4px colored score edge -->
           <div
             class="w-1 flex-shrink-0"
-            :class="scoreEdgeCls(t.total_grades > 0 ? t.avg_score : null)"
+            :class="scoreEdgeCls(row.total_grades > 0 ? row.avg_score : null)"
           />
           <div class="flex-1 p-3 space-y-2.5">
             <!-- Row 1: avatar + name/meta + avg pill + chevron -->
             <div class="flex items-start gap-3">
               <InitialsAvatar
-                :name="t.teacher_name"
+                :name="row.teacher_name"
                 :size="38"
                 :border-radius="11"
                 color="#1B6FB8"
               />
               <div class="flex-1 min-w-0">
                 <p class="text-[13.5px] font-black text-slate-900 truncate">
-                  {{ t.teacher_name }}
+                  {{ row.teacher_name }}
                 </p>
                 <p class="text-[10.5px] font-bold text-slate-500 mt-0.5 truncate">
-                  {{ t.subject_count }} mapel · {{ t.class_count }} kelas ·
-                  {{ t.total_grades }} nilai
+                  {{ t('admin.sekolah.grade_overview.teacher_meta', { subjects: row.subject_count, classes: row.class_count, grades: row.total_grades }) }}
                 </p>
               </div>
               <div
-                v-if="t.total_grades > 0"
+                v-if="row.total_grades > 0"
                 class="px-2 py-1 rounded-lg flex-shrink-0 text-center"
-                :class="avgPillCls(t.avg_score).bg"
+                :class="avgPillCls(row.avg_score).bg"
               >
                 <p
                   class="text-[13.5px] font-black leading-none"
-                  :class="avgPillCls(t.avg_score).text"
+                  :class="avgPillCls(row.avg_score).text"
                 >
-                  {{ t.avg_score.toFixed(1) }}
+                  {{ row.avg_score.toFixed(1) }}
                 </p>
                 <p
                   class="text-[8.5px] font-black tracking-widest mt-0.5"
-                  :class="avgPillCls(t.avg_score).textMuted"
+                  :class="avgPillCls(row.avg_score).textMuted"
                 >
-                  AVG
+                  {{ t('admin.sekolah.grade_overview.avg') }}
                 </p>
               </div>
               <NavIcon name="chevron-right" :size="14" class="text-slate-400 mt-2" />
             </div>
 
             <!-- Row 2: pass-rate progress bar -->
-            <div v-if="t.total_grades > 0" class="flex items-center gap-2">
+            <div v-if="row.total_grades > 0" class="flex items-center gap-2">
               <div class="flex-1 h-1.5 rounded-md overflow-hidden bg-slate-100">
                 <div
                   class="h-full transition-all"
-                  :class="passRateBarCls(passRate(t))"
-                  :style="{ width: `${passRate(t)}%` }"
+                  :class="passRateBarCls(passRate(row))"
+                  :style="{ width: `${passRate(row)}%` }"
                 />
               </div>
               <span class="text-[10.5px] font-black text-slate-600 tabular-nums">
-                {{ passRate(t) }}% lulus
+                {{ t('admin.sekolah.grade_overview.pass_rate_label', { rate: passRate(row) }) }}
               </span>
             </div>
 
             <!-- Row 3: subject mini-chips (max 5 + overflow) -->
             <div
-              v-if="t.subjects.length > 0"
+              v-if="row.subjects.length > 0"
               class="flex flex-wrap gap-1.5 items-center"
             >
               <span
-                v-for="s in t.subjects.slice(0, 5)"
+                v-for="s in row.subjects.slice(0, 5)"
                 :key="s.subject_id"
                 class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-slate-200 text-[10.5px] font-bold text-slate-700"
               >
@@ -413,10 +420,10 @@ function passRate(t: AdminOverviewTeacher): number {
                 </template>
               </span>
               <span
-                v-if="t.subjects.length > 5"
+                v-if="row.subjects.length > 5"
                 class="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 text-[10.5px] font-bold text-slate-600"
               >
-                +{{ t.subjects.length - 5 }} mapel
+                {{ t('admin.sekolah.grade_overview.more_subjects', { count: row.subjects.length - 5 }) }}
               </span>
             </div>
           </div>

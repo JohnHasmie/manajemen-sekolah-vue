@@ -88,17 +88,17 @@ const gradeLevelOptions = computed<FacetOption[]>(() => {
   }
   return Array.from(set)
     .sort()
-    .map((g) => ({ key: g, label: `Tingkat ${g}` }));
+    .map((g) => ({ key: g, label: $t('admin.sekolah.subject_management.tingkat', { grade: g }) }));
 });
 
-const STATUS_OPTIONS: FacetOption[] = [
-  { key: 'active', label: 'Aktif' },
-  { key: 'inactive', label: 'Nonaktif' },
-];
-const CLASSES_OPTIONS: FacetOption[] = [
-  { key: 'with', label: 'Sudah tertaut' },
-  { key: 'without', label: 'Belum tertaut' },
-];
+const STATUS_OPTIONS = computed<FacetOption[]>(() => [
+  { key: 'active', label: $t('admin.sekolah.subject_management.status_active') },
+  { key: 'inactive', label: $t('admin.sekolah.subject_management.status_inactive') },
+]);
+const CLASSES_OPTIONS = computed<FacetOption[]>(() => [
+  { key: 'with', label: $t('admin.sekolah.subject_management.classes_with') },
+  { key: 'without', label: $t('admin.sekolah.subject_management.classes_without') },
+]);
 
 const statusChipValue = computed(() => {
   if (!filters.status) return $t('admin.shared.allFilter');
@@ -443,7 +443,7 @@ function topMeta(s: Subject): string {
   <!-- Per-facet pickers -->
   <FilterFacetPickerModal
     v-if="showStatusPicker"
-    title="Filter Status"
+    :title="$t('admin.sekolah.subject_management.filter_status_title')"
     :options="STATUS_OPTIONS"
     :selected="filters.status ?? ''"
     @close="showStatusPicker = false"
@@ -451,7 +451,7 @@ function topMeta(s: Subject): string {
   />
   <FilterFacetPickerModal
     v-if="showGradePicker"
-    title="Filter Tingkat"
+    :title="$t('admin.sekolah.subject_management.filter_tingkat_title')"
     :options="gradeLevelOptions"
     :selected="filters.grade_level ?? ''"
     @close="showGradePicker = false"
@@ -459,7 +459,7 @@ function topMeta(s: Subject): string {
   />
   <FilterFacetPickerModal
     v-if="showClassesPicker"
-    title="Filter Status Tertaut"
+    :title="$t('admin.sekolah.subject_management.filter_classes_title')"
     :options="CLASSES_OPTIONS"
     :selected="filters.classes_status ?? ''"
     @close="showClassesPicker = false"
@@ -476,9 +476,9 @@ function topMeta(s: Subject): string {
 
   <ConfirmationDialog
     v-if="deleteTarget"
-    :title="`Hapus ${deleteTarget.name}?`"
-    message="Tindakan ini akan menonaktifkan mata pelajaran. Pastikan tidak ada jadwal atau nilai yang masih merujuk ke mata pelajaran ini."
-    confirm-label="Hapus"
+    :title="$t('admin.sekolah.subject_management.delete_one_title', { name: deleteTarget.name })"
+    :message="$t('admin.sekolah.subject_management.delete_one_message')"
+    :confirm-label="$t('admin.sekolah.subject_management.delete')"
     danger
     :loading="isSaving"
     @confirm="confirmDelete"
@@ -487,9 +487,9 @@ function topMeta(s: Subject): string {
 
   <ConfirmationDialog
     v-if="bulkDeleteOpen"
-    :title="`Hapus ${selectedIds.size} mata pelajaran?`"
-    message="Tindakan ini akan menonaktifkan mapel terpilih. Tidak dapat dibatalkan."
-    confirm-label="Hapus semua"
+    :title="$t('admin.sekolah.subject_management.delete_bulk_title', { count: selectedIds.size })"
+    :message="$t('admin.sekolah.subject_management.delete_bulk_message')"
+    :confirm-label="$t('admin.sekolah.subject_management.delete_all')"
     danger
     :loading="isSaving"
     @confirm="performBulkDelete"
@@ -499,7 +499,7 @@ function topMeta(s: Subject): string {
   <AdminImportExcelModal
     v-if="showImport"
     entity="subject"
-    title="Import Mata Pelajaran dari Excel"
+    :title="$t('admin.sekolah.subject_management.import_title')"
     @close="showImport = false"
     @done="onImportDone"
   />

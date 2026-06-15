@@ -10,11 +10,14 @@
   Reached from the admin Sistem hub ("Manajemen Data" tile).
 -->
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const router = useRouter();
+const { t } = useI18n();
 
 interface DataTile {
   icon: string;
@@ -25,47 +28,47 @@ interface DataTile {
   routeName: string;
 }
 
-const tiles: DataTile[] = [
+const tiles = computed<DataTile[]>(() => [
   {
     icon: 'users',
     iconBg: 'bg-emerald-100',
     iconFg: 'text-emerald-700',
-    title: 'Siswa',
-    subtitle: 'Daftar siswa · NIS · kelas aktif',
+    title: t('admin.sekolah.data_management.tile_students_title'),
+    subtitle: t('admin.sekolah.data_management.tile_students_subtitle'),
     routeName: 'admin.students',
   },
   {
     icon: 'user',
     iconBg: 'bg-amber-100',
     iconFg: 'text-amber-700',
-    title: 'Guru',
-    subtitle: 'Profil guru · mapel diampu · kontak',
+    title: t('admin.sekolah.data_management.tile_teachers_title'),
+    subtitle: t('admin.sekolah.data_management.tile_teachers_subtitle'),
     routeName: 'admin.teachers',
   },
   {
     icon: 'layers',
     iconBg: 'bg-indigo-100',
     iconFg: 'text-indigo-700',
-    title: 'Kelas',
-    subtitle: 'Rombel · wali kelas · tingkat',
+    title: t('admin.sekolah.data_management.tile_classes_title'),
+    subtitle: t('admin.sekolah.data_management.tile_classes_subtitle'),
     routeName: 'admin.classes',
   },
   {
     icon: 'book',
     iconBg: 'bg-violet-100',
     iconFg: 'text-violet-700',
-    title: 'Mata Pelajaran',
-    subtitle: 'Mapel · KKM · kelas penerima',
+    title: t('admin.sekolah.data_management.tile_subjects_title'),
+    subtitle: t('admin.sekolah.data_management.tile_subjects_subtitle'),
     routeName: 'admin.subjects',
   },
-];
+]);
 
 function goBack() {
   router.push({ name: 'admin.settings' });
 }
 
-function open(t: DataTile) {
-  router.push({ name: t.routeName });
+function open(tile: DataTile) {
+  router.push({ name: tile.routeName });
 }
 </script>
 
@@ -77,35 +80,35 @@ function open(t: DataTile) {
       @click="goBack"
     >
       <NavIcon name="chevron-left" :size="14" />
-      Pengaturan
+      {{ t('admin.sekolah.data_management.back_to_settings') }}
     </button>
 
     <BrandPageHeader
       role="admin"
-      kicker="Sistem · Data"
-      title="Kelola Data"
-      meta="Siswa · Guru · Kelas · Mapel"
+      :kicker="t('admin.sekolah.data_management.header_kicker')"
+      :title="t('admin.sekolah.data_management.header_title')"
+      :meta="t('admin.sekolah.data_management.header_meta')"
       :live-dot="false"
     />
 
     <section class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
       <button
-        v-for="(t, idx) in tiles"
-        :key="t.routeName"
+        v-for="(tile, idx) in tiles"
+        :key="tile.routeName"
         type="button"
         class="w-full text-left px-4 py-3.5 flex items-center gap-3 hover:bg-slate-50 transition-colors"
         :class="[idx > 0 ? 'border-t border-slate-100' : '']"
-        @click="open(t)"
+        @click="open(tile)"
       >
         <div
           class="w-10 h-10 rounded-xl grid place-items-center flex-shrink-0"
-          :class="[t.iconBg, t.iconFg]"
+          :class="[tile.iconBg, tile.iconFg]"
         >
-          <NavIcon :name="t.icon" :size="18" />
+          <NavIcon :name="tile.icon" :size="18" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[14px] font-bold text-slate-900">{{ t.title }}</p>
-          <p class="text-[11.5px] text-slate-500 truncate">{{ t.subtitle }}</p>
+          <p class="text-[14px] font-bold text-slate-900">{{ tile.title }}</p>
+          <p class="text-[11.5px] text-slate-500 truncate">{{ tile.subtitle }}</p>
         </div>
         <NavIcon name="chevron-right" :size="14" class="text-slate-300" />
       </button>

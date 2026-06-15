@@ -22,6 +22,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { GradeRecapService } from '@/services/grade-recap.service';
 import type {
   AdminRecapOverviewRow,
@@ -37,6 +38,7 @@ import FilterFacetPickerModal, {
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const router = useRouter();
+const { t } = useI18n();
 
 // ── State ──
 const rows = ref<AdminRecapOverviewRow[]>([]);
@@ -61,9 +63,9 @@ const showClassPicker = ref(false);
 const showSubjectPicker = ref(false);
 const showTeacherPicker = ref(false);
 
-const classChipValue = computed(() => filterClass.value || 'Semua');
-const subjectChipValue = computed(() => filterSubject.value || 'Semua');
-const teacherChipValue = computed(() => filterTeacher.value || 'Semua');
+const classChipValue = computed(() => filterClass.value || t('admin.sekolah.grade_recap.all'));
+const subjectChipValue = computed(() => filterSubject.value || t('admin.sekolah.grade_recap.all'));
+const teacherChipValue = computed(() => filterTeacher.value || t('admin.sekolah.grade_recap.all'));
 
 // Distinct facet options derived from the loaded rows, alphabetically sorted.
 // The value the list filters on is the name itself, so key === label.
@@ -280,13 +282,13 @@ function uasDone(r: AdminRecapOverviewRow): boolean {
 }
 
 // ── Sort selector options ──
-const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: 'progress', label: 'Progress' },
-  { key: 'class', label: 'Kelas' },
-  { key: 'subject', label: 'Mapel' },
-  { key: 'teacher', label: 'Guru' },
-  { key: 'avg', label: 'Rerata' },
-];
+const SORT_OPTIONS = computed<{ key: SortKey; label: string }[]>(() => [
+  { key: 'progress', label: t('admin.sekolah.grade_recap.sort_progress') },
+  { key: 'class', label: t('admin.sekolah.grade_recap.sort_class') },
+  { key: 'subject', label: t('admin.sekolah.grade_recap.sort_subject') },
+  { key: 'teacher', label: t('admin.sekolah.grade_recap.sort_teacher') },
+  { key: 'avg', label: t('admin.sekolah.grade_recap.sort_avg') },
+]);
 
 // ── Export visible rows as CSV (web bonus) ──
 function csvEscape(v: unknown): string {
@@ -325,7 +327,7 @@ function exportCsv() {
       r.bab_filled,
       r.uts_done,
       r.uas_done,
-      r.is_complete ? 'Ya' : 'Tidak',
+      r.is_complete ? t('admin.sekolah.grade_recap.yes') : t('admin.sekolah.grade_recap.no'),
     ]
       .map(csvEscape)
       .join(','),
@@ -351,9 +353,9 @@ function exportCsv() {
          inside the gradient hero via the default slot). -->
     <BrandPageHeader
       role="admin"
-      kicker="AKADEMIK"
-      title="Rekap Nilai"
-      :meta="`${kpiCells.totalSlice} rekap · ${kpiCells.completed} final ✓ · rerata ${Math.round(kpiCells.avgProgress)}%`"
+      :kicker="t('admin.sekolah.grade_recap.header_kicker')"
+      :title="t('admin.sekolah.grade_recap.header_title')"
+      :meta="t('admin.sekolah.grade_recap.header_meta', { total: kpiCells.totalSlice, completed: kpiCells.completed, progress: Math.round(kpiCells.avgProgress) })"
       :live-dot="false"
     >
       <template #default>
@@ -364,7 +366,7 @@ function exportCsv() {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Cari kelas, mapel, atau guru..."
+            :placeholder="t('admin.sekolah.grade_recap.search_placeholder')"
             class="flex-1 text-[13px] text-slate-900 outline-none placeholder-slate-400 bg-transparent"
           />
         </div>
@@ -380,7 +382,7 @@ function exportCsv() {
           {{ kpiCells.totalSlice }}
         </p>
         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
-          Rekap
+          {{ t('admin.sekolah.grade_recap.kpi_total') }}
         </p>
       </div>
       <div class="text-center px-2">
@@ -388,7 +390,7 @@ function exportCsv() {
           {{ Math.round(kpiCells.avgProgress) }}%
         </p>
         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
-          Progress
+          {{ t('admin.sekolah.grade_recap.kpi_progress') }}
         </p>
       </div>
       <div class="text-center px-2">
@@ -396,7 +398,7 @@ function exportCsv() {
           {{ kpiCells.completed }}
         </p>
         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
-          Final ✓
+          {{ t('admin.sekolah.grade_recap.kpi_final') }}
         </p>
       </div>
     </section>
@@ -419,28 +421,28 @@ function exportCsv() {
           name="check-circle"
           :size="12"
         />
-        Belum lengkap
+        {{ t('admin.sekolah.grade_recap.incomplete_toggle') }}
       </button>
 
       <!-- Kelas / Mapel / Guru filters — same chip + facet-picker pattern as
            the other admin pages. -->
       <AppFilterChip
         icon-name="layers"
-        label="Kelas"
+        :label="t('admin.sekolah.grade_recap.chip_class')"
         :value="classChipValue"
         tone="brand"
         @click="showClassPicker = true"
       />
       <AppFilterChip
         icon-name="book-open"
-        label="Mapel"
+        :label="t('admin.sekolah.grade_recap.chip_subject')"
         :value="subjectChipValue"
         tone="violet"
         @click="showSubjectPicker = true"
       />
       <AppFilterChip
         icon-name="user"
-        label="Guru"
+        :label="t('admin.sekolah.grade_recap.chip_teacher')"
         :value="teacherChipValue"
         tone="amber"
         @click="showTeacherPicker = true"
@@ -450,7 +452,7 @@ function exportCsv() {
            have no column headers). -->
       <div class="inline-flex items-center gap-1 bg-white border border-slate-200 rounded-full p-0.5">
         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-          Urut:
+          {{ t('admin.sekolah.grade_recap.sort_label') }}
         </span>
         <button
           v-for="opt in SORT_OPTIONS"
@@ -483,7 +485,7 @@ function exportCsv() {
         @click="exportCsv"
       >
         <NavIcon name="download" :size="12" />
-        Ekspor CSV
+        {{ t('admin.sekolah.grade_recap.export_csv') }}
       </button>
       <button
         type="button"
@@ -491,7 +493,7 @@ function exportCsv() {
         @click="load"
       >
         <NavIcon name="refresh-cw" :size="12" />
-        Muat ulang
+        {{ t('admin.sekolah.grade_recap.reload') }}
       </button>
     </div>
 
@@ -499,10 +501,10 @@ function exportCsv() {
     <header class="flex items-center gap-2 px-1 pt-1">
       <NavIcon name="layers" :size="12" class="text-slate-500" />
       <span class="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">
-        Per Rekap
+        {{ t('admin.sekolah.grade_recap.per_recap') }}
       </span>
       <span class="text-[9.5px] font-black text-slate-300 uppercase tracking-widest">
-        · {{ filteredRows.length }} rekap
+        {{ t('admin.sekolah.grade_recap.recap_count', { count: filteredRows.length }) }}
       </span>
       <span class="flex-1 h-px bg-slate-100" />
     </header>
@@ -510,8 +512,8 @@ function exportCsv() {
     <!-- 5. Per-slice cards -->
     <AsyncView
       :state="listState"
-      empty-title="Belum ada data rekap"
-      empty-description="Rekap muncul saat guru mulai mengisi tabel bab/UTS/UAS untuk kelas + mapel."
+      :empty-title="t('admin.sekolah.grade_recap.empty_title')"
+      :empty-description="t('admin.sekolah.grade_recap.empty_description')"
       empty-icon="layers"
       @retry="load"
     >
@@ -618,19 +620,19 @@ function exportCsv() {
                   done: babDone(r).done,
                   label:
                     r.students_total > 0 && r.bab_total > 0
-                      ? `${Math.floor(r.bab_filled / r.students_total)}/${r.bab_total} bab`
-                      : `0/${r.bab_total} bab`,
-                  title: `${babDone(r).filled} / ${babDone(r).expected} sel terisi`,
+                      ? t('admin.sekolah.grade_recap.bab_chip', { filled: Math.floor(r.bab_filled / r.students_total), total: r.bab_total })
+                      : t('admin.sekolah.grade_recap.bab_chip', { filled: 0, total: r.bab_total }),
+                  title: t('admin.sekolah.grade_recap.bab_title', { filled: babDone(r).filled, expected: babDone(r).expected }),
                 },
                 {
                   done: utsDone(r),
-                  label: utsDone(r) ? 'UTS ✓' : 'UTS belum',
-                  title: `UTS ${r.uts_done}/${r.students_total} siswa`,
+                  label: utsDone(r) ? t('admin.sekolah.grade_recap.uts_done') : t('admin.sekolah.grade_recap.uts_pending'),
+                  title: t('admin.sekolah.grade_recap.uts_title', { done: r.uts_done, total: r.students_total }),
                 },
                 {
                   done: uasDone(r),
-                  label: uasDone(r) ? 'UAS ✓' : 'UAS belum',
-                  title: `UAS ${r.uas_done}/${r.students_total} siswa`,
+                  label: uasDone(r) ? t('admin.sekolah.grade_recap.uas_done') : t('admin.sekolah.grade_recap.uas_pending'),
+                  title: t('admin.sekolah.grade_recap.uas_title', { done: r.uas_done, total: r.students_total }),
                 },
               ]"
               :key="chip.label"
@@ -652,7 +654,7 @@ function exportCsv() {
 
           <!-- Roster fill — N siswa punya rekap dari M total -->
           <p class="text-[10px] text-slate-500 pt-0.5">
-            {{ r.students_with_recap }} / {{ r.students_total }} siswa punya rekap
+            {{ t('admin.sekolah.grade_recap.roster_label', { withRecap: r.students_with_recap, total: r.students_total }) }}
           </p>
         </article>
         </div>
@@ -662,7 +664,7 @@ function exportCsv() {
     <!-- Per-facet pickers (shared style with other admin pages) -->
     <FilterFacetPickerModal
       v-if="showClassPicker"
-      title="Filter Kelas"
+      :title="t('admin.sekolah.grade_recap.filter_class_title')"
       :options="classOptions"
       :selected="filterClass"
       @close="showClassPicker = false"
@@ -670,7 +672,7 @@ function exportCsv() {
     />
     <FilterFacetPickerModal
       v-if="showSubjectPicker"
-      title="Filter Mapel"
+      :title="t('admin.sekolah.grade_recap.filter_subject_title')"
       :options="subjectOptions"
       :selected="filterSubject"
       @close="showSubjectPicker = false"
@@ -678,7 +680,7 @@ function exportCsv() {
     />
     <FilterFacetPickerModal
       v-if="showTeacherPicker"
-      title="Filter Guru"
+      :title="t('admin.sekolah.grade_recap.filter_teacher_title')"
       :options="teacherOptions"
       :selected="filterTeacher"
       @close="showTeacherPicker = false"

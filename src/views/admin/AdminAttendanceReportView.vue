@@ -376,7 +376,7 @@ function toggleExportMonth(key: number) {
 function openExportDialog() {
   if (!filters.class_id) {
     toast.value = {
-      message: 'Pilih kelas terlebih dahulu untuk export presensi.',
+      message: $t('admin.sekolah.attendance_report.toast_pick_class'),
       tone: 'error',
     };
     return;
@@ -389,7 +389,7 @@ async function processExport() {
   if (selectedExportMonths.value.length === 0) return;
   const cls = classes.value.find((c) => c.id === filters.class_id);
   if (!cls) {
-    toast.value = { message: 'Kelas tidak ditemukan.', tone: 'error' };
+    toast.value = { message: $t('admin.sekolah.attendance_report.toast_class_not_found'), tone: 'error' };
     return;
   }
 
@@ -424,21 +424,21 @@ async function processExport() {
 
     showExportModal.value = false;
     if (successCount > 0) {
-      const skipNote =
-        skippedCount > 0 ? ` (${skippedCount} bulan kosong dilewati)` : '';
       toast.value = {
-        message: `Berhasil mengexport ${successCount} file XLSX${skipNote}.`,
+        message: skippedCount > 0
+          ? $t('admin.sekolah.attendance_report.toast_export_success_skipped', { count: successCount, skipped: skippedCount })
+          : $t('admin.sekolah.attendance_report.toast_export_success', { count: successCount }),
         tone: 'success',
       };
     } else {
       toast.value = {
-        message: 'Tidak ada data presensi pada bulan yang dipilih.',
+        message: $t('admin.sekolah.attendance_report.toast_no_data'),
         tone: 'error',
       };
     }
   } catch (e) {
     toast.value = {
-      message: `Export gagal: ${(e as Error).message}`,
+      message: $t('admin.sekolah.attendance_report.toast_export_failed', { error: (e as Error).message }),
       tone: 'error',
     };
   } finally {
@@ -651,10 +651,10 @@ async function processExport() {
     <!-- Class picker -->
     <FilterFacetPickerModal
       v-if="showClassPicker"
-      title="Filter Kelas"
+      :title="$t('admin.sekolah.attendance_report.filter_class_title')"
       :options="classOptions"
       :selected="filters.class_id"
-      all-label="Semua kelas"
+      :all-label="$t('admin.sekolah.attendance_report.all_classes')"
       @close="showClassPicker = false"
       @apply="(v) => { filters.class_id = v; void load(1); }"
     />
@@ -662,10 +662,10 @@ async function processExport() {
     <!-- Subject picker -->
     <FilterFacetPickerModal
       v-if="showSubjectPicker"
-      title="Filter Mata Pelajaran"
+      :title="$t('admin.sekolah.attendance_report.filter_subject_title')"
       :options="subjectOptions"
       :selected="filters.subject_id"
-      all-label="Semua mapel"
+      :all-label="$t('admin.sekolah.attendance_report.all_subjects')"
       @close="showSubjectPicker = false"
       @apply="(v) => { filters.subject_id = v; void load(1); }"
     />
@@ -673,8 +673,8 @@ async function processExport() {
     <!-- Date range picker -->
     <Modal
       v-if="showDatePicker"
-      title="Filter Tanggal"
-      subtitle="Pilih rentang tanggal"
+      :title="$t('admin.sekolah.attendance_report.filter_date_title')"
+      :subtitle="$t('admin.sekolah.attendance_report.filter_date_subtitle')"
       size="sm"
       @close="showDatePicker = false"
     >
