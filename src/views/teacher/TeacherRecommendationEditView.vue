@@ -23,6 +23,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { RecommendationService } from '@/services/recommendations.service';
 import {
@@ -42,6 +43,7 @@ import Toast from '@/components/ui/Toast.vue';
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
+const { t } = useI18n();
 
 const recId = computed(() => String(route.params.recId ?? ''));
 
@@ -72,7 +74,7 @@ async function load() {
   try {
     const rec = await RecommendationService.getLearningRec(recId.value);
     if (!rec) {
-      loadError.value = 'Rekomendasi tidak ditemukan.';
+      loadError.value = t('tutor.sekolah.recommendationEdit.notFound');
       return;
     }
     original.value = rec;
@@ -91,7 +93,7 @@ async function load() {
 
 onMounted(() => {
   if (!recId.value) {
-    loadError.value = 'ID rekomendasi tidak valid.';
+    loadError.value = t('tutor.sekolah.recommendationEdit.invalidId');
     isLoading.value = false;
     return;
   }
@@ -100,12 +102,12 @@ onMounted(() => {
 
 // ── Material ops ──
 function addMaterial() {
-  const t = newMaterialTitle.value.trim();
-  if (!t) return;
+  const matTitle = newMaterialTitle.value.trim();
+  if (!matTitle) return;
   materials.value = [
     ...materials.value,
     {
-      title: t,
+      title: matTitle,
       url: newMaterialUrl.value.trim() || null,
       source: 'manual',
     },
@@ -144,13 +146,13 @@ async function save() {
   if (!original.value || !isDirty.value) return;
   if (!teacherId.value) {
     toast.value = {
-      message: 'Profil guru belum termuat — muat ulang halaman.',
+      message: t('tutor.sekolah.recommendationEdit.teacherProfileMissing'),
       tone: 'error',
     };
     return;
   }
   if (!titleField.value.trim()) {
-    toast.value = { message: 'Judul wajib diisi.', tone: 'error' };
+    toast.value = { message: t('tutor.sekolah.recommendationEdit.titleRequired'), tone: 'error' };
     return;
   }
   isSaving.value = true;
@@ -165,12 +167,12 @@ async function save() {
       materials: materials.value,
     });
     if (updated) {
-      toast.value = { message: 'Rekomendasi tersimpan.', tone: 'success' };
+      toast.value = { message: t('tutor.sekolah.recommendationEdit.savedToast'), tone: 'success' };
       // Bounce back to result so the wali kelas sees the patched row.
       goBack();
     } else {
       toast.value = {
-        message: 'Tersimpan, tapi server tidak mengembalikan data.',
+        message: t('tutor.sekolah.recommendationEdit.savedNoDataToast'),
         tone: 'success',
       };
     }
@@ -217,7 +219,7 @@ function goBack() {
         @click="goBack"
       >
         <NavIcon name="chevron-left" :size="14" />
-        Hasil Rekomendasi
+        {{ t('tutor.sekolah.recommendationEdit.backToResult') }}
       </button>
       <span class="flex-1"></span>
       <Button
@@ -229,33 +231,35 @@ function goBack() {
         @click="save"
       >
         <NavIcon name="check" :size="13" />
-        Simpan
+        {{ t('tutor.sekolah.recommendationEdit.save') }}
       </Button>
     </div>
 
-    <AsyncView :state="viewState" empty-title="Rekomendasi tidak ditemukan" @retry="load">
+    <AsyncView :state="viewState" :empty-title="t('tutor.sekolah.recommendationEdit.notFound')" @retry="load">
       <template #default>
         <div v-if="original" class="space-y-4">
           <!-- HEADER -->
           <BrandPageHeader
             role="guru"
-            kicker="Edit Rekomendasi"
-            :title="titleField || original.title || 'Edit'"
-            :meta="
-              `${original.student_name ?? 'Siswa'} · ${original.subject_name ?? 'Mata pelajaran'} · ${original.class_name ?? 'Kelas'}`
-            "
+            :kicker="t('tutor.sekolah.recommendationEdit.kicker')"
+            :title="titleField || original.title || t('tutor.sekolah.recommendationEdit.titleFallback')"
+            :meta="t('tutor.sekolah.recommendationEdit.meta', {
+              student: original.student_name ?? t('tutor.sekolah.recommendationEdit.studentFallback'),
+              subject: original.subject_name ?? t('tutor.sekolah.recommendationEdit.subjectFallback'),
+              className: original.class_name ?? t('tutor.sekolah.recommendationEdit.classFallback')
+            })"
             :live-dot="false"
           />
 
           <!-- JUDUL -->
           <section class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              Judul
+              {{ t('tutor.sekolah.recommendationEdit.fieldTitle') }}
             </label>
             <input
               v-model="titleField"
               type="text"
-              placeholder="Mis. Latih ulang SPLDV bab 4"
+              :placeholder="t('tutor.sekolah.recommendationEdit.titlePlaceholder')"
               class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] font-bold focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white"
               :disabled="isSaving"
             />
@@ -264,7 +268,7 @@ function goBack() {
           <!-- PRIORITAS -->
           <section class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              Prioritas
+              {{ t('tutor.sekolah.recommendationEdit.fieldPriority') }}
             </label>
             <div class="flex flex-wrap gap-1.5">
               <button
@@ -289,16 +293,16 @@ function goBack() {
           <!-- DESKRIPSI (Quill) -->
           <section class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              Deskripsi
+              {{ t('tutor.sekolah.recommendationEdit.fieldDescription') }}
             </label>
             <AppRichTextEditor
               v-model:html="descriptionHtml"
-              placeholder="Jelaskan langkah konkret untuk siswa…"
+              :placeholder="t('tutor.sekolah.recommendationEdit.descriptionPlaceholder')"
               :readonly="isSaving"
               :min-height="220"
             />
             <p class="text-[10px] text-slate-400">
-              Format tersimpan persis seperti di mobile — heading, list, dan link semua di-support.
+              {{ t('tutor.sekolah.recommendationEdit.formatHint') }}
             </p>
           </section>
 
@@ -306,10 +310,10 @@ function goBack() {
           <section class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
             <div class="flex items-center gap-2">
               <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                Materi Terkait
+                {{ t('tutor.sekolah.recommendationEdit.fieldMaterials') }}
               </label>
               <span class="text-[10px] text-slate-400 tabular-nums">
-                · {{ materials.length }} materi
+                · {{ t('tutor.sekolah.recommendationEdit.materialCount', { count: materials.length }) }}
               </span>
             </div>
 
@@ -325,7 +329,7 @@ function goBack() {
                 <button
                   type="button"
                   class="ml-1 text-slate-500 hover:text-red-700"
-                  :aria-label="`Hapus ${m.title}`"
+                  :aria-label="t('tutor.sekolah.recommendationEdit.removeMaterialAria', { title: m.title })"
                   :disabled="isSaving"
                   @click="removeMaterial(idx)"
                 >
@@ -339,7 +343,7 @@ function goBack() {
               <input
                 v-model="newMaterialTitle"
                 type="text"
-                placeholder="Judul materi"
+                :placeholder="t('tutor.sekolah.recommendationEdit.materialTitlePlaceholder')"
                 class="rounded-lg border border-slate-200 px-3 py-2 text-[12px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white"
                 :disabled="isSaving"
                 @keyup.enter="addMaterial"
@@ -347,7 +351,7 @@ function goBack() {
               <input
                 v-model="newMaterialUrl"
                 type="url"
-                placeholder="URL (opsional)"
+                :placeholder="t('tutor.sekolah.recommendationEdit.materialUrlPlaceholder')"
                 class="rounded-lg border border-slate-200 px-3 py-2 text-[12px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white"
                 :disabled="isSaving"
                 @keyup.enter="addMaterial"
@@ -359,7 +363,7 @@ function goBack() {
                 @click="addMaterial"
               >
                 <NavIcon name="plus" :size="12" />
-                Tambah
+                {{ t('tutor.sekolah.recommendationEdit.addMaterial') }}
               </Button>
             </div>
           </section>
@@ -367,12 +371,12 @@ function goBack() {
           <!-- CATATAN -->
           <section class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              Catatan Wali Kelas
+              {{ t('tutor.sekolah.recommendationEdit.fieldNotes') }}
             </label>
             <textarea
               v-model="notes"
               rows="3"
-              placeholder="Catatan opsional yang ingin Anda sampaikan ke siswa atau wali."
+              :placeholder="t('tutor.sekolah.recommendationEdit.notesPlaceholder')"
               class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white resize-y"
               :disabled="isSaving"
             />
@@ -386,7 +390,7 @@ function goBack() {
               :disabled="isSaving"
               @click="goBack"
             >
-              Batal
+              {{ t('tutor.sekolah.recommendationEdit.cancel') }}
             </Button>
             <Button
               variant="primary"
@@ -396,7 +400,7 @@ function goBack() {
               @click="save"
             >
               <NavIcon name="check" :size="13" />
-              Simpan Perubahan
+              {{ t('tutor.sekolah.recommendationEdit.saveChanges') }}
             </Button>
           </div>
         </div>

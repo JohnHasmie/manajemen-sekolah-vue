@@ -38,6 +38,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import { useWebcamCapture } from '@/composables/useWebcamCapture';
 import { useGeolocation } from '@/composables/useGeolocation';
@@ -56,6 +57,7 @@ const router = useRouter();
 const toast = useToast();
 const cam = useWebcamCapture();
 const geo = useGeolocation();
+const { t } = useI18n();
 
 // ── Bootstrap state ─────────────────────────────────────────────
 const config = ref<TeacherAttendanceConfig | null>(null);
@@ -106,7 +108,9 @@ const showCaptureForm = computed(() => {
 });
 
 const primaryActionLabel = computed(() =>
-  mode.value === 'check-out' ? 'Presensi Pulang' : 'Presensi Masuk',
+  mode.value === 'check-out'
+    ? t('tutor.sekolah.presensiTeacher.checkOutLabel')
+    : t('tutor.sekolah.presensiTeacher.checkInLabel'),
 );
 
 const serverDate = computed(() => {
@@ -147,17 +151,17 @@ const firstStartLabel = computed(() =>
 const cameraGuidance = computed(() => {
   switch (cam.errorKind.value) {
     case 'denied':
-      return 'Buka ikon gembok/izin di bilah alamat browser, pilih situs ini, lalu izinkan Kamera. Setelah itu tekan "Nyalakan Kamera".';
+      return t('tutor.sekolah.presensiTeacher.camGuidanceDenied');
     case 'insecure':
-      return 'Akses kamera diblokir karena koneksi tidak aman. Buka halaman ini melalui alamat https:// (atau localhost saat pengembangan).';
+      return t('tutor.sekolah.presensiTeacher.camGuidanceInsecure');
     case 'not-found':
-      return 'Tidak ada kamera yang terdeteksi. Hubungkan/aktifkan kamera lalu coba lagi.';
+      return t('tutor.sekolah.presensiTeacher.camGuidanceNotFound');
     case 'in-use':
-      return 'Kamera sedang dipakai aplikasi lain (mis. Zoom/Meet). Tutup aplikasi tersebut lalu tekan "Nyalakan Kamera".';
+      return t('tutor.sekolah.presensiTeacher.camGuidanceInUse');
     case 'unsupported':
-      return 'Browser ini tidak mendukung kamera. Gunakan Chrome atau Safari versi terbaru.';
+      return t('tutor.sekolah.presensiTeacher.camGuidanceUnsupported');
     default:
-      return 'Tekan "Nyalakan Kamera" untuk mengizinkan akses kamera.';
+      return t('tutor.sekolah.presensiTeacher.camGuidanceDefault');
   }
 });
 
@@ -165,15 +169,15 @@ const cameraGuidance = computed(() => {
 const locationGuidance = computed(() => {
   switch (geo.errorKind.value) {
     case 'denied':
-      return 'Buka ikon gembok/izin di bilah alamat browser, pilih situs ini, lalu izinkan Lokasi, kemudian tekan "Coba lagi".';
+      return t('tutor.sekolah.presensiTeacher.locGuidanceDenied');
     case 'insecure':
-      return 'Akses lokasi diblokir karena koneksi tidak aman. Buka halaman ini melalui alamat https://.';
+      return t('tutor.sekolah.presensiTeacher.locGuidanceInsecure');
     case 'unavailable':
-      return 'Aktifkan layanan lokasi/GPS perangkat lalu coba lagi.';
+      return t('tutor.sekolah.presensiTeacher.locGuidanceUnavailable');
     case 'timeout':
-      return 'Sinyal lokasi lemah. Coba lagi di dekat jendela atau di luar ruangan.';
+      return t('tutor.sekolah.presensiTeacher.locGuidanceTimeout');
     default:
-      return 'Tekan "Coba lagi" untuk mengambil lokasi.';
+      return t('tutor.sekolah.presensiTeacher.locGuidanceDefault');
   }
 });
 
@@ -196,10 +200,10 @@ const canSubmit = computed(
 /** A short "why is the button disabled" hint under the submit button. */
 const blockedReason = computed<string | null>(() => {
   if (cameraRequired.value && !photoSatisfied.value) {
-    return 'Aktifkan kamera dulu untuk presensi.';
+    return t('tutor.sekolah.presensiTeacher.blockedCamera');
   }
   if (locationRequired.value && !locationSatisfied.value) {
-    return 'Ambil lokasi dulu untuk presensi.';
+    return t('tutor.sekolah.presensiTeacher.blockedLocation');
   }
   return null;
 });
@@ -294,15 +298,15 @@ async function submit() {
   if (cameraRequired.value && !blob) {
     blob = await cam.snapshot();
     if (!blob) {
-      toast.error('Gagal mengambil foto. Aktifkan kamera lalu coba lagi.');
+      toast.error(t('tutor.sekolah.presensiTeacher.snapshotFailed'));
       return;
     }
   }
 
   if (!canSubmit.value) {
-    if (!photoSatisfied.value) toast.error('Aktifkan kamera untuk presensi.');
+    if (!photoSatisfied.value) toast.error(t('tutor.sekolah.presensiTeacher.toastEnableCamera'));
     else if (!locationSatisfied.value)
-      toast.error('Ambil lokasi untuk presensi.');
+      toast.error(t('tutor.sekolah.presensiTeacher.toastGrabLocation'));
     return;
   }
 
@@ -317,11 +321,14 @@ async function submit() {
     let result: TeacherAttendanceRecord;
     if (mode.value === 'check-out') {
       result = await TeacherAttendanceService.checkOut(payload);
-      toast.success('Presensi pulang berhasil dicatat.');
+      toast.success(t('tutor.sekolah.presensiTeacher.checkOutSuccess'));
     } else {
       result = await TeacherAttendanceService.checkIn(payload);
-      const lateMsg = result.status === 'late' ? ' (tercatat terlambat)' : '';
-      toast.success(`Presensi masuk berhasil dicatat${lateMsg}.`);
+      toast.success(
+        result.status === 'late'
+          ? t('tutor.sekolah.presensiTeacher.checkInSuccessLate')
+          : t('tutor.sekolah.presensiTeacher.checkInSuccess'),
+      );
     }
     // Reset the form + reload the live state (which re-arms auto-capture
     // for the check-out leg if it's now enabled).
@@ -353,8 +360,8 @@ function gotoHistory() {
     <!-- ── Header ─────────────────────────────────────────────── -->
     <BrandPageHeader
       role="guru"
-      kicker="Presensi Guru · Harian"
-      title="Presensi Hari Ini"
+      :kicker="t('tutor.sekolah.presensiTeacher.kicker')"
+      :title="t('tutor.sekolah.presensiTeacher.title')"
       :meta="serverDate"
       live-dot
     >
@@ -365,7 +372,7 @@ function gotoHistory() {
         <p
           class="text-[10px] font-bold text-white/80 uppercase tracking-widest mt-1"
         >
-          Waktu Server
+          {{ t('tutor.sekolah.presensiTeacher.serverTime') }}
         </p>
       </div>
     </BrandPageHeader>
@@ -389,7 +396,7 @@ function gotoHistory() {
       />
       <p class="text-[13px] font-bold text-red-700">{{ loadError }}</p>
       <Button variant="secondary" size="sm" class="mt-3" @click="reload">
-        Coba lagi
+        {{ t('tutor.sekolah.presensiTeacher.retry') }}
       </Button>
     </div>
 
@@ -406,11 +413,10 @@ function gotoHistory() {
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-[13px] font-black text-emerald-800">
-            Presensi hari ini selesai
+            {{ t('tutor.sekolah.presensiTeacher.doneToday') }}
           </p>
           <p class="text-[11.5px] text-emerald-700 mt-0.5">
-            Masuk {{ fmtTime(record?.check_in_at) }} · Pulang
-            {{ fmtTime(record?.check_out_at) }}
+            {{ t('tutor.sekolah.presensiTeacher.inOutTimes', { checkIn: fmtTime(record?.check_in_at), checkOut: fmtTime(record?.check_out_at) }) }}
           </p>
         </div>
       </section>
@@ -426,7 +432,7 @@ function gotoHistory() {
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-[13px] font-black text-slate-900">
-            Sudah presensi masuk · {{ fmtTime(record?.check_in_at) }}
+            {{ t('tutor.sekolah.presensiTeacher.alreadyCheckedIn', { time: fmtTime(record?.check_in_at) }) }}
           </p>
           <p class="text-[11.5px] text-slate-600 mt-0.5">
             <span
@@ -446,14 +452,14 @@ function gotoHistory() {
               {{ teacherAttendanceStatusLabel(record?.status) }}
             </span>
             <template v-if="record?.check_in_outside_geofence">
-              · <span class="text-red-600 font-bold">di luar area sekolah</span>
+              · <span class="text-red-600 font-bold">{{ t('tutor.sekolah.presensiTeacher.outsideGeofence') }}</span>
             </template>
             <template v-else-if="record?.check_in_distance_m != null">
-              · {{ record.check_in_distance_m }} m dari sekolah
+              · {{ t('tutor.sekolah.presensiTeacher.distanceMeters', { meters: record.check_in_distance_m }) }}
             </template>
           </p>
           <p v-if="!checkoutEnabled" class="text-[11px] text-slate-400 mt-1">
-            Presensi pulang tidak diaktifkan untuk sekolah ini.
+            {{ t('tutor.sekolah.presensiTeacher.checkOutDisabled') }}
           </p>
         </div>
       </section>
@@ -469,17 +475,17 @@ function gotoHistory() {
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-[13px] font-black text-amber-900">
-            Belum presensi masuk
+            {{ t('tutor.sekolah.presensiTeacher.notYetCheckedIn') }}
           </p>
           <p class="text-[11.5px] text-amber-700 mt-0.5">
             <template v-if="config.late_after">
-              Batas tepat waktu: {{ lateAfterLabel }}
+              {{ t('tutor.sekolah.presensiTeacher.onTimeLimit', { time: lateAfterLabel }) }}
               <span v-if="config.first_teaching_start" class="text-amber-600">
-                (mengajar pertama {{ firstStartLabel }})
+                {{ t('tutor.sekolah.presensiTeacher.firstTeaching', { time: firstStartLabel }) }}
               </span>
             </template>
             <template v-else
-              >Tidak ada jadwal mengajar terdeteksi hari ini.</template
+              >{{ t('tutor.sekolah.presensiTeacher.noScheduleToday') }}</template
             >
           </p>
         </div>
@@ -493,9 +499,9 @@ function gotoHistory() {
         <div class="flex items-center gap-2 mb-3">
           <NavIcon name="calendar" :size="15" class="text-brand-cobalt" />
           <p class="text-[12px] font-bold text-slate-700">
-            Jadwal Mengajar Hari Ini
+            {{ t('tutor.sekolah.presensiTeacher.todaySchedule') }}
             <span class="text-slate-400 font-medium"
-              >· {{ config.today_schedule.length }} sesi</span
+              >· {{ t('tutor.sekolah.presensiTeacher.sessionCount', { count: config.today_schedule.length }) }}</span
             >
           </p>
         </div>
@@ -551,7 +557,7 @@ function gotoHistory() {
                 class="text-[10.5px] text-slate-500 mt-0.5 inline-flex items-center gap-1"
               >
                 <NavIcon name="zap" :size="11" class="text-brand-cobalt" />
-                Kamera &amp; lokasi disiapkan otomatis
+                {{ t('tutor.sekolah.presensiTeacher.autoReady') }}
               </p>
             </div>
           </div>
@@ -563,7 +569,7 @@ function gotoHistory() {
                 : 'bg-emerald-100 text-emerald-700'
             "
           >
-            {{ mode === 'check-out' ? 'Pulang' : 'Masuk' }}
+            {{ mode === 'check-out' ? t('tutor.sekolah.presensiTeacher.badgeCheckOut') : t('tutor.sekolah.presensiTeacher.badgeCheckIn') }}
           </span>
         </div>
 
@@ -575,7 +581,7 @@ function gotoHistory() {
                 class="text-[11px] font-bold text-slate-600 flex items-center gap-1.5"
               >
                 <NavIcon name="camera" :size="13" class="text-brand-cobalt" />
-                Foto Selfie
+                {{ t('tutor.sekolah.presensiTeacher.selfiePhoto') }}
               </p>
               <span
                 v-if="cam.isActive.value"
@@ -584,20 +590,20 @@ function gotoHistory() {
                 <span
                   class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
                 ></span>
-                Kamera aktif
+                {{ t('tutor.sekolah.presensiTeacher.camActive') }}
               </span>
               <span
                 v-else-if="cam.isStarting.value"
                 class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400"
               >
-                Menyiapkan…
+                {{ t('tutor.sekolah.presensiTeacher.camStarting') }}
               </span>
               <span
                 v-else-if="cam.error.value"
                 class="inline-flex items-center gap-1 text-[10px] font-bold text-red-500"
               >
                 <NavIcon name="alert-circle" :size="11" />
-                Kamera mati
+                {{ t('tutor.sekolah.presensiTeacher.camOff') }}
               </span>
             </div>
 
@@ -608,7 +614,7 @@ function gotoHistory() {
             >
               <img
                 :src="photoUrl"
-                alt="Foto presensi"
+                :alt="t('tutor.sekolah.presensiTeacher.photoAlt')"
                 class="w-full h-full object-cover"
               />
               <button
@@ -616,7 +622,7 @@ function gotoHistory() {
                 class="absolute bottom-2 right-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/90 text-slate-800 text-[11px] font-bold hover:bg-white"
                 @click="retakePhoto"
               >
-                <NavIcon name="refresh-cw" :size="12" />Ambil ulang
+                <NavIcon name="refresh-cw" :size="12" />{{ t('tutor.sekolah.presensiTeacher.retake') }}
               </button>
             </div>
 
@@ -641,7 +647,7 @@ function gotoHistory() {
                   <div class="text-center">
                     <Spinner size="md" />
                     <p class="text-[11px] text-white/80 font-medium mt-2">
-                      Menyiapkan kamera…
+                      {{ t('tutor.sekolah.presensiTeacher.preparingCamera') }}
                     </p>
                   </div>
                 </div>
@@ -660,7 +666,7 @@ function gotoHistory() {
                       class="text-white/70 mx-auto mb-2"
                     />
                     <p class="text-[12px] text-white/90 font-bold">
-                      {{ cam.error.value ?? 'Kamera belum aktif' }}
+                      {{ cam.error.value ?? t('tutor.sekolah.presensiTeacher.camNotActive') }}
                     </p>
                   </div>
                 </div>
@@ -670,7 +676,7 @@ function gotoHistory() {
                   v-if="cam.isActive.value"
                   class="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 text-white text-[10px] font-bold"
                 >
-                  Posisikan wajah + latar sekolah
+                  {{ t('tutor.sekolah.presensiTeacher.framingHint') }}
                 </div>
               </div>
 
@@ -687,7 +693,7 @@ function gotoHistory() {
                 "
                 @click="startCamera"
               >
-                <NavIcon name="camera" :size="13" />Nyalakan Kamera
+                <NavIcon name="camera" :size="13" />{{ t('tutor.sekolah.presensiTeacher.enableCamera') }}
               </Button>
 
               <!-- Targeted guidance on failure -->
@@ -729,7 +735,7 @@ function gotoHistory() {
               class="text-[11px] font-bold text-slate-600 mb-2 flex items-center gap-1.5"
             >
               <NavIcon name="map-pin" :size="13" class="text-brand-cobalt" />
-              Lokasi GPS
+              {{ t('tutor.sekolah.presensiTeacher.gpsLocation') }}
             </p>
             <div
               class="flex items-center gap-3 rounded-xl border p-3"
@@ -759,7 +765,7 @@ function gotoHistory() {
               <div class="flex-1 min-w-0">
                 <template v-if="geo.position.value">
                   <p class="text-[12px] font-bold text-emerald-800">
-                    Lokasi terdeteksi
+                    {{ t('tutor.sekolah.presensiTeacher.locationDetected') }}
                   </p>
                   <p class="text-[11px] text-emerald-700 tabular-nums">
                     {{ geo.position.value.latitude.toFixed(6) }},
@@ -774,18 +780,18 @@ function gotoHistory() {
                 </template>
                 <template v-else-if="geo.isLocating.value">
                   <p class="text-[12px] font-bold text-slate-600">
-                    Mengambil lokasi…
+                    {{ t('tutor.sekolah.presensiTeacher.fetchingLocation') }}
                   </p>
                   <p class="text-[11px] text-slate-400">
-                    Server memverifikasi jarak ke sekolah (geofence).
+                    {{ t('tutor.sekolah.presensiTeacher.geofenceVerify') }}
                   </p>
                 </template>
                 <template v-else>
                   <p class="text-[12px] font-bold text-slate-600">
-                    Lokasi belum diambil
+                    {{ t('tutor.sekolah.presensiTeacher.locationNotYet') }}
                   </p>
                   <p class="text-[11px] text-slate-400">
-                    Server memverifikasi jarak ke sekolah (geofence).
+                    {{ t('tutor.sekolah.presensiTeacher.geofenceVerify') }}
                   </p>
                 </template>
               </div>
@@ -799,7 +805,7 @@ function gotoHistory() {
                 "
                 @click="captureLocation"
               >
-                {{ geo.position.value ? 'Perbarui' : 'Coba lagi' }}
+                {{ geo.position.value ? t('tutor.sekolah.presensiTeacher.refresh') : t('tutor.sekolah.presensiTeacher.retry') }}
               </Button>
             </div>
 
@@ -813,8 +819,7 @@ function gotoHistory() {
                 :size="11"
                 class="flex-shrink-0 mt-px"
               />
-              Lokasi di komputer bisa kurang akurat (berbasis Wi-Fi/IP). Jika
-              ditolak server, presensi via ponsel untuk GPS lebih presisi.
+              {{ t('tutor.sekolah.presensiTeacher.approximateHint') }}
             </p>
 
             <!-- Targeted guidance on failure -->
@@ -852,13 +857,13 @@ function gotoHistory() {
           <!-- ── Notes ── -->
           <div>
             <label class="text-[11px] font-bold text-slate-600 mb-1.5 block">
-              Catatan (opsional)
+              {{ t('tutor.sekolah.presensiTeacher.notesLabel') }}
             </label>
             <textarea
               v-model="notes"
               rows="2"
               maxlength="1000"
-              placeholder="Mis. ada keperluan dinas, dsb."
+              :placeholder="t('tutor.sekolah.presensiTeacher.notesPlaceholder')"
               class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30 resize-none"
             ></textarea>
           </div>
@@ -875,7 +880,7 @@ function gotoHistory() {
               :name="mode === 'check-out' ? 'log-out' : 'check-square'"
               :size="15"
             />
-            {{ primaryActionLabel }} Sekarang
+            {{ t('tutor.sekolah.presensiTeacher.actionNow', { action: primaryActionLabel }) }}
           </Button>
           <p
             v-if="blockedReason"
@@ -884,8 +889,7 @@ function gotoHistory() {
             {{ blockedReason }}
           </p>
           <p v-else class="text-[10.5px] text-slate-400 text-center -mt-1">
-            Foto diambil otomatis saat menekan tombol · waktu dicatat oleh
-            server.
+            {{ t('tutor.sekolah.presensiTeacher.autoPhotoHint') }}
           </p>
         </div>
       </section>
@@ -902,8 +906,8 @@ function gotoHistory() {
           <NavIcon name="clipboard-list" :size="16" />
         </div>
         <div class="flex-1 text-left">
-          <p class="text-[13px] font-bold text-slate-900">Riwayat Presensi</p>
-          <p class="text-[11px] text-slate-500">Lihat catatan presensi Anda</p>
+          <p class="text-[13px] font-bold text-slate-900">{{ t('tutor.sekolah.presensiTeacher.historyTitle') }}</p>
+          <p class="text-[11px] text-slate-500">{{ t('tutor.sekolah.presensiTeacher.historySubtitle') }}</p>
         </div>
         <NavIcon name="arrow-right" :size="16" class="text-slate-300" />
       </button>

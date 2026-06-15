@@ -28,6 +28,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { RecommendationService } from '@/services/recommendations.service';
 import { StudentService } from '@/services/students.service';
@@ -51,6 +52,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
+const { t } = useI18n();
 
 const classId = computed(() => String(route.params.classId ?? ''));
 const studentId = computed(() => String(route.params.studentId ?? ''));
@@ -159,13 +161,13 @@ const counts = computed(() => {
   };
 });
 
-const statusOptions: { key: StatusChip; label: string }[] = [
-  { key: 'all', label: 'Semua' },
+const statusOptions = computed<{ key: StatusChip; label: string }[]>(() => [
+  { key: 'all', label: t('tutor.sekolah.recommendationResult.filterAll') },
   { key: 'pending', label: STATUS_LABELS.pending },
   { key: 'in_progress', label: STATUS_LABELS.in_progress },
   { key: 'completed', label: STATUS_LABELS.completed },
   { key: 'dismissed', label: STATUS_LABELS.dismissed },
-];
+]);
 
 const listState = computed<AsyncState<LearningRecommendation[]>>(() => {
   if (isLoading.value && items.value.length === 0) return { status: 'loading' };
@@ -177,18 +179,24 @@ const listState = computed<AsyncState<LearningRecommendation[]>>(() => {
 // ── Header copy ──
 const headerKicker = computed(() => {
   const className = cls.value?.name ?? '—';
-  return `Kelas ${className} · ${isHomeroomMode.value ? 'Wali Kelas' : 'Mengajar'}`;
+  return t('tutor.sekolah.recommendationResult.headerKicker', {
+    className,
+    mode: isHomeroomMode.value
+      ? t('tutor.sekolah.recommendationResult.modeHomeroom')
+      : t('tutor.sekolah.recommendationResult.modeTeaching'),
+  });
 });
 
-const headerTitle = computed(() => student.value?.name ?? 'Rekomendasi Siswa');
+const headerTitle = computed(() => student.value?.name ?? t('tutor.sekolah.recommendationResult.titleFallback'));
 
 const headerMeta = computed(() => {
   const parts: string[] = [];
   if (student.value?.student_number) {
-    parts.push(`NIS ${student.value.student_number}`);
+    parts.push(t('tutor.sekolah.recommendationResult.nisLabel', { nis: student.value.student_number }));
   }
-  parts.push(`${counts.value.total} rekomendasi`);
-  if (counts.value.pending > 0) parts.push(`${counts.value.pending} pending`);
+  parts.push(t('tutor.sekolah.recommendationResult.totalRecs', { count: counts.value.total }));
+  if (counts.value.pending > 0)
+    parts.push(t('tutor.sekolah.recommendationResult.pendingCount', { count: counts.value.pending }));
   return parts.join(' · ');
 });
 
@@ -196,7 +204,7 @@ const headerMeta = computed(() => {
 async function toggleStatus(rec: LearningRecommendation) {
   if (!teacherId.value) {
     toast.value = {
-      message: 'Profil guru belum termuat — coba muat ulang halaman.',
+      message: t('tutor.sekolah.recommendationResult.teacherProfileMissing'),
       tone: 'error',
     };
     return;
@@ -218,8 +226,8 @@ async function toggleStatus(rec: LearningRecommendation) {
     toast.value = {
       message:
         next === 'completed'
-          ? `"${rec.title}" ditandai diterapkan.`
-          : `"${rec.title}" dikembalikan ke pending.`,
+          ? t('tutor.sekolah.recommendationResult.markedAppliedToast', { title: rec.title })
+          : t('tutor.sekolah.recommendationResult.revertedPendingToast', { title: rec.title }),
       tone: 'success',
     };
   } catch (e) {
@@ -259,7 +267,7 @@ function onShareSucceeded(updated: LearningRecommendation) {
   if (idx >= 0) {
     items.value[idx] = { ...items.value[idx], ...updated };
   }
-  toast.value = { message: 'Rekomendasi terkirim ke wali.', tone: 'success' };
+  toast.value = { message: t('tutor.sekolah.recommendationResult.sharedToast'), tone: 'success' };
 }
 
 function onHistoryChanged() {
@@ -297,7 +305,7 @@ function goBack() {
         @click="goBack"
       >
         <NavIcon name="chevron-left" :size="14" />
-        Daftar Siswa
+        {{ t('tutor.sekolah.recommendationResult.backToStudents') }}
       </button>
     </div>
 
@@ -320,13 +328,13 @@ function goBack() {
       />
       <div class="flex-1 min-w-0">
         <p class="text-[14px] font-black text-slate-900 truncate">
-          {{ student?.name || 'Memuat siswa…' }}
+          {{ student?.name || t('tutor.sekolah.recommendationResult.loadingStudent') }}
         </p>
         <p class="text-[11px] text-slate-500 mt-0.5">
           <template v-if="student?.student_number">
-            NIS {{ student.student_number }}
+            {{ t('tutor.sekolah.recommendationResult.nisLabel', { nis: student.student_number }) }}
           </template>
-          <template v-else>Tanpa NIS</template>
+          <template v-else>{{ t('tutor.sekolah.recommendationResult.noNis') }}</template>
           <template v-if="cls"> · {{ cls.name }}</template>
         </p>
         <div class="flex items-center gap-1 flex-wrap mt-2">
@@ -334,25 +342,25 @@ function goBack() {
             v-if="counts.pending > 0"
             class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 uppercase tracking-wider"
           >
-            {{ counts.pending }} Pending
+            {{ t('tutor.sekolah.recommendationResult.pillPending', { count: counts.pending }) }}
           </span>
           <span
             v-if="counts.in_progress > 0"
             class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-brand-cobalt/15 text-brand-cobalt uppercase tracking-wider"
           >
-            {{ counts.in_progress }} Proses
+            {{ t('tutor.sekolah.recommendationResult.pillInProgress', { count: counts.in_progress }) }}
           </span>
           <span
             v-if="counts.completed > 0"
             class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase tracking-wider"
           >
-            {{ counts.completed }} Selesai
+            {{ t('tutor.sekolah.recommendationResult.pillCompleted', { count: counts.completed }) }}
           </span>
           <span
             v-if="counts.read_count > 0"
             class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 uppercase tracking-wider"
           >
-            {{ counts.read_count }} Dibaca Wali
+            {{ t('tutor.sekolah.recommendationResult.pillReadByParent', { count: counts.read_count }) }}
           </span>
         </div>
       </div>
@@ -361,7 +369,7 @@ function goBack() {
         class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[12px] font-black bg-violet-100 text-violet-700 flex-shrink-0"
       >
         {{ counts.total }}
-        <span class="text-[9px] uppercase tracking-wider opacity-80">REC</span>
+        <span class="text-[9px] uppercase tracking-wider opacity-80">{{ t('tutor.sekolah.recommendationResult.recBadge') }}</span>
       </span>
     </section>
 
@@ -399,10 +407,10 @@ function goBack() {
       :state="listState"
       :empty-title="
         statusFilter === 'all'
-          ? 'Belum ada rekomendasi'
-          : `Tidak ada rekomendasi ${STATUS_LABELS[statusFilter as RecStatus] ?? ''}`
+          ? t('tutor.sekolah.recommendationResult.emptyAll')
+          : t('tutor.sekolah.recommendationResult.emptyFiltered', { status: STATUS_LABELS[statusFilter as RecStatus] ?? '' })
       "
-      empty-description="Generate dari class hub atau ganti filter status di atas."
+      :empty-description="t('tutor.sekolah.recommendationResult.emptyDescription')"
       empty-icon="sparkles"
       @retry="loadRecs"
     >
