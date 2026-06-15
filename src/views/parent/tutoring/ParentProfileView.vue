@@ -9,11 +9,13 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useChildPicker } from '@/composables/useChildPicker';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 
+const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
 const { children } = useChildPicker();
@@ -64,9 +66,9 @@ function goPwd() {
 <template>
   <div class="space-y-4 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · WALI"
-      title="Profil wali"
-      subtitle="Identitas, anak, dan keamanan akun"
+      :kicker="t('wali.bimbel.profile.kicker')"
+      :title="t('wali.bimbel.profile.title')"
+      :subtitle="t('wali.bimbel.profile.subtitle')"
       :stats="[]"
     >
       <template #actions>
@@ -75,7 +77,7 @@ function goPwd() {
           class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="save"
         >
-          Simpan perubahan
+          {{ t('wali.bimbel.profile.save_changes') }}
         </button>
       </template>
     </ParentBerandaHero>
@@ -89,12 +91,12 @@ function goPwd() {
         <p class="mt-2 text-[14px] font-bold text-bimbel-text-hi">{{ user?.name ?? '—' }}</p>
         <p class="text-[12px] text-bimbel-text-mid">{{ user?.email ?? '—' }}</p>
         <button type="button" class="mt-2.5 text-[12px] font-bold text-bimbel-hero hover:underline">
-          Ubah foto
+          {{ t('wali.bimbel.profile.change_photo') }}
         </button>
         <div class="my-3.5 border-t border-bimbel-border-soft" />
-        <p class="text-left text-[12px] font-bold uppercase tracking-wider text-bimbel-text-lo">Anak saya</p>
+        <p class="text-left text-[12px] font-bold uppercase tracking-wider text-bimbel-text-lo">{{ t('wali.bimbel.profile.my_children_heading') }}</p>
         <p v-if="!children.length" class="mt-2 text-left text-[13px] text-bimbel-text-mid">
-          Belum ada anak terdaftar.
+          {{ t('wali.bimbel.profile.no_children') }}
         </p>
         <div
           v-for="(c, i) in children"
@@ -109,7 +111,7 @@ function goPwd() {
           </span>
           <div class="min-w-0">
             <p class="text-[13px] font-bold text-bimbel-text-hi truncate">{{ c.name }}</p>
-            <p class="text-[12px] text-bimbel-text-mid truncate">{{ c.class_name || 'Kelas —' }}</p>
+            <p class="text-[12px] text-bimbel-text-mid truncate">{{ c.class_name || t('wali.bimbel.profile.default_class_name') }}</p>
           </div>
         </div>
       </aside>
@@ -117,9 +119,9 @@ function goPwd() {
       <!-- RIGHT: Identitas + Keamanan -->
       <div class="lg:col-span-3 space-y-3.5">
         <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <h4 class="mb-2 text-[14px] font-bold text-bimbel-text-hi">Identitas</h4>
+          <h4 class="mb-2 text-[14px] font-bold text-bimbel-text-hi">{{ t('wali.bimbel.profile.identity_heading') }}</h4>
           <label class="grid items-center gap-3 border-b border-bimbel-border-soft py-2" style="grid-template-columns: 110px 1fr;">
-            <span class="text-[13px] text-bimbel-text-mid">Nama lengkap</span>
+            <span class="text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.profile.name_label') }}</span>
             <input
               v-model="form.name"
               type="text"
@@ -127,7 +129,7 @@ function goPwd() {
             />
           </label>
           <label class="grid items-center gap-3 border-b border-bimbel-border-soft py-2" style="grid-template-columns: 110px 1fr;">
-            <span class="text-[13px] text-bimbel-text-mid">Email</span>
+            <span class="text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.profile.email_label') }}</span>
             <input
               :value="user?.email ?? ''"
               type="email"
@@ -136,39 +138,39 @@ function goPwd() {
             />
           </label>
           <label class="grid items-center gap-3 border-b border-bimbel-border-soft py-2" style="grid-template-columns: 110px 1fr;">
-            <span class="text-[13px] text-bimbel-text-mid">No. telepon</span>
+            <span class="text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.profile.phone_label') }}</span>
             <input
               v-model="form.phone"
               type="tel"
-              placeholder="08xx-xxxx-xxxx"
+              :placeholder="t('wali.bimbel.profile.phone_placeholder')"
               class="rounded-lg bg-bimbel-bg px-2.5 py-1.5 text-[13px] text-bimbel-text-hi focus:outline-none"
             />
           </label>
           <label class="grid items-start gap-3 py-2" style="grid-template-columns: 110px 1fr;">
-            <span class="pt-1 text-[13px] text-bimbel-text-mid">Alamat</span>
+            <span class="pt-1 text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.profile.address_label') }}</span>
             <textarea
               v-model="form.address"
               rows="2"
-              placeholder="Alamat lengkap"
+              :placeholder="t('wali.bimbel.profile.address_placeholder')"
               class="min-h-12 rounded-lg bg-bimbel-bg px-2.5 py-1.5 text-[13px] text-bimbel-text-hi focus:outline-none"
             />
           </label>
         </section>
 
         <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <h4 class="mb-2 text-[14px] font-bold text-bimbel-text-hi">Keamanan</h4>
+          <h4 class="mb-2 text-[14px] font-bold text-bimbel-text-hi">{{ t('wali.bimbel.profile.security_heading') }}</h4>
           <div class="grid items-center gap-3 border-b border-bimbel-border-soft py-2" style="grid-template-columns: 110px 1fr auto;">
-            <span class="text-[13px] text-bimbel-text-mid">Kata sandi</span>
+            <span class="text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.profile.password_label') }}</span>
             <span class="text-[13px] text-bimbel-text-hi tracking-widest">••••••••</span>
             <button type="button" class="text-[13px] font-bold text-bimbel-hero hover:underline" @click="goPwd">
-              Ubah
+              {{ t('wali.bimbel.profile.change_password') }}
             </button>
           </div>
           <div class="grid items-center gap-3 py-2" style="grid-template-columns: 110px 1fr auto;">
-            <span class="text-[13px] text-bimbel-text-mid">Sesi aktif</span>
-            <span class="text-[13px] text-bimbel-text-mid">2 perangkat</span>
+            <span class="text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.profile.sessions_label') }}</span>
+            <span class="text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.profile.sessions_count', { count: 2 }) }}</span>
             <button type="button" class="text-[13px] font-bold text-bimbel-hero hover:underline">
-              Kelola
+              {{ t('wali.bimbel.profile.manage_sessions') }}
             </button>
           </div>
         </section>

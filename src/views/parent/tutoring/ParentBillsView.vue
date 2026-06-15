@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import { formatRupiah } from '@/lib/format';
@@ -16,6 +17,7 @@ import type { TutoringBill } from '@/types/tutoring';
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const { activeChildId } = useChildPicker();
@@ -78,9 +80,9 @@ const urgentCount = computed(() =>
 
 // ── Tabs ────────────────────────────────────────────────────────
 const tabs = computed<{ id: TabKey; label: string }[]>(() => [
-  { id: 'unpaid', label: `Belum lunas (${unpaidCount.value})` },
-  { id: 'paid', label: `Sudah lunas (${paidCount.value})` },
-  { id: 'all', label: 'Semua' },
+  { id: 'unpaid', label: t('wali.bimbel.bills.tab_unpaid', { count: unpaidCount.value }) },
+  { id: 'paid', label: t('wali.bimbel.bills.tab_paid', { count: paidCount.value }) },
+  { id: 'all', label: t('wali.bimbel.bills.tab_all') },
 ]);
 
 const visibleBills = computed(() => {
@@ -103,24 +105,24 @@ function pillClass(b: TutoringBill): string {
 }
 
 function pillLabel(b: TutoringBill): string {
-  if (isPaid(b)) return 'Lunas';
-  if (isPending(b)) return 'Pending konfirmasi';
+  if (isPaid(b)) return t('wali.bimbel.bills.paid_pill');
+  if (isPending(b)) return t('wali.bimbel.bills.due_pending');
   if (isUnpaid(b)) {
     const days = daysUntil(b.due_date);
-    if (days != null && days < 0) return `Telat ${Math.abs(days)} hari`;
-    if (days != null && days <= 3) return `Jatuh tempo ${days} hari`;
-    return 'Aktif';
+    if (days != null && days < 0) return t('wali.bimbel.bills.late_pill', { days: Math.abs(days) });
+    if (days != null && days <= 3) return t('wali.bimbel.bills.due_soon_pill', { days });
+    return t('wali.bimbel.bills.active_pill');
   }
   return b.status ?? '—';
 }
 
 function dueLine(b: TutoringBill): string {
-  if (isPaid(b)) return 'Bukti pembayaran tersedia';
-  if (!b.due_date) return 'Belum ada tenggat';
+  if (isPaid(b)) return t('wali.bimbel.bills.paid_evidence');
+  if (!b.due_date) return t('wali.bimbel.bills.no_due_date');
   const d = new Date(b.due_date);
-  if (Number.isNaN(d.valueOf())) return 'Belum ada tenggat';
+  if (Number.isNaN(d.valueOf())) return t('wali.bimbel.bills.no_due_date');
   const fmt = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-  return `Tenggat ${fmt}`;
+  return t('wali.bimbel.bills.due_label', { date: fmt });
 }
 
 function pay(b: TutoringBill) {
@@ -135,9 +137,9 @@ function payFirst() {
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · WALI"
-      title="Tagihan"
-      subtitle="SPP, paket prabayar, dan biaya lain"
+      :kicker="t('wali.bimbel.bills.kicker')"
+      :title="t('wali.bimbel.bills.title')"
+      :subtitle="t('wali.bimbel.bills.subtitle')"
       :stats="[]"
     >
       <template #actions>
@@ -151,10 +153,12 @@ function payFirst() {
       class="rounded-xl bg-bimbel-red-dim border border-red-300 p-3.5 flex justify-between items-center"
     >
       <div>
-        <p class="text-[12px] text-red-800 tracking-wider font-bold">TOTAL BELUM DIBAYAR</p>
+        <p class="text-[12px] text-red-800 tracking-wider font-bold">{{ t('wali.bimbel.bills.outstanding_label') }}</p>
         <p class="text-[22px] font-extrabold text-red-900 leading-tight mt-0.5">{{ totalUnpaidFmt }}</p>
         <p class="text-[12px] text-red-800">
-          {{ unpaidCount }} tagihan{{ urgentCount ? ` · ${urgentCount} jatuh tempo dalam 3 hari` : '' }}
+          {{ urgentCount
+            ? t('wali.bimbel.bills.outstanding_caption_extra', { count: unpaidCount, urgent: urgentCount })
+            : t('wali.bimbel.bills.outstanding_caption_simple', { count: unpaidCount }) }}
         </p>
       </div>
       <button
@@ -162,7 +166,7 @@ function payFirst() {
         class="bg-red-900 text-white text-[13px] font-bold px-3 py-2 rounded-lg flex-shrink-0"
         @click="payFirst"
       >
-        Bayar semua
+        {{ t('wali.bimbel.bills.pay_all_button') }}
       </button>
     </div>
 
@@ -184,7 +188,7 @@ function payFirst() {
       </button>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.bills.loading') }}</div>
 
     <!-- Bill cards -->
     <div v-else-if="visibleBills.length" class="space-y-2.5">
@@ -197,7 +201,7 @@ function payFirst() {
         <div class="flex justify-between items-start gap-3">
           <div class="min-w-0 flex-1">
             <p class="text-[14px] font-bold text-bimbel-text-hi">
-              {{ b.source_label ?? b.source_type ?? 'Tagihan' }}
+              {{ b.source_label ?? b.source_type ?? t('wali.bimbel.bills.default_source') }}
             </p>
             <p class="text-[12px] text-bimbel-text-mid mt-0.5">
               {{ b.month ?? '—' }}
@@ -219,20 +223,20 @@ function payFirst() {
             class="bg-bimbel-hero text-white text-[13px] font-bold px-3.5 py-2 rounded-lg"
             @click="pay(b)"
           >
-            Bayar
+            {{ t('wali.bimbel.bills.pay_button') }}
           </button>
           <button
             v-else
             type="button"
             class="bg-bimbel-bg text-bimbel-text-mid text-[13px] px-3.5 py-2 rounded-lg"
           >
-            Unduh bukti
+            {{ t('wali.bimbel.bills.view_evidence_button') }}
           </button>
         </div>
       </div>
     </div>
     <p v-else class="text-center text-[14px] text-bimbel-text-mid py-8">
-      Belum ada tagihan di kategori ini.
+      {{ t('wali.bimbel.bills.empty_filter') }}
     </p>
   </div>
 </template>

@@ -11,12 +11,14 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type { TutoringGroupAnnouncement } from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 
+const { t } = useI18n();
 const { children, activeChildId } = useChildPicker();
 
 // Row carries the child it belongs to so the chip filter + subtitle
@@ -86,7 +88,7 @@ onMounted(load);
 watch(() => children.value.map((c) => c.student_id).join(','), load);
 
 const childChips = computed(() => {
-  const out: { id: string; label: string }[] = [{ id: 'all', label: 'Semua anak' }];
+  const out: { id: string; label: string }[] = [{ id: 'all', label: t('wali.bimbel.announcements.child_filter_all') }];
   for (const c of children.value) {
     out.push({ id: c.student_id, label: c.name.split(' ')[0] });
   }
@@ -101,7 +103,7 @@ const groupChips = computed(() => {
     ? rows.value
     : rows.value.filter((r) => r.child_id === childFilter.value);
   const seen = new Set<string>();
-  const out: { id: string; label: string }[] = [{ id: 'all', label: 'Semua kelompok' }];
+  const out: { id: string; label: string }[] = [{ id: 'all', label: t('wali.bimbel.announcements.group_filter_all') }];
   for (const r of pool) {
     const id = r.a.tutoring_group_id;
     if (id && !seen.has(id)) {
@@ -135,11 +137,11 @@ function relTime(iso?: string | null): string {
   const d = new Date(iso);
   if (Number.isNaN(d.valueOf())) return '';
   const diffMin = (Date.now() - d.valueOf()) / 60_000;
-  if (diffMin < 60) return `${Math.max(1, Math.floor(diffMin))} menit lalu`;
+  if (diffMin < 60) return t('wali.bimbel.announcements.minute_ago', { minutes: Math.max(1, Math.floor(diffMin)) });
   const h = Math.floor(diffMin / 60);
-  if (h < 24) return `${h} jam lalu`;
+  if (h < 24) return t('wali.bimbel.announcements.hour_ago', { hours: h });
   const days = Math.floor(h / 24);
-  if (days < 7) return `${days} hari lalu`;
+  if (days < 7) return t('wali.bimbel.announcements.day_ago', { days });
   return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
 }
 
@@ -150,8 +152,11 @@ function snippet(body?: string | null, n = 150): string {
 }
 
 const subtitle = computed(() => {
-  const parts: string[] = [`${newCount.value} baru`, `${rows.value.length} total`];
-  if (children.value.length > 1) parts.push(`${children.value.length} anak`);
+  const parts: string[] = [
+    t('wali.bimbel.announcements.subtitle_new_count', { count: newCount.value }),
+    t('wali.bimbel.announcements.subtitle_total_count', { count: rows.value.length }),
+  ];
+  if (children.value.length > 1) parts.push(t('wali.bimbel.announcements.subtitle_child_count', { count: children.value.length }));
   return parts.join(' · ');
 });
 </script>
@@ -159,8 +164,8 @@ const subtitle = computed(() => {
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · PENGUMUMAN"
-      title="Pengumuman semua kelompok"
+      :kicker="t('wali.bimbel.announcements.kicker')"
+      :title="t('wali.bimbel.announcements.title')"
       :subtitle="subtitle"
       :stats="[]"
     />
@@ -219,7 +224,7 @@ const subtitle = computed(() => {
           <span
             v-if="isNew(r.a)"
             class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-red-900 text-white flex-shrink-0"
-          >BARU</span>
+          >{{ t('wali.bimbel.announcements.badge_new') }}</span>
           <span
             v-else
             class="text-[12px] text-bimbel-text-lo flex-shrink-0"
@@ -228,9 +233,9 @@ const subtitle = computed(() => {
         <p class="text-[12px] text-bimbel-text-mid leading-relaxed mt-1">{{ snippet(r.a.body) }}</p>
       </div>
       <p v-if="!visible.length && !loading" class="text-center text-[13px] text-bimbel-text-mid py-6">
-        Belum ada pengumuman di kategori ini.
+        {{ t('wali.bimbel.announcements.empty_filter') }}
       </p>
-      <p v-if="loading" class="text-center text-[13px] text-bimbel-text-mid py-6">Memuat…</p>
+      <p v-if="loading" class="text-center text-[13px] text-bimbel-text-mid py-6">{{ t('wali.bimbel.announcements.loading') }}</p>
     </div>
   </div>
 </template>

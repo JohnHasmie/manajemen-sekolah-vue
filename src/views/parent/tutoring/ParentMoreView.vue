@@ -7,11 +7,13 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useChildPicker } from '@/composables/useChildPicker';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const router = useRouter();
 const { children, activeChildId, setActive } = useChildPicker();
 
@@ -50,23 +52,23 @@ interface Tile {
   route: string;
 }
 
-const academic: Tile[] = [
-  { label: 'Perkembangan', sub: 'Nilai & tren', icon: 'chart-bar', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero', route: 'parent.tutoring.progress' },
-  { label: 'Peringkat', sub: 'Per kelompok', icon: 'star', iconCls: 'bg-bimbel-amber-dim text-amber-700', route: 'parent.tutoring.leaderboard' },
-  { label: 'Aktivitas', sub: 'Tugas & ulangan', icon: 'book', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero', route: 'parent.tutoring.activities' },
-];
+const academic = computed<Tile[]>(() => [
+  { label: t('wali.bimbel.more.tile_progress_label'), sub: t('wali.bimbel.more.tile_progress_sub'), icon: 'chart-bar', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero', route: 'parent.tutoring.progress' },
+  { label: t('wali.bimbel.more.tile_leaderboard_label'), sub: t('wali.bimbel.more.tile_leaderboard_sub'), icon: 'star', iconCls: 'bg-bimbel-amber-dim text-amber-700', route: 'parent.tutoring.leaderboard' },
+  { label: t('wali.bimbel.more.tile_activities_label'), sub: t('wali.bimbel.more.tile_activities_sub'), icon: 'book', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero', route: 'parent.tutoring.activities' },
+]);
 
-const funnel: Tile[] = [
-  { label: 'Voucher', sub: 'Promo & kode', icon: 'discount', iconCls: 'bg-bimbel-red-dim text-red-700', route: 'parent.tutoring.vouchers' },
-  { label: 'Daftar anak baru', sub: 'Ke bimbel ini', icon: 'user-plus', iconCls: 'bg-bimbel-green-dim text-green-700', route: 'parent.tutoring.register-lead' },
-  { label: 'Daftar program', sub: 'Untuk anak terdaftar', icon: 'package', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero', route: 'parent.tutoring.enroll-new' },
-];
+const funnel = computed<Tile[]>(() => [
+  { label: t('wali.bimbel.more.tile_vouchers_label'), sub: t('wali.bimbel.more.tile_vouchers_sub'), icon: 'discount', iconCls: 'bg-bimbel-red-dim text-red-700', route: 'parent.tutoring.vouchers' },
+  { label: t('wali.bimbel.more.tile_register_lead_label'), sub: t('wali.bimbel.more.tile_register_lead_sub'), icon: 'user-plus', iconCls: 'bg-bimbel-green-dim text-green-700', route: 'parent.tutoring.register-lead' },
+  { label: t('wali.bimbel.more.tile_enroll_program_label'), sub: t('wali.bimbel.more.tile_enroll_program_sub'), icon: 'package', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero', route: 'parent.tutoring.enroll-new' },
+]);
 
-const account: Tile[] = [
-  { label: 'Notifikasi', sub: 'Pengingat & info', icon: 'bell', route: 'parent.tutoring.notifications' },
-  { label: 'Profil', sub: 'Identitas & anak', icon: 'user', route: 'parent.tutoring.profile' },
-  { label: 'Tampilan', sub: 'Otomatis', icon: 'sun', route: 'parent.tutoring.appearance' },
-];
+const account = computed<Tile[]>(() => [
+  { label: t('wali.bimbel.more.tile_notifications_label'), sub: t('wali.bimbel.more.tile_notifications_sub'), icon: 'bell', route: 'parent.tutoring.notifications' },
+  { label: t('wali.bimbel.more.tile_profile_label'), sub: t('wali.bimbel.more.tile_profile_sub'), icon: 'user', route: 'parent.tutoring.profile' },
+  { label: t('wali.bimbel.more.tile_appearance_label'), sub: t('wali.bimbel.more.tile_appearance_sub'), icon: 'sun', route: 'parent.tutoring.appearance' },
+]);
 
 function go(name: string) {
   const params = childId.value ? { studentId: childId.value } : undefined;
@@ -77,16 +79,16 @@ function go(name: string) {
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · LAINNYA"
-      title="Lainnya"
-      subtitle="Voucher, profil, notifikasi, & pengaturan"
+      :kicker="t('wali.bimbel.more.kicker')"
+      :title="t('wali.bimbel.more.title')"
+      :subtitle="t('wali.bimbel.more.subtitle')"
       :stats="[]"
     />
 
     <!-- ANAK SAYA — quick switch row, mirrors mobile parent_more_hub -->
     <template v-if="children.length > 0">
       <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
-        ANAK SAYA
+        {{ t('wali.bimbel.more.my_children_heading') }}
       </p>
       <div class="grid gap-2" :class="children.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'">
         <button
@@ -103,71 +105,71 @@ function go(name: string) {
           >{{ initials(c.name) }}</span>
           <div class="min-w-0 flex-1">
             <p class="text-[14px] font-bold text-bimbel-text-hi truncate">{{ c.name }}</p>
-            <p class="text-[12px] text-bimbel-text-mid truncate">{{ c.class_name || 'Kelas —' }}</p>
+            <p class="text-[12px] text-bimbel-text-mid truncate">{{ c.class_name || t('wali.bimbel.more.default_class_name') }}</p>
           </div>
           <span
             v-if="c.student_id === activeChildId"
             class="text-[10px] font-bold uppercase tracking-wider text-bimbel-hero flex-shrink-0"
-          >Aktif</span>
+          >{{ t('wali.bimbel.more.active_badge') }}</span>
           <NavIcon v-else name="chevron-right" :size="14" class="text-bimbel-text-mid flex-shrink-0" />
         </button>
       </div>
     </template>
 
     <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
-      AKADEMIK ANAK
+      {{ t('wali.bimbel.more.academic_heading') }}
     </p>
     <div class="grid grid-cols-3 gap-2">
       <button
-        v-for="t in academic"
-        :key="t.label"
+        v-for="tile in academic"
+        :key="tile.label"
         type="button"
         class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-3.5 text-center"
-        @click="go(t.route)"
+        @click="go(tile.route)"
       >
-        <div class="w-[38px] h-[38px] rounded-lg mx-auto mb-1.5 grid place-items-center" :class="t.iconCls">
-          <NavIcon :name="t.icon" :size="18" />
+        <div class="w-[38px] h-[38px] rounded-lg mx-auto mb-1.5 grid place-items-center" :class="tile.iconCls">
+          <NavIcon :name="tile.icon" :size="18" />
         </div>
-        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ t.label }}</p>
-        <p class="text-[10px] text-bimbel-text-mid mt-0.5">{{ t.sub }}</p>
+        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ tile.label }}</p>
+        <p class="text-[10px] text-bimbel-text-mid mt-0.5">{{ tile.sub }}</p>
       </button>
     </div>
 
     <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
-      DAFTAR &amp; PROMO
+      {{ t('wali.bimbel.more.funnel_heading') }}
     </p>
     <div class="grid grid-cols-3 gap-2">
       <button
-        v-for="t in funnel"
-        :key="t.label"
+        v-for="tile in funnel"
+        :key="tile.label"
         type="button"
         class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-3.5 text-center"
-        @click="go(t.route)"
+        @click="go(tile.route)"
       >
-        <div class="w-[38px] h-[38px] rounded-lg mx-auto mb-1.5 grid place-items-center" :class="t.iconCls">
-          <NavIcon :name="t.icon" :size="18" />
+        <div class="w-[38px] h-[38px] rounded-lg mx-auto mb-1.5 grid place-items-center" :class="tile.iconCls">
+          <NavIcon :name="tile.icon" :size="18" />
         </div>
-        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ t.label }}</p>
-        <p class="text-[10px] text-bimbel-text-mid mt-0.5">{{ t.sub }}</p>
+        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ tile.label }}</p>
+        <p class="text-[10px] text-bimbel-text-mid mt-0.5">{{ tile.sub }}</p>
       </button>
     </div>
 
     <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
-      AKUN
+      {{ t('wali.bimbel.more.account_heading') }}
     </p>
     <div class="grid grid-cols-3 gap-2">
       <button
-        v-for="t in account"
-        :key="t.label"
+        v-for="tile in account"
+        :key="tile.label"
         type="button"
         class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-3.5 text-center"
-        @click="go(t.route)"
+        @click="go(tile.route)"
       >
         <div class="w-[38px] h-[38px] rounded-lg mx-auto mb-1.5 grid place-items-center bg-bimbel-bg text-bimbel-text-hi">
-          <NavIcon :name="t.icon" :size="18" />
+          <NavIcon :name="tile.icon" :size="18" />
         </div>
-        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ t.label }}</p>
-        <p class="text-[10px] text-bimbel-text-mid mt-0.5">{{ t.sub }}</p>
+        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ tile.label }}</p>
+        <p class="text-[10px] text-bimbel-text-mid mt-0.5">{{ tile.sub }}</p>
       </button>
     </div>
   </div>

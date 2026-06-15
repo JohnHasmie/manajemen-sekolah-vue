@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type {
@@ -18,6 +19,7 @@ import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.v
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const route = useRoute();
 const { activeChildId, activeChild } = useChildPicker();
 
@@ -110,7 +112,7 @@ const tugas = computed<TugasRow[]>(() => {
       pillCls: isDone
         ? 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-bimbel-green-dim text-green-700'
         : 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-bimbel-amber-dim text-amber-700',
-      pillLabel: isDone ? 'Selesai' : 'Belum',
+      pillLabel: isDone ? t('wali.bimbel.class_detail.task_done_pill') : t('wali.bimbel.class_detail.task_pending_pill'),
     });
   }
   return out;
@@ -142,10 +144,10 @@ const siswa = computed<SiswaRow[]>(() => {
 });
 
 const tabs = computed(() => [
-  { id: 'aliran' as TabId, label: 'Aliran' },
-  { id: 'tugas' as TabId, label: 'Tugas' },
-  { id: 'nilai' as TabId, label: 'Nilai' },
-  { id: 'siswa' as TabId, label: `Siswa (${siswa.value.length})` },
+  { id: 'aliran' as TabId, label: t('wali.bimbel.class_detail.tab_stream') },
+  { id: 'tugas' as TabId, label: t('wali.bimbel.class_detail.tab_tasks') },
+  { id: 'nilai' as TabId, label: t('wali.bimbel.class_detail.tab_grades') },
+  { id: 'siswa' as TabId, label: t('wali.bimbel.class_detail.tab_students', { count: siswa.value.length }) },
 ]);
 
 // ── Aliran icon mapping ──────────────────────────────────────────
@@ -189,12 +191,12 @@ const heroSubtitle = computed(() => {
   const sched = (m as { schedule_label?: string | null } | null)?.schedule_label ?? '';
   const count = (m as { students_count?: number | null } | null)?.students_count
     ?? m?.attendance?.total_recorded ?? 0;
-  return `${tutor}${sched ? ` · ${sched}` : ''} · ${count} siswa`;
+  return `${tutor}${sched ? ` · ${sched}` : ''} · ${t('wali.bimbel.class_detail.students_count', { count })}`;
 });
 
 const heroTitle = computed(() => {
   const m = meta.value;
-  const subj = (m as { subject?: string | null } | null)?.subject ?? m?.program_name ?? 'Kelas';
+  const subj = (m as { subject?: string | null } | null)?.subject ?? m?.program_name ?? t('wali.bimbel.class_detail.default_program');
   const grp = m?.group_name ?? '';
   return `${subj}${grp ? ` · ${grp}` : ''}`;
 });
@@ -203,7 +205,7 @@ const heroTitle = computed(() => {
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · KELAS"
+      :kicker="t('wali.bimbel.class_detail.kicker')"
       :title="heroTitle"
       :subtitle="heroSubtitle"
       :stats="[]"
@@ -258,9 +260,9 @@ const heroTitle = computed(() => {
         <span class="text-[12px] text-bimbel-text-lo flex-shrink-0">{{ r.time_label }}</span>
       </div>
       <p v-if="!aliran.length && !loading" class="text-center text-[13px] text-bimbel-text-mid py-6">
-        Belum ada aktivitas di kelas ini.
+        {{ t('wali.bimbel.class_detail.empty_stream') }}
       </p>
-      <p v-if="loading" class="text-center text-[13px] text-bimbel-text-mid py-6">Memuat…</p>
+      <p v-if="loading" class="text-center text-[13px] text-bimbel-text-mid py-6">{{ t('wali.bimbel.class_detail.loading') }}</p>
     </div>
 
     <!-- Tugas tab -->
@@ -283,7 +285,7 @@ const heroTitle = computed(() => {
         <span :class="r.pillCls">{{ r.pillLabel }}</span>
       </div>
       <p v-if="!tugas.length" class="text-center text-[13px] text-bimbel-text-mid py-6">
-        Belum ada tugas.
+        {{ t('wali.bimbel.class_detail.empty_tasks') }}
       </p>
     </div>
 
@@ -307,7 +309,7 @@ const heroTitle = computed(() => {
         <span class="text-[16px] font-extrabold text-bimbel-text-hi">{{ r.score }}</span>
       </div>
       <p v-if="!nilai.length" class="text-center text-[13px] text-bimbel-text-mid py-6">
-        Belum ada nilai.
+        {{ t('wali.bimbel.class_detail.empty_grades') }}
       </p>
     </div>
 
@@ -327,12 +329,12 @@ const heroTitle = computed(() => {
         <div class="flex-1 min-w-0">
           <p class="text-[13px] font-bold text-bimbel-text-hi">{{ s.name }}</p>
           <p class="text-[12px] text-bimbel-text-mid">
-            Kehadiran {{ s.attendance_rate ?? 0 }}%
+            {{ t('wali.bimbel.class_detail.subtitle_attendance', { rate: s.attendance_rate ?? 0 }) }}
           </p>
         </div>
       </div>
       <p v-if="!siswa.length" class="text-center text-[13px] text-bimbel-text-mid py-6">
-        Belum ada siswa.
+        {{ t('wali.bimbel.class_detail.empty_students') }}
       </p>
     </div>
   </div>

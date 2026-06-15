@@ -7,11 +7,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { SettingsService } from '@/services/settings.service';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const router = useRouter();
 
 const form = ref({ current: '', next: '', confirm: '' });
@@ -24,10 +26,10 @@ const message = ref<{ kind: 'ok' | 'err'; text: string } | null>(null);
 const tips = computed(() => {
   const next = form.value.next;
   return [
-    { label: 'Minimal 8 karakter', met: next.length >= 8 },
-    { label: 'Angka & huruf', met: /\d/.test(next) && /[a-z]/i.test(next) },
-    { label: 'Karakter spesial', met: /[^a-z0-9]/i.test(next) },
-    { label: 'Bukan kata umum', met: next.length > 0 && !['password', '12345678', 'qwerty'].includes(next.toLowerCase()) },
+    { label: t('wali.bimbel.change_password.tip_min_length'), met: next.length >= 8 },
+    { label: t('wali.bimbel.change_password.tip_letters_digits'), met: /\d/.test(next) && /[a-z]/i.test(next) },
+    { label: t('wali.bimbel.change_password.tip_special_char'), met: /[^a-z0-9]/i.test(next) },
+    { label: t('wali.bimbel.change_password.tip_common_word'), met: next.length > 0 && !['password', '12345678', 'qwerty'].includes(next.toLowerCase()) },
   ];
 });
 
@@ -49,11 +51,11 @@ const strengthTextCls = computed(() => {
 
 const strengthLabel = computed(() => {
   const lvl = strengthLevel.value;
-  if (lvl === 0) return 'Belum diisi';
-  if (lvl === 1) return 'Lemah — tambah panjang & variasi';
-  if (lvl === 2) return 'Sedang — bisa lebih kuat';
-  if (lvl === 3) return 'Kuat — sandi diterima';
-  return 'Sangat kuat — bagus!';
+  if (lvl === 0) return t('wali.bimbel.change_password.strength_empty');
+  if (lvl === 1) return t('wali.bimbel.change_password.strength_weak');
+  if (lvl === 2) return t('wali.bimbel.change_password.strength_medium');
+  if (lvl === 3) return t('wali.bimbel.change_password.strength_strong');
+  return t('wali.bimbel.change_password.strength_very_strong');
 });
 
 const matches = computed(
@@ -78,12 +80,12 @@ async function submit() {
       new_password: form.value.next,
       confirm_password: form.value.confirm,
     });
-    message.value = { kind: 'ok', text: 'Kata sandi berhasil diperbarui.' };
+    message.value = { kind: 'ok', text: t('wali.bimbel.change_password.success') };
     form.value = { current: '', next: '', confirm: '' };
   } catch (e) {
     message.value = {
       kind: 'err',
-      text: e instanceof Error ? e.message : 'Gagal memperbarui sandi.',
+      text: e instanceof Error ? e.message : t('wali.bimbel.change_password.error_default'),
     };
   } finally { saving.value = false; }
 }
@@ -92,9 +94,9 @@ async function submit() {
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · KEAMANAN"
-      title="Ubah kata sandi"
-      subtitle="Disarankan setiap 90 hari · terakhir diubah 4 bulan lalu"
+      :kicker="t('wali.bimbel.change_password.kicker')"
+      :title="t('wali.bimbel.change_password.title')"
+      :subtitle="t('wali.bimbel.change_password.subtitle')"
       :stats="[]"
     />
 
@@ -104,7 +106,7 @@ async function submit() {
           class="grid items-center gap-3 border-b border-bimbel-border-soft py-2"
           style="grid-template-columns: 130px 1fr;"
         >
-          <span class="text-[13px] text-bimbel-text-mid">Sandi sekarang</span>
+          <span class="text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.change_password.current_label') }}</span>
           <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[14px] flex justify-between items-center">
             <input
               v-model="form.current"
@@ -121,7 +123,7 @@ async function submit() {
           class="grid items-center gap-3 border-b border-bimbel-border-soft py-2"
           style="grid-template-columns: 130px 1fr;"
         >
-          <span class="text-[13px] text-bimbel-text-mid">Sandi baru</span>
+          <span class="text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.change_password.new_label') }}</span>
           <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[14px] flex justify-between items-center">
             <input
               v-model="form.next"
@@ -149,7 +151,7 @@ async function submit() {
           class="grid items-center gap-3 border-b border-bimbel-border-soft py-2"
           style="grid-template-columns: 130px 1fr;"
         >
-          <span class="text-[13px] text-bimbel-text-mid">Konfirmasi</span>
+          <span class="text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.change_password.confirm_label') }}</span>
           <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[14px] flex justify-between items-center">
             <input
               v-model="form.confirm"
@@ -174,18 +176,18 @@ async function submit() {
             type="button"
             class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[14px] px-3.5 py-2.5"
             @click="cancel"
-          >Batal</button>
+          >{{ t('wali.bimbel.change_password.cancel') }}</button>
           <button
             type="button"
             :disabled="!canSubmit"
             class="flex-1 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold px-3.5 py-2.5 disabled:opacity-50"
             @click="submit"
-          >{{ saving ? 'Menyimpan…' : 'Simpan kata sandi' }}</button>
+          >{{ saving ? t('wali.bimbel.change_password.saving') : t('wali.bimbel.change_password.save') }}</button>
         </div>
       </div>
 
       <div class="rounded-md bg-bimbel-bg p-3.5">
-        <p class="text-[13px] font-bold text-bimbel-text-hi mb-1.5">Tips kata sandi kuat</p>
+        <p class="text-[13px] font-bold text-bimbel-text-hi mb-1.5">{{ t('wali.bimbel.change_password.tips_title') }}</p>
         <div class="grid grid-cols-2 gap-1.5">
           <div
             v-for="t in tips"
@@ -197,7 +199,7 @@ async function submit() {
           </div>
         </div>
         <div class="border-t border-bimbel-border-soft mt-3 pt-2.5 text-[12px] text-bimbel-text-mid leading-relaxed">
-          Sandi disimpan ter-enkripsi. Jika lupa, gunakan reset via email yang terdaftar di profil.
+          {{ t('wali.bimbel.change_password.encryption_note') }}
         </div>
       </div>
     </div>

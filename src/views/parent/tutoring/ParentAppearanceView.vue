@@ -6,11 +6,13 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useBimbelThemeStore } from '@/stores/bimbel-theme';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const theme = useBimbelThemeStore();
 
 interface ModeOption {
@@ -20,11 +22,11 @@ interface ModeOption {
   preview: string;
 }
 
-const modes: ModeOption[] = [
-  { id: 'light', label: 'Terang', sub: 'Selalu terang', preview: 'background:#f7faff;' },
-  { id: 'dark', label: 'Gelap', sub: 'Selalu gelap', preview: 'background:#0f1419;' },
-  { id: 'auto', label: 'Otomatis', sub: 'Ikut jam', preview: 'background:linear-gradient(90deg,#f7faff 50%,#0f1419 50%);' },
-];
+const modes = computed<ModeOption[]>(() => [
+  { id: 'light', label: t('wali.bimbel.appearance.mode_light_label'), sub: t('wali.bimbel.appearance.mode_light_sub'), preview: 'background:#f7faff;' },
+  { id: 'dark', label: t('wali.bimbel.appearance.mode_dark_label'), sub: t('wali.bimbel.appearance.mode_dark_sub'), preview: 'background:#0f1419;' },
+  { id: 'auto', label: t('wali.bimbel.appearance.mode_auto_label'), sub: t('wali.bimbel.appearance.mode_auto_sub'), preview: 'background:linear-gradient(90deg,#f7faff 50%,#0f1419 50%);' },
+]);
 
 const lightStart = computed({
   get: () => `${String(theme.lightStartHour).padStart(2, '0')}:00`,
@@ -49,14 +51,14 @@ const darkStart = computed({
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · TAMPILAN"
-      title="Tampilan"
-      :subtitle="theme.autoHint || 'Atur mode warna & jadwal otomatis'"
+      :kicker="t('wali.bimbel.appearance.kicker')"
+      :title="t('wali.bimbel.appearance.title')"
+      :subtitle="theme.autoHint || t('wali.bimbel.appearance.default_subtitle')"
       :stats="[]"
     />
 
     <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
-      MODE WARNA
+      {{ t('wali.bimbel.appearance.color_mode_heading') }}
     </p>
     <div class="grid grid-cols-3 gap-2">
       <button
@@ -79,11 +81,11 @@ const darkStart = computed({
     </div>
 
     <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
-      JADWAL OTOMATIS
+      {{ t('wali.bimbel.appearance.auto_schedule_heading') }}
     </p>
     <div class="grid grid-cols-2 gap-2.5">
       <div>
-        <label class="block text-[12px] text-bimbel-text-mid mb-1">Jam terang mulai</label>
+        <label class="block text-[12px] text-bimbel-text-mid mb-1">{{ t('wali.bimbel.appearance.light_start_label') }}</label>
         <input
           v-model="lightStart"
           type="time"
@@ -91,7 +93,7 @@ const darkStart = computed({
         />
       </div>
       <div>
-        <label class="block text-[12px] text-bimbel-text-mid mb-1">Jam gelap mulai</label>
+        <label class="block text-[12px] text-bimbel-text-mid mb-1">{{ t('wali.bimbel.appearance.dark_start_label') }}</label>
         <input
           v-model="darkStart"
           type="time"
@@ -103,7 +105,7 @@ const darkStart = computed({
     <div class="rounded-md bg-bimbel-accent-dim p-2.5 flex gap-2.5 items-center mt-2">
       <NavIcon name="info-circle" :size="14" class="text-bimbel-hero flex-shrink-0" />
       <p class="text-[12px] text-bimbel-hero">
-        Pengaturan ini hanya berlaku untuk halaman Bimbel. Halaman sekolah pakai tema browser Anda.
+        {{ t('wali.bimbel.appearance.info_note') }}
       </p>
     </div>
   </div>
