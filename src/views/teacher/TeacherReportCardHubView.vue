@@ -16,6 +16,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { ReportCardService } from '@/services/report-card.service';
 import type { RaportClassSummary } from '@/types/report-card';
@@ -31,6 +32,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const auth = useAuthStore();
 const router = useRouter();
+const { t } = useI18n();
 
 // ── Data state ──
 const classes = ref<RaportClassSummary[]>([]);
@@ -44,7 +46,7 @@ const teacherId = computed(() => auth.teacherId ?? auth.user?.id ?? '');
 // ── Loader ──
 async function reload() {
   if (!teacherId.value) {
-    loadError.value = 'Profil guru belum termuat.';
+    loadError.value = t('tutor.sekolah.reportCardHub.errorProfile');
     isLoading.value = false;
     return;
   }
@@ -87,26 +89,26 @@ const kpiCards = computed<KpiCard[]>(() => {
   return [
     {
       icon: 'users',
-      label: 'Total Siswa',
+      label: t('tutor.sekolah.reportCardHub.kpiStudents'),
       value: students,
       tone: 'brand',
     },
     {
       icon: 'check-circle',
-      label: 'Terbit',
+      label: t('tutor.sekolah.reportCardHub.kpiPublished'),
       value: terbit,
       tone: 'green',
     },
     {
       icon: 'edit',
-      label: 'Diperiksa',
+      label: t('tutor.sekolah.reportCardHub.kpiReviewed'),
       value: diperiksa,
       tone: diperiksa > 0 ? 'amber' : 'slate',
       accented: diperiksa > 0,
     },
     {
       icon: 'file-text',
-      label: 'Draf',
+      label: t('tutor.sekolah.reportCardHub.kpiDraft'),
       value: draf,
       tone: 'slate',
     },
@@ -131,7 +133,7 @@ function openClass(cls: RaportClassSummary) {
   });
   if (target.matched.length === 0) {
     toast.value = {
-      message: `Daftar siswa ${cls.class_name} — tersedia di pembaruan berikutnya.`,
+      message: t('tutor.sekolah.reportCardHub.classListSoon', { className: cls.class_name }),
       tone: 'success',
     };
     return;
@@ -148,12 +150,12 @@ void auth;
     <!-- HEADER -->
     <BrandPageHeader
       role="guru"
-      kicker="Akademik · Rapor"
-      title="Wali Kelas"
+      :kicker="t('tutor.sekolah.reportCardHub.kicker')"
+      :title="t('tutor.sekolah.reportCardHub.title')"
       :meta="
         classes.length > 0
-          ? `${classes.length} kelas · ${classes.reduce((a, c) => a + c.student_count, 0)} siswa`
-          : 'Memuat ringkasan kelas perwalian…'
+          ? t('tutor.sekolah.reportCardHub.meta', { classes: classes.length, students: classes.reduce((a, c) => a + c.student_count, 0) })
+          : t('tutor.sekolah.reportCardHub.metaLoading')
       "
       :live-dot="false"
     />
@@ -164,11 +166,11 @@ void auth;
     <!-- FILTER TOOLBAR -->
     <PageFilterToolbar
       v-model:search="searchQuery"
-      search-placeholder="Cari nama kelas…"
+      :search-placeholder="t('tutor.sekolah.reportCardHub.searchPlaceholder')"
     >
       <template #chips>
         <span class="text-[11px] font-bold text-slate-500 px-1">
-          {{ visibleClasses.length }} kelas
+          {{ t('tutor.sekolah.reportCardHub.classCount', { count: visibleClasses.length }) }}
         </span>
       </template>
     </PageFilterToolbar>
@@ -178,10 +180,10 @@ void auth;
       :state="listState"
       :empty-title="
         searchQuery
-          ? 'Tidak ada kelas cocok'
-          : 'Belum ada kelas perwalian'
+          ? t('tutor.sekolah.reportCardHub.emptyTitleSearch')
+          : t('tutor.sekolah.reportCardHub.emptyTitle')
       "
-      empty-description="Pilih kelas untuk melihat daftar rapor siswa atau mulai mengisi."
+      :empty-description="t('tutor.sekolah.reportCardHub.emptyDescription')"
       empty-icon="users"
       @retry="reload"
     >

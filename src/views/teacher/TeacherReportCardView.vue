@@ -9,8 +9,11 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const { t } = useI18n();
+void t;
 onMounted(() => {
   router.replace({ name: 'teacher.report-cards' });
 });
@@ -18,6 +21,6 @@ onMounted(() => {
 
 <template>
   <div class="p-8 text-center text-slate-500 text-sm">
-    Memuat ulang ke halaman Rapor…
+    {{ t('tutor.sekolah.reportCardRedirect.loading') }}
   </div>
 </template>

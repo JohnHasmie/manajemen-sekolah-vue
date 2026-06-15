@@ -12,6 +12,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { BillingService } from '@/services/billing.service';
 import {
   PAYMENT_STATUS_LABELS,
@@ -27,6 +28,7 @@ import { formatRupiah, formatDateLong } from '@/lib/format';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const paymentId = computed(() => String(route.params.paymentId ?? ''));
 const billHint = computed(() => {
@@ -66,7 +68,7 @@ async function load() {
       billId: billHint.value,
     });
     if (!res) {
-      error.value = 'Pembayaran tidak ditemukan.';
+      error.value = t('wali.sekolah.paymentSuccess.notFound');
       return;
     }
     payment.value = res.payment;
@@ -91,7 +93,7 @@ async function download() {
   try {
     const name = `kuitansi-${bill.value?.title?.replace(/\s+/g, '-') ?? payment.value.id}.pdf`;
     await BillingService.downloadReceipt(payment.value.id, name);
-    toast.value = { message: 'Kuitansi terdownload.', tone: 'success' };
+    toast.value = { message: t('wali.sekolah.paymentSuccess.receiptDownloaded'), tone: 'success' };
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
@@ -102,10 +104,10 @@ async function download() {
 async function share() {
   if (!payment.value || !bill.value) return;
   const text = [
-    `Konfirmasi pembayaran ${bill.value.title}`,
-    `Nominal: ${formatRupiah(payment.value.amount)}`,
-    `Status: ${PAYMENT_STATUS_LABELS[payment.value.status]}`,
-    payment.value.payment_date ? `Tanggal: ${formatDateLong(payment.value.payment_date)}` : '',
+    t('wali.sekolah.paymentSuccess.shareConfirm', { title: bill.value.title }),
+    t('wali.sekolah.paymentSuccess.shareAmount', { amount: formatRupiah(payment.value.amount) }),
+    t('wali.sekolah.paymentSuccess.shareStatus', { status: PAYMENT_STATUS_LABELS[payment.value.status] }),
+    payment.value.payment_date ? t('wali.sekolah.paymentSuccess.shareDate', { date: formatDateLong(payment.value.payment_date) }) : '',
   ].filter(Boolean).join('\n');
 
   // Native share where supported (mobile + some desktops).
@@ -113,7 +115,7 @@ async function share() {
     try {
       isSharing.value = true;
       await (navigator as any).share({
-        title: 'Kuitansi pembayaran',
+        title: t('wali.sekolah.paymentSuccess.shareTitle'),
         text,
       });
       return;
@@ -155,18 +157,18 @@ const timelineSteps = computed(() => {
   if (!payment.value) return [];
   const steps: { label: string; meta: string | null; done: boolean }[] = [];
   steps.push({
-    label: 'Bukti dikirim',
+    label: t('wali.sekolah.paymentSuccess.timelineSubmitted'),
     meta: payment.value.created_at ? formatDateLong(payment.value.created_at) : null,
     done: true,
   });
   steps.push({
-    label: 'Diverifikasi admin',
+    label: t('wali.sekolah.paymentSuccess.timelineVerified'),
     meta: payment.value.verified_at ? formatDateLong(payment.value.verified_at) : null,
     done: payment.value.status === 'verified',
   });
   steps.push({
-    label: 'Kuitansi terbit',
-    meta: payment.value.verified_at ? 'Tersedia diunduh' : null,
+    label: t('wali.sekolah.paymentSuccess.timelineReceipt'),
+    meta: payment.value.verified_at ? t('wali.sekolah.paymentSuccess.timelineReceiptReady') : null,
     done: payment.value.status === 'verified',
   });
   return steps;
@@ -182,16 +184,16 @@ const timelineSteps = computed(() => {
         @click="router.push({ name: 'parent.billing' })"
       >
         <NavIcon name="chevron-left" :size="14" />
-        Tagihan
+        {{ t('wali.sekolah.paymentSuccess.backToBills') }}
       </button>
     </div>
 
     <AsyncView
       :state="state"
-      empty-title="Pembayaran tidak ditemukan"
-      empty-description="Detail pembayaran ini sudah tidak tersedia. Cek riwayat pembayaran pada halaman Tagihan."
+      :empty-title="t('wali.sekolah.paymentSuccess.emptyTitle')"
+      :empty-description="t('wali.sekolah.paymentSuccess.emptyDescription')"
       empty-icon="wallet"
-      error-title="Gagal memuat pembayaran"
+      :error-title="t('wali.sekolah.paymentSuccess.errorTitle')"
       @retry="load"
     >
       <template #default>
@@ -204,7 +206,7 @@ const timelineSteps = computed(() => {
             <NavIcon :name="heroIcon" :size="28" />
           </div>
           <p class="text-[10px] font-bold tracking-widest uppercase text-white/70">
-            Pembayaran
+            {{ t('wali.sekolah.paymentSuccess.heroLabel') }}
           </p>
           <p class="text-3xl font-black tracking-tight mt-1">
             {{ formatRupiah(payment!.amount) }}
@@ -223,25 +225,25 @@ const timelineSteps = computed(() => {
         <!-- Bill detail -->
         <section v-if="bill" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            Tagihan
+            {{ t('wali.sekolah.paymentSuccess.billSection') }}
           </p>
           <dl class="text-[13px] space-y-1.5">
             <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">Jenis</dt>
+              <dt class="text-slate-500">{{ t('wali.sekolah.paymentSuccess.billKind') }}</dt>
               <dd class="font-bold text-slate-900 text-right">
                 {{ bill.payment_type?.name ?? bill.title }}
               </dd>
             </div>
             <div v-if="bill.student?.name" class="flex justify-between gap-2">
-              <dt class="text-slate-500">Untuk</dt>
+              <dt class="text-slate-500">{{ t('wali.sekolah.paymentSuccess.billFor') }}</dt>
               <dd class="font-bold text-slate-900 text-right">{{ bill.student.name }}</dd>
             </div>
             <div v-if="bill.due_date" class="flex justify-between gap-2">
-              <dt class="text-slate-500">Jatuh tempo</dt>
+              <dt class="text-slate-500">{{ t('wali.sekolah.paymentSuccess.billDueDate') }}</dt>
               <dd class="font-bold text-slate-900 text-right">{{ formatDateLong(bill.due_date) }}</dd>
             </div>
             <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">Nominal tagihan</dt>
+              <dt class="text-slate-500">{{ t('wali.sekolah.paymentSuccess.billAmount') }}</dt>
               <dd class="font-bold text-slate-900 text-right">{{ formatRupiah(bill.amount) }}</dd>
             </div>
           </dl>
@@ -250,29 +252,29 @@ const timelineSteps = computed(() => {
         <!-- Payment detail -->
         <section class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            Detail pembayaran
+            {{ t('wali.sekolah.paymentSuccess.paymentSection') }}
           </p>
           <dl class="text-[13px] space-y-1.5">
             <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">Metode</dt>
+              <dt class="text-slate-500">{{ t('wali.sekolah.paymentSuccess.paymentMethod') }}</dt>
               <dd class="font-bold text-slate-900 text-right">{{ payment!.payment_method ?? '—' }}</dd>
             </div>
             <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">Tanggal transfer</dt>
+              <dt class="text-slate-500">{{ t('wali.sekolah.paymentSuccess.paymentDate') }}</dt>
               <dd class="font-bold text-slate-900 text-right">
                 {{ payment!.payment_date ? formatDateLong(payment!.payment_date) : '—' }}
               </dd>
             </div>
             <div v-if="payment!.verified_at" class="flex justify-between gap-2">
-              <dt class="text-slate-500">Diverifikasi</dt>
+              <dt class="text-slate-500">{{ t('wali.sekolah.paymentSuccess.paymentVerifiedAt') }}</dt>
               <dd class="font-bold text-slate-900 text-right">{{ formatDateLong(payment!.verified_at) }}</dd>
             </div>
             <div v-if="payment!.verifier_name" class="flex justify-between gap-2">
-              <dt class="text-slate-500">Verifikator</dt>
+              <dt class="text-slate-500">{{ t('wali.sekolah.paymentSuccess.paymentVerifier') }}</dt>
               <dd class="font-bold text-slate-900 text-right">{{ payment!.verifier_name }}</dd>
             </div>
             <div v-if="payment!.admin_notes" class="flex justify-between gap-2">
-              <dt class="text-slate-500">Catatan admin</dt>
+              <dt class="text-slate-500">{{ t('wali.sekolah.paymentSuccess.paymentAdminNotes') }}</dt>
               <dd class="font-bold text-slate-900 text-right max-w-[60%]">{{ payment!.admin_notes }}</dd>
             </div>
           </dl>
@@ -281,7 +283,7 @@ const timelineSteps = computed(() => {
         <!-- Timeline -->
         <section class="bg-white border border-slate-200 rounded-2xl p-4">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-            Timeline
+            {{ t('wali.sekolah.paymentSuccess.timelineSection') }}
           </p>
           <ol class="space-y-3">
             <li
@@ -314,7 +316,7 @@ const timelineSteps = computed(() => {
           class="bg-white border border-slate-200 rounded-2xl p-4"
         >
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-            Bukti transfer
+            {{ t('wali.sekolah.paymentSuccess.proofSection') }}
           </p>
           <a
             v-if="buktiIsImage"
@@ -323,7 +325,7 @@ const timelineSteps = computed(() => {
             rel="noopener"
             class="block rounded-xl overflow-hidden border border-slate-200 bg-slate-50"
           >
-            <img :src="buktiBlobUrl" alt="Bukti pembayaran" class="w-full max-h-80 object-contain" />
+            <img :src="buktiBlobUrl" :alt="t('wali.sekolah.paymentSuccess.proofAlt')" class="w-full max-h-80 object-contain" />
           </a>
           <a
             v-else
@@ -333,7 +335,7 @@ const timelineSteps = computed(() => {
             class="inline-flex items-center gap-2 text-[13px] font-bold text-role-wali hover:underline"
           >
             <NavIcon name="file-text" :size="14" />
-            Buka bukti pembayaran (PDF)
+            {{ t('wali.sekolah.paymentSuccess.openProofPdf') }}
           </a>
         </section>
 
@@ -346,7 +348,7 @@ const timelineSteps = computed(() => {
             @click="share"
           >
             <NavIcon name="share-2" :size="13" />
-            Bagikan
+            {{ t('wali.sekolah.paymentSuccess.share') }}
           </Button>
           <Button
             variant="primary"
@@ -355,7 +357,7 @@ const timelineSteps = computed(() => {
             @click="download"
           >
             <NavIcon name="download" :size="13" />
-            Unduh kuitansi
+            {{ t('wali.sekolah.paymentSuccess.download') }}
           </Button>
         </section>
       </template>

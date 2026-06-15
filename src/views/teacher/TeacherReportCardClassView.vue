@@ -21,6 +21,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { ReportCardService } from '@/services/report-card.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import {
@@ -43,6 +44,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const classId = computed(() => String(route.params.classId ?? ''));
 
@@ -117,38 +119,38 @@ const visibleStudents = computed(() => {
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'users',
-    label: 'Siswa',
+    label: t('tutor.sekolah.reportCardClass.kpiStudents'),
     value: counts.value.total,
     tone: 'brand',
   },
   {
     icon: 'check-circle',
-    label: 'Terbit',
+    label: t('tutor.sekolah.reportCardClass.kpiPublished'),
     value: counts.value.published + counts.value.distributed,
     tone: 'green',
   },
   {
     icon: 'edit',
-    label: 'Diperiksa',
+    label: t('tutor.sekolah.reportCardClass.kpiReviewed'),
     value: counts.value.final,
     tone: counts.value.final > 0 ? 'amber' : 'slate',
     accented: counts.value.final > 0,
   },
   {
     icon: 'file-text',
-    label: 'Draf',
+    label: t('tutor.sekolah.reportCardClass.kpiDraft'),
     value: counts.value.draft + counts.value.belum,
     tone: counts.value.belum > 0 ? 'red' : 'slate',
   },
 ]);
 
-const statusOptions: { key: StatusChip; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'belum', label: 'Belum' },
+const statusOptions = computed<{ key: StatusChip; label: string }[]>(() => [
+  { key: 'all', label: t('tutor.sekolah.reportCardClass.filterAll') },
+  { key: 'belum', label: t('tutor.sekolah.reportCardClass.filterPending') },
   { key: 'draft', label: STATUS_LABELS.draft },
   { key: 'final', label: STATUS_LABELS.final },
   { key: 'published', label: STATUS_LABELS.published },
-];
+]);
 
 const listState = computed<AsyncState<RaportSummaryRow[]>>(() => {
   if (isLoading.value && students.value.length === 0) return { status: 'loading' };
@@ -160,13 +162,13 @@ const listState = computed<AsyncState<RaportSummaryRow[]>>(() => {
 // ── Header copy ──
 const headerKicker = computed(() => {
   const name = cls.value?.name ?? '—';
-  return `KELAS ${name.toUpperCase()} · RAPOR`;
+  return t('tutor.sekolah.reportCardClass.kicker', { name: name.toUpperCase() });
 });
 
 const headerMeta = computed(() => {
   const total = counts.value.total;
   const done = counts.value.published + counts.value.distributed;
-  return `${total} siswa · ${done} sudah Terbit`;
+  return t('tutor.sekolah.reportCardClass.meta', { total, done });
 });
 
 // ── Actions ──
@@ -181,7 +183,7 @@ function openStudent(s: RaportSummaryRow) {
   });
   if (target.matched.length === 0) {
     toast.value = {
-      message: `Detail rapor ${s.student_name} — tersedia di pembaruan berikutnya.`,
+      message: t('tutor.sekolah.reportCardClass.detailSoon', { name: s.student_name }),
       tone: 'success',
     };
     return;
@@ -199,7 +201,7 @@ async function exportClassExcel() {
         ? `rapor-kelas-${cls.value.name}.xlsx`
         : undefined,
     });
-    toast.value = { message: 'Excel rapor kelas terdownload.', tone: 'success' };
+    toast.value = { message: t('tutor.sekolah.reportCardClass.excelDownloaded'), tone: 'success' };
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
@@ -209,7 +211,7 @@ async function exportClassExcel() {
 
 function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
   if (!s.raport_status) {
-    return { label: 'Belum diisi', class: 'bg-slate-100 text-slate-500' };
+    return { label: t('tutor.sekolah.reportCardClass.pillEmpty'), class: 'bg-slate-100 text-slate-500' };
   }
   const tone = STATUS_TONES[s.raport_status];
   return {
@@ -229,7 +231,7 @@ function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
         @click="goBack"
       >
         <NavIcon name="chevron-left" :size="14" />
-        Semua Kelas
+        {{ t('tutor.sekolah.reportCardClass.backAllClasses') }}
       </button>
       <span class="flex-1"></span>
       <Button
@@ -240,7 +242,7 @@ function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
         @click="exportClassExcel"
       >
         <NavIcon name="download" :size="13" />
-        Excel Kelas
+        {{ t('tutor.sekolah.reportCardClass.excelButton') }}
       </Button>
     </div>
 
@@ -248,7 +250,7 @@ function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
     <BrandPageHeader
       role="guru"
       :kicker="headerKicker"
-      title="Daftar Siswa"
+      :title="t('tutor.sekolah.reportCardClass.title')"
       :meta="headerMeta"
       :live-dot="false"
     />
@@ -300,10 +302,10 @@ function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
       :state="listState"
       :empty-title="
         statusFilter === 'all'
-          ? 'Belum ada siswa di kelas ini'
-          : 'Tidak ada siswa di filter ini'
+          ? t('tutor.sekolah.reportCardClass.emptyClass')
+          : t('tutor.sekolah.reportCardClass.emptyFilter')
       "
-      empty-description="Coba ganti filter status."
+      :empty-description="t('tutor.sekolah.reportCardClass.emptyDescription')"
       empty-icon="users"
       @retry="loadRoster"
     >
@@ -328,10 +330,10 @@ function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
             </p>
             <p class="text-[11px] text-slate-500 truncate">
               <template v-if="s.student_number">
-                NIS {{ s.student_number }}
+                {{ t('tutor.sekolah.reportCardClass.nis', { nis: s.student_number }) }}
               </template>
-              <template v-else>Tanpa NIS</template>
-              · No {{ idx + 1 }}
+              <template v-else>{{ t('tutor.sekolah.reportCardClass.noNis') }}</template>
+              · {{ t('tutor.sekolah.reportCardClass.rowNumber', { n: idx + 1 }) }}
             </p>
           </div>
           <span

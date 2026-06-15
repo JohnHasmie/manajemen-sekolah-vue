@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { BillingService } from '@/services/billing.service';
 import type { Bill, CheckoutSession, ManualBankAccount } from '@/types/billing';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
@@ -30,6 +31,7 @@ import { formatRupiah, localISODate } from '@/lib/format';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const billId = computed(() => String(route.params.billId ?? ''));
 const session = ref<CheckoutSession | null>(null);
@@ -39,11 +41,11 @@ const error = ref<string | null>(null);
 
 const tab = ref<'qris' | 'va' | 'manual'>('va');
 
-const TAB_OPTS = [
+const TAB_OPTS = computed(() => [
   { key: 'qris', label: 'QRIS' },
-  { key: 'va', label: 'Virtual Account' },
-  { key: 'manual', label: 'Transfer Manual' },
-];
+  { key: 'va', label: t('wali.sekolah.billCheckout.tabVa') },
+  { key: 'manual', label: t('wali.sekolah.billCheckout.tabManual') },
+]);
 
 // Countdown to expires_at — refreshed every second.
 const now = ref(Date.now());
@@ -62,12 +64,12 @@ const remaining = computed(() => {
 
 const remainingLabel = computed(() => {
   if (remaining.value === null) return '';
-  if (remaining.value === 0) return 'Sesi habis';
+  if (remaining.value === 0) return t('wali.sekolah.billCheckout.sessionExpired');
   const sec = Math.floor(remaining.value / 1000);
   const hours = Math.floor(sec / 3600);
   const minutes = Math.floor((sec % 3600) / 60);
   const seconds = sec % 60;
-  if (hours > 0) return `${hours} jam ${String(minutes).padStart(2, '0')} menit`;
+  if (hours > 0) return t('wali.sekolah.billCheckout.remainingHours', { hours, minutes: String(minutes).padStart(2, '0') });
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 });
 
@@ -88,7 +90,7 @@ function onFileChange(e: Event) {
     return;
   }
   if (picked.size > 5 * 1024 * 1024) {
-    toast.value = { message: 'Ukuran file maks 5 MB.', tone: 'error' };
+    toast.value = { message: t('wali.sekolah.billCheckout.fileTooLarge'), tone: 'error' };
     target.value = '';
     return;
   }
@@ -106,7 +108,7 @@ async function submitProof() {
       payment_method: 'bank_transfer',
     });
     toast.value = {
-      message: 'Bukti pembayaran terkirim. Menunggu verifikasi admin.',
+      message: t('wali.sekolah.billCheckout.proofSent'),
       tone: 'success',
     };
     setTimeout(() => {
@@ -163,17 +165,18 @@ const state = computed<AsyncState<CheckoutSession>>(() => {
   return { status: 'content', data: session.value };
 });
 
-function copy(value: string, label = 'Disalin.') {
+function copy(value: string, label?: string) {
+  const okLabel = label ?? t('wali.sekolah.billCheckout.copied');
   if (!navigator.clipboard) {
-    toast.value = { message: 'Clipboard tidak tersedia.', tone: 'error' };
+    toast.value = { message: t('wali.sekolah.billCheckout.clipboardUnavailable'), tone: 'error' };
     return;
   }
   navigator.clipboard.writeText(value).then(
     () => {
-      toast.value = { message: label, tone: 'success' };
+      toast.value = { message: okLabel, tone: 'success' };
     },
     () => {
-      toast.value = { message: 'Gagal menyalin.', tone: 'error' };
+      toast.value = { message: t('wali.sekolah.billCheckout.copyFailed'), tone: 'error' };
     },
   );
 }
@@ -207,7 +210,7 @@ const adminFee = computed(() => {
         @click="router.back()"
       >
         <NavIcon name="chevron-left" :size="14" />
-        Tagihan
+        {{ t('wali.sekolah.billCheckout.backToBills') }}
       </button>
       <div
         v-if="remainingLabel"
@@ -215,16 +218,16 @@ const adminFee = computed(() => {
         :class="remaining === 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'"
       >
         <NavIcon name="clock" :size="11" />
-        Sesi: {{ remainingLabel }}
+        {{ t('wali.sekolah.billCheckout.sessionLabel', { remaining: remainingLabel }) }}
       </div>
     </div>
 
     <AsyncView
       :state="state"
-      empty-title="Tagihan tidak ditemukan"
-      empty-description="Tagihan ini mungkin sudah dihapus atau bukan milik anak Anda."
+      :empty-title="t('wali.sekolah.billCheckout.emptyTitle')"
+      :empty-description="t('wali.sekolah.billCheckout.emptyDescription')"
       empty-icon="wallet"
-      error-title="Gagal memuat tagihan"
+      :error-title="t('wali.sekolah.billCheckout.errorTitle')"
       @retry="load"
     >
       <template #default>
@@ -236,15 +239,15 @@ const adminFee = computed(() => {
           <div class="absolute -top-12 -right-12 w-44 h-44 bg-white/15 rounded-full blur-3xl"></div>
           <div class="relative z-10 space-y-2">
             <p class="text-[10px] font-bold tracking-widest uppercase text-white/70">
-              Total dibayar
+              {{ t('wali.sekolah.billCheckout.totalPaid') }}
             </p>
             <p class="text-3xl sm:text-4xl font-black tracking-tight">{{ formatRupiah(totalToPay) }}</p>
             <p class="text-[13px] text-white/80">
-              {{ session!.bill_name ?? bill?.title ?? 'Tagihan' }}
+              {{ session!.bill_name ?? bill?.title ?? t('wali.sekolah.billCheckout.billFallback') }}
               <span v-if="session!.student_name">· {{ session!.student_name }}</span>
             </p>
             <p v-if="adminFee > 0" class="text-[10px] text-white/70 mt-1">
-              Termasuk biaya admin {{ formatRupiah(adminFee) }}
+              {{ t('wali.sekolah.billCheckout.adminFee', { fee: formatRupiah(adminFee) }) }}
             </p>
           </div>
         </section>
@@ -252,6 +255,7 @@ const adminFee = computed(() => {
         <!-- Tabs -->
         <div class="bg-white border border-slate-200 rounded-2xl p-3">
           <SegmentedControl v-model="tab" :options="TAB_OPTS" />
+          <!-- QRIS label intentionally untranslated (brand name) -->
         </div>
 
         <!-- QRIS tab -->
@@ -265,11 +269,11 @@ const adminFee = computed(() => {
             </div>
           </div>
           <p class="text-[13px] text-slate-500">
-            Scan QR di aplikasi pembayaran (GoPay, OVO, Dana, ShopeePay, dst.).
+            {{ t('wali.sekolah.billCheckout.qrInstruction') }}
           </p>
           <div class="bg-slate-50 rounded-xl p-3">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              Kode QR
+              {{ t('wali.sekolah.billCheckout.qrCode') }}
             </p>
             <p class="font-mono text-[13px] font-bold text-slate-900 break-all mt-1">
               {{ session!.qr_string }}
@@ -277,9 +281,9 @@ const adminFee = computed(() => {
             <button
               type="button"
               class="mt-2 text-[12px] font-bold text-role-wali hover:underline"
-              @click="copy(session!.qr_string, 'Kode QR disalin.')"
+              @click="copy(session!.qr_string, t('wali.sekolah.billCheckout.qrCodeCopied'))"
             >
-              Salin kode
+              {{ t('wali.sekolah.billCheckout.copyCode') }}
             </button>
           </div>
         </section>
@@ -291,13 +295,13 @@ const adminFee = computed(() => {
         >
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              Bank
+              {{ t('wali.sekolah.billCheckout.bank') }}
             </span>
             <span class="text-[14px] font-bold text-slate-900">{{ session!.va_bank }}</span>
           </div>
           <div class="border-t border-slate-100 pt-3">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              Nomor Virtual Account
+              {{ t('wali.sekolah.billCheckout.vaNumber') }}
             </p>
             <div class="flex items-center gap-2 mt-1.5">
               <p class="text-lg font-mono font-bold text-slate-900 flex-1 tracking-wider">
@@ -306,15 +310,14 @@ const adminFee = computed(() => {
               <button
                 type="button"
                 class="text-[12px] font-bold text-role-wali hover:underline px-2 py-1 rounded-lg hover:bg-role-wali/5"
-                @click="copy(session!.va_number.replace(/\s/g, ''), 'Nomor VA disalin.')"
+                @click="copy(session!.va_number.replace(/\s/g, ''), t('wali.sekolah.billCheckout.vaCopied'))"
               >
-                Salin
+                {{ t('wali.sekolah.billCheckout.copy') }}
               </button>
             </div>
           </div>
           <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[12px] text-amber-700">
-            Transfer ke nomor VA di atas dari aplikasi mobile banking. Status tagihan
-            akan otomatis berubah setelah pembayaran diterima bank.
+            {{ t('wali.sekolah.billCheckout.vaInstruction') }}
           </div>
         </section>
 
@@ -322,10 +325,10 @@ const adminFee = computed(() => {
         <section v-else class="space-y-3">
           <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              Rekening sekolah
+              {{ t('wali.sekolah.billCheckout.schoolAccount') }}
             </p>
             <div v-if="session!.manual_bank_list.length === 0" class="text-[13px] text-slate-500">
-              Belum ada rekening sekolah terdaftar. Hubungi admin sekolah.
+              {{ t('wali.sekolah.billCheckout.noBankAccount') }}
             </div>
             <div
               v-for="b in session!.manual_bank_list"
@@ -340,19 +343,19 @@ const adminFee = computed(() => {
                 <button
                   type="button"
                   class="text-[12px] font-bold text-role-wali hover:underline"
-                  @click="copy(b.account_number, 'Nomor rekening disalin.')"
+                  @click="copy(b.account_number, t('wali.sekolah.billCheckout.accountCopied'))"
                 >
-                  Salin
+                  {{ t('wali.sekolah.billCheckout.copy') }}
                 </button>
               </div>
-              <p class="text-[12px] text-slate-500">a.n. {{ b.account_name }}</p>
+              <p class="text-[12px] text-slate-500">{{ t('wali.sekolah.billCheckout.accountHolder', { name: b.account_name }) }}</p>
             </div>
           </div>
 
           <!-- Upload bukti -->
           <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              Bukti transfer
+              {{ t('wali.sekolah.billCheckout.proofSection') }}
             </p>
 
             <label
@@ -374,10 +377,10 @@ const adminFee = computed(() => {
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-[14px] font-bold text-slate-900 truncate">
-                    {{ file ? file.name : 'Pilih file bukti' }}
+                    {{ file ? file.name : t('wali.sekolah.billCheckout.pickFile') }}
                   </p>
                   <p class="text-[12px] text-slate-500 mt-0.5">
-                    JPG / PNG / WebP / HEIC / PDF · maks 5 MB
+                    {{ t('wali.sekolah.billCheckout.fileHint') }}
                   </p>
                 </div>
               </div>
@@ -386,7 +389,7 @@ const adminFee = computed(() => {
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Tanggal transfer
+                  {{ t('wali.sekolah.billCheckout.transferDate') }}
                 </label>
                 <input
                   v-model="paymentDate"
@@ -396,7 +399,7 @@ const adminFee = computed(() => {
               </div>
               <div>
                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Nominal transfer
+                  {{ t('wali.sekolah.billCheckout.transferAmount') }}
                 </label>
                 <input
                   v-model.number="uploadAmount"
@@ -414,7 +417,7 @@ const adminFee = computed(() => {
               @click="submitProof"
             >
               <NavIcon name="check-circle" :size="13" />
-              Kirim bukti pembayaran
+              {{ t('wali.sekolah.billCheckout.submitProof') }}
             </Button>
           </div>
         </section>
