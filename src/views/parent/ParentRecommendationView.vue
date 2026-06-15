@@ -153,7 +153,7 @@ function deriveChildrenFromInbox(rows: ParentInboxRow[]): ParentSummaryChild[] {
     if (!entry) {
       entry = {
         student_id: sid,
-        student_name: String(student?.name ?? 'Siswa'),
+        student_name: String(student?.name ?? t('wali.sekolah.recommendation.siswaFallback')),
         class_name: String(klass?.name ?? '-'),
         total_count: 0,
         unread_count: 0,
@@ -566,7 +566,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
                 v-if="c.unread_count > 0"
                 class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-role-wali text-white shadow shadow-role-wali/30"
               >
-                {{ c.unread_count }} baru
+                {{ c.unread_count }} {{ t('wali.sekolah.recommendation.badgeBaruSuffix') }}
               </span>
             </div>
 
@@ -578,7 +578,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
                   {{ c.total_count }}
                 </p>
                 <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 mt-1.5">
-                  Total
+                  {{ t('wali.sekolah.recommendation.statTotal') }}
                 </p>
               </div>
               <div
@@ -588,7 +588,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
                   {{ Math.max(c.total_count - c.completed_count, 0) }}
                 </p>
                 <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 mt-1.5">
-                  Aktif
+                  {{ t('wali.sekolah.recommendation.statActive') }}
                 </p>
               </div>
               <div
@@ -598,7 +598,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
                   {{ c.completed_count }}
                 </p>
                 <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 mt-1.5">
-                  Selesai
+                  {{ t('wali.sekolah.recommendation.statCompleted') }}
                 </p>
               </div>
             </div>
@@ -624,7 +624,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
             </div>
 
             <div class="mt-3 inline-flex items-center gap-1 text-[12px] font-bold text-role-wali">
-              Lihat rekomendasi
+              {{ t('wali.sekolah.recommendation.seeRecommendations') }}
               <NavIcon name="chevron-right" :size="13" />
             </div>
           </button>
@@ -650,7 +650,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
                 <p class="text-[12px] font-bold text-slate-500 truncate mt-0.5">
                   {{ selectedChild.class_name }} ·
                   <span class="text-role-wali">
-                    {{ selectedChild.total_count }} rekomendasi
+                    {{ selectedChild.total_count }} {{ t('wali.sekolah.recommendation.rekomendasiSuffix') }}
                   </span>
                 </p>
               </div>
@@ -662,7 +662,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
                   {{ selectedChild.unread_count }}
                 </span>
                 <span class="block text-[8.5px] font-bold uppercase tracking-widest mt-1">
-                  Baru
+                  {{ t('wali.sekolah.recommendation.newBadge') }}
                 </span>
               </span>
             </div>
@@ -678,19 +678,19 @@ const SKELETON_ROWS = Array.from({ length: 4 });
                 v-if="selectedChild.unread_count > 0"
                 class="text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-role-wali/10 text-role-wali"
               >
-                {{ selectedChild.unread_count }} belum dibaca
+                {{ selectedChild.unread_count }} {{ t('wali.sekolah.recommendation.pillUnread') }}
               </span>
               <span
                 v-if="selectedChild.high_priority_count > 0"
                 class="text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-700"
               >
-                {{ selectedChild.high_priority_count }} prioritas tinggi
+                {{ selectedChild.high_priority_count }} {{ t('wali.sekolah.recommendation.pillHighPriority') }}
               </span>
               <span
                 v-if="selectedChild.completed_count > 0"
                 class="text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"
               >
-                {{ selectedChild.completed_count }} selesai
+                {{ selectedChild.completed_count }} {{ t('wali.sekolah.recommendation.pillCompleted') }}
               </span>
             </div>
           </div>

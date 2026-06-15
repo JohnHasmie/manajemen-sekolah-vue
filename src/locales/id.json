@@ -2024,6 +2024,42 @@
       "reportCard": {
         "studentId": "NIS"
       },
+      "recommendation": {
+        "siswaFallback": "Siswa",
+        "badgeBaruSuffix": "baru",
+        "statTotal": "Total",
+        "statActive": "Aktif",
+        "statCompleted": "Selesai",
+        "seeRecommendations": "Lihat rekomendasi",
+        "rekomendasiSuffix": "rekomendasi",
+        "newBadge": "Baru",
+        "pillUnread": "belum dibaca",
+        "pillHighPriority": "prioritas tinggi",
+        "pillCompleted": "selesai"
+      },
+      "announcement": {
+        "eventDone": "Selesai",
+        "eventLiveNow": "BERLANGSUNG SEKARANG",
+        "eventToday": "HARI INI",
+        "eventTomorrow": "BESOK",
+        "eventDaysLeft": "{count} HARI LAGI",
+        "eventWeeksLeft": "{count} PEKAN LAGI",
+        "eventMonthsLeft": "{count} BULAN LAGI",
+        "allDay": "Sepanjang hari",
+        "monthOther": "Lainnya",
+        "monthJanuary": "Januari",
+        "monthFebruary": "Februari",
+        "monthMarch": "Maret",
+        "monthApril": "April",
+        "monthMay": "Mei",
+        "monthJune": "Juni",
+        "monthJuly": "Juli",
+        "monthAugust": "Agustus",
+        "monthSeptember": "September",
+        "monthOctober": "Oktober",
+        "monthNovember": "November",
+        "monthDecember": "Desember"
+      },
       "reportCardDetail": {
         "notFoundOrUnpublished": "Rapor tidak ditemukan atau belum diterbitkan.",
         "semGenapShort": "Sem. Genap",

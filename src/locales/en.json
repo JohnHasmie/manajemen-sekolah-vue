@@ -2028,6 +2028,42 @@
       "reportCard": {
         "studentId": "ID"
       },
+      "recommendation": {
+        "siswaFallback": "Student",
+        "badgeBaruSuffix": "new",
+        "statTotal": "Total",
+        "statActive": "Active",
+        "statCompleted": "Completed",
+        "seeRecommendations": "See recommendations",
+        "rekomendasiSuffix": "recommendations",
+        "newBadge": "New",
+        "pillUnread": "unread",
+        "pillHighPriority": "high priority",
+        "pillCompleted": "completed"
+      },
+      "announcement": {
+        "eventDone": "Done",
+        "eventLiveNow": "HAPPENING NOW",
+        "eventToday": "TODAY",
+        "eventTomorrow": "TOMORROW",
+        "eventDaysLeft": "{count} DAYS LEFT",
+        "eventWeeksLeft": "{count} WEEKS LEFT",
+        "eventMonthsLeft": "{count} MONTHS LEFT",
+        "allDay": "All day",
+        "monthOther": "Other",
+        "monthJanuary": "January",
+        "monthFebruary": "February",
+        "monthMarch": "March",
+        "monthApril": "April",
+        "monthMay": "May",
+        "monthJune": "June",
+        "monthJuly": "July",
+        "monthAugust": "August",
+        "monthSeptember": "September",
+        "monthOctober": "October",
+        "monthNovember": "November",
+        "monthDecember": "December"
+      },
       "reportCardDetail": {
         "notFoundOrUnpublished": "Report card not found or not yet published.",
         "semGenapShort": "Sem. Even",
