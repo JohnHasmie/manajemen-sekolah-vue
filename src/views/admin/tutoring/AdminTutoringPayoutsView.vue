@@ -73,7 +73,7 @@ async function load() {
       };
     });
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal memuat data.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.payouts.load_fail'));
   } finally {
     loading.value = false;
   }
@@ -100,11 +100,11 @@ async function saveEdit() {
       bank_account_number: editBankNumber.value.trim() || null,
       bank_account_holder: editBankHolder.value.trim() || null,
     });
-    toast.success('Rate tersimpan.');
+    toast.success(t('admin.bimbel.payouts.saved'));
     editing.value = null;
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menyimpan.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.payouts.save_fail'));
   } finally {
     saving.value = false;
   }
@@ -120,31 +120,31 @@ const totalAmount = computed(
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'users',
-    label: 'Tutor terdaftar',
+    label: t('admin.bimbel.payouts.kpi_registered'),
     value: rows.value.length,
     tone: 'brand',
     accented: true,
   },
   {
     icon: 'check-circle',
-    label: 'Rate sudah diset',
+    label: t('admin.bimbel.payouts.kpi_configured'),
     value: configuredCount.value,
     suffix:
       rows.value.length > 0
-        ? `dari ${rows.value.length}`
+        ? t('admin.bimbel.payouts.kpi_configured_suffix', { total: rows.value.length })
         : undefined,
     tone: 'green',
   },
   {
     icon: 'alert-circle',
-    label: 'Belum diset',
+    label: t('admin.bimbel.payouts.kpi_not_set'),
     value: rows.value.length - configuredCount.value,
     tone:
       rows.value.length - configuredCount.value > 0 ? 'amber' : 'slate',
   },
   {
     icon: 'wallet',
-    label: 'Rata-rata rate',
+    label: t('admin.bimbel.payouts.kpi_avg_rate'),
     value:
       configuredCount.value > 0
         ? formatRupiah(Math.round(totalAmount.value / configuredCount.value))
@@ -154,7 +154,7 @@ const kpiCards = computed<KpiCard[]>(() => [
 ]);
 
 function basisLabel(b: string) {
-  return b === 'PER_HOUR' ? 'per jam' : 'per sesi';
+  return b === 'PER_HOUR' ? t('admin.bimbel.payouts.basis_per_hour_label') : t('admin.bimbel.payouts.basis_per_session_label');
 }
 </script>
 
@@ -162,9 +162,9 @@ function basisLabel(b: string) {
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      kicker="Bimbel · Penggajian"
-      title="Honor Tutor"
-      :meta="`${configuredCount} / ${rows.length} tutor sudah punya rate`"
+      :kicker="t('admin.bimbel.payouts.kicker')"
+      :title="t('admin.bimbel.payouts.title')"
+      :meta="t('admin.bimbel.payouts.meta', { configured: configuredCount, total: rows.length })"
     />
 
     <KpiStripCards :cards="kpiCards" />
@@ -174,7 +174,7 @@ function basisLabel(b: string) {
     </div>
     <TutoringEmpty
       v-else-if="rows.length === 0"
-      text="Belum ada tutor terdaftar."
+      :text="t('admin.bimbel.payouts.empty')"
       icon="users"
     />
     <div
@@ -184,9 +184,9 @@ function basisLabel(b: string) {
       <table class="w-full text-sm">
         <thead class="text-[10.5px] uppercase tracking-wider text-bimbel-text-mid">
           <tr class="border-b border-bimbel-border">
-            <th class="text-left font-bold px-3 py-2.5">Tutor</th>
-            <th class="text-left font-bold px-3 py-2.5">Basis</th>
-            <th class="text-right font-bold px-3 py-2.5">Rate</th>
+            <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.payouts.th_tutor') }}</th>
+            <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.payouts.th_basis') }}</th>
+            <th class="text-right font-bold px-3 py-2.5">{{ t('admin.bimbel.payouts.th_rate') }}</th>
             <th class="px-3 py-2.5"></th>
           </tr>
         </thead>
@@ -206,7 +206,7 @@ function basisLabel(b: string) {
               <span
                 v-if="!r.configured"
                 class="text-bimbel-amber text-xs font-bold"
-              >Belum diset</span>
+              >{{ t('admin.bimbel.payouts.rate_not_set') }}</span>
               <span v-else class="font-semibold text-bimbel-text-hi">
                 {{ formatRupiah(r.amount) }}
               </span>
@@ -221,59 +221,59 @@ function basisLabel(b: string) {
 
     <Modal
       v-if="editing"
-      :title="`Atur Rate · ${editing.name}`"
+      :title="t('admin.bimbel.payouts.modal_title', { name: editing.name })"
       @close="editing = null"
     >
       <div class="space-y-3">
         <label class="block">
           <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Basis
+            {{ t('admin.bimbel.payouts.field_basis') }}
           </span>
           <select
             v-model="editBasis"
             class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
           >
-            <option value="PER_SESSION">Per Sesi</option>
-            <option value="PER_HOUR">Per Jam</option>
+            <option value="PER_SESSION">{{ t('admin.bimbel.payouts.basis_per_session') }}</option>
+            <option value="PER_HOUR">{{ t('admin.bimbel.payouts.basis_per_hour') }}</option>
           </select>
         </label>
         <label class="block">
           <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Rate (Rp)
+            {{ t('admin.bimbel.payouts.field_rate') }}
           </span>
           <input
             v-model.number="editAmount"
             type="number"
             min="0"
             class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
-            placeholder="cth. 150000"
+            :placeholder="t('admin.bimbel.payouts.rate_ph')"
           />
           <p class="text-xs text-bimbel-text-mid mt-1">
-            Honor {{ basisLabel(editBasis) }}, dalam rupiah.
+            {{ t('admin.bimbel.payouts.rate_hint', { basis: basisLabel(editBasis) }) }}
           </p>
         </label>
 
         <!-- Rekening tujuan transfer honor — tampil di payslip PDF -->
         <div class="border-t border-bimbel-border-soft pt-3 mt-2">
           <div class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider mb-1.5">
-            Rekening Tutor (opsional)
+            {{ t('admin.bimbel.payouts.bank_section') }}
           </div>
           <p class="text-[12px] text-bimbel-text-mid mb-2">
-            Tampil di slip honor PDF sebagai tujuan transfer dari bimbel.
+            {{ t('admin.bimbel.payouts.bank_hint') }}
           </p>
           <div class="grid grid-cols-2 gap-2">
             <input
               v-model="editBankName"
               type="text"
               maxlength="80"
-              placeholder="Nama Bank"
+              :placeholder="t('admin.bimbel.payouts.bank_name_ph')"
               class="rounded-lg border border-bimbel-border px-3 py-2 text-sm"
             />
             <input
               v-model="editBankNumber"
               type="text"
               maxlength="40"
-              placeholder="Nomor Rekening"
+              :placeholder="t('admin.bimbel.payouts.bank_number_ph')"
               class="rounded-lg border border-bimbel-border px-3 py-2 text-sm font-mono"
             />
           </div>
@@ -281,7 +281,7 @@ function basisLabel(b: string) {
             v-model="editBankHolder"
             type="text"
             maxlength="120"
-            placeholder="Atas Nama"
+            :placeholder="t('admin.bimbel.payouts.bank_holder_ph')"
             class="mt-2 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm"
           />
         </div>
@@ -299,7 +299,7 @@ function basisLabel(b: string) {
             class="rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="saveEdit"
           >
-            {{ saving ? t('tutoring.common.saving') : 'Simpan' }}
+            {{ saving ? t('tutoring.common.saving') : t('admin.bimbel.payouts.save') }}
           </button>
         </div>
       </div>

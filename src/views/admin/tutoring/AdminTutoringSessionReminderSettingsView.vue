@@ -14,12 +14,14 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const toast = useToast();
 const tab = ref<'session' | 'bill'>('session');
 
@@ -31,27 +33,27 @@ const sessionIsDefault = ref(false);
 const sessionMax = ref(7 * 24 * 60);
 const sessionCustomInput = ref<string>('');
 
-const SESSION_PRESETS: { v: number; label: string }[] = [
-  { v: 7 * 24 * 60, label: '1 minggu' },
-  { v: 2 * 24 * 60, label: '2 hari' },
-  { v: 1 * 24 * 60, label: '1 hari' },
-  { v: 12 * 60, label: '12 jam' },
-  { v: 6 * 60, label: '6 jam' },
-  { v: 3 * 60, label: '3 jam' },
-  { v: 60, label: '1 jam' },
-  { v: 30, label: '30 menit' },
-  { v: 15, label: '15 menit' },
-  { v: 10, label: '10 menit' },
-  { v: 5, label: '5 menit' },
-];
+const SESSION_PRESETS = computed<{ v: number; label: string }[]>(() => [
+  { v: 7 * 24 * 60, label: t('admin.bimbel.session_reminder_settings.preset_1week') },
+  { v: 2 * 24 * 60, label: t('admin.bimbel.session_reminder_settings.preset_2days') },
+  { v: 1 * 24 * 60, label: t('admin.bimbel.session_reminder_settings.preset_1day') },
+  { v: 12 * 60, label: t('admin.bimbel.session_reminder_settings.preset_12hours') },
+  { v: 6 * 60, label: t('admin.bimbel.session_reminder_settings.preset_6hours') },
+  { v: 3 * 60, label: t('admin.bimbel.session_reminder_settings.preset_3hours') },
+  { v: 60, label: t('admin.bimbel.session_reminder_settings.preset_1hour') },
+  { v: 30, label: t('admin.bimbel.session_reminder_settings.preset_30min') },
+  { v: 15, label: t('admin.bimbel.session_reminder_settings.preset_15min') },
+  { v: 10, label: t('admin.bimbel.session_reminder_settings.preset_10min') },
+  { v: 5, label: t('admin.bimbel.session_reminder_settings.preset_5min') },
+]);
 
 function fmtMin(min: number): string {
   if (min % (24 * 60) === 0) {
     const d = min / (24 * 60);
-    return d === 1 ? '1 hari' : `${d} hari`;
+    return d === 1 ? t('admin.bimbel.session_reminder_settings.fmt_day_one') : t('admin.bimbel.session_reminder_settings.fmt_days', { count: d });
   }
-  if (min % 60 === 0) return `${min / 60} jam`;
-  return `${min} menit`;
+  if (min % 60 === 0) return t('admin.bimbel.session_reminder_settings.fmt_hours', { count: min / 60 });
+  return t('admin.bimbel.session_reminder_settings.fmt_minutes', { count: min });
 }
 const sessionSorted = computed(() => [...sessionOffsets.value].sort((a, b) => b - a));
 
@@ -63,7 +65,7 @@ async function loadSession() {
     sessionIsDefault.value = res.is_default;
     sessionMax.value = res.max_offset_minutes;
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal memuat pengingat sesi.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.session_reminder_settings.load_session_fail'));
   } finally {
     sessionLoading.value = false;
   }
@@ -76,15 +78,15 @@ function toggleSession(v: number) {
 function addSessionCustom() {
   const n = parseInt(sessionCustomInput.value, 10);
   if (!Number.isFinite(n) || n < 1 || n > sessionMax.value) {
-    toast.error(`Masukkan angka 1–${sessionMax.value} menit.`);
+    toast.error(t('admin.bimbel.session_reminder_settings.range_session_invalid', { max: sessionMax.value }));
     return;
   }
   if (sessionOffsets.value.includes(n)) {
-    toast.info(`${fmtMin(n)} sudah ada di daftar.`);
+    toast.info(t('admin.bimbel.session_reminder_settings.duplicate_min', { value: fmtMin(n) }));
     return;
   }
   if (sessionOffsets.value.length >= 10) {
-    toast.error('Maksimal 10 pengingat.');
+    toast.error(t('admin.bimbel.session_reminder_settings.max_reached'));
     return;
   }
   sessionOffsets.value.push(n);
@@ -96,7 +98,7 @@ function removeSession(v: number) {
 }
 async function saveSession() {
   if (sessionOffsets.value.length === 0) {
-    toast.error('Minimal satu pengingat harus aktif.');
+    toast.error(t('admin.bimbel.session_reminder_settings.must_have_one'));
     return;
   }
   sessionSaving.value = true;
@@ -104,9 +106,9 @@ async function saveSession() {
     const res = await TutoringService.updateSessionReminderOffsets(sessionOffsets.value);
     sessionOffsets.value = res.offsets_minutes;
     sessionIsDefault.value = res.is_default;
-    toast.success('Pengingat sesi tersimpan.');
+    toast.success(t('admin.bimbel.session_reminder_settings.saved_session'));
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menyimpan.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.session_reminder_settings.save_fail'));
   } finally {
     sessionSaving.value = false;
   }
@@ -124,20 +126,20 @@ const billIsDefault = ref(false);
 const billMax = ref(30);
 const billCustomInput = ref<string>('');
 
-const BILL_PRESETS: { v: number; label: string }[] = [
-  { v: 14, label: '2 minggu' },
-  { v: 7, label: '1 minggu' },
-  { v: 5, label: '5 hari' },
-  { v: 3, label: '3 hari' },
-  { v: 2, label: '2 hari' },
-  { v: 1, label: '1 hari' },
-  { v: 0, label: 'Hari H' },
-];
+const BILL_PRESETS = computed<{ v: number; label: string }[]>(() => [
+  { v: 14, label: t('admin.bimbel.session_reminder_settings.preset_2weeks') },
+  { v: 7, label: t('admin.bimbel.session_reminder_settings.preset_1week') },
+  { v: 5, label: t('admin.bimbel.session_reminder_settings.preset_5days') },
+  { v: 3, label: t('admin.bimbel.session_reminder_settings.preset_3days') },
+  { v: 2, label: t('admin.bimbel.session_reminder_settings.preset_2days') },
+  { v: 1, label: t('admin.bimbel.session_reminder_settings.preset_1day') },
+  { v: 0, label: t('admin.bimbel.session_reminder_settings.preset_due_day') },
+]);
 
 function fmtDay(d: number): string {
-  if (d === 0) return 'hari H';
-  if (d === 1) return '1 hari sebelumnya';
-  return `${d} hari sebelumnya`;
+  if (d === 0) return t('admin.bimbel.session_reminder_settings.fmt_due_day');
+  if (d === 1) return t('admin.bimbel.session_reminder_settings.fmt_day_before');
+  return t('admin.bimbel.session_reminder_settings.fmt_days_before', { count: d });
 }
 const billSorted = computed(() => [...billOffsets.value].sort((a, b) => b - a));
 
@@ -149,7 +151,7 @@ async function loadBill() {
     billIsDefault.value = res.is_default;
     billMax.value = res.max_offset_days;
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal memuat pengingat tagihan.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.session_reminder_settings.load_bill_fail'));
   } finally {
     billLoading.value = false;
   }
@@ -162,15 +164,15 @@ function toggleBill(v: number) {
 function addBillCustom() {
   const n = parseInt(billCustomInput.value, 10);
   if (!Number.isFinite(n) || n < 0 || n > billMax.value) {
-    toast.error(`Masukkan angka 0–${billMax.value} hari.`);
+    toast.error(t('admin.bimbel.session_reminder_settings.range_day_invalid', { max: billMax.value }));
     return;
   }
   if (billOffsets.value.includes(n)) {
-    toast.info(`${fmtDay(n)} sudah ada di daftar.`);
+    toast.info(t('admin.bimbel.session_reminder_settings.duplicate_day', { value: fmtDay(n) }));
     return;
   }
   if (billOffsets.value.length >= 10) {
-    toast.error('Maksimal 10 pengingat.');
+    toast.error(t('admin.bimbel.session_reminder_settings.max_reached'));
     return;
   }
   billOffsets.value.push(n);
@@ -182,7 +184,7 @@ function removeBill(v: number) {
 }
 async function saveBill() {
   if (billOffsets.value.length === 0) {
-    toast.error('Minimal satu pengingat harus aktif.');
+    toast.error(t('admin.bimbel.session_reminder_settings.must_have_one'));
     return;
   }
   billSaving.value = true;
@@ -190,9 +192,9 @@ async function saveBill() {
     const res = await TutoringService.updateBillReminderOffsets(billOffsets.value);
     billOffsets.value = res.offsets_days;
     billIsDefault.value = res.is_default;
-    toast.success('Pengingat tagihan tersimpan.');
+    toast.success(t('admin.bimbel.session_reminder_settings.saved_bill'));
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menyimpan.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.session_reminder_settings.save_fail'));
   } finally {
     billSaving.value = false;
   }
@@ -211,9 +213,9 @@ onMounted(() => {
 <template>
   <div class="space-y-4 pb-12">
     <BrandPageHeader
-      kicker="BIMBEL · PENGATURAN"
-      title="Pengingat notifikasi"
-      subtitle="Atur kapan tutor + wali menerima pengingat untuk sesi & tagihan. Cron memeriksa setiap 5 menit."
+      :kicker="t('admin.bimbel.session_reminder_settings.kicker')"
+      :title="t('admin.bimbel.session_reminder_settings.title')"
+      :subtitle="t('admin.bimbel.session_reminder_settings.subtitle')"
     />
 
     <!-- Tab bar -->
@@ -227,7 +229,7 @@ onMounted(() => {
             : 'border-transparent text-bimbel-text-mid hover:text-bimbel-text-hi'
         "
         @click="tab = 'session'"
-      >Pengingat sesi</button>
+      >{{ t('admin.bimbel.session_reminder_settings.tab_session') }}</button>
       <button
         type="button"
         class="px-4 py-2 text-[13px] font-bold border-b-2 transition-colors"
@@ -237,32 +239,32 @@ onMounted(() => {
             : 'border-transparent text-bimbel-text-mid hover:text-bimbel-text-hi'
         "
         @click="tab = 'bill'"
-      >Pengingat tagihan</button>
+      >{{ t('admin.bimbel.session_reminder_settings.tab_bill') }}</button>
     </div>
 
     <!-- SESSION TAB -->
     <template v-if="tab === 'session'">
-      <div v-if="sessionLoading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+      <div v-if="sessionLoading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.session_reminder_settings.loading') }}</div>
       <template v-else>
         <section class="rounded-2xl bg-bimbel-panel border border-bimbel-border-soft p-4">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-[14px] font-bold text-bimbel-text-hi">Pengingat sesi aktif</h3>
-            <span v-if="sessionIsDefault" class="text-[11px] font-bold uppercase tracking-wider bg-bimbel-amber-dim text-amber-700 px-2 py-0.5 rounded-full">Default</span>
+            <h3 class="text-[14px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.session_reminder_settings.session_active_title') }}</h3>
+            <span v-if="sessionIsDefault" class="text-[11px] font-bold uppercase tracking-wider bg-bimbel-amber-dim text-amber-700 px-2 py-0.5 rounded-full">{{ t('admin.bimbel.session_reminder_settings.default_pill') }}</span>
           </div>
           <p class="text-[13px] text-bimbel-text-mid mb-3">
-            {{ sessionSorted.length }} pengingat per sesi — dari yang paling jauh ke yang paling dekat dengan waktu sesi. Diterima oleh tutor + semua wali yang anak-nya enroll di kelompok.
+            {{ t('admin.bimbel.session_reminder_settings.session_active_hint', { count: sessionSorted.length }) }}
           </p>
           <div v-if="sessionSorted.length" class="flex gap-2 flex-wrap">
             <div v-for="m in sessionSorted" :key="m" class="inline-flex items-center gap-1.5 rounded-full bg-bimbel-accent-dim text-bimbel-hero px-3 py-1.5 text-[13px] font-bold">
               {{ fmtMin(m) }}
-              <button type="button" class="rounded-full hover:bg-bimbel-hero/15 p-0.5 -mr-1" aria-label="Hapus" @click="removeSession(m)"><NavIcon name="x" :size="13" /></button>
+              <button type="button" class="rounded-full hover:bg-bimbel-hero/15 p-0.5 -mr-1" :aria-label="t('admin.bimbel.session_reminder_settings.remove_aria')" @click="removeSession(m)"><NavIcon name="x" :size="13" /></button>
             </div>
           </div>
-          <p v-else class="text-[13px] text-red-700">Belum ada pengingat. Tambahkan minimal satu sebelum menyimpan.</p>
+          <p v-else class="text-[13px] text-red-700">{{ t('admin.bimbel.session_reminder_settings.empty_warning') }}</p>
         </section>
 
         <section class="rounded-2xl bg-bimbel-panel border border-bimbel-border-soft p-4">
-          <h3 class="text-[14px] font-bold text-bimbel-text-hi mb-3">Pilih dari preset</h3>
+          <h3 class="text-[14px] font-bold text-bimbel-text-hi mb-3">{{ t('admin.bimbel.session_reminder_settings.preset_title') }}</h3>
           <div class="flex gap-1.5 flex-wrap">
             <button v-for="p in SESSION_PRESETS" :key="p.v" type="button"
               class="rounded-full px-3 py-1.5 text-[13px] font-bold transition-colors"
@@ -273,22 +275,22 @@ onMounted(() => {
         </section>
 
         <section class="rounded-2xl bg-bimbel-panel border border-bimbel-border-soft p-4">
-          <h3 class="text-[14px] font-bold text-bimbel-text-hi mb-2">Tambah custom (menit)</h3>
-          <p class="text-[13px] text-bimbel-text-mid mb-3">Range 1–{{ sessionMax }} menit. Maks 10 pengingat.</p>
+          <h3 class="text-[14px] font-bold text-bimbel-text-hi mb-2">{{ t('admin.bimbel.session_reminder_settings.custom_min_title') }}</h3>
+          <p class="text-[13px] text-bimbel-text-mid mb-3">{{ t('admin.bimbel.session_reminder_settings.custom_min_hint', { max: sessionMax }) }}</p>
           <div class="flex gap-2">
-            <input v-model="sessionCustomInput" type="number" min="1" :max="sessionMax" placeholder="cth. 45"
+            <input v-model="sessionCustomInput" type="number" min="1" :max="sessionMax" :placeholder="t('admin.bimbel.session_reminder_settings.custom_min_ph')"
               class="flex-1 rounded-md bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:outline-none"
               @keydown.enter="addSessionCustom"
             />
-            <button type="button" class="rounded-md bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-4 py-2 text-[13px] font-bold hover:bg-bimbel-border-soft" @click="addSessionCustom">Tambah</button>
+            <button type="button" class="rounded-md bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-4 py-2 text-[13px] font-bold hover:bg-bimbel-border-soft" @click="addSessionCustom">{{ t('admin.bimbel.session_reminder_settings.add') }}</button>
           </div>
         </section>
 
         <div class="flex justify-end gap-2 pt-2">
-          <button type="button" class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-4 py-2.5 text-[13px]" @click="resetSession">Reset ke default</button>
+          <button type="button" class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-4 py-2.5 text-[13px]" @click="resetSession">{{ t('admin.bimbel.session_reminder_settings.reset_default') }}</button>
           <button type="button" class="rounded-lg bg-bimbel-hero text-white px-4 py-2.5 text-[13px] font-bold disabled:opacity-50"
             :disabled="sessionSaving || sessionOffsets.length === 0" @click="saveSession">
-            {{ sessionSaving ? 'Menyimpan…' : 'Simpan' }}
+            {{ sessionSaving ? t('admin.bimbel.session_reminder_settings.saving') : t('admin.bimbel.session_reminder_settings.save') }}
           </button>
         </div>
       </template>
@@ -296,27 +298,27 @@ onMounted(() => {
 
     <!-- BILL TAB -->
     <template v-else>
-      <div v-if="billLoading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+      <div v-if="billLoading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.session_reminder_settings.loading') }}</div>
       <template v-else>
         <section class="rounded-2xl bg-bimbel-panel border border-bimbel-border-soft p-4">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-[14px] font-bold text-bimbel-text-hi">Pengingat tagihan aktif</h3>
-            <span v-if="billIsDefault" class="text-[11px] font-bold uppercase tracking-wider bg-bimbel-amber-dim text-amber-700 px-2 py-0.5 rounded-full">Default</span>
+            <h3 class="text-[14px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.session_reminder_settings.bill_active_title') }}</h3>
+            <span v-if="billIsDefault" class="text-[11px] font-bold uppercase tracking-wider bg-bimbel-amber-dim text-amber-700 px-2 py-0.5 rounded-full">{{ t('admin.bimbel.session_reminder_settings.default_pill') }}</span>
           </div>
           <p class="text-[13px] text-bimbel-text-mid mb-3">
-            Pengingat per tagihan yang dikirim jam 09:00 — wali menerima notifikasi pada hari-hari yang ditentukan sebelum tanggal jatuh tempo.
+            {{ t('admin.bimbel.session_reminder_settings.bill_active_hint') }}
           </p>
           <div v-if="billSorted.length" class="flex gap-2 flex-wrap">
             <div v-for="d in billSorted" :key="d" class="inline-flex items-center gap-1.5 rounded-full bg-bimbel-accent-dim text-bimbel-hero px-3 py-1.5 text-[13px] font-bold">
               {{ fmtDay(d) }}
-              <button type="button" class="rounded-full hover:bg-bimbel-hero/15 p-0.5 -mr-1" aria-label="Hapus" @click="removeBill(d)"><NavIcon name="x" :size="13" /></button>
+              <button type="button" class="rounded-full hover:bg-bimbel-hero/15 p-0.5 -mr-1" :aria-label="t('admin.bimbel.session_reminder_settings.remove_aria')" @click="removeBill(d)"><NavIcon name="x" :size="13" /></button>
             </div>
           </div>
-          <p v-else class="text-[13px] text-red-700">Belum ada pengingat. Tambahkan minimal satu sebelum menyimpan.</p>
+          <p v-else class="text-[13px] text-red-700">{{ t('admin.bimbel.session_reminder_settings.empty_warning') }}</p>
         </section>
 
         <section class="rounded-2xl bg-bimbel-panel border border-bimbel-border-soft p-4">
-          <h3 class="text-[14px] font-bold text-bimbel-text-hi mb-3">Pilih dari preset</h3>
+          <h3 class="text-[14px] font-bold text-bimbel-text-hi mb-3">{{ t('admin.bimbel.session_reminder_settings.preset_title') }}</h3>
           <div class="flex gap-1.5 flex-wrap">
             <button v-for="p in BILL_PRESETS" :key="p.v" type="button"
               class="rounded-full px-3 py-1.5 text-[13px] font-bold transition-colors"
@@ -327,22 +329,22 @@ onMounted(() => {
         </section>
 
         <section class="rounded-2xl bg-bimbel-panel border border-bimbel-border-soft p-4">
-          <h3 class="text-[14px] font-bold text-bimbel-text-hi mb-2">Tambah custom (hari)</h3>
-          <p class="text-[13px] text-bimbel-text-mid mb-3">Range 0–{{ billMax }} hari. 0 = hari jatuh tempo. Maks 10 pengingat.</p>
+          <h3 class="text-[14px] font-bold text-bimbel-text-hi mb-2">{{ t('admin.bimbel.session_reminder_settings.custom_day_title') }}</h3>
+          <p class="text-[13px] text-bimbel-text-mid mb-3">{{ t('admin.bimbel.session_reminder_settings.custom_day_hint', { max: billMax }) }}</p>
           <div class="flex gap-2">
-            <input v-model="billCustomInput" type="number" min="0" :max="billMax" placeholder="cth. 4"
+            <input v-model="billCustomInput" type="number" min="0" :max="billMax" :placeholder="t('admin.bimbel.session_reminder_settings.custom_day_ph')"
               class="flex-1 rounded-md bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:outline-none"
               @keydown.enter="addBillCustom"
             />
-            <button type="button" class="rounded-md bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-4 py-2 text-[13px] font-bold hover:bg-bimbel-border-soft" @click="addBillCustom">Tambah</button>
+            <button type="button" class="rounded-md bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-4 py-2 text-[13px] font-bold hover:bg-bimbel-border-soft" @click="addBillCustom">{{ t('admin.bimbel.session_reminder_settings.add') }}</button>
           </div>
         </section>
 
         <div class="flex justify-end gap-2 pt-2">
-          <button type="button" class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-4 py-2.5 text-[13px]" @click="resetBill">Reset ke default</button>
+          <button type="button" class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-4 py-2.5 text-[13px]" @click="resetBill">{{ t('admin.bimbel.session_reminder_settings.reset_default') }}</button>
           <button type="button" class="rounded-lg bg-bimbel-hero text-white px-4 py-2.5 text-[13px] font-bold disabled:opacity-50"
             :disabled="billSaving || billOffsets.length === 0" @click="saveBill">
-            {{ billSaving ? 'Menyimpan…' : 'Simpan' }}
+            {{ billSaving ? t('admin.bimbel.session_reminder_settings.saving') : t('admin.bimbel.session_reminder_settings.save') }}
           </button>
         </div>
       </template>

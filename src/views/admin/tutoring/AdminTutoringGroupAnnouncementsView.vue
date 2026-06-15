@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import { formatDateShort } from '@/lib/format';
@@ -19,6 +20,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 
 const route = useRoute();
 const toast = useToast();
+const { t } = useI18n();
 
 const groupId = ref(String(route.query.groupId ?? ''));
 const groups = ref<TutoringGroup[]>([]);
@@ -38,7 +40,7 @@ async function load() {
       groupId.value ? { group_id: groupId.value } : {},
     );
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal memuat pengumuman.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.group_announcements.load_fail'));
   } finally { loading.value = false; }
 }
 
@@ -52,9 +54,9 @@ const totalRecipients = computed(() =>
 );
 
 const heroStats = computed(() => [
-  { label: 'PENGUMUMAN', value: String(rows.value.length), hint: '30 hari terakhir' },
-  { label: 'KELOMPOK', value: String(groups.value.length) },
-  { label: 'PENERIMA', value: String(totalRecipients.value) },
+  { label: t('admin.bimbel.group_announcements.stat_announcements'), value: String(rows.value.length), hint: t('admin.bimbel.group_announcements.stat_last_30') },
+  { label: t('admin.bimbel.group_announcements.stat_groups'), value: String(groups.value.length) },
+  { label: t('admin.bimbel.group_announcements.stat_recipients'), value: String(totalRecipients.value) },
 ]);
 
 function openCompose() {
@@ -65,9 +67,9 @@ function openCompose() {
 }
 
 async function submitCompose() {
-  if (!fGroupId.value) { toast.error('Pilih kelompok dulu.'); return; }
+  if (!fGroupId.value) { toast.error(t('admin.bimbel.group_announcements.pick_group_first')); return; }
   if (fTitle.value.trim().length < 3 || fBody.value.trim().length < 3) {
-    toast.error('Judul + isi minimal 3 karakter.'); return;
+    toast.error(t('admin.bimbel.group_announcements.too_short')); return;
   }
   saving.value = true;
   try {
@@ -76,18 +78,18 @@ async function submitCompose() {
       title: fTitle.value.trim(),
       body: fBody.value.trim(),
     });
-    toast.success('Terbit.');
+    toast.success(t('admin.bimbel.group_announcements.published'));
     showCompose.value = false;
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menerbitkan.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.group_announcements.publish_fail'));
   } finally { saving.value = false; }
 }
 
 async function remove(a: TutoringGroupAnnouncement) {
-  if (!window.confirm(`Hapus "${a.title}"?`)) return;
+  if (!window.confirm(t('admin.bimbel.group_announcements.delete_confirm', { title: a.title }))) return;
   try { await TutoringService.deleteGroupAnnouncement(a.id); await load(); }
-  catch (e) { toast.error(e instanceof Error ? e.message : 'Gagal menghapus.'); }
+  catch (e) { toast.error(e instanceof Error ? e.message : t('admin.bimbel.group_announcements.delete_fail')); }
 }
 
 function recipientsFor(a: TutoringGroupAnnouncement): number {
@@ -98,9 +100,9 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
 <template>
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
-      greeting="BIMBEL · PENGUMUMAN KELOMPOK"
-      title="Broadcast & pengumuman"
-      :subtitle="`${rows.length} pengumuman${groupId ? ' di kelompok terpilih' : ''}`"
+      :greeting="t('admin.bimbel.group_announcements.hero_kicker')"
+      :title="t('admin.bimbel.group_announcements.hero_title')"
+      :subtitle="groupId ? t('admin.bimbel.group_announcements.hero_subtitle_filtered', { count: rows.length }) : t('admin.bimbel.group_announcements.hero_subtitle', { count: rows.length })"
       :stats="heroStats"
     >
       <template #actions>
@@ -109,19 +111,19 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
           class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold"
           @click="openCompose"
         >
-          <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> Tulis pengumuman
+          <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.group_announcements.compose') }}
         </button>
       </template>
     </TutorBerandaHero>
 
     <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3 flex flex-wrap items-center gap-2">
-      <span class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Audiens:</span>
+      <span class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.group_announcements.audience_label') }}</span>
       <button
         type="button"
         class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
         :class="groupId === '' ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
         @click="groupId = ''; load()"
-      >Semua kelompok</button>
+      >{{ t('admin.bimbel.group_announcements.audience_all') }}</button>
       <button
         v-for="g in groups"
         :key="g.id"
@@ -132,7 +134,7 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
       >{{ g.name }}</button>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.group_announcements.loading') }}</div>
 
     <div v-else-if="rows.length" class="space-y-2">
       <article v-for="a in rows" :key="a.id" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4">
@@ -141,14 +143,14 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
             <h3 class="text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ a.title }}</h3>
             <p class="text-[13px] text-bimbel-text-mid mt-0.5">
               {{ a.group_name ?? '—' }}
-              <template v-if="a.author_name"> · oleh {{ a.author_name }}</template>
+              <template v-if="a.author_name"> · {{ t('admin.bimbel.group_announcements.author_prefix', { name: a.author_name }) }}</template>
               <template v-if="a.created_at"> · {{ formatDateShort(a.created_at) }}</template>
             </p>
           </div>
           <button
             type="button"
             class="rounded-md border border-bimbel-border bg-bimbel-panel p-1.5 text-bimbel-text-lo hover:bg-bimbel-border-soft hover:text-rose-500"
-            title="Hapus"
+            :title="t('admin.bimbel.group_announcements.delete_title')"
             @click="remove(a)"
           >
             <NavIcon name="trash-2" :size="13" />
@@ -157,10 +159,10 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
         <p class="text-[14px] text-bimbel-text-mid mt-2 whitespace-pre-wrap">{{ a.body }}</p>
         <div class="mt-2.5 flex items-center gap-3 border-t border-bimbel-border-soft pt-2 text-[13px] text-bimbel-text-mid">
           <span class="inline-flex items-center gap-1">
-            <NavIcon name="users" :size="12" /> {{ recipientsFor(a) }} penerima
+            <NavIcon name="users" :size="12" /> {{ t('admin.bimbel.group_announcements.recipients_count', { count: recipientsFor(a) }) }}
           </span>
           <span class="inline-flex items-center gap-1">
-            <NavIcon name="check" :size="12" /> Terkirim aplikasi
+            <NavIcon name="check" :size="12" /> {{ t('admin.bimbel.group_announcements.delivered_app') }}
           </span>
           <span class="ml-auto inline-flex items-center gap-1">
             <NavIcon name="megaphone" :size="12" /> {{ a.group_name ?? '—' }}
@@ -170,7 +172,7 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
     </div>
 
     <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
-      Belum ada pengumuman. Klik "Tulis pengumuman" untuk membuat broadcast pertama.
+      {{ t('admin.bimbel.group_announcements.empty') }}
     </div>
 
     <div
@@ -179,23 +181,23 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
       @click.self="showCompose = false"
     >
       <div class="w-full max-w-lg rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
-        <h3 class="text-[16px] font-bold text-bimbel-text-hi">Pengumuman baru</h3>
+        <h3 class="text-[16px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.group_announcements.modal_new') }}</h3>
         <label class="block">
           <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">
-            Kelompok <span class="text-rose-500">*</span>
+            {{ t('admin.bimbel.group_announcements.field_group') }} <span class="text-rose-500">*</span>
           </span>
           <select
             v-model="fGroupId"
             class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none"
           >
-            <option value="" disabled>Pilih kelompok</option>
+            <option value="" disabled>{{ t('admin.bimbel.group_announcements.group_pick') }}</option>
             <option v-for="g in groups" :key="g.id" :value="g.id">
-              {{ g.name }} ({{ g.enrollments_count ?? 0 }} siswa)
+              {{ t('admin.bimbel.group_announcements.group_option', { name: g.name, count: g.enrollments_count ?? 0 }) }}
             </option>
           </select>
         </label>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Judul</span>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.group_announcements.field_title') }}</span>
           <input
             v-model="fTitle"
             type="text"
@@ -203,7 +205,7 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
           />
         </label>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Isi</span>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.group_announcements.field_body') }}</span>
           <textarea
             v-model="fBody"
             rows="6"
@@ -215,13 +217,13 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
             type="button"
             class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
             @click="showCompose = false"
-          >Batal</button>
+          >{{ t('admin.bimbel.group_announcements.cancel') }}</button>
           <button
             type="button"
             :disabled="saving"
             class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50"
             @click="submitCompose"
-          >{{ saving ? 'Mengirim…' : 'Terbitkan' }}</button>
+          >{{ saving ? t('admin.bimbel.group_announcements.sending') : t('admin.bimbel.group_announcements.publish') }}</button>
         </div>
       </div>
     </div>

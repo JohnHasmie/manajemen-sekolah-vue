@@ -112,7 +112,7 @@ async function onQrisChange(e: Event) {
   try {
     const { url } = await TutoringService.uploadQrisImage(file);
     qrisImageUrl.value = url;
-    toast.success('QRIS terunggah. Klik Simpan untuk persistensi.');
+    toast.success(t('admin.bimbel.billing_settings.qris_uploaded'));
   } catch (err) {
     toast.error(err instanceof Error ? err.message : String(err));
   } finally {
@@ -127,7 +127,7 @@ onMounted(load);
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      kicker="Bimbel · Pengaturan Billing"
+      :kicker="t('admin.bimbel.billing_settings.kicker')"
       :title="t('tutoring.billing.title')"
       :meta="t('tutoring.billing.hint')"
     />
@@ -186,39 +186,39 @@ onMounted(load);
       </select>
 
       <!-- ── Rekening Bimbel ─────────────────────────────────────── -->
-      <TutoringSectionHeader title="Rekening Bimbel" />
+      <TutoringSectionHeader :title="t('admin.bimbel.billing_settings.bank_section')" />
       <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 space-y-3">
         <p class="text-xs text-bimbel-text-mid">
-          Ditampilkan ke wali di halaman detail tagihan sebagai tujuan transfer.
+          {{ t('admin.bimbel.billing_settings.bank_hint') }}
         </p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="block">
-            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama Bank</span>
+            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.billing_settings.bank_name_label') }}</span>
             <input
               v-model="bankName"
               type="text"
               maxlength="80"
-              placeholder="Mis. BCA, BRI, Mandiri"
+              :placeholder="t('admin.bimbel.billing_settings.bank_name_ph')"
               class="mt-1 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm"
             />
           </label>
           <label class="block">
-            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nomor Rekening</span>
+            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.billing_settings.bank_account_number_label') }}</span>
             <input
               v-model="bankAccountNumber"
               type="text"
               maxlength="40"
-              placeholder="1234567890"
+              :placeholder="t('admin.bimbel.billing_settings.bank_account_number_ph')"
               class="mt-1 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm font-mono"
             />
           </label>
           <label class="block sm:col-span-2">
-            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Atas Nama</span>
+            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.billing_settings.bank_account_holder_label') }}</span>
             <input
               v-model="bankAccountHolder"
               type="text"
               maxlength="120"
-              placeholder="Nama pemilik rekening"
+              :placeholder="t('admin.bimbel.billing_settings.bank_account_holder_ph')"
               class="mt-1 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm"
             />
           </label>
@@ -226,17 +226,17 @@ onMounted(load);
       </div>
 
       <!-- ── QRIS ─────────────────────────────────────────────────── -->
-      <TutoringSectionHeader title="QRIS" />
+      <TutoringSectionHeader :title="t('admin.bimbel.billing_settings.qris_section')" />
       <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 space-y-3">
         <p class="text-xs text-bimbel-text-mid">
-          Unggah gambar QRIS (PNG/JPG, maks 2MB). Wali bisa langsung scan dari detail tagihan.
+          {{ t('admin.bimbel.billing_settings.qris_hint') }}
         </p>
         <div class="flex items-start gap-4">
           <div
             v-if="qrisImageUrl"
             class="h-32 w-32 rounded-lg border border-bimbel-border bg-bimbel-bg overflow-hidden flex items-center justify-center shrink-0"
           >
-            <img :src="qrisImageUrl" alt="QRIS" class="max-h-full max-w-full" />
+            <img :src="qrisImageUrl" :alt="t('admin.bimbel.billing_settings.qris_alt')" class="max-h-full max-w-full" />
           </div>
           <div
             v-else
@@ -258,36 +258,36 @@ onMounted(load);
               class="text-[12px] font-bold text-bimbel-red hover:underline"
               @click="qrisImageUrl = null"
             >
-              Hapus QRIS
+              {{ t('admin.bimbel.billing_settings.qris_remove') }}
             </button>
-            <p v-if="qrisUploading" class="text-[12px] text-bimbel-text-lo">Mengunggah…</p>
+            <p v-if="qrisUploading" class="text-[12px] text-bimbel-text-lo">{{ t('admin.bimbel.billing_settings.qris_uploading') }}</p>
           </div>
         </div>
       </div>
 
       <!-- ── Instruksi Pembayaran ────────────────────────────────── -->
-      <TutoringSectionHeader title="Instruksi Pembayaran" />
+      <TutoringSectionHeader :title="t('admin.bimbel.billing_settings.instructions_section')" />
       <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 space-y-2">
         <p class="text-xs text-bimbel-text-mid">
-          Bebas — mis. nomor e-wallet, cicilan, konfirmasi via WhatsApp.
+          {{ t('admin.bimbel.billing_settings.instructions_hint') }}
         </p>
         <textarea
           v-model="paymentInstructions"
           rows="4"
           maxlength="2000"
-          placeholder="Mis. Setelah transfer, kirim bukti ke 0812xxx via WhatsApp."
+          :placeholder="t('admin.bimbel.billing_settings.instructions_ph')"
           class="w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm resize-none"
         />
       </div>
 
       <!-- ── Payment Gateway (placeholder) ───────────────────────── -->
-      <TutoringSectionHeader title="Payment Gateway" />
+      <TutoringSectionHeader :title="t('admin.bimbel.billing_settings.gateway_section')" />
       <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 space-y-3">
         <label class="flex items-center justify-between gap-3 cursor-pointer">
           <span class="min-w-0">
-            <span class="block text-sm font-semibold text-bimbel-text-hi">Aktifkan payment gateway</span>
+            <span class="block text-sm font-semibold text-bimbel-text-hi">{{ t('admin.bimbel.billing_settings.gateway_enable') }}</span>
             <span class="block text-xs text-bimbel-text-mid mt-0.5">
-              Integrasi Midtrans / Xendit. Kredensial dikonfigurasi via admin platform.
+              {{ t('admin.bimbel.billing_settings.gateway_enable_sub') }}
             </span>
           </span>
           <input
@@ -298,21 +298,21 @@ onMounted(load);
         </label>
         <div v-if="paymentGatewayEnabled" class="space-y-2">
           <label class="block">
-            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Provider</span>
+            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.billing_settings.gateway_provider_label') }}</span>
             <select
               v-model="paymentGatewayProvider"
               class="mt-1 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm"
             >
-              <option value="">— Pilih —</option>
+              <option value="">{{ t('admin.bimbel.billing_settings.gateway_provider_pick') }}</option>
               <option value="midtrans">Midtrans</option>
               <option value="xendit">Xendit</option>
             </select>
           </label>
           <p v-if="paymentGatewayConfigured" class="text-[12px] text-emerald-600 font-bold">
-            ✓ Kredensial sudah dikonfigurasi.
+            ✓ {{ t('admin.bimbel.billing_settings.gateway_configured') }}
           </p>
           <p v-else class="text-[12px] text-amber-600">
-            Kredensial belum disetel. Hubungi admin platform.
+            {{ t('admin.bimbel.billing_settings.gateway_not_configured') }}
           </p>
         </div>
       </div>

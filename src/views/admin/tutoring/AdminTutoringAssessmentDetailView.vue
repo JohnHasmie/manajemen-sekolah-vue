@@ -43,7 +43,7 @@ onMounted(load);
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      :kicker="'Bimbel · Asesmen · ' + title"
+      :kicker="t('admin.bimbel.assessment_detail.kicker_prefix', { title })"
       :title="title"
       :meta="`${assessment?.questions?.length ?? 0} ${t('tutoring.assessment.questions')}`"
     />

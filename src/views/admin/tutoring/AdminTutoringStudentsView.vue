@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
@@ -20,6 +21,7 @@ import AdminConfirmDialog from '@/components/feature/tutoring/AdminConfirmDialog
 
 const router = useRouter();
 const toast = useToast();
+const { t } = useI18n();
 
 const loading = ref(true);
 const rows = ref<TutoringStudentRow[]>([]);
@@ -56,7 +58,7 @@ function pickRow(r: TutoringStudentRow, key: string) {
 async function submitEdit() {
   if (!editTarget.value) return;
   if (editForm.value.name.trim().length < 2) {
-    toast.error('Nama minimal 2 huruf');
+    toast.error(t('admin.bimbel.students.name_min'));
     return;
   }
   editBusy.value = true;
@@ -75,11 +77,11 @@ async function submitEdit() {
     if (gn) payload.guardian_name = gn;
     if (gp) payload.guardian_phone = gp;
     await TutoringService.updateStudent(editTarget.value.student_id, payload);
-    toast.success('Profil siswa diperbarui.');
+    toast.success(t('admin.bimbel.students.edit_saved'));
     editTarget.value = null;
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menyimpan.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.students.edit_fail'));
   } finally { editBusy.value = false; }
 }
 
@@ -88,11 +90,11 @@ async function confirmCancel() {
   cancelBusy.value = true;
   try {
     await TutoringService.cancelEnrollment(cancelTarget.value.enrollment_id);
-    toast.success('Enrollment dihentikan.');
+    toast.success(t('admin.bimbel.students.cancel_done'));
     cancelTarget.value = null;
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menghentikan.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.students.cancel_fail'));
   } finally { cancelBusy.value = false; }
 }
 
@@ -140,7 +142,7 @@ function openCreate() {
 
 async function submitCreate() {
   if (createForm.value.name.trim().length < 2) {
-    toast.error('Nama minimal 2 huruf');
+    toast.error(t('admin.bimbel.students.name_min'));
     return;
   }
   createBusy.value = true;
@@ -150,18 +152,24 @@ async function submitCreate() {
       guardian_name: createForm.value.guardian_name.trim() || null,
       guardian_phone: createForm.value.guardian_phone.trim() || null,
     });
-    toast.success('Siswa baru dibuat. Lanjut "Daftarkan siswa" untuk enroll ke program.');
+    toast.success(t('admin.bimbel.students.create_saved'));
     showCreate.value = false;
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal membuat siswa.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.students.create_fail'));
   } finally { createBusy.value = false; }
 }
 
 function exportCsv() {
   const headers = [
-    'Nama', 'Program', 'Paket', 'Kelompok',
-    'Mode', 'Hadir 30h (%)', 'Tunggakan (Rp)', 'Tunggakan (jumlah tagihan)',
+    t('admin.bimbel.students.csv_header_name'),
+    t('admin.bimbel.students.csv_header_program'),
+    t('admin.bimbel.students.csv_header_package'),
+    t('admin.bimbel.students.csv_header_group'),
+    t('admin.bimbel.students.csv_header_mode'),
+    t('admin.bimbel.students.csv_header_attended'),
+    t('admin.bimbel.students.csv_header_unpaid_total'),
+    t('admin.bimbel.students.csv_header_unpaid_count'),
   ];
   const csvRows = [
     headers.join(','),
@@ -191,9 +199,9 @@ function exportCsv() {
 <template>
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
-      greeting="BIMBEL · SISWA"
-      title="Daftar siswa"
-      :subtitle="`${counts.active} aktif · ${counts.risk} berisiko · kelola enrollment dan kontak wali`"
+      :greeting="t('admin.bimbel.students.hero_kicker')"
+      :title="t('admin.bimbel.students.hero_title')"
+      :subtitle="t('admin.bimbel.students.hero_subtitle', { active: counts.active, risk: counts.risk })"
       :stats="[]"
     >
       <template #actions>
@@ -202,21 +210,21 @@ function exportCsv() {
           class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[14px] font-bold text-white hover:bg-white/25"
           @click="exportCsv"
         >
-          <NavIcon name="download" :size="13" class="inline -mt-0.5" /> Export
+          <NavIcon name="download" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.students.export') }}
         </button>
         <button
           type="button"
           class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[14px] font-bold text-white hover:bg-white/25"
           @click="openCreate"
         >
-          <NavIcon name="user-plus" :size="13" class="inline -mt-0.5" /> Tambah siswa
+          <NavIcon name="user-plus" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.students.add_student') }}
         </button>
         <button
           type="button"
           class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold hover:opacity-90"
           @click="goEnroll"
         >
-          <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> Daftarkan ke program
+          <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.students.enroll_to_program') }}
         </button>
       </template>
     </TutorBerandaHero>
@@ -227,16 +235,16 @@ function exportCsv() {
         <input
           v-model="query"
           type="text"
-          placeholder="Cari nama siswa / kelompok…"
+          :placeholder="t('admin.bimbel.students.search_ph')"
           class="w-full rounded-lg border border-bimbel-border bg-bimbel-bg pl-9 pr-3 py-1.5 text-[14px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-bimbel-accent focus:outline-none"
         />
       </div>
       <div class="flex gap-1.5">
         <button
           v-for="opt in [
-            { id: 'all' as const, label: `Semua (${counts.all})` },
-            { id: 'active' as const, label: `Aktif (${counts.active})` },
-            { id: 'risk' as const, label: `Berisiko (${counts.risk})` },
+            { id: 'all' as const, label: t('admin.bimbel.students.filter_all', { count: counts.all }) },
+            { id: 'active' as const, label: t('admin.bimbel.students.filter_active', { count: counts.active }) },
+            { id: 'risk' as const, label: t('admin.bimbel.students.filter_risk', { count: counts.risk }) },
           ]"
           :key="opt.id"
           type="button"
@@ -247,18 +255,18 @@ function exportCsv() {
       </div>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.students.loading') }}</div>
 
     <div v-else-if="filtered.length" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
       <table class="w-full text-[14px]">
         <thead class="bg-bimbel-bg/40">
           <tr class="text-left text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">
-            <th class="px-3 py-2">Siswa</th>
-            <th class="px-3 py-2 w-[160px]">Program & paket</th>
-            <th class="px-3 py-2 w-[140px]">Kelompok</th>
-            <th class="px-3 py-2 w-[110px]">Tunggakan</th>
-            <th class="px-3 py-2 w-[120px]">Hadir 30h</th>
-            <th class="px-3 py-2 w-[80px]">Status</th>
+            <th class="px-3 py-2">{{ t('admin.bimbel.students.th_student') }}</th>
+            <th class="px-3 py-2 w-[160px]">{{ t('admin.bimbel.students.th_program_pkg') }}</th>
+            <th class="px-3 py-2 w-[140px]">{{ t('admin.bimbel.students.th_group') }}</th>
+            <th class="px-3 py-2 w-[110px]">{{ t('admin.bimbel.students.th_unpaid') }}</th>
+            <th class="px-3 py-2 w-[120px]">{{ t('admin.bimbel.students.th_attendance_30d') }}</th>
+            <th class="px-3 py-2 w-[80px]">{{ t('admin.bimbel.students.th_status') }}</th>
             <th class="px-3 py-2 w-[40px]"></th>
           </tr>
         </thead>
@@ -279,9 +287,9 @@ function exportCsv() {
             </td>
             <td class="px-3 py-2.5 text-bimbel-text-mid">{{ r.group_name ?? '—' }}</td>
             <td class="px-3 py-2.5">
-              <p v-if="r.unpaid_count === 0" class="font-bold text-emerald-700 dark:text-emerald-300">Lunas</p>
+              <p v-if="r.unpaid_count === 0" class="font-bold text-emerald-700 dark:text-emerald-300">{{ t('admin.bimbel.students.status_paid') }}</p>
               <p v-else class="font-bold text-rose-700 dark:text-rose-300">{{ formatRupiah(r.unpaid_total) }}</p>
-              <p v-if="r.unpaid_count > 0" class="text-[13px] text-bimbel-text-mid">{{ r.unpaid_count }} tagihan</p>
+              <p v-if="r.unpaid_count > 0" class="text-[13px] text-bimbel-text-mid">{{ t('admin.bimbel.students.unpaid_count', { count: r.unpaid_count }) }}</p>
             </td>
             <td class="px-3 py-2.5">
               <div class="flex items-center gap-2">
@@ -295,15 +303,15 @@ function exportCsv() {
               <span
                 class="inline-flex rounded-full px-2 py-0.5 text-[13px] font-bold"
                 :class="classify(r) === 'risk' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'"
-              >{{ classify(r) === 'risk' ? 'Berisiko' : 'Aktif' }}</span>
+              >{{ classify(r) === 'risk' ? t('admin.bimbel.students.status_risk') : t('admin.bimbel.students.status_active') }}</span>
             </td>
             <td class="px-3 py-2.5 text-right">
               <AdminActionMenu
                 :items="[
-                  { key: 'edit', label: 'Ubah siswa', icon: 'edit' },
-                  { key: 'cancel', label: 'Hentikan enrollment', icon: 'user-x', danger: true },
+                  { key: 'edit', label: t('admin.bimbel.students.action_edit'), icon: 'edit' },
+                  { key: 'cancel', label: t('admin.bimbel.students.action_cancel'), icon: 'user-x', danger: true },
                 ]"
-                aria-label="Aksi siswa"
+                :aria-label="t('admin.bimbel.students.action_aria')"
                 @pick="(k) => pickRow(r, k)"
               />
             </td>
@@ -313,60 +321,60 @@ function exportCsv() {
     </div>
 
     <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
-      Tidak ada siswa sesuai filter.
+      {{ t('admin.bimbel.students.empty') }}
     </div>
 
     <div v-if="showCreate" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="showCreate = false">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
-        <h3 class="text-[16px] font-bold text-bimbel-text-hi">Tambah siswa baru</h3>
-        <p class="text-[13px] text-bimbel-text-mid">Buat data siswa dulu. Setelah selesai, klik "Daftarkan ke program" untuk enroll.</p>
+        <h3 class="text-[16px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.students.modal_create_title') }}</h3>
+        <p class="text-[13px] text-bimbel-text-mid">{{ t('admin.bimbel.students.modal_create_subtitle') }}</p>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama <span class="text-rose-500">*</span></span>
-          <input v-model="createForm.name" type="text" required placeholder="Nama lengkap siswa" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.students.field_name') }} <span class="text-rose-500">*</span></span>
+          <input v-model="createForm.name" type="text" required :placeholder="t('admin.bimbel.students.name_ph')" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama wali (opsional)</span>
-          <input v-model="createForm.guardian_name" type="text" placeholder="Ibu / Bapak" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.students.field_guardian') }}</span>
+          <input v-model="createForm.guardian_name" type="text" :placeholder="t('admin.bimbel.students.guardian_ph')" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">No. WA wali (opsional)</span>
-          <input v-model="createForm.guardian_phone" type="tel" placeholder="08xxxxxxxxxx" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.students.field_guardian_phone') }}</span>
+          <input v-model="createForm.guardian_phone" type="tel" :placeholder="t('admin.bimbel.students.guardian_phone_ph')" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="showCreate = false">Batal</button>
-          <button type="button" :disabled="createBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitCreate">{{ createBusy ? 'Menyimpan…' : 'Simpan' }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="showCreate = false">{{ t('admin.bimbel.students.cancel') }}</button>
+          <button type="button" :disabled="createBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitCreate">{{ createBusy ? t('admin.bimbel.students.saving') : t('admin.bimbel.students.save') }}</button>
         </div>
       </div>
     </div>
 
     <div v-if="editTarget" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="editTarget = null">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
-        <h3 class="text-[16px] font-bold text-bimbel-text-hi">Ubah siswa</h3>
+        <h3 class="text-[16px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.students.modal_edit_title') }}</h3>
         <p class="text-[13px] text-bimbel-text-mid">{{ editTarget.program_name ?? '—' }}<template v-if="editTarget.group_name"> · {{ editTarget.group_name }}</template></p>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama <span class="text-rose-500">*</span></span>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.students.field_name') }} <span class="text-rose-500">*</span></span>
           <input v-model="editForm.name" type="text" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama wali (opsional)</span>
-          <input v-model="editForm.guardian_name" type="text" placeholder="Kosongkan jika tidak diubah" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.students.field_guardian') }}</span>
+          <input v-model="editForm.guardian_name" type="text" :placeholder="t('admin.bimbel.students.guardian_keep_ph')" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">No. WA wali (opsional)</span>
-          <input v-model="editForm.guardian_phone" type="tel" placeholder="Kosongkan jika tidak diubah" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.students.field_guardian_phone') }}</span>
+          <input v-model="editForm.guardian_phone" type="tel" :placeholder="t('admin.bimbel.students.guardian_keep_ph')" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="editTarget = null">Batal</button>
-          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? 'Menyimpan…' : 'Simpan' }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="editTarget = null">{{ t('admin.bimbel.students.cancel') }}</button>
+          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? t('admin.bimbel.students.saving') : t('admin.bimbel.students.save') }}</button>
         </div>
       </div>
     </div>
 
     <AdminConfirmDialog
       :open="!!cancelTarget"
-      title="Hentikan enrollment?"
-      :message="`Siswa ${cancelTarget?.student_name ?? ''} akan berhenti aktif di kelompok ini. Tagihan tertunda tetap berlaku.`"
-      confirm-label="Hentikan"
+      :title="t('admin.bimbel.students.cancel_dialog_title')"
+      :message="t('admin.bimbel.students.cancel_dialog_message', { name: cancelTarget?.student_name ?? '' })"
+      :confirm-label="t('admin.bimbel.students.cancel_confirm')"
       danger
       :busy="cancelBusy"
       @cancel="cancelTarget = null"

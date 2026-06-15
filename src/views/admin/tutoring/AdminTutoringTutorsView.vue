@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import type { TutoringTutorRow } from '@/types/tutoring';
 
@@ -20,6 +21,7 @@ import { useToast } from '@/composables/useToast';
 
 const router = useRouter();
 const toast = useToast();
+const { t } = useI18n();
 
 const loading = ref(true);
 const rows = ref<TutoringTutorRow[]>([]);
@@ -41,14 +43,14 @@ function pickAction(r: TutoringTutorRow, key: string) {
 
 async function submitEdit() {
   if (!editTarget.value) return;
-  if (editName.value.trim().length < 2) { toast.error('Nama minimal 2 huruf'); return; }
+  if (editName.value.trim().length < 2) { toast.error(t('admin.bimbel.tutors.name_min')); return; }
   editBusy.value = true;
   try {
     await TutoringService.updateTutor(editTarget.value.user_id, { name: editName.value.trim() });
-    toast.success('Profil tutor diperbarui.');
+    toast.success(t('admin.bimbel.tutors.edit_ok'));
     editTarget.value = null;
     await load();
-  } catch (e) { toast.error(e instanceof Error ? e.message : 'Gagal menyimpan.'); }
+  } catch (e) { toast.error(e instanceof Error ? e.message : t('admin.bimbel.tutors.edit_fail')); }
   finally { editBusy.value = false; }
 }
 
@@ -58,11 +60,11 @@ async function confirmDeactivate() {
   try {
     const r = await TutoringService.deactivateTutor(deactivateTarget.value.user_id);
     toast.success(r.groups_unassigned > 0
-      ? `Tutor nonaktif. ${r.groups_unassigned} kelompok perlu tutor baru.`
-      : 'Tutor nonaktif.');
+      ? t('admin.bimbel.tutors.deactivate_ok_groups', { count: r.groups_unassigned })
+      : t('admin.bimbel.tutors.deactivate_ok'));
     deactivateTarget.value = null;
     await load();
-  } catch (e) { toast.error(e instanceof Error ? e.message : 'Gagal menonaktifkan.'); }
+  } catch (e) { toast.error(e instanceof Error ? e.message : t('admin.bimbel.tutors.deactivate_fail')); }
   finally { deactivateBusy.value = false; }
 }
 
@@ -109,9 +111,9 @@ function onInvited() {
 <template>
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
-      greeting="BIMBEL · TUTOR"
-      title="Daftar tutor"
-      :subtitle="`${counts.active} aktif · ${counts.pending} perlu approval`"
+      :greeting="t('admin.bimbel.tutors.hero_kicker')"
+      :title="t('admin.bimbel.tutors.hero_title')"
+      :subtitle="t('admin.bimbel.tutors.hero_subtitle', { active: counts.active, pending: counts.pending })"
       :stats="[]"
     >
       <template #actions>
@@ -120,7 +122,7 @@ function onInvited() {
           class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold"
           @click="showInvite = true"
         >
-          <NavIcon name="mail" :size="13" class="inline -mt-0.5" /> Undang tutor
+          <NavIcon name="mail" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.tutors.invite') }}
         </button>
       </template>
     </TutorBerandaHero>
@@ -131,16 +133,16 @@ function onInvited() {
         <input
           v-model="query"
           type="text"
-          placeholder="Cari nama / email tutor…"
+          :placeholder="t('admin.bimbel.tutors.search_ph')"
           class="w-full rounded-lg border border-bimbel-border bg-bimbel-bg pl-9 pr-3 py-1.5 text-[14px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-bimbel-accent focus:outline-none"
         />
       </div>
       <div class="flex gap-1.5">
         <button
           v-for="opt in [
-            { id: 'all' as const, label: `Semua (${counts.all})` },
-            { id: 'ACTIVE' as const, label: `Aktif (${counts.active})` },
-            { id: 'PENDING' as const, label: `Pending (${counts.pending})` },
+            { id: 'all' as const, label: t('admin.bimbel.tutors.filter_all', { count: counts.all }) },
+            { id: 'ACTIVE' as const, label: t('admin.bimbel.tutors.filter_active', { count: counts.active }) },
+            { id: 'PENDING' as const, label: t('admin.bimbel.tutors.filter_pending', { count: counts.pending }) },
           ]"
           :key="opt.id"
           type="button"
@@ -151,7 +153,7 @@ function onInvited() {
       </div>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.tutors.loading') }}</div>
 
     <div v-else-if="filtered.length" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <div
@@ -169,46 +171,46 @@ function onInvited() {
             <div class="min-w-0">
               <p class="text-[14px] font-bold text-bimbel-text-hi truncate">{{ r.name }}</p>
               <p class="text-[13px] text-bimbel-text-mid truncate">
-                {{ r.groups[0]?.program ?? '—' }}<template v-if="r.groups.length"> · {{ r.groups.length }} kelompok</template>
+                {{ r.groups[0]?.program ?? '—' }}<template v-if="r.groups.length"> · {{ t('admin.bimbel.tutors.groups_count', { count: r.groups.length }) }}</template>
               </p>
             </div>
           </button>
           <AdminActionMenu
             :items="[
-              { key: 'open', label: 'Lihat detail', icon: 'chevron-right' },
-              { key: 'edit', label: 'Ubah profil', icon: 'edit' },
-              { key: 'deactivate', label: 'Nonaktifkan tutor', icon: 'user-x', danger: true },
+              { key: 'open', label: t('admin.bimbel.tutors.action_open'), icon: 'chevron-right' },
+              { key: 'edit', label: t('admin.bimbel.tutors.action_edit'), icon: 'edit' },
+              { key: 'deactivate', label: t('admin.bimbel.tutors.action_deactivate'), icon: 'user-x', danger: true },
             ]"
-            aria-label="Aksi tutor"
+            :aria-label="t('admin.bimbel.tutors.action_aria')"
             @pick="(k) => pickAction(r, k)"
           />
         </div>
         <template v-if="r.status === 'ACTIVE'">
           <div class="grid grid-cols-3 gap-1.5 mt-2">
             <div class="rounded-lg bg-bimbel-bg/40 p-1.5 text-center">
-              <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">KELAS</p>
+              <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.tutors.stat_classes') }}</p>
               <p class="text-[14px] font-bold">{{ r.group_count }}</p>
             </div>
             <div class="rounded-lg bg-bimbel-bg/40 p-1.5 text-center">
-              <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">SISWA</p>
+              <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.tutors.stat_students') }}</p>
               <p class="text-[14px] font-bold">{{ studentsCount(r) }}</p>
             </div>
             <div class="rounded-lg bg-bimbel-bg/40 p-1.5 text-center">
-              <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">SESI 30H</p>
+              <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.tutors.stat_sessions_30d') }}</p>
               <p class="text-[14px] font-bold">{{ r.sessions_30d }}</p>
             </div>
           </div>
           <p v-if="r.attendance_rate != null" class="text-[13px] text-bimbel-text-mid mt-2">
-            Kehadiran sesi: {{ r.attendance_rate }}%
+            {{ t('admin.bimbel.tutors.attendance_line', { rate: r.attendance_rate }) }}
           </p>
         </template>
         <template v-else>
           <div class="mt-2 text-[14px] text-amber-700 dark:text-amber-300">
-            Menunggu approval — onboard sejak {{ r.joined_at ? new Date(r.joined_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '—' }}
+            {{ t('admin.bimbel.tutors.pending_line', { date: r.joined_at ? new Date(r.joined_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '—' }) }}
           </div>
           <div class="mt-2">
             <span class="inline-flex items-center gap-1 rounded-md bg-bimbel-accent text-white px-2.5 py-1 text-[13px] font-bold">
-              Review onboarding →
+              {{ t('admin.bimbel.tutors.pending_cta') }}
             </span>
           </div>
         </template>
@@ -216,31 +218,31 @@ function onInvited() {
     </div>
 
     <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
-      Tidak ada tutor sesuai filter.
+      {{ t('admin.bimbel.tutors.empty') }}
     </div>
 
     <InviteTutorModal v-if="showInvite" @close="showInvite = false" @done="onInvited" />
 
     <div v-if="editTarget" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="editTarget = null">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
-        <h3 class="text-[16px] font-bold text-bimbel-text-hi">Ubah profil tutor</h3>
+        <h3 class="text-[16px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.tutors.modal_edit_title') }}</h3>
         <p class="text-[14px] text-bimbel-text-mid">{{ editTarget.email }}</p>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama</span>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.tutors.field_name') }}</span>
           <input v-model="editName" type="text" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="editTarget = null">Batal</button>
-          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? 'Menyimpan…' : 'Simpan' }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="editTarget = null">{{ t('admin.bimbel.tutors.cancel') }}</button>
+          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? t('admin.bimbel.tutors.saving') : t('admin.bimbel.tutors.save') }}</button>
         </div>
       </div>
     </div>
 
     <AdminConfirmDialog
       :open="!!deactivateTarget"
-      title="Nonaktifkan tutor?"
-      :message="`${deactivateTarget?.name ?? ''} akan dikeluarkan dari semua kelompok yang dia ajar dan kehilangan akses bimbel. Akun-nya tetap ada — admin bisa undang ulang nanti.`"
-      confirm-label="Nonaktifkan"
+      :title="t('admin.bimbel.tutors.deactivate_title')"
+      :message="t('admin.bimbel.tutors.deactivate_message', { name: deactivateTarget?.name ?? '' })"
+      :confirm-label="t('admin.bimbel.tutors.deactivate_confirm')"
       danger
       :busy="deactivateBusy"
       @cancel="deactivateTarget = null"
