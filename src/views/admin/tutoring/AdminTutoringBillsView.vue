@@ -57,16 +57,16 @@ async function confirmMarkPaid() {
       amount: markPaidForm.value.amount,
       admin_notes: markPaidForm.value.admin_notes || undefined,
     });
-    toast.success('Tagihan ditandai lunas.');
+    toast.success(t('admin.bimbel.bills.paid_toast'));
     markPaidBillId.value = null;
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menandai lunas.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.bills.paid_fail'));
   } finally { markPaidSaving.value = false; }
 }
 
 const FILTER_OPTIONS = computed<{ key: Filter; label: string }[]>(() => [
-  { key: 'all', label: 'Semua' },
+  { key: 'all', label: t('admin.bimbel.bills.filter_all') },
   { key: 'unpaid', label: t('tutoring.adminBills.unpaid') },
   { key: 'pending', label: t('tutoring.adminBills.pending') },
   { key: 'paid', label: t('tutoring.adminBills.paid') },
@@ -74,7 +74,7 @@ const FILTER_OPTIONS = computed<{ key: Filter; label: string }[]>(() => [
 
 const activeFilterLabel = computed(
   () =>
-    FILTER_OPTIONS.value.find((o) => o.key === filter.value)?.label ?? 'Semua',
+    FILTER_OPTIONS.value.find((o) => o.key === filter.value)?.label ?? t('admin.bimbel.bills.filter_all'),
 );
 
 async function load() {
@@ -119,7 +119,7 @@ const unpaidTotal = computed(() =>
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'wallet',
-    label: 'Total tagihan',
+    label: t('admin.bimbel.bills.kpi_total_label'),
     value: bills.value.length,
     suffix: formatRupiah(total.value),
     tone: 'brand',
@@ -127,13 +127,13 @@ const kpiCards = computed<KpiCard[]>(() => [
   },
   {
     icon: 'check-circle',
-    label: 'Lunas',
+    label: t('admin.bimbel.bills.kpi_paid_label'),
     value: paidCount.value,
     tone: 'green',
   },
   {
     icon: 'alert-circle',
-    label: 'Belum lunas',
+    label: t('admin.bimbel.bills.kpi_unpaid_label'),
     value: unpaidCount.value,
     suffix:
       unpaidCount.value > 0 ? formatRupiah(unpaidTotal.value) : undefined,
@@ -141,7 +141,7 @@ const kpiCards = computed<KpiCard[]>(() => [
   },
   {
     icon: 'calendar',
-    label: 'Jatuh tempo 7h',
+    label: t('admin.bimbel.bills.kpi_due_7d_label'),
     value: bills.value.filter((b) => {
       if (!b.due_date || b.status === 'paid') return false;
       const d = new Date(b.due_date).getTime();
@@ -156,9 +156,9 @@ const kpiCards = computed<KpiCard[]>(() => [
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      kicker="Bimbel · Tagihan"
+      :kicker="t('admin.bimbel.bills.kicker')"
       :title="t('tutoring.adminBills.title')"
-      :meta="`${bills.length} tagihan · ${formatRupiah(unpaidTotal)} belum lunas`"
+      :meta="t('admin.bimbel.bills.meta', { total: bills.length, unpaid: formatRupiah(unpaidTotal) })"
     >
       <button
         type="button"
@@ -175,7 +175,7 @@ const kpiCards = computed<KpiCard[]>(() => [
     <PageFilterToolbar :hide-default-search="true">
       <template #chips>
         <AppFilterChip
-          label="Status"
+          :label="t('admin.bimbel.bills.filter_status')"
           :value="activeFilterLabel"
           icon-name="wallet"
           tone="amber"
@@ -199,11 +199,11 @@ const kpiCards = computed<KpiCard[]>(() => [
       <table class="w-full text-sm">
         <thead class="text-[10.5px] uppercase tracking-wider text-bimbel-text-mid">
           <tr class="border-b border-bimbel-border">
-            <th class="text-left font-bold px-3 py-2.5">Siswa</th>
-            <th class="text-left font-bold px-3 py-2.5">Sumber</th>
-            <th class="text-left font-bold px-3 py-2.5">Periode</th>
-            <th class="text-right font-bold px-3 py-2.5">Nominal</th>
-            <th class="text-left font-bold px-3 py-2.5">Status</th>
+            <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.bills.th_student') }}</th>
+            <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.bills.th_source') }}</th>
+            <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.bills.th_period') }}</th>
+            <th class="text-right font-bold px-3 py-2.5">{{ t('admin.bimbel.bills.th_amount') }}</th>
+            <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.bills.th_status') }}</th>
             <th class="px-3 py-2.5"></th>
           </tr>
         </thead>
@@ -233,14 +233,14 @@ const kpiCards = computed<KpiCard[]>(() => [
                   class="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[12px] font-bold text-white hover:opacity-90"
                   @click.stop="markPaidBillId = b.id"
                 >
-                  Tandai lunas
+                  {{ t('admin.bimbel.bills.mark_paid') }}
                 </button>
                 <button
                   type="button"
                   class="inline-flex items-center gap-1 rounded-md border border-bimbel-border px-2 py-1 text-[12px] font-bold text-bimbel-accent hover:bg-bimbel-accent/5"
                   @click.stop="openBillId = b.id"
                 >
-                  Detail
+                  {{ t('admin.bimbel.bills.detail') }}
                 </button>
               </div>
             </td>
@@ -252,45 +252,45 @@ const kpiCards = computed<KpiCard[]>(() => [
     <!-- Mark as paid modal -->
     <div v-if="markPaidBillId && markPaidBill" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="markPaidBillId = null">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl">
-        <h3 class="text-[16px] font-bold text-bimbel-text-hi">Tandai sebagai lunas</h3>
-        <p class="text-[14px] text-bimbel-text-mid mt-0.5">Catat pembayaran manual yang sudah diterima admin.</p>
+        <h3 class="text-[16px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.bills.modal_title') }}</h3>
+        <p class="text-[14px] text-bimbel-text-mid mt-0.5">{{ t('admin.bimbel.bills.modal_subtitle') }}</p>
 
         <div class="relative my-3 overflow-hidden rounded-xl border border-bimbel-border-soft bg-bimbel-bg/40 pl-4 pr-3 py-3">
           <span class="absolute left-0 top-0 h-full w-1.5 bg-emerald-500" />
-          <p class="text-[13px] font-extrabold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">TAGIHAN</p>
+          <p class="text-[13px] font-extrabold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">{{ t('admin.bimbel.bills.modal_bill_kicker') }}</p>
           <p class="mt-0.5 text-[20px] font-extrabold text-bimbel-text-hi">{{ formatRupiah(markPaidBill.amount ?? 0) }}</p>
           <p class="text-[14px] text-bimbel-text-mid">
-            {{ [markPaidBill.source_label, markPaidBill.student_name, markPaidBill.due_date ? `jatuh tempo ${formatDateShort(markPaidBill.due_date)}` : null].filter(Boolean).join(' · ') }}
+            {{ [markPaidBill.source_label, markPaidBill.student_name, markPaidBill.due_date ? t('admin.bimbel.bills.due_date_prefix', { date: formatDateShort(markPaidBill.due_date) }) : null].filter(Boolean).join(' · ') }}
           </p>
         </div>
 
         <div class="space-y-2.5">
           <label class="grid items-center gap-3" style="grid-template-columns: 120px 1fr;">
-            <span class="text-[14px] text-bimbel-text-mid">Metode</span>
+            <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.bills.field_method') }}</span>
             <select v-model="markPaidForm.payment_method" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none">
-              <option value="bank_transfer">Transfer bank</option>
-              <option value="qris">QRIS</option>
-              <option value="cash">Tunai</option>
+              <option value="bank_transfer">{{ t('admin.bimbel.bills.method_transfer') }}</option>
+              <option value="qris">{{ t('admin.bimbel.bills.method_qris') }}</option>
+              <option value="cash">{{ t('admin.bimbel.bills.method_cash') }}</option>
             </select>
           </label>
           <label class="grid items-center gap-3" style="grid-template-columns: 120px 1fr;">
-            <span class="text-[14px] text-bimbel-text-mid">Tanggal bayar</span>
+            <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.bills.field_payment_date') }}</span>
             <input v-model="markPaidForm.payment_date" type="date" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
           </label>
           <label class="grid items-center gap-3" style="grid-template-columns: 120px 1fr;">
-            <span class="text-[14px] text-bimbel-text-mid">Jumlah diterima</span>
+            <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.bills.field_amount_received') }}</span>
             <input v-model.number="markPaidForm.amount" type="number" :placeholder="markPaidBill.amount?.toString()" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
           </label>
           <label class="grid items-start gap-3" style="grid-template-columns: 120px 1fr;">
-            <span class="pt-2 text-[14px] text-bimbel-text-mid">Catatan admin</span>
-            <textarea v-model="markPaidForm.admin_notes" rows="2" placeholder="Opsional — bukti transfer diverifikasi, dll." class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none"></textarea>
+            <span class="pt-2 text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.bills.field_admin_notes') }}</span>
+            <textarea v-model="markPaidForm.admin_notes" rows="2" :placeholder="t('admin.bimbel.bills.notes_ph')" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none"></textarea>
           </label>
         </div>
 
         <div class="mt-4 flex gap-2">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="markPaidBillId = null">Batal</button>
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="markPaidBillId = null">{{ t('admin.bimbel.bills.cancel') }}</button>
           <button type="button" :disabled="markPaidSaving" class="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="confirmMarkPaid">
-            {{ markPaidSaving ? 'Menyimpan…' : 'Tandai lunas' }}
+            {{ markPaidSaving ? t('admin.bimbel.bills.saving') : t('admin.bimbel.bills.mark_paid') }}
           </button>
         </div>
       </div>
@@ -305,7 +305,7 @@ const kpiCards = computed<KpiCard[]>(() => [
 
     <Modal
       v-if="showFilterPicker"
-      title="Filter Status"
+      :title="t('admin.bimbel.bills.filter_modal_title')"
       @close="showFilterPicker = false"
     >
       <ul class="space-y-1">

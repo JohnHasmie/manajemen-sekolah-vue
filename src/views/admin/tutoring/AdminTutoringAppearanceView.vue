@@ -10,13 +10,13 @@ import { useI18n } from 'vue-i18n';
 import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
 
 const theme = useBimbelThemeStore();
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
-const modes = [
-  { id: 'light' as const, label: 'Terang', sub: 'Selalu terang' },
-  { id: 'dark' as const, label: 'Gelap', sub: 'Selalu gelap' },
-  { id: 'auto' as const, label: 'Otomatis', sub: 'Ikuti waktu' },
-];
+const modes = computed(() => [
+  { id: 'light' as const, label: t('admin.bimbel.appearance.mode_light'), sub: t('admin.bimbel.appearance.mode_light_sub') },
+  { id: 'dark' as const, label: t('admin.bimbel.appearance.mode_dark'), sub: t('admin.bimbel.appearance.mode_dark_sub') },
+  { id: 'auto' as const, label: t('admin.bimbel.appearance.mode_auto'), sub: t('admin.bimbel.appearance.mode_auto_sub') },
+]);
 
 const notif = computed({
   get: () => ({
@@ -38,14 +38,14 @@ function toggle(key: string) {
 <template>
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
-      greeting="TAMPILAN"
-      title="Tampilan & bahasa"
-      subtitle="Mode terang/gelap + bahasa + notifikasi push"
+      :greeting="t('admin.bimbel.appearance.hero_kicker')"
+      :title="t('admin.bimbel.appearance.hero_title')"
+      :subtitle="t('admin.bimbel.appearance.hero_subtitle')"
       :stats="[]"
     />
 
     <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 space-y-3">
-      <h4 class="text-[15px] font-bold tracking-tight text-bimbel-text-hi">Mode tampilan</h4>
+      <h4 class="text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.appearance.mode_section') }}</h4>
       <div class="grid gap-2 sm:grid-cols-3">
         <button
           v-for="m in modes"
@@ -67,32 +67,32 @@ function toggle(key: string) {
     </section>
 
     <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4">
-      <h4 class="text-[15px] font-bold tracking-tight text-bimbel-text-hi mb-3">Bahasa</h4>
+      <h4 class="text-[15px] font-bold tracking-tight text-bimbel-text-hi mb-3">{{ t('admin.bimbel.appearance.language_section') }}</h4>
       <div class="flex gap-2">
         <button
           type="button"
           class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
           :class="locale === 'id' ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
           @click="locale = 'id'"
-        >Bahasa Indonesia</button>
+        >{{ t('admin.bimbel.appearance.language_id') }}</button>
         <button
           type="button"
           class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
           :class="locale === 'en' ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
           @click="locale = 'en'"
-        >English</button>
+        >{{ t('admin.bimbel.appearance.language_en') }}</button>
       </div>
     </section>
 
     <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4">
-      <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Notifikasi push</h4>
+      <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.appearance.push_section') }}</h4>
       <div
         v-for="row in [
-          { id: 'leads', name: 'Lead masuk', sub: 'WA / push langsung saat ada lead baru' },
-          { id: 'bills', name: 'Tagihan overdue', sub: '7 hari setelah jatuh tempo' },
-          { id: 'tutor', name: 'Tutor sakit / cuti', sub: 'Saat tutor request pengganti' },
-          { id: 'proof', name: 'Bukti bayar masuk', sub: 'Perlu verifikasi manual' },
-          { id: 'daily', name: 'Rangkuman harian', sub: 'Email setiap pagi 06:00' },
+          { id: 'leads', name: t('admin.bimbel.appearance.push_leads_name'), sub: t('admin.bimbel.appearance.push_leads_sub') },
+          { id: 'bills', name: t('admin.bimbel.appearance.push_bills_name'), sub: t('admin.bimbel.appearance.push_bills_sub') },
+          { id: 'tutor', name: t('admin.bimbel.appearance.push_tutor_name'), sub: t('admin.bimbel.appearance.push_tutor_sub') },
+          { id: 'proof', name: t('admin.bimbel.appearance.push_proof_name'), sub: t('admin.bimbel.appearance.push_proof_sub') },
+          { id: 'daily', name: t('admin.bimbel.appearance.push_daily_name'), sub: t('admin.bimbel.appearance.push_daily_sub') },
         ]"
         :key="row.id"
         class="flex items-center justify-between border-t border-bimbel-border-soft py-2.5 first:border-t-0"

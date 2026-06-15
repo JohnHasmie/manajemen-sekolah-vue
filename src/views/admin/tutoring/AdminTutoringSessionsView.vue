@@ -36,14 +36,14 @@ const filter = ref<Filter>('all');
 const view = ref<ViewMode>('list');
 const showFilterPicker = ref(false);
 
-const FILTER_OPTIONS: { key: Filter; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'upcoming', label: 'Mendatang' },
-  { key: 'past', label: 'Lampau' },
-];
+const FILTER_OPTIONS = computed<{ key: Filter; label: string }[]>(() => [
+  { key: 'all', label: t('admin.bimbel.sessions.filter_all') },
+  { key: 'upcoming', label: t('admin.bimbel.sessions.filter_upcoming') },
+  { key: 'past', label: t('admin.bimbel.sessions.filter_past') },
+]);
 
 const activeFilterLabel = computed(
-  () => FILTER_OPTIONS.find((o) => o.key === filter.value)?.label ?? 'Semua',
+  () => FILTER_OPTIONS.value.find((o) => o.key === filter.value)?.label ?? t('admin.bimbel.sessions.filter_all'),
 );
 
 const filtered = computed(() => {
@@ -78,26 +78,26 @@ const cancelledCount = computed(
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'calendar',
-    label: 'Total sesi 60h',
+    label: t('admin.bimbel.sessions.kpi_total'),
     value: sessions.value.length,
     tone: 'brand',
     accented: true,
   },
   {
     icon: 'clock',
-    label: 'Mendatang',
+    label: t('admin.bimbel.sessions.kpi_upcoming'),
     value: upcomingCount.value,
     tone: 'violet',
   },
   {
     icon: 'check-circle',
-    label: 'Selesai',
+    label: t('admin.bimbel.sessions.kpi_done'),
     value: doneCount.value,
     tone: 'green',
   },
   {
     icon: 'x-circle',
-    label: 'Batal',
+    label: t('admin.bimbel.sessions.kpi_cancelled'),
     value: cancelledCount.value,
     tone: cancelledCount.value > 0 ? 'red' : 'slate',
   },
@@ -147,16 +147,16 @@ onMounted(load);
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      kicker="Bimbel · Sesi"
+      :kicker="t('admin.bimbel.sessions.kicker')"
       :title="t('tutoring.adminSessions.title')"
-      :meta="`${sessions.length} sesi (60 hari) · ${upcomingCount} mendatang`"
+      :meta="t('admin.bimbel.sessions.meta', { total: sessions.length, upcoming: upcomingCount })"
     >
       <button
         type="button"
         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[13px] font-bold hover:bg-bimbel-panel/90"
       >
         <NavIcon name="download" :size="13" />
-        Export
+        {{ t('admin.bimbel.sessions.export') }}
       </button>
     </BrandPageHeader>
 
@@ -165,7 +165,7 @@ onMounted(load);
     <PageFilterToolbar :hide-default-search="true">
       <template #chips>
         <AppFilterChip
-          label="Rentang"
+          :label="t('admin.bimbel.sessions.filter_range')"
           :value="activeFilterLabel"
           icon-name="calendar"
           tone="violet"
@@ -183,7 +183,7 @@ onMounted(load);
             @click="view = 'list'"
           >
             <NavIcon name="list" :size="14" />
-            List
+            {{ t('admin.bimbel.sessions.view_list') }}
           </button>
           <button
             type="button"
@@ -194,7 +194,7 @@ onMounted(load);
             @click="view = 'calendar'"
           >
             <NavIcon name="calendar" :size="14" />
-            Kalender
+            {{ t('admin.bimbel.sessions.view_calendar') }}
           </button>
         </div>
       </template>
@@ -224,11 +224,11 @@ onMounted(load);
       <table class="w-full text-sm">
         <thead class="text-[10.5px] uppercase tracking-wider text-bimbel-text-mid">
           <tr class="border-b border-bimbel-border">
-            <th class="text-left font-bold px-3 py-2.5">Waktu</th>
-            <th class="text-left font-bold px-3 py-2.5">Kelompok</th>
-            <th class="text-left font-bold px-3 py-2.5">Tutor</th>
-            <th class="text-left font-bold px-3 py-2.5">Topik / Ruang</th>
-            <th class="text-left font-bold px-3 py-2.5">Status</th>
+            <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.sessions.th_time') }}</th>
+            <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.sessions.th_group') }}</th>
+            <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.sessions.th_tutor') }}</th>
+            <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.sessions.th_topic_room') }}</th>
+            <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.sessions.th_status') }}</th>
             <th class="px-3 py-2.5"></th>
           </tr>
         </thead>
@@ -262,11 +262,11 @@ onMounted(load);
                 type="button"
                 class="inline-flex items-center gap-1 rounded-md border border-bimbel-border px-2 py-1 text-[12px] font-bold text-bimbel-accent hover:bg-bimbel-accent/5 disabled:opacity-40 disabled:cursor-not-allowed"
                 :disabled="s.status === 'CANCELLED'"
-                :title="s.status === 'CANCELLED' ? 'Sesi dibatalkan' : 'Lihat / catat kehadiran'"
+                :title="s.status === 'CANCELLED' ? t('admin.bimbel.sessions.tooltip_cancelled') : t('admin.bimbel.sessions.tooltip_attendance')"
                 @click.stop="openAttendance(s)"
               >
                 <NavIcon name="check-circle" :size="12" />
-                Kehadiran
+                {{ t('admin.bimbel.sessions.btn_attendance') }}
               </button>
             </td>
           </tr>
@@ -276,7 +276,7 @@ onMounted(load);
 
     <Modal
       v-if="showFilterPicker"
-      title="Filter Rentang"
+      :title="t('admin.bimbel.sessions.filter_modal')"
       @close="showFilterPicker = false"
     >
       <ul class="space-y-1">

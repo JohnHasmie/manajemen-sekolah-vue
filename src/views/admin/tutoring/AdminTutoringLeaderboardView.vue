@@ -31,7 +31,7 @@ const loading = ref(true);
 const showGroupPicker = ref(false);
 
 const activeGroupLabel = computed(() => {
-  if (!groupId.value) return 'Pilih kelompok';
+  if (!groupId.value) return t('admin.bimbel.leaderboard.pick_group');
   return groups.value.find((g) => g.id === groupId.value)?.name ?? '—';
 });
 
@@ -50,7 +50,7 @@ async function loadRanks() {
   try {
     rows.value = await TutoringService.getGroupLeaderboard(groupId.value);
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal memuat ranking.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.leaderboard.load_fail'));
   } finally {
     loading.value = false;
   }
@@ -81,13 +81,13 @@ function rankClass(rank: number): string {
       role="admin"
       kicker="Bimbel · Leaderboard"
       title="Peringkat Kelompok"
-      :meta="rows.length > 0 ? `${rows.length} siswa` : ''"
+      :meta="rows.length > 0 ? t('admin.bimbel.leaderboard.students_meta', { count: rows.length }) : ''"
     />
 
     <PageFilterToolbar :hide-default-search="true">
       <template #chips>
         <AppFilterChip
-          label="Kelompok"
+          :label="t('admin.bimbel.leaderboard.filter_group')"
           :value="activeGroupLabel"
           icon-name="users"
           tone="violet"
@@ -101,12 +101,12 @@ function rankClass(rank: number): string {
     </div>
     <TutoringEmpty
       v-else-if="!groupId"
-      text="Pilih kelompok dulu untuk melihat peringkat."
+      :text="t('admin.bimbel.leaderboard.pick_group_first')"
       icon="users"
     />
     <TutoringEmpty
       v-else-if="rows.length === 0"
-      text="Belum ada siswa terdaftar di kelompok ini."
+      :text="t('admin.bimbel.leaderboard.empty')"
       icon="users"
     />
     <div v-else class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl overflow-hidden">
@@ -114,10 +114,10 @@ function rankClass(rank: number): string {
         <thead class="text-[10.5px] uppercase tracking-wider text-bimbel-text-mid">
           <tr class="border-b border-bimbel-border">
             <th class="text-center font-bold px-3 py-2.5 w-12">#</th>
-            <th class="text-left font-bold px-3 py-2.5">Siswa</th>
-            <th class="text-right font-bold px-3 py-2.5">Kehadiran</th>
-            <th class="text-right font-bold px-3 py-2.5">Rata Nilai</th>
-            <th class="text-right font-bold px-3 py-2.5">Skor</th>
+            <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.leaderboard.th_student') }}</th>
+            <th class="text-right font-bold px-3 py-2.5">{{ t('admin.bimbel.leaderboard.th_attendance') }}</th>
+            <th class="text-right font-bold px-3 py-2.5">{{ t('admin.bimbel.leaderboard.th_avg_score') }}</th>
+            <th class="text-right font-bold px-3 py-2.5">{{ t('admin.bimbel.leaderboard.th_score') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -149,7 +149,7 @@ function rankClass(rank: number): string {
       </table>
     </div>
 
-    <Modal v-if="showGroupPicker" title="Pilih Kelompok" @close="showGroupPicker = false">
+    <Modal v-if="showGroupPicker" :title="t('admin.bimbel.leaderboard.modal_title')" @close="showGroupPicker = false">
       <ul class="space-y-1">
         <li v-for="g in groups" :key="g.id">
           <button
@@ -166,7 +166,7 @@ function rankClass(rank: number): string {
 
     <p v-if="groupId" class="text-[12px] text-bimbel-text-mid italic px-1">
       <NavIcon name="info" :size="11" class="inline-block align-text-bottom" />
-      Skor = kehadiran 30h × 0.5 + rata-rata nilai assessment × 0.5
+      {{ t('admin.bimbel.leaderboard.formula_hint') }}
     </p>
   </div>
 </template>

@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringGroup, TutoringProgram, TutoringTutorRow } from '@/types/tutoring';
@@ -16,6 +17,7 @@ import AdminConfirmDialog from '@/components/feature/tutoring/AdminConfirmDialog
 
 const router = useRouter();
 const toast = useToast();
+const { t } = useI18n();
 
 const loading = ref(true);
 const groups = ref<TutoringGroup[]>([]);
@@ -82,8 +84,8 @@ function pickAction(g: TutoringGroup, key: string) {
 }
 
 async function submitCreate() {
-  if (form.value.name.trim().length < 3) { toast.error('Nama minimal 3 huruf'); return; }
-  if (!form.value.program_id) { toast.error('Pilih program'); return; }
+  if (form.value.name.trim().length < 3) { toast.error(t('admin.bimbel.groups.name_too_short')); return; }
+  if (!form.value.program_id) { toast.error(t('admin.bimbel.groups.pick_program')); return; }
   saving.value = true;
   try {
     await TutoringService.createGroup({
@@ -92,26 +94,26 @@ async function submitCreate() {
       capacity: form.value.capacity,
       tutor_user_id: form.value.tutor_user_id || undefined,
     });
-    toast.success('Kelompok dibuat.');
+    toast.success(t('admin.bimbel.groups.created'));
     modal.value = null;
     await load();
-  } catch (e) { toast.error(e instanceof Error ? e.message : 'Gagal membuat.'); }
+  } catch (e) { toast.error(e instanceof Error ? e.message : t('admin.bimbel.groups.create_fail')); }
   finally { saving.value = false; }
 }
 
 async function submitEdit() {
   if (!target.value) return;
-  if (form.value.name.trim().length < 3) { toast.error('Nama minimal 3 huruf'); return; }
+  if (form.value.name.trim().length < 3) { toast.error(t('admin.bimbel.groups.name_too_short')); return; }
   saving.value = true;
   try {
     await TutoringService.updateGroup(target.value.id, {
       name: form.value.name.trim(),
       capacity: form.value.capacity,
     });
-    toast.success('Kelompok diperbarui.');
+    toast.success(t('admin.bimbel.groups.updated'));
     modal.value = null;
     await load();
-  } catch (e) { toast.error(e instanceof Error ? e.message : 'Gagal menyimpan.'); }
+  } catch (e) { toast.error(e instanceof Error ? e.message : t('admin.bimbel.groups.update_fail')); }
   finally { saving.value = false; }
 }
 
@@ -120,10 +122,10 @@ async function submitAssign() {
   saving.value = true;
   try {
     await TutoringService.assignGroupTutor(target.value.id, form.value.tutor_user_id || null);
-    toast.success('Tutor diperbarui.');
+    toast.success(t('admin.bimbel.groups.tutor_updated'));
     modal.value = null;
     await load();
-  } catch (e) { toast.error(e instanceof Error ? e.message : 'Gagal menugaskan tutor.'); }
+  } catch (e) { toast.error(e instanceof Error ? e.message : t('admin.bimbel.groups.tutor_update_fail')); }
   finally { saving.value = false; }
 }
 
@@ -132,19 +134,19 @@ async function submitDelete() {
   saving.value = true;
   try {
     await TutoringService.deleteGroup(target.value.id);
-    toast.success('Kelompok dihapus.');
+    toast.success(t('admin.bimbel.groups.deleted'));
     modal.value = null;
     await load();
-  } catch (e) { toast.error(e instanceof Error ? e.message : 'Gagal menghapus.'); }
+  } catch (e) { toast.error(e instanceof Error ? e.message : t('admin.bimbel.groups.delete_fail')); }
   finally { saving.value = false; }
 }
 
 function cardActions(g: TutoringGroup) {
   return [
-    { key: 'open', label: 'Lihat detail', icon: 'chevron-right' },
-    { key: 'edit', label: 'Ubah kelompok', icon: 'edit' },
-    { key: 'assign', label: g.tutor_user_id ? 'Ganti tutor' : 'Tugaskan tutor', icon: 'user-check' },
-    { key: 'delete', label: 'Hapus kelompok', icon: 'trash-2', danger: true },
+    { key: 'open', label: t('admin.bimbel.groups.action_open'), icon: 'chevron-right' },
+    { key: 'edit', label: t('admin.bimbel.groups.action_edit'), icon: 'edit' },
+    { key: 'assign', label: g.tutor_user_id ? t('admin.bimbel.groups.action_assign_change') : t('admin.bimbel.groups.action_assign_new'), icon: 'user-check' },
+    { key: 'delete', label: t('admin.bimbel.groups.action_delete'), icon: 'trash-2', danger: true },
   ];
 }
 </script>
@@ -152,9 +154,9 @@ function cardActions(g: TutoringGroup) {
 <template>
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
-      greeting="BIMBEL · KELOMPOK"
-      title="Daftar kelompok"
-      :subtitle="`${groups.length} aktif · ${needsAttention} perlu tutor`"
+      :greeting="t('admin.bimbel.groups.hero_kicker')"
+      :title="t('admin.bimbel.groups.hero_title')"
+      :subtitle="t('admin.bimbel.groups.hero_subtitle', { total: groups.length, needs: needsAttention })"
       :stats="[]"
     >
       <template #actions>
@@ -163,7 +165,7 @@ function cardActions(g: TutoringGroup) {
           class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold hover:opacity-90"
           @click="openCreate"
         >
-          <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> Buat kelompok
+          <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.groups.create') }}
         </button>
       </template>
     </TutorBerandaHero>
@@ -174,17 +176,17 @@ function cardActions(g: TutoringGroup) {
         <input
           v-model="query"
           type="text"
-          placeholder="Cari kelompok…"
+          :placeholder="t('admin.bimbel.groups.search_ph')"
           class="w-full rounded-xl border border-bimbel-border bg-bimbel-panel pl-9 pr-3 py-2 text-[14px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-bimbel-accent focus:outline-none"
         />
       </div>
       <div class="flex gap-1.5">
         <button
           v-for="opt in [
-            { id: 'all' as const, label: 'Semua' },
-            { id: 'active' as const, label: 'Aktif' },
-            { id: 'full' as const, label: 'Penuh' },
-            { id: 'closed' as const, label: 'Selesai' },
+            { id: 'all' as const, label: t('admin.bimbel.groups.filter_all') },
+            { id: 'active' as const, label: t('admin.bimbel.groups.filter_active') },
+            { id: 'full' as const, label: t('admin.bimbel.groups.filter_full') },
+            { id: 'closed' as const, label: t('admin.bimbel.groups.filter_closed') },
           ]"
           :key="opt.id"
           type="button"
@@ -195,7 +197,7 @@ function cardActions(g: TutoringGroup) {
       </div>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.groups.loading') }}</div>
 
     <div v-else-if="filtered.length" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <div
@@ -214,7 +216,7 @@ function cardActions(g: TutoringGroup) {
           </button>
           <AdminActionMenu
             :items="cardActions(g)"
-            aria-label="Aksi kelompok"
+            :aria-label="t('admin.bimbel.groups.action_aria')"
             @pick="(k) => pickAction(g, k)"
           />
         </div>
@@ -226,46 +228,46 @@ function cardActions(g: TutoringGroup) {
             · <NavIcon name="user-check" :size="12" /> {{ g.tutor.name }}
           </span>
           <span v-else class="inline-flex items-center gap-1 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[12px] font-bold text-amber-700 dark:text-amber-300">
-            <NavIcon name="alert-circle" :size="10" /> Perlu tutor
+            <NavIcon name="alert-circle" :size="10" /> {{ t('admin.bimbel.groups.needs_tutor') }}
           </span>
         </div>
       </div>
     </div>
 
     <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
-      Tidak ada kelompok sesuai filter.
+      {{ t('admin.bimbel.groups.empty') }}
     </div>
 
     <!-- Create / Edit modal -->
     <div v-if="modal === 'create' || modal === 'edit'" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="modal = null">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
         <h3 class="text-[16px] font-bold text-bimbel-text-hi">
-          {{ modal === 'create' ? 'Kelompok baru' : 'Ubah kelompok' }}
+          {{ modal === 'create' ? t('admin.bimbel.groups.modal_create') : t('admin.bimbel.groups.modal_edit') }}
         </h3>
         <label v-if="modal === 'create'" class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Program <span class="text-rose-500">*</span></span>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.groups.field_program') }} <span class="text-rose-500">*</span></span>
           <select v-model="form.program_id" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none">
             <option v-for="p in programs" :key="p.id" :value="p.id">{{ p.name }}</option>
           </select>
         </label>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama kelompok <span class="text-rose-500">*</span></span>
-          <input v-model="form.name" type="text" placeholder="SMA-IPA-12-A" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.groups.field_name') }} <span class="text-rose-500">*</span></span>
+          <input v-model="form.name" type="text" :placeholder="t('admin.bimbel.groups.name_ph')" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Kapasitas</span>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.groups.field_capacity') }}</span>
           <input v-model.number="form.capacity" type="number" min="1" max="100" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <label v-if="modal === 'create'" class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Tutor (opsional)</span>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.groups.field_tutor_optional') }}</span>
           <select v-model="form.tutor_user_id" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none">
-            <option value="">— belum ada tutor —</option>
-            <option v-for="t in tutors" :key="t.user_id" :value="t.user_id">{{ t.name }}</option>
+            <option value="">{{ t('admin.bimbel.groups.no_tutor_option') }}</option>
+            <option v-for="tt in tutors" :key="tt.user_id" :value="tt.user_id">{{ tt.name }}</option>
           </select>
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="modal = null">Batal</button>
-          <button type="button" :disabled="saving" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="modal === 'create' ? submitCreate() : submitEdit()">{{ saving ? 'Menyimpan…' : 'Simpan' }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="modal = null">{{ t('admin.bimbel.groups.cancel') }}</button>
+          <button type="button" :disabled="saving" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="modal === 'create' ? submitCreate() : submitEdit()">{{ saving ? t('admin.bimbel.groups.saving') : t('admin.bimbel.groups.save') }}</button>
         </div>
       </div>
     </div>
@@ -273,27 +275,27 @@ function cardActions(g: TutoringGroup) {
     <!-- Assign tutor modal -->
     <div v-if="modal === 'assign'" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="modal = null">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
-        <h3 class="text-[16px] font-bold text-bimbel-text-hi">Tugaskan tutor</h3>
+        <h3 class="text-[16px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.groups.modal_assign') }}</h3>
         <p class="text-[14px] text-bimbel-text-mid">{{ target?.name }}</p>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Tutor</span>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.groups.field_tutor') }}</span>
           <select v-model="form.tutor_user_id" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none">
-            <option value="">— belum ada tutor —</option>
-            <option v-for="t in tutors" :key="t.user_id" :value="t.user_id">{{ t.name }}</option>
+            <option value="">{{ t('admin.bimbel.groups.no_tutor_option') }}</option>
+            <option v-for="tt in tutors" :key="tt.user_id" :value="tt.user_id">{{ tt.name }}</option>
           </select>
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="modal = null">Batal</button>
-          <button type="button" :disabled="saving" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitAssign">{{ saving ? 'Menyimpan…' : 'Simpan' }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="modal = null">{{ t('admin.bimbel.groups.cancel') }}</button>
+          <button type="button" :disabled="saving" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitAssign">{{ saving ? t('admin.bimbel.groups.saving') : t('admin.bimbel.groups.save') }}</button>
         </div>
       </div>
     </div>
 
     <AdminConfirmDialog
       :open="modal === 'delete'"
-      title="Hapus kelompok?"
-      :message="`Kelompok ${target?.name ?? ''} akan dihapus. Siswa & sesi yang sudah dijadwalkan tidak dapat dipulihkan.`"
-      confirm-label="Hapus"
+      :title="t('admin.bimbel.groups.delete_title')"
+      :message="t('admin.bimbel.groups.delete_message', { name: target?.name ?? '' })"
+      :confirm-label="t('admin.bimbel.groups.delete_confirm')"
       danger
       :busy="saving"
       @cancel="modal = null"

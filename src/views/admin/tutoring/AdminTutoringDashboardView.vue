@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useAuthStore } from '@/stores/auth';
 import { formatRupiah } from '@/lib/format';
@@ -38,6 +39,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 
 const router = useRouter();
 const auth = useAuthStore();
+const { t } = useI18n();
 
 const loading = ref(true);
 const stats = ref<TutoringAdminStats | null>(null);
@@ -67,10 +69,10 @@ onMounted(load);
 
 function timeGreeting(): string {
   const h = new Date().getHours();
-  if (h < 11) return 'Selamat pagi';
-  if (h < 15) return 'Selamat siang';
-  if (h < 19) return 'Selamat sore';
-  return 'Selamat malam';
+  if (h < 11) return t('admin.bimbel.dashboard.greeting_morning');
+  if (h < 15) return t('admin.bimbel.dashboard.greeting_afternoon');
+  if (h < 19) return t('admin.bimbel.dashboard.greeting_evening');
+  return t('admin.bimbel.dashboard.greeting_night');
 }
 const firstName = computed(() => (auth.user?.name || 'Admin').split(/\s+/)[0]);
 
@@ -79,19 +81,19 @@ const heroStats = computed(() => {
   const groupsNoTutor = groups.value.filter((g) => !g.tutor_user_id).length;
   return [
     {
-      label: 'SISWA',
+      label: t('admin.bimbel.dashboard.stat_students'),
       value: String(s?.students ?? 0),
-      hint: s?.new_enrollments_today ? `+${s.new_enrollments_today} hari ini` : undefined,
+      hint: s?.new_enrollments_today ? t('admin.bimbel.dashboard.stat_today_suffix', { count: s.new_enrollments_today }) : undefined,
     },
     {
-      label: 'KELOMPOK',
+      label: t('admin.bimbel.dashboard.stat_groups'),
       value: String(s?.groups ?? 0),
-      hint: groupsNoTutor > 0 ? `${groupsNoTutor} perlu perhatian` : undefined,
+      hint: groupsNoTutor > 0 ? t('admin.bimbel.dashboard.stat_needs_attention', { count: groupsNoTutor }) : undefined,
     },
     {
-      label: 'SESI MGG',
+      label: t('admin.bimbel.dashboard.stat_sessions_week'),
       value: String(s?.sessions_this_week ?? 0),
-      hint: s?.sessions_today ? `${s.sessions_today} hari ini` : undefined,
+      hint: s?.sessions_today ? t('admin.bimbel.dashboard.stat_today_plain', { count: s.sessions_today }) : undefined,
     },
   ];
 });
@@ -124,7 +126,7 @@ const leadHintLine = computed(() => {
   const days = l.created_at
     ? Math.floor((Date.now() - new Date(l.created_at).valueOf()) / 86_400_000)
     : 0;
-  return `terlama ${days} hari lalu · ${l.name}`;
+  return t('admin.bimbel.dashboard.hot_lead_hint', { days, name: l.name });
 });
 
 function goLeads() { router.push({ name: 'admin.tutoring.leads' }); }
@@ -136,29 +138,29 @@ function dueLabel(iso?: string | null): string {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.valueOf())) return '—';
-  return `jt ${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`;
+  return t('admin.bimbel.dashboard.due_short', { date: d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) });
 }
 </script>
 
 <template>
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
-      :greeting="`${timeGreeting()} · BIMBEL · BERANDA`"
-      :title="`Halo, ${firstName}`"
-      :subtitle="`${auth.user?.school_name ?? 'Bimbel'} · ${stats?.students ?? 0} siswa aktif`"
+      :greeting="`${timeGreeting()} · ${t('admin.bimbel.dashboard.hero_kicker')}`"
+      :title="t('admin.bimbel.dashboard.hero_title', { name: firstName })"
+      :subtitle="t('admin.bimbel.dashboard.hero_subtitle', { school: auth.user?.school_name ?? 'Bimbel', count: stats?.students ?? 0 })"
       :stats="heroStats"
     />
 
-    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">{{ t('admin.bimbel.dashboard.loading') }}</div>
 
     <div v-else class="grid gap-4 lg:grid-cols-3">
       <div class="space-y-3 lg:col-span-2">
         <TutorPrimaryCard
           v-if="attentionGroup"
           icon="alert-triangle"
-          kicker="PERLU PERHATIAN"
-          :title="`Kelompok ${attentionGroup.name} belum punya tutor`"
-          subtitle="Klik untuk pilih tutor cadangan agar sesi minggu ini tidak terlewat."
+          :kicker="t('admin.bimbel.dashboard.attention_kicker')"
+          :title="t('admin.bimbel.dashboard.attention_title', { name: attentionGroup.name })"
+          :subtitle="t('admin.bimbel.dashboard.attention_subtitle')"
           tone="warning"
         >
           <template #actions>
@@ -167,7 +169,7 @@ function dueLabel(iso?: string | null): string {
               class="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3.5 py-2 text-[14px] font-bold text-white hover:opacity-90"
               @click="goGroupDetail(attentionGroup)"
             >
-              <NavIcon name="user-check" :size="13" /> Tugaskan tutor
+              <NavIcon name="user-check" :size="13" /> {{ t('admin.bimbel.dashboard.assign_tutor') }}
             </button>
           </template>
         </TutorPrimaryCard>
@@ -175,8 +177,8 @@ function dueLabel(iso?: string | null): string {
         <TutorRibbon
           v-if="leads.length > 0"
           icon="sparkles"
-          label="LEAD PANAS"
-          :value="`${leads.length} calon belum di-follow-up`"
+          :label="t('admin.bimbel.dashboard.hot_lead_label')"
+          :value="t('admin.bimbel.dashboard.hot_lead_value', { count: leads.length })"
           :hint="leadHintLine || undefined"
           tone="warning"
           clickable
@@ -185,9 +187,9 @@ function dueLabel(iso?: string | null): string {
 
         <div class="grid gap-3 sm:grid-cols-2">
           <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-            <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Kelompok perlu tutor</h4>
+            <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.dashboard.groups_needing_tutor') }}</h4>
             <div v-if="groupsNoTutor.length === 0" class="py-3 text-center text-[14px] text-bimbel-text-mid">
-              Semua kelompok ada tutor.
+              {{ t('admin.bimbel.dashboard.all_groups_have_tutor') }}
             </div>
             <button
               v-for="g in groupsNoTutor.slice(0, 4)"
@@ -201,19 +203,19 @@ function dueLabel(iso?: string | null): string {
               </span>
               <div class="min-w-0 flex-1">
                 <p class="truncate text-[14px] font-bold text-bimbel-text-hi">{{ g.name }}</p>
-                <p class="text-[14px] text-bimbel-text-mid">belum ada tutor</p>
+                <p class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.dashboard.no_tutor') }}</p>
               </div>
             </button>
           </section>
 
           <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-            <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Tagihan tertunggak</h4>
+            <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.dashboard.unpaid_bills') }}</h4>
             <div v-if="unpaidBills.length === 0" class="py-3 text-center text-[14px] text-bimbel-text-mid">
-              Tidak ada tagihan tertunggak.
+              {{ t('admin.bimbel.dashboard.no_unpaid_bills') }}
             </div>
             <div v-else>
               <div class="flex items-center justify-between border-b border-bimbel-border-soft pb-2 mb-1">
-                <span class="text-[14px] text-bimbel-text-mid">Total</span>
+                <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.dashboard.total') }}</span>
                 <span class="text-[15px] font-extrabold text-bimbel-text-hi">{{ formatRupiah(unpaidTotal) }}</span>
               </div>
               <button
@@ -239,9 +241,9 @@ function dueLabel(iso?: string | null): string {
       </div>
 
       <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-        <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Yang baru</h4>
+        <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.dashboard.whats_new') }}</h4>
         <div v-if="feed.length === 0" class="py-6 text-center text-[14px] text-bimbel-text-mid">
-          Belum ada aktivitas baru.
+          {{ t('admin.bimbel.dashboard.no_new_activity') }}
         </div>
         <TutorActivityRow
           v-for="(e, i) in feed.slice(0, 6)"

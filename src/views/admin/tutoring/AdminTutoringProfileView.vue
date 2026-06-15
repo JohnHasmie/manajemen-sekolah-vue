@@ -5,11 +5,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 
 import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
 const user = computed(() => auth.user);
@@ -23,13 +25,13 @@ function initials(name?: string | null): string {
 <template>
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
-      greeting="AKUN · PROFIL"
-      title="Profil admin"
-      subtitle="Identitas operator + profil bimbel + keamanan"
+      :greeting="t('admin.bimbel.profile.hero_kicker')"
+      :title="t('admin.bimbel.profile.hero_title')"
+      :subtitle="t('admin.bimbel.profile.hero_subtitle')"
       :stats="[]"
     >
       <template #actions>
-        <button class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold">Simpan</button>
+        <button class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold">{{ t('admin.bimbel.profile.save') }}</button>
       </template>
     </TutorBerandaHero>
 
@@ -37,54 +39,54 @@ function initials(name?: string | null): string {
       <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 text-center lg:col-span-2 h-fit">
         <div class="mx-auto grid h-20 w-20 place-items-center rounded-full bg-bimbel-accent-dim text-bimbel-accent text-2xl font-extrabold">{{ initials(user?.name) }}</div>
         <p class="mt-3 text-[15px] font-extrabold text-bimbel-text-hi">{{ user?.name ?? '—' }}</p>
-        <p class="text-[13px] text-bimbel-text-mid">Admin · {{ user?.school_name ?? 'Bimbel' }}</p>
+        <p class="text-[13px] text-bimbel-text-mid">{{ t('admin.bimbel.profile.role_admin', { school: user?.school_name ?? 'Bimbel' }) }}</p>
         <dl class="mt-4 space-y-1 text-left text-[14px]">
-          <div class="flex justify-between border-t border-bimbel-border-soft pt-2"><dt class="text-bimbel-text-mid">Email</dt><dd class="font-bold truncate">{{ user?.email ?? '—' }}</dd></div>
-          <div class="flex justify-between border-t border-bimbel-border-soft pt-2"><dt class="text-bimbel-text-mid">Bergabung</dt><dd class="font-bold">—</dd></div>
+          <div class="flex justify-between border-t border-bimbel-border-soft pt-2"><dt class="text-bimbel-text-mid">{{ t('admin.bimbel.profile.field_email') }}</dt><dd class="font-bold truncate">{{ user?.email ?? '—' }}</dd></div>
+          <div class="flex justify-between border-t border-bimbel-border-soft pt-2"><dt class="text-bimbel-text-mid">{{ t('admin.bimbel.profile.field_joined') }}</dt><dd class="font-bold">—</dd></div>
         </dl>
-        <button class="mt-3 w-full rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft">Ganti foto</button>
+        <button class="mt-3 w-full rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft">{{ t('admin.bimbel.profile.change_photo') }}</button>
       </aside>
 
       <div class="space-y-3 lg:col-span-3">
         <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 space-y-2.5">
-          <h4 class="text-[15px] font-bold tracking-tight text-bimbel-text-hi">Identitas operator</h4>
+          <h4 class="text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.profile.section_operator') }}</h4>
           <label class="grid items-center gap-3" style="grid-template-columns: 140px 1fr;">
-            <span class="text-[14px] text-bimbel-text-mid">Nama</span>
+            <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.profile.field_name') }}</span>
             <input type="text" :value="user?.name ?? ''" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
           </label>
           <label class="grid items-center gap-3" style="grid-template-columns: 140px 1fr;">
-            <span class="text-[14px] text-bimbel-text-mid">Email</span>
+            <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.profile.field_email') }}</span>
             <input type="email" :value="user?.email ?? ''" disabled class="rounded-lg border border-bimbel-border-soft bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-mid" />
           </label>
           <label class="grid items-center gap-3" style="grid-template-columns: 140px 1fr;">
-            <span class="text-[14px] text-bimbel-text-mid">No HP / WA</span>
-            <input type="tel" placeholder="08xx-xxxx-xxxx" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+            <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.profile.field_phone') }}</span>
+            <input type="tel" :placeholder="t('admin.bimbel.profile.phone_ph')" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
           </label>
         </section>
 
         <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 space-y-2.5">
-          <h4 class="text-[15px] font-bold tracking-tight text-bimbel-text-hi">Profil bimbel</h4>
+          <h4 class="text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.profile.section_center') }}</h4>
           <label class="grid items-center gap-3" style="grid-template-columns: 140px 1fr;">
-            <span class="text-[14px] text-bimbel-text-mid">Nama bimbel</span>
+            <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.profile.field_center_name') }}</span>
             <input type="text" :value="user?.school_name ?? ''" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
           </label>
           <label class="grid items-start gap-3" style="grid-template-columns: 140px 1fr;">
-            <span class="pt-1 text-[14px] text-bimbel-text-mid">Alamat</span>
-            <textarea rows="2" placeholder="Alamat lengkap" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none"></textarea>
+            <span class="pt-1 text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.profile.field_address') }}</span>
+            <textarea rows="2" :placeholder="t('admin.bimbel.profile.address_ph')" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none"></textarea>
           </label>
           <label class="grid items-center gap-3" style="grid-template-columns: 140px 1fr;">
-            <span class="text-[14px] text-bimbel-text-mid">No telp kantor</span>
-            <input type="tel" placeholder="021-xxx-xxxx" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+            <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.profile.field_office_phone') }}</span>
+            <input type="tel" :placeholder="t('admin.bimbel.profile.office_phone_ph')" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
           </label>
         </section>
 
         <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4">
-          <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Keamanan</h4>
+          <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.profile.section_security') }}</h4>
           <div class="grid items-center gap-3" style="grid-template-columns: 140px 1fr auto;">
-            <span class="text-[14px] text-bimbel-text-mid">Kata sandi</span>
-            <span class="text-[14px] text-bimbel-text-mid">Diperbarui beberapa waktu lalu</span>
+            <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.profile.field_password') }}</span>
+            <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.profile.password_updated_hint') }}</span>
             <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="router.push({ name: 'admin.tutoring.change-password' })">
-              <NavIcon name="lock" :size="13" /> Ubah sandi
+              <NavIcon name="lock" :size="13" /> {{ t('admin.bimbel.profile.change_password') }}
             </button>
           </div>
         </section>

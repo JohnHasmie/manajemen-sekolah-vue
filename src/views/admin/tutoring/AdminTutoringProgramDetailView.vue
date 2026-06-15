@@ -197,9 +197,9 @@ const saveBtnCls =
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      :kicker="'Bimbel · Program · ' + programName"
+      :kicker="t('admin.bimbel.program_detail.kicker_prefix', { name: programName })"
       :title="programName"
-      meta="Atur paket & kelompok lalu daftarkan siswa"
+      :meta="t('admin.bimbel.program_detail.meta')"
     >
       <button
         type="button"

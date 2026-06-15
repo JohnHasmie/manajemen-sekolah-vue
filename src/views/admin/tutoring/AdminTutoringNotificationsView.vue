@@ -4,12 +4,14 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { NotificationService } from '@/services/notification.service';
 import type { AppNotification } from '@/types/notification';
 
 import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const loading = ref(true);
 const items = ref<AppNotification[]>([]);
 const filter = ref<'all' | 'unread' | 'leads' | 'bills'>('all');
@@ -61,9 +63,9 @@ function rel(iso: string): string {
 <template>
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
-      greeting="NOTIFIKASI"
-      title="Notifikasi admin"
-      :subtitle="`${unread} baru · ${items.length} total minggu ini`"
+      :greeting="t('admin.bimbel.notifications.hero_kicker')"
+      :title="t('admin.bimbel.notifications.hero_title')"
+      :subtitle="t('admin.bimbel.notifications.hero_subtitle', { unread, total: items.length })"
       :stats="[]"
     >
       <template #actions>
@@ -71,17 +73,17 @@ function rel(iso: string): string {
           v-if="unread > 0"
           class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold"
           @click="markAll"
-        >Tandai dibaca</button>
+        >{{ t('admin.bimbel.notifications.mark_all') }}</button>
       </template>
     </TutorBerandaHero>
 
     <div class="flex gap-1.5 flex-wrap">
       <button
         v-for="opt in [
-          { id: 'all' as const, label: `Semua (${items.length})` },
-          { id: 'unread' as const, label: `Belum dibaca (${unread})` },
-          { id: 'leads' as const, label: 'Lead' },
-          { id: 'bills' as const, label: 'Tagihan' },
+          { id: 'all' as const, label: t('admin.bimbel.notifications.filter_all', { count: items.length }) },
+          { id: 'unread' as const, label: t('admin.bimbel.notifications.filter_unread', { count: unread }) },
+          { id: 'leads' as const, label: t('admin.bimbel.notifications.filter_leads') },
+          { id: 'bills' as const, label: t('admin.bimbel.notifications.filter_bills') },
         ]"
         :key="opt.id"
         type="button"
@@ -91,7 +93,7 @@ function rel(iso: string): string {
       >{{ opt.label }}</button>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.notifications.loading') }}</div>
 
     <div v-else-if="filtered.length" class="space-y-2">
       <div
@@ -113,7 +115,7 @@ function rel(iso: string): string {
     </div>
 
     <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
-      Belum ada notifikasi.
+      {{ t('admin.bimbel.notifications.empty') }}
     </div>
   </div>
 </template>

@@ -40,14 +40,14 @@ const form = ref({ name: '', target_education_level: '', description: '' });
 const filter = ref<Filter>('all');
 const showFilterPicker = ref(false);
 
-const FILTER_OPTIONS: { key: Filter; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'active', label: 'Punya paket' },
-  { key: 'empty', label: 'Belum punya paket' },
-];
+const FILTER_OPTIONS = computed<{ key: Filter; label: string }[]>(() => [
+  { key: 'all', label: t('admin.bimbel.programs.filter_all') },
+  { key: 'active', label: t('admin.bimbel.programs.filter_active') },
+  { key: 'empty', label: t('admin.bimbel.programs.filter_empty') },
+]);
 
 const activeFilterLabel = computed(
-  () => FILTER_OPTIONS.find((o) => o.key === filter.value)?.label ?? 'Semua',
+  () => FILTER_OPTIONS.value.find((o) => o.key === filter.value)?.label ?? t('admin.bimbel.programs.filter_all'),
 );
 
 const filtered = computed(() => {
@@ -159,7 +159,7 @@ const kpiCards = computed<KpiCard[]>(() => [
   },
   {
     icon: 'alert-circle',
-    label: 'Belum punya paket',
+    label: t('admin.bimbel.programs.kpi_empty'),
     value: emptyPrograms.value,
     tone: emptyPrograms.value > 0 ? 'amber' : 'slate',
   },
@@ -172,9 +172,9 @@ onMounted(load);
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      kicker="Bimbel · Program"
+      :kicker="t('admin.bimbel.programs.kicker')"
       :title="t('tutoring.programs.title')"
-      :meta="`${programs.length} program · ${totalPackages} paket · ${totalGroups} kelompok`"
+      :meta="t('admin.bimbel.programs.meta', { programs: programs.length, packages: totalPackages, groups: totalGroups })"
     >
       <button
         type="button"
@@ -190,12 +190,12 @@ onMounted(load);
 
     <PageFilterToolbar
       :search="search"
-      search-placeholder="Cari nama program…"
+      :search-placeholder="t('admin.bimbel.programs.search_ph')"
       @update:search="(v: string) => (search = v)"
     >
       <template #chips>
         <AppFilterChip
-          label="Status"
+          :label="t('admin.bimbel.programs.filter_status')"
           :value="activeFilterLabel"
           icon-name="layers"
           tone="violet"
@@ -275,7 +275,7 @@ onMounted(load);
 
     <Modal
       v-if="showFilterPicker"
-      title="Filter Status"
+      :title="t('admin.bimbel.programs.filter_modal')"
       @close="showFilterPicker = false"
     >
       <ul class="space-y-1">

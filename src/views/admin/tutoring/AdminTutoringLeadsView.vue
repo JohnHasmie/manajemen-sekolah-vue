@@ -59,14 +59,14 @@ const showDrop = ref(false);
 const dropLead = ref<TutoringLead | null>(null);
 const dropNotes = ref('');
 
-const FILTER_OPTIONS = [
-  { key: 'all' as Filter, label: 'Semua' },
-  { key: 'TRIAL' as Filter, label: 'Trial' },
-  { key: 'CONVERTED' as Filter, label: 'Converted' },
-  { key: 'DROPPED' as Filter, label: 'Dropped' },
-];
+const FILTER_OPTIONS = computed<{ key: Filter; label: string }[]>(() => [
+  { key: 'all', label: t('admin.bimbel.leads.filter_all') },
+  { key: 'TRIAL', label: t('admin.bimbel.leads.filter_trial') },
+  { key: 'CONVERTED', label: t('admin.bimbel.leads.filter_converted') },
+  { key: 'DROPPED', label: t('admin.bimbel.leads.filter_dropped') },
+]);
 const activeFilterLabel = computed(
-  () => FILTER_OPTIONS.find((o) => o.key === filter.value)?.label ?? 'Semua',
+  () => FILTER_OPTIONS.value.find((o) => o.key === filter.value)?.label ?? t('admin.bimbel.leads.filter_all'),
 );
 
 async function load() {
@@ -76,7 +76,7 @@ async function load() {
       status: filter.value === 'all' ? undefined : filter.value,
     });
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal memuat leads.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.leads.load_fail'));
   } finally {
     loading.value = false;
   }
@@ -105,7 +105,7 @@ function openCreate() {
 
 async function submitCreate() {
   if (fName.value.trim().length < 2) {
-    toast.error('Nama minimal 2 karakter.');
+    toast.error(t('admin.bimbel.leads.name_min'));
     return;
   }
   saving.value = true;
@@ -121,7 +121,7 @@ async function submitCreate() {
     showCreate.value = false;
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menyimpan.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.leads.save_fail'));
   } finally {
     saving.value = false;
   }
@@ -151,7 +151,7 @@ function openConvert(lead: TutoringLead) {
 async function submitConvert() {
   if (!convertLead.value) return;
   if (!convertEnrollmentId.value.trim()) {
-    toast.error('Tempel enrollment ID dari hasil enroll.');
+    toast.error(t('admin.bimbel.leads.paste_id'));
     return;
   }
   saving.value = true;
@@ -163,7 +163,7 @@ async function submitConvert() {
     showConvert.value = false;
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menandai.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.leads.mark_fail'));
   } finally {
     saving.value = false;
   }
@@ -186,19 +186,19 @@ async function submitDrop() {
     showDrop.value = false;
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal drop.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.leads.drop_fail'));
   } finally {
     saving.value = false;
   }
 }
 
 async function remove(lead: TutoringLead) {
-  if (!window.confirm(`Hapus "${lead.name}" dari daftar?`)) return;
+  if (!window.confirm(t('admin.bimbel.leads.delete_confirm', { name: lead.name }))) return;
   try {
     await TutoringService.deleteLead(lead.id);
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menghapus.');
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.leads.delete_fail'));
   }
 }
 
@@ -228,28 +228,28 @@ const conversionRate = computed(() => {
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'users',
-    label: 'Total lead',
+    label: t('admin.bimbel.leads.kpi_total'),
     value: rows.value.length,
     tone: 'brand',
     accented: true,
   },
   {
     icon: 'clock',
-    label: 'Trial',
+    label: t('admin.bimbel.leads.kpi_trial'),
     value: trialCount.value,
     tone: 'amber',
   },
   {
     icon: 'check-circle',
-    label: 'Converted',
+    label: t('admin.bimbel.leads.kpi_converted'),
     value: convertedCount.value,
     suffix:
-      conversionRate.value != null ? `${conversionRate.value}% rate` : undefined,
+      conversionRate.value != null ? t('admin.bimbel.leads.kpi_converted_rate', { rate: conversionRate.value }) : undefined,
     tone: 'green',
   },
   {
     icon: 'x-circle',
-    label: 'Dropped',
+    label: t('admin.bimbel.leads.kpi_dropped'),
     value: droppedCount.value,
     tone: droppedCount.value > 0 ? 'red' : 'slate',
   },
@@ -261,9 +261,9 @@ function pillTone(status: string): 'ok' | 'warn' | 'danger' {
   return 'danger';
 }
 function pillLabel(status: string): string {
-  if (status === 'CONVERTED') return 'Converted';
-  if (status === 'TRIAL') return 'Trial';
-  return 'Dropped';
+  if (status === 'CONVERTED') return t('admin.bimbel.leads.pill_converted');
+  if (status === 'TRIAL') return t('admin.bimbel.leads.pill_trial');
+  return t('admin.bimbel.leads.pill_dropped');
 }
 </script>
 
@@ -271,9 +271,9 @@ function pillLabel(status: string): string {
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      kicker="Bimbel · Lead / Calon Siswa"
-      title="Lead Funnel"
-      :meta="`${rows.length} lead · ${convertedCount} converted`"
+      :kicker="t('admin.bimbel.leads.kicker')"
+      :title="t('admin.bimbel.leads.title')"
+      :meta="t('admin.bimbel.leads.meta', { total: rows.length, converted: convertedCount })"
     >
       <button
         type="button"
@@ -281,7 +281,7 @@ function pillLabel(status: string): string {
         @click="openCreate"
       >
         <NavIcon name="plus" :size="13" />
-        Lead baru
+        {{ t('admin.bimbel.leads.new_lead') }}
       </button>
     </BrandPageHeader>
 
@@ -290,7 +290,7 @@ function pillLabel(status: string): string {
     <PageFilterToolbar :hide-default-search="true">
       <template #chips>
         <AppFilterChip
-          label="Status"
+          :label="t('admin.bimbel.leads.filter_status')"
           :value="activeFilterLabel"
           icon-name="users"
           tone="amber"
@@ -304,7 +304,7 @@ function pillLabel(status: string): string {
     </div>
     <TutoringEmpty
       v-else-if="rows.length === 0"
-      text="Belum ada lead. Klik &quot;+ Lead baru&quot; untuk menambah calon siswa."
+      :text="t('admin.bimbel.leads.empty')"
       icon="users"
     />
     <div v-else class="space-y-2">
@@ -317,8 +317,8 @@ function pillLabel(status: string): string {
           lead.email,
           lead.phone,
           lead.program_name,
-          lead.source ? `via ${lead.source}` : null,
-          lead.created_at ? `Didaftar ${formatDateShort(lead.created_at)}` : null,
+          lead.source ? t('admin.bimbel.leads.source_prefix', { source: lead.source }) : null,
+          lead.created_at ? t('admin.bimbel.leads.registered', { date: formatDateShort(lead.created_at) }) : null,
         ].filter(Boolean).join(' · ')"
       >
         <template #trailing>
@@ -329,7 +329,7 @@ function pillLabel(status: string): string {
               class="text-[10.5px] font-bold uppercase tracking-wider text-bimbel-accent hover:underline px-1.5"
               @click.stop="goEnroll(lead)"
             >
-              Enroll
+              {{ t('admin.bimbel.leads.btn_enroll') }}
             </button>
             <button
               v-if="lead.status === 'TRIAL'"
@@ -337,7 +337,7 @@ function pillLabel(status: string): string {
               class="text-[10.5px] font-bold uppercase tracking-wider text-bimbel-green hover:underline px-1.5"
               @click.stop="openConvert(lead)"
             >
-              Tandai
+              {{ t('admin.bimbel.leads.btn_mark') }}
             </button>
             <button
               v-if="lead.status === 'TRIAL'"
@@ -345,7 +345,7 @@ function pillLabel(status: string): string {
               class="text-[10.5px] font-bold uppercase tracking-wider text-bimbel-red hover:underline px-1.5"
               @click.stop="openDrop(lead)"
             >
-              Drop
+              {{ t('admin.bimbel.leads.btn_drop') }}
             </button>
             <TutoringStatusPill
               :label="pillLabel(lead.status)"
@@ -354,7 +354,7 @@ function pillLabel(status: string): string {
             <button
               type="button"
               class="p-1.5 rounded-lg text-bimbel-text-lo hover:text-bimbel-red hover:bg-bimbel-red-soft"
-              title="Hapus"
+              :title="t('admin.bimbel.leads.delete_title')"
               @click.stop="remove(lead)"
             >
               <NavIcon name="trash-2" :size="14" />
@@ -365,7 +365,7 @@ function pillLabel(status: string): string {
     </div>
 
     <!-- Filter picker -->
-    <Modal v-if="showFilterPicker" title="Filter Status" @close="showFilterPicker = false">
+    <Modal v-if="showFilterPicker" :title="t('admin.bimbel.leads.filter_modal')" @close="showFilterPicker = false">
       <ul class="space-y-1">
         <li v-for="o in FILTER_OPTIONS" :key="o.key">
           <button
@@ -381,11 +381,11 @@ function pillLabel(status: string): string {
     </Modal>
 
     <!-- Create modal -->
-    <Modal v-if="showCreate" title="Lead Baru" @close="showCreate = false">
+    <Modal v-if="showCreate" :title="t('admin.bimbel.leads.modal_new')" @close="showCreate = false">
       <div class="space-y-3">
         <label class="block">
           <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Nama
+            {{ t('admin.bimbel.leads.field_name') }}
           </span>
           <input
             v-model="fName"
@@ -395,7 +395,7 @@ function pillLabel(status: string): string {
         <div class="grid grid-cols-2 gap-2">
           <label class="block">
             <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-              Email (opsional)
+              {{ t('admin.bimbel.leads.field_email') }}
             </span>
             <input
               v-model="fEmail"
@@ -405,7 +405,7 @@ function pillLabel(status: string): string {
           </label>
           <label class="block">
             <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-              Telepon (opsional)
+              {{ t('admin.bimbel.leads.field_phone') }}
             </span>
             <input
               v-model="fPhone"
@@ -415,29 +415,29 @@ function pillLabel(status: string): string {
         </div>
         <label class="block">
           <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Program minat (opsional)
+            {{ t('admin.bimbel.leads.field_program') }}
           </span>
           <select
             v-model="fProgramId"
             class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
           >
-            <option value="">— Belum tentu —</option>
+            <option value="">{{ t('admin.bimbel.leads.field_program_none') }}</option>
             <option v-for="p in programs" :key="p.id" :value="p.id">{{ p.name }}</option>
           </select>
         </label>
         <label class="block">
           <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Sumber (opsional)
+            {{ t('admin.bimbel.leads.field_source') }}
           </span>
           <input
             v-model="fSource"
-            placeholder="cth. IG ads, referral, walk-in"
+            :placeholder="t('admin.bimbel.leads.source_ph')"
             class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
           />
         </label>
         <label class="block">
           <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Catatan (opsional)
+            {{ t('admin.bimbel.leads.field_notes') }}
           </span>
           <textarea
             v-model="fNotes"
@@ -459,22 +459,20 @@ function pillLabel(status: string): string {
             class="rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="submitCreate"
           >
-            {{ saving ? t('tutoring.common.saving') : 'Simpan' }}
+            {{ saving ? t('tutoring.common.saving') : t('admin.bimbel.leads.save') }}
           </button>
         </div>
       </div>
     </Modal>
 
     <!-- Convert modal -->
-    <Modal v-if="showConvert" title="Tandai Converted" @close="showConvert = false">
+    <Modal v-if="showConvert" :title="t('admin.bimbel.leads.modal_convert')" @close="showConvert = false">
       <p class="text-sm text-bimbel-text-mid mb-3">
-        Setelah membuat enrollment di flow Daftarkan, tempel
-        <strong>enrollment ID</strong> di sini agar lead tercatat
-        sebagai sumber.
+        {{ t('admin.bimbel.leads.convert_hint') }}
       </p>
       <input
         v-model="convertEnrollmentId"
-        placeholder="enrollment_id"
+        :placeholder="t('admin.bimbel.leads.convert_ph')"
         class="w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
       />
       <div class="flex items-center gap-2 justify-end mt-4">
@@ -483,7 +481,7 @@ function pillLabel(status: string): string {
           class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
           @click="showConvert = false"
         >
-          Batal
+          {{ t('admin.bimbel.leads.cancel') }}
         </button>
         <button
           type="button"
@@ -491,20 +489,20 @@ function pillLabel(status: string): string {
           class="rounded-lg bg-bimbel-green hover:bg-bimbel-green/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           @click="submitConvert"
         >
-          {{ saving ? 'Menyimpan…' : 'Tandai converted' }}
+          {{ saving ? t('admin.bimbel.leads.saving') : t('admin.bimbel.leads.convert_btn') }}
         </button>
       </div>
     </Modal>
 
     <!-- Drop modal -->
-    <Modal v-if="showDrop" title="Drop Lead" @close="showDrop = false">
+    <Modal v-if="showDrop" :title="t('admin.bimbel.leads.modal_drop')" @close="showDrop = false">
       <p class="text-sm text-bimbel-text-mid mb-3">
-        Alasan drop (opsional, masuk ke catatan):
+        {{ t('admin.bimbel.leads.drop_hint') }}
       </p>
       <textarea
         v-model="dropNotes"
         rows="3"
-        placeholder="cth. tidak sesuai jadwal, pindah tempat tinggal"
+        :placeholder="t('admin.bimbel.leads.drop_ph')"
         class="w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-status-danger/20 focus:border-status-danger resize-none"
       />
       <div class="flex items-center gap-2 justify-end mt-4">
@@ -513,7 +511,7 @@ function pillLabel(status: string): string {
           class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
           @click="showDrop = false"
         >
-          Batal
+          {{ t('admin.bimbel.leads.cancel') }}
         </button>
         <button
           type="button"
@@ -521,7 +519,7 @@ function pillLabel(status: string): string {
           class="rounded-lg bg-bimbel-red hover:bg-bimbel-red/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           @click="submitDrop"
         >
-          {{ saving ? 'Menyimpan…' : 'Drop' }}
+          {{ saving ? t('admin.bimbel.leads.saving') : t('admin.bimbel.leads.drop_btn') }}
         </button>
       </div>
     </Modal>

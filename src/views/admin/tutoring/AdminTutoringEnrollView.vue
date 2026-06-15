@@ -66,11 +66,11 @@ const effectiveAmount = computed(
 async function applyVoucher() {
   const code = voucherCode.value.trim();
   if (!code) {
-    voucherErr.value = 'Tempel kode dulu.';
+    voucherErr.value = t('admin.bimbel.enroll.voucher_paste');
     return;
   }
   if (amount.value == null || amount.value <= 0) {
-    voucherErr.value = 'Isi nominal harga dulu sebelum apply.';
+    voucherErr.value = t('admin.bimbel.enroll.voucher_need_amount');
     return;
   }
   voucherChecking.value = true;
@@ -84,7 +84,7 @@ async function applyVoucher() {
     };
   } catch (e) {
     voucherPreview.value = null;
-    voucherErr.value = e instanceof Error ? e.message : 'Kode tidak valid.';
+    voucherErr.value = e instanceof Error ? e.message : t('admin.bimbel.enroll.voucher_invalid');
   } finally {
     voucherChecking.value = false;
   }
@@ -187,8 +187,8 @@ async function submit() {
       } catch (e) {
         toast.error(
           e instanceof Error
-            ? `Voucher gagal: ${e.message}`
-            : 'Voucher gagal di-redeem.',
+            ? t('admin.bimbel.enroll.voucher_redeem_fail', { message: e.message })
+            : t('admin.bimbel.enroll.voucher_redeem_fail_generic'),
         );
       }
     }
@@ -221,11 +221,11 @@ const inputCls =
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      :kicker="initialProgramId ? ('Bimbel · ' + programName) : 'Bimbel · Daftarkan siswa'"
+      :kicker="initialProgramId ? t('admin.bimbel.enroll.kicker_program', { program: programName }) : t('admin.bimbel.enroll.kicker_pick')"
       :title="t('tutoring.enroll.title')"
       :meta="initialProgramId
-        ? 'Pilih paket → kelompok → siswa → mode billing → Simpan'
-        : 'Pilih program → paket → siswa → mode billing → Simpan'"
+        ? t('admin.bimbel.enroll.meta_pinned')
+        : t('admin.bimbel.enroll.meta_open')"
     />
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
@@ -237,13 +237,13 @@ const inputCls =
       class="space-y-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5"
     >
       <label v-if="!initialProgramId" class="block">
-        <span :class="fieldLabel">Program</span>
+        <span :class="fieldLabel">{{ t('admin.bimbel.enroll.program_label') }}</span>
         <select v-model="programId" :class="inputCls">
-          <option value="" disabled>Pilih program</option>
+          <option value="" disabled>{{ t('admin.bimbel.enroll.program_pick') }}</option>
           <option v-for="p in programs" :key="p.id" :value="p.id">{{ p.name }}</option>
         </select>
         <p v-if="programs.length === 0" class="text-xs text-bimbel-text-mid mt-1">
-          Belum ada program. Buat program + paket dulu di menu Program.
+          {{ t('admin.bimbel.enroll.program_empty') }}
         </p>
       </label>
 
@@ -251,12 +251,12 @@ const inputCls =
         <span :class="fieldLabel">{{ t('tutoring.enroll.package') }}</span>
         <select v-model="packageId" :class="inputCls" :disabled="!programId" @change="mode = null">
           <option :value="null" disabled>
-            {{ programId ? t('tutoring.enroll.pickPackage') : 'Pilih program dulu' }}
+            {{ programId ? t('tutoring.enroll.pickPackage') : t('admin.bimbel.enroll.pick_program_first') }}
           </option>
           <option v-for="p in packages" :key="p.id" :value="p.id">{{ p.name }}</option>
         </select>
         <p v-if="programId && packages.length === 0" class="text-xs text-bimbel-text-mid mt-1">
-          Program ini belum punya paket.
+          {{ t('admin.bimbel.enroll.no_packages') }}
         </p>
       </label>
 
@@ -275,9 +275,9 @@ const inputCls =
           <option v-for="s in students" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
         <p v-if="students.length === 0" class="text-xs text-bimbel-text-mid mt-1">
-          Belum ada siswa di tenant.
+          {{ t('admin.bimbel.enroll.no_students') }}
           <button type="button" class="text-bimbel-accent font-bold underline" @click="router.push({ name: 'admin.tutoring.students' })">
-            Buat dulu di menu Siswa
+            {{ t('admin.bimbel.enroll.create_first') }}
           </button>.
         </p>
       </label>
@@ -299,11 +299,11 @@ const inputCls =
            discount; the redeem call fires after the enrollment is
            created so we can pin redemption to it. -->
       <div>
-        <span :class="fieldLabel">Kode voucher (opsional)</span>
+        <span :class="fieldLabel">{{ t('admin.bimbel.enroll.voucher_label') }}</span>
         <div class="mt-1.5 flex gap-2">
           <input
             v-model="voucherCode"
-            placeholder="cth. UTBK20OFF"
+            :placeholder="t('admin.bimbel.enroll.voucher_ph')"
             class="flex-1 rounded-lg border border-bimbel-border px-3 py-2 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
             :disabled="!!voucherPreview"
           />
@@ -314,7 +314,7 @@ const inputCls =
             class="rounded-lg bg-bimbel-accent hover:opacity-90 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="applyVoucher"
           >
-            {{ voucherChecking ? 'Cek…' : 'Apply' }}
+            {{ voucherChecking ? t('admin.bimbel.enroll.voucher_check') : t('admin.bimbel.enroll.voucher_apply') }}
           </button>
           <button
             v-else
@@ -322,7 +322,7 @@ const inputCls =
             class="rounded-lg border border-bimbel-border px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
             @click="clearVoucher"
           >
-            Hapus
+            {{ t('admin.bimbel.enroll.voucher_remove') }}
           </button>
         </div>
         <p
@@ -335,8 +335,7 @@ const inputCls =
           v-else-if="voucherPreview"
           class="text-xs text-bimbel-green mt-1 font-semibold"
         >
-          ✓ Diskon −{{ voucherPreview.discount_amount.toLocaleString('id-ID') }}
-          · Total bayar
+          ✓ {{ t('admin.bimbel.enroll.voucher_success', { discount: voucherPreview.discount_amount.toLocaleString('id-ID') }) }}
           <strong>{{ voucherPreview.final_amount.toLocaleString('id-ID') }}</strong>
         </p>
       </div>

@@ -4,12 +4,14 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import type { AdminActivityReport } from '@/types/tutoring';
 
 import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const loading = ref(true);
 const data = ref<AdminActivityReport | null>(null);
 const type = ref<'all' | 'HOMEWORK' | 'QUIZ' | 'EXAM' | 'PROJECT'>('all');
@@ -29,10 +31,10 @@ watch(type, load);
 const stats = computed(() => {
   const k = data.value?.kpi;
   return [
-    { label: 'TOTAL', value: String(k?.total_activities ?? 0) },
-    { label: 'DIKUMPUL', value: k?.submitted_pct != null ? `${k.submitted_pct}%` : '–' },
-    { label: 'DINILAI', value: k?.graded_pct != null ? `${k.graded_pct}%` : '–' },
-    { label: 'RATA NILAI', value: k?.avg_score != null ? String(Math.round(k.avg_score)) : '–' },
+    { label: t('admin.bimbel.activity_report.stat_total'), value: String(k?.total_activities ?? 0) },
+    { label: t('admin.bimbel.activity_report.stat_submitted'), value: k?.submitted_pct != null ? `${k.submitted_pct}%` : '–' },
+    { label: t('admin.bimbel.activity_report.stat_graded'), value: k?.graded_pct != null ? `${k.graded_pct}%` : '–' },
+    { label: t('admin.bimbel.activity_report.stat_avg_score'), value: k?.avg_score != null ? String(Math.round(k.avg_score)) : '–' },
   ];
 });
 
@@ -47,14 +49,14 @@ function pctClass(pct: number | null): string {
 <template>
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
-      greeting="LAPORAN · AKTIVITAS"
-      title="Laporan aktivitas & tugas"
-      subtitle="PR, quiz, try-out, materi · 30 hari terakhir"
+      :greeting="t('admin.bimbel.activity_report.hero_kicker')"
+      :title="t('admin.bimbel.activity_report.hero_title')"
+      :subtitle="t('admin.bimbel.activity_report.hero_subtitle')"
       :stats="[]"
     >
       <template #actions>
         <button class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[14px] font-bold text-white">
-          <NavIcon name="download" :size="13" class="inline -mt-0.5" /> Export
+          <NavIcon name="download" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.activity_report.export') }}
         </button>
       </template>
     </TutorBerandaHero>
@@ -62,11 +64,11 @@ function pctClass(pct: number | null): string {
     <div class="flex gap-1.5 flex-wrap">
       <button
         v-for="opt in [
-          { id: 'all' as const, label: 'Semua' },
-          { id: 'HOMEWORK' as const, label: 'PR' },
-          { id: 'QUIZ' as const, label: 'Quiz' },
-          { id: 'EXAM' as const, label: 'Try-out' },
-          { id: 'PROJECT' as const, label: 'Proyek' },
+          { id: 'all' as const, label: t('admin.bimbel.activity_report.type_all') },
+          { id: 'HOMEWORK' as const, label: t('admin.bimbel.activity_report.type_homework') },
+          { id: 'QUIZ' as const, label: t('admin.bimbel.activity_report.type_quiz') },
+          { id: 'EXAM' as const, label: t('admin.bimbel.activity_report.type_exam') },
+          { id: 'PROJECT' as const, label: t('admin.bimbel.activity_report.type_project') },
         ]"
         :key="opt.id"
         type="button"
@@ -83,19 +85,19 @@ function pctClass(pct: number | null): string {
       </div>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.activity_report.loading') }}</div>
 
     <div v-else-if="data?.rows?.length" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
       <table class="w-full text-[14px]">
         <thead class="bg-bimbel-bg/40">
           <tr class="text-left text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">
-            <th class="px-3 py-2">Kelompok</th>
-            <th class="px-3 py-2 w-[120px]">Tutor</th>
-            <th class="px-3 py-2 w-[80px]">Tipe</th>
-            <th class="px-3 py-2 w-[80px]">Dibuat</th>
-            <th class="px-3 py-2 w-[140px]">Dikumpul</th>
-            <th class="px-3 py-2 w-[90px]">Rata nilai</th>
-            <th class="px-3 py-2 w-[100px]">Status</th>
+            <th class="px-3 py-2">{{ t('admin.bimbel.activity_report.th_group') }}</th>
+            <th class="px-3 py-2 w-[120px]">{{ t('admin.bimbel.activity_report.th_tutor') }}</th>
+            <th class="px-3 py-2 w-[80px]">{{ t('admin.bimbel.activity_report.th_type') }}</th>
+            <th class="px-3 py-2 w-[80px]">{{ t('admin.bimbel.activity_report.th_created') }}</th>
+            <th class="px-3 py-2 w-[140px]">{{ t('admin.bimbel.activity_report.th_submitted') }}</th>
+            <th class="px-3 py-2 w-[90px]">{{ t('admin.bimbel.activity_report.th_avg_score') }}</th>
+            <th class="px-3 py-2 w-[100px]">{{ t('admin.bimbel.activity_report.th_status') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -121,7 +123,7 @@ function pctClass(pct: number | null): string {
     </div>
 
     <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
-      Belum ada data aktivitas.
+      {{ t('admin.bimbel.activity_report.empty') }}
     </div>
   </div>
 </template>
