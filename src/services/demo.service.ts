@@ -164,6 +164,58 @@ export const DemoService = {
   },
 
   /**
+   * Self-service "Reset Data Demo" — the authed demo owner asks the
+   * backend to wipe their demo school back to a freshly-provisioned
+   * state. Ownership is enforced server-side via `demo_owner_user_id`;
+   * the client passes no school id (the endpoint shape is "reset MY
+   * demo"). `demo_expires_at` is preserved on the new school, so a
+   * reset never extends the demo TTL.
+   *
+   * Optional `payload` overrides the original wizard answers with a
+   * fresh configuration; omitted → "restart with the same setup".
+   *
+   * Heavy work happens server-side (delete + full re-provision) —
+   * timeout matches /demo/provision so a slow network doesn't trip
+   * ECONNABORTED before the seed work finishes.
+   */
+  async reset(payload?: DemoWizardPayload): Promise<{
+    school_id: string;
+    school_name: string;
+    demo_expires_at: string | null;
+  }> {
+    try {
+      const res = await api.post(
+        '/demo/reset',
+        payload ? { payload } : {},
+        { timeout: 120_000 },
+      );
+      const data = res.data?.data;
+      if (!data?.school_id) {
+        throw new Error('Respons reset demo tidak valid.');
+      }
+      return {
+        school_id: String(data.school_id),
+        school_name: String(data.school_name ?? ''),
+        demo_expires_at: data.demo_expires_at ? String(data.demo_expires_at) : null,
+      };
+    } catch (err: unknown) {
+      const e = err as { response?: { status?: number; data?: { message?: string } } };
+      const status = e.response?.status;
+      const msg = e.response?.data?.message;
+      if (status === 404) {
+        throw new Error(msg ?? 'Anda tidak memiliki sekolah demo aktif.');
+      }
+      if (status === 422) {
+        throw new Error(msg ?? 'Reset demo ditolak oleh server.');
+      }
+      if (status === 429) {
+        throw new Error('Terlalu banyak permintaan reset. Coba lagi dalam beberapa saat.');
+      }
+      throw new Error(msg ?? 'Gagal mereset data demo. Mohon coba lagi.');
+    }
+  },
+
+  /**
    * Submit the final demo request. The endpoint is still
    * `POST /demo/provision` (kept backward-compatible) but it no longer
    * activates a demo — it validates the wizard payload + requester

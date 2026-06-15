@@ -9,11 +9,40 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
+import { DemoService } from '@/services/demo.service';
+import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
+const auth = useAuthStore();
 
 const showResetModal = ref(false);
+const isResetting = ref(false);
+const resetError = ref<string | null>(null);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
+
+/**
+ * Confirm "Reset Data Demo" — wipe the demo school back to a freshly-
+ * provisioned state, then log out so the user re-enters with the new
+ * school id. The backend re-provisions a brand-new school row, so the
+ * current session's cached `current_school_id` no longer exists after
+ * the call; forcing a clean re-login is the simplest reliable way to
+ * land the user on the new demo with consistent auth state (vs trying
+ * to swap active-school in place, which would race other tabs and
+ * stale TanStack caches).
+ */
+async function confirmResetDemo() {
+  if (isResetting.value) return;
+  isResetting.value = true;
+  resetError.value = null;
+  try {
+    await DemoService.reset();
+    await auth.logout();
+    await router.push('/login');
+  } catch (e) {
+    resetError.value = (e as Error).message;
+    isResetting.value = false;
+  }
+}
 
 interface SettingsGroup {
   title: string;
@@ -97,14 +126,42 @@ function open(it: SettingsGroup['items'][number]) {
       </section>
     </div>
 
-    <Modal v-if="showResetModal" title="Reset data demo" subtitle="Tindakan ini menghapus seluruh data demo dan tidak dapat dibatalkan." @close="showResetModal = false">
+    <Modal
+      v-if="showResetModal"
+      title="Reset data demo"
+      subtitle="Sekolah demo akan dibangun ulang dari awal. Masa aktif demo tidak berubah."
+      @close="!isResetting && (showResetModal = false)"
+    >
       <div class="space-y-md">
         <div class="bg-red-50 border border-red-200 rounded-xl p-3 text-[12px] text-red-700 leading-relaxed">
-          <strong>Peringatan:</strong> Semua data siswa, guru, nilai, dan kehadiran akan dihapus permanen.
+          <strong>Peringatan:</strong> Semua data siswa, guru, nilai, kehadiran, jadwal, dan tagihan akan dihapus dan diisi ulang dengan data dummy baru. Akun login Anda tetap aman dan masa aktif demo tidak diperpanjang.
+        </div>
+        <div
+          v-if="resetError"
+          class="bg-red-100 border border-red-300 rounded-xl p-3 text-[12px] text-red-800 leading-relaxed"
+        >
+          {{ resetError }}
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 leading-relaxed">
+          Setelah reset selesai Anda akan diminta login kembali, lalu masuk lagi ke demo baru.
         </div>
         <div class="grid grid-cols-2 gap-2">
-          <Button variant="secondary" block @click="showResetModal = false">Batal</Button>
-          <Button variant="danger" block @click="showResetModal = false">Ya, reset</Button>
+          <Button
+            variant="secondary"
+            block
+            :disabled="isResetting"
+            @click="showResetModal = false"
+          >
+            Batal
+          </Button>
+          <Button
+            variant="danger"
+            block
+            :disabled="isResetting"
+            @click="confirmResetDemo"
+          >
+            {{ isResetting ? 'Mereset…' : 'Ya, reset' }}
+          </Button>
         </div>
       </div>
     </Modal>
