@@ -3,12 +3,13 @@
   Sections: school profile, levels, time periods, system, data backup.
 -->
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
+import DemoResetForm from '@/components/demo/DemoResetForm.vue';
 import { DemoService } from '@/services/demo.service';
 import { useAuthStore } from '@/stores/auth';
 
@@ -19,6 +20,40 @@ const showResetModal = ref(false);
 const isResetting = ref(false);
 const resetError = ref<string | null>(null);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
+
+/**
+ * Original wizard payload from the user's DemoWizardState — the BASE
+ * that <DemoResetForm> merges user overrides on top of when the
+ * operator picks "Ubah konfigurasi". Hydrated lazily on first modal
+ * open. Null while loading; if the fetch fails (or the user has no
+ * wizard state cached), the form's "Ubah konfigurasi" tab stays
+ * locked and only "Konfigurasi sama" is available — the safe
+ * fallback, since the backend then reuses the demo_request's payload.
+ */
+const basePayload = ref<Record<string, unknown> | null>(null);
+
+/**
+ * Merged payload coming back from <DemoResetForm>. `null` means
+ * "use the original wizard answers" — we call reset() with no body
+ * and the backend reuses the payload captured on the demo_request.
+ */
+const resetOverride = ref<Record<string, unknown> | null>(null);
+
+watch(showResetModal, async (open) => {
+  if (!open) return;
+  resetError.value = null;
+  resetOverride.value = null;
+  if (basePayload.value) return; // cached from a previous open
+  try {
+    const state = await DemoService.loadWizardState();
+    if (state?.payload) {
+      basePayload.value = state.payload as unknown as Record<string, unknown>;
+    }
+  } catch {
+    // Non-fatal — tweak tab will stay locked, "Konfigurasi sama" still
+    // works (server reuses the original payload).
+  }
+});
 
 /**
  * Confirm "Reset Data Demo" — wipe the demo school back to a freshly-
@@ -35,7 +70,14 @@ async function confirmResetDemo() {
   isResetting.value = true;
   resetError.value = null;
   try {
-    await DemoService.reset();
+    // The mini-wizard works with a generic Record (it merges fields
+    // by name only); reset() typed its parameter as DemoWizardPayload
+    // for the wizard's own call site. Cast at the boundary — the
+    // backend validates the shape so a wrong-shape merged payload
+    // surfaces as a 422 with a readable message, not a silent break.
+    await DemoService.reset(
+      (resetOverride.value ?? undefined) as never,
+    );
     await auth.logout();
     await router.push('/login');
   } catch (e) {
@@ -136,6 +178,13 @@ function open(it: SettingsGroup['items'][number]) {
         <div class="bg-red-50 border border-red-200 rounded-xl p-3 text-[12px] text-red-700 leading-relaxed">
           <strong>Peringatan:</strong> Semua data siswa, guru, nilai, kehadiran, jadwal, dan tagihan akan dihapus dan diisi ulang dengan data dummy baru. Akun login Anda tetap aman dan masa aktif demo tidak diperpanjang.
         </div>
+
+        <!-- Mini-wizard: pakai konfigurasi yang sama atau ubah sedikit. -->
+        <DemoResetForm
+          :base-payload="basePayload"
+          @change="resetOverride = $event"
+        />
+
         <div
           v-if="resetError"
           class="bg-red-100 border border-red-300 rounded-xl p-3 text-[12px] text-red-800 leading-relaxed"

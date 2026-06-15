@@ -335,6 +335,31 @@ function onSchoolDeleted(result: DeleteDemoSchoolResult) {
   };
   window.setTimeout(goBack, 1200);
 }
+
+/**
+ * Called after a successful demo-school reset. The school row was
+ * REPLACED (delete + re-provision) — the request's
+ * `activated_school_id` now points at a different uuid, the cached
+ * `school_payload` is stale (if the operator used "Ubah konfigurasi"),
+ * and the account counts in DemoAccountManagementSection are for the
+ * old school. Easiest correct refresh: re-fetch the whole detail and
+ * let the page re-render with the new linkage.
+ */
+function onSchoolReset(result: {
+  school_id: string;
+  school_name: string;
+  tenant_type: string;
+  demo_expires_at: string | null;
+}) {
+  toast.value = {
+    message: `Sekolah demo "${result.school_name}" berhasil direset.`,
+    tone: 'success',
+  };
+  // Re-fetch the detail so activated_school_id + school_payload reflect
+  // the new school. `load()` is the same async fetch the page runs
+  // on mount.
+  void load();
+}
 </script>
 
 <template>
@@ -1034,8 +1059,10 @@ function onSchoolDeleted(result: DeleteDemoSchoolResult) {
           :school-name="
             payload?.bimbel?.name ?? payload?.school?.name ?? detail.school_summary?.name ?? null
           "
+          :current-payload="payload as Record<string, unknown> | null"
           @deleted="onAccountsDeleted"
           @school-deleted="onSchoolDeleted"
+          @reset="onSchoolReset"
         />
 
         <!-- REVIEW NOTE (if reviewed) -->
