@@ -192,14 +192,14 @@ const kpiCards = computed<KpiCard[]>(() => {
   return [
     {
       icon: 'book',
-      label: 'Total Bab',
+      label: t('tutor.sekolah.material.kpiTotalBab'),
       value: tree.value.chapters.length,
-      suffix: `${total} sub-bab`,
+      suffix: t('tutor.sekolah.material.kpiTotalBabSuffix', { count: total }),
       tone: 'brand',
     },
     {
       icon: 'check-circle',
-      label: 'Sudah Diajar',
+      label: t('tutor.sekolah.material.kpiSudahDiajar'),
       value: done,
       suffix: `${progressPct.value}%`,
       tone: 'green',
@@ -207,16 +207,16 @@ const kpiCards = computed<KpiCard[]>(() => {
     },
     {
       icon: 'clock',
-      label: 'Belum Diajar',
+      label: t('tutor.sekolah.material.kpiBelumDiajar'),
       value: remaining,
-      suffix: 'sub-bab',
+      suffix: t('tutor.sekolah.material.kpiBelumDiajarSuffix'),
       tone: remaining > 0 ? 'amber' : 'green',
     },
     {
       icon: 'sparkles',
-      label: 'Konten AI',
+      label: t('tutor.sekolah.material.kpiKontenAi'),
       value: aiCount.value,
-      suffix: `${aiPct}% siap`,
+      suffix: t('tutor.sekolah.material.kpiKontenAiSuffix', { pct: aiPct }),
       tone: 'violet',
       accented: aiPct >= 50,
     },
@@ -224,25 +224,25 @@ const kpiCards = computed<KpiCard[]>(() => {
 });
 
 const tabOptions = computed(() => [
-  { key: 'all', label: 'Semua', meta: String(tree.value.total_total) },
-  { key: 'done', label: 'Selesai', meta: String(tree.value.done_total) },
+  { key: 'all', label: t('tutor.sekolah.material.tabAll'), meta: String(tree.value.total_total) },
+  { key: 'done', label: t('tutor.sekolah.material.tabDone'), meta: String(tree.value.done_total) },
   {
     key: 'todo',
-    label: 'Belum',
+    label: t('tutor.sekolah.material.tabTodo'),
     meta: String(tree.value.total_total - tree.value.done_total),
   },
 ]);
 
 const detailTabOptions = computed(() => [
-  { key: 'materi', label: 'Materi' },
+  { key: 'materi', label: t('tutor.sekolah.material.tabMateri') },
   {
     key: 'kuis',
-    label: 'Kuis',
+    label: t('tutor.sekolah.material.tabKuis'),
     meta: detailAi.value ? String(detailAi.value.quizzes.length) : '0',
   },
   {
     key: 'referensi',
-    label: 'Referensi',
+    label: t('tutor.sekolah.material.tabReferensi'),
     meta: detailAi.value ? String(detailAi.value.references.length) : '0',
   },
 ]);
@@ -383,7 +383,7 @@ async function toggleSubChapter(s: SubChapter, parent?: Chapter) {
     );
   if (!chapter) {
     toast.value = {
-      message: 'Bab induk tidak ditemukan untuk sub-bab ini.',
+      message: t('tutor.sekolah.material.toastParentNotFound'),
       tone: 'error',
     };
     return;
@@ -391,7 +391,7 @@ async function toggleSubChapter(s: SubChapter, parent?: Chapter) {
   const teacherId = auth.teacherId ?? auth.user?.id;
   if (!teacherId || !subjectId.value) {
     toast.value = {
-      message: 'Pilih mapel & pastikan profil guru termuat dulu.',
+      message: t('tutor.sekolah.material.toastNeedSubjectAndTeacher'),
       tone: 'error',
     };
     return;
@@ -505,12 +505,15 @@ async function runBatchGenerate() {
   selectedSubIds.value = failedIds;
   if (failed.length === 0) {
     toast.value = {
-      message: `${selectedRows.value.length} sub-bab terkirim ke AI · Menunggu hasil…`,
+      message: t('tutor.sekolah.material.toastBatchSuccess', { count: selectedRows.value.length }),
       tone: 'success',
     };
   } else {
     toast.value = {
-      message: `${failed.length} dari ${selectedRows.value.length + failed.length} gagal — sisanya akan diretry`,
+      message: t('tutor.sekolah.material.toastBatchPartialFail', {
+        failed: failed.length,
+        total: selectedRows.value.length + failed.length,
+      }),
       tone: 'error',
     };
   }
@@ -574,12 +577,18 @@ const editorTarget = ref<{
   value: string;
 } | null>(null);
 
-const EDITOR_LABELS: Record<EditorField, string> = {
-  ringkasan: 'Ringkasan Materi',
-  tujuan_pembelajaran: 'Tujuan Pembelajaran',
-  poin_utama: 'Poin Utama',
-  cara_mengajar: 'Cara Mengajar',
-};
+function editorLabel(key: EditorField): string {
+  switch (key) {
+    case 'ringkasan':
+      return t('tutor.sekolah.material.sectionRingkasan');
+    case 'tujuan_pembelajaran':
+      return t('tutor.sekolah.material.sectionTujuan');
+    case 'poin_utama':
+      return t('tutor.sekolah.material.sectionPoin');
+    case 'cara_mengajar':
+      return t('tutor.sekolah.material.sectionCara');
+  }
+}
 
 function openSectionEditor(key: EditorField) {
   const parsed = detailAi.value?.parsed_content;
@@ -603,7 +612,7 @@ function openSectionEditor(key: EditorField) {
     const raw = parsed[key];
     value = typeof raw === 'string' ? raw : '';
   }
-  editorTarget.value = { key, label: EDITOR_LABELS[key], mode, value };
+  editorTarget.value = { key, label: editorLabel(key), mode, value };
 }
 
 function saveSectionEdit(next: string) {
@@ -623,7 +632,7 @@ function saveSectionEdit(next: string) {
     (detailAi.value.parsed_content as Record<string, unknown>)[key] = next;
   }
   toast.value = {
-    message: `${editorTarget.value.label} diperbarui (lokal).`,
+    message: t('tutor.sekolah.material.editLocalUpdated', { label: editorTarget.value.label }),
     tone: 'success',
   };
   editorTarget.value = null;
@@ -676,7 +685,7 @@ async function generateForDetail() {
     // automatically once the material lands. On timeout we flip
     // `timedOut` instead of nulling it so the user gets a Retry.
     aiPolling.value = {
-      title: 'Memproses Materi AI',
+      title: t('tutor.sekolah.material.overlayGenerating'),
       subtitle: `${chapter.label} · ${sub.name}`,
       estimatedSeconds: 60,
       timedOut: false,
@@ -695,7 +704,7 @@ async function generateForDetail() {
       detailAi.value = fresh;
       // Flip the sub-bab AI pill in the tree without a full reload.
       sub.ai_generated = true;
-      toast.value = { message: 'Materi AI siap.', tone: 'success' };
+      toast.value = { message: t('tutor.sekolah.material.toastMateriReady'), tone: 'success' };
     } else if (!aiPollAbort) {
       // Keep the overlay mounted but flip into timeout mode so the
       // teacher can retry without re-navigating.
@@ -750,7 +759,7 @@ async function regenAndPoll(args: {
       if (updated && args.changeDetector(before, updated)) {
         if (detail.value) detailAi.value = updated;
         aiPolling.value = null;
-        toast.value = { message: 'AI selesai memperbarui.', tone: 'success' };
+        toast.value = { message: t('tutor.sekolah.material.toastAiUpdated'), tone: 'success' };
         return;
       }
       await new Promise((r) => setTimeout(r, 2500));
@@ -775,7 +784,7 @@ async function regenMateri() {
   const materialId = detailAi.value.id;
   await regenAndPoll({
     busyTag: 'regen-materi',
-    overlayTitle: 'Regenerate Materi AI',
+    overlayTitle: t('tutor.sekolah.material.overlayRegenMateri'),
     estimatedSeconds: 45,
     fire: () => MaterialService.regenerateMaterialContent(materialId),
     changeDetector: (before, after) =>
@@ -790,7 +799,7 @@ async function regenQuiz() {
   const materialId = detailAi.value.id;
   await regenAndPoll({
     busyTag: 'regen-quiz',
-    overlayTitle: 'Membuat Kuis Baru',
+    overlayTitle: t('tutor.sekolah.material.overlayRegenQuiz'),
     estimatedSeconds: 40,
     fire: () => MaterialService.regenerateQuiz(materialId),
     changeDetector: (before, after) =>
@@ -804,7 +813,7 @@ async function regenRef() {
   const materialId = detailAi.value.id;
   await regenAndPoll({
     busyTag: 'regen-ref',
-    overlayTitle: 'Mencari Referensi Baru',
+    overlayTitle: t('tutor.sekolah.material.overlayRegenRef'),
     estimatedSeconds: 30,
     fire: () => MaterialService.regenerateReferences(materialId),
     changeDetector: (before, after) =>
@@ -827,7 +836,7 @@ async function generateAi() {
     showAiSheet.value = false;
     aiForm.value = { chapter_label: '', topic: '' };
     toast.value = {
-      message: 'Permintaan AI dikirim. Hasil akan muncul setelah selesai.',
+      message: t('tutor.sekolah.material.toastGenerateQueued'),
       tone: 'success',
     };
     await reload();
@@ -838,14 +847,14 @@ async function generateAi() {
   }
 }
 
-const gradeOptions = [
-  { key: '7', label: 'Kelas 7' },
-  { key: '8', label: 'Kelas 8' },
-  { key: '9', label: 'Kelas 9' },
-  { key: '10', label: 'Kelas 10' },
-  { key: '11', label: 'Kelas 11' },
-  { key: '12', label: 'Kelas 12' },
-];
+const gradeOptions = computed(() => [
+  { key: '7', label: t('tutor.sekolah.material.classPrefix', { grade: '7' }) },
+  { key: '8', label: t('tutor.sekolah.material.classPrefix', { grade: '8' }) },
+  { key: '9', label: t('tutor.sekolah.material.classPrefix', { grade: '9' }) },
+  { key: '10', label: t('tutor.sekolah.material.classPrefix', { grade: '10' }) },
+  { key: '11', label: t('tutor.sekolah.material.classPrefix', { grade: '11' }) },
+  { key: '12', label: t('tutor.sekolah.material.classPrefix', { grade: '12' }) },
+]);
 
 function pickSubject(id: string) {
   subjectId.value = id;
@@ -1005,8 +1014,8 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                 "
                 :title="
                   isChapterAllSelected(c)
-                    ? 'Hapus pilihan'
-                    : 'Pilih semua sub-bab di bab ini'
+                    ? t('tutor.sekolah.material.chapterCheckRemoveSel')
+                    : t('tutor.sekolah.material.chapterCheckSelectAll')
                 "
                 @click.stop="selectAllInChapter(c)"
               >
@@ -1042,7 +1051,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                   {{ c.label }}{{ c.name ? ` · ${c.name}` : '' }}
                 </p>
                 <p class="text-[11px] text-slate-400 truncate">
-                  {{ c.total_count }} sub-bab{{ c.meta ? ` · ${c.meta}` : '' }}
+                  {{ t('tutor.sekolah.material.chapterMetaSubCount', { count: c.total_count }) }}{{ c.meta ? ` · ${c.meta}` : '' }}
                 </p>
               </div>
               <div class="flex items-center gap-2 flex-shrink-0">
@@ -1079,7 +1088,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       : 'border-slate-300 hover:border-brand-cobalt/60'
                   "
                   :title="
-                    selectedSubIds.has(s.id) ? 'Hapus pilihan' : 'Pilih untuk Generate AI'
+                    selectedSubIds.has(s.id) ? t('tutor.sekolah.material.subRowSelectRemove') : t('tutor.sekolah.material.subRowSelectAdd')
                   "
                   @click.stop="toggleSelect(s)"
                 >
@@ -1105,7 +1114,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       ? 'bg-emerald-600 border-emerald-600 text-white'
                       : 'border-slate-300 hover:border-emerald-400'
                   "
-                  :aria-label="s.done ? 'Tandai belum diajar' : 'Tandai selesai diajar'"
+                  :aria-label="s.done ? t('tutor.sekolah.material.subRowToggleOff') : t('tutor.sekolah.material.subRowToggleOn')"
                   :disabled="isSaving"
                   @click.stop="toggleSubChapter(s, c)"
                 >
@@ -1142,8 +1151,8 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                 <span class="text-[10px] text-slate-400 min-w-[80px] text-right">
                   {{
                     s.done && s.taught_at
-                      ? `Diajar ${formatDateShort(s.taught_at)}`
-                      : 'Belum diajar'
+                      ? t('tutor.sekolah.material.subRowTaughtAt', { date: formatDateShort(s.taught_at) })
+                      : t('tutor.sekolah.material.subRowNotTaught')
                   }}
                 </span>
                 <NavIcon name="chevron-right" :size="14" class="text-slate-300" />
@@ -1153,7 +1162,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
               v-else-if="expanded.has(c.id) && c.sub_chapters.length === 0"
               class="pl-12 pr-4 py-3 text-[11px] text-slate-400 italic"
             >
-              Tidak ada sub-bab untuk filter aktif.
+              {{ t('tutor.sekolah.material.subRowEmptyFilter') }}
             </div>
           </article>
         </section>
@@ -1161,7 +1170,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
     </AsyncView>
 
     <!-- Subject picker -->
-    <Modal v-if="showSubjectPicker" title="Pilih Mata Pelajaran" @close="showSubjectPicker = false">
+    <Modal v-if="showSubjectPicker" :title="t('tutor.sekolah.material.pickSubjectTitle')" @close="showSubjectPicker = false">
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">
         <li v-for="s in subjects" :key="s.id">
           <button
@@ -1177,7 +1186,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
     </Modal>
 
     <!-- Grade picker -->
-    <Modal v-if="showGradePicker" title="Pilih Tingkat" @close="showGradePicker = false">
+    <Modal v-if="showGradePicker" :title="t('tutor.sekolah.material.pickGradeTitle')" @close="showGradePicker = false">
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">
         <li>
           <button
@@ -1186,7 +1195,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
             :class="{ 'bg-brand-cobalt/5 text-brand-cobalt font-bold': gradeLevel === '' }"
             @click="pickGrade('')"
           >
-            Semua tingkat
+            {{ t('tutor.sekolah.material.allGrades') }}
           </button>
         </li>
         <li v-for="g in gradeOptions" :key="g.key">
@@ -1205,44 +1214,42 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
     <!-- AI generate sheet -->
     <Modal
       v-if="showAiSheet"
-      title="Generate Materi dengan AI"
-      subtitle="Isi field di bawah lalu klik Generate. Hasil dapat diedit sebelum disimpan."
+      :title="t('tutor.sekolah.material.aiSheetTitle')"
+      :subtitle="t('tutor.sekolah.material.aiSheetSubtitle')"
       @close="showAiSheet = false"
     >
       <form class="space-y-md" @submit.prevent="generateAi">
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1">
-            Bab / Sub-bab <span class="text-slate-400 font-normal">(opsional)</span>
+            {{ t('tutor.sekolah.material.aiSheetChapterLabel') }} <span class="text-slate-400 font-normal">{{ t('tutor.sekolah.material.aiSheetChapterOptional') }}</span>
           </label>
           <input
             v-model="aiForm.chapter_label"
             type="text"
-            placeholder="Contoh: Bab 4.5 · Aplikasi SPLDV"
+            :placeholder="t('tutor.sekolah.material.aiSheetChapterPlaceholder')"
             class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
             :disabled="isGenerating"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Topik utama</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('tutor.sekolah.material.aiSheetTopicLabel') }}</label>
           <textarea
             v-model="aiForm.topic"
             rows="3"
-            placeholder="Misal: aplikasi SPLDV dalam masalah dunia nyata (perdagangan, transportasi)…"
+            :placeholder="t('tutor.sekolah.material.aiSheetTopicPlaceholder')"
             class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none resize-none"
             :disabled="isGenerating"
           ></textarea>
         </div>
         <p class="text-[11px] text-slate-500 bg-slate-50 rounded-lg p-3 leading-relaxed">
-          AI akan menghasilkan draf konten materi untuk sub-bab di atas.
-          Estimasi waktu: <b class="text-slate-900">~30 detik</b>. Anda tetap
-          dapat mengedit hasil sebelum menyimpan.
+          {{ t('tutor.sekolah.material.aiSheetHint') }} <b class="text-slate-900">{{ t('tutor.sekolah.material.aiSheetHintEta') }}</b>{{ t('tutor.sekolah.material.aiSheetHintTail') }}
         </p>
         <div class="grid grid-cols-2 gap-2">
           <Button variant="secondary" block @click="showAiSheet = false">
-            Batal
+            {{ t('tutor.sekolah.material.aiSheetCancel') }}
           </Button>
           <Button variant="primary" block :loading="isGenerating" @click="generateAi">
-            Generate sekarang
+            {{ t('tutor.sekolah.material.aiSheetSubmit') }}
           </Button>
         </div>
       </form>
@@ -1273,21 +1280,21 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                   v-if="detail.sub.ai_generated || detailAi"
                   class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 uppercase tracking-wider"
                 >
-                  AI siap
+                  {{ t('tutor.sekolah.material.detailAiReady') }}
                 </span>
               </div>
               <h2 class="text-base font-black text-slate-900 truncate">
                 {{ detail.sub.name }}
               </h2>
               <p class="text-[11px] text-slate-400 truncate">
-                {{ activeSubject?.name ?? '—' }} · {{ semester === 'ganjil' ? 'Semester 1' : 'Semester 2' }}
-                {{ detail.sub.done && detail.sub.taught_at ? ` · Diajar ${formatDateShort(detail.sub.taught_at)}` : '' }}
+                {{ activeSubject?.name ?? '—' }} · {{ semester === 'ganjil' ? t('tutor.sekolah.material.semester1') : t('tutor.sekolah.material.semester2') }}
+                {{ detail.sub.done && detail.sub.taught_at ? t('tutor.sekolah.material.detailTaughtSuffix', { date: formatDateShort(detail.sub.taught_at) }) : '' }}
               </p>
             </div>
             <button
               type="button"
               class="text-slate-400 hover:text-slate-700 p-1 -m-1"
-              aria-label="Tutup"
+              :aria-label="t('tutor.sekolah.material.detailAriaClose')"
               @click="closeDetail()"
             >
               <NavIcon name="x" :size="18" />
@@ -1298,19 +1305,19 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
           <div class="px-5 pt-4">
             <div class="grid grid-cols-3 gap-2 bg-slate-50 rounded-xl p-3">
               <div class="text-center">
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Materi AI</p>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.material.detailKpiMateri') }}</p>
                 <p class="text-lg font-black" :class="detailAi ? 'text-violet-700' : 'text-slate-400'">
-                  {{ detailAi ? 'Siap' : '—' }}
+                  {{ detailAi ? t('tutor.sekolah.material.detailKpiMateriReady') : '—' }}
                 </p>
               </div>
               <div class="text-center">
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Kuis</p>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.material.detailKpiKuis') }}</p>
                 <p class="text-lg font-black text-slate-900">
                   {{ detailAi?.quizzes.length ?? 0 }}
                 </p>
               </div>
               <div class="text-center">
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Referensi</p>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.material.detailKpiReferensi') }}</p>
                 <p class="text-lg font-black text-slate-900">
                   {{ detailAi?.references.length ?? 0 }}
                 </p>
@@ -1332,7 +1339,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
           <div class="flex-1 overflow-y-auto px-5 py-4">
             <div v-if="detailLoading" class="py-12 text-center text-slate-400 text-sm">
               <NavIcon name="loader" :size="20" class="animate-spin inline-block mb-2" />
-              <p>Memuat konten…</p>
+              <p>{{ t('tutor.sekolah.material.detailLoading') }}</p>
             </div>
 
             <!-- ── Materi tab ───────────────────────────────────────── -->
@@ -1349,12 +1356,12 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       <NavIcon name="file-text" :size="14" />
                     </span>
                     <h3 class="text-sm font-bold text-slate-900 flex-1">
-                      Ringkasan Materi
+                      {{ t('tutor.sekolah.material.sectionRingkasan') }}
                     </h3>
                     <button
                       type="button"
                       class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-brand-cobalt transition"
-                      title="Edit Ringkasan"
+                      :title="t('tutor.sekolah.material.editRingkasanTitle')"
                       @click="openSectionEditor('ringkasan')"
                     >
                       <NavIcon name="edit" :size="14" />
@@ -1375,12 +1382,12 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       <NavIcon name="flag" :size="14" />
                     </span>
                     <h3 class="text-sm font-bold text-slate-900 flex-1">
-                      Tujuan Pembelajaran
+                      {{ t('tutor.sekolah.material.sectionTujuan') }}
                     </h3>
                     <button
                       type="button"
                       class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-brand-cobalt transition"
-                      title="Edit Tujuan Pembelajaran"
+                      :title="t('tutor.sekolah.material.editTujuanTitle')"
                       @click="openSectionEditor('tujuan_pembelajaran')"
                     >
                       <NavIcon name="edit" :size="14" />
@@ -1410,12 +1417,12 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       <NavIcon name="zap" :size="14" />
                     </span>
                     <h3 class="text-sm font-bold text-slate-900 flex-1">
-                      Poin Utama
+                      {{ t('tutor.sekolah.material.sectionPoin') }}
                     </h3>
                     <button
                       type="button"
                       class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-brand-cobalt transition"
-                      title="Edit Poin Utama"
+                      :title="t('tutor.sekolah.material.editPoinTitle')"
                       @click="openSectionEditor('poin_utama')"
                     >
                       <NavIcon name="edit" :size="14" />
@@ -1445,12 +1452,12 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       <NavIcon name="book" :size="14" />
                     </span>
                     <h3 class="text-sm font-bold text-slate-900 flex-1">
-                      Cara Mengajar
+                      {{ t('tutor.sekolah.material.sectionCara') }}
                     </h3>
                     <button
                       type="button"
                       class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-brand-cobalt transition"
-                      title="Edit Cara Mengajar"
+                      :title="t('tutor.sekolah.material.editCaraTitle')"
                       @click="openSectionEditor('cara_mengajar')"
                     >
                       <NavIcon name="edit" :size="14" />
