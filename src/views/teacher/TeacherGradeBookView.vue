@@ -268,31 +268,31 @@ const summaryKpi = computed<KpiCard[]>(() => {
   return [
     {
       icon: 'layers',
-      label: 'Mapel · Kelas',
+      label: t('tutor.sekolah.gradebook.kpiMapelKelas'),
       value: totalCards,
       tone: 'brand',
     },
     {
       icon: 'edit-3',
-      label: 'Asesmen',
+      label: t('tutor.sekolah.gradebook.kpiAsesmen'),
       value: totalAssessments,
       tone: 'violet',
     },
     {
       icon: 'bar-chart',
-      label: 'Rerata',
+      label: t('tutor.sekolah.gradebook.kpiRerata'),
       value: cardsWithAvg
         ? Math.round((sumAvg / cardsWithAvg) * 10) / 10
         : '—',
-      suffix: 'gabungan',
+      suffix: t('tutor.sekolah.gradebook.kpiRerataSuffix'),
       tone: 'green',
       accented: true,
     },
     {
       icon: 'bell',
-      label: 'Belum Dinilai',
+      label: t('tutor.sekolah.gradebook.kpiBelumDinilai'),
       value: cardsBelumNilai,
-      suffix: 'mapel',
+      suffix: t('tutor.sekolah.gradebook.kpiBelumSuffix'),
       tone: cardsBelumNilai > 0 ? 'amber' : 'green',
     },
   ];
@@ -374,25 +374,25 @@ const typeCounts = computed(() => {
 // selected key matches `assessment.type` (also canonical) when the
 // matrix filters `visibleAssessments`. The labels stay Indonesian.
 const typeOptions = computed(() => [
-  { key: 'all', label: 'Semua', meta: String(typeCounts.value.all ?? 0) },
+  { key: 'all', label: t('tutor.sekolah.gradebook.typeAll'), meta: String(typeCounts.value.all ?? 0) },
   {
     key: 'assignment',
-    label: 'Tugas',
+    label: t('tutor.sekolah.gradebook.typeAssignment'),
     meta: String(typeCounts.value.assignment ?? 0),
   },
   {
     key: 'daily_test',
-    label: 'UH',
+    label: t('tutor.sekolah.gradebook.typeDailyTest'),
     meta: String(typeCounts.value.daily_test ?? 0),
   },
   {
     key: 'midterm',
-    label: 'UTS',
+    label: t('tutor.sekolah.gradebook.typeMidterm'),
     meta: String(typeCounts.value.midterm ?? 0),
   },
   {
     key: 'final_exam',
-    label: 'UAS',
+    label: t('tutor.sekolah.gradebook.typeFinalExam'),
     meta: String(typeCounts.value.final_exam ?? 0),
   },
 ]);
@@ -681,14 +681,14 @@ async function applyEditColumn() {
   if (!a || !matrixSubject.value?.id) return;
   const f = editForm.value;
   if (!f.type || !f.date) {
-    toast.value = { message: 'Tipe dan tanggal wajib diisi.', tone: 'error' };
+    toast.value = { message: t('tutor.sekolah.gradebook.toastTypeDateRequired'), tone: 'error' };
     return;
   }
   // Editing requires the original column to have a date so the
   // backend batch-delete can target it (same limit as delete).
   if (!a.date) {
     toast.value = {
-      message: 'Asesmen ini belum punya tanggal — tidak bisa diedit dari web.',
+      message: t('tutor.sekolah.gradebook.toastEditNoDate'),
       tone: 'error',
     };
     return;
@@ -702,8 +702,7 @@ async function applyEditColumn() {
   }
   if (isAdminView.value) {
     toast.value = {
-      message:
-        'Mode admin — tampilan hanya-baca. Mintalah guru terkait untuk menyimpan perubahan.',
+      message: t('tutor.sekolah.gradebook.toastReadOnly'),
       tone: 'error',
     };
     return;
@@ -721,7 +720,9 @@ async function applyEditColumn() {
     }
     columnEditFor.value = null;
     toast.value = {
-      message: `Asesmen "${nextTitle || ASSESSMENT_LABELS[f.type]}" diperbarui.`,
+      message: t('tutor.sekolah.gradebook.toastAssessmentUpdated', {
+        name: nextTitle || ASSESSMENT_LABELS[f.type],
+      }),
       tone: 'success',
     };
     return;
@@ -729,7 +730,7 @@ async function applyEditColumn() {
   const teacherId = auth.teacherId ?? auth.user?.id ?? '';
   if (!teacherId) {
     toast.value = {
-      message: 'Identitas guru belum siap — coba refresh halaman.',
+      message: t('tutor.sekolah.gradebook.toastTeacherIdMissing'),
       tone: 'error',
     };
     return;
@@ -745,7 +746,9 @@ async function applyEditColumn() {
       teacher_id: teacherId,
     });
     toast.value = {
-      message: `Asesmen "${nextTitle || ASSESSMENT_LABELS[f.type]}" diperbarui.`,
+      message: t('tutor.sekolah.gradebook.toastAssessmentUpdated', {
+        name: nextTitle || ASSESSMENT_LABELS[f.type],
+      }),
       tone: 'success',
     };
     columnEditFor.value = null;
@@ -780,7 +783,7 @@ async function applyEditColumn() {
         .map(([k, v]) => `${k}: ${Array.isArray(v) ? v[0] : String(v)}`)
         .slice(0, 3)
         .join(' · ');
-      if (fields) message = `Validasi gagal — ${fields}`;
+      if (fields) message = t('tutor.sekolah.gradebook.toastValidationFailed', { fields });
     }
     toast.value = { message, tone: 'error' };
   } finally {
@@ -793,7 +796,7 @@ async function confirmDeleteColumn() {
   const a = columnDeleteConfirm.value;
   if (!a.date) {
     toast.value = {
-      message: 'Asesmen ini belum punya tanggal — tidak bisa dihapus dari web.',
+      message: t('tutor.sekolah.gradebook.toastDeleteNoDate'),
       tone: 'error',
     };
     return;
@@ -807,7 +810,7 @@ async function confirmDeleteColumn() {
       title: a.raw_title ?? null,
     });
     toast.value = {
-      message: `Asesmen "${a.name}" dihapus beserta seluruh nilainya.`,
+      message: t('tutor.sekolah.gradebook.toastAssessmentDeleted', { name: a.name }),
       tone: 'success',
     };
     columnDeleteConfirm.value = null;
@@ -840,7 +843,7 @@ async function confirmDeleteColumn() {
         .map(([k, v]) => `${k}: ${Array.isArray(v) ? v[0] : String(v)}`)
         .slice(0, 3)
         .join(' · ');
-      if (fields) message = `Validasi gagal — ${fields}`;
+      if (fields) message = t('tutor.sekolah.gradebook.toastValidationFailed', { fields });
     }
     toast.value = { message, tone: 'error' };
   } finally {
@@ -871,7 +874,7 @@ function openAddAsesmen() {
 function applyAddAsesmen() {
   const f = addForm.value;
   if (!f.type || !f.date) {
-    toast.value = { message: 'Tipe dan tanggal wajib diisi.', tone: 'error' };
+    toast.value = { message: t('tutor.sekolah.gradebook.toastTypeDateRequired'), tone: 'error' };
     return;
   }
   const title = f.title.trim();
@@ -898,7 +901,7 @@ function applyAddAsesmen() {
   }
   showAddAsesmen.value = false;
   toast.value = {
-    message: `Asesmen "${newAssessment.name}" ditambahkan — isi skor untuk menyimpan.`,
+    message: t('tutor.sekolah.gradebook.toastAssessmentAdded', { name: newAssessment.name }),
     tone: 'success',
   };
 }
@@ -947,14 +950,14 @@ async function save(opts: { silent?: boolean } = {}) {
   if (dirty.length === 0) {
     if (!opts.silent)
       toast.value = {
-        message: 'Tidak ada perubahan untuk disimpan.',
+        message: t('tutor.sekolah.gradebook.toastNoChanges'),
         tone: 'error',
       };
     return;
   }
   if (isAdminView.value) {
     toast.value = {
-      message: 'Mode admin — tampilan hanya-baca. Mintalah guru terkait untuk menyimpan perubahan.',
+      message: t('tutor.sekolah.gradebook.toastReadOnly'),
       tone: 'error',
     };
     return;
@@ -962,7 +965,7 @@ async function save(opts: { silent?: boolean } = {}) {
   const teacherId = auth.teacherId ?? auth.user?.id ?? '';
   if (!teacherId) {
     toast.value = {
-      message: 'Identitas guru belum siap — coba refresh halaman.',
+      message: t('tutor.sekolah.gradebook.toastTeacherIdMissing'),
       tone: 'error',
     };
     return;
@@ -979,7 +982,7 @@ async function save(opts: { silent?: boolean } = {}) {
     }
     if (!opts.silent) {
       toast.value = {
-        message: `${dirty.length} nilai tersimpan.`,
+        message: t('tutor.sekolah.gradebook.toastSaved', { count: dirty.length }),
         tone: 'success',
       };
     }
@@ -1012,7 +1015,7 @@ async function save(opts: { silent?: boolean } = {}) {
         .map(([k, v]) => `${k}: ${Array.isArray(v) ? v[0] : String(v)}`)
         .slice(0, 3)
         .join(' · ');
-      if (fields) message = `Validasi gagal — ${fields}`;
+      if (fields) message = t('tutor.sekolah.gradebook.toastValidationFailed', { fields });
     }
     toast.value = { message, tone: 'error' };
     // Surface to console for debugging the raw response.
@@ -1203,7 +1206,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                   <p
                     class="text-[10px] font-bold text-brand-cobalt uppercase tracking-widest"
                   >
-                    Kelas {{ row.class_name }}
+                    {{ t('tutor.sekolah.gradebook.cardClassPrefix', { name: row.class_name }) }}
                   </p>
                   <p
                     class="text-[14px] font-black text-slate-900 leading-tight mt-0.5 truncate"
@@ -1220,7 +1223,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                 <span
                   class="text-[10px] font-bold text-brand-cobalt inline-flex items-center gap-0.5 flex-shrink-0"
                 >
-                  Buka
+                  {{ t('tutor.sekolah.gradebook.cardOpen') }}
                   <NavIcon name="chevron-right" :size="12" />
                 </span>
               </div>
@@ -1231,7 +1234,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                   <p
                     class="text-[8.5px] font-bold text-slate-400 uppercase tracking-widest"
                   >
-                    Siswa
+                    {{ t('tutor.sekolah.gradebook.cardSiswa') }}
                   </p>
                   <p class="text-[12px] font-black text-slate-900 mt-0.5">
                     {{ row.student_count }}
@@ -1241,7 +1244,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                   <p
                     class="text-[8.5px] font-bold text-slate-400 uppercase tracking-widest"
                   >
-                    Asesmen
+                    {{ t('tutor.sekolah.gradebook.cardAsesmen') }}
                   </p>
                   <p class="text-[12px] font-black text-slate-900 mt-0.5">
                     {{ row.subject.assessments.length }}
@@ -1251,7 +1254,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                   <p
                     class="text-[8.5px] font-bold text-slate-400 uppercase tracking-widest"
                   >
-                    Nilai
+                    {{ t('tutor.sekolah.gradebook.cardNilai') }}
                   </p>
                   <p class="text-[12px] font-black text-slate-900 mt-0.5">
                     {{ row.subject.total_nilai }}
@@ -1290,7 +1293,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                         : 'bg-amber-500'
                       : 'bg-slate-200'
                   "
-                  :title="`${a.label}: ${a.avg ?? 'belum dinilai'}`"
+                  :title="`${a.label}: ${a.avg ?? t('tutor.sekolah.gradebook.cardProgressNoScore')}`"
                 ></span>
               </div>
 
@@ -1300,7 +1303,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                 class="text-[11px] text-slate-400 mt-3 inline-flex items-center gap-1.5"
               >
                 <NavIcon name="bell" :size="11" />
-                Belum ada asesmen — tambah di matrix.
+                {{ t('tutor.sekolah.gradebook.cardEmptyAssessment') }}
               </p>
             </button>
           </section>
@@ -1314,7 +1317,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
     <template v-else>
       <PageFilterToolbar
         :search="matrixSearchQuery"
-        search-placeholder="Cari nama atau NIS siswa…"
+        :search-placeholder="t('tutor.sekolah.gradebook.matrixSearchPlaceholder')"
         @update:search="(v) => (matrixSearchQuery = v)"
       >
         <template #chips>
@@ -1323,7 +1326,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
           >
             <span
               class="text-[9px] font-bold uppercase tracking-widest text-slate-400"
-              >Kelas</span
+              >{{ t('tutor.sekolah.gradebook.matrixChipClass') }}</span
             >
             <span class="text-[12px] font-bold text-slate-900">{{
               matrixClass?.name
@@ -1334,7 +1337,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
           >
             <span
               class="text-[9px] font-bold uppercase tracking-widest text-slate-400"
-              >Mapel</span
+              >{{ t('tutor.sekolah.gradebook.matrixChipSubject') }}</span
             >
             <span class="text-[12px] font-bold text-slate-900">{{
               matrixSubject?.name
@@ -1348,7 +1351,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
           <span
             class="text-[11px] font-bold text-slate-500 uppercase tracking-widest"
           >
-            Jenis asesmen
+            {{ t('tutor.sekolah.gradebook.matrixTypeLabel') }}
           </span>
           <SegmentedControl
             :model-value="typeFilter"
@@ -1363,49 +1366,49 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
           <span class="inline-flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-700"></span>
             <b class="text-slate-900 font-bold">{{ matrixSummary.tuntas }}</b>
-            Tuntas
+            {{ t('tutor.sekolah.gradebook.kkmTuntas') }}
           </span>
           <span class="inline-flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-red-700"></span>
             <b class="text-slate-900 font-bold">{{ matrixSummary.remed }}</b>
-            Remedial
+            {{ t('tutor.sekolah.gradebook.kkmRemed') }}
           </span>
           <span class="inline-flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-slate-300"></span>
             <b class="text-slate-900 font-bold">{{ matrixSummary.belum }}</b>
-            Belum dinilai
+            {{ t('tutor.sekolah.gradebook.kkmBelum') }}
           </span>
           <span class="flex-1"></span>
           <span class="text-slate-500">
-            Rata-rata kelas:
+            {{ t('tutor.sekolah.gradebook.kkmClassAvg') }}
             <b class="text-slate-900 font-bold">{{ matrixSummary.avg || '—' }}</b>
-            · KKM {{ matrix.kkm }}
+            · {{ t('tutor.sekolah.gradebook.kkmLabel', { kkm: matrix.kkm }) }}
           </span>
         </div>
         <p
           class="hidden md:flex items-center gap-3 flex-wrap text-[10.5px] text-slate-500 px-1"
         >
           <span class="font-bold text-slate-400 uppercase tracking-widest">
-            Pintasan:
+            {{ t('tutor.sekolah.gradebook.shortcutsLabel') }}
           </span>
           <span class="inline-flex items-center gap-1">
             <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">Tab</kbd>
             /
             <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">↵</kbd>
-            pindah sel
+            {{ t('tutor.sekolah.gradebook.shortcutsMoveCell') }}
           </span>
           <span class="inline-flex items-center gap-1">
             <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">↑</kbd>
             <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">↓</kbd>
-            pindah baris
+            {{ t('tutor.sekolah.gradebook.shortcutsMoveRow') }}
           </span>
           <span class="inline-flex items-center gap-1">
-            <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">Ctrl</kbd>
+            <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">{{ t('tutor.sekolah.gradebook.shortcutsCtrl') }}</kbd>
             +
             <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">S</kbd>
-            simpan ·
+            {{ t('tutor.sekolah.gradebook.shortcutsSave') }}
             <em class="text-slate-400">
-              otomatis tersimpan 1.2 dtk setelah berhenti mengetik
+              {{ t('tutor.sekolah.gradebook.shortcutsAutosave') }}
             </em>
           </span>
         </p>
@@ -1413,8 +1416,8 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
 
       <AsyncView
         :state="matrixState"
-        empty-title="Belum ada asesmen"
-        empty-description="Tambahkan asesmen lewat tombol + Tambah Asesmen di pojok kanan bawah."
+        :empty-title="t('tutor.sekolah.gradebook.matrixEmptyTitle')"
+        :empty-description="t('tutor.sekolah.gradebook.matrixEmptyDesc')"
         @retry="loadMatrix"
       >
         <template #default>
@@ -1429,7 +1432,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                   <th
                     class="text-left font-bold px-4 py-2.5 sticky left-0 bg-slate-50 z-10"
                   >
-                    Siswa
+                    {{ t('tutor.sekolah.gradebook.matrixColStudent') }}
                   </th>
                   <th
                     v-for="a in visibleAssessments"
@@ -1439,7 +1442,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                     <button
                       type="button"
                       class="w-full inline-flex flex-col items-center gap-0.5 px-2 py-1 rounded-md hover:bg-brand-cobalt/10 transition-colors text-slate-500 hover:text-brand-cobalt"
-                      :title="`Aksi untuk ${a.name}`"
+                      :title="t('tutor.sekolah.gradebook.matrixColActionTitle', { name: a.name })"
                       @click="openColumnActions(a)"
                     >
                       <span>{{ a.name }}</span>
@@ -1449,10 +1452,10 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                     </button>
                   </th>
                   <th class="font-bold px-3 py-2.5 text-center min-w-[64px]">
-                    Rata-rata
+                    {{ t('tutor.sekolah.gradebook.matrixColAverage') }}
                   </th>
                   <th class="font-bold px-3 py-2.5 text-center min-w-[100px]">
-                    Status
+                    {{ t('tutor.sekolah.gradebook.matrixColStatus') }}
                   </th>
                 </tr>
               </thead>
@@ -1477,7 +1480,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                           {{ row.student_name }}
                         </p>
                         <p class="text-[10px] text-slate-400">
-                          NIS {{ row.student_number }}
+                          {{ t('tutor.sekolah.gradebook.matrixStudentNumber', { number: row.student_number }) }}
                         </p>
                       </div>
                     </div>
@@ -1534,21 +1537,21 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                       class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500"
                     >
                       <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                      Belum
+                      {{ t('tutor.sekolah.gradebook.matrixStatusBelum') }}
                     </span>
                     <span
                       v-else-if="(rowAverage(row.student_id) as number) >= matrix.kkm"
                       class="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700"
                     >
                       <span class="w-1.5 h-1.5 rounded-full bg-emerald-700"></span>
-                      Tuntas
+                      {{ t('tutor.sekolah.gradebook.matrixStatusTuntas') }}
                     </span>
                     <span
                       v-else
                       class="inline-flex items-center gap-1.5 text-[10px] font-bold text-red-700"
                     >
                       <span class="w-1.5 h-1.5 rounded-full bg-red-700"></span>
-                      Remedial
+                      {{ t('tutor.sekolah.gradebook.matrixStatusRemedial') }}
                     </span>
                   </td>
                 </tr>
@@ -1569,23 +1572,23 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
             class="text-emerald-700 font-bold inline-flex items-center gap-1"
           >
             <NavIcon name="check-circle" :size="12" />
-            Tersimpan
+            {{ t('tutor.sekolah.gradebook.saveSaved') }}
           </span>
           <span v-else-if="isSaving" class="text-brand-cobalt font-bold">
-            Menyimpan otomatis…
+            {{ t('tutor.sekolah.gradebook.saveSaving') }}
           </span>
           <span v-else class="text-amber-700 font-bold">
-            {{ dirtyCount }} perubahan belum tersimpan
+            {{ t('tutor.sekolah.gradebook.saveDirty', { count: dirtyCount }) }}
           </span>
           <span v-if="matrixSummary.remed > 0" class="ml-2 text-slate-400">
             ·
             <span class="text-red-700 font-bold">{{ matrixSummary.remed }}</span>
-            remedial perlu ditindaklanjuti
+            {{ t('tutor.sekolah.gradebook.saveRemedNote') }}
           </span>
         </div>
         <span class="flex-1"></span>
         <Button variant="secondary" size="sm" @click="loadMatrix">
-          Muat ulang
+          {{ t('tutor.sekolah.gradebook.saveReload') }}
         </Button>
         <Button
           variant="primary"
@@ -1594,7 +1597,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
           :disabled="dirtyCount === 0"
           @click="save()"
         >
-          Simpan nilai
+          {{ t('tutor.sekolah.gradebook.saveButton') }}
         </Button>
       </section>
 
@@ -1608,7 +1611,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
         @click="openAddAsesmen"
       >
         <NavIcon name="plus" :size="16" />
-        Tambah Asesmen
+        {{ t('tutor.sekolah.gradebook.fabAdd') }}
       </button>
     </template>
 
@@ -1630,8 +1633,8 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
               <NavIcon name="eye" :size="16" />
             </span>
             <div class="flex-1 min-w-0">
-              <p class="text-[13px] font-bold text-slate-900">Lihat detail</p>
-              <p class="text-[11px] text-slate-500">Tipe, tanggal, statistik kelas</p>
+              <p class="text-[13px] font-bold text-slate-900">{{ t('tutor.sekolah.gradebook.actionViewDetail') }}</p>
+              <p class="text-[11px] text-slate-500">{{ t('tutor.sekolah.gradebook.actionViewDetailDesc') }}</p>
             </div>
             <NavIcon name="chevron-right" :size="14" class="text-slate-300" />
           </button>
@@ -1646,8 +1649,8 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
               <NavIcon name="edit-3" :size="16" />
             </span>
             <div class="flex-1 min-w-0">
-              <p class="text-[13px] font-bold text-slate-900">Edit asesmen</p>
-              <p class="text-[11px] text-slate-500">Ubah judul, tipe, atau tanggal</p>
+              <p class="text-[13px] font-bold text-slate-900">{{ t('tutor.sekolah.gradebook.actionEdit') }}</p>
+              <p class="text-[11px] text-slate-500">{{ t('tutor.sekolah.gradebook.actionEditDesc') }}</p>
             </div>
             <NavIcon name="chevron-right" :size="14" class="text-slate-300" />
           </button>
@@ -1662,15 +1665,15 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
               <NavIcon name="trash" :size="16" />
             </span>
             <div class="flex-1 min-w-0">
-              <p class="text-[13px] font-bold text-red-700">Hapus asesmen</p>
-              <p class="text-[11px] text-slate-500">Hapus seluruh nilai pada kolom ini</p>
+              <p class="text-[13px] font-bold text-red-700">{{ t('tutor.sekolah.gradebook.actionDelete') }}</p>
+              <p class="text-[11px] text-slate-500">{{ t('tutor.sekolah.gradebook.actionDeleteDesc') }}</p>
             </div>
             <NavIcon name="chevron-right" :size="14" class="text-slate-300" />
           </button>
         </li>
       </ul>
       <p class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
-        Mengikuti pola aplikasi mobile — tap header asesmen untuk membuka menu ini.
+        {{ t('tutor.sekolah.gradebook.actionFooter') }}
       </p>
     </Modal>
 
@@ -1678,36 +1681,36 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
     <Modal
       v-if="columnDetail"
       :title="columnDetail.name"
-      :subtitle="`${ASSESSMENT_LABELS[columnDetail.type]} · Detail asesmen`"
+      :subtitle="t('tutor.sekolah.gradebook.detailSubtitle', { type: ASSESSMENT_LABELS[columnDetail.type] })"
       @close="columnDetail = null"
     >
       <div class="space-y-3">
         <div class="grid grid-cols-2 gap-2">
           <div class="bg-slate-50 rounded-xl p-3">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tipe</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailType') }}</p>
             <p class="text-[14px] font-bold text-slate-900 mt-1">{{ ASSESSMENT_LABELS[columnDetail.type] }}</p>
           </div>
           <div class="bg-slate-50 rounded-xl p-3">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tanggal</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailDate') }}</p>
             <p class="text-[13px] font-bold text-slate-900 mt-1">{{ columnStats(columnDetail).dateLabel }}</p>
           </div>
         </div>
         <div class="grid grid-cols-3 gap-2">
           <div class="bg-brand-cobalt/5 rounded-xl p-3 text-center">
-            <p class="text-[10px] font-bold text-brand-cobalt uppercase tracking-widest">Siswa</p>
+            <p class="text-[10px] font-bold text-brand-cobalt uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailStudents') }}</p>
             <p class="text-[18px] font-black text-brand-cobalt mt-0.5">{{ columnStats(columnDetail).total }}</p>
           </div>
           <div class="bg-emerald-50 rounded-xl p-3 text-center">
-            <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Dinilai</p>
+            <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailGraded') }}</p>
             <p class="text-[18px] font-black text-emerald-700 mt-0.5">{{ columnStats(columnDetail).graded }}</p>
           </div>
           <div class="bg-violet-50 rounded-xl p-3 text-center">
-            <p class="text-[10px] font-bold text-violet-700 uppercase tracking-widest">Rerata</p>
+            <p class="text-[10px] font-bold text-violet-700 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailAvg') }}</p>
             <p class="text-[18px] font-black text-violet-700 mt-0.5">{{ columnStats(columnDetail).avg ?? '—' }}</p>
           </div>
         </div>
         <div class="flex items-center justify-end pt-2">
-          <Button variant="secondary" size="sm" @click="columnDetail = null">Tutup</Button>
+          <Button variant="secondary" size="sm" @click="columnDetail = null">{{ t('tutor.sekolah.gradebook.detailClose') }}</Button>
         </div>
       </div>
     </Modal>
@@ -1715,8 +1718,8 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
     <!-- ── Delete assessment confirm ────────────────────────── -->
     <Modal
       v-if="columnDeleteConfirm"
-      title="Hapus asesmen?"
-      :subtitle="`Seluruh nilai siswa pada kolom '${columnDeleteConfirm.name}' akan ikut terhapus dan tidak dapat dipulihkan.`"
+      :title="t('tutor.sekolah.gradebook.deleteTitle')"
+      :subtitle="t('tutor.sekolah.gradebook.deleteSubtitle', { name: columnDeleteConfirm.name })"
       @close="!isDeletingColumn && (columnDeleteConfirm = null)"
     >
       <div class="space-y-3">
@@ -1726,8 +1729,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
             ·
             {{ ASSESSMENT_LABELS[columnDeleteConfirm.type] }}
             ·
-            {{ columnStats(columnDeleteConfirm).graded }} dari
-            {{ columnStats(columnDeleteConfirm).total }} siswa sudah dinilai
+            {{ t('tutor.sekolah.gradebook.deleteSummary', { graded: columnStats(columnDeleteConfirm).graded, total: columnStats(columnDeleteConfirm).total }) }}
           </p>
         </div>
         <div class="flex items-center justify-end gap-2 pt-1">
@@ -1737,7 +1739,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
             :disabled="isDeletingColumn"
             @click="columnDeleteConfirm = null"
           >
-            Batal
+            {{ t('tutor.sekolah.gradebook.deleteCancel') }}
           </Button>
           <Button
             variant="primary"
@@ -1746,7 +1748,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
             class="!bg-red-600 hover:!bg-red-700"
             @click="confirmDeleteColumn"
           >
-            Hapus permanen
+            {{ t('tutor.sekolah.gradebook.deleteConfirm') }}
           </Button>
         </div>
       </div>
@@ -1755,8 +1757,8 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
     <!-- ── Tambah Asesmen modal (Flutter parity FAB flow) ───── -->
     <Modal
       v-if="showAddAsesmen"
-      title="Tambah Asesmen Baru"
-      subtitle="Setelah dibuat, kolom kosong akan muncul. Isi skor siswa untuk menyimpan."
+      :title="t('tutor.sekolah.gradebook.addModalTitle')"
+      :subtitle="t('tutor.sekolah.gradebook.addModalSubtitle')"
       @close="showAddAsesmen = false"
     >
       <form class="space-y-md" @submit.prevent="applyAddAsesmen">
@@ -1764,16 +1766,16 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
           <label
             class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
-            Tipe Asesmen
+            {{ t('tutor.sekolah.gradebook.addFieldType') }}
           </label>
           <SegmentedControl
             :model-value="addForm.type"
             :options="[
-              { key: 'assignment', label: 'Tugas' },
-              { key: 'daily_test', label: 'UH' },
-              { key: 'midterm', label: 'UTS' },
-              { key: 'final_exam', label: 'UAS' },
-              { key: 'other', label: 'Lainnya' },
+              { key: 'assignment', label: t('tutor.sekolah.gradebook.typeAssignment') },
+              { key: 'daily_test', label: t('tutor.sekolah.gradebook.typeDailyTest') },
+              { key: 'midterm', label: t('tutor.sekolah.gradebook.typeMidterm') },
+              { key: 'final_exam', label: t('tutor.sekolah.gradebook.typeFinalExam') },
+              { key: 'other', label: t('tutor.sekolah.gradebook.typeOther') },
             ]"
             size="sm"
             @update:model-value="(v) => (addForm.type = v as AssessmentType)"
@@ -1783,23 +1785,23 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
           <label
             class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
-            Judul (opsional)
+            {{ t('tutor.sekolah.gradebook.addFieldTitle') }}
           </label>
           <input
             v-model="addForm.title"
             type="text"
             class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-            placeholder="Contoh: Ulangan Harian 4, UTS Genap"
+            :placeholder="t('tutor.sekolah.gradebook.addTitlePlaceholder')"
           />
           <p class="text-[10.5px] text-slate-400 mt-1">
-            Kosongkan untuk pakai label default ({{ ASSESSMENT_LABELS[addForm.type] }}).
+            {{ t('tutor.sekolah.gradebook.addTitleHint', { label: ASSESSMENT_LABELS[addForm.type] }) }}
           </p>
         </div>
         <div>
           <label
             class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
-            Tanggal
+            {{ t('tutor.sekolah.gradebook.addFieldDate') }}
           </label>
           <input
             v-model="addForm.date"
@@ -1809,7 +1811,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
         </div>
         <div class="bg-slate-50 border border-dashed border-slate-200 rounded-lg px-3 py-2 text-[11px] text-slate-500">
           <NavIcon name="check-circle" :size="11" class="inline-block mr-1 -mt-0.5 text-brand-cobalt" />
-          Kolom baru muncul langsung di matrix; backend menyimpan asesmen otomatis saat skor siswa pertama disimpan.
+          {{ t('tutor.sekolah.gradebook.addInfo') }}
         </div>
         <div class="flex items-center justify-end gap-2 pt-1">
           <Button
@@ -1817,10 +1819,10 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
             size="sm"
             @click="showAddAsesmen = false"
           >
-            Batal
+            {{ t('tutor.sekolah.gradebook.addCancel') }}
           </Button>
           <Button variant="primary" size="sm" @click="applyAddAsesmen">
-            Tambah
+            {{ t('tutor.sekolah.gradebook.addSubmit') }}
           </Button>
         </div>
       </form>
@@ -1829,8 +1831,8 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
     <!-- ── Edit Asesmen modal (rename + details) ────────────── -->
     <Modal
       v-if="columnEditFor"
-      title="Edit Asesmen"
-      :subtitle="`Ubah judul / tipe / tanggal untuk kolom '${columnEditFor.name}'.`"
+      :title="t('tutor.sekolah.gradebook.editModalTitle')"
+      :subtitle="t('tutor.sekolah.gradebook.editModalSubtitle', { name: columnEditFor.name })"
       @close="!isSavingColumnEdit && (columnEditFor = null)"
     >
       <form class="space-y-md" @submit.prevent="applyEditColumn">
@@ -1838,16 +1840,16 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
           <label
             class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
-            Tipe Asesmen
+            {{ t('tutor.sekolah.gradebook.addFieldType') }}
           </label>
           <SegmentedControl
             :model-value="editForm.type"
             :options="[
-              { key: 'assignment', label: 'Tugas' },
-              { key: 'daily_test', label: 'UH' },
-              { key: 'midterm', label: 'UTS' },
-              { key: 'final_exam', label: 'UAS' },
-              { key: 'other', label: 'Lainnya' },
+              { key: 'assignment', label: t('tutor.sekolah.gradebook.typeAssignment') },
+              { key: 'daily_test', label: t('tutor.sekolah.gradebook.typeDailyTest') },
+              { key: 'midterm', label: t('tutor.sekolah.gradebook.typeMidterm') },
+              { key: 'final_exam', label: t('tutor.sekolah.gradebook.typeFinalExam') },
+              { key: 'other', label: t('tutor.sekolah.gradebook.typeOther') },
             ]"
             size="sm"
             @update:model-value="(v) => (editForm.type = v as AssessmentType)"
@@ -1857,23 +1859,23 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
           <label
             class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
-            Judul (opsional)
+            {{ t('tutor.sekolah.gradebook.addFieldTitle') }}
           </label>
           <input
             v-model="editForm.title"
             type="text"
             class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-            placeholder="Contoh: Ulangan Harian 4, UTS Genap"
+            :placeholder="t('tutor.sekolah.gradebook.addTitlePlaceholder')"
           />
           <p class="text-[10.5px] text-slate-400 mt-1">
-            Kosongkan untuk pakai label default ({{ ASSESSMENT_LABELS[editForm.type] }}).
+            {{ t('tutor.sekolah.gradebook.addTitleHint', { label: ASSESSMENT_LABELS[editForm.type] }) }}
           </p>
         </div>
         <div>
           <label
             class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
-            Tanggal
+            {{ t('tutor.sekolah.gradebook.addFieldDate') }}
           </label>
           <input
             v-model="editForm.date"
@@ -1883,7 +1885,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
         </div>
         <div class="bg-amber-50 border border-dashed border-amber-200 rounded-lg px-3 py-2 text-[11px] text-amber-700">
           <NavIcon name="edit-3" :size="11" class="inline-block mr-1 -mt-0.5" />
-          Nilai siswa yang sudah terisi ikut dipindahkan ke kolom dengan detail baru.
+          {{ t('tutor.sekolah.gradebook.editInfo') }}
         </div>
         <div class="flex items-center justify-end gap-2 pt-1">
           <Button
@@ -1892,7 +1894,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
             :disabled="isSavingColumnEdit"
             @click="columnEditFor = null"
           >
-            Batal
+            {{ t('tutor.sekolah.gradebook.editCancel') }}
           </Button>
           <Button
             variant="primary"
@@ -1900,7 +1902,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
             :loading="isSavingColumnEdit"
             @click="applyEditColumn"
           >
-            Simpan perubahan
+            {{ t('tutor.sekolah.gradebook.editSubmit') }}
           </Button>
         </div>
       </form>
@@ -1909,7 +1911,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
     <!-- ── Picker modals ────────────────────────────────────── -->
     <Modal
       v-if="showClassPicker"
-      title="Pilih Kelas"
+      :title="t('tutor.sekolah.gradebook.pickClassTitle')"
       @close="showClassPicker = false"
     >
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">
@@ -1922,7 +1924,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
             }"
             @click="pickClass('')"
           >
-            Semua kelas
+            {{ t('tutor.sekolah.gradebook.allClasses') }}
           </button>
         </li>
         <li v-for="c in classes" :key="c.id">
@@ -1937,7 +1939,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
           >
             <span>{{ c.name }}</span>
             <span class="text-[10px] text-slate-400">
-              {{ c.student_count }} siswa
+              {{ t('tutor.sekolah.gradebook.pickClassStudents', { count: c.student_count }) }}
             </span>
           </button>
         </li>
@@ -1946,7 +1948,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
 
     <Modal
       v-if="showSubjectPicker"
-      title="Pilih Mata Pelajaran"
+      :title="t('tutor.sekolah.gradebook.pickSubjectTitle')"
       @close="showSubjectPicker = false"
     >
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">
@@ -1959,7 +1961,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
             }"
             @click="pickSubject('')"
           >
-            Semua mapel
+            {{ t('tutor.sekolah.gradebook.allSubjects') }}
           </button>
         </li>
         <li v-for="s in subjects" :key="s.id">
