@@ -2028,6 +2028,22 @@
       "reportCard": {
         "studentId": "ID"
       },
+      "grade": {
+        "btnReset": "Reset",
+        "kkmPrefix": "Min",
+        "monthShortJan": "Jan",
+        "monthShortFeb": "Feb",
+        "monthShortMar": "Mar",
+        "monthShortApr": "Apr",
+        "monthShortMay": "May",
+        "monthShortJun": "Jun",
+        "monthShortJul": "Jul",
+        "monthShortAug": "Aug",
+        "monthShortSep": "Sep",
+        "monthShortOct": "Oct",
+        "monthShortNov": "Nov",
+        "monthShortDec": "Dec"
+      },
       "classActivity": {
         "headerKicker": "Academic · Class Activity",
         "headerTitle": "Class Activity",

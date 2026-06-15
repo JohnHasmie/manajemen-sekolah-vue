@@ -2024,6 +2024,22 @@
       "reportCard": {
         "studentId": "NIS"
       },
+      "grade": {
+        "btnReset": "Reset",
+        "kkmPrefix": "KKM",
+        "monthShortJan": "Jan",
+        "monthShortFeb": "Feb",
+        "monthShortMar": "Mar",
+        "monthShortApr": "Apr",
+        "monthShortMay": "Mei",
+        "monthShortJun": "Jun",
+        "monthShortJul": "Jul",
+        "monthShortAug": "Agu",
+        "monthShortSep": "Sep",
+        "monthShortOct": "Okt",
+        "monthShortNov": "Nov",
+        "monthShortDec": "Des"
+      },
       "classActivity": {
         "headerKicker": "Akademik · Kegiatan Kelas",
         "headerTitle": "Kegiatan Kelas",
