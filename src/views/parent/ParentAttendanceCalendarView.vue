@@ -16,6 +16,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useChildPicker } from '@/composables/useChildPicker';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
@@ -33,6 +34,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 
 const router = useRouter();
+const { t } = useI18n();
 const ayStore = useAcademicYearStore();
 const { activeChildId, activeChild } = useChildPicker();
 const attCache = useParentAttendance();
@@ -261,12 +263,12 @@ function dotCls(s: ParentAttendanceStatus): string {
       @click="router.push({ name: 'parent.attendance' })"
     >
       <NavIcon name="chevron-left" :size="14" />
-      Kembali
+      {{ t('wali.sekolah.attendanceCalendar.back') }}
     </button>
 
     <!-- 1. Header -->
     <ParentPageHeader
-      kicker="Kehadiran"
+      :kicker="t('wali.sekolah.attendanceCalendar.kicker')"
       :title="monthLabel"
       :interpolate-child="false"
       :meta="activeChild()?.name ?? ''"
@@ -315,7 +317,7 @@ function dotCls(s: ParentAttendanceStatus): string {
         class="text-xs font-bold text-red-700 hover:text-red-900"
         @click="reload({ force: true })"
       >
-        Coba lagi
+        {{ t('wali.sekolah.attendanceCalendar.retry') }}
       </button>
     </div>
 
@@ -335,7 +337,7 @@ function dotCls(s: ParentAttendanceStatus): string {
     >
       <header class="border-b border-slate-100 pb-2">
         <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-          Detail
+          {{ t('wali.sekolah.attendanceCalendar.detail') }}
         </p>
         <p class="text-sm font-extrabold text-slate-900 mt-0.5">
           {{ selectedDayLabel }}
@@ -346,7 +348,7 @@ function dotCls(s: ParentAttendanceStatus): string {
         v-if="selectedDayRecords.length === 0"
         class="text-slate-500 text-xs py-3 text-center"
       >
-        Tidak ada presensi tercatat untuk hari ini.
+        {{ t('wali.sekolah.attendanceCalendar.empty') }}
       </div>
       <div v-else ref="recordsRoot" class="space-y-4">
         <div
@@ -366,7 +368,7 @@ function dotCls(s: ParentAttendanceStatus): string {
           </div>
 
           <h5 class="text-[14px] font-extrabold text-slate-900 leading-tight">
-            {{ record.subject_name || 'Presensi Harian' }}
+            {{ record.subject_name || t('wali.sekolah.attendanceCalendar.dailyPresence') }}
           </h5>
 
           <p
@@ -380,7 +382,7 @@ function dotCls(s: ParentAttendanceStatus): string {
             v-if="record.notes"
             class="text-[12px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 mt-1"
           >
-            Catatan: {{ record.notes }}
+            {{ t('wali.sekolah.attendanceCalendar.notes', { notes: record.notes }) }}
           </p>
         </div>
       </div>

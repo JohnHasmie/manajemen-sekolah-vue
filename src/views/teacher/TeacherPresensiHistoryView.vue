@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import type {
   TeacherAttendanceListResult,
@@ -30,6 +31,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 
 const router = useRouter();
+const { t } = useI18n();
 
 const startDate = ref('');
 const endDate = ref('');
@@ -156,16 +158,16 @@ onMounted(reload);
   <div class="space-y-md">
     <BrandPageHeader
       role="guru"
-      kicker="Presensi Guru · Riwayat"
-      title="Riwayat Presensi"
-      :meta="meta ? `${meta.total} catatan` : 'Catatan presensi harian Anda'"
+      :kicker="t('tutor.sekolah.presenceHistory.kicker')"
+      :title="t('tutor.sekolah.presenceHistory.title')"
+      :meta="meta ? t('tutor.sekolah.presenceHistory.metaCount', { count: meta.total }) : t('tutor.sekolah.presenceHistory.metaDefault')"
     >
       <Button
         variant="secondary"
         size="sm"
         @click="router.push('/teacher/my-attendance')"
       >
-        <NavIcon name="arrow-left" :size="13" />Kembali
+        <NavIcon name="arrow-left" :size="13" />{{ t('tutor.sekolah.presenceHistory.back') }}
       </Button>
     </BrandPageHeader>
 
@@ -177,7 +179,7 @@ onMounted(reload);
         <label
           class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
         >
-          Dari tanggal
+          {{ t('tutor.sekolah.presenceHistory.fromDate') }}
         </label>
         <input
           v-model="startDate"
@@ -189,7 +191,7 @@ onMounted(reload);
         <label
           class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
         >
-          Sampai tanggal
+          {{ t('tutor.sekolah.presenceHistory.toDate') }}
         </label>
         <input
           v-model="endDate"
@@ -198,7 +200,7 @@ onMounted(reload);
         />
       </div>
       <Button variant="primary" size="sm" @click="applyFilters">
-        <NavIcon name="filter" :size="13" />Terapkan
+        <NavIcon name="filter" :size="13" />{{ t('tutor.sekolah.presenceHistory.apply') }}
       </Button>
       <Button
         v-if="startDate || endDate"
@@ -206,7 +208,7 @@ onMounted(reload);
         size="sm"
         @click="clearFilters"
       >
-        Reset
+        {{ t('tutor.sekolah.presenceHistory.reset') }}
       </Button>
     </section>
 
@@ -218,7 +220,7 @@ onMounted(reload);
       <div
         class="flex items-center justify-between gap-3 flex-wrap mb-3"
       >
-        <h3 class="text-[13px] font-black text-slate-900">Ringkasan Periode</h3>
+        <h3 class="text-[13px] font-black text-slate-900">{{ t('tutor.sekolah.presenceHistory.periodSummary') }}</h3>
         <span v-if="summaryRangeLabel" class="text-[11px] text-slate-500">
           {{ summaryRangeLabel }}
         </span>
@@ -239,13 +241,13 @@ onMounted(reload);
         </div>
         <div class="rounded-xl px-3 py-2.5 bg-brand-cobalt/10 text-brand-cobalt">
           <p class="text-[10px] font-bold uppercase tracking-widest opacity-80">
-            % Kehadiran
+            {{ t('tutor.sekolah.presenceHistory.attendancePct') }}
           </p>
           <p class="text-[20px] font-black leading-tight tabular-nums">
             {{ summary.summary.present_pct }}%
           </p>
           <p class="text-[10px] opacity-70 tabular-nums">
-            {{ summary.summary.total }} hari tercatat
+            {{ t('tutor.sekolah.presenceHistory.daysRecorded', { count: summary.summary.total }) }}
           </p>
         </div>
       </div>
@@ -254,8 +256,8 @@ onMounted(reload);
     <!-- List -->
     <AsyncView
       :state="state"
-      empty-title="Belum ada riwayat presensi"
-      empty-description="Catatan presensi harian Anda akan muncul di sini."
+      :empty-title="t('tutor.sekolah.presenceHistory.emptyTitle')"
+      :empty-description="t('tutor.sekolah.presenceHistory.emptyDescription')"
       @retry="reload"
     >
       <template #default>
@@ -272,7 +274,7 @@ onMounted(reload);
               <img
                 v-if="r.check_in_photo_url"
                 :src="r.check_in_photo_url"
-                alt="Foto presensi"
+                :alt="t('tutor.sekolah.presenceHistory.photoAlt')"
                 class="w-full h-full object-cover"
               />
               <NavIcon v-else name="camera" :size="16" class="text-slate-300" />
@@ -295,12 +297,12 @@ onMounted(reload);
                 </span>
               </div>
               <p class="text-[11.5px] text-slate-500 mt-0.5">
-                Masuk
+                {{ t('tutor.sekolah.presenceHistory.checkIn') }}
                 <span class="font-bold text-slate-700">{{
                   fmtTime(r.check_in_at)
                 }}</span>
                 <template v-if="r.check_out_at">
-                  · Pulang
+                  · {{ t('tutor.sekolah.presenceHistory.checkOut') }}
                   <span class="font-bold text-slate-700">{{
                     fmtTime(r.check_out_at)
                   }}</span>
@@ -323,10 +325,10 @@ onMounted(reload);
                   class="inline-block -mt-0.5"
                 />
                 <template v-if="r.check_in_outside_geofence"
-                  >Di luar area sekolah</template
+                  >{{ t('tutor.sekolah.presenceHistory.outsideGeofence') }}</template
                 >
                 <template v-else
-                  >{{ r.check_in_distance_m }} m dari sekolah</template
+                  >{{ t('tutor.sekolah.presenceHistory.distance', { meters: r.check_in_distance_m }) }}</template
                 >
               </p>
             </div>
@@ -347,7 +349,7 @@ onMounted(reload);
             <NavIcon name="chevron-left" :size="13" />
           </Button>
           <span class="text-[12px] text-slate-500 font-bold px-2">
-            Hal {{ meta.current_page }} / {{ meta.last_page }}
+            {{ t('tutor.sekolah.presenceHistory.pagination', { current: meta.current_page, total: meta.last_page }) }}
           </span>
           <Button
             variant="secondary"

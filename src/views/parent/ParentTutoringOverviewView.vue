@@ -11,6 +11,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useAuthStore } from '@/stores/auth';
 import { useChildPicker } from '@/composables/useChildPicker';
@@ -26,6 +27,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 const auth = useAuthStore();
 const { children, activeChildId } = useChildPicker();
 
@@ -259,9 +261,9 @@ function goPayBill() {
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · WALI"
-      :title="`Halo, Pak ${firstName}`"
-      :subtitle="`Pantau perkembangan ${childCount} anak di ${schoolName}`"
+      :kicker="t('wali.sekolah.tutoringOverview.kicker')"
+      :title="t('wali.sekolah.tutoringOverview.title', { name: firstName })"
+      :subtitle="t('wali.sekolah.tutoringOverview.subtitle', { count: childCount, school: schoolName })"
       :stats="[]"
     >
       <template #actions>
@@ -271,30 +273,30 @@ function goPayBill() {
           class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="goEnroll"
         >
-          <NavIcon name="plus" :size="13" />Daftar program
+          <NavIcon name="plus" :size="13" />{{ t('wali.sekolah.tutoringOverview.enroll') }}
         </button>
       </template>
     </ParentBerandaHero>
 
-    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">{{ t('wali.sekolah.tutoringOverview.loading') }}</div>
 
     <template v-else>
       <!-- KPI strip (3 cells) -->
       <div class="grid grid-cols-3 gap-2">
         <div class="rounded-lg bg-bimbel-bg p-3">
-          <p class="text-[12px] text-bimbel-text-mid">Sesi hadir bulan ini</p>
+          <p class="text-[12px] text-bimbel-text-mid">{{ t('wali.sekolah.tutoringOverview.sessionsThisMonth') }}</p>
           <p class="text-[20px] font-extrabold text-bimbel-text-hi leading-none mt-0.5">
             {{ attKpi.attended }}<span class="text-[14px] text-bimbel-text-mid font-normal">/{{ attKpi.total }}</span>
           </p>
           <p class="text-[12px] text-bimbel-text-lo mt-1">{{ attKpi.meta }}</p>
         </div>
         <div class="rounded-lg bg-bimbel-bg p-3">
-          <p class="text-[12px] text-bimbel-text-mid">Rata-rata nilai</p>
+          <p class="text-[12px] text-bimbel-text-mid">{{ t('wali.sekolah.tutoringOverview.averageScore') }}</p>
           <p class="text-[20px] font-extrabold text-bimbel-text-hi leading-none mt-0.5">{{ scoreKpi.value }}</p>
           <p class="text-[12px] text-bimbel-text-lo mt-1">{{ scoreKpi.meta }}</p>
         </div>
         <div class="rounded-lg bg-bimbel-bg p-3">
-          <p class="text-[12px] text-bimbel-text-mid">Tagihan jatuh tempo</p>
+          <p class="text-[12px] text-bimbel-text-mid">{{ t('wali.sekolah.tutoringOverview.billsDue') }}</p>
           <p
             class="text-[20px] font-extrabold leading-none mt-0.5"
             :class="billKpi.unpaid ? 'text-red-800' : 'text-bimbel-text-hi'"
@@ -306,7 +308,7 @@ function goPayBill() {
       </div>
 
       <!-- Sesi hari ini -->
-      <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">SESI HARI INI</p>
+      <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">{{ t('wali.sekolah.tutoringOverview.todaysSession') }}</p>
       <div
         v-if="heroNext"
         class="rounded-xl bg-bimbel-accent-dim border border-bimbel-accent/30 p-3.5 flex gap-3 items-center"
@@ -324,14 +326,14 @@ function goPayBill() {
           class="bg-bimbel-hero text-white px-3 py-2 rounded-lg text-[13px] font-bold flex-shrink-0"
           @click="goSesi"
         >
-          Lihat detail
+          {{ t('wali.sekolah.tutoringOverview.viewDetail') }}
         </button>
       </div>
       <div
         v-else
         class="rounded-xl bg-bimbel-bg border border-bimbel-border-soft p-4 text-center text-[13px] text-bimbel-text-mid"
       >
-        Tidak ada sesi hari ini.
+        {{ t('wali.sekolah.tutoringOverview.noSessionToday') }}
       </div>
 
       <!-- Tagihan ribbon -->
@@ -351,12 +353,12 @@ function goPayBill() {
           class="bg-red-900 text-white text-[12px] font-bold px-2.5 py-1.5 rounded-md flex-shrink-0"
           @click="goPayBill"
         >
-          Bayar sekarang
+          {{ t('wali.sekolah.tutoringOverview.payNow') }}
         </button>
       </div>
 
       <!-- YANG BARU feed -->
-      <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">YANG BARU</p>
+      <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">{{ t('wali.sekolah.tutoringOverview.whatsNew') }}</p>
       <div class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-3.5">
         <div
           v-for="(ev, i) in feed"
@@ -375,7 +377,7 @@ function goPayBill() {
           </div>
           <span class="text-[12px] text-bimbel-text-lo flex-shrink-0">{{ relTime(ev.occurred_at) }}</span>
         </div>
-        <p v-if="!feed.length" class="text-center text-[13px] text-bimbel-text-mid py-6">Belum ada aktivitas baru.</p>
+        <p v-if="!feed.length" class="text-center text-[13px] text-bimbel-text-mid py-6">{{ t('wali.sekolah.tutoringOverview.noActivity') }}</p>
       </div>
     </template>
   </div>
