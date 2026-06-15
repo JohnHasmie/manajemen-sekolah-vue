@@ -52,6 +52,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
 import DemoResetForm from '@/components/demo/DemoResetForm.vue';
+import DemoResetProgress from '@/components/demo/DemoResetProgress.vue';
 
 const props = defineProps<{
   schoolId: string;
@@ -271,23 +272,32 @@ async function confirmReset() {
   if (!resetConfirmUnlocked.value) return;
   resetting.value = true;
   resetError.value = null;
+  // Hand off the screen to <DemoResetProgress>: close the confirmation
+  // modal immediately so the takeover isn't layered on top of it.
+  // Keep `resetting=true` so the takeover stays mounted.
+  resetOpen.value = false;
   try {
     const result = await DemoAccountService.resetSchool(
       props.schoolId,
       resetPayload.value ?? undefined,
     );
     emit('reset', result);
-    cancelReset();
     // Reset replaces the school row — the displayed account counts
     // belong to the OLD school id and are now stale. The parent
     // typically reloads the whole demo-request detail (which re-emits
     // a new schoolId prop), but if it doesn't, refresh defensively
     // so this section doesn't show ghost numbers.
     await loadCounts();
-  } catch (e) {
-    resetError.value = (e as Error).message;
-  } finally {
+    // Tear down the takeover only AFTER counts refresh so the user
+    // doesn't see a flash of zero counts on the new (empty) tab.
     resetting.value = false;
+    resetPayload.value = null;
+  } catch (e) {
+    // Failure: tear down takeover, reopen modal with the error so the
+    // operator can read it + retry.
+    resetError.value = (e as Error).message;
+    resetting.value = false;
+    resetOpen.value = true;
   }
 }
 
@@ -625,7 +635,7 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
     <!-- RESET-SCHOOL MODAL · mini-wizard + typed confirmation. -->
     <Modal
       v-if="resetOpen"
-      size="md"
+      size="xl"
       title="Reset Sekolah Demo"
       @close="cancelReset"
     >
@@ -683,5 +693,10 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
         </div>
       </div>
     </Modal>
+
+    <!-- Full-viewport blocking screen mounted while the reset HTTP
+         request is in flight. Teleported to <body> so it overlays the
+         super-admin chrome too. -->
+    <DemoResetProgress :active="resetting" :school-name="schoolName" />
   </section>
 </template>

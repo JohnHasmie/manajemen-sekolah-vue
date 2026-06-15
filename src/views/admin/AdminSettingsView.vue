@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
 import DemoResetForm from '@/components/demo/DemoResetForm.vue';
+import DemoResetProgress from '@/components/demo/DemoResetProgress.vue';
 import { DemoService } from '@/services/demo.service';
 import { useAuthStore } from '@/stores/auth';
 
@@ -69,6 +70,10 @@ async function confirmResetDemo() {
   if (isResetting.value) return;
   isResetting.value = true;
   resetError.value = null;
+  // Hand off the screen to <DemoResetProgress>: close the confirmation
+  // modal immediately so the takeover isn't visually layered on top of
+  // it. The progress component mounts via v-if="isResetting" below.
+  showResetModal.value = false;
   try {
     // The mini-wizard works with a generic Record (it merges fields
     // by name only); reset() typed its parameter as DemoWizardPayload
@@ -78,11 +83,18 @@ async function confirmResetDemo() {
     await DemoService.reset(
       (resetOverride.value ?? undefined) as never,
     );
+    // Success: tear down session locally + server-side, route to
+    // /login. The progress takeover stays mounted through the
+    // navigation (it animates to 100% as the route changes), so the
+    // user never sees a flash of the old dashboard chrome.
     await auth.logout();
     await router.push('/login');
   } catch (e) {
+    // Failure: unmount the takeover, surface the error in the modal
+    // again so the user can read it + retry.
     resetError.value = (e as Error).message;
     isResetting.value = false;
+    showResetModal.value = true;
   }
 }
 
@@ -170,6 +182,7 @@ function open(it: SettingsGroup['items'][number]) {
 
     <Modal
       v-if="showResetModal"
+      size="xl"
       title="Reset data demo"
       subtitle="Sekolah demo akan dibangun ulang dari awal. Masa aktif demo tidak berubah."
       @close="!isResetting && (showResetModal = false)"
@@ -214,6 +227,11 @@ function open(it: SettingsGroup['items'][number]) {
         </div>
       </div>
     </Modal>
+
+    <!-- Full-viewport blocking screen mounted while the reset HTTP
+         request is in flight. Teleported to <body> so it covers the
+         AppShell chrome (sidebar, bottom nav on mobile) too. -->
+    <DemoResetProgress :active="isResetting" />
 
     <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />
   </div>
