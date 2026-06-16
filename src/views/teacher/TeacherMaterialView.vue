@@ -136,6 +136,10 @@ function isChapterPartialSelected(c: Chapter): boolean {
 const showAiSheet = ref(false);
 const aiForm = ref({ chapter_label: '', topic: '' });
 const isGenerating = ref(false);
+// Inline form error shown inside the AI sheet (rather than dismissable
+// toast) so the teacher reads it next to the field they need to fix.
+// Cleared on every open + on every keystroke that changes form state.
+const aiFormError = ref<string | null>(null);
 
 // Detail modal
 const detail = ref<{ sub: SubChapter; chapter: Chapter } | null>(null);
@@ -824,28 +828,62 @@ async function regenRef() {
 
 async function generateAi() {
   if (!subjectId.value) return;
+
+  // Local pre-validation. The backend's GenerateMaterialRequest
+  // withValidator emits the same rule ("at least one of chapter_label
+  // / topic"), but enforcing it here means the teacher gets the
+  // message INLINE next to the field they are looking at, not as a
+  // toast that arrives 200ms after a round trip. It also avoids
+  // burning an AI-quota probe on an empty submission.
+  const chapterLabel = aiForm.value.chapter_label.trim();
+  const topic = aiForm.value.topic.trim();
+  if (!chapterLabel && !topic) {
+    aiFormError.value =
+      'Isi minimal salah satu: nama bab/sub-bab atau topik utama.';
+    return;
+  }
+  aiFormError.value = null;
+
   isGenerating.value = true;
   try {
     await MaterialService.generateWithAi({
       teacher_id: auth.teacherId ?? auth.user?.id,
       subject_id: subjectId.value,
       grade_level: gradeLevel.value,
-      chapter_label: aiForm.value.chapter_label.trim() || undefined,
-      topic: aiForm.value.topic.trim() || undefined,
+      chapter_label: chapterLabel || undefined,
+      topic: topic || undefined,
     });
     showAiSheet.value = false;
     aiForm.value = { chapter_label: '', topic: '' };
+    aiFormError.value = null;
     toast.value = {
       message: t('tutor.sekolah.material.toastGenerateQueued'),
       tone: 'success',
     };
     await reload();
   } catch (e) {
-    toast.value = { message: (e as Error).message, tone: 'error' };
+    // Show the friendly message inline (next to the form) AND as a
+    // toast — the toast is what users see if they accidentally close
+    // the sheet before reading; the inline copy is what they see if
+    // the sheet stays open (typical, since on failure we don't close).
+    // The service translated axios → Bahasa Indonesia, so this string
+    // is already user-ready.
+    const message = (e as Error).message;
+    aiFormError.value = message;
+    toast.value = { message, tone: 'error' };
   } finally {
     isGenerating.value = false;
   }
 }
+
+/**
+ * Clear stale form error every time the sheet opens. Without this,
+ * a previous failed attempt's red banner would be visible the moment
+ * the teacher reopens the sheet, which feels broken.
+ */
+watch(showAiSheet, (open) => {
+  if (open) aiFormError.value = null;
+});
 
 const gradeOptions = computed(() => [
   { key: '7', label: t('tutor.sekolah.material.classPrefix', { grade: '7' }) },
@@ -1244,8 +1282,23 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
         <p class="text-[11px] text-slate-500 bg-slate-50 rounded-lg p-3 leading-relaxed">
           {{ t('tutor.sekolah.material.aiSheetHint') }} <b class="text-slate-900">{{ t('tutor.sekolah.material.aiSheetHintEta') }}</b>{{ t('tutor.sekolah.material.aiSheetHintTail') }}
         </p>
+        <!--
+          Inline error banner — shown for both local validation failures
+          ("topic / bab harus diisi") and translated backend errors
+          (the materials service already converts axios → Bahasa
+          Indonesia). Lives inside the form so the teacher reads it
+          next to the field rather than chasing a toast.
+        -->
+        <div
+          v-if="aiFormError"
+          role="alert"
+          class="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-[12px] text-red-700 leading-relaxed"
+        >
+          <NavIcon name="alert-triangle" :size="14" class="mt-[2px] flex-shrink-0 text-red-500" />
+          <span class="flex-1">{{ aiFormError }}</span>
+        </div>
         <div class="grid grid-cols-2 gap-2">
-          <Button variant="secondary" block @click="showAiSheet = false">
+          <Button variant="secondary" block :disabled="isGenerating" @click="showAiSheet = false">
             {{ t('tutor.sekolah.material.aiSheetCancel') }}
           </Button>
           <Button variant="primary" block :loading="isGenerating" @click="generateAi">

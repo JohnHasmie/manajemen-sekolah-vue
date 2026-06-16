@@ -3,19 +3,103 @@
   Sections: school profile, levels, time periods, system, data backup.
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
+import DemoResetForm from '@/components/demo/DemoResetForm.vue';
+import DemoResetProgress from '@/components/demo/DemoResetProgress.vue';
+import { DemoService } from '@/services/demo.service';
+import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
 const { t } = useI18n();
 
 const showResetModal = ref(false);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
+
+const auth = useAuthStore();
+const isResetting = ref(false);
+const resetError = ref<string | null>(null);
+
+/**
+ * Original wizard payload from the user's DemoWizardState — the BASE
+ * that <DemoResetForm> merges user overrides on top of when the
+ * operator picks "Ubah konfigurasi". Hydrated lazily on first modal
+ * open. Null while loading; if the fetch fails (or the user has no
+ * wizard state cached), the form's "Ubah konfigurasi" tab stays
+ * locked and only "Konfigurasi sama" is available — the safe
+ * fallback, since the backend then reuses the demo_request's payload.
+ */
+const basePayload = ref<Record<string, unknown> | null>(null);
+
+/**
+ * Merged payload coming back from <DemoResetForm>. `null` means
+ * "use the original wizard answers" — we call reset() with no body
+ * and the backend reuses the payload captured on the demo_request.
+ */
+const resetOverride = ref<Record<string, unknown> | null>(null);
+
+watch(showResetModal, async (open) => {
+  if (!open) return;
+  resetError.value = null;
+  resetOverride.value = null;
+  if (basePayload.value) return; // cached from a previous open
+  try {
+    const state = await DemoService.loadWizardState();
+    if (state?.payload) {
+      basePayload.value = state.payload as unknown as Record<string, unknown>;
+    }
+  } catch {
+    // Non-fatal — tweak tab will stay locked, "Konfigurasi sama" still
+    // works (server reuses the original payload).
+  }
+});
+
+/**
+ * Confirm "Reset Data Demo" — wipe the demo school back to a freshly-
+ * provisioned state, then log out so the user re-enters with the new
+ * school id. The backend re-provisions a brand-new school row, so the
+ * current session's cached `current_school_id` no longer exists after
+ * the call; forcing a clean re-login is the simplest reliable way to
+ * land the user on the new demo with consistent auth state (vs trying
+ * to swap active-school in place, which would race other tabs and
+ * stale TanStack caches).
+ */
+async function confirmResetDemo() {
+  if (isResetting.value) return;
+  isResetting.value = true;
+  resetError.value = null;
+  // Hand off the screen to <DemoResetProgress>: close the confirmation
+  // modal immediately so the takeover isn't visually layered on top of
+  // it. The progress component mounts via v-if="isResetting" below.
+  showResetModal.value = false;
+  try {
+    // The mini-wizard works with a generic Record (it merges fields
+    // by name only); reset() typed its parameter as DemoWizardPayload
+    // for the wizard's own call site. Cast at the boundary — the
+    // backend validates the shape so a wrong-shape merged payload
+    // surfaces as a 422 with a readable message, not a silent break.
+    await DemoService.reset(
+      (resetOverride.value ?? undefined) as never,
+    );
+    // Success: tear down session locally + server-side, route to
+    // /login. The progress takeover stays mounted through the
+    // navigation (it animates to 100% as the route changes), so the
+    // user never sees a flash of the old dashboard chrome.
+    await auth.logout();
+    await router.push('/login');
+  } catch (e) {
+    // Failure: unmount the takeover, surface the error in the modal
+    // again so the user can read it + retry.
+    resetError.value = (e as Error).message;
+    isResetting.value = false;
+    showResetModal.value = true;
+  }
+}
 
 interface SettingsGroup {
   title: string;
@@ -99,17 +183,59 @@ function open(it: SettingsGroup['items'][number]) {
       </section>
     </div>
 
-    <Modal v-if="showResetModal" :title="t('admin.sekolah.settings.reset_modal_title')" :subtitle="t('admin.sekolah.settings.reset_modal_subtitle')" @close="showResetModal = false">
+    <Modal
+      v-if="showResetModal"
+      size="xl"
+      :title="t('admin.sekolah.settings.reset_modal_title')"
+      :subtitle="t('admin.sekolah.settings.reset_modal_subtitle')"
+      @close="!isResetting && (showResetModal = false)"
+    >
       <div class="space-y-md">
         <div class="bg-red-50 border border-red-200 rounded-xl p-3 text-[12px] text-red-700 leading-relaxed">
           <strong>{{ t('admin.sekolah.settings.reset_modal_warning_label') }}</strong> {{ t('admin.sekolah.settings.reset_modal_warning_body') }}
         </div>
+
+        <!-- Mini-wizard: pakai konfigurasi yang sama atau ubah sedikit. -->
+        <DemoResetForm
+          :base-payload="basePayload"
+          @change="resetOverride = $event"
+        />
+
+        <div
+          v-if="resetError"
+          class="bg-red-100 border border-red-300 rounded-xl p-3 text-[12px] text-red-800 leading-relaxed"
+        >
+          {{ resetError }}
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 leading-relaxed">
+          Setelah reset selesai Anda akan diminta login kembali, lalu masuk lagi ke demo baru.
+        </div>
         <div class="grid grid-cols-2 gap-2">
-          <Button variant="secondary" block @click="showResetModal = false">{{ t('admin.sekolah.settings.cancel') }}</Button>
-          <Button variant="danger" block @click="showResetModal = false">{{ t('admin.sekolah.settings.confirm_reset') }}</Button>
+          <Button
+            variant="secondary"
+            block
+            :disabled="isResetting"
+            @click="showResetModal = false"
+          >
+            {{ t('admin.sekolah.settings.cancel') }}
+          </Button>
+          <Button
+            variant="danger"
+            block
+            :disabled="isResetting"
+            :loading="isResetting"
+            @click="confirmResetDemo"
+          >
+            {{ t('admin.sekolah.settings.confirm_reset') }}
+          </Button>
         </div>
       </div>
     </Modal>
+
+    <!-- Full-viewport blocking screen mounted while the reset HTTP
+         request is in flight. Teleported to <body> so it covers the
+         AppShell chrome (sidebar, bottom nav on mobile) too. -->
+    <DemoResetProgress :active="isResetting" />
 
     <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />
   </div>

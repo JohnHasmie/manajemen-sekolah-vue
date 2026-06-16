@@ -115,6 +115,29 @@ interface AuthState {
    * / Kegiatan Kelas / Buku Nilai / Rapor / Rekomendasi.
    */
   homeroomClasses: { id: string; name: string }[];
+  /**
+   * Which sign-in method started the current auth chain.
+   *
+   *   'password' → email + password (and its OTP continuation)
+   *   'google'   → Google Identity Services
+   *   null       → no chain in progress (logged out / never logged in)
+   *
+   * Why a store field, not a function arg: the chain spans several
+   * round-trips — `login()` → `_autoAdvancePicker()` → `selectSchool()`
+   * → `selectRole()`. Every one funnels into `_applyResponse(res)`,
+   * which is the SINGLE place that decides whether
+   * `res.dapat_buat_demo === true` routes the user to /register-demo.
+   * That auto-route is only ever valid for a brand-new Google sign-up
+   * (the wizard's intended entry point); for an email/password user
+   * it is a misroute regardless of which step the flag arrives on
+   * (e.g. a stale flag echoed back from /switch-school).
+   *
+   * Bug fixed: 2026-06-15 — multiple email+password logins (student /
+   * admin / parent) were being bounced into the demo wizard because
+   * the per-call `_stripDapatBuatDemo` only covered the FIRST hop and
+   * the flag could still slip through on a follow-up picker round-trip.
+   */
+  authMethod: 'password' | 'google' | null;
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -134,6 +157,7 @@ export const useAuthStore = defineStore('auth', {
     serverOnline: true,
     teacherProfileId: null,
     homeroomClasses: [],
+    authMethod: null,
   }),
 
   getters: {
@@ -237,7 +261,17 @@ export const useAuthStore = defineStore('auth', {
       // can prefill display + credential previews. The view layer's
       // RegisterDemo route guard reads `step === 'register_demo'` to
       // allow access while keeping /admin etc. closed.
-      if (res.dapat_buat_demo) {
+      //
+      // GATE: only honor `dapat_buat_demo` when the current chain
+      // started from Google sign-in. An email/password user landing
+      // here (e.g. via /switch-school echoing the flag from a stale
+      // backend code path) must NEVER be silently bounced into the
+      // demo wizard — they came to sign in, not to sign up. The
+      // per-call `_stripDapatBuatDemo` in `login()` / `verifyOtp()`
+      // still runs as belt-and-suspenders, but this gate also covers
+      // continuation hops (`selectSchool` / `selectRole`) that did
+      // not strip.
+      if (res.dapat_buat_demo && this.authMethod === 'google') {
         if (res.user) {
           // Treat the user as authenticated (we have the token) but
           // without a role yet. AppShell won't render — only the
@@ -391,6 +425,10 @@ export const useAuthStore = defineStore('auth', {
       this.error = null;
       this.otpDebug = null;
       this.isLoading = false;
+      // Clear the chain marker so the next login starts on a clean
+      // slate — otherwise a previous 'google' chain could survive a
+      // logout and let a follow-up password login see authMethod=google.
+      this.authMethod = null;
     },
 
     /** Drops back one step (used by "Kembali" buttons in OTP / picker views). */
@@ -599,6 +637,11 @@ export const useAuthStore = defineStore('auth', {
     async login(email: string, password: string) {
       this._setLoading(true);
       this.pendingEmail = email;
+      // Mark the chain so every downstream `_applyResponse(res)` (this
+      // call, _autoAdvancePicker → selectSchool/selectRole) refuses to
+      // route an email/password user into the demo wizard even if a
+      // backend response unexpectedly carries `dapat_buat_demo`.
+      this.authMethod = 'password';
       try {
         const res = await AuthService.login(email, password);
         // Email/password is a *sign-in* flow, never a *sign-up* flow.
@@ -639,6 +682,12 @@ export const useAuthStore = defineStore('auth', {
         throw new Error('Email tidak tersedia. Silakan masuk ulang.');
       }
       this._setLoading(true);
+      // OTP is the continuation of an email/password sign-in — re-stamp
+      // the chain marker so the gate keeps the user out of /register-demo
+      // even if the tab was reloaded between `login()` and `verifyOtp()`
+      // (Pinia state resets on reload; without this, the gate would see
+      // authMethod=null and behave correctly only by coincidence).
+      this.authMethod = 'password';
       try {
         const res = await AuthService.verifyOtp(this.pendingEmail, otp);
         // OTP is the continuation of an email/password sign-in — same
@@ -716,6 +765,10 @@ export const useAuthStore = defineStore('auth', {
     }) {
       this._setLoading(true);
       this.pendingEmail = payload.email;
+      // Google sign-up of a brand-new account legitimately routes into
+      // /register-demo via `dapat_buat_demo`; mark the chain so the
+      // gate in `_applyResponse` allows that branch.
+      this.authMethod = 'google';
       try {
         const res = await AuthService.googleLogin(payload);
         this._applyResponse(res);

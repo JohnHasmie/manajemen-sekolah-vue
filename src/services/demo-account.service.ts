@@ -118,6 +118,51 @@ export const DemoAccountService = {
   },
 
   /**
+   * POST /api/demo-schools/{schoolId}/reset — wipe a demo school back
+   * to a freshly-provisioned state, keeping the demo owner's login and
+   * `demo_expires_at` intact. Optionally accepts a payload to seed the
+   * fresh state with (otherwise the original payload captured on the
+   * demo_request is reused).
+   *
+   * Strictly demo-only on the backend: the action re-asserts
+   * `is_demo = true` and rejects a real tenant with 422.
+   *
+   * Heavy work (delete + full re-provision) happens server-side, so
+   * the timeout matches what the wizard's own /demo/provision call
+   * uses on a slow network — a fresh seed can take a minute or more
+   * on a big school.
+   */
+  async resetSchool(
+    schoolId: string,
+    payload?: Record<string, unknown>,
+  ): Promise<{
+    school_id: string;
+    school_name: string;
+    tenant_type: string;
+    demo_expires_at: string | null;
+  }> {
+    try {
+      const res = await api.post(
+        `/demo-schools/${schoolId}/reset`,
+        payload ? { payload } : {},
+        { timeout: 120_000 },
+      );
+      const data = res.data?.data ?? res.data;
+      if (!data?.school_id) {
+        throw new Error('Respons reset sekolah demo tidak valid.');
+      }
+      return {
+        school_id: String(data.school_id),
+        school_name: String(data.school_name ?? ''),
+        tenant_type: String(data.tenant_type ?? 'school'),
+        demo_expires_at: data.demo_expires_at ? String(data.demo_expires_at) : null,
+      };
+    } catch (e) {
+      throw toFriendlyError(e, 'Gagal mereset sekolah demo.');
+    }
+  },
+
+  /**
    * GET /api/demo-incomplete-registrations — abandoned demo wizards
    * (started but never finished/submitted), newest active first.
    */

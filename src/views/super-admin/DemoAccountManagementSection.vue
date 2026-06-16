@@ -51,11 +51,38 @@ import type {
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
+import DemoResetForm from '@/components/demo/DemoResetForm.vue';
+import DemoResetProgress from '@/components/demo/DemoResetProgress.vue';
 
-const props = defineProps<{ schoolId: string; schoolName?: string | null }>();
+const props = defineProps<{
+  schoolId: string;
+  schoolName?: string | null;
+  /**
+   * Original wizard payload that built this demo (the demo_request's
+   * `school_payload`). Passed in so the reset modal's "Ubah konfigurasi"
+   * tab can shallow-merge user overrides on top instead of asking the
+   * backend to do partial-merge gymnastics. Null is fine — the form
+   * locks the tweak tab and only "Konfigurasi sama" stays available.
+   */
+  currentPayload?: Record<string, unknown> | null;
+}>();
 const emit = defineEmits<{
   deleted: [result: DemoAccountDeleteResult];
   schoolDeleted: [result: DeleteDemoSchoolResult];
+  /**
+   * Fired after a successful reset so the parent can refresh + toast.
+   * The demo school ROW IS REPLACED by reset — the new school_id is in
+   * `result.school_id`. The parent typically reloads the demo-request
+   * detail (which then re-reads `activated_school_id`).
+   */
+  reset: [
+    result: {
+      school_id: string;
+      school_name: string;
+      tenant_type: string;
+      demo_expires_at: string | null;
+    },
+  ];
 }>();
 
 const { t } = useI18n();
@@ -198,6 +225,79 @@ async function confirmSchoolDelete() {
     schoolDeleteError.value = (e as Error).message;
   } finally {
     deletingSchool.value = false;
+  }
+}
+
+// ── Reset-school flow ───────────────────────────────────────────────
+// Same modal pattern as the delete flow (typed confirmation token)
+// but kept visually distinct (amber, not red) since reset is
+// reversible-in-spirit: the demo owner's login + TTL are preserved
+// and the school is re-seeded from a fresh provision. The token is
+// a separate word ("RESET") so an operator who mistypes "HAPUS" into
+// the reset modal isn't auto-armed.
+const RESET_CONFIRM_WORD = 'RESET';
+const resetOpen = ref(false);
+const resetConfirmInput = ref('');
+const resetting = ref(false);
+const resetError = ref<string | null>(null);
+/**
+ * Override payload coming back from <DemoResetForm>. `null` means the
+ * form is in "Konfigurasi sama" mode → call resetSchool with no
+ * payload (backend reuses the original). A non-null value is the
+ * merged payload to ship as-is.
+ */
+const resetPayload = ref<Record<string, unknown> | null>(null);
+
+const resetConfirmUnlocked = computed(
+  () =>
+    resetConfirmInput.value.trim().toUpperCase() === RESET_CONFIRM_WORD,
+);
+
+function startReset() {
+  resetOpen.value = true;
+  resetConfirmInput.value = '';
+  resetError.value = null;
+  resetPayload.value = null;
+}
+
+function cancelReset() {
+  if (resetting.value) return;
+  resetOpen.value = false;
+  resetConfirmInput.value = '';
+  resetError.value = null;
+  resetPayload.value = null;
+}
+
+async function confirmReset() {
+  if (!resetConfirmUnlocked.value) return;
+  resetting.value = true;
+  resetError.value = null;
+  // Hand off the screen to <DemoResetProgress>: close the confirmation
+  // modal immediately so the takeover isn't layered on top of it.
+  // Keep `resetting=true` so the takeover stays mounted.
+  resetOpen.value = false;
+  try {
+    const result = await DemoAccountService.resetSchool(
+      props.schoolId,
+      resetPayload.value ?? undefined,
+    );
+    emit('reset', result);
+    // Reset replaces the school row — the displayed account counts
+    // belong to the OLD school id and are now stale. The parent
+    // typically reloads the whole demo-request detail (which re-emits
+    // a new schoolId prop), but if it doesn't, refresh defensively
+    // so this section doesn't show ghost numbers.
+    await loadCounts();
+    // Tear down the takeover only AFTER counts refresh so the user
+    // doesn't see a flash of zero counts on the new (empty) tab.
+    resetting.value = false;
+    resetPayload.value = null;
+  } catch (e) {
+    // Failure: tear down takeover, reopen modal with the error so the
+    // operator can read it + retry.
+    resetError.value = (e as Error).message;
+    resetting.value = false;
+    resetOpen.value = true;
   }
 }
 
@@ -345,6 +445,30 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
         </Button>
       </div>
     </template>
+
+    <!-- AMBER ZONE · RESET THE DEMO SCHOOL ─────────────────────────────
+         Wipe operational data + re-provision fresh, keeping the demo
+         owner's login + demo_expires_at intact. Distinct visual zone
+         (amber, not red) and a different confirm token ("RESET") so it
+         can't be confused with the destructive delete below. -->
+    <div
+      v-if="!isLoading && !loadError"
+      class="mt-4 rounded-2xl border-2 border-amber-300 bg-amber-50/40 p-3.5"
+    >
+      <h3
+        class="text-[11px] font-black uppercase tracking-widest text-amber-700 flex items-center gap-2 mb-1.5"
+      >
+        <NavIcon name="refresh-cw" :size="14" />
+        Reset Sekolah Demo
+      </h3>
+      <p class="text-[11px] text-amber-700/90 leading-relaxed mb-3">
+        Hapus seluruh data sekolah demo lalu seed ulang dari awal. Login pemilik demo dan masa aktif tidak berubah. Bisa langsung pakai konfigurasi awal atau ubah skenario/nama lebih dulu.
+      </p>
+      <Button variant="secondary" size="sm" block @click="startReset">
+        <NavIcon name="refresh-cw" :size="14" />
+        Reset sekolah demo
+      </Button>
+    </div>
 
     <!-- DANGER ZONE · DELETE THE ENTIRE DEMO SCHOOL ───────────────────
          Always available (even with zero accounts) for an activated
@@ -507,5 +631,72 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
         </div>
       </div>
     </Modal>
+
+    <!-- RESET-SCHOOL MODAL · mini-wizard + typed confirmation. -->
+    <Modal
+      v-if="resetOpen"
+      size="xl"
+      title="Reset Sekolah Demo"
+      @close="cancelReset"
+    >
+      <div class="space-y-3">
+        <div
+          class="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5"
+        >
+          <span class="text-amber-600 mt-0.5 flex-shrink-0">
+            <NavIcon name="refresh-cw" :size="18" />
+          </span>
+          <p class="text-xs text-amber-800 leading-relaxed">
+            Semua data sekolah demo dihapus lalu dibangun ulang dari awal. Login pemilik demo dan masa aktif demo tidak berubah. Aksi ini tidak dapat dibatalkan setelah dijalankan, tapi pemilik bisa tetap login seperti biasa.
+          </p>
+        </div>
+
+        <!-- Mini-wizard: pilih konfigurasi -->
+        <DemoResetForm
+          :base-payload="currentPayload ?? null"
+          @change="resetPayload = $event"
+        />
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">
+            Ketik <span class="font-black tracking-widest">{{ RESET_CONFIRM_WORD }}</span> untuk mengonfirmasi.
+          </label>
+          <input
+            v-model="resetConfirmInput"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            :placeholder="RESET_CONFIRM_WORD"
+            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-amber-300"
+            @keyup.enter="resetConfirmUnlocked && confirmReset()"
+          />
+        </div>
+
+        <p v-if="resetError" class="text-xs text-red-600">
+          {{ resetError }}
+        </p>
+
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <Button variant="ghost" size="sm" :disabled="resetting" @click="cancelReset">
+            Batal
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            :loading="resetting"
+            :disabled="!resetConfirmUnlocked || resetting"
+            @click="confirmReset"
+          >
+            <NavIcon name="refresh-cw" :size="14" />
+            Reset sekolah
+          </Button>
+        </div>
+      </div>
+    </Modal>
+
+    <!-- Full-viewport blocking screen mounted while the reset HTTP
+         request is in flight. Teleported to <body> so it overlays the
+         super-admin chrome too. -->
+    <DemoResetProgress :active="resetting" :school-name="schoolName" />
   </section>
 </template>
