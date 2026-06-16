@@ -207,6 +207,63 @@ function materialFromJson(raw: any): GeneratedMaterial {
   };
 }
 
+/**
+ * Translate an axios failure from `POST /generated-materials/generate`
+ * into a Bahasa Indonesia message the AI sheet can show verbatim.
+ *
+ * Priority:
+ *   1. `response.data.message` — the backend's own actionable string
+ *      (e.g. "Isi minimal salah satu: nama bab/sub-bab atau topik
+ *      utama." from GenerateMaterialRequest::withValidator).
+ *   2. `response.data.errors.<field>[0]` — Laravel's default validator
+ *      shape when no top-level `message` was supplied.
+ *   3. Status-code fallback for 429 / 5xx / network — these usually
+ *      reach us with no body, so we have to write the copy ourselves.
+ *
+ * Returning a string (not throwing) makes the call site simpler:
+ *   throw new Error(translateGenerateMaterialError(err))
+ */
+function translateGenerateMaterialError(err: unknown): string {
+  const axiosErr = err as {
+    response?: { status?: number; data?: { message?: string; errors?: Record<string, string[]> } };
+    code?: string;
+    message?: string;
+  };
+  const status = axiosErr.response?.status;
+  const body = axiosErr.response?.data;
+
+  if (body?.message && typeof body.message === 'string') {
+    return body.message;
+  }
+  if (body?.errors) {
+    const firstField = Object.keys(body.errors)[0];
+    const firstMsg = firstField ? body.errors[firstField]?.[0] : undefined;
+    if (firstMsg) return firstMsg;
+  }
+
+  if (status === 422) {
+    return 'Form tidak valid. Pastikan bab/sub-bab atau topik utama terisi.';
+  }
+  if (status === 429) {
+    return 'Kuota AI sekolah ini sudah habis untuk hari ini. Silakan coba lagi besok atau hubungi admin.';
+  }
+  if (status === 503 || status === 502) {
+    return 'Layanan AI sedang sibuk. Mohon coba lagi beberapa saat.';
+  }
+  if (status && status >= 500) {
+    return 'Terjadi kesalahan pada server. Mohon coba lagi.';
+  }
+
+  if (axiosErr.code === 'ECONNABORTED' || axiosErr.message?.includes('timeout')) {
+    return 'Permintaan terlalu lama. Coba lagi dengan koneksi yang lebih stabil.';
+  }
+  if (axiosErr.message === 'Network Error' || axiosErr.code === 'ERR_NETWORK') {
+    return 'Koneksi terputus. Periksa internet Anda lalu coba lagi.';
+  }
+
+  return 'Gagal menggenerate materi. Mohon coba lagi.';
+}
+
 export const MaterialService = {
   /**
    * Fetch the chapter tree for a subject.
@@ -387,6 +444,15 @@ export const MaterialService = {
    * Generate a new AI material payload for a sub-chapter. The Laravel
    * proxy may return a 200 with the inline payload OR a 202 with a
    * job_id that the caller polls via the AI-jobs endpoint.
+   *
+   * Axios errors are translated into Bahasa Indonesia messages so the
+   * UI toast doesn't show "Request failed with status code 422" when
+   * the backend validator rejects, or raw "Network Error" on a
+   * connectivity drop. When the backend responds with a structured
+   * `message`, we surface that verbatim — the backend already emits
+   * locale-friendly, actionable strings and re-translating loses
+   * detail. Status-code fallbacks cover the cases where the backend
+   * couldn't supply a message (5xx, timeouts).
    */
   async generateWithAi(payload: {
     teacher_id?: string;
@@ -398,14 +464,18 @@ export const MaterialService = {
     chapter_label?: string;
     topic?: string;
   }): Promise<{ job_id?: string; material_id?: string }> {
-    // AI service mounts this under the `generated-materials` prefix
-    // (routes/api_ai_features.php) — `/material/generate` 404s.
-    const res = await aiApi.post('/generated-materials/generate', payload);
-    const body = res.data?.data ?? res.data ?? {};
-    return {
-      job_id: body.job_id ?? undefined,
-      material_id: body.material_id ?? body.id ?? undefined,
-    };
+    try {
+      // AI service mounts this under the `generated-materials` prefix
+      // (routes/api_ai_features.php) — `/material/generate` 404s.
+      const res = await aiApi.post('/generated-materials/generate', payload);
+      const body = res.data?.data ?? res.data ?? {};
+      return {
+        job_id: body.job_id ?? undefined,
+        material_id: body.material_id ?? body.id ?? undefined,
+      };
+    } catch (err: unknown) {
+      throw new Error(translateGenerateMaterialError(err));
+    }
   },
 
   /**
