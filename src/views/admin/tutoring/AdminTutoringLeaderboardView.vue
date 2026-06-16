@@ -80,7 +80,7 @@ function rankClass(rank: number): string {
     <BrandPageHeader
       role="admin"
       kicker="Bimbel · Leaderboard"
-      title="Peringkat Kelompok"
+      :title="t('admin.bimbel.leaderboard.title')"
       :meta="rows.length > 0 ? t('admin.bimbel.leaderboard.students_meta', { count: rows.length }) : ''"
     />
 

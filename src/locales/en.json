@@ -1019,6 +1019,7 @@
         "updated": "Group updated."
       },
       "leaderboard": {
+        "title": "Group Leaderboard",
         "empty": "No students enrolled in this group yet.",
         "filter_group": "Group",
         "formula_hint": "Score = 30d attendance × 0.5 + average assessment score × 0.5",

@@ -1016,6 +1016,7 @@
         "updated": "Kelompok diperbarui."
       },
       "leaderboard": {
+        "title": "Peringkat Kelompok",
         "empty": "Belum ada siswa terdaftar di kelompok ini.",
         "filter_group": "Kelompok",
         "formula_hint": "Skor = kehadiran 30h × 0.5 + rata-rata nilai assessment × 0.5",
