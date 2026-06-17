@@ -370,7 +370,7 @@ export const BIMBEL_QUESTIONS: readonly Question[] = [
     prompt: 'Data dummy apa yang ingin disisipkan?',
     helper:
       'Tap untuk untoggle — semuanya default-on. Bisa diubah sebelum kirim.',
-    required: false,
+    required: true,
     input: 'scenarios',
     value: (p) => p.bimbel.scenarios,
     setValue: (p, v) =>
@@ -561,7 +561,7 @@ export const SEKOLAH_QUESTIONS: readonly Question[] = [
     chapter: 'Tagihan',
     prompt: 'Aktifkan tagihan SPP demo?',
     helper: 'Bisa di-skip — Anda tetap bisa atur tagihan nanti.',
-    required: false,
+    required: true,
     input: 'pills',
     options: SEKOLAH_BILLING_OPTIONS,
     value: (p) => p.billing.mode,

@@ -234,24 +234,25 @@ function handleBack() {
   }
 }
 
-function handleFinish() {
-  // Terminal — the demo isn't live yet (pending review). Clear local
-  // progress and return to login or home dashboard depending on user status.
+const isExistingUser = computed(() => auth.schools && auth.schools.length > 0);
+
+function goToDashboard() {
   wizard.clearLocalProgress();
-  const isExistingUser = auth.schools && auth.schools.length > 0;
-  if (isExistingUser) {
-    // If they have an active role, they go straight to their dashboard.
-    // If they don't (because they logged in via ?intent=demo), we send them to /
-    // which will bounce them to /login to show the SchoolPicker.
-    // To avoid confusion ("beralih ke login"), we add a toast message.
-    if (!auth.activeRole) {
-      // Import the toast from composables
-      useToast().success(t('registerDemo.demoRequestedPleaseSelectSchool', 'Pendaftaran demo berhasil. Silakan pilih sekolah Anda.'));
-    }
-    router.replace('/');
-  } else {
-    router.replace('/login');
+  if (!auth.activeRole) {
+    useToast().success(t('registerDemo.demoRequestedPleaseSelectSchool', 'Pendaftaran demo berhasil. Silakan pilih sekolah Anda.'));
   }
+  router.replace('/');
+}
+
+function goToLogin() {
+  wizard.clearLocalProgress();
+  router.replace('/login');
+}
+
+async function handleLogout() {
+  wizard.clearLocalProgress();
+  await auth.logout();
+  router.replace('/login');
 }
 
 const sendLabel = computed(() =>
@@ -354,14 +355,34 @@ const sendLabel = computed(() =>
               {{ t('registerDemo.pendingFinalNote') }}
             </p>
 
-            <!-- Terminal action — back to login (demo not live yet). -->
-            <button
-              type="button"
-              class="mt-6 w-full inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg bg-role-admin text-white text-[13px] font-bold hover:bg-role-admin/90"
-              @click="handleFinish"
-            >
-              {{ t('registerDemo.nextButtonFinish') }}
-            </button>
+            <!-- Terminal action — options to stay, go to dashboard, or logout. -->
+            <div class="mt-6 space-y-2.5">
+              <button
+                v-if="isExistingUser"
+                type="button"
+                class="w-full inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg bg-role-admin text-white text-[13px] font-bold hover:bg-role-admin/90"
+                @click="goToDashboard"
+              >
+                Kembali ke dasbor lembaga Anda
+              </button>
+              <button
+                v-else
+                type="button"
+                class="w-full inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg bg-role-admin text-white text-[13px] font-bold hover:bg-role-admin/90"
+                @click="goToLogin"
+              >
+                {{ t('registerDemo.nextButtonFinish') }}
+              </button>
+
+              <button
+                v-if="isExistingUser"
+                type="button"
+                class="w-full inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-[13px] font-bold hover:bg-slate-50"
+                @click="handleLogout"
+              >
+                Keluar (Logout)
+              </button>
+            </div>
           </div>
 
           <!-- IDENTITY FORM — the separate "Data Diri" screen body. -->

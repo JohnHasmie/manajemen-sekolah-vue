@@ -203,8 +203,10 @@ async function submit(): Promise<void> {
   submitting.value = true;
   submitError.value = null;
   try {
-    wizard.prepareIdentityHandoff();
-    router.push('/register-demo/identity');
+    const ok = await wizard.provision();
+    if (ok) {
+      router.push('/register-demo/identity');
+    }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Terjadi kesalahan.';
     submitError.value = msg;

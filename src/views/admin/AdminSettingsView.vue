@@ -23,6 +23,7 @@ const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
 const auth = useAuthStore();
 const isResetting = ref(false);
+const isResetSuccess = ref(false);
 const resetError = ref<string | null>(null);
 
 /**
@@ -72,6 +73,7 @@ watch(showResetModal, async (open) => {
 async function confirmResetDemo() {
   if (isResetting.value) return;
   isResetting.value = true;
+  isResetSuccess.value = false;
   resetError.value = null;
   // Hand off the screen to <DemoResetProgress>: close the confirmation
   // modal immediately so the takeover isn't visually layered on top of
@@ -86,12 +88,9 @@ async function confirmResetDemo() {
     await DemoService.reset(
       (resetOverride.value ?? undefined) as never,
     );
-    // Success: tear down session locally + server-side, route to
-    // /login. The progress takeover stays mounted through the
-    // navigation (it animates to 100% as the route changes), so the
-    // user never sees a flash of the old dashboard chrome.
-    await auth.logout();
-    await router.push('/login');
+    // Success: trigger fast-forward animation in DemoResetProgress.
+    // The actual routing happens in onResetCompleted once the UI finishes.
+    isResetSuccess.value = true;
   } catch (e) {
     // Failure: unmount the takeover, surface the error in the modal
     // again so the user can read it + retry.
@@ -99,6 +98,11 @@ async function confirmResetDemo() {
     isResetting.value = false;
     showResetModal.value = true;
   }
+}
+
+async function onResetCompleted() {
+  await auth.logout();
+  await router.push('/login');
 }
 
 interface SettingsGroup {
@@ -235,7 +239,11 @@ function open(it: SettingsGroup['items'][number]) {
     <!-- Full-viewport blocking screen mounted while the reset HTTP
          request is in flight. Teleported to <body> so it covers the
          AppShell chrome (sidebar, bottom nav on mobile) too. -->
-    <DemoResetProgress :active="isResetting" />
+    <DemoResetProgress
+      :active="isResetting"
+      :success="isResetSuccess"
+      @completed="onResetCompleted"
+    />
 
     <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />
   </div>

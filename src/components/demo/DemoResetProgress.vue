@@ -51,6 +51,12 @@ const props = defineProps<{
    * holds at "almost done" if the HTTP response outlives the budget.
    */
   expectedSeconds?: number;
+  /** True when the API call succeeds. Triggers a fast-forward animation to 100%. */
+  success?: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: 'completed'): void;
 }>();
 
 /**
@@ -101,6 +107,25 @@ watch(
     }
   },
   { immediate: true },
+);
+
+watch(
+  () => props.success,
+  (isSuccess) => {
+    if (isSuccess && props.active) {
+      stopTimer();
+      // Fast forward the remaining progress
+      intervalId = window.setInterval(() => {
+        elapsed.value += Math.max(2, totalBudget.value / 20); // Finish in ~1 second
+        if (elapsed.value >= totalBudget.value) {
+          elapsed.value = totalBudget.value;
+          stopTimer();
+          // Wait briefly so the user sees 100% and all checks before unmounting
+          setTimeout(() => emit('completed'), 600);
+        }
+      }, 50);
+    }
+  }
 );
 
 /**
@@ -156,6 +181,9 @@ const phaseStates = computed(() => {
       break;
     }
   }
+  if (elapsed.value >= totalBudget.value) {
+    activeIdx = PHASES.length;
+  }
   return PHASES.map((p, i) => ({
     ...p,
     state:
@@ -190,12 +218,14 @@ const totalBudget = computed(
  */
 const percent = computed(() => {
   const pct = Math.round((elapsed.value / totalBudget.value) * 100);
+  if (props.success) return Math.min(100, Math.max(0, pct));
   return Math.min(95, Math.max(0, pct));
 });
 
 const remainingLabel = computed(() => {
+  if (props.success && elapsed.value >= totalBudget.value) return 'Selesai!';
   const remaining = Math.max(0, totalBudget.value - elapsed.value);
-  if (remaining < 1) return 'Hampir selesai…';
+  if (remaining < 1 || props.success) return 'Hampir selesai…';
   return `Estimasi ~${remaining} detik tersisa`;
 });
 

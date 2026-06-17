@@ -108,7 +108,10 @@ export const useDemoWizardStore = defineStore('demoWizard', {
      * the school name because it's the first required answer and is
      * mandatory for a meaningful demo request.
      */
-    hasWizardData: (s) => (s.payload.school.name ?? '').trim().length > 0,
+    hasWizardData: (s) =>
+      s.payload.tenant_type === 'bimbel'
+        ? (s.payload.bimbel.name ?? '').trim().length > 0
+        : (s.payload.school.name ?? '').trim().length > 0,
   },
 
   actions: {
