@@ -270,8 +270,8 @@ export const MaterialService = {
   /**
    * Fetch the chapter tree for a subject.
    *
-   * Flutter exposes two flat list endpoints (`/bab-material` for
-   * chapters, `/sub-bab-material?chapter_id=…` for sub-chapters per
+   * The backend exposes two flat list endpoints (`/chapters` for
+   * chapters, `/sub-chapters?chapter_id=…` for sub-chapters per
    * chapter); there is no combined `/chapter` endpoint. We fetch the
    * chapters first, then fan out per-chapter for sub-chapters.
    */

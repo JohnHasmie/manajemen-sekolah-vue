@@ -124,13 +124,13 @@ export const ClassroomService = {
   },
 
   /**
-   * GET /class/{id}/wali-candidates — list teacher candidates for the
+   * GET /class/{id}/homeroom-candidates — list teacher candidates for the
    * homeroom dropdown when editing a class. Mirrors Flutter's
    * `_ensureHomeroomTeacherInList` pre-fetch.
    */
   async waliCandidates(id: string): Promise<Array<{ id: string; name: string }>> {
     try {
-      const res = await api.get(`/class/${id}/wali-candidates`);
+      const res = await api.get(`/class/${id}/homeroom-candidates`);
       const body = res.data?.data ?? res.data ?? [];
       return (Array.isArray(body) ? body : []).map((t: any) => ({
         id: String(t.id),

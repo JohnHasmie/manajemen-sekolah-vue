@@ -236,7 +236,7 @@ export const TutoringService = {
   ): Promise<import('@/types/tutoring').TutoringWaliClassMeta[]> {
     const res = await api.get<ApiResponse<{
       classes: import('@/types/tutoring').TutoringWaliClassMeta[];
-    }>>(`/tutoring/students/${studentId}/wali-class-meta`);
+    }>>(`/tutoring/students/${studentId}/parent-class-meta`);
     return (extractData(res)?.classes ?? []) as import('@/types/tutoring').TutoringWaliClassMeta[];
   },
 
