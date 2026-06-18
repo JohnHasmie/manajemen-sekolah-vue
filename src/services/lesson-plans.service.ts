@@ -485,6 +485,7 @@ export const LessonPlanService = {
         typeof body.progress === 'number' ? body.progress : undefined,
       result_id:
         (body.result_id as string | undefined) ??
+        ((body.result as Record<string, unknown> | undefined)?.id as string | undefined) ??
         (body.id as string | undefined),
       error: body.error as string | undefined,
     };
