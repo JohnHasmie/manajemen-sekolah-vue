@@ -27,6 +27,7 @@ import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useAcademicYearStore } from '@/stores/academic-year';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useAiProgressStore } from '@/stores/ai-progress';
 import {
   RateLimitError,
   RecommendationService,
@@ -54,6 +55,7 @@ import Toast from '@/components/ui/Toast.vue';
 
 const auth = useAuthStore();
 const academicYear = useAcademicYearStore();
+const aiProgress = useAiProgressStore();
 const router = useRouter();
 const { t } = useI18n();
 
@@ -137,8 +139,6 @@ interface GenerateTarget {
 }
 const generateTarget = ref<GenerateTarget | null>(null);
 const isGenerating = ref<Set<string>>(new Set()); // classIds in flight
-// Inline progress banner shown while a generate batch is running.
-const progressMessage = ref<string | null>(null);
 
 // ── Loaders ──
 async function loadClasses() {
@@ -332,10 +332,10 @@ async function runGenerate(cfg: GenerateConfig) {
   }
   const tgt = generateTarget.value;
   isGenerating.value.add(tgt.classId);
-  progressMessage.value = t('tutor.sekolah.recommendationHub.progressSending', {
+  aiProgress.startProcess(t('tutor.sekolah.recommendationHub.progressSending', {
     count: cfg.subject_ids.length,
     className: tgt.className,
-  });
+  }), cfg.subject_ids.length);
   try {
     const results = await RecommendationService.dispatchGenerate({
       cfg,
@@ -355,10 +355,10 @@ async function runGenerate(cfg: GenerateConfig) {
     let polledDone = 0;
     const total = asyncJobs.length;
     if (total > 0) {
-      progressMessage.value = t('tutor.sekolah.recommendationHub.progressProcessing', {
+      aiProgress.updateProgress(t('tutor.sekolah.recommendationHub.progressProcessing', {
         total,
         done: syncDone,
-      });
+      }), syncDone, total + syncDone);
       await Promise.all(
         asyncJobs.map(async (r) => {
           try {
@@ -367,11 +367,11 @@ async function runGenerate(cfg: GenerateConfig) {
               { intervalMs: 3000, maxAttempts: 40 },
             );
             polledDone += 1;
-            progressMessage.value = t('tutor.sekolah.recommendationHub.progressProcessingProgress', {
+            aiProgress.updateProgress(t('tutor.sekolah.recommendationHub.progressProcessingProgress', {
               total,
               done: polledDone + syncDone,
               grandTotal: total + syncDone,
-            });
+            }), polledDone + syncDone, total + syncDone);
           } catch (e) {
             failed.push({
               subject_id: r.subject_id,
@@ -422,7 +422,7 @@ async function runGenerate(cfg: GenerateConfig) {
     }
   } finally {
     isGenerating.value.delete(tgt.classId);
-    progressMessage.value = null;
+    aiProgress.finishProcess();
     generateTarget.value = null;
   }
 }
@@ -502,15 +502,6 @@ async function runGenerate(cfg: GenerateConfig) {
         />
       </div>
     </AsyncView>
-
-    <!-- AI progress banner — non-blocking, sticks above the toast -->
-    <div
-      v-if="progressMessage"
-      class="fixed bottom-4 right-4 z-40 max-w-sm bg-violet-600 text-white rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3"
-    >
-      <NavIcon name="loader" :size="16" class="animate-spin flex-shrink-0" />
-      <p class="text-[12px] font-medium leading-snug">{{ progressMessage }}</p>
-    </div>
 
     <!-- GENERATE SHEET -->
     <RecommendationGenerateSheet

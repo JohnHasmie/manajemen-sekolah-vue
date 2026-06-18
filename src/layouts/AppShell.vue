@@ -24,6 +24,7 @@ import SchoolPill from '@/components/feature/SchoolPill.vue';
 import DemoCountdownBanner from '@/components/feature/DemoCountdownBanner.vue';
 import NotificationBell from '@/components/feature/NotificationBell.vue';
 import ToastHost from '@/components/ui/ToastHost.vue';
+import AiProgressBanner from '@/components/feature/AiProgressBanner.vue';
 import ProfileMenu from '@/components/feature/ProfileMenu.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import { useNotificationsStore } from '@/stores/notifications';
@@ -549,6 +550,7 @@ const schoolInitial = computed(() => {
       </main>
     </div>
 
+    <AiProgressBanner />
     <ToastHost />
   </div>
 </template>
