@@ -47,11 +47,12 @@ function subFromJson(raw: any): SubChapter {
     // `urutan` is the canonical ordering column on the Laravel
     // backend (Indonesian); `number` / `nomor` are kept for
     // any other shape that might ship one day.
-    number: String(raw.number ?? raw.nomor ?? raw.urutan ?? ''),
+    number: String(raw.number ?? raw.nomor ?? raw.urutan ?? raw.order ?? ''),
     // Backend ships `judul_sub_bab` / `judul_bab` for the title;
     // older Vue mockups expected `name` / `nama` / `title`.
     name: String(
-      raw.judul_sub_bab ??
+      raw.sub_chapter_title ??
+        raw.judul_sub_bab ??
         raw.judul ??
         raw.name ??
         raw.nama ??
@@ -77,19 +78,20 @@ function chapterFromJson(raw: any): Chapter {
   );
   const done_count = sub_chapters.filter((s) => s.done).length;
   // `urutan` is the chapter sequence number — drives "Bab N".
-  const seq = raw.number ?? raw.nomor ?? raw.urutan ?? '';
+  const seq = raw.number ?? raw.nomor ?? raw.urutan ?? raw.order ?? '';
   return {
     id: String(raw.id ?? ''),
     label: String(raw.label ?? `Bab ${seq}`).trim(),
     name: String(
-      raw.judul_bab ??
+      raw.chapter_title ??
+        raw.judul_bab ??
         raw.judul ??
         raw.name ??
         raw.nama ??
         raw.title ??
         '',
     ),
-    meta: raw.meta ?? raw.deskripsi_bab ?? raw.deskripsi ?? '',
+    meta: raw.chapter_description ?? raw.meta ?? raw.deskripsi_bab ?? raw.deskripsi ?? '',
     sub_chapters,
     done_count,
     total_count: sub_chapters.length,
@@ -275,7 +277,7 @@ export const MaterialService = {
    */
   async getTree(params: TreeParams): Promise<MaterialTree> {
     try {
-      const chapterRes = await api.get('/bab-material', {
+      const chapterRes = await api.get('/chapters', {
         params: {
           subject_id: params.subject_id,
           ...(params.grade_level ? { grade_level: params.grade_level } : {}),
@@ -297,7 +299,7 @@ export const MaterialService = {
             Array.isArray(raw.subBab);
           if (hasInlineSubs) return chapterFromJson(raw);
           try {
-            const subRes = await api.get('/sub-bab-material', {
+            const subRes = await api.get('/sub-chapters', {
               params: { chapter_id: raw.id ?? raw.bab_id },
             });
             const subBody = subRes.data?.data ?? subRes.data ?? [];
