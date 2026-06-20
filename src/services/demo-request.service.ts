@@ -135,4 +135,23 @@ export const DemoRequestService = {
       throw toFriendlyError(e, 'Gagal menolak permintaan demo.');
     }
   },
+
+  /**
+   * POST /api/demo-requests/{id}/extend — memperpanjang demo.
+   *
+   * @param days jumlah hari perpanjangan
+   * @param note catatan perpanjangan
+   */
+  async extend(id: string, days: number, note?: string): Promise<DemoRequest> {
+    try {
+      const res = await api.post(`/demo-requests/${id}/extend`, {
+        days,
+        note: note?.trim() ? note.trim() : undefined,
+      });
+      const data = res.data?.data ?? res.data;
+      return data as DemoRequest;
+    } catch (e) {
+      throw toFriendlyError(e, 'Gagal memperpanjang masa aktif demo.');
+    }
+  },
 };

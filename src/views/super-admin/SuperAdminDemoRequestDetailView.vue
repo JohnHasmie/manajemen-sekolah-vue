@@ -54,6 +54,7 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Toast from '@/components/ui/Toast.vue';
+import Modal from '@/components/ui/Modal.vue';
 import DemoAccountManagementSection from './DemoAccountManagementSection.vue';
 import type {
   DeleteDemoSchoolResult,
@@ -309,6 +310,58 @@ async function submitReview() {
 
 function goBack() {
   router.push({ name: 'super-admin.demo-requests' });
+}
+
+// ── Extend demo actions ─────────────────────────────────────────────
+const extendModalOpen = ref(false);
+const extendDays = ref(7);
+const customExtendDays = ref(7);
+const extendNote = ref('');
+const extending = ref(false);
+const extendError = ref<string | null>(null);
+
+function openExtendModal() {
+  extendModalOpen.value = true;
+  extendDays.value = 7;
+  customExtendDays.value = 7;
+  extendNote.value = '';
+  extendError.value = null;
+}
+
+function closeExtendModal() {
+  extendModalOpen.value = false;
+  extendError.value = null;
+}
+
+function getActualDays(): number {
+  return extendDays.value === 0 ? customExtendDays.value : extendDays.value;
+}
+
+async function submitExtend() {
+  if (!detail.value) return;
+  const days = getActualDays();
+  if (days <= 0) {
+    extendError.value = 'Durasi perpanjangan harus minimal 1 hari.';
+    return;
+  }
+  extending.value = true;
+  extendError.value = null;
+  try {
+    detail.value = await DemoRequestService.extend(
+      detail.value.id,
+      days,
+      extendNote.value,
+    );
+    toast.value = {
+      message: `Masa aktif demo berhasil diperpanjang selama ${days} hari.`,
+      tone: 'success',
+    };
+    closeExtendModal();
+  } catch (e) {
+    extendError.value = (e as Error).message;
+  } finally {
+    extending.value = false;
+  }
 }
 
 // Called after a successful demo-account deletion from the management
@@ -1054,7 +1107,7 @@ function onSchoolReset(result: {
         <!-- KELOLA AKUN DEMO — only for an ACTIVATED demo school.
              Deletion is gated server-side to is_demo=true tenants. -->
         <DemoAccountManagementSection
-          v-if="detail.status === 'approved' && detail.activated_school_id"
+          v-if="['approved', 'expired'].includes(detail.status) && detail.activated_school_id"
           :school-id="detail.activated_school_id"
           :school-name="
             payload?.bimbel?.name ?? payload?.school?.name ?? detail.school_summary?.name ?? null
@@ -1150,16 +1203,28 @@ function onSchoolReset(result: {
           <Button variant="secondary" size="sm" @click="goBack">
             {{ t('superAdmin.demoDetail.backToList') }}
           </Button>
-          <template v-if="detail.status === 'pending'">
-            <Button variant="danger" size="sm" @click="startReview('reject')">
+          
+          <!-- Reactivate / Activate from registration payload (Scenario B or Pending) -->
+          <template v-if="detail.status === 'pending' || (detail.status === 'expired' && !detail.activated_school_id)">
+            <Button v-if="detail.status === 'pending'" variant="danger" size="sm" @click="startReview('reject')">
               <NavIcon name="x" :size="14" />
               {{ t('superAdmin.demoDetail.reject') }}
             </Button>
             <Button variant="success" size="sm" @click="startReview('approve')">
               <NavIcon name="check" :size="14" />
-              {{ t('superAdmin.demoDetail.activate') }}
+              {{ detail.status === 'expired' ? 'Aktifkan Kembali' : t('superAdmin.demoDetail.activate') }}
             </Button>
           </template>
+
+          <!-- Extend / Reactivate existing school (Scenario A or Approved) -->
+          <template v-else-if="['approved', 'expired'].includes(detail.status) && detail.activated_school_id">
+            <Button variant="primary" size="sm" @click="openExtendModal">
+              <NavIcon name="calendar" :size="14" />
+              Perpanjang Demo
+            </Button>
+          </template>
+
+          <!-- Fallback text for rejected or other conditions -->
           <span v-else class="text-[11px] text-slate-400">
             {{
               t('superAdmin.demoDetail.alreadyReviewed', {
@@ -1177,5 +1242,79 @@ function onSchoolReset(result: {
       :tone="toast.tone"
       @close="toast = null"
     />
+
+    <!-- EXTEND MODAL -->
+    <Modal
+      v-if="extendModalOpen"
+      size="sm"
+      title="Perpanjang Masa Aktif Demo"
+      @close="closeExtendModal"
+    >
+      <div class="space-y-4 text-left">
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Masukkan jumlah hari untuk memperpanjang masa aktif demo. Jika demo sudah kedaluwarsa, masa aktif baru akan dihitung mulai dari hari ini.
+        </p>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">
+            Durasi Perpanjangan (Hari)
+          </label>
+          <select
+            v-model="extendDays"
+            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+          >
+            <option :value="7">7 Hari</option>
+            <option :value="14">14 Hari</option>
+            <option :value="30">30 Hari</option>
+            <option :value="0">Kustom...</option>
+          </select>
+        </div>
+
+        <div v-if="extendDays === 0">
+          <label class="block text-xs font-semibold text-slate-700 mb-1">
+            Jumlah Hari Kustom
+          </label>
+          <input
+            v-model.number="customExtendDays"
+            type="number"
+            min="1"
+            max="90"
+            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">
+            Catatan Perpanjangan
+          </label>
+          <textarea
+            v-model="extendNote"
+            rows="3"
+            placeholder="Alasan perpanjangan atau catatan tambahan..."
+            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 resize-none"
+          ></textarea>
+        </div>
+
+        <p v-if="extendError" class="text-xs text-red-600">
+          {{ extendError }}
+        </p>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <Button variant="ghost" size="sm" :disabled="extending" @click="closeExtendModal">
+            Batal
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            :loading="extending"
+            :disabled="extending || getActualDays() <= 0"
+            @click="submitExtend"
+          >
+            <NavIcon name="calendar" :size="14" />
+            Simpan
+          </Button>
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>
