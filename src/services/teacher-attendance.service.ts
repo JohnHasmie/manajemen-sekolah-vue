@@ -48,6 +48,7 @@ const Endpoints = {
   history: '/teacher-attendance/history',
   historySummary: '/teacher-attendance/history/summary',
   settings: '/teacher-attendance/settings',
+  rules: '/teacher-attendance/rules',
   admin: '/teacher-attendance/admin',
   adminSummary: '/teacher-attendance/admin/summary',
 } as const;
@@ -357,6 +358,32 @@ export const TeacherAttendanceService = {
       throw new Error(
         humanError(e, 'Gagal menyimpan pengaturan presensi guru.'),
       );
+    }
+  },
+
+  async getRules(): Promise<{ rules: any[]; teachers: any[]; grade_levels: string[] }> {
+    try {
+      const res = await api.get(Endpoints.rules);
+      return res.data?.data ?? { rules: [], teachers: [], grade_levels: [] };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat aturan presensi guru.'));
+    }
+  },
+
+  async saveRule(payload: any): Promise<any> {
+    try {
+      const res = await api.post(Endpoints.rules, payload);
+      return res.data?.data;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menyimpan aturan presensi guru.'));
+    }
+  },
+
+  async deleteRule(id: string): Promise<void> {
+    try {
+      await api.delete(`${Endpoints.rules}/${id}`);
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menghapus aturan presensi guru.'));
     }
   },
 

@@ -43,7 +43,7 @@ import Spinner from '@/components/ui/Spinner.vue';
 const toast = useToast();
 const { t } = useI18n();
 
-type Tab = 'settings' | 'report';
+type Tab = 'settings' | 'rules' | 'report';
 const tab = ref<Tab>('settings');
 
 // ─────────────────────────────────────────────────────────────────
@@ -376,6 +376,7 @@ function switchTab(t: Tab) {
   // The rekap leads the report tab — load it on first entry. The
   // detail list stays lazy until the admin expands it.
   if (t === 'report' && !summaryLoaded.value) loadSummary();
+  if (t === 'rules') loadRules();
 }
 
 function fmtDate(d: string): string {
@@ -393,6 +394,161 @@ function fmtTime(iso?: string | null): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+// ── Rules Tab State ──
+const rules = ref<any[]>([]);
+const teachersList = ref<any[]>([]);
+const gradeLevelsList = ref<string[]>([]);
+const rulesLoading = ref(false);
+const rulesError = ref<string | null>(null);
+
+// Form for editing/adding a rule
+const ruleForm = ref({
+  id: null as string | null,
+  scope_type: 'global' as 'global' | 'grade_level' | 'teacher',
+  scope_value: '',
+  checkout_time_validation_enabled: true,
+  checkout_time_rule_type: 'all_days' as 'all_days' | 'custom_days',
+  checkout_time_all_days: '14:00',
+  checkout_times_custom_days: {
+    '1': '14:00',
+    '2': '14:00',
+    '3': '14:00',
+    '4': '14:00',
+    '5': '14:00',
+    '6': '14:00',
+    '7': '14:00',
+  } as Record<string, string>,
+});
+const savingRule = ref(false);
+const showAddRuleForm = ref(false);
+
+async function loadRules() {
+  rulesLoading.value = true;
+  rulesError.value = null;
+  try {
+    const data = await TeacherAttendanceService.getRules();
+    rules.value = data.rules;
+    teachersList.value = data.teachers;
+    gradeLevelsList.value = data.grade_levels;
+  } catch (e) {
+    rulesError.value = (e as Error).message;
+  } finally {
+    rulesLoading.value = false;
+  }
+}
+
+function resetRuleForm() {
+  ruleForm.value = {
+    id: null,
+    scope_type: 'global',
+    scope_value: '',
+    checkout_time_validation_enabled: true,
+    checkout_time_rule_type: 'all_days',
+    checkout_time_all_days: '14:00',
+    checkout_times_custom_days: {
+      '1': '14:00',
+      '2': '14:00',
+      '3': '14:00',
+      '4': '14:00',
+      '5': '14:00',
+      '6': '14:00',
+      '7': '14:00',
+    },
+  };
+  showAddRuleForm.value = false;
+}
+
+function editRule(rule: any) {
+  ruleForm.value = {
+    id: rule.id,
+    scope_type: rule.scope_type,
+    scope_value: rule.scope_value || '',
+    checkout_time_validation_enabled: Boolean(rule.checkout_time_validation_enabled),
+    checkout_time_rule_type: rule.checkout_time_rule_type,
+    checkout_time_all_days: rule.checkout_time_all_days ? rule.checkout_time_all_days.substring(0, 5) : '14:00',
+    checkout_times_custom_days: rule.checkout_times_custom_days
+      ? Object.keys(rule.checkout_times_custom_days).reduce((acc, key) => {
+          acc[key] = rule.checkout_times_custom_days[key].substring(0, 5);
+          return acc;
+        }, {} as Record<string, string>)
+      : {
+          '1': '14:00',
+          '2': '14:00',
+          '3': '14:00',
+          '4': '14:00',
+          '5': '14:00',
+          '6': '14:00',
+          '7': '14:00',
+        },
+  };
+  showAddRuleForm.value = true;
+}
+
+async function saveRule() {
+  savingRule.value = true;
+  try {
+    const payload = {
+      id: ruleForm.value.id,
+      scope_type: ruleForm.value.scope_type,
+      scope_value: ruleForm.value.scope_type === 'global' ? null : ruleForm.value.scope_value,
+      checkout_time_validation_enabled: ruleForm.value.checkout_time_validation_enabled,
+      checkout_time_rule_type: ruleForm.value.checkout_time_rule_type,
+      checkout_time_all_days: ruleForm.value.checkout_time_rule_type === 'all_days' ? ruleForm.value.checkout_time_all_days : null,
+      checkout_times_custom_days: ruleForm.value.checkout_time_rule_type === 'custom_days' ? ruleForm.value.checkout_times_custom_days : null,
+    };
+    await TeacherAttendanceService.saveRule(payload);
+    toast.success('Aturan presensi berhasil disimpan.');
+    resetRuleForm();
+    await loadRules();
+  } catch (e) {
+    toast.error((e as Error).message);
+  } finally {
+    savingRule.value = false;
+  }
+}
+
+async function deleteRule(id: string) {
+  if (!confirm('Apakah Anda yakin ingin menghapus aturan presensi ini?')) return;
+  try {
+    await TeacherAttendanceService.deleteRule(id);
+    toast.success('Aturan presensi berhasil dihapus.');
+    await loadRules();
+  } catch (e) {
+    toast.error((e as Error).message);
+  }
+}
+
+function getScopeLabel(rule: any): string {
+  if (rule.scope_type === 'global') return 'Semua Guru (Global)';
+  if (rule.scope_type === 'grade_level') return `Tingkat Kelas ${rule.scope_value}`;
+  if (rule.scope_type === 'teacher') {
+    const teacher = teachersList.value.find((t) => t.id === rule.scope_value);
+    return teacher ? `Guru: ${teacher.name}` : `Guru ID: ${rule.scope_value}`;
+  }
+  return rule.scope_type;
+}
+
+function getRuleSummaryLabel(rule: any): string {
+  if (!rule.checkout_time_validation_enabled) return 'Validasi jam pulang dinonaktifkan';
+  if (rule.checkout_time_rule_type === 'all_days') {
+    return `Minimal Jam Pulang: ${rule.checkout_time_all_days ? rule.checkout_time_all_days.substring(0, 5) : '-'}`;
+  }
+  return 'Jam pulang kustom per hari';
+}
+
+function getDayName(dayIndex: string): string {
+  const names: Record<string, string> = {
+    '1': 'Senin',
+    '2': 'Selasa',
+    '3': 'Rabu',
+    '4': 'Kamis',
+    '5': 'Jumat',
+    '6': 'Sabtu',
+    '7': 'Minggu',
+  };
+  return names[dayIndex] ?? dayIndex;
 }
 
 onMounted(loadSettings);
@@ -420,6 +576,18 @@ onMounted(loadSettings);
           @click="switchTab('settings')"
         >
           <NavIcon name="settings" :size="13" />{{ t('admin.sekolah.teacher_attendance.tab_settings') }}
+        </button>
+        <button
+          type="button"
+          class="px-3 py-1 rounded-lg text-[11.5px] font-bold inline-flex items-center gap-1.5 transition-all"
+          :class="
+            tab === 'rules'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-white/90 hover:text-white'
+          "
+          @click="switchTab('rules')"
+        >
+          <NavIcon name="clock" :size="13" />{{ t('admin.sekolah.teacher_attendance.tab_rules') }}
         </button>
         <button
           type="button"
@@ -663,8 +831,159 @@ onMounted(loadSettings);
       </template>
     </template>
 
+    <!-- ════════════════════ RULES TAB ════════════════════ -->
+    <template v-else-if="tab === 'rules'">
+      <div v-if="rulesLoading" class="flex items-center justify-center py-xl text-slate-400">
+        <Spinner size="md" />
+      </div>
+      <div v-else-if="rulesError" class="bg-red-50 text-red-600 rounded-xl p-4 text-[13px]">
+        {{ rulesError }}
+      </div>
+      <div v-else class="space-y-md">
+        <!-- Add/Edit Rule Form -->
+        <section v-if="showAddRuleForm" class="bg-white border border-slate-200 rounded-2xl p-5 space-y-md">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-sm font-bold text-slate-800">
+              {{ ruleForm.id ? 'Edit Aturan Presensi' : 'Tambah Aturan Presensi Baru' }}
+            </h3>
+            <button @click="resetRuleForm" class="text-xs text-slate-400 hover:text-slate-600">Batal</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Cakupan (Scope)</label>
+              <select v-model="ruleForm.scope_type" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30">
+                <option value="global">Semua Guru (Global)</option>
+                <option value="grade_level">Per Tingkat Kelas</option>
+                <option value="teacher">Per Guru</option>
+              </select>
+            </div>
+
+            <div v-if="ruleForm.scope_type === 'grade_level'">
+              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Tingkat Kelas</label>
+              <select v-model="ruleForm.scope_value" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30">
+                <option value="">Pilih Tingkat</option>
+                <option v-for="level in gradeLevelsList" :key="level" :value="level">Tingkat {{ level }}</option>
+              </select>
+            </div>
+
+            <div v-if="ruleForm.scope_type === 'teacher'">
+              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Guru</label>
+              <select v-model="ruleForm.scope_value" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30">
+                <option value="">Pilih Guru</option>
+                <option v-for="teacher in teachersList" :key="teacher.id" :value="teacher.id">
+                  {{ teacher.name }} ({{ teacher.employee_number || 'NIP -' }})
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-100 pt-4 space-y-md">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" v-model="ruleForm.checkout_time_validation_enabled" class="w-5 h-5 accent-brand-cobalt" />
+              <span class="text-[12.5px] text-slate-700 font-bold">Aktifkan Validasi Minimal Jam Pulang</span>
+            </label>
+
+            <div v-if="ruleForm.checkout_time_validation_enabled" class="space-y-md bg-slate-50 rounded-xl p-4 border border-slate-200">
+              <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Tipe Aturan Waktu</label>
+                <div class="flex gap-2">
+                  <button type="button" @click="ruleForm.checkout_time_rule_type = 'all_days'" class="px-4 py-2 rounded-lg text-xs font-bold transition-all border" :class="ruleForm.checkout_time_rule_type === 'all_days' ? 'bg-brand-cobalt text-white border-brand-cobalt shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'">
+                    Sama untuk Semua Hari
+                  </button>
+                  <button type="button" @click="ruleForm.checkout_time_rule_type = 'custom_days'" class="px-4 py-2 rounded-lg text-xs font-bold transition-all border" :class="ruleForm.checkout_time_rule_type === 'custom_days' ? 'bg-brand-cobalt text-white border-brand-cobalt shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'">
+                    Kustom per Hari
+                  </button>
+                </div>
+              </div>
+
+              <!-- Time Inputs -->
+              <div v-if="ruleForm.checkout_time_rule_type === 'all_days'" class="w-48">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Jam Pulang Minimal</label>
+                <input type="time" v-model="ruleForm.checkout_time_all_days" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30" />
+              </div>
+
+              <div v-else class="grid grid-cols-2 sm:grid-cols-7 gap-3">
+                <div v-for="day in ['1', '2', '3', '4', '5', '6', '7']" :key="day">
+                  <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
+                    {{ getDayName(day) }}
+                  </label>
+                  <input type="time" v-model="ruleForm.checkout_times_custom_days[day]" class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+            <Button variant="secondary" @click="resetRuleForm">Batal</Button>
+            <Button variant="primary" :loading="savingRule" @click="saveRule">Simpan Aturan</Button>
+          </div>
+        </section>
+
+        <!-- Rules List -->
+        <section v-else class="bg-white border border-slate-200 rounded-2xl p-5 space-y-md">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800">Daftar Aturan Presensi Guru</h3>
+              <p class="text-[11px] text-slate-400">Atur batasan jam pulang khusus untuk jenjang kelas atau guru tertentu.</p>
+            </div>
+            <Button variant="primary" @click="showAddRuleForm = true">
+              <NavIcon name="plus" :size="13" />Tambah Aturan
+            </Button>
+          </div>
+
+          <div v-if="rules.length === 0" class="flex flex-col items-center justify-center py-10 text-slate-400 border border-dashed border-slate-200 rounded-xl">
+            <NavIcon name="info-circle" :size="24" class="mb-2" />
+            <p class="text-xs">Belum ada aturan presensi khusus yang dibuat.</p>
+            <p class="text-[10px]">Semua guru akan mengikuti aturan presensi default sekolah.</p>
+          </div>
+
+          <div v-else class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                  <th class="py-3 px-4">Cakupan Aturan</th>
+                  <th class="py-3 px-4">Validasi Jam Pulang</th>
+                  <th class="py-3 px-4">Tipe Aturan</th>
+                  <th class="py-3 px-4">Batas Jam</th>
+                  <th class="py-3 px-4 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="text-xs text-slate-700 divide-y divide-slate-50">
+                <tr v-for="rule in rules" :key="rule.id" class="hover:bg-slate-50/50">
+                  <td class="py-3 px-4 font-bold text-slate-900">{{ getScopeLabel(rule) }}</td>
+                  <td class="py-3 px-4">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" :class="rule.checkout_time_validation_enabled ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'">
+                      {{ rule.checkout_time_validation_enabled ? 'Aktif' : 'Non-aktif' }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4">
+                    {{ rule.checkout_time_rule_type === 'all_days' ? 'Sama Setiap Hari' : 'Kustom per Hari' }}
+                  </td>
+                  <td class="py-3 px-4 tabular-nums">
+                    <div v-if="rule.checkout_time_rule_type === 'all_days'">
+                      {{ rule.checkout_time_all_days ? rule.checkout_time_all_days.substring(0, 5) : '-' }}
+                    </div>
+                    <div v-else class="text-[10px] text-slate-500">
+                      <span v-for="(time, day) in rule.checkout_times_custom_days" :key="day" class="mr-2 inline-block">
+                        <span class="font-bold text-slate-700">{{ getDayName(day).substring(0, 3) }}:</span> {{ time.substring(0, 5) }}
+                      </span>
+                    </div>
+                  </td>
+                  <td class="py-3 px-4 text-right space-x-2">
+                    <button @click="editRule(rule)" class="text-brand-cobalt hover:underline font-bold">Edit</button>
+                    <button @click="deleteRule(rule.id)" class="text-red-500 hover:underline font-bold">Hapus</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </template>
+
     <!-- ════════════════════ REPORT TAB ════════════════════ -->
-    <template v-else>
+    <template v-else-if="tab === 'report'">
       <!-- Periode filter (drives BOTH rekap + detail) -->
       <section
         class="bg-white border border-slate-200 rounded-2xl p-3 flex flex-wrap items-end gap-3"

@@ -2195,6 +2195,7 @@
         "header_title": "Presensi Guru",
         "header_meta": "Atur metode presensi, geofence, dan lihat laporan harian guru",
         "tab_settings": "Pengaturan",
+        "tab_rules": "Aturan Jam Pulang",
         "tab_report": "Laporan",
         "empty_title": "Belum ada rekap presensi",
         "empty_description": "Tidak ada data presensi guru untuk periode ini."

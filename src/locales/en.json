@@ -2198,6 +2198,7 @@
         "header_title": "Teacher Attendance",
         "header_meta": "Configure attendance method, geofence, and view daily teacher reports",
         "tab_settings": "Settings",
+        "tab_rules": "Check-Out Rules",
         "tab_report": "Report",
         "empty_title": "No attendance recap yet",
         "empty_description": "No teacher attendance data for this period."
