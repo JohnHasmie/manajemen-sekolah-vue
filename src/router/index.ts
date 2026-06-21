@@ -369,26 +369,26 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
-        path: 'admin/attendance',
-        name: 'admin.attendance',
+        path: 'admin/student-attendance',
+        name: 'admin.student-attendance',
         component: AdminAttendanceDashboardView,
         meta: { role: 'admin' satisfies Role },
       },
       {
-        path: 'admin/attendance/tingkat/:tingkat',
-        name: 'admin.attendance.tingkat',
+        path: 'admin/student-attendance/tingkat/:tingkat',
+        name: 'admin.student-attendance.tingkat',
         component: AdminAttendanceTingkatHeatmapView,
         meta: { role: 'admin' satisfies Role },
       },
       {
-        path: 'admin/attendance/laporan',
-        name: 'admin.attendance.laporan',
+        path: 'admin/student-attendance/laporan',
+        name: 'admin.student-attendance.laporan',
         component: AdminAttendanceReportView,
         meta: { role: 'admin' satisfies Role },
       },
       {
-        path: 'admin/attendance/detail',
-        name: 'admin.attendance.detail',
+        path: 'admin/student-attendance/detail',
+        name: 'admin.student-attendance.detail',
         component: AdminAttendanceDetailView,
         meta: { role: 'admin' satisfies Role },
       },
@@ -522,8 +522,15 @@ const routes: RouteRecordRaw[] = [
       {
         // PRESENSI GURU — admin config + report for teacher daily
         // attendance (camera/location/geofence settings + report list).
-        path: 'admin/teacher-attendance',
-        name: 'admin.teacher-attendance',
+        path: 'admin/teacher-attendance/report',
+        name: 'admin.teacher-attendance.report',
+        component: AdminTeacherAttendanceView,
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        // PRESENSI GURU — admin settings for teacher daily attendance
+        path: 'admin/teacher-attendance/settings',
+        name: 'admin.teacher-attendance.settings',
         component: AdminTeacherAttendanceView,
         meta: { role: 'admin' satisfies Role },
       },

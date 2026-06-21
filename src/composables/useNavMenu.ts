@@ -50,8 +50,8 @@ const ADMIN_NAV: NavSection[] = [
   {
     titleKey: 'nav.reports',
     items: [
-      { to: '/admin/attendance', labelKey: 'nav.attendance', icon: 'check-square' },
-      { to: '/admin/teacher-attendance', labelKey: 'nav.teacherAttendance', icon: 'camera' },
+      { to: '/admin/student-attendance', labelKey: 'nav.attendance', icon: 'check-square' },
+      { to: '/admin/teacher-attendance/report', labelKey: 'nav.teacherAttendance', icon: 'camera' },
       { to: '/admin/class-activity', labelKey: 'nav.classActivity', icon: 'activity' },
       { to: '/admin/grades', labelKey: 'nav.grades', icon: 'bar-chart' },
       { to: '/admin/grade-recap', labelKey: 'nav.gradeRecap', icon: 'check-square' },

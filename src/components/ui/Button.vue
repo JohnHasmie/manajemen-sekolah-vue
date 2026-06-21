@@ -10,6 +10,11 @@
 -->
 <script setup lang="ts">
 import Spinner from './Spinner.vue';
+import { useAuthStore } from '@/stores/auth';
+import { useRoleColor } from '@/composables/useRoleColor';
+
+const auth = useAuthStore();
+const roleColor = useRoleColor(() => auth.activeRole);
 
 withDefaults(
   defineProps<{
@@ -46,9 +51,8 @@ defineEmits<{ click: [MouseEvent] }>();
         'px-lg py-md text-base': size === 'lg',
       },
       // variant
+      variant === 'primary' ? [roleColor.bg, 'text-white', 'hover:opacity-90', 'disabled:opacity-60', 'focus:ring-2', roleColor.ring] : '',
       {
-        'bg-brand text-white hover:bg-brand-700 disabled:bg-brand/60 focus:ring-brand':
-          variant === 'primary',
         'border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-60 focus:ring-slate-400':
           variant === 'secondary',
         'text-slate-600 hover:bg-slate-100 disabled:opacity-60':

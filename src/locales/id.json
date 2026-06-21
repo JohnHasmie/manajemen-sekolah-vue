@@ -279,8 +279,8 @@
     "classes": "Kelas",
     "subjects": "Mata Pelajaran",
     "schedule": "Jadwal",
-    "attendance": "Kehadiran",
-    "teacherAttendance": "Presensi Guru",
+    "attendance": "Kehadiran Siswa",
+    "teacherAttendance": "Kehadiran Guru",
     "myAttendance": "Presensi Saya",
     "grades": "Nilai",
     "gradeRecap": "Rekap Nilai",
@@ -2100,6 +2100,8 @@
         "item_academic_year_desc": "Atur tahun ajaran aktif & semester",
         "item_lesson_hours_label": "Jam pelajaran",
         "item_lesson_hours_desc": "Sesi mengajar, jam mulai-selesai, hari aktif",
+        "item_teacher_attendance_label": "Presensi Guru",
+        "item_teacher_attendance_desc": "Pengaturan metode presensi, geofence, dan aturan jam pulang",
         "item_billing_label": "Tagihan & biaya",
         "item_billing_desc": "Jenis tagihan, nominal default, jatuh tempo",
         "item_data_management_label": "Manajemen data",
@@ -2191,14 +2193,15 @@
         "import_title": "Import Mata Pelajaran dari Excel"
       },
       "teacher_attendance": {
-        "header_kicker": "Presensi Guru · Konfigurasi & Laporan",
-        "header_title": "Presensi Guru",
-        "header_meta": "Atur metode presensi, geofence, dan lihat laporan harian guru",
+        "header_kicker": "Kehadiran Guru · Konfigurasi & Laporan",
+        "header_title": "Kehadiran Guru",
+        "header_meta": "Atur metode kehadiran, geofence, dan lihat laporan harian guru",
         "tab_settings": "Pengaturan",
+        "tab_checkin_rules": "Aturan Jam Datang",
         "tab_rules": "Aturan Jam Pulang",
         "tab_report": "Laporan",
-        "empty_title": "Belum ada rekap presensi",
-        "empty_description": "Tidak ada data presensi guru untuk periode ini."
+        "empty_title": "Belum ada rekap kehadiran",
+        "empty_description": "Tidak ada data kehadiran guru untuk periode ini."
       },
       "teacher_management": {
         "role_teacher": "Guru",

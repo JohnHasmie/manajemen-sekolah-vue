@@ -15,7 +15,8 @@
  * Admin-facing:
  *   GET  /teacher-attendance/settings  → getSettings()
  *   PUT  /teacher-attendance/settings  → updateSettings() (partial)
- *   GET  /teacher-attendance/admin     → adminReport()
+ *   GET  /teacher-attendance/report     → adminReport()
+ *   GET  /teacher-attendance/report/summary → adminSummary()
  *
  * The check-in/out payload is `multipart/form-data` because it carries
  * a live camera photo. We build a FormData and let the browser set the
@@ -49,8 +50,8 @@ const Endpoints = {
   historySummary: '/teacher-attendance/history/summary',
   settings: '/teacher-attendance/settings',
   rules: '/teacher-attendance/rules',
-  admin: '/teacher-attendance/admin',
-  adminSummary: '/teacher-attendance/admin/summary',
+  report: '/teacher-attendance/report',
+  reportSummary: '/teacher-attendance/report/summary',
 } as const;
 
 /**
@@ -388,7 +389,7 @@ export const TeacherAttendanceService = {
   },
 
   /**
-   * GET /teacher-attendance/admin — school-scoped report list. The
+   * GET /teacher-attendance/report — school-scoped report list. The
    * `teacher_id` filter accepts a Teacher ID OR a User ID; the server
    * resolves it within the active school.
    */
@@ -404,7 +405,7 @@ export const TeacherAttendanceService = {
       if (filters.status) params.status = filters.status;
       if (filters.per_page) params.per_page = filters.per_page;
       if (filters.page) params.page = filters.page;
-      const res = await api.get(Endpoints.admin, { params });
+      const res = await api.get(Endpoints.report, { params });
       return listFromJson(res.data);
     } catch (e) {
       throw new Error(humanError(e, 'Gagal memuat laporan presensi guru.'));
@@ -412,7 +413,7 @@ export const TeacherAttendanceService = {
   },
 
   /**
-   * GET /teacher-attendance/admin/summary — per-TEACHER rekap over a
+   * GET /teacher-attendance/report/summary — per-TEACHER rekap over a
    * date range. Status columns are dynamic: read `meta.statuses` for
    * the ordered column list, then index each row by status key.
    * `teacher_id` accepts a Teacher ID OR a User ID; the server resolves
@@ -427,7 +428,7 @@ export const TeacherAttendanceService = {
       if (filters.start_date) params.start_date = filters.start_date;
       if (filters.end_date) params.end_date = filters.end_date;
       if (filters.teacher_id) params.teacher_id = filters.teacher_id;
-      const res = await api.get(Endpoints.adminSummary, { params });
+      const res = await api.get(Endpoints.reportSummary, { params });
       const body = (res.data ?? {}) as {
         meta?: Record<string, unknown>;
         data?: Record<string, unknown>[];

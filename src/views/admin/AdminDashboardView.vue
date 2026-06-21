@@ -160,7 +160,7 @@ const quickActions: QuickAction[] = [
   { labelKey: 'nav.classes', icon: 'layers', to: '/admin/classes' },
   { labelKey: 'nav.subjects', icon: 'book', to: '/admin/subjects' },
   { labelKey: 'nav.schedule', icon: 'calendar', to: '/admin/schedule' },
-  { labelKey: 'nav.attendance', icon: 'check-square', to: '/admin/attendance' },
+  { labelKey: 'nav.attendance', icon: 'check-square', to: '/admin/student-attendance' },
   { labelKey: 'nav.lessonPlans', icon: 'file-text', to: '/admin/lesson-plans' },
   { labelKey: 'nav.finance', icon: 'wallet', to: '/admin/finance' },
   { labelKey: 'nav.grades', icon: 'edit-3', to: '/admin/grades' },
@@ -293,7 +293,7 @@ const financePct = computed(() =>
               :slice-progress="1"
               :slice-label="sliceLabel"
               :slice-label-muted="sliceLabelMuted"
-              @click="router.push('/admin/attendance')"
+              @click="router.push('/admin/student-attendance')"
             />
             <StatSummaryCard
               :label="t('admin.dashboard.pendingLessonPlans')"
@@ -328,7 +328,7 @@ const financePct = computed(() =>
                 <button
                   type="button"
                   class="text-[11px] font-bold text-role-admin hover:underline"
-                  @click="router.push('/admin/attendance')"
+                  @click="router.push('/admin/student-attendance')"
                 >
                   {{ t('admin.dashboard.details') }}
                 </button>

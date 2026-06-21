@@ -101,7 +101,7 @@ const ROUTE_MAPS: Record<PriorityRole, RouteMap> = {
     overdue_bills: '/admin/finance',
     bills_overdue: '/admin/finance',
     announcement: '/admin/announcements',
-    attendance: '/admin/attendance',
+    attendance: '/admin/student-attendance',
     class_activity: '/admin/class-activity',
     grade: '/admin/grades',
     grade_overview: '/admin/grades',

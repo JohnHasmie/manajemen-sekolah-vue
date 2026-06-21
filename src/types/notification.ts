@@ -167,7 +167,7 @@ export function notificationHref(
       // No `/:id` attendance detail on the web; route to the role's
       // attendance overview. Parents are the usual recipients.
       if (audience === 'teacher') return '/teacher/attendance';
-      if (audience === 'admin') return '/admin/attendance';
+      if (audience === 'admin') return '/admin/student-attendance';
       return '/parent/attendance';
     }
 
