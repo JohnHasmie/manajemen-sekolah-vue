@@ -592,15 +592,15 @@ function toggleScenario(key: BimbelScenarioKey) {
         <div class="w-8 h-8 rounded-lg bg-slate-50 text-slate-600 grid place-items-center flex-shrink-0">
           <NavIcon :name="socialLabels[c].icon" :size="16" />
         </div>
-        <div class="flex-1 min-w-0">
-          <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
             {{ socialLabels[c].label }}
           </div>
           <input
             :value="socialMap[c]"
             type="text"
             :placeholder="socialLabels[c].ph"
-            class="w-full text-sm text-slate-900 bg-transparent focus:outline-none placeholder:text-slate-300"
+            class="w-full text-sm text-slate-900 bg-transparent focus:outline-none placeholder:text-slate-300 text-left"
             @input="updateSocial(c, ($event.target as HTMLInputElement).value)"
             @keydown.enter="onEnter"
           />
