@@ -344,9 +344,9 @@ export const BIMBEL_QUESTIONS: readonly Question[] = [
   {
     key: 'requester.social_media',
     chapter: 'Identitas Anda',
-    prompt: 'Media sosial lembaga Anda?',
+    prompt: 'Media sosial Anda?',
     helper:
-      'Minimal satu channel yang aktif dan terlihat real (Instagram lembaga, web resmi, dll). Tim verifikasi cek profil ini untuk memastikan lembaga benar-benar ada — channel kosong/fiktif akan ditolak.',
+      'Minimal satu channel yang aktif dan terlihat real (Instagram pribadi, LinkedIn, dll). Tim verifikasi cek profil ini untuk memastikan identitas Anda benar-benar ada — channel kosong/fiktif akan ditolak.',
     required: true,
     input: 'social',
     value: (p) => p.requester.social_media,
@@ -658,9 +658,9 @@ export const SEKOLAH_QUESTIONS: readonly Question[] = [
   {
     key: 'requester.social_media',
     chapter: 'Identitas Anda',
-    prompt: 'Media sosial sekolah Anda?',
+    prompt: 'Media sosial Anda?',
     helper:
-      'Minimal satu channel yang aktif dan terlihat real (Instagram lembaga, web resmi, dll). Tim verifikasi cek profil ini untuk memastikan lembaga benar-benar ada — channel kosong/fiktif akan ditolak.',
+      'Minimal satu channel yang aktif dan terlihat real (Instagram pribadi, LinkedIn, dll). Tim verifikasi cek profil ini untuk memastikan identitas Anda benar-benar ada — channel kosong/fiktif akan ditolak.',
     required: true,
     input: 'social',
     value: (p) => p.requester.social_media,

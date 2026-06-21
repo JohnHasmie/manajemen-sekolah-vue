@@ -252,11 +252,11 @@ function updateSocial(channel: DemoSocialChannel, value: string) {
 }
 
 const socialLabels: Record<DemoSocialChannel, { label: string; icon: string; ph: string }> = {
-  instagram: { label: 'Instagram', icon: 'instagram', ph: '@nama_lembaga' },
-  facebook: { label: 'Facebook', icon: 'facebook', ph: 'facebook.com/lembaga' },
-  threads: { label: 'Threads', icon: 'at', ph: '@nama_lembaga' },
+  instagram: { label: 'Instagram', icon: 'instagram', ph: '@username' },
+  facebook: { label: 'Facebook', icon: 'facebook', ph: 'facebook.com/username' },
+  threads: { label: 'Threads', icon: 'at', ph: '@username' },
   linkedin: { label: 'LinkedIn', icon: 'linkedin', ph: 'linkedin.com/in/…' },
-  other: { label: 'Lain (TikTok / Web)', icon: 'link', ph: 'mis. tiktok.com/@lembaga' },
+  other: { label: 'Lain (TikTok / Web)', icon: 'link', ph: 'mis. tiktok.com/@username' },
 };
 
 const hasAnySocial = computed(() =>
