@@ -7,7 +7,7 @@
        Tapping any row (or the Edit link) opens the edit modal.
     2. Tahun Ajaran — active-year hero card with the canonical AY
        label + semester pill, plus an "Arsip & kelola" tile that
-       drills into `admin.settings.kelola-tahun-ajaran` (Phase 3).
+       drills into `admin.settings.manage-academic-years` (Phase 3).
 
   Endpoints:
     GET  /school/settings
@@ -124,8 +124,8 @@ function openKelolaTahunAjaran() {
   // Phase 3 ports KelolaTahunAjaranScreen here. Until then, only push
   // when the route actually exists so we don't blow up the page with
   // an unmatched-name warning.
-  if (router.hasRoute('admin.settings.kelola-tahun-ajaran')) {
-    router.push({ name: 'admin.settings.kelola-tahun-ajaran' });
+  if (router.hasRoute('admin.settings.manage-academic-years')) {
+    router.push({ name: 'admin.settings.manage-academic-years' });
   } else {
     toast.value = {
       message: t('admin.sekolah.school_level_settings.toast_ay_coming'),

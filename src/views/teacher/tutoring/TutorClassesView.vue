@@ -3,7 +3,7 @@
   the assigned tutor. Mirrors mobile `TutorClassesScreen`.
 
   Header: navy hero with class count + a search box. Body: responsive
-  grid of TutorClassCard. Tap → /teacher/tutoring/kelas/:groupId.
+  grid of TutorClassCard. Tap → /teacher/tutoring/class/:groupId.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';

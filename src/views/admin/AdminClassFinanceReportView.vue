@@ -271,7 +271,7 @@ function billStatusChip(b: Bill): { label: string; cls: string } {
 }
 
 function goBack() {
-  router.push({ name: 'admin.finance.tagihan' });
+  router.push({ name: 'admin.finance.bills' });
 }
 </script>
 

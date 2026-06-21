@@ -2,7 +2,7 @@
   TeacherReportCardClassView.vue — per-class roster (Rapor Frame B).
 
   Web port of `teacher_report_card_screen.dart`. Route entry:
-    /teacher/report-cards/kelas/:classId
+    /teacher/report-cards/class/:classId
 
   Layout:
     1. Back chevron row + Export Excel action

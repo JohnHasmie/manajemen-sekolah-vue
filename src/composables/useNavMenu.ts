@@ -221,7 +221,7 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
     items: [
       { to: '/teacher', labelKey: 'tutoring.nav.home', icon: 'home' },
       {
-        to: '/teacher/tutoring/kelas',
+        to: '/teacher/tutoring/class',
         labelKey: 'tutoring.nav.classes',
         icon: 'layers',
       },

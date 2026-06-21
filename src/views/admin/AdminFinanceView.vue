@@ -8,9 +8,9 @@
     4. <router-view /> for the active tab
 
   Sub-routes:
-    /admin/finance/tagihan     → AdminFinanceTagihanView (Phase 6)
-    /admin/finance/pembayaran  → AdminFinancePembayaranView (Phase 7)
-    /admin/finance/jenis       → AdminFinanceJenisView (Phase 8)
+    /admin/finance/bills     → AdminFinanceTagihanView (Phase 6)
+    /admin/finance/payments  → AdminFinancePembayaranView (Phase 7)
+    /admin/finance/types       → AdminFinanceJenisView (Phase 8)
 
   Endpoint:
     GET /finance/money-flow    → MoneyFlowSummary
@@ -59,9 +59,9 @@ interface Tab {
 }
 
 const TABS = computed<Tab[]>(() => [
-  { key: 'tagihan', label: t('admin.sekolah.finance.tab_bills'), icon: 'credit-card', route: 'admin.finance.tagihan' },
-  { key: 'pembayaran', label: t('admin.sekolah.finance.tab_payments'), icon: 'check-circle', route: 'admin.finance.pembayaran' },
-  { key: 'jenis', label: t('admin.sekolah.finance.tab_types'), icon: 'layers', route: 'admin.finance.jenis' },
+  { key: 'tagihan', label: t('admin.sekolah.finance.tab_bills'), icon: 'credit-card', route: 'admin.finance.bills' },
+  { key: 'pembayaran', label: t('admin.sekolah.finance.tab_payments'), icon: 'check-circle', route: 'admin.finance.payments' },
+  { key: 'jenis', label: t('admin.sekolah.finance.tab_types'), icon: 'layers', route: 'admin.finance.types' },
 ]);
 
 const activeTab = computed<Tab['key']>(() => {

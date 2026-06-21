@@ -154,7 +154,7 @@ const jenisChipValue = computed(() => {
 
 function openGroup(g: BillGroup) {
   router.push({
-    name: 'admin.finance.tagihan.detail',
+    name: 'admin.finance.bills.detail',
     params: { classId: g.class_id, paymentTypeId: g.payment_type_id },
     query: { academicYearId: g.academic_year_id ?? '' },
   });

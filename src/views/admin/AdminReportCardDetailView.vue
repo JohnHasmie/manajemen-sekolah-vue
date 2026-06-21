@@ -3,7 +3,7 @@
 
   Web port of parent_report_card_detail_screen.dart (with userRole = 'admin').
   Route entry:
-    /admin/report-cards/kelas/:classId/siswa/:studentClassId
+    /admin/report-cards/class/:classId/student/:studentClassId
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';

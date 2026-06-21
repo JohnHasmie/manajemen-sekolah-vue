@@ -2,7 +2,7 @@
   TeacherReportCardDetailView.vue — Rapor edit (Frame C).
 
   Web port of `report_card_detail_screen.dart`. Route entry:
-    /teacher/report-cards/kelas/:classId/siswa/:studentClassId
+    /teacher/report-cards/class/:classId/student/:studentClassId
 
   Layout:
     1. Back chevron row + sticky Simpan/Finalisasi actions

@@ -198,7 +198,7 @@ export function notificationHref(
       // to the parent checkout for that bill.
       const subType = String(dataValue(data, 'type') ?? type ?? '').toLowerCase();
       if (audience === 'admin' || subType === 'payment_submitted') {
-        return '/admin/finance/pembayaran';
+        return '/admin/finance/payments';
       }
       const billId = dataValue(data, 'bill_id');
       if (billId) return `/parent/billing/checkout/${billId}`;

@@ -115,7 +115,7 @@ const groups = computed<SettingsGroup[]>(() => [
     title: t('admin.sekolah.settings.group_school_profile'),
     items: [
       { icon: 'home', label: t('admin.sekolah.settings.item_school_profile_label'), desc: t('admin.sekolah.settings.item_school_profile_desc'), to: '/admin/settings/school' },
-      { icon: 'calendar', label: t('admin.sekolah.settings.item_academic_year_label'), desc: t('admin.sekolah.settings.item_academic_year_desc'), to: '/admin/settings/kelola-tahun-ajaran' },
+      { icon: 'calendar', label: t('admin.sekolah.settings.item_academic_year_label'), desc: t('admin.sekolah.settings.item_academic_year_desc'), to: '/admin/settings/manage-academic-years' },
     ],
   },
   {
@@ -123,7 +123,7 @@ const groups = computed<SettingsGroup[]>(() => [
     items: [
       { icon: 'calendar', label: t('admin.sekolah.settings.item_lesson_hours_label'), desc: t('admin.sekolah.settings.item_lesson_hours_desc'), to: '/admin/schedule/lesson-hours' },
       { icon: 'camera', label: t('admin.sekolah.settings.item_teacher_attendance_label'), desc: t('admin.sekolah.settings.item_teacher_attendance_desc'), to: '/admin/teacher-attendance/settings' },
-      { icon: 'wallet', label: t('admin.sekolah.settings.item_billing_label'), desc: t('admin.sekolah.settings.item_billing_desc'), to: '/admin/finance/jenis' },
+      { icon: 'wallet', label: t('admin.sekolah.settings.item_billing_label'), desc: t('admin.sekolah.settings.item_billing_desc'), to: '/admin/finance/types' },
     ],
   },
   {

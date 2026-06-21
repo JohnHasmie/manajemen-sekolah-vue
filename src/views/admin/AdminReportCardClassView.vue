@@ -3,7 +3,7 @@
   (Mockup #08 continuation).
 
   Web port of `admin_report_card_screen.dart`. Route entry:
-    /admin/report-cards/kelas/:classId
+    /admin/report-cards/class/:classId
 
   Layout:
     1. Back chevron + sticky actions (Export Excel + Kirim ke Wali)

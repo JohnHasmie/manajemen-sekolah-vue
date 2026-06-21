@@ -2,7 +2,7 @@
   TeacherRecommendationResultView.vue — per-student rec list (Frame C).
 
   Web port of `recommendation_result_screen.dart`. Route entry:
-    /teacher/recommendations/kelas/:classId/siswa/:studentId?scope=wali
+    /teacher/recommendations/class/:classId/student/:studentId?scope=wali
 
   Layout:
     1. Back chevron row → kembali ke student list

@@ -142,7 +142,7 @@ function onReminderSent(payload: { count: number; channel: string }) {
 }
 
 function goBack() {
-  router.push({ name: 'admin.finance.tagihan' });
+  router.push({ name: 'admin.finance.bills' });
 }
 
 const headerMeta = computed(

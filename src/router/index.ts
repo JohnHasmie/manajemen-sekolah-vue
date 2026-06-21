@@ -375,14 +375,14 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
-        path: 'admin/student-attendance/tingkat/:tingkat',
-        name: 'admin.student-attendance.tingkat',
+        path: 'admin/student-attendance/grade-level/:tingkat',
+        name: 'admin.student-attendance.grade-level',
         component: AdminAttendanceTingkatHeatmapView,
         meta: { role: 'admin' satisfies Role },
       },
       {
-        path: 'admin/student-attendance/laporan',
-        name: 'admin.student-attendance.laporan',
+        path: 'admin/student-attendance/report',
+        name: 'admin.student-attendance.report',
         component: AdminAttendanceReportView,
         meta: { role: 'admin' satisfies Role },
       },
@@ -402,23 +402,23 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/finance',
         component: AdminFinanceView,
         meta: { role: 'admin' satisfies Role },
-        redirect: { name: 'admin.finance.tagihan' },
+        redirect: { name: 'admin.finance.bills' },
         children: [
           {
             path: 'tagihan',
-            name: 'admin.finance.tagihan',
+            name: 'admin.finance.bills',
             component: AdminFinanceTagihanView,
             meta: { role: 'admin' satisfies Role },
           },
           {
             path: 'pembayaran',
-            name: 'admin.finance.pembayaran',
+            name: 'admin.finance.payments',
             component: AdminFinancePembayaranView,
             meta: { role: 'admin' satisfies Role },
           },
           {
             path: 'jenis',
-            name: 'admin.finance.jenis',
+            name: 'admin.finance.types',
             component: AdminFinanceJenisView,
             meta: { role: 'admin' satisfies Role },
           },
@@ -428,11 +428,11 @@ const routes: RouteRecordRaw[] = [
         // Back-compat redirect — existing menu items use `admin.finance`.
         path: 'admin/finance/index',
         name: 'admin.finance',
-        redirect: { name: 'admin.finance.tagihan' },
+        redirect: { name: 'admin.finance.bills' },
       },
       {
-        path: 'admin/finance/tagihan/:classId/:paymentTypeId',
-        name: 'admin.finance.tagihan.detail',
+        path: 'admin/finance/bills/:classId/:paymentTypeId',
+        name: 'admin.finance.bills.detail',
         component: AdminFinanceBillGroupDetailView,
         meta: { role: 'admin' satisfies Role },
       },
@@ -484,13 +484,13 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
-        path: 'admin/report-cards/kelas/:classId',
+        path: 'admin/report-cards/class/:classId',
         name: 'admin.report-cards.class',
         component: AdminReportCardClassView,
         meta: { role: 'admin' satisfies Role },
       },
       {
-        path: 'admin/report-cards/kelas/:classId/siswa/:studentClassId',
+        path: 'admin/report-cards/class/:classId/student/:studentClassId',
         name: 'admin.report-cards.detail',
         component: AdminReportCardDetailView,
         meta: { role: 'admin' satisfies Role },
@@ -514,8 +514,8 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
-        path: 'admin/settings/kelola-tahun-ajaran',
-        name: 'admin.settings.kelola-tahun-ajaran',
+        path: 'admin/settings/manage-academic-years',
+        name: 'admin.settings.manage-academic-years',
         component: AdminKelolaTahunAjaranView,
         meta: { role: 'admin' satisfies Role },
       },
@@ -694,13 +694,13 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'guru' satisfies Role },
       },
       {
-        path: 'teacher/recommendations/kelas/:classId',
+        path: 'teacher/recommendations/class/:classId',
         name: 'teacher.recommendations.students',
         component: TeacherRecommendationStudentsView,
         meta: { role: 'guru' satisfies Role },
       },
       {
-        path: 'teacher/recommendations/kelas/:classId/siswa/:studentId',
+        path: 'teacher/recommendations/class/:classId/student/:studentId',
         name: 'teacher.recommendations.result',
         component: TeacherRecommendationResultView,
         meta: { role: 'guru' satisfies Role },
@@ -730,13 +730,13 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'guru' satisfies Role },
       },
       {
-        path: 'teacher/report-cards/kelas/:classId',
+        path: 'teacher/report-cards/class/:classId',
         name: 'teacher.report-cards.class',
         component: TeacherReportCardClassView,
         meta: { role: 'guru' satisfies Role },
       },
       {
-        path: 'teacher/report-cards/kelas/:classId/siswa/:studentClassId',
+        path: 'teacher/report-cards/class/:classId/student/:studentClassId',
         name: 'teacher.report-cards.detail',
         component: TeacherReportCardDetailView,
         meta: { role: 'guru' satisfies Role },
@@ -1139,14 +1139,14 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
-        path: 'teacher/tutoring/kelas',
+        path: 'teacher/tutoring/class',
         name: 'teacher.tutoring.classes',
         component: () =>
           import('@/views/teacher/tutoring/TutorClassesView.vue'),
         meta: { role: 'guru' satisfies Role },
       },
       {
-        path: 'teacher/tutoring/kelas/:groupId',
+        path: 'teacher/tutoring/class/:groupId',
         name: 'teacher.tutoring.class-detail',
         component: () =>
           import('@/views/teacher/tutoring/TutorClassDetailView.vue'),
