@@ -305,6 +305,36 @@ const visibleAssessments = computed<Assessment[]>(() =>
     : matrix.value.assessments.filter((a) => a.type === typeFilter.value),
 );
 
+/**
+ * When two assessments share the SAME title but differ in `type`
+ * (e.g. "UH Bab 1" exists as both `daily_test` AND `uh`, which the
+ * DB allows — assessment_unique_with_title is on
+ * (teacher_id, subject_id, type, date, title)), the header used to
+ * render only the title — the user saw "UH Bab 1" twice with no way
+ * to tell them apart, and reasonably called it a duplicate
+ * (Luay 2026-06-19, SMP Kamil Edu B / TIK).
+ *
+ * Prefix the type ("UH · UH Bab 1") only when there is an in-view
+ * collision so the common case (unique titles) stays terse. The
+ * existing 9px type subtitle below the header stays as well, but a
+ * loud prefix is what actually makes the columns visually distinct
+ * at a glance.
+ */
+const assessmentDisplayNames = computed<Record<string, string>>(() => {
+  const titleCount = new Map<string, number>();
+  for (const a of visibleAssessments.value) {
+    titleCount.set(a.name, (titleCount.get(a.name) ?? 0) + 1);
+  }
+  const out: Record<string, string> = {};
+  for (const a of visibleAssessments.value) {
+    out[a.id] =
+      (titleCount.get(a.name) ?? 0) > 1
+        ? `${typeLabel(a.type)} · ${a.name}`
+        : a.name;
+  }
+  return out;
+});
+
 const filteredMatrixRows = computed(() => {
   const q = matrixSearchQuery.value.trim().toLowerCase();
   if (!q) return matrix.value.rows;
@@ -1465,10 +1495,10 @@ function typeLabel(type: AssessmentType): string {
                     <button
                       type="button"
                       class="w-full inline-flex flex-col items-center gap-0.5 px-2 py-1 rounded-md hover:bg-brand-cobalt/10 transition-colors text-slate-500 hover:text-brand-cobalt"
-                      :title="t('tutor.sekolah.gradebook.matrixColActionTitle', { name: a.name })"
+                      :title="t('tutor.sekolah.gradebook.matrixColActionTitle', { name: assessmentDisplayNames[a.id] || a.name })"
                       @click="openColumnActions(a)"
                     >
-                      <span>{{ a.name }}</span>
+                      <span>{{ assessmentDisplayNames[a.id] || a.name }}</span>
                       <span class="text-[9px] font-medium text-slate-400">
                         {{ typeLabel(a.type) }}
                       </span>
