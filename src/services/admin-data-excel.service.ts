@@ -86,9 +86,35 @@ export const AdminDataExcelService = {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const body = res.data ?? {};
+      // Backend shapes vary across importers. StudentsImport (and the
+      // other Maatwebsite ToCollection importers) responds with
+      //   { message, results: { success, failed, errors } }
+      // while simpler endpoints respond at the top level
+      //   { imported, failed }
+      // We read both nests — top-level first, then `results.*` — so a
+      // successful 1-student import no longer shows "0 berhasil"
+      // (Luay 2026-06-16) because of a counter pulled from the wrong
+      // depth.
+      const results = (body.results ?? {}) as Record<string, unknown>;
       return {
-        imported: Number(body.imported ?? body.created ?? body.success ?? 0),
-        failed: Number(body.failed ?? body.skipped ?? body.errors_count ?? 0),
+        imported: Number(
+          body.imported
+          ?? body.created
+          ?? body.success
+          ?? results.imported
+          ?? results.created
+          ?? results.success
+          ?? 0,
+        ),
+        failed: Number(
+          body.failed
+          ?? body.skipped
+          ?? body.errors_count
+          ?? results.failed
+          ?? results.skipped
+          ?? results.errors_count
+          ?? 0,
+        ),
         message: body.message ?? undefined,
       };
     } catch (e) {
