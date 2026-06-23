@@ -148,6 +148,46 @@ export const TutoringService = {
     return extractData(res);
   },
 
+  /**
+   * Download the invoice PDF for a paid bill. Triggers a browser
+   * download via an in-memory blob URL — matches the pattern used by
+   * BillingService.downloadReceipt. Backend wraps the binary in an
+   * `application/pdf` response; the `disposition=attachment` query
+   * keeps it consistent with the existing kuitansi/receipt UX.
+   *
+   * The filename uses the first 8 chars of the bill id so admins can
+   * cross-reference downloads with the bill list without exposing the
+   * full UUID.
+   */
+  async downloadInvoicePdf(billId: string): Promise<void> {
+    const res = await api.get(`/tutoring/bills/${billId}/invoice`, {
+      responseType: 'blob',
+      params: { disposition: 'attachment' },
+    });
+    const blob = res.data as Blob;
+    const url = window.URL.createObjectURL(blob);
+    try {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice-${billId.slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } finally {
+      // Defer revoke so the click can settle on some browsers.
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    }
+  },
+
+  /**
+   * Resend the invoice for an already-paid bill via the configured
+   * channels (email + WhatsApp). Backend returns 422 if the bill is
+   * not paid yet — caller surfaces that as a toast error.
+   */
+  async resendInvoice(billId: string): Promise<void> {
+    await api.post(`/tutoring/bills/${billId}/resend-invoice`);
+  },
+
   /** Admin manual mark-paid — creates a verified Payment row and
    *  flips bill.status → paid in one transaction. */
   async markBillPaid(

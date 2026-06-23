@@ -3299,6 +3299,16 @@
       "unpaidOnly": "Belum bayar saja",
       "student": "Siswa"
     },
+    "billDetail": {
+      "downloadInvoice": "Unduh invoice PDF",
+      "resendInvoice": "Kirim ulang email + WA",
+      "downloadingInvoice": "Mengunduh invoice…",
+      "downloadFailed": "Gagal mengunduh invoice",
+      "resendSuccess": "Invoice dikirim ulang ke email + WhatsApp",
+      "resendFailed": "Gagal mengirim ulang invoice",
+      "resendConfirm": "Kirim ulang invoice ke wali via email + WhatsApp?",
+      "resending": "Mengirim ulang…"
+    },
     "tenant": {
       "school": "Sekolah",
       "center": "Bimbel"

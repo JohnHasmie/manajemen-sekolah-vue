@@ -3303,6 +3303,16 @@
       "unpaidOnly": "Unpaid only",
       "student": "Student"
     },
+    "billDetail": {
+      "downloadInvoice": "Download invoice PDF",
+      "resendInvoice": "Resend email + WA",
+      "downloadingInvoice": "Downloading invoice…",
+      "downloadFailed": "Failed to download invoice",
+      "resendSuccess": "Invoice resent to email + WhatsApp",
+      "resendFailed": "Failed to resend invoice",
+      "resendConfirm": "Resend invoice to wali via email + WhatsApp?",
+      "resending": "Resending…"
+    },
     "tenant": {
       "school": "School",
       "center": "Tutoring"

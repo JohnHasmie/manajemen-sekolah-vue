@@ -11,6 +11,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
+import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
 import type { TutoringBill } from '@/types/tutoring';
 
@@ -21,6 +22,24 @@ const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const { activeChildId } = useChildPicker();
+const toast = useToast();
+
+// One bill at a time is fine — wali typically downloads after a single
+// payment. Tracking by id keeps the spinner local to the row instead of
+// blocking the whole list.
+const downloadingId = ref<string | null>(null);
+
+async function downloadInvoice(b: TutoringBill) {
+  if (downloadingId.value) return;
+  downloadingId.value = b.id;
+  try {
+    await TutoringService.downloadInvoicePdf(b.id);
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : t('tutoring.billDetail.downloadFailed'));
+  } finally {
+    downloadingId.value = null;
+  }
+}
 
 const studentId = computed(() =>
   String(route.params.studentId || activeChildId.value || ''),
@@ -228,9 +247,13 @@ function payFirst() {
           <button
             v-else
             type="button"
-            class="bg-bimbel-bg text-bimbel-text-mid text-[13px] px-3.5 py-2 rounded-lg"
+            :disabled="downloadingId === b.id"
+            class="bg-bimbel-bg text-bimbel-text-mid text-[13px] px-3.5 py-2 rounded-lg disabled:opacity-50"
+            @click="downloadInvoice(b)"
           >
-            {{ t('wali.bimbel.bills.view_evidence_button') }}
+            {{ downloadingId === b.id
+              ? t('tutoring.billDetail.downloadingInvoice')
+              : t('tutoring.billDetail.downloadInvoice') }}
           </button>
         </div>
       </div>

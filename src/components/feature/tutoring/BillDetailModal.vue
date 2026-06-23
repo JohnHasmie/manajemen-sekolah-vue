@@ -14,6 +14,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import { formatRupiah, formatDateShort } from '@/lib/format';
@@ -29,6 +30,7 @@ const emit = defineEmits<{
   (e: 'done'): void;
 }>();
 
+const { t } = useI18n();
 const toast = useToast();
 const loading = ref(true);
 const detail = ref<TutoringBillDetail | null>(null);
@@ -40,9 +42,41 @@ const markDate = ref<string>(new Date().toISOString().slice(0, 10));
 const markNotes = ref('');
 const saving = ref(false);
 
+// Paid-only actions — invoice PDF download + admin resend.
+const downloadingPdf = ref(false);
+const resending = ref(false);
+
 const isPaid = computed(
   () => detail.value?.bill.status?.toLowerCase() === 'paid',
 );
+
+async function downloadInvoice() {
+  if (downloadingPdf.value) return;
+  downloadingPdf.value = true;
+  try {
+    await TutoringService.downloadInvoicePdf(props.billId);
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : t('tutoring.billDetail.downloadFailed'));
+  } finally {
+    downloadingPdf.value = false;
+  }
+}
+
+async function resendInvoice() {
+  if (resending.value) return;
+  // Lightweight confirm via window.confirm — keeps the modal simple and
+  // matches the destructive-action pattern used elsewhere in admin views.
+  if (!window.confirm(t('tutoring.billDetail.resendConfirm'))) return;
+  resending.value = true;
+  try {
+    await TutoringService.resendInvoice(props.billId);
+    toast.success(t('tutoring.billDetail.resendSuccess'));
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : t('tutoring.billDetail.resendFailed'));
+  } finally {
+    resending.value = false;
+  }
+}
 
 async function load() {
   loading.value = true;
@@ -196,6 +230,31 @@ onMounted(load);
             {{ detail.payment_account.payment_instructions }}
           </div>
         </div>
+      </section>
+
+      <!-- Paid-bill actions: invoice PDF download + admin manual resend
+           (email + WhatsApp). Backend already auto-fires both channels
+           on payment verification; these are explicit re-sends when wali
+           lost the original notification. -->
+      <section v-if="isPaid" class="space-y-2">
+        <button
+          type="button"
+          :disabled="downloadingPdf"
+          class="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-bimbel-accent px-3 py-2.5 text-sm font-bold text-white hover:opacity-90 disabled:opacity-50"
+          @click="downloadInvoice"
+        >
+          <NavIcon name="download" :size="14" />
+          {{ downloadingPdf ? t('tutoring.billDetail.downloadingInvoice') : t('tutoring.billDetail.downloadInvoice') }}
+        </button>
+        <button
+          type="button"
+          :disabled="resending"
+          class="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2.5 text-sm font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft disabled:opacity-50"
+          @click="resendInvoice"
+        >
+          <NavIcon name="send" :size="14" />
+          {{ resending ? t('tutoring.billDetail.resending') : t('tutoring.billDetail.resendInvoice') }}
+        </button>
       </section>
 
       <!-- Mark paid form -->
