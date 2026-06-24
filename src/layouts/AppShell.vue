@@ -15,7 +15,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import { useBimbelThemeStore } from '@/stores/bimbel-theme';
+import { useTutoringThemeStore } from '@/stores/tutoring-theme';
 import { useI18n } from 'vue-i18n';
 import { useRoleColor } from '@/composables/useRoleColor';
 import { useNavMenu } from '@/composables/useNavMenu';
@@ -34,13 +34,13 @@ const auth = useAuthStore();
 const route = useRoute();
 const { t } = useI18n();
 const color = useRoleColor(() => auth.activeRole);
-const bimbelTheme = useBimbelThemeStore();
+const bimbelTheme = useTutoringThemeStore();
 
 // Active tenant is a tutoring center? The tenant_type lives on either
 // the User payload directly (post-login normalisation) or on the
 // active school in the user's schools list. Either source is fine;
 // we just need it cheaply at render time so we can branch the surface.
-const isBimbelTenant = computed(() => {
+const isTutoringTenant = computed(() => {
   const raw =
     auth.user?.tenant_type ??
     (auth.user?.schools ?? []).find(
@@ -69,23 +69,23 @@ const isBimbelTenant = computed(() => {
 //     page bg is light. School-tenant sessions never hit this branch.
 //
 // School pages keep the light chrome untouched (no branch matches).
-const isBimbelRoute = computed(() => {
+const isTutoringRoute = computed(() => {
   const name = String(route.name ?? '');
   if (name.includes('tutoring')) return true;
-  if (name === 'teacher.home' && isBimbelTenant.value) return true;
-  if (isBimbelTenant.value) return true;
+  if (name === 'teacher.home' && isTutoringTenant.value) return true;
+  if (isTutoringTenant.value) return true;
   return false;
 });
 const isTutorBimbelRoute = computed(() => {
   const name = String(route.name ?? '');
   if (name.startsWith('teacher.tutoring')) return true;
-  // Same reasoning as `isBimbelRoute` — the bimbel tutor home is
+  // Same reasoning as `isTutoringRoute` — the bimbel tutor home is
   // rendered on `teacher.home` for tutoring-center tenants, and its
   // surface should obey the user's light/dark/auto pick.
-  if (name === 'teacher.home' && isBimbelTenant.value) return true;
+  if (name === 'teacher.home' && isTutoringTenant.value) return true;
   return false;
 });
-const bimbelRoleClass = computed(() =>
+const tutoringRoleClass = computed(() =>
   auth.activeRole === 'teacher'
     ? 'bimbel-tutor'
     : auth.activeRole === 'parent'
@@ -109,7 +109,7 @@ const bimbelRoleClass = computed(() =>
  * consulted for those roles. Removing the branch lets the same store
  * drive all three roles.
  */
-const bimbelSurfaceClass = computed(() => bimbelTheme.rootClass);
+const tutoringSurfaceClass = computed(() => bimbelTheme.rootClass);
 
 /**
  * Mirror the bimbel surface classes (`.bimbel-light` / `.bimbel-dark`
@@ -135,9 +135,9 @@ function syncBimbelHtmlClasses() {
   const root = document.documentElement;
   // Clear any previous bimbel classes so role/mode swaps don't pile up.
   root.classList.remove(...BIMBEL_HTML_CLASSES);
-  if (isBimbelRoute.value) {
-    root.classList.add(bimbelSurfaceClass.value);
-    root.classList.add(bimbelRoleClass.value);
+  if (isTutoringRoute.value) {
+    root.classList.add(tutoringSurfaceClass.value);
+    root.classList.add(tutoringRoleClass.value);
     return;
   }
   // School (non-bimbel) routes still render the sidebar with
@@ -150,7 +150,7 @@ function syncBimbelHtmlClasses() {
   root.classList.add('bimbel-light');
 }
 watch(
-  [isBimbelRoute, bimbelSurfaceClass, bimbelRoleClass],
+  [isTutoringRoute, tutoringSurfaceClass, tutoringRoleClass],
   syncBimbelHtmlClasses,
   { immediate: true },
 );
@@ -542,7 +542,7 @@ const schoolInitial = computed(() => {
 
       <main
         class="flex-1 overflow-y-auto no-scrollbar"
-        :class="isBimbelRoute ? [bimbelSurfaceClass, bimbelRoleClass] : 'bg-slate-50'"
+        :class="isTutoringRoute ? [tutoringSurfaceClass, tutoringRoleClass] : 'bg-slate-50'"
       >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <RouterView />

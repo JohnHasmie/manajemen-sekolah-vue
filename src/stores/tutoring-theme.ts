@@ -58,7 +58,7 @@ interface BimbelThemeState {
   _tickId: number | null;
 }
 
-export const useBimbelThemeStore = defineStore('bimbelTheme', {
+export const useTutoringThemeStore = defineStore('bimbelTheme', {
   state: (): BimbelThemeState => ({
     mode: readMode(),
     lightStartHour: readInt(LIGHT_HOUR_KEY, 6),

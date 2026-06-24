@@ -8,8 +8,8 @@
     4. <router-view /> for the active tab
 
   Sub-routes:
-    /admin/finance/bills     → AdminFinanceTagihanView (Phase 6)
-    /admin/finance/payments  → AdminFinancePembayaranView (Phase 7)
+    /admin/finance/bills     → AdminFinanceBillsView (Phase 6)
+    /admin/finance/payments  → AdminFinancePaymentsView (Phase 7)
     /admin/finance/types       → AdminFinanceJenisView (Phase 8)
 
   Endpoint:

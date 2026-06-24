@@ -1,5 +1,5 @@
 <!--
-  AdminFinancePembayaranView.vue — admin · Pembayaran tab.
+  AdminFinancePaymentsView.vue — admin · Pembayaran tab.
 
   Lists payments (verified / pending / rejected) from `GET /payments`.
   Pending payments get an "Approve / Tolak" CTA that opens

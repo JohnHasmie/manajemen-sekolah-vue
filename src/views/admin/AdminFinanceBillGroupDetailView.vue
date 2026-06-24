@@ -2,7 +2,7 @@
   AdminFinanceBillGroupDetailView.vue — admin · per-bucket per-student
   tagihan detail.
 
-  Drilled into from AdminFinanceTagihanView when a BillGroupCard is
+  Drilled into from AdminFinanceBillsView when a BillGroupCard is
   tapped. Fetches `GET /bills?payment_type_id=…&class_id=…&academic_year_id=…`
   and lists the individual bills with student name + amount + status.
 

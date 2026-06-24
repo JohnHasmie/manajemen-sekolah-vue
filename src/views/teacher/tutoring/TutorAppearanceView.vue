@@ -3,7 +3,7 @@
 
   Mirrors `lib/features/tutoring/presentation/screens/tutoring_appearance_screen.dart`
   for the tutor role. Three radio tiles (Otomatis / Selalu terang /
-  Selalu gelap) drive the `useBimbelThemeStore` mode; the tutor surface
+  Selalu gelap) drive the `useTutoringThemeStore` mode; the tutor surface
   then flips between `bimbel-dark` and `bimbel-light` via the AppShell
   wrapper class.
 
@@ -17,11 +17,11 @@ import { useI18n } from 'vue-i18n';
 
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
-import { useBimbelThemeStore, type BimbelThemeMode } from '@/stores/bimbel-theme';
+import { useTutoringThemeStore, type BimbelThemeMode } from '@/stores/tutoring-theme';
 
 const { t } = useI18n();
 const router = useRouter();
-const theme = useBimbelThemeStore();
+const theme = useTutoringThemeStore();
 
 interface ModeOption {
   mode: BimbelThemeMode;

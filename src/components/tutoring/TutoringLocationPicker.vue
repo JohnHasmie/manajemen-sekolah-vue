@@ -1,5 +1,5 @@
 <!--
-  BimbelLocationPicker.vue — Nominatim/Leaflet location picker for the
+  TutoringLocationPicker.vue — Nominatim/Leaflet location picker for the
   register-demo conversational wizard's bimbel path.
 
   Same Leaflet/OSM foundation as `GeofenceMapPicker.vue` (no API key, no

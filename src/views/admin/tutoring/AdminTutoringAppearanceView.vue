@@ -4,12 +4,12 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useBimbelThemeStore } from '@/stores/bimbel-theme';
+import { useTutoringThemeStore } from '@/stores/tutoring-theme';
 import { useI18n } from 'vue-i18n';
 
 import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
 
-const theme = useBimbelThemeStore();
+const theme = useTutoringThemeStore();
 const { locale, t } = useI18n();
 
 const modes = computed(() => [

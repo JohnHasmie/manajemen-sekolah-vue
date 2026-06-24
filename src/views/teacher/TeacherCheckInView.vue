@@ -1,5 +1,5 @@
 <!--
-  TeacherPresensiView.vue — PRESENSI GURU (presensi harian guru).
+  TeacherCheckInView.vue — teacher self check-in/out (presensi harian guru).
 
   One check-in per teaching day + an optional check-out (toggled per
   school by the admin). The teacher:

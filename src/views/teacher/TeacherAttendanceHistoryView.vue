@@ -1,5 +1,5 @@
 <!--
-  TeacherPresensiHistoryView.vue — the teacher's own PRESENSI GURU log.
+  TeacherAttendanceHistoryView.vue — the teacher's own PRESENSI GURU log.
 
   Paginated list of the authenticated teacher's daily check-in/out
   records (GET /teacher-attendance/history) with a date-range filter.

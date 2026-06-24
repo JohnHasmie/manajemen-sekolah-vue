@@ -2,18 +2,18 @@
   ParentAppearanceView — wali Tampilan settings. 3 mode cards (Terang /
   Gelap / Otomatis) with literal preview swatches, time inputs for the
   auto schedule, and an info note pinned to bimbel scope. Live-wires to
-  useBimbelThemeStore so the page reflects mode changes immediately.
+  useTutoringThemeStore so the page reflects mode changes immediately.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useBimbelThemeStore } from '@/stores/bimbel-theme';
+import { useTutoringThemeStore } from '@/stores/tutoring-theme';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
-const theme = useBimbelThemeStore();
+const theme = useTutoringThemeStore();
 
 interface ModeOption {
   id: 'light' | 'dark' | 'auto';

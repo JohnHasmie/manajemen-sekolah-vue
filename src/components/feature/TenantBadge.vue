@@ -19,9 +19,9 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const kind = computed(() => tenantKindFromRaw(props.type));
-const isBimbel = computed(() => kind.value === 'TUTORING_CENTER');
+const isTutoringCenter = computed(() => kind.value === 'TUTORING_CENTER');
 const label = computed(() =>
-  t(isBimbel.value ? 'tutoring.tenant.center' : 'tutoring.tenant.school'),
+  t(isTutoringCenter.value ? 'tutoring.tenant.center' : 'tutoring.tenant.school'),
 );
 </script>
 
@@ -29,7 +29,7 @@ const label = computed(() =>
   <span
     class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold"
     :class="
-      isBimbel
+      isTutoringCenter
         ? 'bg-amber-100 text-amber-800'
         : 'bg-indigo-100 text-indigo-800'
     "
@@ -42,7 +42,7 @@ const label = computed(() =>
       stroke-width="2"
     >
       <path
-        v-if="isBimbel"
+        v-if="isTutoringCenter"
         d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"
       />
       <path v-else d="M22 10v6M2 10l10-5 10 5-10 5z M6 12v5c3 3 9 3 12 0v-5" />

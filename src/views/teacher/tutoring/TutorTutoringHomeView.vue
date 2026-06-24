@@ -14,7 +14,7 @@
     6. Yang baru feed — last 6 events from /tutoring/tutor-activity
 
   Light/dark is automatic via the `bimbel-light` / `bimbel-dark`
-  wrapper class applied by AppShell from useBimbelThemeStore.
+  wrapper class applied by AppShell from useTutoringThemeStore.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';

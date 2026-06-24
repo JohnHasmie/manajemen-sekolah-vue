@@ -6,9 +6,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
-import BimbelLocationPicker, {
+import TutoringLocationPicker, {
   type PickedLocation,
-} from '@/components/bimbel/BimbelLocationPicker.vue';
+} from '@/components/tutoring/TutoringLocationPicker.vue';
 import {
   BIMBEL_SCENARIO_DEFINITIONS,
   DEMO_SOCIAL_CHANNELS,
@@ -628,7 +628,7 @@ function toggleScenario(key: BimbelScenarioKey) {
     <!-- scenarios (bimbel) ---------------------------------------- -->
     <!-- bimbel location (Nominatim/Leaflet map picker) -->
     <div v-else-if="question.input === 'location'" class="max-w-2xl mx-auto text-left">
-      <BimbelLocationPicker
+      <TutoringLocationPicker
         :lat="currentLocation?.lat ?? null"
         :lng="currentLocation?.lng ?? null"
         :address="currentLocation?.address ?? null"

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
-import { useBimbelThemeStore } from '@/stores/bimbel-theme';
+import { useTutoringThemeStore } from '@/stores/tutoring-theme';
 
 const auth = useAuthStore();
-const bimbelTheme = useBimbelThemeStore();
+const bimbelTheme = useTutoringThemeStore();
 
 // Rehydrate token / user from localStorage (persisted by Pinia plugin)
 // and verify it's still valid on app boot. Mirrors Flutter's startup check

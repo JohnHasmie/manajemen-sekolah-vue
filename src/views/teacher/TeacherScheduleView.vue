@@ -64,7 +64,7 @@ const classFilter = ref<string>('');
 const searchQuery = ref<string>('');
 
 const showHariPicker = ref(false);
-const showKelasPicker = ref(false);
+const showClassPicker = ref(false);
 
 // ── Role chip options ──────────────────────────────────────────
 const roleOptions = computed<RoleOption[]>(() => {
@@ -589,7 +589,7 @@ function pickHari(k: 'all' | DayKey) {
 }
 function pickKelas(id: string) {
   classFilter.value = id;
-  showKelasPicker.value = false;
+  showClassPicker.value = false;
 }
 
 // Wire fromQuickAction so quick-action navigations land on a sensible state.
@@ -666,7 +666,7 @@ onMounted(() => {
           :value="activeClass?.name ?? t('teacher.schedule.allClasses')"
           icon-name="layers"
           tone="violet"
-          @click="showKelasPicker = true"
+          @click="showClassPicker = true"
         />
       </template>
     </PageFilterToolbar>
@@ -1035,7 +1035,7 @@ onMounted(() => {
     </Modal>
 
     <!-- ── Kelas picker ─────────────────────────────────────── -->
-    <Modal v-if="showKelasPicker" :title="t('teacher.schedule.selectClass')" @close="showKelasPicker = false">
+    <Modal v-if="showClassPicker" :title="t('teacher.schedule.selectClass')" @close="showClassPicker = false">
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">
         <li>
           <button

@@ -10,7 +10,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useI18n } from 'vue-i18n';
 import { usePreferencesStore } from '@/stores/preferences';
-import { useBimbelThemeStore, type BimbelThemeMode } from '@/stores/bimbel-theme';
+import { useTutoringThemeStore, type BimbelThemeMode } from '@/stores/tutoring-theme';
 import { tenantKindFromRaw } from '@/composables/useTenant';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
@@ -19,7 +19,7 @@ import type { Role, School } from '@/types/auth';
 
 const auth = useAuthStore();
 const prefs = usePreferencesStore();
-const bimbelTheme = useBimbelThemeStore();
+const bimbelTheme = useTutoringThemeStore();
 const router = useRouter();
 const { t } = useI18n();
 
@@ -30,7 +30,7 @@ const { t } = useI18n();
  * the light chrome anyway, so we hide the menu item to avoid an
  * inert affordance.
  */
-const isBimbelTenant = computed(() => {
+const isTutoringTenant = computed(() => {
   const raw =
     auth.user?.tenant_type ??
     (auth.user?.schools ?? []).find(
@@ -422,7 +422,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
           chrome where the toggle would be a no-op.
         -->
         <button
-          v-if="isBimbelTenant"
+          v-if="isTutoringTenant"
           type="button"
           class="w-full text-left px-md py-sm rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm text-slate-700"
           @click="showAppearancePicker = true; open = false;"
@@ -576,7 +576,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
       Appearance picker — three radio tiles (Otomatis / Selalu terang /
       Selalu gelap). Picking a mode calls `bimbelTheme.setMode` which
       mutates the store + persists to localStorage; AppShell's
-      `bimbelSurfaceClass` is reactive so the surface flips on the
+      `tutoringSurfaceClass` is reactive so the surface flips on the
       same frame.
 
       We don't re-route to TutorAppearanceView because that screen is

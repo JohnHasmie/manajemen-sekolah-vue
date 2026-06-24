@@ -1,5 +1,5 @@
 <!--
-  AdminKelolaTahunAjaranView.vue — admin Kelola Tahun Ajaran.
+  AdminAcademicYearsView.vue — admin Kelola Tahun Ajaran.
 
   Mirrors Flutter's `KelolaTahunAjaranScreen`. Chrome:
 

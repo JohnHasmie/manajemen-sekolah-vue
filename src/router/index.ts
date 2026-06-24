@@ -75,10 +75,10 @@ const AdminClassActivityView = () =>
   import('@/views/admin/AdminClassActivityView.vue');
 const AdminFinanceView = () =>
   import('@/views/admin/AdminFinanceView.vue');
-const AdminFinanceTagihanView = () =>
-  import('@/views/admin/AdminFinanceTagihanView.vue');
-const AdminFinancePembayaranView = () =>
-  import('@/views/admin/AdminFinancePembayaranView.vue');
+const AdminFinanceBillsView = () =>
+  import('@/views/admin/AdminFinanceBillsView.vue');
+const AdminFinancePaymentsView = () =>
+  import('@/views/admin/AdminFinancePaymentsView.vue');
 const AdminFinanceJenisView = () =>
   import('@/views/admin/AdminFinanceJenisView.vue');
 const AdminFinanceBillGroupDetailView = () =>
@@ -99,8 +99,8 @@ const AdminDataManagementView = () =>
   import('@/views/admin/AdminDataManagementView.vue');
 const AdminSchoolLevelSettingsView = () =>
   import('@/views/admin/AdminSchoolLevelSettingsView.vue');
-const AdminKelolaTahunAjaranView = () =>
-  import('@/views/admin/AdminKelolaTahunAjaranView.vue');
+const AdminAcademicYearsView = () =>
+  import('@/views/admin/AdminAcademicYearsView.vue');
 const PriorityInboxView = () =>
   import('@/views/common/PriorityInboxView.vue');
 const AdminAnnouncementCalendarView = () =>
@@ -145,10 +145,10 @@ const SuperAdminBroadcastView = () =>
   import('@/views/super-admin/SuperAdminBroadcastView.vue');
 const SuperAdminIncompleteRegistrationsView = () =>
   import('@/views/super-admin/SuperAdminIncompleteRegistrationsView.vue');
-const TeacherPresensiView = () =>
-  import('@/views/teacher/TeacherPresensiView.vue');
-const TeacherPresensiHistoryView = () =>
-  import('@/views/teacher/TeacherPresensiHistoryView.vue');
+const TeacherAttendanceView = () =>
+  import('@/views/teacher/TeacherAttendanceView.vue');
+const TeacherAttendanceHistoryView = () =>
+  import('@/views/teacher/TeacherAttendanceHistoryView.vue');
 // School-teacher dashboard view is loaded indirectly via
 // TeacherHomeRouter — that wrapper imports it AND the bimbel
 // equivalent, then picks based on the active tenant.
@@ -407,13 +407,13 @@ const routes: RouteRecordRaw[] = [
           {
             path: 'tagihan',
             name: 'admin.finance.bills',
-            component: AdminFinanceTagihanView,
+            component: AdminFinanceBillsView,
             meta: { role: 'admin' satisfies Role },
           },
           {
             path: 'pembayaran',
             name: 'admin.finance.payments',
-            component: AdminFinancePembayaranView,
+            component: AdminFinancePaymentsView,
             meta: { role: 'admin' satisfies Role },
           },
           {
@@ -516,7 +516,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'admin/settings/manage-academic-years',
         name: 'admin.settings.manage-academic-years',
-        component: AdminKelolaTahunAjaranView,
+        component: AdminAcademicYearsView,
         meta: { role: 'admin' satisfies Role },
       },
       {
@@ -616,13 +616,13 @@ const routes: RouteRecordRaw[] = [
         // English path doesn't collide with that student route.
         path: 'teacher/my-attendance',
         name: 'teacher.my-attendance',
-        component: TeacherPresensiView,
+        component: TeacherAttendanceView,
         meta: { role: 'guru' satisfies Role },
       },
       {
         path: 'teacher/my-attendance/history',
         name: 'teacher.my-attendance.history',
-        component: TeacherPresensiHistoryView,
+        component: TeacherAttendanceHistoryView,
         meta: { role: 'guru' satisfies Role },
       },
       {
@@ -1218,9 +1218,9 @@ const routes: RouteRecordRaw[] = [
       {
         // Tutor Tampilan — the light/dark mode picker for the bimbel
         // (tutor) surface. Route NAME contains "tutoring" so AppShell's
-        // isBimbelRoute guard fires and the page renders on the bimbel
+        // isTutoringRoute guard fires and the page renders on the bimbel
         // surface; it picks `bimbel-light` / `bimbel-dark` via the
-        // useBimbelThemeStore state so the user can preview their choice
+        // useTutoringThemeStore state so the user can preview their choice
         // live on this very screen.
         path: 'teacher/tutoring/appearance',
         name: 'teacher.tutoring.appearance',

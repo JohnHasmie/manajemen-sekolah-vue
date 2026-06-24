@@ -19,7 +19,7 @@ import TutorTutoringHomeView from '@/views/teacher/tutoring/TutorTutoringHomeVie
 
 const auth = useAuthStore();
 
-const isBimbel = computed(() => {
+const isTutoringTenant = computed(() => {
   const raw =
     auth.user?.tenant_type ??
     auth.schools.find((s) => (s.id ?? s.school_id) === auth.schoolId)
@@ -29,6 +29,6 @@ const isBimbel = computed(() => {
 </script>
 
 <template>
-  <TutorTutoringHomeView v-if="isBimbel" />
+  <TutorTutoringHomeView v-if="isTutoringTenant" />
   <TeacherDashboardView v-else />
 </template>
