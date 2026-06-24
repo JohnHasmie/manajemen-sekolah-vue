@@ -5,6 +5,18 @@ import { useAuthStore } from '@/stores/auth';
 import type { DemoRegistrationItem, ActiveSchoolItem } from '@/types/demo';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+// Canonical tenant_type value is English per project convention
+// ("indonesia hanya untuk translate" — Yahya, 2026-06-24).
+// The backend's TenantType enum stores 'TUTORING_CENTER' for bimbel
+// rows on the schools table. The legacy demo wizard payload still
+// emits a lowercase 'bimbel' literal stored on demo_requests, so this
+// helper tolerates both forms during migration — the new schools
+// path renders correctly today, and the demoRequests path keeps
+// working until the wizard payload is canonicalised in a follow-up.
+function isBimbel(tt: string | null | undefined): boolean {
+  return tt === 'TUTORING_CENTER' || tt === 'bimbel';
+}
+
 const props = defineProps<{
   demoRequests: DemoRegistrationItem[];
   activeSchools: ActiveSchoolItem[];
@@ -57,7 +69,7 @@ function formatDate(dateStr: string | null) {
           <div v-for="school in activeSchools" :key="school.id" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-slate-50 border border-slate-100 rounded-xl hover:bg-slate-100/70 transition">
             <div class="flex items-center gap-3">
               <span class="text-lg">
-                {{ school.tenant_type === 'bimbel' ? '📚' : '🏫' }}
+                {{ isBimbel(school.tenant_type) ? '📚' : '🏫' }}
               </span>
               <div>
                 <h4 class="text-sm font-bold text-slate-800 leading-tight">
@@ -65,7 +77,7 @@ function formatDate(dateStr: string | null) {
                 </h4>
                 <div class="flex items-center gap-2 mt-1">
                   <span class="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
-                    {{ school.tenant_type === 'bimbel' ? 'Bimbel' : 'Sekolah' }}
+                    {{ isBimbel(school.tenant_type) ? 'Bimbel' : 'Sekolah' }}
                   </span>
                   <span class="w-1 h-1 rounded-full bg-slate-300"></span>
                   <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold uppercase tracking-wider">
@@ -89,7 +101,7 @@ function formatDate(dateStr: string | null) {
           <div v-for="req in demoRequests" :key="req.id" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-slate-50/50 border border-slate-100/50 rounded-xl hover:bg-slate-100/50 transition">
             <div class="flex items-center gap-3">
               <span class="text-lg">
-                {{ req.tenant_type === 'bimbel' ? '📚' : '🏫' }}
+                {{ isBimbel(req.tenant_type) ? '📚' : '🏫' }}
               </span>
               <div>
                 <h4 class="text-sm font-semibold text-slate-700 leading-tight">
@@ -97,7 +109,7 @@ function formatDate(dateStr: string | null) {
                 </h4>
                 <div class="flex items-center gap-2 mt-1">
                   <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">
-                    {{ req.tenant_type === 'bimbel' ? 'Bimbel' : 'Sekolah' }}
+                    {{ isBimbel(req.tenant_type) ? 'Bimbel' : 'Sekolah' }}
                   </span>
                   <span class="w-1 h-1 rounded-full bg-slate-300"></span>
                   <span v-if="req.status === 'pending'" class="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold uppercase tracking-wider">
