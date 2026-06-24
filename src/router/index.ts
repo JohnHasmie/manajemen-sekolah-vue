@@ -145,8 +145,8 @@ const SuperAdminBroadcastView = () =>
   import('@/views/super-admin/SuperAdminBroadcastView.vue');
 const SuperAdminIncompleteRegistrationsView = () =>
   import('@/views/super-admin/SuperAdminIncompleteRegistrationsView.vue');
-const TeacherAttendanceView = () =>
-  import('@/views/teacher/TeacherAttendanceView.vue');
+const TeacherCheckInView = () =>
+  import('@/views/teacher/TeacherCheckInView.vue');
 const TeacherAttendanceHistoryView = () =>
   import('@/views/teacher/TeacherAttendanceHistoryView.vue');
 // School-teacher dashboard view is loaded indirectly via
@@ -616,7 +616,7 @@ const routes: RouteRecordRaw[] = [
         // English path doesn't collide with that student route.
         path: 'teacher/my-attendance',
         name: 'teacher.my-attendance',
-        component: TeacherAttendanceView,
+        component: TeacherCheckInView,
         meta: { role: 'guru' satisfies Role },
       },
       {
