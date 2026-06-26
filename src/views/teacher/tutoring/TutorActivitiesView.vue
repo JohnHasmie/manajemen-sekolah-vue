@@ -154,7 +154,7 @@ function iconFor(tkey: string): string {
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[13px] font-bold hover:bg-bimbel-panel/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-tutoring-panel text-tutoring-accent text-[13px] font-bold hover:bg-tutoring-panel/90"
         @click="showCreate = true"
       >
         <NavIcon name="plus" :size="13" />
@@ -176,7 +176,7 @@ function iconFor(tkey: string): string {
       </template>
     </PageFilterToolbar>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -211,8 +211,8 @@ function iconFor(tkey: string): string {
         <li v-for="o in TYPE_OPTIONS" :key="o.key">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
-            :class="{ 'bg-role-teacher/5 text-bimbel-accent font-bold': type === o.key }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-tutoring-bg"
+            :class="{ 'bg-role-teacher/5 text-tutoring-accent font-bold': type === o.key }"
             @click="pickType(o.key)"
           >
             {{ o.label }}

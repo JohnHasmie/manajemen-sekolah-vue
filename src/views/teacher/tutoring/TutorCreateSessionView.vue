@@ -75,9 +75,9 @@ async function submit() {
 onMounted(load);
 
 const fieldLabel =
-  'text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider';
+  'text-[12px] font-bold text-tutoring-text-mid uppercase tracking-wider';
 const inputCls =
-  'mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher';
+  'mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher';
 </script>
 
 <template>
@@ -89,7 +89,7 @@ const inputCls =
       :meta="t('tutor.bimbel.create_session.meta')"
     />
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
@@ -101,7 +101,7 @@ const inputCls =
 
     <div
       v-else
-      class="space-y-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5"
+      class="space-y-3 bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4 sm:p-5"
     >
       <label class="block">
         <span :class="fieldLabel">{{ t('tutoring.createSession.group') }}</span>

@@ -135,7 +135,7 @@ function whenLabel(iso?: string | null): string {
   <div class="space-y-4 pb-12">
     <button
       type="button"
-      class="inline-flex items-center gap-1 text-[14px] text-bimbel-text-mid hover:text-bimbel-text-hi"
+      class="inline-flex items-center gap-1 text-[14px] text-tutoring-text-mid hover:text-tutoring-text-hi"
       @click="router.push({ name: 'admin.tutoring.tutors' })"
     >
       <NavIcon name="chevron-left" :size="13" /> {{ t('admin.bimbel.tutor_detail.back') }}
@@ -164,7 +164,7 @@ function whenLabel(iso?: string | null): string {
         </button>
         <button
           type="button"
-          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold"
+          class="rounded-lg bg-white text-tutoring-accent px-3 py-1.5 text-[14px] font-bold"
           @click="router.push({ name: 'admin.tutoring.payouts' })"
         >
           <NavIcon name="wallet" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.tutor_detail.manage_payout') }}
@@ -173,16 +173,16 @@ function whenLabel(iso?: string | null): string {
     </TutorHomeHero>
 
     <div v-if="showEdit" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="showEdit = false">
-      <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
-        <h3 class="text-[16px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.tutor_detail.modal_edit_title') }}</h3>
-        <p class="text-[14px] text-bimbel-text-mid">{{ tutor?.email }}</p>
+      <div class="w-full max-w-md rounded-2xl bg-tutoring-panel p-5 shadow-xl space-y-3">
+        <h3 class="text-[16px] font-bold text-tutoring-text-hi">{{ t('admin.bimbel.tutor_detail.modal_edit_title') }}</h3>
+        <p class="text-[14px] text-tutoring-text-mid">{{ tutor?.email }}</p>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.tutor_detail.field_name') }}</span>
-          <input v-model="editName" type="text" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.tutor_detail.field_name') }}</span>
+          <input v-model="editName" type="text" class="mt-1 w-full rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none" />
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="showEdit = false">{{ t('admin.bimbel.tutor_detail.cancel') }}</button>
-          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? t('admin.bimbel.tutor_detail.saving') : t('admin.bimbel.tutor_detail.save') }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-tutoring-border bg-tutoring-panel px-3 py-2 text-[14px] font-bold text-tutoring-text-hi hover:bg-tutoring-border-soft" @click="showEdit = false">{{ t('admin.bimbel.tutor_detail.cancel') }}</button>
+          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-tutoring-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? t('admin.bimbel.tutor_detail.saving') : t('admin.bimbel.tutor_detail.save') }}</button>
         </div>
       </div>
     </div>
@@ -198,59 +198,59 @@ function whenLabel(iso?: string | null): string {
       @confirm="confirmDeactivate"
     />
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.tutor_detail.loading') }}</div>
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">{{ t('admin.bimbel.tutor_detail.loading') }}</div>
 
     <div v-else class="grid gap-4 lg:grid-cols-3">
-      <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5 lg:col-span-2">
-        <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.tutor_detail.sessions_title') }}</h4>
-        <div v-if="sessionsSorted.length === 0" class="py-6 text-center text-[14px] text-bimbel-text-mid">
+      <section class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3.5 lg:col-span-2">
+        <h4 class="mb-2 text-[15px] font-bold tracking-tight text-tutoring-text-hi">{{ t('admin.bimbel.tutor_detail.sessions_title') }}</h4>
+        <div v-if="sessionsSorted.length === 0" class="py-6 text-center text-[14px] text-tutoring-text-mid">
           {{ t('admin.bimbel.tutor_detail.sessions_empty') }}
         </div>
         <div
           v-for="s in sessionsSorted"
           :key="s.id"
-          class="flex items-center justify-between border-b border-bimbel-border-soft py-2.5 last:border-b-0"
+          class="flex items-center justify-between border-b border-tutoring-border-soft py-2.5 last:border-b-0"
         >
           <div class="min-w-0 flex-1">
-            <p class="font-bold text-bimbel-text-hi truncate">
+            <p class="font-bold text-tutoring-text-hi truncate">
               {{ s.topic ?? t('admin.bimbel.tutor_detail.session_default_title') }}
-              <span class="text-bimbel-text-mid font-normal">· {{ s.group?.name ?? '—' }}</span>
+              <span class="text-tutoring-text-mid font-normal">· {{ s.group?.name ?? '—' }}</span>
             </p>
-            <p class="text-[13px] text-bimbel-text-mid">{{ whenLabel(s.scheduled_at) }} · {{ s.duration_minutes }}m</p>
+            <p class="text-[13px] text-tutoring-text-mid">{{ whenLabel(s.scheduled_at) }} · {{ s.duration_minutes }}m</p>
           </div>
           <span
             class="rounded-full px-2 py-0.5 text-[13px] font-bold"
-            :class="s.status === 'DONE' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : s.status === 'CANCELLED' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : 'bg-bimbel-accent-dim text-bimbel-accent'"
+            :class="s.status === 'DONE' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : s.status === 'CANCELLED' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : 'bg-tutoring-accent-dim text-tutoring-accent'"
           >{{ s.status_label ?? s.status }}</span>
         </div>
       </section>
 
       <div class="space-y-3">
-        <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.tutor_detail.payout_section') }}</h4>
-          <p class="text-[14px] text-bimbel-text-mid">
+        <section class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3.5">
+          <h4 class="mb-2 text-[15px] font-bold tracking-tight text-tutoring-text-hi">{{ t('admin.bimbel.tutor_detail.payout_section') }}</h4>
+          <p class="text-[14px] text-tutoring-text-mid">
             {{ t('admin.bimbel.tutor_detail.basis_line', { basis: payout?.rate.basis === 'PER_SESSION' ? t('admin.bimbel.tutor_detail.basis_per_session') : t('admin.bimbel.tutor_detail.basis_per_hour') }) }}
-            <span class="font-bold text-bimbel-text-hi">· {{ payout ? formatRupiah(payout.rate.amount) : '—' }} / {{ payout?.rate.basis === 'PER_SESSION' ? t('admin.bimbel.tutor_detail.rate_unit_session') : t('admin.bimbel.tutor_detail.rate_unit_hour') }}</span>
+            <span class="font-bold text-tutoring-text-hi">· {{ payout ? formatRupiah(payout.rate.amount) : '—' }} / {{ payout?.rate.basis === 'PER_SESSION' ? t('admin.bimbel.tutor_detail.rate_unit_session') : t('admin.bimbel.tutor_detail.rate_unit_hour') }}</span>
           </p>
-          <p v-if="payout?.rate.note" class="text-[13px] text-bimbel-text-mid">{{ payout.rate.note }}</p>
-          <div v-if="payout" class="mt-2.5 flex items-center justify-between border-t border-bimbel-border-soft pt-2.5 text-[14px]">
-            <span class="text-bimbel-text-mid">{{ payout.period.label }}</span>
-            <span class="font-bold text-bimbel-text-hi">{{ formatRupiah(payout.earnings) }}</span>
+          <p v-if="payout?.rate.note" class="text-[13px] text-tutoring-text-mid">{{ payout.rate.note }}</p>
+          <div v-if="payout" class="mt-2.5 flex items-center justify-between border-t border-tutoring-border-soft pt-2.5 text-[14px]">
+            <span class="text-tutoring-text-mid">{{ payout.period.label }}</span>
+            <span class="font-bold text-tutoring-text-hi">{{ formatRupiah(payout.earnings) }}</span>
           </div>
         </section>
 
-        <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.tutor_detail.groups_section') }}</h4>
-          <div v-if="!tutor?.groups?.length" class="py-4 text-center text-[14px] text-bimbel-text-mid">
+        <section class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3.5">
+          <h4 class="mb-2 text-[15px] font-bold tracking-tight text-tutoring-text-hi">{{ t('admin.bimbel.tutor_detail.groups_section') }}</h4>
+          <div v-if="!tutor?.groups?.length" class="py-4 text-center text-[14px] text-tutoring-text-mid">
             {{ t('admin.bimbel.tutor_detail.groups_empty') }}
           </div>
           <div
             v-for="g in tutor?.groups ?? []"
             :key="g.id"
-            class="border-b border-bimbel-border-soft py-2 last:border-b-0"
+            class="border-b border-tutoring-border-soft py-2 last:border-b-0"
           >
-            <p class="text-[14px] font-bold text-bimbel-text-hi">{{ g.name }}</p>
-            <p v-if="g.program" class="text-[13px] text-bimbel-text-mid">{{ g.program }}</p>
+            <p class="text-[14px] font-bold text-tutoring-text-hi">{{ g.name }}</p>
+            <p v-if="g.program" class="text-[13px] text-tutoring-text-mid">{{ g.program }}</p>
           </div>
         </section>
       </div>

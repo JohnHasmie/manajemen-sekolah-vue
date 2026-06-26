@@ -5,7 +5,7 @@
   name + tutor name + capacity hint over it.
 
   Mirrors Flutter `TutorClassColors.gradientFor` — we hash the
-  group id into one of 6 paired hues, then blend with --bimbel-hero
+  group id into one of 6 paired hues, then blend with --tutoring-hero
   via color-mix so the brand identity wins over the random tint.
 -->
 <script setup lang="ts">
@@ -46,7 +46,7 @@ function hashIdx(s: string): number {
 const gradient = computed(() => {
   const [a, b] = HUES[hashIdx(props.identityKey)];
   // Mix each stop with the role hero (cyan-navy) at 55% so the brand wins.
-  return `linear-gradient(135deg, color-mix(in srgb, ${a} 55%, var(--bimbel-hero)), color-mix(in srgb, ${b} 60%, var(--bimbel-hero)))`;
+  return `linear-gradient(135deg, color-mix(in srgb, ${a} 55%, var(--tutoring-hero)), color-mix(in srgb, ${b} 60%, var(--tutoring-hero)))`;
 });
 </script>
 

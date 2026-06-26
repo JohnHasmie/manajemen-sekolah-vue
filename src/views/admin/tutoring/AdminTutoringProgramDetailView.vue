@@ -188,9 +188,9 @@ const kpiCards = computed<KpiCard[]>(() => [
 ]);
 
 const inputCls =
-  'w-full rounded-lg border border-bimbel-border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent';
+  'w-full rounded-lg border border-tutoring-border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent';
 const saveBtnCls =
-  'rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50';
+  'rounded-lg bg-tutoring-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50';
 </script>
 
 <template>
@@ -203,7 +203,7 @@ const saveBtnCls =
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[13px] font-bold hover:bg-bimbel-panel/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-tutoring-panel text-tutoring-accent text-[13px] font-bold hover:bg-tutoring-panel/90"
         @click="goEnroll"
       >
         <NavIcon name="user-plus" :size="13" />
@@ -213,7 +213,7 @@ const saveBtnCls =
 
     <KpiStripCards v-if="!loading" :cards="kpiCards" :lg-cols="3" />
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
@@ -226,7 +226,7 @@ const saveBtnCls =
       />
       <section
         v-if="showPkgForm"
-        class="mb-3 space-y-2 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4"
+        class="mb-3 space-y-2 bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4"
       >
         <input
           v-model="pkgForm.name"
@@ -255,8 +255,8 @@ const saveBtnCls =
             class="rounded-lg px-2.5 py-1.5 text-xs font-semibold border"
             :class="
               pkgForm.modes.includes(m.key)
-                ? 'bg-bimbel-accent border-bimbel-accent text-bimbel-ring'
-                : 'bg-bimbel-panel border-bimbel-border text-bimbel-text-mid hover:border-bimbel-accent/50'
+                ? 'bg-tutoring-accent border-tutoring-accent text-tutoring-ring'
+                : 'bg-tutoring-panel border-tutoring-border text-tutoring-text-mid hover:border-tutoring-accent/50'
             "
             @click="toggleMode(m.key)"
           >
@@ -304,7 +304,7 @@ const saveBtnCls =
       />
       <section
         v-if="showGrpForm"
-        class="mb-3 space-y-2 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4"
+        class="mb-3 space-y-2 bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4"
       >
         <input
           v-model="grpForm.name"

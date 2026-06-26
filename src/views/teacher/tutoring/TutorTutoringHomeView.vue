@@ -195,7 +195,7 @@ function goToShortcut(name: string) {
 
 <template>
   <div class="space-y-4 pb-12">
-    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-16 text-center text-tutoring-text-mid">
       {{ t('tutor.bimbel.home.loading') }}
     </div>
 
@@ -229,20 +229,20 @@ function goToShortcut(name: string) {
             :class="
               nextSessionTone === 'success'
                 ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
-                : 'bg-bimbel-accent-dim text-bimbel-accent'
+                : 'bg-tutoring-accent-dim text-tutoring-accent'
             "
           >
             {{ nextSessionCountdown }}
           </span>
         </template>
-        <p v-if="nextSessionLabel" class="text-bimbel-text-mid">
+        <p v-if="nextSessionLabel" class="text-tutoring-text-mid">
           <NavIcon name="clock" :size="13" class="inline -mt-0.5" />
           {{ nextSessionLabel }}
         </p>
         <template #actions>
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 rounded-lg bg-bimbel-accent px-3.5 py-2 text-sm font-bold text-white hover:opacity-90"
+            class="inline-flex items-center gap-1.5 rounded-lg bg-tutoring-accent px-3.5 py-2 text-sm font-bold text-white hover:opacity-90"
             @click="goToAttendance"
           >
             <NavIcon name="check-circle" :size="14" />
@@ -253,7 +253,7 @@ function goToShortcut(name: string) {
             :href="nextSession.meeting_url"
             target="_blank"
             rel="noopener"
-            class="inline-flex items-center gap-1.5 rounded-lg border border-bimbel-accent/40 px-3.5 py-2 text-sm font-bold text-bimbel-accent hover:bg-bimbel-accent-dim"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-tutoring-accent/40 px-3.5 py-2 text-sm font-bold text-tutoring-accent hover:bg-tutoring-accent-dim"
           >
             <NavIcon name="link" :size="14" />
             {{ t('tutor.bimbel.home.btn_meet') }}
@@ -282,7 +282,7 @@ function goToShortcut(name: string) {
             @click="goToClass(g)"
           />
         </div>
-        <p v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-6 text-center text-sm text-bimbel-text-mid">
+        <p v-else class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-6 text-center text-sm text-tutoring-text-mid">
           {{ t('tutor.bimbel.home.classes_empty') }}
         </p>
       </div>
@@ -333,7 +333,7 @@ function goToShortcut(name: string) {
         </div>
         <p
           v-else
-          class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-6 text-center text-sm text-bimbel-text-mid"
+          class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-6 text-center text-sm text-tutoring-text-mid"
         >
           {{ t('tutor.bimbel.home.feed_empty') }}
         </p>

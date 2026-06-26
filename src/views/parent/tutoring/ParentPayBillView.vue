@@ -52,9 +52,9 @@ const saving = ref(false);
 const message = ref<{ kind: 'ok' | 'err'; text: string } | null>(null);
 
 const methods = computed<{ id: MethodId; name: string; sub: string; icon: string; iconCls: string }[]>(() => [
-  { id: 'qris', name: t('wali.bimbel.pay_bill.qris_method_title'), sub: t('wali.bimbel.pay_bill.qris_method_sub'), icon: 'qr-code', iconCls: 'bg-bimbel-green-dim text-green-700' },
-  { id: 'bank', name: t('wali.bimbel.pay_bill.transfer_method_title'), sub: t('wali.bimbel.pay_bill.transfer_method_sub'), icon: 'building-bank', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero' },
-  { id: 'cash', name: t('wali.bimbel.pay_bill.cash_method_title'), sub: t('wali.bimbel.pay_bill.cash_method_sub'), icon: 'wallet', iconCls: 'bg-bimbel-amber-dim text-amber-700' },
+  { id: 'qris', name: t('wali.bimbel.pay_bill.qris_method_title'), sub: t('wali.bimbel.pay_bill.qris_method_sub'), icon: 'qr-code', iconCls: 'bg-tutoring-green-dim text-green-700' },
+  { id: 'bank', name: t('wali.bimbel.pay_bill.transfer_method_title'), sub: t('wali.bimbel.pay_bill.transfer_method_sub'), icon: 'building-bank', iconCls: 'bg-tutoring-accent-dim text-tutoring-hero' },
+  { id: 'cash', name: t('wali.bimbel.pay_bill.cash_method_title'), sub: t('wali.bimbel.pay_bill.cash_method_sub'), icon: 'wallet', iconCls: 'bg-tutoring-amber-dim text-amber-700' },
 ]);
 
 const methodLabel = computed(() => methods.value.find((m) => m.id === method.value)?.name ?? t('wali.bimbel.pay_bill.qris_method_title'));
@@ -135,7 +135,7 @@ async function submit() {
       <template #actions>
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-tutoring-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="back"
         >
           <NavIcon name="arrow-left" :size="12" />
@@ -145,15 +145,15 @@ async function submit() {
     </ParentHomeHero>
 
     <!-- Summary -->
-    <div class="rounded-lg bg-bimbel-accent-dim p-3.5">
-      <p class="text-[10px] text-bimbel-hero tracking-wider font-bold uppercase">{{ t('wali.bimbel.pay_bill.summary_label') }}</p>
-      <p class="text-[22px] font-extrabold text-bimbel-hero leading-tight mt-0.5">
+    <div class="rounded-lg bg-tutoring-accent-dim p-3.5">
+      <p class="text-[10px] text-tutoring-hero tracking-wider font-bold uppercase">{{ t('wali.bimbel.pay_bill.summary_label') }}</p>
+      <p class="text-[22px] font-extrabold text-tutoring-hero leading-tight mt-0.5">
         {{ formatRupiah(billDisplay?.amount ?? 0) }}
       </p>
-      <p class="text-[12px] text-bimbel-hero/80">{{ t('wali.bimbel.pay_bill.summary_due', { date: dueLabel, days_left: daysLeftLabel }) }}</p>
+      <p class="text-[12px] text-tutoring-hero/80">{{ t('wali.bimbel.pay_bill.summary_due', { date: dueLabel, days_left: daysLeftLabel }) }}</p>
     </div>
 
-    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+    <p class="text-[12px] tracking-[0.1em] text-tutoring-text-lo font-bold uppercase mb-2 mt-3">
       {{ t('wali.bimbel.pay_bill.method_heading') }}
     </p>
     <button
@@ -161,8 +161,8 @@ async function submit() {
       :key="m.id"
       type="button"
       :class="[
-        'w-full rounded-md bg-bimbel-panel border flex items-center gap-2.5 mb-1.5 text-left transition-colors',
-        method === m.id ? 'border-2 border-bimbel-hero p-[9px]' : 'border-bimbel-border-soft p-2.5',
+        'w-full rounded-md bg-tutoring-panel border flex items-center gap-2.5 mb-1.5 text-left transition-colors',
+        method === m.id ? 'border-2 border-tutoring-hero p-[9px]' : 'border-tutoring-border-soft p-2.5',
       ]"
       @click="method = m.id"
     >
@@ -170,42 +170,42 @@ async function submit() {
         <NavIcon :name="m.icon" :size="17" />
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-[14px] font-bold text-bimbel-text-hi">{{ m.name }}</p>
-        <p class="text-[12px] text-bimbel-text-mid">{{ m.sub }}</p>
+        <p class="text-[14px] font-bold text-tutoring-text-hi">{{ m.name }}</p>
+        <p class="text-[12px] text-tutoring-text-mid">{{ m.sub }}</p>
       </div>
       <span
         :class="[
           'w-4 h-4 rounded-full border-2 flex-shrink-0',
-          method === m.id ? 'border-bimbel-hero bg-bimbel-hero/20' : 'border-bimbel-border',
+          method === m.id ? 'border-tutoring-hero bg-tutoring-hero/20' : 'border-tutoring-border',
         ]"
       >
-        <span v-if="method === m.id" class="block w-1.5 h-1.5 rounded-full bg-bimbel-hero m-0.5"></span>
+        <span v-if="method === m.id" class="block w-1.5 h-1.5 rounded-full bg-tutoring-hero m-0.5"></span>
       </span>
     </button>
 
-    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+    <p class="text-[12px] tracking-[0.1em] text-tutoring-text-lo font-bold uppercase mb-2 mt-3">
       {{ t('wali.bimbel.pay_bill.voucher_heading') }}
     </p>
     <div class="flex gap-1.5">
       <input
         v-model="voucherCode"
         :placeholder="t('wali.bimbel.pay_bill.voucher_placeholder')"
-        class="flex-1 rounded-md bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:outline-none"
+        class="flex-1 rounded-md bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi placeholder:text-tutoring-text-lo focus:outline-none"
       />
       <button
         type="button"
-        class="rounded-md bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-3.5 py-2 text-[14px]"
+        class="rounded-md bg-tutoring-bg text-tutoring-text-mid border border-tutoring-border-soft px-3.5 py-2 text-[14px]"
         @click="applyVoucher"
       >
         {{ t('wali.bimbel.pay_bill.voucher_apply') }}
       </button>
     </div>
-    <p v-if="voucherMsg" class="mt-1 text-[12px] text-bimbel-text-mid">{{ voucherMsg }}</p>
+    <p v-if="voucherMsg" class="mt-1 text-[12px] text-tutoring-text-mid">{{ voucherMsg }}</p>
 
     <div
       v-if="message"
       class="rounded-md mt-3 px-3 py-2 text-[13px]"
-      :class="message.kind === 'ok' ? 'bg-bimbel-green-dim text-green-700' : 'bg-bimbel-red-dim text-red-700'"
+      :class="message.kind === 'ok' ? 'bg-tutoring-green-dim text-green-700' : 'bg-tutoring-red-dim text-red-700'"
     >
       {{ message.text }}
     </div>
@@ -213,7 +213,7 @@ async function submit() {
     <button
       type="button"
       :disabled="saving"
-      class="w-full mt-3 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold py-2.5 disabled:opacity-50"
+      class="w-full mt-3 rounded-lg bg-tutoring-hero text-white text-[14px] font-bold py-2.5 disabled:opacity-50"
       @click="submit"
     >
       {{ saving ? t('wali.bimbel.pay_bill.processing') : t('wali.bimbel.pay_bill.continue_pay', { method: methodLabel }) }}

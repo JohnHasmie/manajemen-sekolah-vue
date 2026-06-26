@@ -22,7 +22,7 @@ const emit = defineEmits<{ (e: 'click'): void }>();
 const meta = computed(() => {
   switch (props.type) {
     case 'new_submission':
-      return { icon: 'check-circle', chip: 'bg-bimbel-accent-dim', text: 'text-bimbel-accent' };
+      return { icon: 'check-circle', chip: 'bg-tutoring-accent-dim', text: 'text-tutoring-accent' };
     case 'rating_received':
       return { icon: 'star', chip: 'bg-amber-500/15', text: 'text-amber-700 dark:text-amber-400' };
     case 'enrollment_new':
@@ -30,7 +30,7 @@ const meta = computed(() => {
     case 'announcement_posted':
       return { icon: 'megaphone', chip: 'bg-violet-500/15', text: 'text-violet-600 dark:text-violet-400' };
     case 'session_done':
-      return { icon: 'calendar', chip: 'bg-bimbel-accent-dim', text: 'text-bimbel-accent' };
+      return { icon: 'calendar', chip: 'bg-tutoring-accent-dim', text: 'text-tutoring-accent' };
     case 'bill_paid':
       return { icon: 'wallet', chip: 'bg-emerald-500/15', text: 'text-emerald-600 dark:text-emerald-400' };
     case 'lead_new':
@@ -38,7 +38,7 @@ const meta = computed(() => {
     case 'lead_converted':
       return { icon: 'check-circle', chip: 'bg-emerald-500/15', text: 'text-emerald-600 dark:text-emerald-400' };
     default:
-      return { chip: 'bg-bimbel-border-soft', text: 'text-bimbel-text-mid', icon: 'circle' };
+      return { chip: 'bg-tutoring-border-soft', text: 'text-tutoring-text-mid', icon: 'circle' };
   }
 });
 
@@ -60,7 +60,7 @@ const rel = computed(() => {
 <template>
   <button
     type="button"
-    class="flex w-full items-start gap-3 rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3 text-left transition hover:border-bimbel-accent/40"
+    class="flex w-full items-start gap-3 rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3 text-left transition hover:border-tutoring-accent/40"
     @click="emit('click')"
   >
     <span
@@ -70,16 +70,16 @@ const rel = computed(() => {
       <NavIcon :name="meta.icon" :size="16" />
     </span>
     <div class="min-w-0 flex-1">
-      <p class="truncate text-[14px] font-bold tracking-tight text-bimbel-text-hi">
+      <p class="truncate text-[14px] font-bold tracking-tight text-tutoring-text-hi">
         {{ title }}
       </p>
-      <p v-if="subtitle" class="truncate text-[13px] text-bimbel-text-mid">
+      <p v-if="subtitle" class="truncate text-[13px] text-tutoring-text-mid">
         {{ subtitle }}
       </p>
     </div>
     <span
       v-if="rel"
-      class="flex-shrink-0 text-[12px] font-semibold text-bimbel-text-lo"
+      class="flex-shrink-0 text-[12px] font-semibold text-tutoring-text-lo"
     >
       {{ rel }}
     </span>

@@ -110,8 +110,8 @@ const tugas = computed<TugasRow[]>(() => {
       title: e.title,
       subtitle: e.subtitle ?? whenLabel(e.occurred_at),
       pillCls: isDone
-        ? 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-bimbel-green-dim text-green-700'
-        : 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-bimbel-amber-dim text-amber-700',
+        ? 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-tutoring-green-dim text-green-700'
+        : 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-tutoring-amber-dim text-amber-700',
       pillLabel: isDone ? t('wali.bimbel.class_detail.task_done_pill') : t('wali.bimbel.class_detail.task_pending_pill'),
     });
   }
@@ -162,16 +162,16 @@ function rowIconName(r: AliranRow): string {
 function rowIconStyle(r: AliranRow): Record<string, string> {
   const t = r.type ?? '';
   if (t === 'announcement' || t === 'announcement_posted') {
-    return { background: 'var(--bimbel-accent-dim, rgba(12,68,124,.12))', color: 'var(--bimbel-hero, #0c447c)' };
+    return { background: 'var(--tutoring-accent-dim, rgba(12,68,124,.12))', color: 'var(--tutoring-hero, #0c447c)' };
   }
   if (t === 'note' || t === 'new_submission') {
-    return { background: 'var(--bimbel-amber-dim, rgba(217,119,6,.15))', color: '#b45309' };
+    return { background: 'var(--tutoring-amber-dim, rgba(217,119,6,.15))', color: '#b45309' };
   }
   if (t === 'score') {
-    return { background: 'var(--bimbel-green-dim, rgba(22,163,74,.15))', color: '#15803d' };
+    return { background: 'var(--tutoring-green-dim, rgba(22,163,74,.15))', color: '#15803d' };
   }
   // attendance / session / default
-  return { background: 'var(--bimbel-green-dim, rgba(22,163,74,.15))', color: '#15803d' };
+  return { background: 'var(--tutoring-green-dim, rgba(22,163,74,.15))', color: '#15803d' };
 }
 
 function initials(name: string): string {
@@ -215,7 +215,7 @@ const heroTitle = computed(() => {
 
     <!-- Tabs (4) -->
     <div
-      class="flex gap-1 px-3.5 -mt-1 border-b border-bimbel-border-soft bg-bimbel-bg rounded-t-lg overflow-x-auto"
+      class="flex gap-1 px-3.5 -mt-1 border-b border-tutoring-border-soft bg-tutoring-bg rounded-t-lg overflow-x-auto"
       role="tablist"
     >
       <button
@@ -227,8 +227,8 @@ const heroTitle = computed(() => {
         class="px-3 py-2 text-[13px] border-b-2 -mb-px transition-colors whitespace-nowrap"
         :class="
           activeTab === t.id
-            ? 'text-bimbel-hero border-bimbel-hero font-bold bg-bimbel-panel'
-            : 'text-bimbel-text-mid border-transparent'
+            ? 'text-tutoring-hero border-tutoring-hero font-bold bg-tutoring-panel'
+            : 'text-tutoring-text-mid border-transparent'
         "
         @click="activeTab = t.id"
       >{{ t.label }}</button>
@@ -237,12 +237,12 @@ const heroTitle = computed(() => {
     <!-- Aliran tab -->
     <div
       v-if="activeTab === 'aliran'"
-      class="rounded-b-lg bg-bimbel-panel border border-bimbel-border-soft border-t-0 p-3.5"
+      class="rounded-b-lg bg-tutoring-panel border border-tutoring-border-soft border-t-0 p-3.5"
     >
       <div
         v-for="(r, i) in aliran"
         :key="r.id || i"
-        class="flex gap-2.5 py-2 border-b border-bimbel-border-soft last:border-b-0 items-start"
+        class="flex gap-2.5 py-2 border-b border-tutoring-border-soft last:border-b-0 items-start"
       >
         <div
           class="w-[30px] h-[30px] rounded-lg grid place-items-center flex-shrink-0"
@@ -251,40 +251,40 @@ const heroTitle = computed(() => {
           <NavIcon :name="rowIconName(r)" :size="13" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[13px] font-bold text-bimbel-text-hi">{{ r.title }}</p>
-          <p class="text-[12px] text-bimbel-text-mid">
+          <p class="text-[13px] font-bold text-tutoring-text-hi">{{ r.title }}</p>
+          <p class="text-[12px] text-tutoring-text-mid">
             {{ r.subtitle }}
             <span v-if="r.pill" :class="r.pill.cls">{{ r.pill.label }}</span>
           </p>
         </div>
-        <span class="text-[12px] text-bimbel-text-lo flex-shrink-0">{{ r.time_label }}</span>
+        <span class="text-[12px] text-tutoring-text-lo flex-shrink-0">{{ r.time_label }}</span>
       </div>
-      <p v-if="!aliran.length && !loading" class="text-center text-[13px] text-bimbel-text-mid py-6">
+      <p v-if="!aliran.length && !loading" class="text-center text-[13px] text-tutoring-text-mid py-6">
         {{ t('wali.bimbel.class_detail.empty_stream') }}
       </p>
-      <p v-if="loading" class="text-center text-[13px] text-bimbel-text-mid py-6">{{ t('wali.bimbel.class_detail.loading') }}</p>
+      <p v-if="loading" class="text-center text-[13px] text-tutoring-text-mid py-6">{{ t('wali.bimbel.class_detail.loading') }}</p>
     </div>
 
     <!-- Tugas tab -->
     <div
       v-if="activeTab === 'tugas'"
-      class="rounded-b-lg bg-bimbel-panel border border-bimbel-border-soft border-t-0 p-3.5"
+      class="rounded-b-lg bg-tutoring-panel border border-tutoring-border-soft border-t-0 p-3.5"
     >
       <div
         v-for="(r, i) in tugas"
         :key="r.id || i"
-        class="flex gap-2.5 py-2 border-b border-bimbel-border-soft last:border-b-0 items-start"
+        class="flex gap-2.5 py-2 border-b border-tutoring-border-soft last:border-b-0 items-start"
       >
-        <div class="w-[30px] h-[30px] rounded-lg bg-bimbel-amber-dim text-amber-700 grid place-items-center flex-shrink-0">
+        <div class="w-[30px] h-[30px] rounded-lg bg-tutoring-amber-dim text-amber-700 grid place-items-center flex-shrink-0">
           <NavIcon name="book" :size="13" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[13px] font-bold text-bimbel-text-hi">{{ r.title }}</p>
-          <p class="text-[12px] text-bimbel-text-mid">{{ r.subtitle }}</p>
+          <p class="text-[13px] font-bold text-tutoring-text-hi">{{ r.title }}</p>
+          <p class="text-[12px] text-tutoring-text-mid">{{ r.subtitle }}</p>
         </div>
         <span :class="r.pillCls">{{ r.pillLabel }}</span>
       </div>
-      <p v-if="!tugas.length" class="text-center text-[13px] text-bimbel-text-mid py-6">
+      <p v-if="!tugas.length" class="text-center text-[13px] text-tutoring-text-mid py-6">
         {{ t('wali.bimbel.class_detail.empty_tasks') }}
       </p>
     </div>
@@ -292,23 +292,23 @@ const heroTitle = computed(() => {
     <!-- Grade tab -->
     <div
       v-if="activeTab === 'nilai'"
-      class="rounded-b-lg bg-bimbel-panel border border-bimbel-border-soft border-t-0 p-3.5"
+      class="rounded-b-lg bg-tutoring-panel border border-tutoring-border-soft border-t-0 p-3.5"
     >
       <div
         v-for="(r, i) in nilai"
         :key="i"
-        class="flex gap-2.5 py-2 border-b border-bimbel-border-soft last:border-b-0 items-center"
+        class="flex gap-2.5 py-2 border-b border-tutoring-border-soft last:border-b-0 items-center"
       >
-        <div class="w-[30px] h-[30px] rounded-lg bg-bimbel-green-dim text-green-700 grid place-items-center flex-shrink-0">
+        <div class="w-[30px] h-[30px] rounded-lg bg-tutoring-green-dim text-green-700 grid place-items-center flex-shrink-0">
           <NavIcon name="check-circle" :size="13" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[13px] font-bold text-bimbel-text-hi">{{ r.title }}</p>
-          <p class="text-[12px] text-bimbel-text-mid">{{ r.subtitle }}</p>
+          <p class="text-[13px] font-bold text-tutoring-text-hi">{{ r.title }}</p>
+          <p class="text-[12px] text-tutoring-text-mid">{{ r.subtitle }}</p>
         </div>
-        <span class="text-[16px] font-extrabold text-bimbel-text-hi">{{ r.score }}</span>
+        <span class="text-[16px] font-extrabold text-tutoring-text-hi">{{ r.score }}</span>
       </div>
-      <p v-if="!nilai.length" class="text-center text-[13px] text-bimbel-text-mid py-6">
+      <p v-if="!nilai.length" class="text-center text-[13px] text-tutoring-text-mid py-6">
         {{ t('wali.bimbel.class_detail.empty_grades') }}
       </p>
     </div>
@@ -316,24 +316,24 @@ const heroTitle = computed(() => {
     <!-- Student tab -->
     <div
       v-if="activeTab === 'siswa'"
-      class="rounded-b-lg bg-bimbel-panel border border-bimbel-border-soft border-t-0 p-3.5"
+      class="rounded-b-lg bg-tutoring-panel border border-tutoring-border-soft border-t-0 p-3.5"
     >
       <div
         v-for="(s, i) in siswa"
         :key="s.id || i"
-        class="flex gap-2.5 py-2 border-b border-bimbel-border-soft last:border-b-0 items-center"
+        class="flex gap-2.5 py-2 border-b border-tutoring-border-soft last:border-b-0 items-center"
       >
-        <div class="w-8 h-8 rounded-full bg-bimbel-accent-dim text-bimbel-hero grid place-items-center text-[12px] font-bold">
+        <div class="w-8 h-8 rounded-full bg-tutoring-accent-dim text-tutoring-hero grid place-items-center text-[12px] font-bold">
           {{ initials(s.name) }}
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[13px] font-bold text-bimbel-text-hi">{{ s.name }}</p>
-          <p class="text-[12px] text-bimbel-text-mid">
+          <p class="text-[13px] font-bold text-tutoring-text-hi">{{ s.name }}</p>
+          <p class="text-[12px] text-tutoring-text-mid">
             {{ t('wali.bimbel.class_detail.subtitle_attendance', { rate: s.attendance_rate ?? 0 }) }}
           </p>
         </div>
       </div>
-      <p v-if="!siswa.length" class="text-center text-[13px] text-bimbel-text-mid py-6">
+      <p v-if="!siswa.length" class="text-center text-[13px] text-tutoring-text-mid py-6">
         {{ t('wali.bimbel.class_detail.empty_students') }}
       </p>
     </div>

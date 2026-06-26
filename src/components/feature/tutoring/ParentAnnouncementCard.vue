@@ -38,7 +38,7 @@ const rel = computed(() => {
 const chipClass = computed(() =>
   props.sourceKind === 'admin'
     ? 'bg-violet-500/15 text-violet-700 dark:text-violet-300'
-    : 'bg-bimbel-accent-dim text-bimbel-accent',
+    : 'bg-tutoring-accent-dim text-tutoring-accent',
 );
 const chipLabel = computed(() =>
   props.sourceKind === 'admin' ? 'admin' : 'tutor kelompok',
@@ -46,12 +46,12 @@ const chipLabel = computed(() =>
 </script>
 
 <template>
-  <article class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
+  <article class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3.5">
     <div class="mb-2 flex items-center gap-2">
-      <span class="grid h-6 w-6 place-items-center rounded-full bg-bimbel-accent-dim text-bimbel-accent text-[13px] font-bold">
+      <span class="grid h-6 w-6 place-items-center rounded-full bg-tutoring-accent-dim text-tutoring-accent text-[13px] font-bold">
         {{ initial(sourceName) }}
       </span>
-      <span class="text-[13px] text-bimbel-text-mid">
+      <span class="text-[13px] text-tutoring-text-mid">
         {{ sourceName }}<template v-if="context"> · {{ context }}</template>
         <template v-if="rel"> · {{ rel }}</template>
       </span>
@@ -62,10 +62,10 @@ const chipLabel = computed(() =>
         {{ chipLabel }}
       </span>
     </div>
-    <h3 class="text-[14px] font-extrabold tracking-tight text-bimbel-text-hi">
+    <h3 class="text-[14px] font-extrabold tracking-tight text-tutoring-text-hi">
       {{ title }}
     </h3>
-    <p v-if="body" class="mt-1 text-[13px] leading-relaxed text-bimbel-text-mid">
+    <p v-if="body" class="mt-1 text-[13px] leading-relaxed text-tutoring-text-mid">
       {{ body }}
     </p>
   </article>

@@ -31,7 +31,7 @@ const styles = computed(() => {
     case 'danger':
       return { chip: 'bg-rose-500/15', icon: 'text-rose-600 dark:text-rose-400' };
     default:
-      return { chip: 'bg-bimbel-accent-dim', icon: 'text-bimbel-accent' };
+      return { chip: 'bg-tutoring-accent-dim', icon: 'text-tutoring-accent' };
   }
 });
 </script>
@@ -39,7 +39,7 @@ const styles = computed(() => {
 <template>
   <button
     type="button"
-    class="flex w-full flex-col items-start gap-2 rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5 text-left transition hover:border-bimbel-accent/50"
+    class="flex w-full flex-col items-start gap-2 rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3.5 text-left transition hover:border-tutoring-accent/50"
     @click="emit('click')"
   >
     <span
@@ -49,10 +49,10 @@ const styles = computed(() => {
       <NavIcon :name="icon" :size="20" />
     </span>
     <div class="min-w-0">
-      <p class="text-[14px] font-bold tracking-tight text-bimbel-text-hi">
+      <p class="text-[14px] font-bold tracking-tight text-tutoring-text-hi">
         {{ label }}
       </p>
-      <p v-if="hint" class="mt-0.5 truncate text-[12px] text-bimbel-text-mid">
+      <p v-if="hint" class="mt-0.5 truncate text-[12px] text-tutoring-text-mid">
         {{ hint }}
       </p>
     </div>

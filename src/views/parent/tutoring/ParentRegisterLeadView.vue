@@ -107,7 +107,7 @@ async function submit() {
       <template #actions>
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-tutoring-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="cancel"
         >
           <NavIcon name="x" :size="12" />
@@ -116,42 +116,42 @@ async function submit() {
       </template>
     </ParentHomeHero>
 
-    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+    <p class="text-[12px] tracking-[0.1em] text-tutoring-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
       {{ t('wali.bimbel.register_lead.child_data_heading') }}
     </p>
-    <label class="block text-[12px] text-bimbel-text-mid mb-1">{{ t('wali.bimbel.register_lead.child_name_label') }}</label>
+    <label class="block text-[12px] text-tutoring-text-mid mb-1">{{ t('wali.bimbel.register_lead.child_name_label') }}</label>
     <input
       v-model="form.childName"
       type="text"
-      class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[14px] text-bimbel-text-hi block w-full focus:outline-none mb-2"
+      class="rounded-md bg-tutoring-bg px-3 py-2.5 text-[14px] text-tutoring-text-hi block w-full focus:outline-none mb-2"
     />
     <div class="grid grid-cols-2 gap-2">
       <div>
-        <label class="block text-[12px] text-bimbel-text-mid mb-1">{{ t('wali.bimbel.register_lead.class_label') }}</label>
+        <label class="block text-[12px] text-tutoring-text-mid mb-1">{{ t('wali.bimbel.register_lead.class_label') }}</label>
         <select
           v-model="form.grade"
-          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[14px] text-bimbel-text-hi block w-full focus:outline-none"
+          class="rounded-md bg-tutoring-bg px-3 py-2.5 text-[14px] text-tutoring-text-hi block w-full focus:outline-none"
         >
           <option value="">{{ t('wali.bimbel.register_lead.class_placeholder') }}</option>
           <option v-for="g in grades" :key="g" :value="g">{{ g }}</option>
         </select>
       </div>
       <div>
-        <label class="block text-[12px] text-bimbel-text-mid mb-1">{{ t('wali.bimbel.register_lead.school_label') }}</label>
+        <label class="block text-[12px] text-tutoring-text-mid mb-1">{{ t('wali.bimbel.register_lead.school_label') }}</label>
         <input
           v-model="form.school"
           type="text"
-          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[14px] text-bimbel-text-hi block w-full focus:outline-none"
+          class="rounded-md bg-tutoring-bg px-3 py-2.5 text-[14px] text-tutoring-text-hi block w-full focus:outline-none"
         />
       </div>
     </div>
 
-    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+    <p class="text-[12px] tracking-[0.1em] text-tutoring-text-lo font-bold uppercase mb-2 mt-3">
       {{ t('wali.bimbel.register_lead.program_heading') }}
     </p>
     <div
       v-if="!programs.length"
-      class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-6 text-center text-[13px] text-bimbel-text-mid"
+      class="rounded-md bg-tutoring-panel border border-tutoring-border-soft p-6 text-center text-[13px] text-tutoring-text-mid"
     >
       {{ t('wali.bimbel.register_lead.loading_programs') }}
     </div>
@@ -160,52 +160,52 @@ async function submit() {
       :key="p.id"
       type="button"
       :class="[
-        'w-full rounded-md bg-bimbel-panel border flex gap-2.5 items-center mb-1.5 text-left',
-        form.programId === p.id ? 'border-2 border-bimbel-hero p-[11px]' : 'border-bimbel-border-soft p-3',
+        'w-full rounded-md bg-tutoring-panel border flex gap-2.5 items-center mb-1.5 text-left',
+        form.programId === p.id ? 'border-2 border-tutoring-hero p-[11px]' : 'border-tutoring-border-soft p-3',
       ]"
       @click="form.programId = p.id"
     >
-      <div class="w-10 h-10 rounded-lg bg-bimbel-accent-dim text-bimbel-hero grid place-items-center flex-shrink-0">
+      <div class="w-10 h-10 rounded-lg bg-tutoring-accent-dim text-tutoring-hero grid place-items-center flex-shrink-0">
         <NavIcon name="school" :size="18" />
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-[14px] font-bold text-bimbel-text-hi">{{ p.name }}</p>
-        <p class="text-[12px] text-bimbel-text-mid">{{ p.description || '—' }}</p>
+        <p class="text-[14px] font-bold text-tutoring-text-hi">{{ p.name }}</p>
+        <p class="text-[12px] text-tutoring-text-mid">{{ p.description || '—' }}</p>
       </div>
       <span
         :class="[
           'w-4 h-4 rounded-full border-2 flex-shrink-0',
-          form.programId === p.id ? 'border-bimbel-hero bg-bimbel-hero/20' : 'border-bimbel-border',
+          form.programId === p.id ? 'border-tutoring-hero bg-tutoring-hero/20' : 'border-tutoring-border',
         ]"
       ></span>
     </button>
 
-    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+    <p class="text-[12px] tracking-[0.1em] text-tutoring-text-lo font-bold uppercase mb-2 mt-3">
       {{ t('wali.bimbel.register_lead.notes_heading') }}
     </p>
     <textarea
       v-model="form.notes"
       rows="3"
       :placeholder="t('wali.bimbel.register_lead.notes_placeholder')"
-      class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[14px] text-bimbel-text-hi w-full focus:outline-none placeholder:text-bimbel-text-lo min-h-12"
+      class="rounded-md bg-tutoring-bg px-3 py-2.5 text-[14px] text-tutoring-text-hi w-full focus:outline-none placeholder:text-tutoring-text-lo min-h-12"
     ></textarea>
 
     <div
       v-if="message"
       class="rounded-md mt-3 px-3 py-2 text-[13px]"
-      :class="message.kind === 'ok' ? 'bg-bimbel-green-dim text-green-700' : 'bg-bimbel-red-dim text-red-700'"
+      :class="message.kind === 'ok' ? 'bg-tutoring-green-dim text-green-700' : 'bg-tutoring-red-dim text-red-700'"
     >{{ message.text }}</div>
 
     <div class="flex gap-2 mt-3">
       <button
         type="button"
-        class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[14px] px-3.5 py-2.5"
+        class="rounded-lg bg-tutoring-bg text-tutoring-text-mid border border-tutoring-border-soft text-[14px] px-3.5 py-2.5"
         @click="saveDraft"
       >{{ t('wali.bimbel.register_lead.save_draft') }}</button>
       <button
         type="button"
         :disabled="!canSubmit"
-        class="flex-1 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold px-3.5 py-2.5 disabled:opacity-50"
+        class="flex-1 rounded-lg bg-tutoring-hero text-white text-[14px] font-bold px-3.5 py-2.5 disabled:opacity-50"
         @click="submit"
       >{{ saving ? t('wali.bimbel.register_lead.submitting') : t('wali.bimbel.register_lead.submit') }}</button>
     </div>

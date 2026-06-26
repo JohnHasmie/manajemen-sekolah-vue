@@ -157,7 +157,7 @@ function goCreateActivity() {
       ]"
     />
 
-    <div class="flex items-center gap-2 rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-1.5">
+    <div class="flex items-center gap-2 rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-1.5">
       <button
         v-for="tabKey in ['aliran', 'tugas', 'siswa'] as const"
         :key="tabKey"
@@ -165,8 +165,8 @@ function goCreateActivity() {
         class="flex-1 rounded-xl px-3 py-2 text-[13px] font-bold tracking-tight capitalize transition"
         :class="
           tab === tabKey
-            ? 'bg-bimbel-accent text-white shadow'
-            : 'text-bimbel-text-mid hover:text-bimbel-text-hi'
+            ? 'bg-tutoring-accent text-white shadow'
+            : 'text-tutoring-text-mid hover:text-tutoring-text-hi'
         "
         @click="tab = tabKey"
       >
@@ -174,7 +174,7 @@ function goCreateActivity() {
       </button>
     </div>
 
-    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-16 text-center text-tutoring-text-mid">
       {{ t('tutor.bimbel.class_detail.loading') }}
     </div>
 
@@ -193,7 +193,7 @@ function goCreateActivity() {
       </div>
       <p
         v-else
-        class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid"
+        class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-8 text-center text-sm text-tutoring-text-mid"
       >
         {{ t('tutor.bimbel.class_detail.aliran_empty') }}
       </p>
@@ -219,7 +219,7 @@ function goCreateActivity() {
       </div>
       <p
         v-else
-        class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid"
+        class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-8 text-center text-sm text-tutoring-text-mid"
       >
         {{ t('tutor.bimbel.class_detail.tugas_empty') }}
       </p>
@@ -231,22 +231,22 @@ function goCreateActivity() {
         <div
           v-for="e in enrollees"
           :key="e.id"
-          class="flex items-center gap-3 rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3"
+          class="flex items-center gap-3 rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3"
         >
-          <span class="grid h-10 w-10 place-items-center rounded-full bg-bimbel-accent-dim text-bimbel-accent">
+          <span class="grid h-10 w-10 place-items-center rounded-full bg-tutoring-accent-dim text-tutoring-accent">
             <NavIcon name="user" :size="18" />
           </span>
           <span class="min-w-0">
-            <span class="block truncate text-[14px] font-bold text-bimbel-text-hi">
+            <span class="block truncate text-[14px] font-bold text-tutoring-text-hi">
               {{ e.student?.name || t('tutor.bimbel.class_detail.student_dash') }}
             </span>
-            <span class="block text-[12px] text-bimbel-text-mid">{{ t('tutor.bimbel.class_detail.student_active') }}</span>
+            <span class="block text-[12px] text-tutoring-text-mid">{{ t('tutor.bimbel.class_detail.student_active') }}</span>
           </span>
         </div>
       </div>
       <p
         v-else
-        class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid"
+        class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-8 text-center text-sm text-tutoring-text-mid"
       >
         {{ t('tutor.bimbel.class_detail.siswa_empty') }}
       </p>

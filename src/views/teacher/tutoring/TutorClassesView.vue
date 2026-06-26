@@ -64,17 +64,17 @@ function goToClass(g: TutoringGroup) {
       <NavIcon
         name="search"
         :size="16"
-        class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-bimbel-text-lo"
+        class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-tutoring-text-lo"
       />
       <input
         v-model="query"
         type="text"
         :placeholder="t('tutor.bimbel.classes.search_placeholder')"
-        class="w-full rounded-xl border border-bimbel-border bg-bimbel-panel px-9 py-2.5 text-sm text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-bimbel-accent focus:outline-none"
+        class="w-full rounded-xl border border-tutoring-border bg-tutoring-panel px-9 py-2.5 text-sm text-tutoring-text-hi placeholder:text-tutoring-text-lo focus:border-tutoring-accent focus:outline-none"
       />
     </div>
 
-    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-16 text-center text-tutoring-text-mid">
       {{ t('tutor.bimbel.classes.loading') }}
     </div>
 
@@ -95,7 +95,7 @@ function goToClass(g: TutoringGroup) {
 
     <p
       v-else
-      class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid"
+      class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-8 text-center text-sm text-tutoring-text-mid"
     >
       <template v-if="query">{{ t('tutor.bimbel.classes.no_match', { query }) }}</template>
       <template v-else>{{ t('tutor.bimbel.classes.no_classes') }}</template>

@@ -114,9 +114,9 @@ function initials(name?: string | null): string {
 // Cycle through bimbel-palette chip styles so siblings/tutors get
 // distinct hues without raw slate/sky tokens.
 const TUTOR_CHIPS = [
-  'bg-bimbel-accent-dim text-bimbel-hero',
-  'bg-bimbel-green-dim text-green-700',
-  'bg-bimbel-amber-dim text-amber-700',
+  'bg-tutoring-accent-dim text-tutoring-hero',
+  'bg-tutoring-green-dim text-green-700',
+  'bg-tutoring-amber-dim text-amber-700',
   'bg-purple-200 text-purple-800',
 ];
 function tutorChipClass(i: number): string {
@@ -136,7 +136,7 @@ function scheduleLabel(c: TutoringParentClassMeta): string {
 }
 
 function attBarClass(rate: number | null | undefined): string {
-  if (rate == null) return 'bg-bimbel-text-lo';
+  if (rate == null) return 'bg-tutoring-text-lo';
   if (rate >= 85) return 'bg-green-600';
   if (rate >= 70) return 'bg-amber-500';
   return 'bg-red-600';
@@ -167,12 +167,12 @@ function goEnroll() {
     </ParentHomeHero>
 
     <!-- Search row -->
-    <div class="rounded-lg bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-mid flex items-center gap-2">
+    <div class="rounded-lg bg-tutoring-bg px-3 py-2 text-[13px] text-tutoring-text-mid flex items-center gap-2">
       <NavIcon name="search" :size="14" />
       <input
         v-model="q"
         :placeholder="t('wali.bimbel.classes.search_placeholder')"
-        class="bg-transparent flex-1 focus:outline-none text-bimbel-text-hi placeholder:text-bimbel-text-mid"
+        class="bg-transparent flex-1 focus:outline-none text-tutoring-text-hi placeholder:text-tutoring-text-mid"
       />
     </div>
 
@@ -185,14 +185,14 @@ function goEnroll() {
         class="rounded-full px-2.5 py-1 text-[12px] transition-colors"
         :class="
           status === s.id
-            ? 'bg-bimbel-accent-dim text-bimbel-hero font-bold'
-            : 'bg-bimbel-bg text-bimbel-text-mid'
+            ? 'bg-tutoring-accent-dim text-tutoring-hero font-bold'
+            : 'bg-tutoring-bg text-tutoring-text-mid'
         "
         @click="status = s.id"
       >{{ s.label }} ({{ s.count }})</button>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.classes.loading') }}</div>
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">{{ t('wali.bimbel.classes.loading') }}</div>
 
     <!-- Class grid 2-col -->
     <div v-else class="grid sm:grid-cols-2 gap-2.5">
@@ -200,7 +200,7 @@ function goEnroll() {
         v-for="(c, i) in filteredClasses"
         :key="c.group_id"
         type="button"
-        class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-3 flex flex-col gap-1.5 text-left hover:border-bimbel-border"
+        class="rounded-xl bg-tutoring-panel border border-tutoring-border-soft p-3 flex flex-col gap-1.5 text-left hover:border-tutoring-border"
         @click="openClass(c)"
       >
         <div class="flex items-center gap-2">
@@ -210,11 +210,11 @@ function goEnroll() {
           >
             {{ initials(c.tutor_name) }}
           </span>
-          <span class="text-[14px] font-bold text-bimbel-text-hi truncate">
+          <span class="text-[14px] font-bold text-tutoring-text-hi truncate">
             {{ c.subject || c.group_name }}
           </span>
         </div>
-        <div class="text-[12px] text-bimbel-text-mid flex gap-2.5">
+        <div class="text-[12px] text-tutoring-text-mid flex gap-2.5">
           <span class="inline-flex items-center gap-1">
             <NavIcon name="user" :size="12" />{{ c.tutor_name || '—' }}
           </span>
@@ -222,27 +222,27 @@ function goEnroll() {
             <NavIcon name="calendar" :size="12" />{{ c.schedule_label || '—' }}
           </span>
         </div>
-        <div class="text-[12px] flex justify-between items-center mt-1 pt-2 border-t border-bimbel-border-soft">
-          <span class="text-bimbel-text-mid">{{ t('wali.bimbel.classes.label_attendance') }}</span>
-          <span class="flex-1 mx-2 h-1 bg-bimbel-bg rounded-full overflow-hidden max-w-[80px]">
+        <div class="text-[12px] flex justify-between items-center mt-1 pt-2 border-t border-tutoring-border-soft">
+          <span class="text-tutoring-text-mid">{{ t('wali.bimbel.classes.label_attendance') }}</span>
+          <span class="flex-1 mx-2 h-1 bg-tutoring-bg rounded-full overflow-hidden max-w-[80px]">
             <span
               class="block h-full"
               :class="attBarClass(c.attendance_rate)"
               :style="{ width: `${Math.max(0, Math.min(100, c.attendance_rate ?? 0))}%` }"
             />
           </span>
-          <span class="font-bold text-bimbel-text-hi">{{ c.attendance_rate ?? 0 }}%</span>
+          <span class="font-bold text-tutoring-text-hi">{{ c.attendance_rate ?? 0 }}%</span>
         </div>
       </button>
 
       <!-- Daftarkan tile -->
       <button
         type="button"
-        class="rounded-xl border border-dashed border-bimbel-border bg-bimbel-bg p-3 flex flex-col items-center justify-center text-center min-h-[110px]"
+        class="rounded-xl border border-dashed border-tutoring-border bg-tutoring-bg p-3 flex flex-col items-center justify-center text-center min-h-[110px]"
         @click="goEnroll"
       >
         <NavIcon name="plus" :size="22" />
-        <p class="text-[13px] text-bimbel-text-mid mt-1">{{ t('wali.bimbel.classes.enroll_new_tile') }}</p>
+        <p class="text-[13px] text-tutoring-text-mid mt-1">{{ t('wali.bimbel.classes.enroll_new_tile') }}</p>
       </button>
     </div>
   </div>

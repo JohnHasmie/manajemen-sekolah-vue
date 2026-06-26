@@ -277,7 +277,7 @@ function pillLabel(status: string): string {
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[13px] font-bold hover:bg-bimbel-panel/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-tutoring-panel text-tutoring-accent text-[13px] font-bold hover:bg-tutoring-panel/90"
         @click="openCreate"
       >
         <NavIcon name="plus" :size="13" />
@@ -299,7 +299,7 @@ function pillLabel(status: string): string {
       </template>
     </PageFilterToolbar>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -326,7 +326,7 @@ function pillLabel(status: string): string {
             <button
               v-if="lead.status === 'TRIAL'"
               type="button"
-              class="text-[10.5px] font-bold uppercase tracking-wider text-bimbel-accent hover:underline px-1.5"
+              class="text-[10.5px] font-bold uppercase tracking-wider text-tutoring-accent hover:underline px-1.5"
               @click.stop="goEnroll(lead)"
             >
               {{ t('admin.bimbel.leads.btn_enroll') }}
@@ -334,7 +334,7 @@ function pillLabel(status: string): string {
             <button
               v-if="lead.status === 'TRIAL'"
               type="button"
-              class="text-[10.5px] font-bold uppercase tracking-wider text-bimbel-green hover:underline px-1.5"
+              class="text-[10.5px] font-bold uppercase tracking-wider text-tutoring-green hover:underline px-1.5"
               @click.stop="openConvert(lead)"
             >
               {{ t('admin.bimbel.leads.btn_mark') }}
@@ -342,7 +342,7 @@ function pillLabel(status: string): string {
             <button
               v-if="lead.status === 'TRIAL'"
               type="button"
-              class="text-[10.5px] font-bold uppercase tracking-wider text-bimbel-red hover:underline px-1.5"
+              class="text-[10.5px] font-bold uppercase tracking-wider text-tutoring-red hover:underline px-1.5"
               @click.stop="openDrop(lead)"
             >
               {{ t('admin.bimbel.leads.btn_drop') }}
@@ -353,7 +353,7 @@ function pillLabel(status: string): string {
             />
             <button
               type="button"
-              class="p-1.5 rounded-lg text-bimbel-text-lo hover:text-bimbel-red hover:bg-bimbel-red-soft"
+              class="p-1.5 rounded-lg text-tutoring-text-lo hover:text-tutoring-red hover:bg-tutoring-red-soft"
               :title="t('admin.bimbel.leads.delete_title')"
               @click.stop="remove(lead)"
             >
@@ -370,8 +370,8 @@ function pillLabel(status: string): string {
         <li v-for="o in FILTER_OPTIONS" :key="o.key">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
-            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': filter === o.key }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-tutoring-bg"
+            :class="{ 'bg-tutoring-accent/5 text-tutoring-accent font-bold': filter === o.key }"
             @click="pickFilter(o.key)"
           >
             {{ o.label }}
@@ -384,71 +384,71 @@ function pillLabel(status: string): string {
     <Modal v-if="showCreate" :title="t('admin.bimbel.leads.modal_new')" @close="showCreate = false">
       <div class="space-y-3">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('admin.bimbel.leads.field_name') }}
           </span>
           <input
             v-model="fName"
-            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+            class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
           />
         </label>
         <div class="grid grid-cols-2 gap-2">
           <label class="block">
-            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
               {{ t('admin.bimbel.leads.field_email') }}
             </span>
             <input
               v-model="fEmail"
               type="email"
-              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+              class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
             />
           </label>
           <label class="block">
-            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
               {{ t('admin.bimbel.leads.field_phone') }}
             </span>
             <input
               v-model="fPhone"
-              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+              class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
             />
           </label>
         </div>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('admin.bimbel.leads.field_program') }}
           </span>
           <select
             v-model="fProgramId"
-            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+            class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
           >
             <option value="">{{ t('admin.bimbel.leads.field_program_none') }}</option>
             <option v-for="p in programs" :key="p.id" :value="p.id">{{ p.name }}</option>
           </select>
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('admin.bimbel.leads.field_source') }}
           </span>
           <input
             v-model="fSource"
             :placeholder="t('admin.bimbel.leads.source_ph')"
-            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+            class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
           />
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('admin.bimbel.leads.field_notes') }}
           </span>
           <textarea
             v-model="fNotes"
             rows="3"
-            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent resize-none"
+            class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent resize-none"
           />
         </label>
         <div class="flex items-center gap-2 justify-end pt-2">
           <button
             type="button"
-            class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
+            class="rounded-lg px-3 py-2 text-sm font-semibold text-tutoring-text-mid hover:bg-tutoring-border-soft"
             @click="showCreate = false"
           >
             {{ t('tutoring.common.close') }}
@@ -456,7 +456,7 @@ function pillLabel(status: string): string {
           <button
             type="button"
             :disabled="saving"
-            class="rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            class="rounded-lg bg-tutoring-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="submitCreate"
           >
             {{ saving ? t('tutoring.common.saving') : t('admin.bimbel.leads.save') }}
@@ -467,18 +467,18 @@ function pillLabel(status: string): string {
 
     <!-- Convert modal -->
     <Modal v-if="showConvert" :title="t('admin.bimbel.leads.modal_convert')" @close="showConvert = false">
-      <p class="text-sm text-bimbel-text-mid mb-3">
+      <p class="text-sm text-tutoring-text-mid mb-3">
         {{ t('admin.bimbel.leads.convert_hint') }}
       </p>
       <input
         v-model="convertEnrollmentId"
         :placeholder="t('admin.bimbel.leads.convert_ph')"
-        class="w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+        class="w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
       />
       <div class="flex items-center gap-2 justify-end mt-4">
         <button
           type="button"
-          class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
+          class="rounded-lg px-3 py-2 text-sm font-semibold text-tutoring-text-mid hover:bg-tutoring-border-soft"
           @click="showConvert = false"
         >
           {{ t('admin.bimbel.leads.cancel') }}
@@ -486,7 +486,7 @@ function pillLabel(status: string): string {
         <button
           type="button"
           :disabled="saving"
-          class="rounded-lg bg-bimbel-green hover:bg-bimbel-green/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          class="rounded-lg bg-tutoring-green hover:bg-tutoring-green/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           @click="submitConvert"
         >
           {{ saving ? t('admin.bimbel.leads.saving') : t('admin.bimbel.leads.convert_btn') }}
@@ -496,19 +496,19 @@ function pillLabel(status: string): string {
 
     <!-- Drop modal -->
     <Modal v-if="showDrop" :title="t('admin.bimbel.leads.modal_drop')" @close="showDrop = false">
-      <p class="text-sm text-bimbel-text-mid mb-3">
+      <p class="text-sm text-tutoring-text-mid mb-3">
         {{ t('admin.bimbel.leads.drop_hint') }}
       </p>
       <textarea
         v-model="dropNotes"
         rows="3"
         :placeholder="t('admin.bimbel.leads.drop_ph')"
-        class="w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-status-danger/20 focus:border-status-danger resize-none"
+        class="w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-status-danger/20 focus:border-status-danger resize-none"
       />
       <div class="flex items-center gap-2 justify-end mt-4">
         <button
           type="button"
-          class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
+          class="rounded-lg px-3 py-2 text-sm font-semibold text-tutoring-text-mid hover:bg-tutoring-border-soft"
           @click="showDrop = false"
         >
           {{ t('admin.bimbel.leads.cancel') }}
@@ -516,7 +516,7 @@ function pillLabel(status: string): string {
         <button
           type="button"
           :disabled="saving"
-          class="rounded-lg bg-bimbel-red hover:bg-bimbel-red/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          class="rounded-lg bg-tutoring-red hover:bg-tutoring-red/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           @click="submitDrop"
         >
           {{ saving ? t('admin.bimbel.leads.saving') : t('admin.bimbel.leads.drop_btn') }}

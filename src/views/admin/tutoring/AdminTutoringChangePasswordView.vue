@@ -46,36 +46,36 @@ async function submit() {
 
 <template>
   <div class="space-y-4 pb-12">
-    <button type="button" class="inline-flex items-center gap-1 text-[14px] text-bimbel-text-mid hover:text-bimbel-text-hi" @click="router.push({ name: 'admin.tutoring.profile' })">
+    <button type="button" class="inline-flex items-center gap-1 text-[14px] text-tutoring-text-mid hover:text-tutoring-text-hi" @click="router.push({ name: 'admin.tutoring.profile' })">
       <NavIcon name="chevron-left" :size="13" /> {{ t('admin.bimbel.change_password.back') }}
     </button>
 
     <TutorHomeHero :greeting="t('admin.bimbel.change_password.hero_kicker')" :title="t('admin.bimbel.change_password.hero_title')" :subtitle="t('admin.bimbel.change_password.hero_subtitle')" :stats="[]" />
 
     <div class="grid gap-4 lg:grid-cols-5">
-      <form class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 lg:col-span-3 space-y-3" @submit.prevent="submit">
-        <h4 class="text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.change_password.section_title') }}</h4>
-        <label class="block"><span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.change_password.current_label') }}</span>
-          <input v-model="current" type="password" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+      <form class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-4 lg:col-span-3 space-y-3" @submit.prevent="submit">
+        <h4 class="text-[15px] font-bold tracking-tight text-tutoring-text-hi">{{ t('admin.bimbel.change_password.section_title') }}</h4>
+        <label class="block"><span class="block text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.change_password.current_label') }}</span>
+          <input v-model="current" type="password" required class="mt-1 w-full rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none" />
         </label>
-        <label class="block"><span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.change_password.new_label') }}</span>
-          <input v-model="next" type="password" required minlength="8" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+        <label class="block"><span class="block text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.change_password.new_label') }}</span>
+          <input v-model="next" type="password" required minlength="8" class="mt-1 w-full rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none" />
         </label>
-        <label class="block"><span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.change_password.confirm_label') }}</span>
-          <input v-model="confirm" type="password" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+        <label class="block"><span class="block text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.change_password.confirm_label') }}</span>
+          <input v-model="confirm" type="password" required class="mt-1 w-full rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none" />
         </label>
         <div class="flex gap-1">
-          <div v-for="i in 4" :key="i" class="h-1.5 flex-1 rounded-full" :style="{ background: strength >= i ? strengthColor : 'var(--bimbel-border)' }" />
+          <div v-for="i in 4" :key="i" class="h-1.5 flex-1 rounded-full" :style="{ background: strength >= i ? strengthColor : 'var(--tutoring-border)' }" />
         </div>
         <div v-if="message" class="rounded-lg px-3 py-2 text-[14px]" :class="message.kind === 'ok' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/10 text-rose-700 dark:text-rose-300'">{{ message.text }}</div>
         <div class="flex gap-2 pt-2">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="router.push({ name: 'admin.tutoring.profile' })">{{ t('admin.bimbel.change_password.cancel') }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-tutoring-border bg-tutoring-panel px-3 py-2 text-[14px] font-bold text-tutoring-text-hi hover:bg-tutoring-border-soft" @click="router.push({ name: 'admin.tutoring.profile' })">{{ t('admin.bimbel.change_password.cancel') }}</button>
           <button type="submit" :disabled="!canSubmit" class="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50">{{ saving ? t('admin.bimbel.change_password.saving') : t('admin.bimbel.change_password.save') }}</button>
         </div>
       </form>
-      <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 lg:col-span-2 h-fit">
-        <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.change_password.tips_title') }}</h4>
-        <ul class="space-y-1.5 text-[14px] text-bimbel-text-mid list-disc pl-4">
+      <aside class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-4 lg:col-span-2 h-fit">
+        <h4 class="mb-2 text-[15px] font-bold tracking-tight text-tutoring-text-hi">{{ t('admin.bimbel.change_password.tips_title') }}</h4>
+        <ul class="space-y-1.5 text-[14px] text-tutoring-text-mid list-disc pl-4">
           <li>{{ t('admin.bimbel.change_password.tips_min') }}</li>
           <li>{{ t('admin.bimbel.change_password.tips_mix') }}</li>
           <li>{{ t('admin.bimbel.change_password.tips_avoid') }}</li>

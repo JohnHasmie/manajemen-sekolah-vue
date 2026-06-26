@@ -169,7 +169,7 @@ function basisLabel(b: string) {
 
     <KpiStripCards :cards="kpiCards" />
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -179,11 +179,11 @@ function basisLabel(b: string) {
     />
     <div
       v-else
-      class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl overflow-hidden"
+      class="bg-tutoring-panel border border-tutoring-border-soft rounded-2xl overflow-hidden"
     >
       <table class="w-full text-sm">
-        <thead class="text-[10.5px] uppercase tracking-wider text-bimbel-text-mid">
-          <tr class="border-b border-bimbel-border">
+        <thead class="text-[10.5px] uppercase tracking-wider text-tutoring-text-mid">
+          <tr class="border-b border-tutoring-border">
             <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.payouts.th_tutor') }}</th>
             <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.payouts.th_basis') }}</th>
             <th class="text-right font-bold px-3 py-2.5">{{ t('admin.bimbel.payouts.th_rate') }}</th>
@@ -194,25 +194,25 @@ function basisLabel(b: string) {
           <tr
             v-for="r in rows"
             :key="r.userId"
-            class="border-b border-bimbel-border-soft last:border-0 hover:bg-bimbel-bg cursor-pointer"
+            class="border-b border-tutoring-border-soft last:border-0 hover:bg-tutoring-bg cursor-pointer"
             @click="openEdit(r)"
           >
             <td class="px-3 py-3">
-              <div class="font-semibold text-bimbel-text-hi">{{ r.name }}</div>
-              <div class="text-xs text-bimbel-text-mid">{{ r.email }}</div>
+              <div class="font-semibold text-tutoring-text-hi">{{ r.name }}</div>
+              <div class="text-xs text-tutoring-text-mid">{{ r.email }}</div>
             </td>
-            <td class="px-3 py-3 text-bimbel-text-mid">{{ basisLabel(r.basis) }}</td>
+            <td class="px-3 py-3 text-tutoring-text-mid">{{ basisLabel(r.basis) }}</td>
             <td class="px-3 py-3 text-right">
               <span
                 v-if="!r.configured"
-                class="text-bimbel-amber text-xs font-bold"
+                class="text-tutoring-amber text-xs font-bold"
               >{{ t('admin.bimbel.payouts.rate_not_set') }}</span>
-              <span v-else class="font-semibold text-bimbel-text-hi">
+              <span v-else class="font-semibold text-tutoring-text-hi">
                 {{ formatRupiah(r.amount) }}
               </span>
             </td>
             <td class="px-3 py-3 text-right">
-              <NavIcon name="chevron-right" :size="14" class="text-bimbel-text-lo" />
+              <NavIcon name="chevron-right" :size="14" class="text-tutoring-text-lo" />
             </td>
           </tr>
         </tbody>
@@ -226,39 +226,39 @@ function basisLabel(b: string) {
     >
       <div class="space-y-3">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('admin.bimbel.payouts.field_basis') }}
           </span>
           <select
             v-model="editBasis"
-            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+            class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
           >
             <option value="PER_SESSION">{{ t('admin.bimbel.payouts.basis_per_session') }}</option>
             <option value="PER_HOUR">{{ t('admin.bimbel.payouts.basis_per_hour') }}</option>
           </select>
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('admin.bimbel.payouts.field_rate') }}
           </span>
           <input
             v-model.number="editAmount"
             type="number"
             min="0"
-            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+            class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
             :placeholder="t('admin.bimbel.payouts.rate_ph')"
           />
-          <p class="text-xs text-bimbel-text-mid mt-1">
+          <p class="text-xs text-tutoring-text-mid mt-1">
             {{ t('admin.bimbel.payouts.rate_hint', { basis: basisLabel(editBasis) }) }}
           </p>
         </label>
 
         <!-- Rekening tujuan transfer honor — tampil di payslip PDF -->
-        <div class="border-t border-bimbel-border-soft pt-3 mt-2">
-          <div class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider mb-1.5">
+        <div class="border-t border-tutoring-border-soft pt-3 mt-2">
+          <div class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider mb-1.5">
             {{ t('admin.bimbel.payouts.bank_section') }}
           </div>
-          <p class="text-[12px] text-bimbel-text-mid mb-2">
+          <p class="text-[12px] text-tutoring-text-mid mb-2">
             {{ t('admin.bimbel.payouts.bank_hint') }}
           </p>
           <div class="grid grid-cols-2 gap-2">
@@ -267,14 +267,14 @@ function basisLabel(b: string) {
               type="text"
               maxlength="80"
               :placeholder="t('admin.bimbel.payouts.bank_name_ph')"
-              class="rounded-lg border border-bimbel-border px-3 py-2 text-sm"
+              class="rounded-lg border border-tutoring-border px-3 py-2 text-sm"
             />
             <input
               v-model="editBankNumber"
               type="text"
               maxlength="40"
               :placeholder="t('admin.bimbel.payouts.bank_number_ph')"
-              class="rounded-lg border border-bimbel-border px-3 py-2 text-sm font-mono"
+              class="rounded-lg border border-tutoring-border px-3 py-2 text-sm font-mono"
             />
           </div>
           <input
@@ -282,13 +282,13 @@ function basisLabel(b: string) {
             type="text"
             maxlength="120"
             :placeholder="t('admin.bimbel.payouts.bank_holder_ph')"
-            class="mt-2 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm"
+            class="mt-2 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm"
           />
         </div>
         <div class="flex items-center gap-2 justify-end pt-2">
           <button
             type="button"
-            class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
+            class="rounded-lg px-3 py-2 text-sm font-semibold text-tutoring-text-mid hover:bg-tutoring-border-soft"
             @click="editing = null"
           >
             {{ t('tutoring.common.close') }}
@@ -296,7 +296,7 @@ function basisLabel(b: string) {
           <button
             type="button"
             :disabled="saving"
-            class="rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            class="rounded-lg bg-tutoring-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="saveEdit"
           >
             {{ saving ? t('tutoring.common.saving') : t('admin.bimbel.payouts.save') }}

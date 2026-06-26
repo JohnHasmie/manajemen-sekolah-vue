@@ -69,9 +69,9 @@ function pickGroup(id: string) {
 
 function rankClass(rank: number): string {
   if (rank === 1) return 'bg-amber-100 text-amber-700 border-amber-300';
-  if (rank === 2) return 'bg-slate-200 text-bimbel-text-mid border-slate-300';
+  if (rank === 2) return 'bg-slate-200 text-tutoring-text-mid border-slate-300';
   if (rank === 3) return 'bg-orange-100 text-orange-700 border-orange-300';
-  return 'bg-bimbel-grey-dim text-bimbel-text-mid border-bimbel-border';
+  return 'bg-tutoring-grey-dim text-tutoring-text-mid border-tutoring-border';
 }
 </script>
 
@@ -96,7 +96,7 @@ function rankClass(rank: number): string {
       </template>
     </PageFilterToolbar>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -109,10 +109,10 @@ function rankClass(rank: number): string {
       :text="t('admin.bimbel.leaderboard.empty')"
       icon="users"
     />
-    <div v-else class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl overflow-hidden">
+    <div v-else class="bg-tutoring-panel border border-tutoring-border-soft rounded-2xl overflow-hidden">
       <table class="w-full text-sm">
-        <thead class="text-[10.5px] uppercase tracking-wider text-bimbel-text-mid">
-          <tr class="border-b border-bimbel-border">
+        <thead class="text-[10.5px] uppercase tracking-wider text-tutoring-text-mid">
+          <tr class="border-b border-tutoring-border">
             <th class="text-center font-bold px-3 py-2.5 w-12">#</th>
             <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.leaderboard.th_student') }}</th>
             <th class="text-right font-bold px-3 py-2.5">{{ t('admin.bimbel.leaderboard.th_attendance') }}</th>
@@ -124,7 +124,7 @@ function rankClass(rank: number): string {
           <tr
             v-for="r in rows"
             :key="r.student_id"
-            class="border-b border-bimbel-border-soft last:border-0 hover:bg-bimbel-bg"
+            class="border-b border-tutoring-border-soft last:border-0 hover:bg-tutoring-bg"
           >
             <td class="px-3 py-3 text-center">
               <span
@@ -134,14 +134,14 @@ function rankClass(rank: number): string {
                 {{ r.rank }}
               </span>
             </td>
-            <td class="px-3 py-3 font-semibold text-bimbel-text-hi">{{ r.name }}</td>
-            <td class="px-3 py-3 text-right text-bimbel-text-mid">
+            <td class="px-3 py-3 font-semibold text-tutoring-text-hi">{{ r.name }}</td>
+            <td class="px-3 py-3 text-right text-tutoring-text-mid">
               {{ r.attendance_rate == null ? '—' : r.attendance_rate + '%' }}
             </td>
-            <td class="px-3 py-3 text-right text-bimbel-text-mid">
+            <td class="px-3 py-3 text-right text-tutoring-text-mid">
               {{ r.avg_score == null ? '—' : r.avg_score }}
             </td>
-            <td class="px-3 py-3 text-right font-bold text-bimbel-accent">
+            <td class="px-3 py-3 text-right font-bold text-tutoring-accent">
               {{ r.composite }}
             </td>
           </tr>
@@ -154,8 +154,8 @@ function rankClass(rank: number): string {
         <li v-for="g in groups" :key="g.id">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
-            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': groupId === g.id }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-tutoring-bg"
+            :class="{ 'bg-tutoring-accent/5 text-tutoring-accent font-bold': groupId === g.id }"
             @click="pickGroup(g.id)"
           >
             {{ g.name }}
@@ -164,7 +164,7 @@ function rankClass(rank: number): string {
       </ul>
     </Modal>
 
-    <p v-if="groupId" class="text-[12px] text-bimbel-text-mid italic px-1">
+    <p v-if="groupId" class="text-[12px] text-tutoring-text-mid italic px-1">
       <NavIcon name="info" :size="11" class="inline-block align-text-bottom" />
       {{ t('admin.bimbel.leaderboard.formula_hint') }}
     </p>

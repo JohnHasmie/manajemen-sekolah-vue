@@ -103,34 +103,34 @@ async function submit() {
     <div class="grid lg:grid-cols-2 gap-4">
       <div>
         <div
-          class="grid items-center gap-3 border-b border-bimbel-border-soft py-2"
+          class="grid items-center gap-3 border-b border-tutoring-border-soft py-2"
           style="grid-template-columns: 130px 1fr;"
         >
-          <span class="text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.change_password.current_label') }}</span>
-          <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[14px] flex justify-between items-center">
+          <span class="text-[13px] text-tutoring-text-mid">{{ t('wali.bimbel.change_password.current_label') }}</span>
+          <div class="bg-tutoring-bg rounded-md px-3 py-2 text-[14px] flex justify-between items-center">
             <input
               v-model="form.current"
               :type="showCurrent ? 'text' : 'password'"
-              class="bg-transparent flex-1 focus:outline-none text-bimbel-text-hi"
+              class="bg-transparent flex-1 focus:outline-none text-tutoring-text-hi"
             />
-            <button type="button" class="text-bimbel-text-mid" @click="showCurrent = !showCurrent">
+            <button type="button" class="text-tutoring-text-mid" @click="showCurrent = !showCurrent">
               <NavIcon :name="showCurrent ? 'eye-off' : 'eye'" :size="14" />
             </button>
           </div>
         </div>
 
         <div
-          class="grid items-center gap-3 border-b border-bimbel-border-soft py-2"
+          class="grid items-center gap-3 border-b border-tutoring-border-soft py-2"
           style="grid-template-columns: 130px 1fr;"
         >
-          <span class="text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.change_password.new_label') }}</span>
-          <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[14px] flex justify-between items-center">
+          <span class="text-[13px] text-tutoring-text-mid">{{ t('wali.bimbel.change_password.new_label') }}</span>
+          <div class="bg-tutoring-bg rounded-md px-3 py-2 text-[14px] flex justify-between items-center">
             <input
               v-model="form.next"
               :type="showNext ? 'text' : 'password'"
-              class="bg-transparent flex-1 focus:outline-none text-bimbel-text-hi"
+              class="bg-transparent flex-1 focus:outline-none text-tutoring-text-hi"
             />
-            <button type="button" class="text-bimbel-text-mid" @click="showNext = !showNext">
+            <button type="button" class="text-tutoring-text-mid" @click="showNext = !showNext">
               <NavIcon :name="showNext ? 'eye-off' : 'eye'" :size="14" />
             </button>
           </div>
@@ -141,25 +141,25 @@ async function submit() {
             <span
               v-for="i in 4"
               :key="i"
-              :class="['flex-1 h-1 rounded-sm', i <= strengthLevel ? strengthBarCls : 'bg-bimbel-bg']"
+              :class="['flex-1 h-1 rounded-sm', i <= strengthLevel ? strengthBarCls : 'bg-tutoring-bg']"
             ></span>
           </div>
           <p class="text-[12px] mt-1" :class="strengthTextCls">{{ strengthLabel }}</p>
         </div>
 
         <div
-          class="grid items-center gap-3 border-b border-bimbel-border-soft py-2"
+          class="grid items-center gap-3 border-b border-tutoring-border-soft py-2"
           style="grid-template-columns: 130px 1fr;"
         >
-          <span class="text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.change_password.confirm_label') }}</span>
-          <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[14px] flex justify-between items-center">
+          <span class="text-[13px] text-tutoring-text-mid">{{ t('wali.bimbel.change_password.confirm_label') }}</span>
+          <div class="bg-tutoring-bg rounded-md px-3 py-2 text-[14px] flex justify-between items-center">
             <input
               v-model="form.confirm"
               :type="showConfirm ? 'text' : 'password'"
-              class="bg-transparent flex-1 focus:outline-none text-bimbel-text-hi"
+              class="bg-transparent flex-1 focus:outline-none text-tutoring-text-hi"
             />
             <NavIcon v-if="matches" name="check" :size="14" class="text-green-700" />
-            <button v-else type="button" class="text-bimbel-text-mid" @click="showConfirm = !showConfirm">
+            <button v-else type="button" class="text-tutoring-text-mid" @click="showConfirm = !showConfirm">
               <NavIcon :name="showConfirm ? 'eye-off' : 'eye'" :size="14" />
             </button>
           </div>
@@ -168,37 +168,37 @@ async function submit() {
         <div
           v-if="message"
           class="rounded-md mt-3 px-3 py-2 text-[13px]"
-          :class="message.kind === 'ok' ? 'bg-bimbel-green-dim text-green-700' : 'bg-bimbel-red-dim text-red-700'"
+          :class="message.kind === 'ok' ? 'bg-tutoring-green-dim text-green-700' : 'bg-tutoring-red-dim text-red-700'"
         >{{ message.text }}</div>
 
         <div class="flex gap-2 mt-3.5">
           <button
             type="button"
-            class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[14px] px-3.5 py-2.5"
+            class="rounded-lg bg-tutoring-bg text-tutoring-text-mid border border-tutoring-border-soft text-[14px] px-3.5 py-2.5"
             @click="cancel"
           >{{ t('wali.bimbel.change_password.cancel') }}</button>
           <button
             type="button"
             :disabled="!canSubmit"
-            class="flex-1 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold px-3.5 py-2.5 disabled:opacity-50"
+            class="flex-1 rounded-lg bg-tutoring-hero text-white text-[14px] font-bold px-3.5 py-2.5 disabled:opacity-50"
             @click="submit"
           >{{ saving ? t('wali.bimbel.change_password.saving') : t('wali.bimbel.change_password.save') }}</button>
         </div>
       </div>
 
-      <div class="rounded-md bg-bimbel-bg p-3.5">
-        <p class="text-[13px] font-bold text-bimbel-text-hi mb-1.5">{{ t('wali.bimbel.change_password.tips_title') }}</p>
+      <div class="rounded-md bg-tutoring-bg p-3.5">
+        <p class="text-[13px] font-bold text-tutoring-text-hi mb-1.5">{{ t('wali.bimbel.change_password.tips_title') }}</p>
         <div class="grid grid-cols-2 gap-1.5">
           <div
             v-for="t in tips"
             :key="t.label"
             class="flex gap-1.5 items-center text-[12px]"
-            :class="t.met ? 'text-green-700' : 'text-bimbel-text-lo'"
+            :class="t.met ? 'text-green-700' : 'text-tutoring-text-lo'"
           >
             <NavIcon :name="t.met ? 'check' : 'x'" :size="13" />{{ t.label }}
           </div>
         </div>
-        <div class="border-t border-bimbel-border-soft mt-3 pt-2.5 text-[12px] text-bimbel-text-mid leading-relaxed">
+        <div class="border-t border-tutoring-border-soft mt-3 pt-2.5 text-[12px] text-tutoring-text-mid leading-relaxed">
           {{ t('wali.bimbel.change_password.encryption_note') }}
         </div>
       </div>

@@ -151,7 +151,7 @@ function dueLabel(iso?: string | null): string {
       :stats="heroStats"
     />
 
-    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">{{ t('admin.bimbel.dashboard.loading') }}</div>
+    <div v-if="loading" class="py-16 text-center text-tutoring-text-mid">{{ t('admin.bimbel.dashboard.loading') }}</div>
 
     <div v-else class="grid gap-4 lg:grid-cols-3">
       <div class="space-y-3 lg:col-span-2">
@@ -186,51 +186,51 @@ function dueLabel(iso?: string | null): string {
         />
 
         <div class="grid gap-3 sm:grid-cols-2">
-          <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-            <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.dashboard.groups_needing_tutor') }}</h4>
-            <div v-if="groupsNoTutor.length === 0" class="py-3 text-center text-[14px] text-bimbel-text-mid">
+          <section class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3.5">
+            <h4 class="mb-2 text-[15px] font-bold tracking-tight text-tutoring-text-hi">{{ t('admin.bimbel.dashboard.groups_needing_tutor') }}</h4>
+            <div v-if="groupsNoTutor.length === 0" class="py-3 text-center text-[14px] text-tutoring-text-mid">
               {{ t('admin.bimbel.dashboard.all_groups_have_tutor') }}
             </div>
             <button
               v-for="g in groupsNoTutor.slice(0, 4)"
               :key="g.id"
               type="button"
-              class="flex w-full items-center gap-2.5 border-b border-bimbel-border-soft py-2 text-left last:border-b-0 hover:bg-bimbel-border-soft/30"
+              class="flex w-full items-center gap-2.5 border-b border-tutoring-border-soft py-2 text-left last:border-b-0 hover:bg-tutoring-border-soft/30"
               @click="goGroupDetail(g)"
             >
               <span class="grid h-7 w-7 flex-shrink-0 place-items-center rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300">
                 <NavIcon name="alert-triangle" :size="13" />
               </span>
               <div class="min-w-0 flex-1">
-                <p class="truncate text-[14px] font-bold text-bimbel-text-hi">{{ g.name }}</p>
-                <p class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.dashboard.no_tutor') }}</p>
+                <p class="truncate text-[14px] font-bold text-tutoring-text-hi">{{ g.name }}</p>
+                <p class="text-[14px] text-tutoring-text-mid">{{ t('admin.bimbel.dashboard.no_tutor') }}</p>
               </div>
             </button>
           </section>
 
-          <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-            <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.dashboard.unpaid_bills') }}</h4>
-            <div v-if="unpaidBills.length === 0" class="py-3 text-center text-[14px] text-bimbel-text-mid">
+          <section class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3.5">
+            <h4 class="mb-2 text-[15px] font-bold tracking-tight text-tutoring-text-hi">{{ t('admin.bimbel.dashboard.unpaid_bills') }}</h4>
+            <div v-if="unpaidBills.length === 0" class="py-3 text-center text-[14px] text-tutoring-text-mid">
               {{ t('admin.bimbel.dashboard.no_unpaid_bills') }}
             </div>
             <div v-else>
-              <div class="flex items-center justify-between border-b border-bimbel-border-soft pb-2 mb-1">
-                <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.dashboard.total') }}</span>
-                <span class="text-[15px] font-extrabold text-bimbel-text-hi">{{ formatRupiah(unpaidTotal) }}</span>
+              <div class="flex items-center justify-between border-b border-tutoring-border-soft pb-2 mb-1">
+                <span class="text-[14px] text-tutoring-text-mid">{{ t('admin.bimbel.dashboard.total') }}</span>
+                <span class="text-[15px] font-extrabold text-tutoring-text-hi">{{ formatRupiah(unpaidTotal) }}</span>
               </div>
               <button
                 v-for="b in unpaidBills.slice(0, 3)"
                 :key="b.id"
                 type="button"
-                class="flex w-full items-center gap-2.5 border-b border-bimbel-border-soft py-2 text-left last:border-b-0 hover:bg-bimbel-border-soft/30"
+                class="flex w-full items-center gap-2.5 border-b border-tutoring-border-soft py-2 text-left last:border-b-0 hover:bg-tutoring-border-soft/30"
                 @click="goBills"
               >
                 <span class="grid h-7 w-7 flex-shrink-0 place-items-center rounded-lg bg-rose-500/15 text-rose-700 dark:text-rose-300">
                   <NavIcon name="wallet" :size="13" />
                 </span>
                 <div class="min-w-0 flex-1">
-                  <p class="truncate text-[14px] font-bold text-bimbel-text-hi">{{ formatRupiah(b.amount ?? 0) }}</p>
-                  <p class="truncate text-[14px] text-bimbel-text-mid">
+                  <p class="truncate text-[14px] font-bold text-tutoring-text-hi">{{ formatRupiah(b.amount ?? 0) }}</p>
+                  <p class="truncate text-[14px] text-tutoring-text-mid">
                     {{ [b.student_name, dueLabel(b.due_date)].filter(Boolean).join(' · ') }}
                   </p>
                 </div>
@@ -240,9 +240,9 @@ function dueLabel(iso?: string | null): string {
         </div>
       </div>
 
-      <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-        <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ t('admin.bimbel.dashboard.whats_new') }}</h4>
-        <div v-if="feed.length === 0" class="py-6 text-center text-[14px] text-bimbel-text-mid">
+      <aside class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3.5">
+        <h4 class="mb-2 text-[15px] font-bold tracking-tight text-tutoring-text-hi">{{ t('admin.bimbel.dashboard.whats_new') }}</h4>
+        <div v-if="feed.length === 0" class="py-6 text-center text-[14px] text-tutoring-text-mid">
           {{ t('admin.bimbel.dashboard.no_new_activity') }}
         </div>
         <TutorActivityRow

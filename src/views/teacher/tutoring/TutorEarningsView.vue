@@ -179,13 +179,13 @@ const monthOptions = computed(() => {
         :href="payslipUrl"
         target="_blank"
         rel="noopener"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-accent text-white text-[13px] font-bold hover:opacity-90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-tutoring-accent text-white text-[13px] font-bold hover:opacity-90"
       >
         {{ t('tutor.bimbel.earnings.payslip_btn') }}
       </a>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
@@ -195,11 +195,11 @@ const monthOptions = computed(() => {
       <!-- RITME — sessions per week bars (mobile parity) -->
       <div
         v-if="ritme.length"
-        class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5"
+        class="bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4 sm:p-5"
       >
         <div class="flex justify-between items-baseline mb-3">
-          <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ t('tutor.bimbel.earnings.ritme_heading') }}</p>
-          <p class="text-[11px] text-bimbel-text-lo">{{ t('tutor.bimbel.earnings.ritme_subheading') }}</p>
+          <p class="text-[12px] font-bold uppercase tracking-widest text-tutoring-text-mid">{{ t('tutor.bimbel.earnings.ritme_heading') }}</p>
+          <p class="text-[11px] text-tutoring-text-lo">{{ t('tutor.bimbel.earnings.ritme_subheading') }}</p>
         </div>
         <div class="flex items-end justify-between gap-2 h-24">
           <div
@@ -207,24 +207,24 @@ const monthOptions = computed(() => {
             :key="b.label"
             class="flex-1 flex flex-col items-center justify-end gap-1.5"
           >
-            <span class="text-[11px] font-bold text-bimbel-text-hi">{{ b.count }}</span>
+            <span class="text-[11px] font-bold text-tutoring-text-hi">{{ b.count }}</span>
             <div
-              class="w-full rounded-t-md bg-bimbel-accent transition-all"
+              class="w-full rounded-t-md bg-tutoring-accent transition-all"
               :style="{ height: `${(b.count / ritmeMax) * 70}px`, minHeight: b.count > 0 ? '4px' : '0' }"
             ></div>
-            <span class="text-[10px] text-bimbel-text-lo">{{ b.label }}</span>
+            <span class="text-[10px] text-tutoring-text-lo">{{ b.label }}</span>
           </div>
         </div>
       </div>
 
-      <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5">
+      <div class="bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4 sm:p-5">
         <label class="block">
-          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('tutor.bimbel.earnings.month_label') }}
           </span>
           <select
             v-model="month"
-            class="mt-1.5 w-full sm:w-64 rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full sm:w-64 rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
             <option
               v-for="o in monthOptions"
@@ -238,15 +238,15 @@ const monthOptions = computed(() => {
 
         <div
           v-if="!summary.rate.configured"
-          class="mt-4 rounded-xl bg-bimbel-amber-soft border border-status-warning/30 p-3 text-sm text-bimbel-amber"
+          class="mt-4 rounded-xl bg-tutoring-amber-soft border border-status-warning/30 p-3 text-sm text-tutoring-amber"
         >
           {{ t('tutor.bimbel.earnings.rate_unset_alert') }}
         </div>
 
-        <div v-else class="mt-4 text-sm text-bimbel-text-mid leading-relaxed">
+        <div v-else class="mt-4 text-sm text-tutoring-text-mid leading-relaxed">
           <p>
             {{ t('tutor.bimbel.earnings.honor_prefix') }}
-            <span class="font-bold text-bimbel-text-hi">
+            <span class="font-bold text-tutoring-text-hi">
               {{ formatRupiah(summary.rate.amount) }}
             </span>
             {{ basisLabel(summary.rate.basis) }}
@@ -259,7 +259,7 @@ const monthOptions = computed(() => {
           </p>
           <p
             v-if="summary.rate.note"
-            class="mt-2 text-xs text-bimbel-text-mid"
+            class="mt-2 text-xs text-tutoring-text-mid"
           >
             {{ t('tutor.bimbel.earnings.admin_note_prefix') }} {{ summary.rate.note }}
           </p>

@@ -113,14 +113,14 @@ const visibleBills = computed(() => {
 // ── Pill style + label per bill ────────────────────────────────
 function pillClass(b: TutoringBill): string {
   const base = 'inline-flex flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide';
-  if (isPaid(b)) return `${base} bg-bimbel-green-dim text-green-700`;
-  if (isPending(b)) return `${base} bg-bimbel-amber-dim text-amber-700`;
+  if (isPaid(b)) return `${base} bg-tutoring-green-dim text-green-700`;
+  if (isPending(b)) return `${base} bg-tutoring-amber-dim text-amber-700`;
   if (isUnpaid(b)) {
     const days = daysUntil(b.due_date);
-    if (days != null && days <= 3) return `${base} bg-bimbel-red-dim text-red-700`;
-    return `${base} bg-bimbel-accent-dim text-bimbel-hero`;
+    if (days != null && days <= 3) return `${base} bg-tutoring-red-dim text-red-700`;
+    return `${base} bg-tutoring-accent-dim text-tutoring-hero`;
   }
-  return `${base} bg-bimbel-accent-dim text-bimbel-hero`;
+  return `${base} bg-tutoring-accent-dim text-tutoring-hero`;
 }
 
 function pillLabel(b: TutoringBill): string {
@@ -169,7 +169,7 @@ function payFirst() {
     <!-- Outstanding banner -->
     <div
       v-if="unpaidCount > 0"
-      class="rounded-xl bg-bimbel-red-dim border border-red-300 p-3.5 flex justify-between items-center"
+      class="rounded-xl bg-tutoring-red-dim border border-red-300 p-3.5 flex justify-between items-center"
     >
       <div>
         <p class="text-[12px] text-red-800 tracking-wider font-bold">{{ t('wali.bimbel.bills.outstanding_label') }}</p>
@@ -190,7 +190,7 @@ function payFirst() {
     </div>
 
     <!-- Tabs -->
-    <div class="flex gap-1 border-b border-bimbel-border-soft">
+    <div class="flex gap-1 border-b border-tutoring-border-soft">
       <button
         v-for="t in tabs"
         :key="t.id"
@@ -198,8 +198,8 @@ function payFirst() {
         class="px-3.5 py-2 text-[13px] border-b-2 -mb-px transition-colors"
         :class="
           activeTab === t.id
-            ? 'text-bimbel-hero border-bimbel-hero font-bold'
-            : 'text-bimbel-text-mid border-transparent'
+            ? 'text-tutoring-hero border-tutoring-hero font-bold'
+            : 'text-tutoring-text-mid border-transparent'
         "
         @click="activeTab = t.id"
       >
@@ -207,39 +207,39 @@ function payFirst() {
       </button>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.bills.loading') }}</div>
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">{{ t('wali.bimbel.bills.loading') }}</div>
 
     <!-- Bill cards -->
     <div v-else-if="visibleBills.length" class="space-y-2.5">
       <div
         v-for="b in visibleBills"
         :key="b.id"
-        class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-3.5"
+        class="rounded-xl bg-tutoring-panel border border-tutoring-border-soft p-3.5"
         :class="{ 'opacity-70': isPaid(b) }"
       >
         <div class="flex justify-between items-start gap-3">
           <div class="min-w-0 flex-1">
-            <p class="text-[14px] font-bold text-bimbel-text-hi">
+            <p class="text-[14px] font-bold text-tutoring-text-hi">
               {{ b.source_label ?? b.source_type ?? t('wali.bimbel.bills.default_source') }}
             </p>
-            <p class="text-[12px] text-bimbel-text-mid mt-0.5">
+            <p class="text-[12px] text-tutoring-text-mid mt-0.5">
               {{ b.month ?? '—' }}
               <template v-if="b.student_name"> · {{ b.student_name }}</template>
             </p>
           </div>
           <span :class="pillClass(b)">{{ pillLabel(b) }}</span>
         </div>
-        <div class="flex justify-between items-center mt-2.5 pt-2.5 border-t border-bimbel-border-soft">
+        <div class="flex justify-between items-center mt-2.5 pt-2.5 border-t border-tutoring-border-soft">
           <div>
-            <p class="text-[18px] font-extrabold text-bimbel-text-hi">
+            <p class="text-[18px] font-extrabold text-tutoring-text-hi">
               {{ b.amount != null ? formatRupiah(b.amount) : '—' }}
             </p>
-            <p class="text-[12px] text-bimbel-text-mid">{{ dueLine(b) }}</p>
+            <p class="text-[12px] text-tutoring-text-mid">{{ dueLine(b) }}</p>
           </div>
           <button
             v-if="!isPaid(b)"
             type="button"
-            class="bg-bimbel-hero text-white text-[13px] font-bold px-3.5 py-2 rounded-lg"
+            class="bg-tutoring-hero text-white text-[13px] font-bold px-3.5 py-2 rounded-lg"
             @click="pay(b)"
           >
             {{ t('wali.bimbel.bills.pay_button') }}
@@ -248,7 +248,7 @@ function payFirst() {
             v-else
             type="button"
             :disabled="downloadingId === b.id"
-            class="bg-bimbel-bg text-bimbel-text-mid text-[13px] px-3.5 py-2 rounded-lg disabled:opacity-50"
+            class="bg-tutoring-bg text-tutoring-text-mid text-[13px] px-3.5 py-2 rounded-lg disabled:opacity-50"
             @click="downloadInvoice(b)"
           >
             {{ downloadingId === b.id
@@ -258,7 +258,7 @@ function payFirst() {
         </div>
       </div>
     </div>
-    <p v-else class="text-center text-[14px] text-bimbel-text-mid py-8">
+    <p v-else class="text-center text-[14px] text-tutoring-text-mid py-8">
       {{ t('wali.bimbel.bills.empty_filter') }}
     </p>
   </div>

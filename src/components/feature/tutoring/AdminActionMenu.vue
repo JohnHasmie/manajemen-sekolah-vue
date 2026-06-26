@@ -62,10 +62,10 @@ onBeforeUnmount(() => {
       v-if="triggerLabel"
       type="button"
       :aria-label="ariaLabel ?? 'Aksi'"
-      class="inline-flex items-center gap-1 rounded-md border bg-bimbel-panel px-2 py-1 text-[12px] font-bold transition"
+      class="inline-flex items-center gap-1 rounded-md border bg-tutoring-panel px-2 py-1 text-[12px] font-bold transition"
       :class="open
-        ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent'
-        : 'border-bimbel-border text-bimbel-text-hi hover:border-bimbel-accent/40 hover:bg-bimbel-border-soft'"
+        ? 'border-tutoring-accent bg-tutoring-accent-dim text-tutoring-accent'
+        : 'border-tutoring-border text-tutoring-text-hi hover:border-tutoring-accent/40 hover:bg-tutoring-border-soft'"
       @click.stop="toggle"
     >
       <NavIcon name="settings" :size="12" />
@@ -76,14 +76,14 @@ onBeforeUnmount(() => {
       v-else
       type="button"
       :aria-label="ariaLabel ?? 'Aksi'"
-      class="grid h-7 w-7 place-items-center rounded-md border border-bimbel-border bg-bimbel-panel text-bimbel-text-mid hover:bg-bimbel-border-soft hover:text-bimbel-text-hi transition"
+      class="grid h-7 w-7 place-items-center rounded-md border border-tutoring-border bg-tutoring-panel text-tutoring-text-mid hover:bg-tutoring-border-soft hover:text-tutoring-text-hi transition"
       @click.stop="toggle"
     >
       <NavIcon name="more-horizontal" :size="14" />
     </button>
     <div
       v-if="open"
-      class="absolute right-0 z-30 mt-1 min-w-[180px] rounded-xl border border-bimbel-border bg-bimbel-panel py-1 shadow-lg"
+      class="absolute right-0 z-30 mt-1 min-w-[180px] rounded-xl border border-tutoring-border bg-tutoring-panel py-1 shadow-lg"
     >
       <button
         v-for="it in items"
@@ -91,7 +91,7 @@ onBeforeUnmount(() => {
         type="button"
         :disabled="it.disabled"
         class="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] font-semibold text-left transition disabled:opacity-40"
-        :class="it.danger ? 'text-rose-600 dark:text-rose-400 hover:bg-rose-500/10' : 'text-bimbel-text-hi hover:bg-bimbel-border-soft'"
+        :class="it.danger ? 'text-rose-600 dark:text-rose-400 hover:bg-rose-500/10' : 'text-tutoring-text-hi hover:bg-tutoring-border-soft'"
         @click.stop="pick(it)"
       >
         <NavIcon v-if="it.icon" :name="it.icon" :size="13" />

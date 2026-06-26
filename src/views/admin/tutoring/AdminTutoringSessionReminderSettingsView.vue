@@ -219,14 +219,14 @@ onMounted(() => {
     />
 
     <!-- Tab bar -->
-    <div class="flex gap-1 border-b border-bimbel-border-soft">
+    <div class="flex gap-1 border-b border-tutoring-border-soft">
       <button
         type="button"
         class="px-4 py-2 text-[13px] font-bold border-b-2 transition-colors"
         :class="
           tab === 'session'
-            ? 'border-bimbel-hero text-bimbel-hero'
-            : 'border-transparent text-bimbel-text-mid hover:text-bimbel-text-hi'
+            ? 'border-tutoring-hero text-tutoring-hero'
+            : 'border-transparent text-tutoring-text-mid hover:text-tutoring-text-hi'
         "
         @click="tab = 'session'"
       >{{ t('admin.bimbel.session_reminder_settings.tab_session') }}</button>
@@ -235,8 +235,8 @@ onMounted(() => {
         class="px-4 py-2 text-[13px] font-bold border-b-2 transition-colors"
         :class="
           tab === 'bill'
-            ? 'border-bimbel-hero text-bimbel-hero'
-            : 'border-transparent text-bimbel-text-mid hover:text-bimbel-text-hi'
+            ? 'border-tutoring-hero text-tutoring-hero'
+            : 'border-transparent text-tutoring-text-mid hover:text-tutoring-text-hi'
         "
         @click="tab = 'bill'"
       >{{ t('admin.bimbel.session_reminder_settings.tab_bill') }}</button>
@@ -244,51 +244,51 @@ onMounted(() => {
 
     <!-- SESSION TAB -->
     <template v-if="tab === 'session'">
-      <div v-if="sessionLoading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.session_reminder_settings.loading') }}</div>
+      <div v-if="sessionLoading" class="py-12 text-center text-tutoring-text-mid">{{ t('admin.bimbel.session_reminder_settings.loading') }}</div>
       <template v-else>
-        <section class="rounded-2xl bg-bimbel-panel border border-bimbel-border-soft p-4">
+        <section class="rounded-2xl bg-tutoring-panel border border-tutoring-border-soft p-4">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-[14px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.session_reminder_settings.session_active_title') }}</h3>
-            <span v-if="sessionIsDefault" class="text-[11px] font-bold uppercase tracking-wider bg-bimbel-amber-dim text-amber-700 px-2 py-0.5 rounded-full">{{ t('admin.bimbel.session_reminder_settings.default_pill') }}</span>
+            <h3 class="text-[14px] font-bold text-tutoring-text-hi">{{ t('admin.bimbel.session_reminder_settings.session_active_title') }}</h3>
+            <span v-if="sessionIsDefault" class="text-[11px] font-bold uppercase tracking-wider bg-tutoring-amber-dim text-amber-700 px-2 py-0.5 rounded-full">{{ t('admin.bimbel.session_reminder_settings.default_pill') }}</span>
           </div>
-          <p class="text-[13px] text-bimbel-text-mid mb-3">
+          <p class="text-[13px] text-tutoring-text-mid mb-3">
             {{ t('admin.bimbel.session_reminder_settings.session_active_hint', { count: sessionSorted.length }) }}
           </p>
           <div v-if="sessionSorted.length" class="flex gap-2 flex-wrap">
-            <div v-for="m in sessionSorted" :key="m" class="inline-flex items-center gap-1.5 rounded-full bg-bimbel-accent-dim text-bimbel-hero px-3 py-1.5 text-[13px] font-bold">
+            <div v-for="m in sessionSorted" :key="m" class="inline-flex items-center gap-1.5 rounded-full bg-tutoring-accent-dim text-tutoring-hero px-3 py-1.5 text-[13px] font-bold">
               {{ fmtMin(m) }}
-              <button type="button" class="rounded-full hover:bg-bimbel-hero/15 p-0.5 -mr-1" :aria-label="t('admin.bimbel.session_reminder_settings.remove_aria')" @click="removeSession(m)"><NavIcon name="x" :size="13" /></button>
+              <button type="button" class="rounded-full hover:bg-tutoring-hero/15 p-0.5 -mr-1" :aria-label="t('admin.bimbel.session_reminder_settings.remove_aria')" @click="removeSession(m)"><NavIcon name="x" :size="13" /></button>
             </div>
           </div>
           <p v-else class="text-[13px] text-red-700">{{ t('admin.bimbel.session_reminder_settings.empty_warning') }}</p>
         </section>
 
-        <section class="rounded-2xl bg-bimbel-panel border border-bimbel-border-soft p-4">
-          <h3 class="text-[14px] font-bold text-bimbel-text-hi mb-3">{{ t('admin.bimbel.session_reminder_settings.preset_title') }}</h3>
+        <section class="rounded-2xl bg-tutoring-panel border border-tutoring-border-soft p-4">
+          <h3 class="text-[14px] font-bold text-tutoring-text-hi mb-3">{{ t('admin.bimbel.session_reminder_settings.preset_title') }}</h3>
           <div class="flex gap-1.5 flex-wrap">
             <button v-for="p in SESSION_PRESETS" :key="p.v" type="button"
               class="rounded-full px-3 py-1.5 text-[13px] font-bold transition-colors"
-              :class="sessionOffsets.includes(p.v) ? 'bg-bimbel-hero text-white' : 'bg-bimbel-bg text-bimbel-text-mid hover:text-bimbel-text-hi'"
+              :class="sessionOffsets.includes(p.v) ? 'bg-tutoring-hero text-white' : 'bg-tutoring-bg text-tutoring-text-mid hover:text-tutoring-text-hi'"
               @click="toggleSession(p.v)"
             >{{ p.label }}</button>
           </div>
         </section>
 
-        <section class="rounded-2xl bg-bimbel-panel border border-bimbel-border-soft p-4">
-          <h3 class="text-[14px] font-bold text-bimbel-text-hi mb-2">{{ t('admin.bimbel.session_reminder_settings.custom_min_title') }}</h3>
-          <p class="text-[13px] text-bimbel-text-mid mb-3">{{ t('admin.bimbel.session_reminder_settings.custom_min_hint', { max: sessionMax }) }}</p>
+        <section class="rounded-2xl bg-tutoring-panel border border-tutoring-border-soft p-4">
+          <h3 class="text-[14px] font-bold text-tutoring-text-hi mb-2">{{ t('admin.bimbel.session_reminder_settings.custom_min_title') }}</h3>
+          <p class="text-[13px] text-tutoring-text-mid mb-3">{{ t('admin.bimbel.session_reminder_settings.custom_min_hint', { max: sessionMax }) }}</p>
           <div class="flex gap-2">
             <input v-model="sessionCustomInput" type="number" min="1" :max="sessionMax" :placeholder="t('admin.bimbel.session_reminder_settings.custom_min_ph')"
-              class="flex-1 rounded-md bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:outline-none"
+              class="flex-1 rounded-md bg-tutoring-bg px-3 py-2 text-[13px] text-tutoring-text-hi focus:outline-none"
               @keydown.enter="addSessionCustom"
             />
-            <button type="button" class="rounded-md bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-4 py-2 text-[13px] font-bold hover:bg-bimbel-border-soft" @click="addSessionCustom">{{ t('admin.bimbel.session_reminder_settings.add') }}</button>
+            <button type="button" class="rounded-md bg-tutoring-bg text-tutoring-text-mid border border-tutoring-border-soft px-4 py-2 text-[13px] font-bold hover:bg-tutoring-border-soft" @click="addSessionCustom">{{ t('admin.bimbel.session_reminder_settings.add') }}</button>
           </div>
         </section>
 
         <div class="flex justify-end gap-2 pt-2">
-          <button type="button" class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-4 py-2.5 text-[13px]" @click="resetSession">{{ t('admin.bimbel.session_reminder_settings.reset_default') }}</button>
-          <button type="button" class="rounded-lg bg-bimbel-hero text-white px-4 py-2.5 text-[13px] font-bold disabled:opacity-50"
+          <button type="button" class="rounded-lg bg-tutoring-bg text-tutoring-text-mid border border-tutoring-border-soft px-4 py-2.5 text-[13px]" @click="resetSession">{{ t('admin.bimbel.session_reminder_settings.reset_default') }}</button>
+          <button type="button" class="rounded-lg bg-tutoring-hero text-white px-4 py-2.5 text-[13px] font-bold disabled:opacity-50"
             :disabled="sessionSaving || sessionOffsets.length === 0" @click="saveSession">
             {{ sessionSaving ? t('admin.bimbel.session_reminder_settings.saving') : t('admin.bimbel.session_reminder_settings.save') }}
           </button>
@@ -298,51 +298,51 @@ onMounted(() => {
 
     <!-- BILL TAB -->
     <template v-else>
-      <div v-if="billLoading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.session_reminder_settings.loading') }}</div>
+      <div v-if="billLoading" class="py-12 text-center text-tutoring-text-mid">{{ t('admin.bimbel.session_reminder_settings.loading') }}</div>
       <template v-else>
-        <section class="rounded-2xl bg-bimbel-panel border border-bimbel-border-soft p-4">
+        <section class="rounded-2xl bg-tutoring-panel border border-tutoring-border-soft p-4">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-[14px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.session_reminder_settings.bill_active_title') }}</h3>
-            <span v-if="billIsDefault" class="text-[11px] font-bold uppercase tracking-wider bg-bimbel-amber-dim text-amber-700 px-2 py-0.5 rounded-full">{{ t('admin.bimbel.session_reminder_settings.default_pill') }}</span>
+            <h3 class="text-[14px] font-bold text-tutoring-text-hi">{{ t('admin.bimbel.session_reminder_settings.bill_active_title') }}</h3>
+            <span v-if="billIsDefault" class="text-[11px] font-bold uppercase tracking-wider bg-tutoring-amber-dim text-amber-700 px-2 py-0.5 rounded-full">{{ t('admin.bimbel.session_reminder_settings.default_pill') }}</span>
           </div>
-          <p class="text-[13px] text-bimbel-text-mid mb-3">
+          <p class="text-[13px] text-tutoring-text-mid mb-3">
             {{ t('admin.bimbel.session_reminder_settings.bill_active_hint') }}
           </p>
           <div v-if="billSorted.length" class="flex gap-2 flex-wrap">
-            <div v-for="d in billSorted" :key="d" class="inline-flex items-center gap-1.5 rounded-full bg-bimbel-accent-dim text-bimbel-hero px-3 py-1.5 text-[13px] font-bold">
+            <div v-for="d in billSorted" :key="d" class="inline-flex items-center gap-1.5 rounded-full bg-tutoring-accent-dim text-tutoring-hero px-3 py-1.5 text-[13px] font-bold">
               {{ fmtDay(d) }}
-              <button type="button" class="rounded-full hover:bg-bimbel-hero/15 p-0.5 -mr-1" :aria-label="t('admin.bimbel.session_reminder_settings.remove_aria')" @click="removeBill(d)"><NavIcon name="x" :size="13" /></button>
+              <button type="button" class="rounded-full hover:bg-tutoring-hero/15 p-0.5 -mr-1" :aria-label="t('admin.bimbel.session_reminder_settings.remove_aria')" @click="removeBill(d)"><NavIcon name="x" :size="13" /></button>
             </div>
           </div>
           <p v-else class="text-[13px] text-red-700">{{ t('admin.bimbel.session_reminder_settings.empty_warning') }}</p>
         </section>
 
-        <section class="rounded-2xl bg-bimbel-panel border border-bimbel-border-soft p-4">
-          <h3 class="text-[14px] font-bold text-bimbel-text-hi mb-3">{{ t('admin.bimbel.session_reminder_settings.preset_title') }}</h3>
+        <section class="rounded-2xl bg-tutoring-panel border border-tutoring-border-soft p-4">
+          <h3 class="text-[14px] font-bold text-tutoring-text-hi mb-3">{{ t('admin.bimbel.session_reminder_settings.preset_title') }}</h3>
           <div class="flex gap-1.5 flex-wrap">
             <button v-for="p in BILL_PRESETS" :key="p.v" type="button"
               class="rounded-full px-3 py-1.5 text-[13px] font-bold transition-colors"
-              :class="billOffsets.includes(p.v) ? 'bg-bimbel-hero text-white' : 'bg-bimbel-bg text-bimbel-text-mid hover:text-bimbel-text-hi'"
+              :class="billOffsets.includes(p.v) ? 'bg-tutoring-hero text-white' : 'bg-tutoring-bg text-tutoring-text-mid hover:text-tutoring-text-hi'"
               @click="toggleBill(p.v)"
             >{{ p.label }}</button>
           </div>
         </section>
 
-        <section class="rounded-2xl bg-bimbel-panel border border-bimbel-border-soft p-4">
-          <h3 class="text-[14px] font-bold text-bimbel-text-hi mb-2">{{ t('admin.bimbel.session_reminder_settings.custom_day_title') }}</h3>
-          <p class="text-[13px] text-bimbel-text-mid mb-3">{{ t('admin.bimbel.session_reminder_settings.custom_day_hint', { max: billMax }) }}</p>
+        <section class="rounded-2xl bg-tutoring-panel border border-tutoring-border-soft p-4">
+          <h3 class="text-[14px] font-bold text-tutoring-text-hi mb-2">{{ t('admin.bimbel.session_reminder_settings.custom_day_title') }}</h3>
+          <p class="text-[13px] text-tutoring-text-mid mb-3">{{ t('admin.bimbel.session_reminder_settings.custom_day_hint', { max: billMax }) }}</p>
           <div class="flex gap-2">
             <input v-model="billCustomInput" type="number" min="0" :max="billMax" :placeholder="t('admin.bimbel.session_reminder_settings.custom_day_ph')"
-              class="flex-1 rounded-md bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:outline-none"
+              class="flex-1 rounded-md bg-tutoring-bg px-3 py-2 text-[13px] text-tutoring-text-hi focus:outline-none"
               @keydown.enter="addBillCustom"
             />
-            <button type="button" class="rounded-md bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-4 py-2 text-[13px] font-bold hover:bg-bimbel-border-soft" @click="addBillCustom">{{ t('admin.bimbel.session_reminder_settings.add') }}</button>
+            <button type="button" class="rounded-md bg-tutoring-bg text-tutoring-text-mid border border-tutoring-border-soft px-4 py-2 text-[13px] font-bold hover:bg-tutoring-border-soft" @click="addBillCustom">{{ t('admin.bimbel.session_reminder_settings.add') }}</button>
           </div>
         </section>
 
         <div class="flex justify-end gap-2 pt-2">
-          <button type="button" class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-4 py-2.5 text-[13px]" @click="resetBill">{{ t('admin.bimbel.session_reminder_settings.reset_default') }}</button>
-          <button type="button" class="rounded-lg bg-bimbel-hero text-white px-4 py-2.5 text-[13px] font-bold disabled:opacity-50"
+          <button type="button" class="rounded-lg bg-tutoring-bg text-tutoring-text-mid border border-tutoring-border-soft px-4 py-2.5 text-[13px]" @click="resetBill">{{ t('admin.bimbel.session_reminder_settings.reset_default') }}</button>
+          <button type="button" class="rounded-lg bg-tutoring-hero text-white px-4 py-2.5 text-[13px] font-bold disabled:opacity-50"
             :disabled="billSaving || billOffsets.length === 0" @click="saveBill">
             {{ billSaving ? t('admin.bimbel.session_reminder_settings.saving') : t('admin.bimbel.session_reminder_settings.save') }}
           </button>

@@ -162,7 +162,7 @@ const kpiCards = computed<KpiCard[]>(() => [
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[13px] font-bold hover:bg-bimbel-panel/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-tutoring-panel text-tutoring-accent text-[13px] font-bold hover:bg-tutoring-panel/90"
         @click="router.push({ name: 'admin.tutoring.billing-settings' })"
       >
         <NavIcon name="settings" :size="13" />
@@ -184,7 +184,7 @@ const kpiCards = computed<KpiCard[]>(() => [
       </template>
     </PageFilterToolbar>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -194,11 +194,11 @@ const kpiCards = computed<KpiCard[]>(() => [
     />
     <div
       v-else
-      class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl overflow-hidden"
+      class="bg-tutoring-panel border border-tutoring-border-soft rounded-2xl overflow-hidden"
     >
       <table class="w-full text-sm">
-        <thead class="text-[10.5px] uppercase tracking-wider text-bimbel-text-mid">
-          <tr class="border-b border-bimbel-border">
+        <thead class="text-[10.5px] uppercase tracking-wider text-tutoring-text-mid">
+          <tr class="border-b border-tutoring-border">
             <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.bills.th_student') }}</th>
             <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.bills.th_source') }}</th>
             <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.bills.th_period') }}</th>
@@ -211,15 +211,15 @@ const kpiCards = computed<KpiCard[]>(() => [
           <tr
             v-for="b in bills"
             :key="b.id"
-            class="border-b border-bimbel-border-soft last:border-0 hover:bg-bimbel-bg cursor-pointer"
+            class="border-b border-tutoring-border-soft last:border-0 hover:bg-tutoring-bg cursor-pointer"
             @click="openBillId = b.id"
           >
-            <td class="px-3 py-3 font-semibold text-bimbel-text-hi">{{ b.student_name ?? '—' }}</td>
-            <td class="px-3 py-3 text-bimbel-text-mid">{{ b.source_label ?? '—' }}</td>
-            <td class="px-3 py-3 text-bimbel-text-mid">
+            <td class="px-3 py-3 font-semibold text-tutoring-text-hi">{{ b.student_name ?? '—' }}</td>
+            <td class="px-3 py-3 text-tutoring-text-mid">{{ b.source_label ?? '—' }}</td>
+            <td class="px-3 py-3 text-tutoring-text-mid">
               {{ b.month ?? (b.due_date ? formatDateShort(b.due_date) : '—') }}
             </td>
-            <td class="px-3 py-3 text-right font-semibold text-bimbel-text-hi">
+            <td class="px-3 py-3 text-right font-semibold text-tutoring-text-hi">
               {{ formatRupiah(b.amount ?? 0) }}
             </td>
             <td class="px-3 py-3">
@@ -237,7 +237,7 @@ const kpiCards = computed<KpiCard[]>(() => [
                 </button>
                 <button
                   type="button"
-                  class="inline-flex items-center gap-1 rounded-md border border-bimbel-border px-2 py-1 text-[12px] font-bold text-bimbel-accent hover:bg-bimbel-accent/5"
+                  class="inline-flex items-center gap-1 rounded-md border border-tutoring-border px-2 py-1 text-[12px] font-bold text-tutoring-accent hover:bg-tutoring-accent/5"
                   @click.stop="openBillId = b.id"
                 >
                   {{ t('admin.bimbel.bills.detail') }}
@@ -251,44 +251,44 @@ const kpiCards = computed<KpiCard[]>(() => [
 
     <!-- Mark as paid modal -->
     <div v-if="markPaidBillId && markPaidBill" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="markPaidBillId = null">
-      <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl">
-        <h3 class="text-[16px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.bills.modal_title') }}</h3>
-        <p class="text-[14px] text-bimbel-text-mid mt-0.5">{{ t('admin.bimbel.bills.modal_subtitle') }}</p>
+      <div class="w-full max-w-md rounded-2xl bg-tutoring-panel p-5 shadow-xl">
+        <h3 class="text-[16px] font-bold text-tutoring-text-hi">{{ t('admin.bimbel.bills.modal_title') }}</h3>
+        <p class="text-[14px] text-tutoring-text-mid mt-0.5">{{ t('admin.bimbel.bills.modal_subtitle') }}</p>
 
-        <div class="relative my-3 overflow-hidden rounded-xl border border-bimbel-border-soft bg-bimbel-bg/40 pl-4 pr-3 py-3">
+        <div class="relative my-3 overflow-hidden rounded-xl border border-tutoring-border-soft bg-tutoring-bg/40 pl-4 pr-3 py-3">
           <span class="absolute left-0 top-0 h-full w-1.5 bg-emerald-500" />
           <p class="text-[13px] font-extrabold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">{{ t('admin.bimbel.bills.modal_bill_kicker') }}</p>
-          <p class="mt-0.5 text-[20px] font-extrabold text-bimbel-text-hi">{{ formatRupiah(markPaidBill.amount ?? 0) }}</p>
-          <p class="text-[14px] text-bimbel-text-mid">
+          <p class="mt-0.5 text-[20px] font-extrabold text-tutoring-text-hi">{{ formatRupiah(markPaidBill.amount ?? 0) }}</p>
+          <p class="text-[14px] text-tutoring-text-mid">
             {{ [markPaidBill.source_label, markPaidBill.student_name, markPaidBill.due_date ? t('admin.bimbel.bills.due_date_prefix', { date: formatDateShort(markPaidBill.due_date) }) : null].filter(Boolean).join(' · ') }}
           </p>
         </div>
 
         <div class="space-y-2.5">
           <label class="grid items-center gap-3" style="grid-template-columns: 120px 1fr;">
-            <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.bills.field_method') }}</span>
-            <select v-model="markPaidForm.payment_method" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none">
+            <span class="text-[14px] text-tutoring-text-mid">{{ t('admin.bimbel.bills.field_method') }}</span>
+            <select v-model="markPaidForm.payment_method" class="rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none">
               <option value="bank_transfer">{{ t('admin.bimbel.bills.method_transfer') }}</option>
               <option value="qris">{{ t('admin.bimbel.bills.method_qris') }}</option>
               <option value="cash">{{ t('admin.bimbel.bills.method_cash') }}</option>
             </select>
           </label>
           <label class="grid items-center gap-3" style="grid-template-columns: 120px 1fr;">
-            <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.bills.field_payment_date') }}</span>
-            <input v-model="markPaidForm.payment_date" type="date" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+            <span class="text-[14px] text-tutoring-text-mid">{{ t('admin.bimbel.bills.field_payment_date') }}</span>
+            <input v-model="markPaidForm.payment_date" type="date" class="rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none" />
           </label>
           <label class="grid items-center gap-3" style="grid-template-columns: 120px 1fr;">
-            <span class="text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.bills.field_amount_received') }}</span>
-            <input v-model.number="markPaidForm.amount" type="number" :placeholder="markPaidBill.amount?.toString()" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+            <span class="text-[14px] text-tutoring-text-mid">{{ t('admin.bimbel.bills.field_amount_received') }}</span>
+            <input v-model.number="markPaidForm.amount" type="number" :placeholder="markPaidBill.amount?.toString()" class="rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none" />
           </label>
           <label class="grid items-start gap-3" style="grid-template-columns: 120px 1fr;">
-            <span class="pt-2 text-[14px] text-bimbel-text-mid">{{ t('admin.bimbel.bills.field_admin_notes') }}</span>
-            <textarea v-model="markPaidForm.admin_notes" rows="2" :placeholder="t('admin.bimbel.bills.notes_ph')" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none"></textarea>
+            <span class="pt-2 text-[14px] text-tutoring-text-mid">{{ t('admin.bimbel.bills.field_admin_notes') }}</span>
+            <textarea v-model="markPaidForm.admin_notes" rows="2" :placeholder="t('admin.bimbel.bills.notes_ph')" class="rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none"></textarea>
           </label>
         </div>
 
         <div class="mt-4 flex gap-2">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="markPaidBillId = null">{{ t('admin.bimbel.bills.cancel') }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-tutoring-border bg-tutoring-panel px-3 py-2 text-[14px] font-bold text-tutoring-text-hi hover:bg-tutoring-border-soft" @click="markPaidBillId = null">{{ t('admin.bimbel.bills.cancel') }}</button>
           <button type="button" :disabled="markPaidSaving" class="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="confirmMarkPaid">
             {{ markPaidSaving ? t('admin.bimbel.bills.saving') : t('admin.bimbel.bills.mark_paid') }}
           </button>
@@ -312,8 +312,8 @@ const kpiCards = computed<KpiCard[]>(() => [
         <li v-for="o in FILTER_OPTIONS" :key="o.key">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
-            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': filter === o.key }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-tutoring-bg"
+            :class="{ 'bg-tutoring-accent/5 text-tutoring-accent font-bold': filter === o.key }"
             @click="pickFilter(o.key)"
           >
             {{ o.label }}

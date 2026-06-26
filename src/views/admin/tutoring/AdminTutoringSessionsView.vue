@@ -153,7 +153,7 @@ onMounted(load);
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[13px] font-bold hover:bg-bimbel-panel/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-tutoring-panel text-tutoring-accent text-[13px] font-bold hover:bg-tutoring-panel/90"
       >
         <NavIcon name="download" :size="13" />
         {{ t('admin.bimbel.sessions.export') }}
@@ -173,13 +173,13 @@ onMounted(load);
         />
       </template>
       <template #segmented>
-        <div class="inline-flex p-1 bg-bimbel-bg border border-bimbel-border rounded-xl">
+        <div class="inline-flex p-1 bg-tutoring-bg border border-tutoring-border rounded-xl">
           <button
             type="button"
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition"
             :class="view === 'list'
-              ? 'bg-bimbel-accent text-bimbel-ring'
-              : 'text-bimbel-text-mid hover:text-bimbel-text-hi'"
+              ? 'bg-tutoring-accent text-tutoring-ring'
+              : 'text-tutoring-text-mid hover:text-tutoring-text-hi'"
             @click="view = 'list'"
           >
             <NavIcon name="list" :size="14" />
@@ -189,8 +189,8 @@ onMounted(load);
             type="button"
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition"
             :class="view === 'calendar'
-              ? 'bg-bimbel-accent text-bimbel-ring'
-              : 'text-bimbel-text-mid hover:text-bimbel-text-hi'"
+              ? 'bg-tutoring-accent text-tutoring-ring'
+              : 'text-tutoring-text-mid hover:text-tutoring-text-hi'"
             @click="view = 'calendar'"
           >
             <NavIcon name="calendar" :size="14" />
@@ -200,7 +200,7 @@ onMounted(load);
       </template>
     </PageFilterToolbar>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
@@ -219,11 +219,11 @@ onMounted(load);
     />
     <div
       v-else
-      class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl overflow-hidden"
+      class="bg-tutoring-panel border border-tutoring-border-soft rounded-2xl overflow-hidden"
     >
       <table class="w-full text-sm">
-        <thead class="text-[10.5px] uppercase tracking-wider text-bimbel-text-mid">
-          <tr class="border-b border-bimbel-border">
+        <thead class="text-[10.5px] uppercase tracking-wider text-tutoring-text-mid">
+          <tr class="border-b border-tutoring-border">
             <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.sessions.th_time') }}</th>
             <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.sessions.th_group') }}</th>
             <th class="text-left font-bold px-3 py-2.5">{{ t('admin.bimbel.sessions.th_tutor') }}</th>
@@ -236,18 +236,18 @@ onMounted(load);
           <tr
             v-for="s in filtered"
             :key="s.id"
-            class="border-b border-bimbel-border-soft last:border-0 hover:bg-bimbel-bg cursor-pointer"
+            class="border-b border-tutoring-border-soft last:border-0 hover:bg-tutoring-bg cursor-pointer"
             :class="s.status === 'CANCELLED' ? 'opacity-60' : ''"
             @click="openAttendance(s)"
           >
-            <td class="px-3 py-3 font-semibold text-bimbel-text-hi">
+            <td class="px-3 py-3 font-semibold text-tutoring-text-hi">
               {{ s.scheduled_at ? formatDateShort(s.scheduled_at) : '—' }}
             </td>
-            <td class="px-3 py-3 text-bimbel-text-mid">
+            <td class="px-3 py-3 text-tutoring-text-mid">
               {{ s.group?.name ?? s.group?.program?.name ?? '—' }}
             </td>
-            <td class="px-3 py-3 text-bimbel-text-mid">{{ s.tutor?.name ?? '—' }}</td>
-            <td class="px-3 py-3 text-bimbel-text-mid">
+            <td class="px-3 py-3 text-tutoring-text-mid">{{ s.tutor?.name ?? '—' }}</td>
+            <td class="px-3 py-3 text-tutoring-text-mid">
               {{
                 [s.topic, s.room ? t('tutoring.sessions.room') + ' ' + s.room : null]
                   .filter(Boolean)
@@ -260,7 +260,7 @@ onMounted(load);
             <td class="px-3 py-3 text-right">
               <button
                 type="button"
-                class="inline-flex items-center gap-1 rounded-md border border-bimbel-border px-2 py-1 text-[12px] font-bold text-bimbel-accent hover:bg-bimbel-accent/5 disabled:opacity-40 disabled:cursor-not-allowed"
+                class="inline-flex items-center gap-1 rounded-md border border-tutoring-border px-2 py-1 text-[12px] font-bold text-tutoring-accent hover:bg-tutoring-accent/5 disabled:opacity-40 disabled:cursor-not-allowed"
                 :disabled="s.status === 'CANCELLED'"
                 :title="s.status === 'CANCELLED' ? t('admin.bimbel.sessions.tooltip_cancelled') : t('admin.bimbel.sessions.tooltip_attendance')"
                 @click.stop="openAttendance(s)"
@@ -283,8 +283,8 @@ onMounted(load);
         <li v-for="o in FILTER_OPTIONS" :key="o.key">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
-            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': filter === o.key }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-tutoring-bg"
+            :class="{ 'bg-tutoring-accent/5 text-tutoring-accent font-bold': filter === o.key }"
             @click="pickFilter(o.key)"
           >
             {{ o.label }}

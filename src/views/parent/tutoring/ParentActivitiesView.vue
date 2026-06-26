@@ -159,14 +159,14 @@ function iconName(r: Row): string {
 }
 function iconStyle(r: Row): Record<string, string> {
   // Done-state always reads green regardless of type.
-  if (isDone(r)) return { background: 'var(--bimbel-green-dim, rgba(22,163,74,.15))', color: '#15803d' };
+  if (isDone(r)) return { background: 'var(--tutoring-green-dim, rgba(22,163,74,.15))', color: '#15803d' };
   switch (r.activity.type) {
     case 'EXAM':
-      return { background: 'var(--bimbel-red-dim, rgba(220,38,38,.12))', color: '#b91c1c' };
+      return { background: 'var(--tutoring-red-dim, rgba(220,38,38,.12))', color: '#b91c1c' };
     case 'MATERIAL':
-      return { background: 'var(--bimbel-accent-dim, rgba(12,68,124,.12))', color: 'var(--bimbel-hero, #0c447c)' };
+      return { background: 'var(--tutoring-accent-dim, rgba(12,68,124,.12))', color: 'var(--tutoring-hero, #0c447c)' };
     default:
-      return { background: 'var(--bimbel-accent-dim, rgba(12,68,124,.12))', color: 'var(--bimbel-hero, #0c447c)' };
+      return { background: 'var(--tutoring-accent-dim, rgba(12,68,124,.12))', color: 'var(--tutoring-hero, #0c447c)' };
   }
 }
 
@@ -229,17 +229,17 @@ const PILL_BASE = 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase trac
 
 function pillCls(r: Row): string {
   const s = r.submission?.status;
-  if (s === 'GRADED') return `${PILL_BASE} bg-bimbel-green-dim text-green-700`;
-  if (s === 'SUBMITTED') return `${PILL_BASE} bg-bimbel-accent-dim text-bimbel-hero`;
-  if (s === 'LATE' || s === 'MISSED') return `${PILL_BASE} bg-bimbel-red-dim text-red-700`;
+  if (s === 'GRADED') return `${PILL_BASE} bg-tutoring-green-dim text-green-700`;
+  if (s === 'SUBMITTED') return `${PILL_BASE} bg-tutoring-accent-dim text-tutoring-hero`;
+  if (s === 'LATE' || s === 'MISSED') return `${PILL_BASE} bg-tutoring-red-dim text-red-700`;
   // No submission yet — pill colour follows urgency.
   if (r.activity.type === 'MATERIAL' && !r.activity.due_at) {
-    return `${PILL_BASE} bg-bimbel-bg text-bimbel-text-mid`;
+    return `${PILL_BASE} bg-tutoring-bg text-tutoring-text-mid`;
   }
   const days = daysUntilDue(r);
-  if (days != null && days < 0) return `${PILL_BASE} bg-bimbel-red-dim text-red-700`;
-  if (days != null && days <= 3) return `${PILL_BASE} bg-bimbel-amber-dim text-amber-700`;
-  return `${PILL_BASE} bg-bimbel-accent-dim text-bimbel-hero`;
+  if (days != null && days < 0) return `${PILL_BASE} bg-tutoring-red-dim text-red-700`;
+  if (days != null && days <= 3) return `${PILL_BASE} bg-tutoring-amber-dim text-amber-700`;
+  return `${PILL_BASE} bg-tutoring-accent-dim text-tutoring-hero`;
 }
 
 function pillLabel(r: Row): string {
@@ -280,8 +280,8 @@ function pillLabel(r: Row): string {
         class="rounded-full px-2.5 py-1 text-[12px] transition-colors"
         :class="
           typeFilter === opt.id
-            ? 'bg-bimbel-accent-dim text-bimbel-hero font-bold'
-            : 'bg-bimbel-bg text-bimbel-text-mid'
+            ? 'bg-tutoring-accent-dim text-tutoring-hero font-bold'
+            : 'bg-tutoring-bg text-tutoring-text-mid'
         "
         @click="typeFilter = opt.id"
       >{{ opt.label }}</button>
@@ -291,24 +291,24 @@ function pillLabel(r: Row): string {
       <div
         v-for="r in visible"
         :key="r.id"
-        class="grid items-center gap-2.5 p-2.5 rounded-lg bg-bimbel-bg"
+        class="grid items-center gap-2.5 p-2.5 rounded-lg bg-tutoring-bg"
         style="grid-template-columns: 32px 1fr auto;"
       >
         <div class="w-8 h-8 rounded-lg grid place-items-center" :style="iconStyle(r)">
           <NavIcon :name="iconName(r)" :size="14" />
         </div>
         <div class="min-w-0">
-          <p class="text-[14px] font-bold text-bimbel-text-hi">
+          <p class="text-[14px] font-bold text-tutoring-text-hi">
             {{ title(r) }}
           </p>
-          <p class="text-[12px] text-bimbel-text-mid">{{ subtitle(r) }}</p>
+          <p class="text-[12px] text-tutoring-text-mid">{{ subtitle(r) }}</p>
         </div>
         <span :class="pillCls(r)">{{ pillLabel(r) }}</span>
       </div>
-      <p v-if="!visible.length && !loading" class="text-center text-[13px] text-bimbel-text-mid py-6">
+      <p v-if="!visible.length && !loading" class="text-center text-[13px] text-tutoring-text-mid py-6">
         {{ t('wali.bimbel.activities.empty_filter') }}
       </p>
-      <p v-if="loading" class="text-center text-[13px] text-bimbel-text-mid py-6">{{ t('wali.bimbel.activities.loading') }}</p>
+      <p v-if="loading" class="text-center text-[13px] text-tutoring-text-mid py-6">{{ t('wali.bimbel.activities.loading') }}</p>
     </div>
   </div>
 </template>

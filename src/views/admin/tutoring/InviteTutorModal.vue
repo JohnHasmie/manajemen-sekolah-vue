@@ -64,43 +64,43 @@ function done() {
     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
     @click.self="close"
   >
-    <div class="w-full max-w-md bg-bimbel-panel rounded-2xl p-5 sm:p-6">
-      <h2 class="text-base font-bold text-bimbel-text-hi tracking-tight">
+    <div class="w-full max-w-md bg-tutoring-panel rounded-2xl p-5 sm:p-6">
+      <h2 class="text-base font-bold text-tutoring-text-hi tracking-tight">
         {{ t('tutoring.invite.title') }}
       </h2>
-      <p class="text-xs text-bimbel-text-mid mt-1">
+      <p class="text-xs text-tutoring-text-mid mt-1">
         {{ t('tutoring.invite.subtitle') }}
       </p>
 
       <template v-if="!result">
         <div class="mt-4 space-y-3">
           <label class="block">
-            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
               {{ t('tutoring.invite.emailLabel') }}
             </span>
             <input
               v-model="email"
               type="email"
-              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+              class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
               :placeholder="t('tutoring.invite.emailHint')"
             />
           </label>
           <label class="block">
-            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
               {{ t('tutoring.invite.nameLabel') }}
             </span>
             <input
               v-model="name"
-              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+              class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
               :placeholder="t('tutoring.invite.nameHint')"
             />
           </label>
-          <p v-if="errMsg" class="text-xs text-bimbel-red">{{ errMsg }}</p>
+          <p v-if="errMsg" class="text-xs text-tutoring-red">{{ errMsg }}</p>
         </div>
         <div class="mt-5 flex items-center gap-2 justify-end">
           <button
             type="button"
-            class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
+            class="rounded-lg px-3 py-2 text-sm font-semibold text-tutoring-text-mid hover:bg-tutoring-border-soft"
             @click="close"
           >
             {{ t('tutoring.common.close') }}
@@ -108,7 +108,7 @@ function done() {
           <button
             type="button"
             :disabled="saving"
-            class="rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            class="rounded-lg bg-tutoring-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="submit"
           >
             {{ saving ? t('tutoring.common.saving') : t('tutoring.invite.submit') }}
@@ -118,25 +118,25 @@ function done() {
 
       <template v-else>
         <div class="mt-4">
-          <p class="font-bold text-bimbel-green">{{ headline }}</p>
+          <p class="font-bold text-tutoring-green">{{ headline }}</p>
           <div class="mt-3 space-y-1 text-sm">
             <div>
-              <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider mr-2">Nama</span>
-              <span class="font-semibold text-bimbel-text-hi">{{ result.name }}</span>
+              <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider mr-2">Nama</span>
+              <span class="font-semibold text-tutoring-text-hi">{{ result.name }}</span>
             </div>
             <div>
-              <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider mr-2">Email</span>
-              <span class="font-semibold text-bimbel-text-hi">{{ result.email }}</span>
+              <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider mr-2">Email</span>
+              <span class="font-semibold text-tutoring-text-hi">{{ result.email }}</span>
             </div>
           </div>
           <div
             v-if="result.status === 'created' && result.temp_password"
-            class="mt-3 rounded-xl bg-bimbel-amber-soft border border-status-warning/30 p-3"
+            class="mt-3 rounded-xl bg-tutoring-amber-soft border border-status-warning/30 p-3"
           >
-            <p class="text-[10.5px] font-bold text-bimbel-amber uppercase tracking-wider">
+            <p class="text-[10.5px] font-bold text-tutoring-amber uppercase tracking-wider">
               {{ t('tutoring.invite.tempPwd') }}
             </p>
-            <p class="mt-1 font-mono font-bold text-bimbel-text-hi select-all">
+            <p class="mt-1 font-mono font-bold text-tutoring-text-hi select-all">
               {{ result.temp_password }}
             </p>
           </div>
@@ -144,7 +144,7 @@ function done() {
         <div class="mt-5 flex justify-end">
           <button
             type="button"
-            class="rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white"
+            class="rounded-lg bg-tutoring-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white"
             @click="done"
           >
             {{ t('tutoring.invite.done') }}

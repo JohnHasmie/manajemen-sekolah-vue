@@ -26,7 +26,7 @@ withDefaults(
 <template>
   <div
     class="rounded-3xl px-5 pt-4 pb-5 text-white shadow-lg"
-    style="background: linear-gradient(135deg, var(--bimbel-hero), color-mix(in srgb, var(--bimbel-hero) 72%, black))"
+    style="background: linear-gradient(135deg, var(--tutoring-hero), color-mix(in srgb, var(--tutoring-hero) 72%, black))"
   >
     <div class="flex items-start justify-between gap-4">
       <div class="min-w-0 flex-1">

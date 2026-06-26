@@ -107,9 +107,9 @@ const stepHeader = computed(() => {
 });
 
 const billingModeOptions = computed<StepOption[]>(() => [
-  { id: 'PREPAID', title: t('wali.bimbel.enroll_wizard.billing_prepaid_title'), subtitle: t('wali.bimbel.enroll_wizard.billing_prepaid_sub'), icon: 'wallet', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero' },
-  { id: 'MONTHLY', title: t('wali.bimbel.enroll_wizard.billing_monthly_title'), subtitle: t('wali.bimbel.enroll_wizard.billing_monthly_sub'), icon: 'wallet', iconCls: 'bg-bimbel-green-dim text-green-700' },
-  { id: 'PER_SESSION', title: t('wali.bimbel.enroll_wizard.billing_per_session_title'), subtitle: t('wali.bimbel.enroll_wizard.billing_per_session_sub'), icon: 'wallet', iconCls: 'bg-bimbel-amber-dim text-amber-700' },
+  { id: 'PREPAID', title: t('wali.bimbel.enroll_wizard.billing_prepaid_title'), subtitle: t('wali.bimbel.enroll_wizard.billing_prepaid_sub'), icon: 'wallet', iconCls: 'bg-tutoring-accent-dim text-tutoring-hero' },
+  { id: 'MONTHLY', title: t('wali.bimbel.enroll_wizard.billing_monthly_title'), subtitle: t('wali.bimbel.enroll_wizard.billing_monthly_sub'), icon: 'wallet', iconCls: 'bg-tutoring-green-dim text-green-700' },
+  { id: 'PER_SESSION', title: t('wali.bimbel.enroll_wizard.billing_per_session_title'), subtitle: t('wali.bimbel.enroll_wizard.billing_per_session_sub'), icon: 'wallet', iconCls: 'bg-tutoring-amber-dim text-amber-700' },
 ]);
 
 const stepOptions = computed<StepOption[]>(() => {
@@ -119,7 +119,7 @@ const stepOptions = computed<StepOption[]>(() => {
       title: p.name,
       subtitle: p.description ?? '—',
       icon: 'school',
-      iconCls: ['bg-bimbel-accent-dim text-bimbel-hero', 'bg-bimbel-green-dim text-green-700', 'bg-bimbel-amber-dim text-amber-700'][idx % 3] ?? 'bg-bimbel-accent-dim text-bimbel-hero',
+      iconCls: ['bg-tutoring-accent-dim text-tutoring-hero', 'bg-tutoring-green-dim text-green-700', 'bg-tutoring-amber-dim text-amber-700'][idx % 3] ?? 'bg-tutoring-accent-dim text-tutoring-hero',
     }));
   }
   if (currentStep.value === 2) {
@@ -129,7 +129,7 @@ const stepOptions = computed<StepOption[]>(() => {
       subtitle: t('wali.bimbel.enroll_wizard.package_sessions', { count: p.total_sessions ?? '–' }),
       priceLabel: p.price != null ? formatRupiah(p.price) : undefined,
       icon: 'package',
-      iconCls: ['bg-bimbel-accent-dim text-bimbel-hero', 'bg-bimbel-green-dim text-green-700', 'bg-bimbel-amber-dim text-amber-700'][idx % 3] ?? 'bg-bimbel-accent-dim text-bimbel-hero',
+      iconCls: ['bg-tutoring-accent-dim text-tutoring-hero', 'bg-tutoring-green-dim text-green-700', 'bg-tutoring-amber-dim text-amber-700'][idx % 3] ?? 'bg-tutoring-accent-dim text-tutoring-hero',
     }));
   }
   if (currentStep.value === 3) {
@@ -138,10 +138,10 @@ const stepOptions = computed<StepOption[]>(() => {
   }
   // Step 4 — confirmation rows surfaced as readonly option-style cards.
   return [
-    { id: 'child', title: selectedChild.value?.name ?? '—', subtitle: t('wali.bimbel.enroll_wizard.confirmation_label_child'), icon: 'user', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero' },
-    { id: 'program', title: selectedProgram.value?.name ?? '—', subtitle: t('wali.bimbel.enroll_wizard.confirmation_label_program'), icon: 'school', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero' },
-    { id: 'package', title: selectedPackage.value?.name ?? '—', subtitle: t('wali.bimbel.enroll_wizard.confirmation_label_package'), priceLabel: selectedPackage.value?.price != null ? formatRupiah(selectedPackage.value.price) : undefined, icon: 'package', iconCls: 'bg-bimbel-green-dim text-green-700' },
-    { id: 'mode', title: billingMode.value || '—', subtitle: t('wali.bimbel.enroll_wizard.confirmation_label_mode'), icon: 'wallet', iconCls: 'bg-bimbel-amber-dim text-amber-700' },
+    { id: 'child', title: selectedChild.value?.name ?? '—', subtitle: t('wali.bimbel.enroll_wizard.confirmation_label_child'), icon: 'user', iconCls: 'bg-tutoring-accent-dim text-tutoring-hero' },
+    { id: 'program', title: selectedProgram.value?.name ?? '—', subtitle: t('wali.bimbel.enroll_wizard.confirmation_label_program'), icon: 'school', iconCls: 'bg-tutoring-accent-dim text-tutoring-hero' },
+    { id: 'package', title: selectedPackage.value?.name ?? '—', subtitle: t('wali.bimbel.enroll_wizard.confirmation_label_package'), priceLabel: selectedPackage.value?.price != null ? formatRupiah(selectedPackage.value.price) : undefined, icon: 'package', iconCls: 'bg-tutoring-green-dim text-green-700' },
+    { id: 'mode', title: billingMode.value || '—', subtitle: t('wali.bimbel.enroll_wizard.confirmation_label_mode'), icon: 'wallet', iconCls: 'bg-tutoring-amber-dim text-amber-700' },
   ];
 });
 
@@ -217,7 +217,7 @@ function cancel() {
       <template #actions>
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-tutoring-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="cancel"
         >
           <NavIcon name="x" :size="12" />
@@ -228,16 +228,16 @@ function cancel() {
 
     <div
       v-if="successId"
-      class="rounded-lg bg-bimbel-green-dim p-6 text-center"
+      class="rounded-lg bg-tutoring-green-dim p-6 text-center"
     >
       <div class="mx-auto mb-2 grid h-10 w-10 place-items-center rounded-full bg-green-700 text-white">
         <NavIcon name="check" :size="18" />
       </div>
-      <h3 class="text-[14px] font-bold text-bimbel-text-hi">{{ t('wali.bimbel.enroll_wizard.success_title') }}</h3>
-      <p class="mt-1 text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.enroll_wizard.enrollment_id', { id: successId }) }}</p>
+      <h3 class="text-[14px] font-bold text-tutoring-text-hi">{{ t('wali.bimbel.enroll_wizard.success_title') }}</h3>
+      <p class="mt-1 text-[13px] text-tutoring-text-mid">{{ t('wali.bimbel.enroll_wizard.enrollment_id', { id: successId }) }}</p>
       <button
         type="button"
-        class="mt-4 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold px-4 py-2"
+        class="mt-4 rounded-lg bg-tutoring-hero text-white text-[14px] font-bold px-4 py-2"
         @click="router.push({ name: 'parent.tutoring.bills' })"
       >{{ t('wali.bimbel.enroll_wizard.success_button') }}</button>
     </div>
@@ -253,8 +253,8 @@ function cancel() {
                 s.state === 'done'
                   ? 'bg-green-700 text-white'
                   : s.state === 'on'
-                  ? 'bg-bimbel-hero text-white'
-                  : 'bg-bimbel-bg text-bimbel-text-mid',
+                  ? 'bg-tutoring-hero text-white'
+                  : 'bg-tutoring-bg text-tutoring-text-mid',
               ]"
             >
               <NavIcon v-if="s.state === 'done'" name="check" :size="12" />
@@ -264,10 +264,10 @@ function cancel() {
               :class="[
                 'text-[12px]',
                 s.state === 'on'
-                  ? 'text-bimbel-text-hi font-bold'
+                  ? 'text-tutoring-text-hi font-bold'
                   : s.state === 'done'
-                  ? 'text-bimbel-text-hi'
-                  : 'text-bimbel-text-mid',
+                  ? 'text-tutoring-text-hi'
+                  : 'text-tutoring-text-mid',
               ]"
             >{{ s.label }}</span>
           </div>
@@ -275,20 +275,20 @@ function cancel() {
             v-if="i < steps.length - 1"
             :class="[
               'flex-1 h-px mx-1.5',
-              s.state === 'done' ? 'bg-green-700' : 'bg-bimbel-border-soft',
+              s.state === 'done' ? 'bg-green-700' : 'bg-tutoring-border-soft',
             ]"
           ></div>
         </template>
       </div>
 
       <!-- Step header + body -->
-      <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+      <p class="text-[12px] tracking-[0.1em] text-tutoring-text-lo font-bold uppercase mb-2 mt-3">
         {{ stepHeader }}
       </p>
 
       <div
         v-if="!stepOptions.length"
-        class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-6 text-center text-[13px] text-bimbel-text-mid"
+        class="rounded-md bg-tutoring-panel border border-tutoring-border-soft p-6 text-center text-[13px] text-tutoring-text-mid"
       >
         {{ t('wali.bimbel.enroll_wizard.empty_options') }}
       </div>
@@ -298,8 +298,8 @@ function cancel() {
         :key="opt.id"
         type="button"
         :class="[
-          'w-full rounded-md bg-bimbel-panel border flex gap-2.5 items-center mb-1.5 text-left transition-colors',
-          isSelected(opt) ? 'border-2 border-bimbel-hero p-[11px]' : 'border-bimbel-border-soft p-3',
+          'w-full rounded-md bg-tutoring-panel border flex gap-2.5 items-center mb-1.5 text-left transition-colors',
+          isSelected(opt) ? 'border-2 border-tutoring-hero p-[11px]' : 'border-tutoring-border-soft p-3',
           currentStep === 4 ? 'cursor-default' : '',
         ]"
         :disabled="currentStep === 4"
@@ -309,30 +309,30 @@ function cancel() {
           <NavIcon :name="opt.icon || 'package'" :size="18" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[14px] font-bold text-bimbel-text-hi">{{ opt.title }}</p>
-          <p class="text-[12px] text-bimbel-text-mid">{{ opt.subtitle }}</p>
+          <p class="text-[14px] font-bold text-tutoring-text-hi">{{ opt.title }}</p>
+          <p class="text-[12px] text-tutoring-text-mid">{{ opt.subtitle }}</p>
         </div>
-        <p v-if="opt.priceLabel" class="text-[14px] font-bold text-bimbel-hero flex-shrink-0">
+        <p v-if="opt.priceLabel" class="text-[14px] font-bold text-tutoring-hero flex-shrink-0">
           {{ opt.priceLabel }}
         </p>
       </button>
 
       <div
         v-if="errorMsg"
-        class="rounded-md mt-3 bg-bimbel-red-dim text-red-700 px-3 py-2 text-[13px]"
+        class="rounded-md mt-3 bg-tutoring-red-dim text-red-700 px-3 py-2 text-[13px]"
       >{{ errorMsg }}</div>
 
       <div class="flex gap-2 mt-3">
         <button
           v-if="currentStep > 1"
           type="button"
-          class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[14px] px-3.5 py-2.5"
+          class="rounded-lg bg-tutoring-bg text-tutoring-text-mid border border-tutoring-border-soft text-[14px] px-3.5 py-2.5"
           @click="prev"
         >{{ t('wali.bimbel.enroll_wizard.prev') }}</button>
         <button
           type="button"
           :disabled="!canAdvance"
-          class="flex-1 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold px-3.5 py-2.5 disabled:opacity-50"
+          class="flex-1 rounded-lg bg-tutoring-hero text-white text-[14px] font-bold px-3.5 py-2.5 disabled:opacity-50"
           @click="next"
         >{{ nextLabel }}</button>
       </div>

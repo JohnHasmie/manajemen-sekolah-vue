@@ -124,7 +124,7 @@ onMounted(load);
       :meta="t('tutor.bimbel.activity_submissions.meta_students', { count: Object.keys(names).length })"
     />
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -142,17 +142,17 @@ onMounted(load);
         <div
           v-for="(name, studentId) in names"
           :key="studentId"
-          class="flex items-center gap-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-3"
+          class="flex items-center gap-3 bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-3"
         >
           <span
-            class="w-9 h-9 rounded-xl bg-bimbel-accent-dim text-bimbel-accent grid place-items-center flex-shrink-0"
+            class="w-9 h-9 rounded-xl bg-tutoring-accent-dim text-tutoring-accent grid place-items-center flex-shrink-0"
           >
             <NavIcon name="user" :size="18" />
           </span>
-          <span class="flex-1 text-sm font-semibold text-bimbel-text-hi">{{ name }}</span>
+          <span class="flex-1 text-sm font-semibold text-tutoring-text-hi">{{ name }}</span>
           <select
             v-model="chosen[studentId]"
-            class="rounded-lg border border-bimbel-border px-2.5 py-1.5 text-xs font-semibold text-bimbel-text-mid focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="rounded-lg border border-tutoring-border px-2.5 py-1.5 text-xs font-semibold text-tutoring-text-mid focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
             <option v-for="k in statusKeys" :key="k" :value="k">{{ statusLabel(k) }}</option>
           </select>
@@ -160,17 +160,17 @@ onMounted(load);
       </div>
 
       <!-- Catatan Session — surfaces on the parent "Yang Baru" feed -->
-      <section class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4">
+      <section class="bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4">
         <div class="flex items-center gap-2 mb-1.5">
-          <NavIcon name="edit" :size="14" class="text-bimbel-accent" />
-          <h3 class="text-sm font-extrabold tracking-tight text-bimbel-text-hi">
+          <NavIcon name="edit" :size="14" class="text-tutoring-accent" />
+          <h3 class="text-sm font-extrabold tracking-tight text-tutoring-text-hi">
             {{ t('tutor.bimbel.session_attendance.notes_label') }}
           </h3>
-          <span class="rounded bg-role-parent/12 px-1.5 py-0.5 text-[12px] font-extrabold uppercase tracking-widest text-bimbel-accent">
+          <span class="rounded bg-role-parent/12 px-1.5 py-0.5 text-[12px] font-extrabold uppercase tracking-widest text-tutoring-accent">
             {{ t('tutor.bimbel.session_attendance.notes_badge') }}
           </span>
         </div>
-        <p class="text-[12px] text-bimbel-text-mid mb-2">
+        <p class="text-[12px] text-tutoring-text-mid mb-2">
           {{ t('tutor.bimbel.session_attendance.notes_hint') }}
         </p>
         <textarea
@@ -178,7 +178,7 @@ onMounted(load);
           rows="3"
           maxlength="1000"
           :placeholder="t('tutor.bimbel.session_attendance.notes_placeholder')"
-          class="w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher resize-none"
+          class="w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher resize-none"
         />
       </section>
 

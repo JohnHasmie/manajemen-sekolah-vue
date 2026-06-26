@@ -143,7 +143,7 @@ const kpiCards = computed<KpiCard[]>(() => [
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[13px] font-bold hover:bg-bimbel-panel/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-tutoring-panel text-tutoring-accent text-[13px] font-bold hover:bg-tutoring-panel/90"
         @click="openCreate"
       >
         <NavIcon name="plus" :size="13" />
@@ -153,7 +153,7 @@ const kpiCards = computed<KpiCard[]>(() => [
 
     <KpiStripCards v-if="!loading" :cards="kpiCards" :lg-cols="3" />
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -185,7 +185,7 @@ const kpiCards = computed<KpiCard[]>(() => [
               :href="m.file_url"
               target="_blank"
               rel="noopener"
-              class="p-1.5 rounded-lg text-bimbel-accent hover:bg-status-info-soft"
+              class="p-1.5 rounded-lg text-tutoring-accent hover:bg-status-info-soft"
               :title="t('tutor.bimbel.materials.open_file_title')"
               @click.stop
             >
@@ -193,7 +193,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             </a>
             <button
               type="button"
-              class="p-1.5 rounded-lg text-bimbel-red hover:bg-bimbel-red-soft"
+              class="p-1.5 rounded-lg text-tutoring-red hover:bg-tutoring-red-soft"
               :title="t('tutor.bimbel.materials.delete_title')"
               @click.stop="remove(m)"
             >
@@ -207,46 +207,46 @@ const kpiCards = computed<KpiCard[]>(() => [
     <Modal v-if="showCreate" :title="t('tutor.bimbel.materials.modal_title')" @close="showCreate = false">
       <div class="space-y-3">
         <label class="block">
-          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('tutor.bimbel.materials.field_group') }}
           </span>
           <select
             v-model="fGroupId"
-            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
             <option value="" disabled>{{ t('tutor.bimbel.materials.field_group_placeholder') }}</option>
             <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
           </select>
         </label>
         <label class="block">
-          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('tutor.bimbel.materials.field_title') }}
           </span>
           <input
             v-model="fTitle"
-            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
             :placeholder="t('tutor.bimbel.materials.field_title_placeholder')"
           />
         </label>
         <label class="block">
-          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('tutor.bimbel.materials.field_description') }}
           </span>
           <textarea
             v-model="fDesc"
             rows="3"
-            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher resize-none"
+            class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher resize-none"
           />
         </label>
         <label class="block">
-          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('tutor.bimbel.materials.field_url') }}
           </span>
           <input
             v-model="fUrl"
             type="url"
             placeholder="https://drive.google.com/…"
-            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           />
         </label>
         <label class="flex items-center gap-2">
@@ -255,7 +255,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             type="checkbox"
             class="h-4 w-4 accent-role-teacher"
           />
-          <span class="text-sm text-bimbel-text-mid">
+          <span class="text-sm text-tutoring-text-mid">
             {{ t('tutor.bimbel.materials.publish_label') }}
           </span>
         </label>
@@ -263,7 +263,7 @@ const kpiCards = computed<KpiCard[]>(() => [
         <div class="flex items-center gap-2 justify-end pt-2">
           <button
             type="button"
-            class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
+            class="rounded-lg px-3 py-2 text-sm font-semibold text-tutoring-text-mid hover:bg-tutoring-border-soft"
             @click="showCreate = false"
           >
             {{ t('tutoring.common.close') }}

@@ -89,7 +89,7 @@ async function generate() {
 }
 
 const inputCls =
-  'w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher';
+  'w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher';
 </script>
 
 <template>
@@ -101,7 +101,7 @@ const inputCls =
       :meta="t('tutor.bimbel.tryout_generate.meta')"
     />
 
-    <div class="space-y-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4">
+    <div class="space-y-3 bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4">
       <TutoringChipsRow
         v-model="mode"
         :options="[
@@ -155,9 +155,9 @@ const inputCls =
     <!-- Save block (tryout mode only, after generation) -->
     <div
       v-if="questions.length > 0 && mode === 'tryout'"
-      class="mt-4 space-y-2 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4"
+      class="mt-4 space-y-2 bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4"
     >
-      <p class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+      <p class="text-[12px] font-bold text-tutoring-text-mid uppercase tracking-wider">
         {{ t('tutoring.ai.saveForGroup') }}
       </p>
       <select v-model="groupId" :class="inputCls">
@@ -166,7 +166,7 @@ const inputCls =
       </select>
       <button
         :disabled="saving || !groupId"
-        class="w-full rounded-lg border border-role-teacher text-bimbel-accent hover:bg-role-teacher-soft px-4 py-2 text-sm font-semibold disabled:opacity-50 inline-flex items-center justify-center gap-2"
+        class="w-full rounded-lg border border-role-teacher text-tutoring-accent hover:bg-role-teacher-soft px-4 py-2 text-sm font-semibold disabled:opacity-50 inline-flex items-center justify-center gap-2"
         @click="saveAsTryout"
       >
         <NavIcon name="bookmark" :size="14" />

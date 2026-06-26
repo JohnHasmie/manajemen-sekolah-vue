@@ -54,9 +54,9 @@ const summary = computed(() => {
 
 function rankColor(idx: number): string {
   if (idx === 0) return 'text-amber-600 dark:text-amber-400';
-  if (idx === 1) return 'text-bimbel-text-mid';
+  if (idx === 1) return 'text-tutoring-text-mid';
   if (idx === 2) return 'text-orange-700 dark:text-orange-400';
-  return 'text-bimbel-text-mid';
+  return 'text-tutoring-text-mid';
 }
 </script>
 
@@ -73,45 +73,45 @@ function rankColor(idx: number): string {
           v-model="selectedGroupId"
           class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-semibold text-white"
         >
-          <option v-for="g in groups" :key="g.id" :value="g.id" class="text-bimbel-text-hi">{{ g.name }}</option>
+          <option v-for="g in groups" :key="g.id" :value="g.id" class="text-tutoring-text-hi">{{ g.name }}</option>
         </select>
       </template>
     </TutorHomeHero>
 
     <div class="grid grid-cols-3 gap-2.5">
-      <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-        <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ t('tutor.bimbel.leaderboard.kpi_students') }}</p>
-        <p class="mt-1 text-[22px] font-extrabold text-bimbel-text-hi">{{ summary.count }}</p>
+      <div class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3.5">
+        <p class="text-[12px] font-bold uppercase tracking-widest text-tutoring-text-mid">{{ t('tutor.bimbel.leaderboard.kpi_students') }}</p>
+        <p class="mt-1 text-[22px] font-extrabold text-tutoring-text-hi">{{ summary.count }}</p>
       </div>
-      <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-        <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ t('tutor.bimbel.leaderboard.kpi_average') }}</p>
-        <p class="mt-1 text-[22px] font-extrabold text-bimbel-text-hi">{{ summary.avg ?? '–' }}</p>
+      <div class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3.5">
+        <p class="text-[12px] font-bold uppercase tracking-widest text-tutoring-text-mid">{{ t('tutor.bimbel.leaderboard.kpi_average') }}</p>
+        <p class="mt-1 text-[22px] font-extrabold text-tutoring-text-hi">{{ summary.avg ?? '–' }}</p>
       </div>
-      <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-        <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ t('tutor.bimbel.leaderboard.kpi_participation') }}</p>
-        <p class="mt-1 text-[22px] font-extrabold text-bimbel-text-hi">{{ summary.avgAtt != null ? `${summary.avgAtt}%` : '–' }}</p>
+      <div class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3.5">
+        <p class="text-[12px] font-bold uppercase tracking-widest text-tutoring-text-mid">{{ t('tutor.bimbel.leaderboard.kpi_participation') }}</p>
+        <p class="mt-1 text-[22px] font-extrabold text-tutoring-text-hi">{{ summary.avgAtt != null ? `${summary.avgAtt}%` : '–' }}</p>
       </div>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('tutor.bimbel.leaderboard.loading') }}</div>
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">{{ t('tutor.bimbel.leaderboard.loading') }}</div>
 
-    <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-      <div v-if="rows.length === 0" class="py-8 text-center text-sm text-bimbel-text-mid">
+    <div v-else class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3.5">
+      <div v-if="rows.length === 0" class="py-8 text-center text-sm text-tutoring-text-mid">
         {{ t('tutor.bimbel.leaderboard.empty') }}
       </div>
       <div
         v-for="(r, i) in rows"
         :key="r.student_id"
-        class="flex items-center gap-3 border-b border-bimbel-border-soft py-2.5 last:border-b-0"
+        class="flex items-center gap-3 border-b border-tutoring-border-soft py-2.5 last:border-b-0"
       >
         <span class="w-7 text-center text-[16px] font-extrabold" :class="rankColor(i)">{{ i + 1 }}</span>
         <div class="min-w-0 flex-1">
-          <p class="truncate text-[14px] font-bold text-bimbel-text-hi">{{ r.name }}</p>
-          <p class="truncate text-[12px] text-bimbel-text-mid">
+          <p class="truncate text-[14px] font-bold text-tutoring-text-hi">{{ r.name }}</p>
+          <p class="truncate text-[12px] text-tutoring-text-mid">
             {{ r.attendance_rate != null ? `${r.attendance_rate}% ${t('tutor.bimbel.leaderboard.attendance_suffix')}` : t('tutor.bimbel.leaderboard.attendance_none') }}
           </p>
         </div>
-        <span class="text-[15px] font-extrabold text-bimbel-accent">{{ r.avg_score?.toFixed(1) ?? '–' }}</span>
+        <span class="text-[15px] font-extrabold text-tutoring-accent">{{ r.avg_score?.toFixed(1) ?? '–' }}</span>
       </div>
     </div>
   </div>

@@ -58,9 +58,9 @@ const kpis = computed(() => {
       delta: avg != null ? t('wali.bimbel.progress.average_kpi_delta') : '',
       deltaCls: 'text-green-700',
     },
-    { label: t('wali.bimbel.progress.kpi_attendance'), value: '—', delta: '', deltaCls: 'text-bimbel-text-lo' },
-    { label: t('wali.bimbel.progress.kpi_assignments'), value: '—', delta: '', deltaCls: 'text-bimbel-text-lo' },
-    { label: t('wali.bimbel.progress.kpi_sessions_per_month'), value: '—', delta: '', deltaCls: 'text-bimbel-text-lo' },
+    { label: t('wali.bimbel.progress.kpi_attendance'), value: '—', delta: '', deltaCls: 'text-tutoring-text-lo' },
+    { label: t('wali.bimbel.progress.kpi_assignments'), value: '—', delta: '', deltaCls: 'text-tutoring-text-lo' },
+    { label: t('wali.bimbel.progress.kpi_sessions_per_month'), value: '—', delta: '', deltaCls: 'text-tutoring-text-lo' },
   ];
 });
 
@@ -121,7 +121,7 @@ const xLabels = ref(['Mar', 'Mei', 'Jul', 'Sep']);
       <template #actions><ParentChildPickerChip /></template>
     </ParentHomeHero>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.progress.loading') }}</div>
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">{{ t('wali.bimbel.progress.loading') }}</div>
 
     <template v-else>
       <!-- 4-KPI strip -->
@@ -129,10 +129,10 @@ const xLabels = ref(['Mar', 'Mei', 'Jul', 'Sep']);
         <div
           v-for="k in kpis"
           :key="k.label"
-          class="rounded-lg bg-bimbel-bg p-2.5"
+          class="rounded-lg bg-tutoring-bg p-2.5"
         >
-          <p class="text-[10px] text-bimbel-text-mid">{{ k.label }}</p>
-          <p class="text-[16px] font-extrabold text-bimbel-text-hi leading-none mt-0.5">{{ k.value }}</p>
+          <p class="text-[10px] text-tutoring-text-mid">{{ k.label }}</p>
+          <p class="text-[16px] font-extrabold text-tutoring-text-hi leading-none mt-0.5">{{ k.value }}</p>
           <p class="text-[10px] mt-0.5" :class="k.deltaCls">{{ k.delta || ' ' }}</p>
         </div>
       </div>
@@ -145,14 +145,14 @@ const xLabels = ref(['Mar', 'Mei', 'Jul', 'Sep']);
           type="button"
           class="rounded-full px-2.5 py-1 text-[12px] whitespace-nowrap transition-colors"
           :class="activeSubject === s.id
-            ? 'bg-bimbel-hero text-white font-bold'
-            : 'bg-bimbel-bg text-bimbel-text-mid'"
+            ? 'bg-tutoring-hero text-white font-bold'
+            : 'bg-tutoring-bg text-tutoring-text-mid'"
           @click="activeSubject = s.id"
         >{{ s.label }}</button>
       </div>
 
       <!-- Chart box -->
-      <div class="rounded-lg bg-bimbel-bg p-3 relative" style="height:120px">
+      <div class="rounded-lg bg-tutoring-bg p-3 relative" style="height:120px">
         <svg
           viewBox="0 0 600 80"
           preserveAspectRatio="none"
@@ -183,7 +183,7 @@ const xLabels = ref(['Mar', 'Mei', 'Jul', 'Sep']);
         </svg>
       </div>
 
-      <div class="flex justify-between text-[10px] text-bimbel-text-lo">
+      <div class="flex justify-between text-[10px] text-tutoring-text-lo">
         <span>
           <span class="inline-block w-2 h-0.5 bg-[#185FA5] align-middle mr-1"></span>
           {{ t('wali.bimbel.progress.chart_legend_child', { name: childFirstName }) }}

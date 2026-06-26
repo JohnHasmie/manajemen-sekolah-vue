@@ -179,8 +179,8 @@ const subtitle = computed(() => {
         class="rounded-full px-2.5 py-1 text-[12px] transition-colors"
         :class="
           childFilter === c.id
-            ? 'bg-bimbel-hero text-white font-bold'
-            : 'bg-bimbel-bg text-bimbel-text-mid'
+            ? 'bg-tutoring-hero text-white font-bold'
+            : 'bg-tutoring-bg text-tutoring-text-mid'
         "
         @click="
           childFilter = c.id;
@@ -199,8 +199,8 @@ const subtitle = computed(() => {
         class="rounded-full px-2.5 py-1 text-[12px] transition-colors"
         :class="
           groupFilter === g.id
-            ? 'bg-bimbel-accent-dim text-bimbel-hero font-bold'
-            : 'bg-bimbel-bg text-bimbel-text-mid'
+            ? 'bg-tutoring-accent-dim text-tutoring-hero font-bold'
+            : 'bg-tutoring-bg text-tutoring-text-mid'
         "
         @click="groupFilter = g.id"
       >{{ g.label }}</button>
@@ -210,16 +210,16 @@ const subtitle = computed(() => {
       <div
         v-for="r in visible"
         :key="r.a.id"
-        class="rounded-lg bg-bimbel-bg p-2.5"
-        :class="isNew(r.a) ? 'border-l-2 border-bimbel-hero pl-3' : ''"
+        class="rounded-lg bg-tutoring-bg p-2.5"
+        :class="isNew(r.a) ? 'border-l-2 border-tutoring-hero pl-3' : ''"
       >
         <div class="flex justify-between items-start gap-2">
           <div class="min-w-0 flex-1">
-            <p class="text-[10px] text-bimbel-text-lo tracking-wider font-bold uppercase">
+            <p class="text-[10px] text-tutoring-text-lo tracking-wider font-bold uppercase">
               {{ r.a.author_name }} · {{ r.a.group_name }}
-              <span v-if="children.length > 1" class="text-bimbel-hero">· {{ r.child_name }}</span>
+              <span v-if="children.length > 1" class="text-tutoring-hero">· {{ r.child_name }}</span>
             </p>
-            <p class="text-[14px] font-bold text-bimbel-text-hi mt-0.5">{{ r.a.title }}</p>
+            <p class="text-[14px] font-bold text-tutoring-text-hi mt-0.5">{{ r.a.title }}</p>
           </div>
           <span
             v-if="isNew(r.a)"
@@ -227,15 +227,15 @@ const subtitle = computed(() => {
           >{{ t('wali.bimbel.announcements.badge_new') }}</span>
           <span
             v-else
-            class="text-[12px] text-bimbel-text-lo flex-shrink-0"
+            class="text-[12px] text-tutoring-text-lo flex-shrink-0"
           >{{ relTime(r.a.created_at) }}</span>
         </div>
-        <p class="text-[12px] text-bimbel-text-mid leading-relaxed mt-1">{{ snippet(r.a.body) }}</p>
+        <p class="text-[12px] text-tutoring-text-mid leading-relaxed mt-1">{{ snippet(r.a.body) }}</p>
       </div>
-      <p v-if="!visible.length && !loading" class="text-center text-[13px] text-bimbel-text-mid py-6">
+      <p v-if="!visible.length && !loading" class="text-center text-[13px] text-tutoring-text-mid py-6">
         {{ t('wali.bimbel.announcements.empty_filter') }}
       </p>
-      <p v-if="loading" class="text-center text-[13px] text-bimbel-text-mid py-6">{{ t('wali.bimbel.announcements.loading') }}</p>
+      <p v-if="loading" class="text-center text-[13px] text-tutoring-text-mid py-6">{{ t('wali.bimbel.announcements.loading') }}</p>
     </div>
   </div>
 </template>

@@ -58,12 +58,12 @@ const isTutoringTenant = computed(() => {
 //  2. The role-home route (`teacher.home`) when the active tenant is
 //     a tutoring center — `TeacherHomeRouter` swaps the body to
 //     `TutorTutoringHomeView` there, and that view uses the
-//     `bg-bimbel-panel` / `text-bimbel-text-hi` tokens. Without this
+//     `bg-tutoring-panel` / `text-tutoring-text-hi` tokens. Without this
 //     branch the wrapper class never lands, so those tokens fall
 //     through to their dark `:root` defaults and we get a half-light
 //     half-dark dashboard.
 //  3. Anything else under a tutoring-center tenant. The sidebar uses
-//     `bg-bimbel-panel` regardless of route, and even shared routes
+//     `bg-tutoring-panel` regardless of route, and even shared routes
 //     like `/admin/announcements` belong to the bimbel UX for these
 //     users — without this branch the sidebar stays dark while the
 //     page bg is light. School-tenant sessions never hit this branch.
@@ -79,7 +79,7 @@ const isTutoringRoute = computed(() => {
 const isTutorBimbelRoute = computed(() => {
   const name = String(route.name ?? '');
   if (name.startsWith('teacher.tutoring')) return true;
-  // Same reasoning as `isTutoringRoute` — the bimbel tutor home is
+  // Same reasoning as `isTutoringRoute` — the tutoring tutor home is
   // rendered on `teacher.home` for tutoring-center tenants, and its
   // surface should obey the user's light/dark/auto pick.
   if (name === 'teacher.home' && isTutoringTenant.value) return true;
@@ -87,17 +87,17 @@ const isTutorBimbelRoute = computed(() => {
 });
 const tutoringRoleClass = computed(() =>
   auth.activeRole === 'teacher'
-    ? 'bimbel-tutor'
+    ? 'tutoring-tutor'
     : auth.activeRole === 'parent'
-      ? 'bimbel-wali'
-      : 'bimbel-admin',
+      ? 'tutoring-parent'
+      : 'tutoring-admin',
 );
 /**
- * Surface class for bimbel pages.
+ * Surface class for tutoring pages.
  *
- * Every bimbel surface (admin / tutor / parent) now obeys the user's
- * mode pick (light / dark / auto) via the bimbel theme store. The
- * whole tokenised CSS-var system (`--bimbel-panel`, `--bimbel-text-hi`,
+ * Every tutoring surface (admin / tutor / parent) now obeys the user's
+ * mode pick (light / dark / auto) via the tutoring theme store. The
+ * whole tokenised CSS-var system (`--tutoring-panel`, `--tutoring-text-hi`,
  * etc.) is the SHARED mechanism — each component already reads those
  * vars, so flipping `.tutoring-light` ↔ `.tutoring-dark` on this single
  * `<main>` element re-skins every page underneath at once. No
@@ -113,13 +113,13 @@ const tutoringSurfaceClass = computed(() => tutoringTheme.rootClass);
 
 /**
  * Mirror the surface classes (`.tutoring-light` / `.tutoring-dark`
- * + role tier `.bimbel-tutor` / `.bimbel-admin` / `.bimbel-parent`)
+ * + role tier `.tutoring-tutor` / `.tutoring-admin` / `.tutoring-parent`)
  * onto `<html>` whenever we're rendering a tutoring route.
  *
  * Why this exists: `<main>` already carries those classes for the
  * in-tree cascade, but our `<Modal>` primitive teleports its content
  * to `<body>` — outside the `<main>` cascade. Without this mirror,
- * `bg-bimbel-panel` / `text-bimbel-text-hi` inside a teleported
+ * `bg-tutoring-panel` / `text-tutoring-text-hi` inside a teleported
  * dialog fall through to the `:root` DARK defaults, so an admin
  * with the toggle set to "Selalu terang" still sees a dark
  * `Detail Bill` modal. By writing the classes to
@@ -128,16 +128,8 @@ const tutoringSurfaceClass = computed(() => tutoringTheme.rootClass);
  *
  * On school routes (and after logout) we strip the classes so we
  * don't leak the tutoring palette onto the standard school chrome.
- *
- * NOTE: only the .tutoring-{light,dark} surface classes were renamed
- * in the 2026-06-26 cutover. The role tier classes (.bimbel-{tutor,
- * admin,parent}) and the underlying `--bimbel-*` CSS variables stay
- * unchanged because they are tightly coupled to the `bimbel:` Tailwind
- * namespace (see tailwind.config.ts), and renaming them would force a
- * sweep across every component that uses `bg-bimbel-panel` /
- * `text-bimbel-text-hi` / etc. — out of scope for this PR.
  */
-const TUTORING_HTML_CLASSES = ['tutoring-light', 'tutoring-dark', 'bimbel-tutor', 'bimbel-admin', 'bimbel-wali'];
+const TUTORING_HTML_CLASSES = ['tutoring-light', 'tutoring-dark', 'tutoring-tutor', 'tutoring-admin', 'tutoring-parent'];
 function syncTutoringHtmlClasses() {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
@@ -149,7 +141,7 @@ function syncTutoringHtmlClasses() {
     return;
   }
   // School (non-tutoring) routes still render the sidebar with
-  // `bg-bimbel-panel` / `text-bimbel-text-*` utilities. Those tokens
+  // `bg-tutoring-panel` / `text-tutoring-text-*` utilities. Those tokens
   // default to the DARK palette on `:root` — without a class on <html>
   // the school sidebar comes out fully dark while the page body is
   // light, which is what was reported. School has light-only mode, so
@@ -274,8 +266,8 @@ const schoolInitial = computed(() => {
       Sidebar — Option A "Lifted panel".
 
       Surface:
-        bg-bimbel-panel sits one tier above the page bg, so the page
-        feels recessed below it. Border-right on bimbel-border-soft
+        bg-tutoring-panel sits one tier above the page bg, so the page
+        feels recessed below it. Border-right on tutoring-border-soft
         gives a subtle seam. Tokens flip via .tutoring-light /
         .tutoring-dark so the same markup serves both modes.
 
@@ -286,7 +278,7 @@ const schoolInitial = computed(() => {
 
       Nav:
         - Section labels (titleKey) render as compact uppercase
-          captions in text-bimbel-text-lo.
+          captions in text-tutoring-text-lo.
         - Each item is a rounded pill with the icon + label.
         - Hover: subtle accent-tinted tint + brighter text.
         - Active: accent-tinted bg + accent text + a 3px left rail
@@ -297,11 +289,11 @@ const schoolInitial = computed(() => {
           with the label as a tooltip on hover.
     -->
     <aside
-      class="hidden md:flex md:flex-col bg-bimbel-panel border-r border-bimbel-border-soft flex-shrink-0 transition-[width] duration-300 ease-out relative z-40 sticky top-0 h-screen"
+      class="hidden md:flex md:flex-col bg-tutoring-panel border-r border-tutoring-border-soft flex-shrink-0 transition-[width] duration-300 ease-out relative z-40 sticky top-0 h-screen"
       :class="isCollapsed ? 'w-20' : 'w-64'"
     >
       <!-- Brand header -->
-      <div class="h-[60px] flex items-center px-4 gap-3 border-b border-bimbel-border-soft flex-shrink-0">
+      <div class="h-[60px] flex items-center px-4 gap-3 border-b border-tutoring-border-soft flex-shrink-0">
         <template v-if="isSuperAdmin">
           <div
             class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-white"
@@ -310,22 +302,22 @@ const schoolInitial = computed(() => {
             <NavIcon name="shield" :size="18" />
           </div>
           <div v-if="!isCollapsed" class="min-w-0">
-            <p class="text-[13px] font-extrabold text-bimbel-text-hi leading-tight truncate">{{ t('superAdmin.platformName') }}</p>
-            <p class="text-[11px] text-bimbel-text-lo">{{ t('superAdmin.kicker') }}</p>
+            <p class="text-[13px] font-extrabold text-tutoring-text-hi leading-tight truncate">{{ t('superAdmin.platformName') }}</p>
+            <p class="text-[11px] text-tutoring-text-lo">{{ t('superAdmin.kicker') }}</p>
           </div>
         </template>
         <template v-else>
           <div
             class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden"
             :style="!activeSchoolLogo ? { background: color.hex } : undefined"
-            :class="activeSchoolLogo ? 'bg-bimbel-bg' : ''"
+            :class="activeSchoolLogo ? 'bg-tutoring-bg' : ''"
           >
             <img v-if="activeSchoolLogo" :src="activeSchoolLogo" :alt="activeSchoolName" class="w-full h-full object-cover" />
             <span v-else class="text-white font-extrabold text-[15px]">{{ schoolInitial }}</span>
           </div>
           <div v-if="!isCollapsed" class="min-w-0">
-            <p class="text-[13px] font-extrabold text-bimbel-text-hi leading-tight truncate" :title="activeSchoolName">{{ activeSchoolName }}</p>
-            <p class="text-[11px] text-bimbel-text-lo capitalize">{{ auth.activeRole || 'role' }}</p>
+            <p class="text-[13px] font-extrabold text-tutoring-text-hi leading-tight truncate" :title="activeSchoolName">{{ activeSchoolName }}</p>
+            <p class="text-[11px] text-tutoring-text-lo capitalize">{{ auth.activeRole || 'role' }}</p>
           </div>
         </template>
       </div>
@@ -335,7 +327,7 @@ const schoolInitial = computed(() => {
         <div v-for="(section, idx) in menu" :key="idx" class="mb-4 last:mb-0">
           <p
             v-if="section.titleKey && !isCollapsed"
-            class="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-bimbel-text-lo"
+            class="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-tutoring-text-lo"
           >
             {{ t(section.titleKey) }}
           </p>
@@ -347,8 +339,8 @@ const schoolInitial = computed(() => {
                 :class="[
                   isCollapsed ? 'justify-center px-0 py-2.5 h-11' : 'px-3 py-2.5',
                   isActive(item.to)
-                    ? 'text-bimbel-text-hi'
-                    : 'text-bimbel-text-mid hover:text-bimbel-text-hi hover:bg-bimbel-border-soft/60',
+                    ? 'text-tutoring-text-hi'
+                    : 'text-tutoring-text-mid hover:text-tutoring-text-hi hover:bg-tutoring-border-soft/60',
                 ]"
                 :style="
                   isActive(item.to)
@@ -380,7 +372,7 @@ const schoolInitial = computed(() => {
                 />
                 <span
                   v-if="isCollapsed"
-                  class="pointer-events-none absolute left-[calc(100%+12px)] px-2.5 py-1.5 bg-bimbel-panel border border-bimbel-border-soft rounded-md text-[12px] font-semibold text-bimbel-text-hi opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition z-50 whitespace-nowrap shadow-xl"
+                  class="pointer-events-none absolute left-[calc(100%+12px)] px-2.5 py-1.5 bg-tutoring-panel border border-tutoring-border-soft rounded-md text-[12px] font-semibold text-tutoring-text-hi opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition z-50 whitespace-nowrap shadow-xl"
                 >{{ t(item.labelKey) }}</span>
               </RouterLink>
             </li>
@@ -389,10 +381,10 @@ const schoolInitial = computed(() => {
       </nav>
 
       <!-- Collapse toggle -->
-      <div class="px-3 py-3 border-t border-bimbel-border-soft flex-shrink-0">
+      <div class="px-3 py-3 border-t border-tutoring-border-soft flex-shrink-0">
         <button
           type="button"
-          class="w-full h-9 rounded-lg bg-bimbel-bg/60 border border-bimbel-border-soft text-bimbel-text-mid hover:text-bimbel-text-hi hover:bg-bimbel-border-soft flex items-center justify-center transition"
+          class="w-full h-9 rounded-lg bg-tutoring-bg/60 border border-tutoring-border-soft text-tutoring-text-mid hover:text-tutoring-text-hi hover:bg-tutoring-border-soft flex items-center justify-center transition"
           @click="toggleSidebar"
         >
           <svg
@@ -436,15 +428,15 @@ const schoolInitial = computed(() => {
            left rail, bimbel-* tokens so light/dark adapts). -->
       <aside
         v-if="drawerOpen"
-        class="fixed inset-y-0 left-0 w-64 bg-bimbel-panel border-r border-bimbel-border-soft z-50 md:hidden flex flex-col"
+        class="fixed inset-y-0 left-0 w-64 bg-tutoring-panel border-r border-tutoring-border-soft z-50 md:hidden flex flex-col"
       >
-        <div class="h-[60px] flex items-center justify-between px-4 border-b border-bimbel-border-soft">
+        <div class="h-[60px] flex items-center justify-between px-4 border-b border-tutoring-border-soft">
           <div class="flex items-center gap-3 min-w-0">
             <template v-if="isSuperAdmin">
               <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-white" :style="{ background: color.hex }">
                 <NavIcon name="shield" :size="18" />
               </div>
-              <span class="text-[13px] font-extrabold text-bimbel-text-hi truncate">{{ t('superAdmin.platformName') }}</span>
+              <span class="text-[13px] font-extrabold text-tutoring-text-hi truncate">{{ t('superAdmin.platformName') }}</span>
             </template>
             <template v-else>
               <div
@@ -455,14 +447,14 @@ const schoolInitial = computed(() => {
                 <span v-else class="text-white font-extrabold text-[15px]">{{ schoolInitial }}</span>
               </div>
               <div class="min-w-0">
-                <p class="text-[13px] font-extrabold text-bimbel-text-hi leading-tight truncate" :title="activeSchoolName">{{ activeSchoolName }}</p>
-                <p class="text-[11px] text-bimbel-text-lo capitalize">{{ auth.activeRole || 'role' }}</p>
+                <p class="text-[13px] font-extrabold text-tutoring-text-hi leading-tight truncate" :title="activeSchoolName">{{ activeSchoolName }}</p>
+                <p class="text-[11px] text-tutoring-text-lo capitalize">{{ auth.activeRole || 'role' }}</p>
               </div>
             </template>
           </div>
           <button
             type="button"
-            class="p-1 rounded-md text-bimbel-text-mid hover:text-bimbel-text-hi hover:bg-bimbel-border-soft"
+            class="p-1 rounded-md text-tutoring-text-mid hover:text-tutoring-text-hi hover:bg-tutoring-border-soft"
             aria-label="Tutup menu"
             @click="drawerOpen = false"
           >
@@ -473,14 +465,14 @@ const schoolInitial = computed(() => {
           <div v-for="(section, idx) in menu" :key="idx" class="mb-4 last:mb-0">
             <p
               v-if="section.titleKey"
-              class="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-bimbel-text-lo"
+              class="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-tutoring-text-lo"
             >{{ t(section.titleKey) }}</p>
             <ul class="space-y-0.5">
               <li v-for="item in section.items" :key="item.to">
                 <RouterLink
                   :to="item.to"
                   class="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-colors"
-                  :class="isActive(item.to) ? 'text-bimbel-text-hi' : 'text-bimbel-text-mid hover:text-bimbel-text-hi hover:bg-bimbel-border-soft/60'"
+                  :class="isActive(item.to) ? 'text-tutoring-text-hi' : 'text-tutoring-text-mid hover:text-tutoring-text-hi hover:bg-tutoring-border-soft/60'"
                   :style="isActive(item.to) ? { background: `color-mix(in srgb, ${color.hex} 14%, transparent)` } : undefined"
                   @click="drawerOpen = false"
                 >

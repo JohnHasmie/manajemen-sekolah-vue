@@ -80,7 +80,7 @@ function goBack() {
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-xs font-bold text-bimbel-text-mid hover:text-bimbel-text-hi"
+        class="inline-flex items-center gap-1.5 rounded-lg border border-tutoring-border bg-tutoring-panel px-3 py-1.5 text-xs font-bold text-tutoring-text-mid hover:text-tutoring-text-hi"
         @click="goBack"
       >
         <NavIcon name="arrow-left" :size="14" />
@@ -90,7 +90,7 @@ function goBack() {
 
     <!-- MODE TEMA ─────────────────────────────────────────────────── -->
     <div>
-      <p class="px-1 pb-2 text-[12px] font-extrabold tracking-widest text-bimbel-text-mid">
+      <p class="px-1 pb-2 text-[12px] font-extrabold tracking-widest text-tutoring-text-mid">
         {{ t('tutor.bimbel.appearance.section_mode') }}
       </p>
       <div class="space-y-2.5">
@@ -101,8 +101,8 @@ function goBack() {
           class="block w-full text-left rounded-2xl border p-3.5 transition-colors"
           :class="
             theme.mode === opt.mode
-              ? 'border-bimbel-accent bg-bimbel-accent-dim'
-              : 'border-bimbel-border bg-bimbel-panel hover:border-bimbel-accent/40'
+              ? 'border-tutoring-accent bg-tutoring-accent-dim'
+              : 'border-tutoring-border bg-tutoring-panel hover:border-tutoring-accent/40'
           "
           @click="pick(opt.mode)"
         >
@@ -111,23 +111,23 @@ function goBack() {
               class="grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg"
               :class="
                 theme.mode === opt.mode
-                  ? 'bg-bimbel-accent/20 text-bimbel-accent'
-                  : 'bg-bimbel-border-soft text-bimbel-text-mid'
+                  ? 'bg-tutoring-accent/20 text-tutoring-accent'
+                  : 'bg-tutoring-border-soft text-tutoring-text-mid'
               "
             >
               <NavIcon :name="opt.icon" :size="18" />
             </div>
             <div class="min-w-0 flex-1">
-              <div class="text-sm font-bold text-bimbel-text-hi">{{ opt.title }}</div>
-              <div class="text-xs text-bimbel-text-mid">{{ opt.subtitle }}</div>
+              <div class="text-sm font-bold text-tutoring-text-hi">{{ opt.title }}</div>
+              <div class="text-xs text-tutoring-text-mid">{{ opt.subtitle }}</div>
             </div>
             <span
               class="inline-grid h-[18px] w-[18px] flex-shrink-0 place-items-center rounded-full border-2"
-              :class="theme.mode === opt.mode ? 'border-bimbel-accent' : 'border-bimbel-text-lo'"
+              :class="theme.mode === opt.mode ? 'border-tutoring-accent' : 'border-tutoring-text-lo'"
             >
               <span
                 v-if="theme.mode === opt.mode"
-                class="block h-2 w-2 rounded-full bg-bimbel-accent"
+                class="block h-2 w-2 rounded-full bg-tutoring-accent"
               />
             </span>
           </div>
@@ -137,14 +137,14 @@ function goBack() {
                in the Flutter screen. -->
           <div
             v-if="opt.mode === 'auto' && theme.autoHint"
-            class="mt-3 flex items-start gap-2 rounded-lg border border-bimbel-green/40 bg-bimbel-green-dim px-2.5 py-2"
+            class="mt-3 flex items-start gap-2 rounded-lg border border-tutoring-green/40 bg-tutoring-green-dim px-2.5 py-2"
           >
             <NavIcon
               :name="theme.isDark ? 'moon' : 'sun'"
               :size="13"
-              class="mt-0.5 text-bimbel-green"
+              class="mt-0.5 text-tutoring-green"
             />
-            <span class="text-[12px] leading-snug text-bimbel-text-hi">
+            <span class="text-[12px] leading-snug text-tutoring-text-hi">
               {{ theme.autoHint }}
             </span>
           </div>
@@ -153,17 +153,17 @@ function goBack() {
     </div>
 
     <!-- Preview card ──────────────────────────────────────────────── -->
-    <div class="rounded-2xl border border-bimbel-border bg-bimbel-panel p-3.5">
+    <div class="rounded-2xl border border-tutoring-border bg-tutoring-panel p-3.5">
       <div class="flex items-center gap-3">
         <div
           class="grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl"
-          :style="{ backgroundColor: 'var(--bimbel-hero)' }"
+          :style="{ backgroundColor: 'var(--tutoring-hero)' }"
         >
-          <div class="h-5 w-5 rounded-md" :style="{ backgroundColor: 'var(--bimbel-accent)' }" />
+          <div class="h-5 w-5 rounded-md" :style="{ backgroundColor: 'var(--tutoring-accent)' }" />
         </div>
         <div class="min-w-0 flex-1">
-          <div class="text-sm font-bold text-bimbel-text-hi">{{ t('tutor.bimbel.appearance.preview_title') }}</div>
-          <div class="text-xs text-bimbel-text-mid">{{ previewText }}</div>
+          <div class="text-sm font-bold text-tutoring-text-hi">{{ t('tutor.bimbel.appearance.preview_title') }}</div>
+          <div class="text-xs text-tutoring-text-mid">{{ previewText }}</div>
         </div>
       </div>
     </div>

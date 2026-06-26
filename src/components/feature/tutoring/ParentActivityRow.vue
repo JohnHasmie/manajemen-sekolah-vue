@@ -33,11 +33,11 @@ const meta = computed(() => {
     case 'attendance':
       return { icon: 'check-circle', chip: 'bg-emerald-500/15', text: 'text-emerald-700 dark:text-emerald-300' };
     case 'session_done':
-      return { icon: 'calendar', chip: 'bg-bimbel-accent-dim', text: 'text-bimbel-accent' };
+      return { icon: 'calendar', chip: 'bg-tutoring-accent-dim', text: 'text-tutoring-accent' };
     case 'new_submission':
       return { icon: 'book', chip: 'bg-amber-500/15', text: 'text-amber-700 dark:text-amber-300' };
     default:
-      return { icon: 'circle', chip: 'bg-bimbel-border-soft', text: 'text-bimbel-text-mid' };
+      return { icon: 'circle', chip: 'bg-tutoring-border-soft', text: 'text-tutoring-text-mid' };
   }
 });
 
@@ -62,8 +62,8 @@ const rel = computed(() => {
     class="flex w-full items-start gap-3 text-left transition"
     :class="
       compact
-        ? 'py-2 border-b border-bimbel-border-soft last:border-b-0 hover:bg-bimbel-border-soft/30'
-        : 'rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3 hover:border-bimbel-accent/40'
+        ? 'py-2 border-b border-tutoring-border-soft last:border-b-0 hover:bg-tutoring-border-soft/30'
+        : 'rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3 hover:border-tutoring-accent/40'
     "
     @click="emit('click')"
   >
@@ -74,16 +74,16 @@ const rel = computed(() => {
       <NavIcon :name="meta.icon" :size="15" />
     </span>
     <div class="min-w-0 flex-1">
-      <p class="truncate text-[14px] font-bold tracking-tight text-bimbel-text-hi">
+      <p class="truncate text-[14px] font-bold tracking-tight text-tutoring-text-hi">
         {{ title }}
       </p>
-      <p v-if="subtitle" class="truncate text-[13px] text-bimbel-text-mid">
+      <p v-if="subtitle" class="truncate text-[13px] text-tutoring-text-mid">
         {{ subtitle }}
       </p>
     </div>
     <span
       v-if="rel"
-      class="flex-shrink-0 text-[13px] font-semibold text-bimbel-text-lo"
+      class="flex-shrink-0 text-[13px] font-semibold text-tutoring-text-lo"
     >
       {{ rel }}
     </span>

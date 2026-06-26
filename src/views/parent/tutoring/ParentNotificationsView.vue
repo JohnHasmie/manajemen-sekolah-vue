@@ -137,21 +137,21 @@ const groupLabels = computed<Record<GroupKey, string>>(() => ({
         <button
           v-if="unreadCount > 0"
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-tutoring-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="markAll"
         >{{ t('wali.bimbel.notifications.mark_all_read') }}</button>
       </template>
     </ParentHomeHero>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.notifications.loading') }}</div>
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">{{ t('wali.bimbel.notifications.loading') }}</div>
 
     <div
       v-else-if="items.length"
-      class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-3.5"
+      class="rounded-xl bg-tutoring-panel border border-tutoring-border-soft p-3.5"
     >
       <template v-for="key in groupOrder" :key="key">
         <template v-if="grouped[key].length">
-          <p class="text-[10px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+          <p class="text-[10px] tracking-[0.1em] text-tutoring-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
             {{ groupLabels[key] }}
           </p>
           <div
@@ -159,7 +159,7 @@ const groupLabels = computed<Record<GroupKey, string>>(() => ({
             :key="n.id"
             :class="[
               'flex items-start gap-2.5 py-2.5',
-              !n.read_at ? 'bg-bimbel-accent-dim -mx-3.5 px-3.5' : '',
+              !n.read_at ? 'bg-tutoring-accent-dim -mx-3.5 px-3.5' : '',
               key === 'week' && i === grouped[key].length - 1 ? 'opacity-70' : '',
             ]"
           >
@@ -170,8 +170,8 @@ const groupLabels = computed<Record<GroupKey, string>>(() => ({
               <NavIcon :name="iconName(n)" :size="14" />
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-[14px] font-bold text-bimbel-text-hi">{{ n.title }}</p>
-              <p v-if="n.body" class="text-[12px] text-bimbel-text-mid">{{ n.body }}</p>
+              <p class="text-[14px] font-bold text-tutoring-text-hi">{{ n.title }}</p>
+              <p v-if="n.body" class="text-[12px] text-tutoring-text-mid">{{ n.body }}</p>
             </div>
             <span
               v-if="!n.read_at"
@@ -179,7 +179,7 @@ const groupLabels = computed<Record<GroupKey, string>>(() => ({
             >{{ t('wali.bimbel.notifications.badge_new') }}</span>
             <span
               v-else
-              class="text-[12px] text-bimbel-text-lo flex-shrink-0"
+              class="text-[12px] text-tutoring-text-lo flex-shrink-0"
             >{{ relTime(n.created_at) }}</span>
           </div>
         </template>
@@ -188,7 +188,7 @@ const groupLabels = computed<Record<GroupKey, string>>(() => ({
 
     <div
       v-else
-      class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-8 text-center text-[14px] text-bimbel-text-mid"
+      class="rounded-xl bg-tutoring-panel border border-tutoring-border-soft p-8 text-center text-[14px] text-tutoring-text-mid"
     >{{ t('wali.bimbel.notifications.empty') }}</div>
   </div>
 </template>

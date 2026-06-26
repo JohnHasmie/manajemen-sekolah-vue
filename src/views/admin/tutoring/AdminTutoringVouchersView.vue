@@ -179,7 +179,7 @@ const kpiCards = computed<KpiCard[]>(() => [
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[13px] font-bold hover:bg-bimbel-panel/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-tutoring-panel text-tutoring-accent text-[13px] font-bold hover:bg-tutoring-panel/90"
         @click="openCreate"
       >
         <NavIcon name="plus" :size="13" />
@@ -189,7 +189,7 @@ const kpiCards = computed<KpiCard[]>(() => [
 
     <KpiStripCards :cards="kpiCards" />
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -216,7 +216,7 @@ const kpiCards = computed<KpiCard[]>(() => [
           <span class="inline-flex items-center gap-1.5">
             <button
               type="button"
-              class="p-1.5 rounded-lg text-bimbel-text-mid hover:text-bimbel-accent hover:bg-bimbel-accent/5"
+              class="p-1.5 rounded-lg text-tutoring-text-mid hover:text-tutoring-accent hover:bg-tutoring-accent/5"
               :title="t('admin.bimbel.vouchers.copy_code')"
               @click.stop="copyCode(v.code)"
             >
@@ -225,7 +225,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             <button
               type="button"
               class="text-[10.5px] font-bold uppercase tracking-wider px-1.5 hover:underline"
-              :class="v.is_active ? 'text-bimbel-amber' : 'text-bimbel-green'"
+              :class="v.is_active ? 'text-tutoring-amber' : 'text-tutoring-green'"
               @click.stop="toggleActive(v)"
             >
               {{ v.is_active ? t('admin.bimbel.vouchers.set_inactive') : t('admin.bimbel.vouchers.set_active') }}
@@ -236,7 +236,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             />
             <button
               type="button"
-              class="p-1.5 rounded-lg text-bimbel-text-lo hover:text-bimbel-red hover:bg-bimbel-red-soft"
+              class="p-1.5 rounded-lg text-tutoring-text-lo hover:text-tutoring-red hover:bg-tutoring-red-soft"
               :title="t('admin.bimbel.vouchers.delete_title')"
               @click.stop="remove(v)"
             >
@@ -250,33 +250,33 @@ const kpiCards = computed<KpiCard[]>(() => [
     <Modal v-if="showCreate" :title="t('admin.bimbel.vouchers.modal_title')" @close="showCreate = false">
       <div class="space-y-3">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('admin.bimbel.vouchers.field_code') }}
           </span>
           <input
             v-model="fCode"
             :placeholder="t('admin.bimbel.vouchers.code_ph')"
-            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+            class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
           />
-          <p class="text-[12px] text-bimbel-text-mid mt-1">
+          <p class="text-[12px] text-tutoring-text-mid mt-1">
             {{ t('admin.bimbel.vouchers.code_hint') }}
           </p>
         </label>
         <div class="grid grid-cols-2 gap-2">
           <label class="block">
-            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
               {{ t('admin.bimbel.vouchers.field_type') }}
             </span>
             <select
               v-model="fType"
-              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+              class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
             >
               <option value="PERCENTAGE">{{ t('admin.bimbel.vouchers.type_percentage') }}</option>
               <option value="AMOUNT">{{ t('admin.bimbel.vouchers.type_amount') }}</option>
             </select>
           </label>
           <label class="block">
-            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
               {{ t('admin.bimbel.vouchers.field_value') }}
             </span>
             <input
@@ -284,12 +284,12 @@ const kpiCards = computed<KpiCard[]>(() => [
               type="number"
               :min="1"
               :max="fType === 'PERCENTAGE' ? 100 : undefined"
-              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+              class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
             />
           </label>
         </div>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('admin.bimbel.vouchers.field_max_uses') }}
           </span>
           <input
@@ -297,46 +297,46 @@ const kpiCards = computed<KpiCard[]>(() => [
             type="number"
             min="1"
             :placeholder="t('admin.bimbel.vouchers.max_uses_ph')"
-            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+            class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
           />
         </label>
         <div class="grid grid-cols-2 gap-2">
           <label class="block">
-            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
               {{ t('admin.bimbel.vouchers.field_valid_from') }}
             </span>
             <input
               v-model="fValidFrom"
               type="date"
-              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+              class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
             />
           </label>
           <label class="block">
-            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
               {{ t('admin.bimbel.vouchers.field_valid_until') }}
             </span>
             <input
               v-model="fValidUntil"
               type="date"
-              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+              class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
             />
           </label>
         </div>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider">
             {{ t('admin.bimbel.vouchers.field_notes') }}
           </span>
           <textarea
             v-model="fNotes"
             rows="2"
-            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent resize-none"
+            class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent resize-none"
           />
         </label>
 
         <div class="flex items-center gap-2 justify-end pt-2">
           <button
             type="button"
-            class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
+            class="rounded-lg px-3 py-2 text-sm font-semibold text-tutoring-text-mid hover:bg-tutoring-border-soft"
             @click="showCreate = false"
           >
             {{ t('tutoring.common.close') }}
@@ -344,7 +344,7 @@ const kpiCards = computed<KpiCard[]>(() => [
           <button
             type="button"
             :disabled="saving"
-            class="rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            class="rounded-lg bg-tutoring-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="submit"
           >
             {{ saving ? t('tutoring.common.saving') : t('admin.bimbel.vouchers.save') }}

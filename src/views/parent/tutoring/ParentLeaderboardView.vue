@@ -161,11 +161,11 @@ function initials(name?: string | null): string {
 }
 
 function rankCls(rank: number, isMe: boolean): string {
-  if (isMe) return 'text-bimbel-hero';
+  if (isMe) return 'text-tutoring-hero';
   if (rank === 1) return 'text-amber-700';
   if (rank === 2) return 'text-gray-600';
   if (rank === 3) return 'text-orange-700';
-  return 'text-bimbel-text-mid';
+  return 'text-tutoring-text-mid';
 }
 
 function rankPrefix(rank: number): string {
@@ -178,7 +178,7 @@ function rankPrefix(rank: number): string {
 function deltaCls(d: number): string {
   if (d > 0) return 'text-green-700';
   if (d < 0) return 'text-red-700';
-  return 'text-bimbel-text-lo';
+  return 'text-tutoring-text-lo';
 }
 
 function deltaLabel(d: number): string {
@@ -199,7 +199,7 @@ function deltaLabel(d: number): string {
       <template #actions>
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-tutoring-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="openGroupPicker"
         >
           {{ currentGroupShort }}
@@ -208,40 +208,40 @@ function deltaLabel(d: number): string {
       </template>
     </ParentHomeHero>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.leaderboard.loading') }}</div>
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">{{ t('wali.bimbel.leaderboard.loading') }}</div>
 
     <template v-else>
       <!-- Anak saya highlight -->
       <div
         v-if="myRow"
-        class="rounded-lg bg-bimbel-accent-dim p-3 flex gap-3.5 items-center"
+        class="rounded-lg bg-tutoring-accent-dim p-3 flex gap-3.5 items-center"
       >
         <div class="flex-1 min-w-0">
-          <p class="text-[10px] text-bimbel-hero tracking-wider font-bold uppercase">
+          <p class="text-[10px] text-tutoring-hero tracking-wider font-bold uppercase">
             {{ t('wali.bimbel.leaderboard.child_label', { name: myRow.name }) }}
           </p>
-          <p class="text-[22px] font-extrabold text-bimbel-hero leading-tight">
-            #{{ myRow.rank }}<span class="text-[13px] font-normal text-bimbel-hero/80"> {{ t('wali.bimbel.leaderboard.of_total', { total: rows.length }) }}</span>
+          <p class="text-[22px] font-extrabold text-tutoring-hero leading-tight">
+            #{{ myRow.rank }}<span class="text-[13px] font-normal text-tutoring-hero/80"> {{ t('wali.bimbel.leaderboard.of_total', { total: rows.length }) }}</span>
           </p>
-          <p class="text-[12px] text-bimbel-hero/80">
+          <p class="text-[12px] text-tutoring-hero/80">
             {{ myRow.deltaText || t('wali.bimbel.leaderboard.delta_same') }}
           </p>
         </div>
-        <div class="text-[12px] text-bimbel-hero text-right">
+        <div class="text-[12px] text-tutoring-hero text-right">
           <p>{{ t('wali.bimbel.leaderboard.score_label') }}</p>
           <p class="text-[18px] font-extrabold leading-tight">{{ myRow.score }}</p>
-          <p v-if="myRow.gapText" class="text-bimbel-hero/80">{{ myRow.gapText }}</p>
+          <p v-if="myRow.gapText" class="text-tutoring-hero/80">{{ myRow.gapText }}</p>
         </div>
       </div>
 
       <!-- Ranking rows -->
-      <div class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-3.5">
+      <div class="rounded-xl bg-tutoring-panel border border-tutoring-border-soft p-3.5">
         <div
           v-for="r in rows"
           :key="r.id"
           :class="[
-            'grid items-center gap-2.5 py-2 border-b border-bimbel-border-soft last:border-b-0 text-[13px]',
-            r.isMe ? 'bg-bimbel-accent-dim -mx-3.5 px-3.5' : '',
+            'grid items-center gap-2.5 py-2 border-b border-tutoring-border-soft last:border-b-0 text-[13px]',
+            r.isMe ? 'bg-tutoring-accent-dim -mx-3.5 px-3.5' : '',
           ]"
           style="grid-template-columns: 28px 28px 1fr auto auto;"
         >
@@ -258,27 +258,27 @@ function deltaLabel(d: number): string {
           <div class="min-w-0">
             <p
               class="font-bold truncate"
-              :class="r.isMe ? 'text-bimbel-hero' : 'text-bimbel-text-hi'"
+              :class="r.isMe ? 'text-tutoring-hero' : 'text-tutoring-text-hi'"
             >
               {{ r.name }}
               <span
                 v-if="r.isMe"
-                class="text-[9px] bg-bimbel-hero text-white px-1.5 py-px rounded-full ml-1 align-middle"
+                class="text-[9px] bg-tutoring-hero text-white px-1.5 py-px rounded-full ml-1 align-middle"
               >{{ t('wali.bimbel.leaderboard.anak_badge') }}</span>
             </p>
             <p
               class="text-[10px]"
-              :class="r.isMe ? 'text-bimbel-hero/80' : 'text-bimbel-text-lo'"
+              :class="r.isMe ? 'text-tutoring-hero/80' : 'text-tutoring-text-lo'"
             >{{ r.attendedLine }}</p>
           </div>
 
           <span class="text-[10px]" :class="deltaCls(r.delta)">{{ deltaLabel(r.delta) }}</span>
-          <span class="font-bold" :class="r.isMe ? 'text-bimbel-hero' : 'text-bimbel-text-hi'">{{ r.score }}</span>
+          <span class="font-bold" :class="r.isMe ? 'text-tutoring-hero' : 'text-tutoring-text-hi'">{{ r.score }}</span>
         </div>
 
         <p
           v-if="!rows.length"
-          class="text-center text-[13px] text-bimbel-text-mid py-6"
+          class="text-center text-[13px] text-tutoring-text-mid py-6"
         >{{ t('wali.bimbel.leaderboard.empty') }}</p>
       </div>
     </template>

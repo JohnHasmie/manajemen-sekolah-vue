@@ -57,7 +57,7 @@ const darkStart = computed({
       :stats="[]"
     />
 
-    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+    <p class="text-[12px] tracking-[0.1em] text-tutoring-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
       {{ t('wali.bimbel.appearance.color_mode_heading') }}
     </p>
     <div class="grid grid-cols-3 gap-2">
@@ -66,45 +66,45 @@ const darkStart = computed({
         :key="m.id"
         type="button"
         :class="[
-          'rounded-md bg-bimbel-panel border text-center',
-          theme.mode === m.id ? 'border-2 border-bimbel-hero p-[11px]' : 'border-bimbel-border-soft p-3',
+          'rounded-md bg-tutoring-panel border text-center',
+          theme.mode === m.id ? 'border-2 border-tutoring-hero p-[11px]' : 'border-tutoring-border-soft p-3',
         ]"
         @click="theme.setMode(m.id)"
       >
         <span
-          class="block h-14 w-full rounded-md mb-2 border border-bimbel-border-soft"
+          class="block h-14 w-full rounded-md mb-2 border border-tutoring-border-soft"
           :style="m.preview"
         ></span>
-        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ m.label }}</p>
-        <p class="text-[12px] text-bimbel-text-mid mt-0.5">{{ m.sub }}</p>
+        <p class="text-[13px] font-bold text-tutoring-text-hi">{{ m.label }}</p>
+        <p class="text-[12px] text-tutoring-text-mid mt-0.5">{{ m.sub }}</p>
       </button>
     </div>
 
-    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+    <p class="text-[12px] tracking-[0.1em] text-tutoring-text-lo font-bold uppercase mb-2 mt-3">
       {{ t('wali.bimbel.appearance.auto_schedule_heading') }}
     </p>
     <div class="grid grid-cols-2 gap-2.5">
       <div>
-        <label class="block text-[12px] text-bimbel-text-mid mb-1">{{ t('wali.bimbel.appearance.light_start_label') }}</label>
+        <label class="block text-[12px] text-tutoring-text-mid mb-1">{{ t('wali.bimbel.appearance.light_start_label') }}</label>
         <input
           v-model="lightStart"
           type="time"
-          class="rounded-md bg-bimbel-bg px-3 py-1.5 text-[14px] font-mono text-bimbel-text-hi w-full focus:outline-none"
+          class="rounded-md bg-tutoring-bg px-3 py-1.5 text-[14px] font-mono text-tutoring-text-hi w-full focus:outline-none"
         />
       </div>
       <div>
-        <label class="block text-[12px] text-bimbel-text-mid mb-1">{{ t('wali.bimbel.appearance.dark_start_label') }}</label>
+        <label class="block text-[12px] text-tutoring-text-mid mb-1">{{ t('wali.bimbel.appearance.dark_start_label') }}</label>
         <input
           v-model="darkStart"
           type="time"
-          class="rounded-md bg-bimbel-bg px-3 py-1.5 text-[14px] font-mono text-bimbel-text-hi w-full focus:outline-none"
+          class="rounded-md bg-tutoring-bg px-3 py-1.5 text-[14px] font-mono text-tutoring-text-hi w-full focus:outline-none"
         />
       </div>
     </div>
 
-    <div class="rounded-md bg-bimbel-accent-dim p-2.5 flex gap-2.5 items-center mt-2">
-      <NavIcon name="info-circle" :size="14" class="text-bimbel-hero flex-shrink-0" />
-      <p class="text-[12px] text-bimbel-hero">
+    <div class="rounded-md bg-tutoring-accent-dim p-2.5 flex gap-2.5 items-center mt-2">
+      <NavIcon name="info-circle" :size="14" class="text-tutoring-hero flex-shrink-0" />
+      <p class="text-[12px] text-tutoring-hero">
         {{ t('wali.bimbel.appearance.info_note') }}
       </p>
     </div>

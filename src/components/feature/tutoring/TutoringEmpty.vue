@@ -12,14 +12,14 @@ defineProps<{
 
 <template>
   <div
-    class="w-full text-center bg-bimbel-panel border border-dashed border-bimbel-border rounded-2xl py-8 px-4"
+    class="w-full text-center bg-tutoring-panel border border-dashed border-tutoring-border rounded-2xl py-8 px-4"
   >
     <NavIcon
       v-if="icon"
       :name="icon"
       :size="28"
-      class="text-bimbel-text-lo mx-auto mb-2"
+      class="text-tutoring-text-lo mx-auto mb-2"
     />
-    <p class="text-sm text-bimbel-text-mid">{{ text }}</p>
+    <p class="text-sm text-tutoring-text-mid">{{ text }}</p>
   </div>
 </template>

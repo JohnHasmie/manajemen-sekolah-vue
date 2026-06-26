@@ -212,9 +212,9 @@ async function submit() {
 onMounted(load);
 
 const fieldLabel =
-  'text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider';
+  'text-[10.5px] font-bold text-tutoring-text-mid uppercase tracking-wider';
 const inputCls =
-  'mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent';
+  'mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent';
 </script>
 
 <template>
@@ -228,13 +228,13 @@ const inputCls =
         : t('admin.bimbel.enroll.meta_open')"
     />
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
     <div
       v-else
-      class="space-y-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5"
+      class="space-y-3 bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4 sm:p-5"
     >
       <label v-if="!initialProgramId" class="block">
         <span :class="fieldLabel">{{ t('admin.bimbel.enroll.program_label') }}</span>
@@ -242,7 +242,7 @@ const inputCls =
           <option value="" disabled>{{ t('admin.bimbel.enroll.program_pick') }}</option>
           <option v-for="p in programs" :key="p.id" :value="p.id">{{ p.name }}</option>
         </select>
-        <p v-if="programs.length === 0" class="text-xs text-bimbel-text-mid mt-1">
+        <p v-if="programs.length === 0" class="text-xs text-tutoring-text-mid mt-1">
           {{ t('admin.bimbel.enroll.program_empty') }}
         </p>
       </label>
@@ -255,7 +255,7 @@ const inputCls =
           </option>
           <option v-for="p in packages" :key="p.id" :value="p.id">{{ p.name }}</option>
         </select>
-        <p v-if="programId && packages.length === 0" class="text-xs text-bimbel-text-mid mt-1">
+        <p v-if="programId && packages.length === 0" class="text-xs text-tutoring-text-mid mt-1">
           {{ t('admin.bimbel.enroll.no_packages') }}
         </p>
       </label>
@@ -274,9 +274,9 @@ const inputCls =
           <option :value="null" disabled>{{ t('tutoring.enroll.pickStudent') }}</option>
           <option v-for="s in students" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
-        <p v-if="students.length === 0" class="text-xs text-bimbel-text-mid mt-1">
+        <p v-if="students.length === 0" class="text-xs text-tutoring-text-mid mt-1">
           {{ t('admin.bimbel.enroll.no_students') }}
-          <button type="button" class="text-bimbel-accent font-bold underline" @click="router.push({ name: 'admin.tutoring.students' })">
+          <button type="button" class="text-tutoring-accent font-bold underline" @click="router.push({ name: 'admin.tutoring.students' })">
             {{ t('admin.bimbel.enroll.create_first') }}
           </button>.
         </p>
@@ -304,14 +304,14 @@ const inputCls =
           <input
             v-model="voucherCode"
             :placeholder="t('admin.bimbel.enroll.voucher_ph')"
-            class="flex-1 rounded-lg border border-bimbel-border px-3 py-2 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+            class="flex-1 rounded-lg border border-tutoring-border px-3 py-2 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
             :disabled="!!voucherPreview"
           />
           <button
             v-if="!voucherPreview"
             type="button"
             :disabled="voucherChecking"
-            class="rounded-lg bg-bimbel-accent hover:opacity-90 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            class="rounded-lg bg-tutoring-accent hover:opacity-90 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="applyVoucher"
           >
             {{ voucherChecking ? t('admin.bimbel.enroll.voucher_check') : t('admin.bimbel.enroll.voucher_apply') }}
@@ -319,7 +319,7 @@ const inputCls =
           <button
             v-else
             type="button"
-            class="rounded-lg border border-bimbel-border px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
+            class="rounded-lg border border-tutoring-border px-3 py-2 text-sm font-semibold text-tutoring-text-mid hover:bg-tutoring-border-soft"
             @click="clearVoucher"
           >
             {{ t('admin.bimbel.enroll.voucher_remove') }}
@@ -327,13 +327,13 @@ const inputCls =
         </div>
         <p
           v-if="voucherErr"
-          class="text-xs text-bimbel-red mt-1"
+          class="text-xs text-tutoring-red mt-1"
         >
           {{ voucherErr }}
         </p>
         <p
           v-else-if="voucherPreview"
-          class="text-xs text-bimbel-green mt-1 font-semibold"
+          class="text-xs text-tutoring-green mt-1 font-semibold"
         >
           ✓ {{ t('admin.bimbel.enroll.voucher_success', { discount: voucherPreview.discount_amount.toLocaleString('id-ID') }) }}
           <strong>{{ voucherPreview.final_amount.toLocaleString('id-ID') }}</strong>
@@ -352,7 +352,7 @@ const inputCls =
 
       <button
         :disabled="saving"
-        class="w-full rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+        class="w-full rounded-lg bg-tutoring-accent hover:opacity-90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
         @click="submit"
       >
         {{ saving ? t('tutoring.common.saving') : t('tutoring.enroll.submit') }}

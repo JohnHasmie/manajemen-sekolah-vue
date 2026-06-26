@@ -31,9 +31,9 @@ const TONE: Record<
   { bar: string; chip: string; chipText: string }
 > = {
   brand: {
-    bar: 'bg-bimbel-accent',
-    chip: 'bg-bimbel-accent-dim',
-    chipText: 'text-bimbel-accent',
+    bar: 'bg-tutoring-accent',
+    chip: 'bg-tutoring-accent-dim',
+    chipText: 'text-tutoring-accent',
   },
   success: {
     bar: 'bg-emerald-500',
@@ -55,7 +55,7 @@ const TONE: Record<
 
 <template>
   <div
-    class="relative overflow-hidden rounded-3xl border border-bimbel-border-soft bg-bimbel-panel pl-5 pr-4 py-4"
+    class="relative overflow-hidden rounded-3xl border border-tutoring-border-soft bg-tutoring-panel pl-5 pr-4 py-4"
   >
     <span
       class="absolute left-0 top-0 h-full w-1.5"
@@ -72,7 +72,7 @@ const TONE: Record<
           {{ kicker }}
         </p>
         <h3
-          class="mt-0.5 flex items-center gap-2 text-base font-extrabold tracking-tight text-bimbel-text-hi"
+          class="mt-0.5 flex items-center gap-2 text-base font-extrabold tracking-tight text-tutoring-text-hi"
         >
           <NavIcon
             v-if="icon"
@@ -82,7 +82,7 @@ const TONE: Record<
           />
           <span class="truncate">{{ title }}</span>
         </h3>
-        <p v-if="subtitle" class="mt-0.5 text-[13px] text-bimbel-text-mid">
+        <p v-if="subtitle" class="mt-0.5 text-[13px] text-tutoring-text-mid">
           {{ subtitle }}
         </p>
       </div>
@@ -92,7 +92,7 @@ const TONE: Record<
       </div>
     </div>
 
-    <div v-if="$slots.default" class="mt-3 text-[14px] text-bimbel-text-mid">
+    <div v-if="$slots.default" class="mt-3 text-[14px] text-tutoring-text-mid">
       <slot />
     </div>
 

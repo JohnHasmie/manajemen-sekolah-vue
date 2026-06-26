@@ -51,7 +51,7 @@ async function submit() {
 
 <template>
   <Modal title="Beri Rating Sesi" @close="emit('close')">
-    <p v-if="sessionTitle" class="text-xs text-bimbel-text-mid mb-3">
+    <p v-if="sessionTitle" class="text-xs text-tutoring-text-mid mb-3">
       {{ sessionTitle }}
     </p>
     <div class="flex items-center justify-center gap-1 my-3">
@@ -60,34 +60,34 @@ async function submit() {
         :key="n"
         type="button"
         class="p-1.5 transition"
-        :class="n <= rating ? 'text-amber-400' : 'text-bimbel-text-lo hover:text-amber-300'"
+        :class="n <= rating ? 'text-amber-400' : 'text-tutoring-text-lo hover:text-amber-300'"
         @click="rating = n"
       >
         <NavIcon name="sparkles" :size="28" />
       </button>
     </div>
-    <p class="text-center text-xs font-bold text-bimbel-text-mid uppercase tracking-widest mb-3">
+    <p class="text-center text-xs font-bold text-tutoring-text-mid uppercase tracking-widest mb-3">
       {{ rating }} dari 5
     </p>
 
     <label class="block">
-      <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+      <span class="text-[12px] font-bold text-tutoring-text-mid uppercase tracking-wider">
         Komentar (opsional)
       </span>
       <textarea
         v-model="comment"
         rows="3"
         placeholder="Bagaimana sesi tadi?"
-        class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-parent/20 focus:border-role-parent resize-none"
+        class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-parent/20 focus:border-role-parent resize-none"
       />
     </label>
 
-    <p v-if="errMsg" class="text-xs text-bimbel-red mt-2">{{ errMsg }}</p>
+    <p v-if="errMsg" class="text-xs text-tutoring-red mt-2">{{ errMsg }}</p>
 
     <div class="flex items-center gap-2 justify-end mt-4">
       <button
         type="button"
-        class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
+        class="rounded-lg px-3 py-2 text-sm font-semibold text-tutoring-text-mid hover:bg-tutoring-border-soft"
         @click="emit('close')"
       >
         Batal

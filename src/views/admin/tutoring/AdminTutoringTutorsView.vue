@@ -119,7 +119,7 @@ function onInvited() {
       <template #actions>
         <button
           type="button"
-          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold"
+          class="rounded-lg bg-white text-tutoring-accent px-3 py-1.5 text-[14px] font-bold"
           @click="showInvite = true"
         >
           <NavIcon name="mail" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.tutors.invite') }}
@@ -127,14 +127,14 @@ function onInvited() {
       </template>
     </TutorHomeHero>
 
-    <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3 flex flex-wrap items-center gap-2">
+    <div class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3 flex flex-wrap items-center gap-2">
       <div class="relative min-w-[200px] flex-1">
-        <NavIcon name="search" :size="14" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-bimbel-text-lo" />
+        <NavIcon name="search" :size="14" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-tutoring-text-lo" />
         <input
           v-model="query"
           type="text"
           :placeholder="t('admin.bimbel.tutors.search_ph')"
-          class="w-full rounded-lg border border-bimbel-border bg-bimbel-bg pl-9 pr-3 py-1.5 text-[14px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-bimbel-accent focus:outline-none"
+          class="w-full rounded-lg border border-tutoring-border bg-tutoring-bg pl-9 pr-3 py-1.5 text-[14px] text-tutoring-text-hi placeholder:text-tutoring-text-lo focus:border-tutoring-accent focus:outline-none"
         />
       </div>
       <div class="flex gap-1.5">
@@ -147,30 +147,30 @@ function onInvited() {
           :key="opt.id"
           type="button"
           class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
-          :class="status === opt.id ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
+          :class="status === opt.id ? 'border-tutoring-accent bg-tutoring-accent-dim text-tutoring-accent' : 'border-tutoring-border bg-tutoring-panel text-tutoring-text-mid'"
           @click="status = opt.id"
         >{{ opt.label }}</button>
       </div>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.tutors.loading') }}</div>
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">{{ t('admin.bimbel.tutors.loading') }}</div>
 
     <div v-else-if="filtered.length" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <div
         v-for="r in filtered"
         :key="r.user_id"
-        class="rounded-2xl border bg-bimbel-panel p-3.5 transition hover:border-bimbel-accent/40"
-        :class="r.status === 'PENDING' ? 'border-dashed border-amber-500/40 opacity-90' : 'border-bimbel-border-soft'"
+        class="rounded-2xl border bg-tutoring-panel p-3.5 transition hover:border-tutoring-accent/40"
+        :class="r.status === 'PENDING' ? 'border-dashed border-amber-500/40 opacity-90' : 'border-tutoring-border-soft'"
       >
         <div class="flex items-center gap-2.5 mb-2">
           <button type="button" class="flex items-center gap-2.5 text-left min-w-0 flex-1" @click="goDetail(r)">
             <span
               class="grid h-9 w-9 place-items-center rounded-full text-[14px] font-bold shrink-0"
-              :class="r.status === 'PENDING' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-bimbel-accent-dim text-bimbel-accent'"
+              :class="r.status === 'PENDING' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-tutoring-accent-dim text-tutoring-accent'"
             >{{ initials(r.name) }}</span>
             <div class="min-w-0">
-              <p class="text-[14px] font-bold text-bimbel-text-hi truncate">{{ r.name }}</p>
-              <p class="text-[13px] text-bimbel-text-mid truncate">
+              <p class="text-[14px] font-bold text-tutoring-text-hi truncate">{{ r.name }}</p>
+              <p class="text-[13px] text-tutoring-text-mid truncate">
                 {{ r.groups[0]?.program ?? '—' }}<template v-if="r.groups.length"> · {{ t('admin.bimbel.tutors.groups_count', { count: r.groups.length }) }}</template>
               </p>
             </div>
@@ -187,20 +187,20 @@ function onInvited() {
         </div>
         <template v-if="r.status === 'ACTIVE'">
           <div class="grid grid-cols-3 gap-1.5 mt-2">
-            <div class="rounded-lg bg-bimbel-bg/40 p-1.5 text-center">
-              <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.tutors.stat_classes') }}</p>
+            <div class="rounded-lg bg-tutoring-bg/40 p-1.5 text-center">
+              <p class="text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.tutors.stat_classes') }}</p>
               <p class="text-[14px] font-bold">{{ r.group_count }}</p>
             </div>
-            <div class="rounded-lg bg-bimbel-bg/40 p-1.5 text-center">
-              <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.tutors.stat_students') }}</p>
+            <div class="rounded-lg bg-tutoring-bg/40 p-1.5 text-center">
+              <p class="text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.tutors.stat_students') }}</p>
               <p class="text-[14px] font-bold">{{ studentsCount(r) }}</p>
             </div>
-            <div class="rounded-lg bg-bimbel-bg/40 p-1.5 text-center">
-              <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.tutors.stat_sessions_30d') }}</p>
+            <div class="rounded-lg bg-tutoring-bg/40 p-1.5 text-center">
+              <p class="text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.tutors.stat_sessions_30d') }}</p>
               <p class="text-[14px] font-bold">{{ r.sessions_30d }}</p>
             </div>
           </div>
-          <p v-if="r.attendance_rate != null" class="text-[13px] text-bimbel-text-mid mt-2">
+          <p v-if="r.attendance_rate != null" class="text-[13px] text-tutoring-text-mid mt-2">
             {{ t('admin.bimbel.tutors.attendance_line', { rate: r.attendance_rate }) }}
           </p>
         </template>
@@ -209,7 +209,7 @@ function onInvited() {
             {{ t('admin.bimbel.tutors.pending_line', { date: r.joined_at ? new Date(r.joined_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '—' }) }}
           </div>
           <div class="mt-2">
-            <span class="inline-flex items-center gap-1 rounded-md bg-bimbel-accent text-white px-2.5 py-1 text-[13px] font-bold">
+            <span class="inline-flex items-center gap-1 rounded-md bg-tutoring-accent text-white px-2.5 py-1 text-[13px] font-bold">
               {{ t('admin.bimbel.tutors.pending_cta') }}
             </span>
           </div>
@@ -217,23 +217,23 @@ function onInvited() {
       </div>
     </div>
 
-    <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
+    <div v-else class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-8 text-center text-sm text-tutoring-text-mid">
       {{ t('admin.bimbel.tutors.empty') }}
     </div>
 
     <InviteTutorModal v-if="showInvite" @close="showInvite = false" @done="onInvited" />
 
     <div v-if="editTarget" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="editTarget = null">
-      <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
-        <h3 class="text-[16px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.tutors.modal_edit_title') }}</h3>
-        <p class="text-[14px] text-bimbel-text-mid">{{ editTarget.email }}</p>
+      <div class="w-full max-w-md rounded-2xl bg-tutoring-panel p-5 shadow-xl space-y-3">
+        <h3 class="text-[16px] font-bold text-tutoring-text-hi">{{ t('admin.bimbel.tutors.modal_edit_title') }}</h3>
+        <p class="text-[14px] text-tutoring-text-mid">{{ editTarget.email }}</p>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.tutors.field_name') }}</span>
-          <input v-model="editName" type="text" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.tutors.field_name') }}</span>
+          <input v-model="editName" type="text" class="mt-1 w-full rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none" />
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="editTarget = null">{{ t('admin.bimbel.tutors.cancel') }}</button>
-          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? t('admin.bimbel.tutors.saving') : t('admin.bimbel.tutors.save') }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-tutoring-border bg-tutoring-panel px-3 py-2 text-[14px] font-bold text-tutoring-text-hi hover:bg-tutoring-border-soft" @click="editTarget = null">{{ t('admin.bimbel.tutors.cancel') }}</button>
+          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-tutoring-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? t('admin.bimbel.tutors.saving') : t('admin.bimbel.tutors.save') }}</button>
         </div>
       </div>
     </div>

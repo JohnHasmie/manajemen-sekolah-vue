@@ -43,9 +43,9 @@ const styles = computed(() => {
       };
     case 'brand':
       return {
-        bg: 'bg-bimbel-accent-dim',
-        border: 'border-bimbel-accent/40',
-        icon: 'text-bimbel-accent bg-bimbel-accent-dim',
+        bg: 'bg-tutoring-accent-dim',
+        border: 'border-tutoring-accent/40',
+        icon: 'text-tutoring-accent bg-tutoring-accent-dim',
       };
     default:
       return {
@@ -72,19 +72,19 @@ const styles = computed(() => {
       <NavIcon :name="icon" :size="18" />
     </span>
     <div class="min-w-0 flex-1">
-      <p class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">
+      <p class="text-[12px] font-bold uppercase tracking-wider text-tutoring-text-mid">
         {{ label }}
       </p>
-      <p class="truncate text-base font-extrabold tracking-tight text-bimbel-text-hi">
+      <p class="truncate text-base font-extrabold tracking-tight text-tutoring-text-hi">
         {{ value }}
       </p>
-      <p v-if="hint" class="truncate text-[12px] text-bimbel-text-mid">{{ hint }}</p>
+      <p v-if="hint" class="truncate text-[12px] text-tutoring-text-mid">{{ hint }}</p>
     </div>
     <NavIcon
       v-if="clickable"
       name="chevron-right"
       :size="16"
-      class="flex-shrink-0 text-bimbel-text-lo"
+      class="flex-shrink-0 text-tutoring-text-lo"
     />
   </component>
 </template>

@@ -9,7 +9,7 @@ defineProps<{ text: string }>();
 
 <template>
   <div
-    class="flex items-center gap-2 bg-bimbel-accent-dim text-bimbel-accent rounded-xl px-3 py-2.5 text-xs font-semibold"
+    class="flex items-center gap-2 bg-tutoring-accent-dim text-tutoring-accent rounded-xl px-3 py-2.5 text-xs font-semibold"
   >
     <NavIcon name="zap" :size="14" />
     {{ text }}

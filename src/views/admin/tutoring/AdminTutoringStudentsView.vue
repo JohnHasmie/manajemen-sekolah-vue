@@ -122,7 +122,7 @@ function initial(name: string): string {
 }
 
 function attendanceBar(rate: number | null): { width: string; color: string } {
-  if (rate == null) return { width: '0%', color: 'var(--bimbel-border)' };
+  if (rate == null) return { width: '0%', color: 'var(--tutoring-border)' };
   return {
     width: `${rate}%`,
     color: rate >= 90 ? '#1d9e75' : rate >= 75 ? '#efaf07' : '#e24b4a',
@@ -221,7 +221,7 @@ function exportCsv() {
         </button>
         <button
           type="button"
-          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold hover:opacity-90"
+          class="rounded-lg bg-white text-tutoring-accent px-3 py-1.5 text-[14px] font-bold hover:opacity-90"
           @click="goEnroll"
         >
           <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.students.enroll_to_program') }}
@@ -229,14 +229,14 @@ function exportCsv() {
       </template>
     </TutorHomeHero>
 
-    <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3 flex flex-wrap items-center gap-2">
+    <div class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3 flex flex-wrap items-center gap-2">
       <div class="relative min-w-[200px] flex-1">
-        <NavIcon name="search" :size="14" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-bimbel-text-lo" />
+        <NavIcon name="search" :size="14" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-tutoring-text-lo" />
         <input
           v-model="query"
           type="text"
           :placeholder="t('admin.bimbel.students.search_ph')"
-          class="w-full rounded-lg border border-bimbel-border bg-bimbel-bg pl-9 pr-3 py-1.5 text-[14px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-bimbel-accent focus:outline-none"
+          class="w-full rounded-lg border border-tutoring-border bg-tutoring-bg pl-9 pr-3 py-1.5 text-[14px] text-tutoring-text-hi placeholder:text-tutoring-text-lo focus:border-tutoring-accent focus:outline-none"
         />
       </div>
       <div class="flex gap-1.5">
@@ -249,18 +249,18 @@ function exportCsv() {
           :key="opt.id"
           type="button"
           class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
-          :class="status === opt.id ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
+          :class="status === opt.id ? 'border-tutoring-accent bg-tutoring-accent-dim text-tutoring-accent' : 'border-tutoring-border bg-tutoring-panel text-tutoring-text-mid'"
           @click="status = opt.id"
         >{{ opt.label }}</button>
       </div>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.students.loading') }}</div>
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">{{ t('admin.bimbel.students.loading') }}</div>
 
-    <div v-else-if="filtered.length" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
+    <div v-else-if="filtered.length" class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel overflow-hidden">
       <table class="w-full text-[14px]">
-        <thead class="bg-bimbel-bg/40">
-          <tr class="text-left text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">
+        <thead class="bg-tutoring-bg/40">
+          <tr class="text-left text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">
             <th class="px-3 py-2">{{ t('admin.bimbel.students.th_student') }}</th>
             <th class="px-3 py-2 w-[160px]">{{ t('admin.bimbel.students.th_program_pkg') }}</th>
             <th class="px-3 py-2 w-[140px]">{{ t('admin.bimbel.students.th_group') }}</th>
@@ -271,29 +271,29 @@ function exportCsv() {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in filtered" :key="r.enrollment_id" class="border-t border-bimbel-border-soft hover:bg-bimbel-border-soft/30">
+          <tr v-for="r in filtered" :key="r.enrollment_id" class="border-t border-tutoring-border-soft hover:bg-tutoring-border-soft/30">
             <td class="px-3 py-2.5">
               <div class="flex items-center gap-2.5">
-                <span class="grid h-7 w-7 place-items-center rounded-full bg-bimbel-accent-dim text-bimbel-accent text-[13px] font-bold">{{ initial(r.student_name) }}</span>
+                <span class="grid h-7 w-7 place-items-center rounded-full bg-tutoring-accent-dim text-tutoring-accent text-[13px] font-bold">{{ initial(r.student_name) }}</span>
                 <div>
-                  <p class="font-bold text-bimbel-text-hi">{{ r.student_name }}</p>
-                  <p class="text-[13px] text-bimbel-text-mid">{{ r.billing_mode }}</p>
+                  <p class="font-bold text-tutoring-text-hi">{{ r.student_name }}</p>
+                  <p class="text-[13px] text-tutoring-text-mid">{{ r.billing_mode }}</p>
                 </div>
               </div>
             </td>
             <td class="px-3 py-2.5">
-              <p class="text-bimbel-text-hi">{{ r.program_name ?? '—' }}</p>
-              <p v-if="r.package_name" class="text-[13px] text-bimbel-text-mid">{{ r.package_name }}</p>
+              <p class="text-tutoring-text-hi">{{ r.program_name ?? '—' }}</p>
+              <p v-if="r.package_name" class="text-[13px] text-tutoring-text-mid">{{ r.package_name }}</p>
             </td>
-            <td class="px-3 py-2.5 text-bimbel-text-mid">{{ r.group_name ?? '—' }}</td>
+            <td class="px-3 py-2.5 text-tutoring-text-mid">{{ r.group_name ?? '—' }}</td>
             <td class="px-3 py-2.5">
               <p v-if="r.unpaid_count === 0" class="font-bold text-emerald-700 dark:text-emerald-300">{{ t('admin.bimbel.students.status_paid') }}</p>
               <p v-else class="font-bold text-rose-700 dark:text-rose-300">{{ formatRupiah(r.unpaid_total) }}</p>
-              <p v-if="r.unpaid_count > 0" class="text-[13px] text-bimbel-text-mid">{{ t('admin.bimbel.students.unpaid_count', { count: r.unpaid_count }) }}</p>
+              <p v-if="r.unpaid_count > 0" class="text-[13px] text-tutoring-text-mid">{{ t('admin.bimbel.students.unpaid_count', { count: r.unpaid_count }) }}</p>
             </td>
             <td class="px-3 py-2.5">
               <div class="flex items-center gap-2">
-                <span class="inline-block w-16 h-1.5 rounded-full bg-bimbel-border overflow-hidden">
+                <span class="inline-block w-16 h-1.5 rounded-full bg-tutoring-border overflow-hidden">
                   <span class="block h-full" :style="{ width: attendanceBar(r.attendance_rate).width, background: attendanceBar(r.attendance_rate).color }" />
                 </span>
                 <span>{{ r.attendance_rate ?? '–' }}%</span>
@@ -320,52 +320,52 @@ function exportCsv() {
       </table>
     </div>
 
-    <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
+    <div v-else class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-8 text-center text-sm text-tutoring-text-mid">
       {{ t('admin.bimbel.students.empty') }}
     </div>
 
     <div v-if="showCreate" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="showCreate = false">
-      <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
-        <h3 class="text-[16px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.students.modal_create_title') }}</h3>
-        <p class="text-[13px] text-bimbel-text-mid">{{ t('admin.bimbel.students.modal_create_subtitle') }}</p>
+      <div class="w-full max-w-md rounded-2xl bg-tutoring-panel p-5 shadow-xl space-y-3">
+        <h3 class="text-[16px] font-bold text-tutoring-text-hi">{{ t('admin.bimbel.students.modal_create_title') }}</h3>
+        <p class="text-[13px] text-tutoring-text-mid">{{ t('admin.bimbel.students.modal_create_subtitle') }}</p>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.students.field_name') }} <span class="text-rose-500">*</span></span>
-          <input v-model="createForm.name" type="text" required :placeholder="t('admin.bimbel.students.name_ph')" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.students.field_name') }} <span class="text-rose-500">*</span></span>
+          <input v-model="createForm.name" type="text" required :placeholder="t('admin.bimbel.students.name_ph')" class="mt-1 w-full rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.students.field_guardian') }}</span>
-          <input v-model="createForm.guardian_name" type="text" :placeholder="t('admin.bimbel.students.guardian_ph')" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.students.field_guardian') }}</span>
+          <input v-model="createForm.guardian_name" type="text" :placeholder="t('admin.bimbel.students.guardian_ph')" class="mt-1 w-full rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.students.field_guardian_phone') }}</span>
-          <input v-model="createForm.guardian_phone" type="tel" :placeholder="t('admin.bimbel.students.guardian_phone_ph')" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.students.field_guardian_phone') }}</span>
+          <input v-model="createForm.guardian_phone" type="tel" :placeholder="t('admin.bimbel.students.guardian_phone_ph')" class="mt-1 w-full rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none" />
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="showCreate = false">{{ t('admin.bimbel.students.cancel') }}</button>
-          <button type="button" :disabled="createBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitCreate">{{ createBusy ? t('admin.bimbel.students.saving') : t('admin.bimbel.students.save') }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-tutoring-border bg-tutoring-panel px-3 py-2 text-[14px] font-bold text-tutoring-text-hi hover:bg-tutoring-border-soft" @click="showCreate = false">{{ t('admin.bimbel.students.cancel') }}</button>
+          <button type="button" :disabled="createBusy" class="flex-1 rounded-lg bg-tutoring-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitCreate">{{ createBusy ? t('admin.bimbel.students.saving') : t('admin.bimbel.students.save') }}</button>
         </div>
       </div>
     </div>
 
     <div v-if="editTarget" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="editTarget = null">
-      <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
-        <h3 class="text-[16px] font-bold text-bimbel-text-hi">{{ t('admin.bimbel.students.modal_edit_title') }}</h3>
-        <p class="text-[13px] text-bimbel-text-mid">{{ editTarget.program_name ?? '—' }}<template v-if="editTarget.group_name"> · {{ editTarget.group_name }}</template></p>
+      <div class="w-full max-w-md rounded-2xl bg-tutoring-panel p-5 shadow-xl space-y-3">
+        <h3 class="text-[16px] font-bold text-tutoring-text-hi">{{ t('admin.bimbel.students.modal_edit_title') }}</h3>
+        <p class="text-[13px] text-tutoring-text-mid">{{ editTarget.program_name ?? '—' }}<template v-if="editTarget.group_name"> · {{ editTarget.group_name }}</template></p>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.students.field_name') }} <span class="text-rose-500">*</span></span>
-          <input v-model="editForm.name" type="text" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.students.field_name') }} <span class="text-rose-500">*</span></span>
+          <input v-model="editForm.name" type="text" required class="mt-1 w-full rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.students.field_guardian') }}</span>
-          <input v-model="editForm.guardian_name" type="text" :placeholder="t('admin.bimbel.students.guardian_keep_ph')" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.students.field_guardian') }}</span>
+          <input v-model="editForm.guardian_name" type="text" :placeholder="t('admin.bimbel.students.guardian_keep_ph')" class="mt-1 w-full rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.students.field_guardian_phone') }}</span>
-          <input v-model="editForm.guardian_phone" type="tel" :placeholder="t('admin.bimbel.students.guardian_keep_ph')" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.students.field_guardian_phone') }}</span>
+          <input v-model="editForm.guardian_phone" type="tel" :placeholder="t('admin.bimbel.students.guardian_keep_ph')" class="mt-1 w-full rounded-lg border border-tutoring-border bg-tutoring-bg px-3 py-2 text-[14px] text-tutoring-text-hi focus:border-tutoring-accent focus:outline-none" />
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="editTarget = null">{{ t('admin.bimbel.students.cancel') }}</button>
-          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? t('admin.bimbel.students.saving') : t('admin.bimbel.students.save') }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-tutoring-border bg-tutoring-panel px-3 py-2 text-[14px] font-bold text-tutoring-text-hi hover:bg-tutoring-border-soft" @click="editTarget = null">{{ t('admin.bimbel.students.cancel') }}</button>
+          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-tutoring-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? t('admin.bimbel.students.saving') : t('admin.bimbel.students.save') }}</button>
         </div>
       </div>
     </div>

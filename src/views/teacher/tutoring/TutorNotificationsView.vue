@@ -93,7 +93,7 @@ function rel(iso: string): string {
         <button
           v-if="unread > 0"
           type="button"
-          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold hover:opacity-90"
+          class="rounded-lg bg-white text-tutoring-accent px-3 py-1.5 text-[13px] font-bold hover:opacity-90"
           @click="markAll"
         >{{ t('tutor.bimbel.notifications.mark_all_read') }}</button>
       </template>
@@ -108,33 +108,33 @@ function rel(iso: string): string {
         :key="opt.id"
         type="button"
         class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
-        :class="filter === opt.id ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
+        :class="filter === opt.id ? 'border-tutoring-accent bg-tutoring-accent-dim text-tutoring-accent' : 'border-tutoring-border bg-tutoring-panel text-tutoring-text-mid'"
         @click="filter = opt.id"
       >{{ opt.label }}</button>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('tutor.bimbel.notifications.loading') }}</div>
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">{{ t('tutor.bimbel.notifications.loading') }}</div>
 
     <div v-else-if="filtered.length" class="space-y-2">
       <div
         v-for="n in filtered"
         :key="n.id"
         class="flex items-start gap-3 rounded-2xl border p-3"
-        :class="n.read_at ? 'border-bimbel-border-soft bg-bimbel-panel' : 'border-bimbel-accent/40 bg-bimbel-accent-dim'"
+        :class="n.read_at ? 'border-tutoring-border-soft bg-tutoring-panel' : 'border-tutoring-accent/40 bg-tutoring-accent-dim'"
       >
-        <span class="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-bimbel-accent-dim text-bimbel-accent">
+        <span class="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-tutoring-accent-dim text-tutoring-accent">
           <NavIcon :name="iconFor(n)" :size="15" />
         </span>
         <div class="min-w-0 flex-1">
-          <p class="text-[14px] font-bold text-bimbel-text-hi">{{ n.title }}</p>
-          <p v-if="n.body" class="text-[13px] text-bimbel-text-mid">{{ n.body }}</p>
+          <p class="text-[14px] font-bold text-tutoring-text-hi">{{ n.title }}</p>
+          <p v-if="n.body" class="text-[13px] text-tutoring-text-mid">{{ n.body }}</p>
         </div>
-        <span class="flex-shrink-0 text-[12px] text-bimbel-text-lo">{{ rel(n.created_at) }}</span>
-        <span v-if="!n.read_at" class="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-bimbel-accent" />
+        <span class="flex-shrink-0 text-[12px] text-tutoring-text-lo">{{ rel(n.created_at) }}</span>
+        <span v-if="!n.read_at" class="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-tutoring-accent" />
       </div>
     </div>
 
-    <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
+    <div v-else class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-8 text-center text-sm text-tutoring-text-mid">
       <template v-if="filter === 'unread'">{{ t('tutor.bimbel.notifications.empty_unread') }}</template>
       <template v-else>{{ t('tutor.bimbel.notifications.empty_all') }}</template>
     </div>

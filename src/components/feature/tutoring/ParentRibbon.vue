@@ -75,7 +75,7 @@ const styles = computed(() => {
       <p class="text-[13px] font-bold uppercase tracking-wider" :class="styles.accent">
         {{ label }}
       </p>
-      <p class="truncate text-[16px] font-extrabold tracking-tight text-bimbel-text-hi">
+      <p class="truncate text-[16px] font-extrabold tracking-tight text-tutoring-text-hi">
         {{ value }}
       </p>
       <p v-if="hint" class="truncate text-[13px]" :class="styles.accent">{{ hint }}</p>
@@ -92,7 +92,7 @@ const styles = computed(() => {
       v-else-if="clickable"
       name="chevron-right"
       :size="16"
-      class="flex-shrink-0 text-bimbel-text-lo"
+      class="flex-shrink-0 text-tutoring-text-lo"
     />
   </component>
 </template>

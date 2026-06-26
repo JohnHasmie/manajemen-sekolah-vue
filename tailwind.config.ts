@@ -63,31 +63,31 @@ const config: Config = {
           info: '#06B6D4',
           'info-soft': '#CFFAFE',
         },
-        // Bimbel surface tokens — mirror the mobile AdminPalette /
+        // Tutoring surface tokens — mirror the mobile AdminPalette /
         // TutorPalette / ParentPalette and now resolve through CSS
-        // variables. `--bimbel-*` defaults to DARK values in style.css
-        // (preserves existing behavior); the `.bimbel-light` wrapper
+        // variables. `--tutoring-*` defaults to DARK values in style.css
+        // (preserves existing behavior); the `.tutoring-light` wrapper
         // class flips the surface tokens to a light palette without
-        // touching the per-role `--bimbel-hero` / `--bimbel-accent` /
-        // `--bimbel-accent-soft` vars (those stay brand-identity).
+        // touching the per-role `--tutoring-hero` / `--tutoring-accent` /
+        // `--tutoring-accent-soft` vars (those stay brand-identity).
         //
         // Status colors (green / amber / red) stay constant — they
         // read on both light and dark surfaces and double as semantic
         // tone tokens shared with the mobile palette.
-        bimbel: {
-          bg: 'var(--bimbel-bg)',
-          panel: 'var(--bimbel-panel)',
-          'panel-navy': 'var(--bimbel-panel-navy)',
-          border: 'var(--bimbel-border)',
-          'border-soft': 'var(--bimbel-border-soft)',
-          'text-hi': 'var(--bimbel-text-hi)',
-          'text-mid': 'var(--bimbel-text-mid)',
-          'text-lo': 'var(--bimbel-text-lo)',
-          ring: 'var(--bimbel-ring)',
-          hero: 'var(--bimbel-hero)',
-          accent: 'var(--bimbel-accent)',
-          'accent-soft': 'var(--bimbel-accent-soft)',
-          'accent-dim': 'color-mix(in srgb, var(--bimbel-accent) 16%, transparent)',
+        tutoring: {
+          bg: 'var(--tutoring-bg)',
+          panel: 'var(--tutoring-panel)',
+          'panel-navy': 'var(--tutoring-panel-navy)',
+          border: 'var(--tutoring-border)',
+          'border-soft': 'var(--tutoring-border-soft)',
+          'text-hi': 'var(--tutoring-text-hi)',
+          'text-mid': 'var(--tutoring-text-mid)',
+          'text-lo': 'var(--tutoring-text-lo)',
+          ring: 'var(--tutoring-ring)',
+          hero: 'var(--tutoring-hero)',
+          accent: 'var(--tutoring-accent)',
+          'accent-soft': 'var(--tutoring-accent-soft)',
+          'accent-dim': 'color-mix(in srgb, var(--tutoring-accent) 16%, transparent)',
           green: '#4ADE80',
           amber: '#FBBF24',
           red: '#F87171',

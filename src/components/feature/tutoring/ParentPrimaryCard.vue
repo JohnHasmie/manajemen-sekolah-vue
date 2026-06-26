@@ -52,7 +52,7 @@ const TONE: Record<
 
 <template>
   <div
-    class="relative overflow-hidden rounded-2xl border border-bimbel-border-soft bg-bimbel-panel pl-5 pr-4 py-3.5"
+    class="relative overflow-hidden rounded-2xl border border-tutoring-border-soft bg-tutoring-panel pl-5 pr-4 py-3.5"
   >
     <span class="absolute left-0 top-0 h-full w-1.5" :class="TONE[tone].bar" />
     <div class="flex items-start justify-between gap-3">
@@ -65,12 +65,12 @@ const TONE: Record<
           {{ kicker }}
         </p>
         <h3
-          class="mt-0.5 flex items-center gap-2 text-[15px] font-extrabold tracking-tight text-bimbel-text-hi"
+          class="mt-0.5 flex items-center gap-2 text-[15px] font-extrabold tracking-tight text-tutoring-text-hi"
         >
           <NavIcon v-if="icon" :name="icon" :size="15" :class="TONE[tone].chipText" />
           <span class="truncate">{{ title }}</span>
         </h3>
-        <p v-if="subtitle" class="mt-0.5 text-[13px] text-bimbel-text-mid">{{ subtitle }}</p>
+        <p v-if="subtitle" class="mt-0.5 text-[13px] text-tutoring-text-mid">{{ subtitle }}</p>
       </div>
       <span
         v-if="chip"
@@ -80,7 +80,7 @@ const TONE: Record<
         {{ chip }}
       </span>
     </div>
-    <div v-if="$slots.default" class="mt-2.5 text-[13px] text-bimbel-text-mid">
+    <div v-if="$slots.default" class="mt-2.5 text-[13px] text-tutoring-text-mid">
       <slot />
     </div>
     <div v-if="$slots.actions" class="mt-3 flex flex-wrap gap-2">

@@ -16,7 +16,7 @@ defineEmits<{ (e: 'update:modelValue', v: string): void }>();
 
 <template>
   <div
-    class="flex gap-1 rounded-xl border border-bimbel-border-soft bg-bimbel-panel p-1"
+    class="flex gap-1 rounded-xl border border-tutoring-border-soft bg-tutoring-panel p-1"
     :class="fit ? 'inline-flex' : 'w-full'"
   >
     <button
@@ -27,7 +27,7 @@ defineEmits<{ (e: 'update:modelValue', v: string): void }>();
       :class="
         modelValue === t.id
           ? 'bg-[#21afe6] text-white shadow'
-          : 'text-bimbel-text-mid hover:text-bimbel-text-hi'
+          : 'text-tutoring-text-mid hover:text-tutoring-text-hi'
       "
       @click="$emit('update:modelValue', t.id)"
     >

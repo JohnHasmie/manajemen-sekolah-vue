@@ -39,7 +39,7 @@ const stats = computed(() => {
 });
 
 function pctClass(pct: number | null): string {
-  if (pct == null) return 'bg-bimbel-border';
+  if (pct == null) return 'bg-tutoring-border';
   if (pct >= 90) return 'bg-emerald-500';
   if (pct >= 70) return 'bg-amber-500';
   return 'bg-rose-500';
@@ -73,24 +73,24 @@ function pctClass(pct: number | null): string {
         :key="opt.id"
         type="button"
         class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
-        :class="type === opt.id ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
+        :class="type === opt.id ? 'border-tutoring-accent bg-tutoring-accent-dim text-tutoring-accent' : 'border-tutoring-border bg-tutoring-panel text-tutoring-text-mid'"
         @click="type = opt.id"
       >{{ opt.label }}</button>
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-      <div v-for="s in stats" :key="s.label" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-        <p class="text-[13px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ s.label }}</p>
-        <p class="mt-1 text-[22px] font-extrabold text-bimbel-text-hi">{{ s.value }}</p>
+      <div v-for="s in stats" :key="s.label" class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-3.5">
+        <p class="text-[13px] font-bold uppercase tracking-widest text-tutoring-text-mid">{{ s.label }}</p>
+        <p class="mt-1 text-[22px] font-extrabold text-tutoring-text-hi">{{ s.value }}</p>
       </div>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.activity_report.loading') }}</div>
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">{{ t('admin.bimbel.activity_report.loading') }}</div>
 
-    <div v-else-if="data?.rows?.length" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
+    <div v-else-if="data?.rows?.length" class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel overflow-hidden">
       <table class="w-full text-[14px]">
-        <thead class="bg-bimbel-bg/40">
-          <tr class="text-left text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">
+        <thead class="bg-tutoring-bg/40">
+          <tr class="text-left text-[13px] font-bold uppercase tracking-wider text-tutoring-text-mid">
             <th class="px-3 py-2">{{ t('admin.bimbel.activity_report.th_group') }}</th>
             <th class="px-3 py-2 w-[120px]">{{ t('admin.bimbel.activity_report.th_tutor') }}</th>
             <th class="px-3 py-2 w-[80px]">{{ t('admin.bimbel.activity_report.th_type') }}</th>
@@ -101,16 +101,16 @@ function pctClass(pct: number | null): string {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in data.rows" :key="r.group_id + r.type" class="border-t border-bimbel-border-soft">
+          <tr v-for="r in data.rows" :key="r.group_id + r.type" class="border-t border-tutoring-border-soft">
             <td class="px-3 py-2.5">
-              <p class="font-bold text-bimbel-text-hi">{{ r.group_name }}</p>
-              <p v-if="r.program_name" class="text-[13px] text-bimbel-text-mid">{{ r.program_name }}</p>
+              <p class="font-bold text-tutoring-text-hi">{{ r.group_name }}</p>
+              <p v-if="r.program_name" class="text-[13px] text-tutoring-text-mid">{{ r.program_name }}</p>
             </td>
-            <td class="px-3 py-2.5 text-bimbel-text-mid">{{ r.tutor_name ?? '—' }}</td>
-            <td class="px-3 py-2.5 text-bimbel-text-mid">{{ r.type }}</td>
-            <td class="px-3 py-2.5 text-bimbel-text-mid">{{ r.created }}</td>
+            <td class="px-3 py-2.5 text-tutoring-text-mid">{{ r.tutor_name ?? '—' }}</td>
+            <td class="px-3 py-2.5 text-tutoring-text-mid">{{ r.type }}</td>
+            <td class="px-3 py-2.5 text-tutoring-text-mid">{{ r.created }}</td>
             <td class="px-3 py-2.5">
-              <span class="inline-block w-16 h-1.5 rounded-full bg-bimbel-border align-middle overflow-hidden mr-1.5">
+              <span class="inline-block w-16 h-1.5 rounded-full bg-tutoring-border align-middle overflow-hidden mr-1.5">
                 <span class="block h-full" :class="pctClass(r.created > 0 ? Math.round((r.submitted / r.created) * 100) : null)" :style="{ width: r.created > 0 ? `${Math.min(100, Math.round((r.submitted / r.created) * 100))}%` : '0%' }" />
               </span>
               <span class="text-[14px]">{{ r.submitted }}/{{ r.created }}</span>
@@ -122,7 +122,7 @@ function pctClass(pct: number | null): string {
       </table>
     </div>
 
-    <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
+    <div v-else class="rounded-2xl border border-tutoring-border-soft bg-tutoring-panel p-8 text-center text-sm text-tutoring-text-mid">
       {{ t('admin.bimbel.activity_report.empty') }}
     </div>
   </div>

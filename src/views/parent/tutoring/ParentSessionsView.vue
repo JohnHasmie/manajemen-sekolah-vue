@@ -84,9 +84,9 @@ function statusPillCls(s: TutoringSession): string {
   const at = s.scheduled_at ? new Date(s.scheduled_at).valueOf() : 0;
   const isPast = at && at < Date.now();
   const attended = (s as WithMeta).attended;
-  if (s.status === 'DONE' || (isPast && attended === true)) return `${base} bg-bimbel-green-dim text-green-700`;
-  if (s.status === 'CANCELLED' || (isPast && attended === false)) return `${base} bg-bimbel-red-dim text-red-700`;
-  return `${base} bg-bimbel-accent-dim text-bimbel-hero`;
+  if (s.status === 'DONE' || (isPast && attended === true)) return `${base} bg-tutoring-green-dim text-green-700`;
+  if (s.status === 'CANCELLED' || (isPast && attended === false)) return `${base} bg-tutoring-red-dim text-red-700`;
+  return `${base} bg-tutoring-accent-dim text-tutoring-hero`;
 }
 
 // ── Counts ──────────────────────────────────────────────────────
@@ -188,7 +188,7 @@ const grouped = computed(() => {
         <ParentChildPickerChip />
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-tutoring-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="toggleView"
         >
           <NavIcon :name="view === 'list' ? 'calendar' : 'list'" :size="13" />
@@ -206,8 +206,8 @@ const grouped = computed(() => {
         class="rounded-full px-2.5 py-1 text-[12px] transition-colors"
         :class="
           subjectFilter === opt.id
-            ? 'bg-bimbel-accent-dim text-bimbel-hero font-bold'
-            : 'bg-bimbel-bg text-bimbel-text-mid'
+            ? 'bg-tutoring-accent-dim text-tutoring-hero font-bold'
+            : 'bg-tutoring-bg text-tutoring-text-mid'
         "
         @click="subjectFilter = opt.id"
       >{{ opt.label }}</button>
@@ -217,30 +217,30 @@ const grouped = computed(() => {
     <template v-if="view === 'list'">
       <div
         v-if="!grouped.length"
-        class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-8 text-center text-[14px] text-bimbel-text-mid"
+        class="rounded-xl bg-tutoring-panel border border-tutoring-border-soft p-8 text-center text-[14px] text-tutoring-text-mid"
       >{{ t('wali.bimbel.sessions.empty') }}</div>
 
       <template v-for="g in grouped" :key="g.label">
-        <p class="text-[10px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase pt-2.5 pb-1">
+        <p class="text-[10px] tracking-[0.1em] text-tutoring-text-lo font-bold uppercase pt-2.5 pb-1">
           {{ g.label }}
         </p>
         <div
           v-for="s in g.items"
           :key="s.id"
-          class="rounded-lg bg-bimbel-bg p-2.5 flex items-center gap-2.5"
+          class="rounded-lg bg-tutoring-bg p-2.5 flex items-center gap-2.5"
         >
           <div class="w-16 flex-shrink-0">
-            <p class="text-[14px] font-bold text-bimbel-text-hi">{{ timeOnly(s.scheduled_at) }}</p>
-            <p class="text-[12px] text-bimbel-text-mid">{{ t('wali.bimbel.sessions.duration_minutes', { count: s.duration_minutes ?? 60 }) }}</p>
+            <p class="text-[14px] font-bold text-tutoring-text-hi">{{ timeOnly(s.scheduled_at) }}</p>
+            <p class="text-[12px] text-tutoring-text-mid">{{ t('wali.bimbel.sessions.duration_minutes', { count: s.duration_minutes ?? 60 }) }}</p>
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[13px] font-bold text-bimbel-text-hi">
+            <p class="text-[13px] font-bold text-tutoring-text-hi">
               {{ (s as any).subject || s.group?.program?.name || '—' }}
-              <span class="text-bimbel-text-mid font-normal">
+              <span class="text-tutoring-text-mid font-normal">
                 · {{ (s as any).group_code || s.group?.name || '' }}
               </span>
             </p>
-            <p class="text-[12px] text-bimbel-text-mid">
+            <p class="text-[12px] text-tutoring-text-mid">
               {{ [(s as any).tutor_name ?? s.tutor?.name, s.room, s.topic].filter(Boolean).join(' · ') || '—' }}
             </p>
           </div>

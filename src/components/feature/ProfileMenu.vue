@@ -24,8 +24,8 @@ const router = useRouter();
 const { t } = useI18n();
 
 /**
- * Appearance picker is only meaningful on the bimbel surface (the
- * `--bimbel-*` CSS vars are the only thing the light/dark toggle
+ * Appearance picker is only meaningful on the tutoring surface (the
+ * `--tutoring-*` CSS vars are the only thing the light/dark toggle
  * controls). For school tenants the rest of the app is locked to
  * the light chrome anyway, so we hide the menu item to avoid an
  * inert affordance.
@@ -416,8 +416,8 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
         </button>
 
         <!--
-          Appearance (Appearance) — only shown on bimbel tenants because
-          the light/dark switch is wired to the `--bimbel-*` CSS
+          Appearance (Appearance) — only shown on tutoring tenants because
+          the light/dark switch is wired to the `--tutoring-*` CSS
           variables; school tenants render on the locked-light school
           chrome where the toggle would be a no-op.
         -->

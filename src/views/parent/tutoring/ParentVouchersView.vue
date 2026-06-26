@@ -85,22 +85,22 @@ function mapVoucher(v: TutoringVoucher): VoucherView {
   let valueCls = '';
   if (v.type === 'PERCENTAGE') {
     valueLabel = `${v.value}%`;
-    valueCls = used ? 'text-bimbel-text-mid' : 'text-orange-700';
+    valueCls = used ? 'text-tutoring-text-mid' : 'text-orange-700';
   } else {
     valueLabel = formatRupiah(v.value);
-    valueCls = used ? 'text-bimbel-text-mid' : 'text-bimbel-hero';
+    valueCls = used ? 'text-tutoring-text-mid' : 'text-tutoring-hero';
   }
   // "Gratis 1 session" — backend never ships a free-session voucher type
   // yet, but if value === 0 and it's PERCENTAGE 100, show the friendlier
   // label per spec.
   if (v.type === 'PERCENTAGE' && v.value === 100) {
     valueLabel = t('wali.bimbel.vouchers.free_label');
-    valueCls = used ? 'text-bimbel-text-mid' : 'text-green-700';
+    valueCls = used ? 'text-tutoring-text-mid' : 'text-green-700';
   }
 
   // Footer line — urgency / validity / usage.
   let footerText = '';
-  let footerCls = 'text-bimbel-text-lo';
+  let footerCls = 'text-tutoring-text-lo';
   if (used) {
     footerText = isExpired(v)
       ? t('wali.bimbel.vouchers.expired_on', { date: dateShort(v.valid_until) })
@@ -144,16 +144,16 @@ const visible = computed<VoucherView[]>(() => {
       <template #actions>
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-tutoring-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="view = view === 'history' ? 'active' : 'history'"
         >{{ view === 'history' ? t('wali.bimbel.vouchers.toggle_active') : t('wali.bimbel.vouchers.toggle_history') }}</button>
       </template>
     </ParentHomeHero>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.vouchers.loading') }}</div>
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">{{ t('wali.bimbel.vouchers.loading') }}</div>
 
     <template v-else>
-      <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+      <p class="text-[12px] tracking-[0.1em] text-tutoring-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
         {{ view === 'history' ? t('wali.bimbel.vouchers.heading_history') : t('wali.bimbel.vouchers.heading_active') }}
       </p>
 
@@ -161,15 +161,15 @@ const visible = computed<VoucherView[]>(() => {
         <div
           v-for="v in visible"
           :key="v.id"
-          class="rounded-lg bg-bimbel-panel border border-dashed border-bimbel-border-soft p-3 relative overflow-hidden"
+          class="rounded-lg bg-tutoring-panel border border-dashed border-tutoring-border-soft p-3 relative overflow-hidden"
           :class="[
             v.urgent ? 'border-solid border-orange-600' : '',
             v.used ? 'opacity-60 border-solid' : '',
           ]"
         >
           <p class="text-[24px] font-extrabold leading-none" :class="v.valueCls">{{ v.valueLabel }}</p>
-          <p class="text-[12px] text-bimbel-text-mid my-1">{{ v.description }}</p>
-          <span class="font-mono text-[12px] bg-bimbel-bg px-2 py-1 rounded inline-block tracking-wider mt-2">{{ v.code }}</span>
+          <p class="text-[12px] text-tutoring-text-mid my-1">{{ v.description }}</p>
+          <span class="font-mono text-[12px] bg-tutoring-bg px-2 py-1 rounded inline-block tracking-wider mt-2">{{ v.code }}</span>
           <p class="text-[10px] mt-1.5" :class="v.footerCls">
             <NavIcon name="clock" :size="11" class="inline align-text-bottom" />{{ ' ' }}{{ v.footerText }}
           </p>
@@ -177,7 +177,7 @@ const visible = computed<VoucherView[]>(() => {
 
         <p
           v-if="!visible.length"
-          class="col-span-full text-center text-[13px] text-bimbel-text-mid py-6"
+          class="col-span-full text-center text-[13px] text-tutoring-text-mid py-6"
         >{{ view === 'history' ? t('wali.bimbel.vouchers.empty_history') : t('wali.bimbel.vouchers.empty_active') }}</p>
       </div>
     </template>

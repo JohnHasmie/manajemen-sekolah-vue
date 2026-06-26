@@ -132,7 +132,7 @@ onMounted(load);
       :meta="t('tutoring.billing.hint')"
     />
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
+    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
@@ -160,11 +160,11 @@ onMounted(load);
           },
         ]"
         :key="cfg.t"
-        class="flex items-center justify-between gap-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl px-4 py-3 mb-2 cursor-pointer"
+        class="flex items-center justify-between gap-3 bg-tutoring-panel border border-tutoring-border-soft rounded-2xl px-4 py-3 mb-2 cursor-pointer"
       >
         <span class="min-w-0">
-          <span class="block text-sm font-semibold text-bimbel-text-hi">{{ cfg.t }}</span>
-          <span class="block text-xs text-bimbel-text-mid mt-0.5">{{ cfg.s }}</span>
+          <span class="block text-sm font-semibold text-tutoring-text-hi">{{ cfg.t }}</span>
+          <span class="block text-xs text-tutoring-text-mid mt-0.5">{{ cfg.s }}</span>
         </span>
         <input
           :checked="cfg.v"
@@ -177,7 +177,7 @@ onMounted(load);
       <TutoringSectionHeader :title="t('tutoring.billing.defaultMode')" />
       <select
         v-model="defaultMode"
-        class="w-full rounded-lg border border-bimbel-border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
+        class="w-full rounded-lg border border-tutoring-border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-tutoring-accent"
       >
         <option :value="null">{{ t('tutoring.billing.none') }}</option>
         <option v-for="m in enabledModes" :key="m" :value="m">
@@ -187,39 +187,39 @@ onMounted(load);
 
       <!-- ── Rekening Bimbel ─────────────────────────────────────── -->
       <TutoringSectionHeader :title="t('admin.bimbel.billing_settings.bank_section')" />
-      <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 space-y-3">
-        <p class="text-xs text-bimbel-text-mid">
+      <div class="bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4 space-y-3">
+        <p class="text-xs text-tutoring-text-mid">
           {{ t('admin.bimbel.billing_settings.bank_hint') }}
         </p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="block">
-            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.billing_settings.bank_name_label') }}</span>
+            <span class="text-[12px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.billing_settings.bank_name_label') }}</span>
             <input
               v-model="bankName"
               type="text"
               maxlength="80"
               :placeholder="t('admin.bimbel.billing_settings.bank_name_ph')"
-              class="mt-1 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm"
+              class="mt-1 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm"
             />
           </label>
           <label class="block">
-            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.billing_settings.bank_account_number_label') }}</span>
+            <span class="text-[12px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.billing_settings.bank_account_number_label') }}</span>
             <input
               v-model="bankAccountNumber"
               type="text"
               maxlength="40"
               :placeholder="t('admin.bimbel.billing_settings.bank_account_number_ph')"
-              class="mt-1 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm font-mono"
+              class="mt-1 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm font-mono"
             />
           </label>
           <label class="block sm:col-span-2">
-            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.billing_settings.bank_account_holder_label') }}</span>
+            <span class="text-[12px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.billing_settings.bank_account_holder_label') }}</span>
             <input
               v-model="bankAccountHolder"
               type="text"
               maxlength="120"
               :placeholder="t('admin.bimbel.billing_settings.bank_account_holder_ph')"
-              class="mt-1 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm"
+              class="mt-1 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm"
             />
           </label>
         </div>
@@ -227,20 +227,20 @@ onMounted(load);
 
       <!-- ── QRIS ─────────────────────────────────────────────────── -->
       <TutoringSectionHeader :title="t('admin.bimbel.billing_settings.qris_section')" />
-      <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 space-y-3">
-        <p class="text-xs text-bimbel-text-mid">
+      <div class="bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4 space-y-3">
+        <p class="text-xs text-tutoring-text-mid">
           {{ t('admin.bimbel.billing_settings.qris_hint') }}
         </p>
         <div class="flex items-start gap-4">
           <div
             v-if="qrisImageUrl"
-            class="h-32 w-32 rounded-lg border border-bimbel-border bg-bimbel-bg overflow-hidden flex items-center justify-center shrink-0"
+            class="h-32 w-32 rounded-lg border border-tutoring-border bg-tutoring-bg overflow-hidden flex items-center justify-center shrink-0"
           >
             <img :src="qrisImageUrl" :alt="t('admin.bimbel.billing_settings.qris_alt')" class="max-h-full max-w-full" />
           </div>
           <div
             v-else
-            class="h-32 w-32 rounded-lg border-2 border-dashed border-bimbel-border bg-bimbel-bg flex items-center justify-center text-bimbel-text-lo shrink-0"
+            class="h-32 w-32 rounded-lg border-2 border-dashed border-tutoring-border bg-tutoring-bg flex items-center justify-center text-tutoring-text-lo shrink-0"
           >
             <NavIcon name="image" :size="32" />
           </div>
@@ -248,27 +248,27 @@ onMounted(load);
             <input
               type="file"
               accept="image/png,image/jpeg"
-              class="block w-full text-xs file:mr-3 file:rounded-md file:border-0 file:bg-bimbel-accent/10 file:text-bimbel-accent file:px-3 file:py-2 file:font-bold file:text-[12px] file:cursor-pointer"
+              class="block w-full text-xs file:mr-3 file:rounded-md file:border-0 file:bg-tutoring-accent/10 file:text-tutoring-accent file:px-3 file:py-2 file:font-bold file:text-[12px] file:cursor-pointer"
               :disabled="qrisUploading"
               @change="onQrisChange"
             />
             <button
               v-if="qrisImageUrl"
               type="button"
-              class="text-[12px] font-bold text-bimbel-red hover:underline"
+              class="text-[12px] font-bold text-tutoring-red hover:underline"
               @click="qrisImageUrl = null"
             >
               {{ t('admin.bimbel.billing_settings.qris_remove') }}
             </button>
-            <p v-if="qrisUploading" class="text-[12px] text-bimbel-text-lo">{{ t('admin.bimbel.billing_settings.qris_uploading') }}</p>
+            <p v-if="qrisUploading" class="text-[12px] text-tutoring-text-lo">{{ t('admin.bimbel.billing_settings.qris_uploading') }}</p>
           </div>
         </div>
       </div>
 
       <!-- ── Instruksi Pembayaran ────────────────────────────────── -->
       <TutoringSectionHeader :title="t('admin.bimbel.billing_settings.instructions_section')" />
-      <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 space-y-2">
-        <p class="text-xs text-bimbel-text-mid">
+      <div class="bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4 space-y-2">
+        <p class="text-xs text-tutoring-text-mid">
           {{ t('admin.bimbel.billing_settings.instructions_hint') }}
         </p>
         <textarea
@@ -276,17 +276,17 @@ onMounted(load);
           rows="4"
           maxlength="2000"
           :placeholder="t('admin.bimbel.billing_settings.instructions_ph')"
-          class="w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm resize-none"
+          class="w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm resize-none"
         />
       </div>
 
       <!-- ── Payment Gateway (placeholder) ───────────────────────── -->
       <TutoringSectionHeader :title="t('admin.bimbel.billing_settings.gateway_section')" />
-      <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 space-y-3">
+      <div class="bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4 space-y-3">
         <label class="flex items-center justify-between gap-3 cursor-pointer">
           <span class="min-w-0">
-            <span class="block text-sm font-semibold text-bimbel-text-hi">{{ t('admin.bimbel.billing_settings.gateway_enable') }}</span>
-            <span class="block text-xs text-bimbel-text-mid mt-0.5">
+            <span class="block text-sm font-semibold text-tutoring-text-hi">{{ t('admin.bimbel.billing_settings.gateway_enable') }}</span>
+            <span class="block text-xs text-tutoring-text-mid mt-0.5">
               {{ t('admin.bimbel.billing_settings.gateway_enable_sub') }}
             </span>
           </span>
@@ -298,10 +298,10 @@ onMounted(load);
         </label>
         <div v-if="paymentGatewayEnabled" class="space-y-2">
           <label class="block">
-            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.billing_settings.gateway_provider_label') }}</span>
+            <span class="text-[12px] font-bold uppercase tracking-wider text-tutoring-text-mid">{{ t('admin.bimbel.billing_settings.gateway_provider_label') }}</span>
             <select
               v-model="paymentGatewayProvider"
-              class="mt-1 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm"
+              class="mt-1 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm"
             >
               <option value="">{{ t('admin.bimbel.billing_settings.gateway_provider_pick') }}</option>
               <option value="midtrans">Midtrans</option>
@@ -319,7 +319,7 @@ onMounted(load);
 
       <button
         :disabled="saving"
-        class="mt-4 w-full rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+        class="mt-4 w-full rounded-lg bg-tutoring-accent hover:opacity-90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
         @click="save"
       >
         {{ saving ? t('tutoring.common.saving') : t('tutoring.common.save') }}
