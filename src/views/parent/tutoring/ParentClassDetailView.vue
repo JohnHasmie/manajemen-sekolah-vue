@@ -12,7 +12,7 @@ import { useChildPicker } from '@/composables/useChildPicker';
 import type {
   TutoringFeedEvent,
   TutoringProgress,
-  TutoringWaliClassMeta,
+  TutoringParentClassMeta,
 } from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
@@ -32,7 +32,7 @@ type TabId = 'aliran' | 'tugas' | 'nilai' | 'siswa';
 const activeTab = ref<TabId>('aliran');
 
 const loading = ref(true);
-const meta = ref<(TutoringWaliClassMeta & {
+const meta = ref<(TutoringParentClassMeta & {
   subject?: string | null;
   schedule_label?: string | null;
   students_count?: number | null;
@@ -47,11 +47,11 @@ async function load() {
   loading.value = true;
   try {
     const [allMeta, f, prog] = await Promise.all([
-      TutoringService.getWaliClassMeta(sid).catch(() => [] as TutoringWaliClassMeta[]),
+      TutoringService.getWaliClassMeta(sid).catch(() => [] as TutoringParentClassMeta[]),
       TutoringService.getStudentFeed(sid, { limit: 30, sinceDays: 60 }).catch(() => [] as TutoringFeedEvent[]),
       TutoringService.getProgress(sid).catch(() => null as TutoringProgress | null),
     ]);
-    meta.value = (allMeta as TutoringWaliClassMeta[]).find((m) => m.group_id === gid) ?? null;
+    meta.value = (allMeta as TutoringParentClassMeta[]).find((m) => m.group_id === gid) ?? null;
     feed.value = (f as TutoringFeedEvent[]).filter((e) => {
       const m = e.meta as Record<string, unknown> | undefined;
       return !m || !m.group_id || String(m.group_id) === gid;

@@ -507,7 +507,7 @@ export interface TutoringActivitySubmission {
 /** Rich per-class meta for the wali Kelas list page.
  *  Mirrors GetWaliClassMetaAction (one row per kelompok the student
  *  is enrolled in). */
-export interface TutoringWaliClassMeta {
+export interface TutoringParentClassMeta {
   group_id: string;
   group_name: string;
   program_id?: string | null;

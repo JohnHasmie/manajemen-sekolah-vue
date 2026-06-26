@@ -13,21 +13,21 @@
  * iterate over.
  */
 import type {
-  BimbelBillingMode,
-  BimbelJenjang,
-  BimbelStudentScale,
-  BimbelTutorScale,
-  DemoBimbelLocation,
-  DemoBimbelPayload,
+  TutoringBillingMode,
+  TutoringEducationLevel,
+  TutoringStudentScale,
+  TutoringTutorScale,
+  DemoTutoringLocation,
+  DemoTutoringPayload,
   DemoWizardPayload,
-  Jenjang,
+  EducationLevel,
 } from '@/types/demo';
 import {
-  BIMBEL_BILLING_MODE_LABEL,
-  BIMBEL_DEFAULT_PROGRAMS,
-  BIMBEL_JENJANG_LABEL,
-  BIMBEL_STUDENT_SCALE_LABEL,
-  BIMBEL_TUTOR_SCALE_LABEL,
+  TUTORING_BILLING_MODE_LABEL,
+  TUTORING_DEFAULT_PROGRAMS,
+  TUTORING_EDUCATION_LEVEL_LABEL,
+  TUTORING_STUDENT_SCALE_LABEL,
+  TUTORING_TUTOR_SCALE_LABEL,
   DEMO_SOCIAL_CHANNELS,
   defaultSubjectsFor,
 } from '@/types/demo';
@@ -128,25 +128,25 @@ export interface Question {
   skipIf?: (p: DemoWizardPayload) => boolean;
 }
 
-/* ─────────────────────────── BIMBEL PATH ─────────────────────────── */
+/* ────────────────────── TUTORING CENTER PATH ─────────────────────── */
 
-const BIMBEL_TARGET_OPTIONS: QuestionOption[] = (
-  ['SD', 'SMP', 'SMA', 'SNBT', 'KARYAWAN', 'UMUM'] as BimbelJenjang[]
-).map((v) => ({ value: v, label: BIMBEL_JENJANG_LABEL[v] }));
+const TUTORING_TARGET_OPTIONS: QuestionOption[] = (
+  ['SD', 'SMP', 'SMA', 'SNBT', 'KARYAWAN', 'UMUM'] as TutoringEducationLevel[]
+).map((v) => ({ value: v, label: TUTORING_EDUCATION_LEVEL_LABEL[v] }));
 
-const BIMBEL_STUDENT_SCALE_OPTIONS: QuestionOption[] = (
-  ['lt50', '50_200', '200_500', 'gt500'] as BimbelStudentScale[]
-).map((v) => ({ value: v, label: BIMBEL_STUDENT_SCALE_LABEL[v] }));
+const TUTORING_STUDENT_SCALE_OPTIONS: QuestionOption[] = (
+  ['lt50', '50_200', '200_500', 'gt500'] as TutoringStudentScale[]
+).map((v) => ({ value: v, label: TUTORING_STUDENT_SCALE_LABEL[v] }));
 
-const BIMBEL_TUTOR_SCALE_OPTIONS: QuestionOption[] = (
-  ['1_3', '4_10', '11_30', 'gt30'] as BimbelTutorScale[]
-).map((v) => ({ value: v, label: BIMBEL_TUTOR_SCALE_LABEL[v] }));
+const TUTORING_TUTOR_SCALE_OPTIONS: QuestionOption[] = (
+  ['1_3', '4_10', '11_30', 'gt30'] as TutoringTutorScale[]
+).map((v) => ({ value: v, label: TUTORING_TUTOR_SCALE_LABEL[v] }));
 
-const BIMBEL_BILLING_OPTIONS: QuestionOption[] = (
-  ['PER_SESSION', 'PER_MONTH', 'PACKAGE'] as BimbelBillingMode[]
+const TUTORING_BILLING_OPTIONS: QuestionOption[] = (
+  ['PER_SESSION', 'PER_MONTH', 'PACKAGE'] as TutoringBillingMode[]
 ).map((v) => ({
   value: v,
-  label: BIMBEL_BILLING_MODE_LABEL[v],
+  label: TUTORING_BILLING_MODE_LABEL[v],
   hint:
     v === 'PER_SESSION'
       ? 'Tagihan otomatis terbit setiap sesi tercatat'
@@ -155,15 +155,16 @@ const BIMBEL_BILLING_OPTIONS: QuestionOption[] = (
         : 'Bayar sekali untuk seluruh paket program',
 }));
 
-function patchBimbel<K extends keyof DemoBimbelPayload>(
+/* `p.bimbel` field name kept — backend payload key. */
+function patchTutoring<K extends keyof DemoTutoringPayload>(
   p: DemoWizardPayload,
   key: K,
-  value: DemoBimbelPayload[K],
+  value: DemoTutoringPayload[K],
 ): DemoWizardPayload {
   return { ...p, bimbel: { ...p.bimbel, [key]: value } };
 }
 
-export const BIMBEL_QUESTIONS: readonly Question[] = [
+export const TUTORING_QUESTIONS: readonly Question[] = [
   {
     key: 'bimbel.name',
     chapter: 'Tentang lembaga',
@@ -174,7 +175,7 @@ export const BIMBEL_QUESTIONS: readonly Question[] = [
     placeholder: 'mis. Cahaya Prestasi Bimbel',
     gibberishCheck: true,
     value: (p) => p.bimbel.name,
-    setValue: (p, v) => patchBimbel(p, 'name', String(v ?? '')),
+    setValue: (p, v) => patchTutoring(p, 'name', String(v ?? '')),
     isValid: (p) => p.bimbel.name.trim().length >= 3,
   },
   {
@@ -187,7 +188,7 @@ export const BIMBEL_QUESTIONS: readonly Question[] = [
     input: 'location',
     value: (p) => p.bimbel.location,
     setValue: (p, v) =>
-      patchBimbel(p, 'location', (v as DemoBimbelLocation | null) ?? null),
+      patchTutoring(p, 'location', (v as DemoTutoringLocation | null) ?? null),
     isValid: (p) => {
       const loc = p.bimbel.location;
       if (!loc) return false;
@@ -208,19 +209,19 @@ export const BIMBEL_QUESTIONS: readonly Question[] = [
     // want to override.
     skipIf: (p) => (p.bimbel.city ?? '').trim().length >= 2 && p.bimbel.location != null,
     value: (p) => p.bimbel.city ?? '',
-    setValue: (p, v) => patchBimbel(p, 'city', String(v ?? '') || null),
+    setValue: (p, v) => patchTutoring(p, 'city', String(v ?? '') || null),
     isValid: (p) => (p.bimbel.city ?? '').trim().length >= 2,
   },
   {
     key: 'bimbel.target_levels',
     chapter: 'Tentang lembaga',
-    prompt: 'Jenjang apa saja yang Anda bimbing?',
+    prompt: 'EducationLevel apa saja yang Anda bimbing?',
     helper: 'Pilih satu atau lebih. Bisa diubah lagi setelah demo aktif.',
     required: true,
     input: 'chips_multi',
-    options: BIMBEL_TARGET_OPTIONS,
+    options: TUTORING_TARGET_OPTIONS,
     value: (p) => p.bimbel.target_levels,
-    setValue: (p, v) => patchBimbel(p, 'target_levels', (v as BimbelJenjang[]) ?? []),
+    setValue: (p, v) => patchTutoring(p, 'target_levels', (v as TutoringEducationLevel[]) ?? []),
     isValid: (p) => p.bimbel.target_levels.length > 0,
   },
   {
@@ -230,9 +231,9 @@ export const BIMBEL_QUESTIONS: readonly Question[] = [
     helper: 'Estimasi kasar saja — data demo akan disesuaikan dengan skala ini.',
     required: true,
     input: 'pills',
-    options: BIMBEL_STUDENT_SCALE_OPTIONS,
+    options: TUTORING_STUDENT_SCALE_OPTIONS,
     value: (p) => p.bimbel.student_scale,
-    setValue: (p, v) => patchBimbel(p, 'student_scale', v as BimbelStudentScale),
+    setValue: (p, v) => patchTutoring(p, 'student_scale', v as TutoringStudentScale),
     isValid: (p) => !!p.bimbel.student_scale,
   },
   {
@@ -242,11 +243,11 @@ export const BIMBEL_QUESTIONS: readonly Question[] = [
     helper: 'Tap untuk pilih dari saran, atau tambahkan program khusus Anda.',
     required: true,
     input: 'chips_add',
-    suggestions: [...BIMBEL_DEFAULT_PROGRAMS],
+    suggestions: [...TUTORING_DEFAULT_PROGRAMS],
     placeholder: 'mis. Intensif SNBT 2026',
     value: (p) => p.bimbel.programs,
     setValue: (p, v) =>
-      patchBimbel(
+      patchTutoring(
         p,
         'programs',
         ((v as string[]) ?? []).map((s) => s.trim()).filter(Boolean),
@@ -262,9 +263,9 @@ export const BIMBEL_QUESTIONS: readonly Question[] = [
     helper: 'Untuk menentukan jumlah akun tutor dummy yang dibuatkan.',
     required: true,
     input: 'pills',
-    options: BIMBEL_TUTOR_SCALE_OPTIONS,
+    options: TUTORING_TUTOR_SCALE_OPTIONS,
     value: (p) => p.bimbel.tutor_scale,
-    setValue: (p, v) => patchBimbel(p, 'tutor_scale', v as BimbelTutorScale),
+    setValue: (p, v) => patchTutoring(p, 'tutor_scale', v as TutoringTutorScale),
     isValid: (p) => !!p.bimbel.tutor_scale,
   },
   {
@@ -274,9 +275,9 @@ export const BIMBEL_QUESTIONS: readonly Question[] = [
     helper: 'Bisa diubah per program / per siswa setelah demo aktif.',
     required: true,
     input: 'pills',
-    options: BIMBEL_BILLING_OPTIONS,
+    options: TUTORING_BILLING_OPTIONS,
     value: (p) => p.bimbel.billing_mode,
-    setValue: (p, v) => patchBimbel(p, 'billing_mode', v as BimbelBillingMode),
+    setValue: (p, v) => patchTutoring(p, 'billing_mode', v as TutoringBillingMode),
     isValid: (p) => !!p.bimbel.billing_mode,
   },
   {
@@ -374,29 +375,29 @@ export const BIMBEL_QUESTIONS: readonly Question[] = [
     input: 'scenarios',
     value: (p) => p.bimbel.scenarios,
     setValue: (p, v) =>
-      patchBimbel(p, 'scenarios', (v as DemoBimbelPayload['scenarios']) ?? []),
+      patchTutoring(p, 'scenarios', (v as DemoTutoringPayload['scenarios']) ?? []),
     isValid: () => true,
   },
 ];
 
 /* ─────────────────────────── SEKOLAH PATH ─────────────────────────── */
 
-const SEKOLAH_JENJANG_OPTIONS: QuestionOption[] = (
-  ['SD', 'MI', 'SMP', 'MTs', 'SMA', 'MA', 'SMK', 'TK', 'PAUD', 'Pesantren'] as Jenjang[]
+const SCHOOL_EDUCATION_LEVEL_OPTIONS: QuestionOption[] = (
+  ['SD', 'MI', 'SMP', 'MTs', 'SMA', 'MA', 'SMK', 'TK', 'PAUD', 'Pesantren'] as EducationLevel[]
 ).map((v) => ({ value: v, label: v }));
 
-const SEKOLAH_CLASS_PATTERN_OPTIONS: QuestionOption[] = [
+const SCHOOL_CLASS_PATTERN_OPTIONS: QuestionOption[] = [
   { value: 'small', label: 'Kecil', hint: '1–2 kelas per tingkat' },
   { value: 'medium', label: 'Sedang', hint: '3–4 kelas per tingkat' },
   { value: 'large', label: 'Besar', hint: '5+ kelas per tingkat' },
 ];
 
-const SEKOLAH_BILLING_OPTIONS: QuestionOption[] = [
+const SCHOOL_BILLING_OPTIONS: QuestionOption[] = [
   { value: 'build_year', label: 'Aktifkan tagihan SPP', hint: 'SPP + uang gedung + UTS/UAS' },
   { value: 'skip', label: 'Skip tagihan dulu', hint: 'Bisa diaktifkan nanti dari menu Tagihan' },
 ];
 
-export const SEKOLAH_QUESTIONS: readonly Question[] = [
+export const SCHOOL_QUESTIONS: readonly Question[] = [
   {
     key: 'school.name',
     chapter: 'Tentang sekolah',
@@ -417,17 +418,17 @@ export const SEKOLAH_QUESTIONS: readonly Question[] = [
   {
     key: 'school.education_level',
     chapter: 'Tentang sekolah',
-    prompt: 'Jenjang sekolah Anda?',
+    prompt: 'EducationLevel sekolah Anda?',
     helper: 'Mata pelajaran default akan disesuaikan dengan jenjang.',
     required: true,
     input: 'pills',
-    options: SEKOLAH_JENJANG_OPTIONS,
+    options: SCHOOL_EDUCATION_LEVEL_OPTIONS,
     // Auto-skip when Q1 picked a registry hit. Hits carry both a
     // NPSN and an education_level, so re-asking is just friction.
     skipIf: (p) => Boolean(p.school.npsn) && Boolean(p.school.education_level),
     value: (p) => p.school.education_level,
     setValue: (p, v) => {
-      const lvl = v as Jenjang;
+      const lvl = v as EducationLevel;
       return {
         ...p,
         school: { ...p.school, education_level: lvl },
@@ -465,7 +466,7 @@ export const SEKOLAH_QUESTIONS: readonly Question[] = [
     helper: 'Kami siapkan kelas dummy sesuai pola ini.',
     required: true,
     input: 'pills',
-    options: SEKOLAH_CLASS_PATTERN_OPTIONS,
+    options: SCHOOL_CLASS_PATTERN_OPTIONS,
     value: (p) => p.classes.pattern,
     setValue: (p, v) => ({
       ...p,
@@ -563,7 +564,7 @@ export const SEKOLAH_QUESTIONS: readonly Question[] = [
     helper: 'Bisa di-skip — Anda tetap bisa atur tagihan nanti.',
     required: true,
     input: 'pills',
-    options: SEKOLAH_BILLING_OPTIONS,
+    options: SCHOOL_BILLING_OPTIONS,
     value: (p) => p.billing.mode,
     setValue: (p, v) => ({
       ...p,
@@ -685,5 +686,5 @@ export const SEKOLAH_QUESTIONS: readonly Question[] = [
  * the tenant type is known.
  */
 export function questionsFor(tenant: 'sekolah' | 'bimbel'): readonly Question[] {
-  return tenant === 'bimbel' ? BIMBEL_QUESTIONS : SEKOLAH_QUESTIONS;
+  return tenant === 'bimbel' ? TUTORING_QUESTIONS : SCHOOL_QUESTIONS;
 }

@@ -9,13 +9,13 @@
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
-import { defaultSubjectsFor, SUBJECTS_TEMPLATE, type Jenjang } from '@/types/demo';
+import { defaultSubjectsFor, SUBJECTS_TEMPLATE, type EducationLevel } from '@/types/demo';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
 const wizard = useDemoWizardStore();
 
-const jenjang = computed<Jenjang>(() => wizard.payload.school.education_level);
+const jenjang = computed<EducationLevel>(() => wizard.payload.school.education_level);
 const names = computed({
   get: () => wizard.payload.subjects.names,
   set: (v: string[]) => wizard.patchPayload('subjects', { names: v }),
@@ -27,7 +27,7 @@ const names = computed({
 // jenjang template, it's still default-shaped and safe to re-seed.
 watch(jenjang, (newJenjang, oldJenjang) => {
   if (newJenjang === oldJenjang) return;
-  const oldTemplate = defaultSubjectsFor(oldJenjang as Jenjang);
+  const oldTemplate = defaultSubjectsFor(oldJenjang as EducationLevel);
   const sameAsOld =
     names.value.length === oldTemplate.length &&
     names.value.every((n) => oldTemplate.includes(n));

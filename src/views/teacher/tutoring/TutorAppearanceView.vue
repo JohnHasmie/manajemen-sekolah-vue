@@ -17,14 +17,14 @@ import { useI18n } from 'vue-i18n';
 
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
-import { useTutoringThemeStore, type BimbelThemeMode } from '@/stores/tutoring-theme';
+import { useTutoringThemeStore, type TutoringThemeMode } from '@/stores/tutoring-theme';
 
 const { t } = useI18n();
 const router = useRouter();
 const theme = useTutoringThemeStore();
 
 interface ModeOption {
-  mode: BimbelThemeMode;
+  mode: TutoringThemeMode;
   icon: string;
   title: string;
   subtitle: string;
@@ -57,7 +57,7 @@ const previewText = computed(() =>
     : t('tutor.bimbel.appearance.preview_light'),
 );
 
-function pick(m: BimbelThemeMode) {
+function pick(m: TutoringThemeMode) {
   theme.setMode(m);
 }
 

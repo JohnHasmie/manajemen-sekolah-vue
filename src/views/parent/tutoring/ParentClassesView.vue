@@ -12,7 +12,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
-import type { TutoringWaliClassMeta } from '@/types/tutoring';
+import type { TutoringParentClassMeta } from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
@@ -28,7 +28,7 @@ const studentId = computed(() =>
 );
 
 const loading = ref(true);
-const classes = ref<TutoringWaliClassMeta[]>([]);
+const classes = ref<TutoringParentClassMeta[]>([]);
 
 async function load() {
   const sid = studentId.value;
@@ -67,7 +67,7 @@ const statusChips = computed<{ id: StatusKey; label: string; count: number }[]>(
   ];
 });
 
-type ClassRow = TutoringWaliClassMeta & {
+type ClassRow = TutoringParentClassMeta & {
   subject?: string;
   schedule_label?: string;
   attendance_rate?: number | null;
@@ -123,7 +123,7 @@ function tutorChipClass(i: number): string {
   return TUTOR_CHIPS[i % TUTOR_CHIPS.length];
 }
 
-function scheduleLabel(c: TutoringWaliClassMeta): string {
+function scheduleLabel(c: TutoringParentClassMeta): string {
   const ns = c.next_session;
   if (!ns?.scheduled_at) return t('wali.bimbel.classes.empty_schedule');
   const d = new Date(ns.scheduled_at);
@@ -142,7 +142,7 @@ function attBarClass(rate: number | null | undefined): string {
   return 'bg-red-600';
 }
 
-function openClass(c: TutoringWaliClassMeta) {
+function openClass(c: TutoringParentClassMeta) {
   router.push({
     name: 'parent.tutoring.class-detail',
     params: { studentId: studentId.value, groupId: c.group_id },

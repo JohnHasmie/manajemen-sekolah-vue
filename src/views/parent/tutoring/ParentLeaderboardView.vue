@@ -10,7 +10,7 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type {
   TutoringLeaderboardRow,
-  TutoringWaliClassMeta,
+  TutoringParentClassMeta,
 } from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
@@ -25,7 +25,7 @@ const studentId = computed(() =>
 );
 
 const loading = ref(true);
-const groups = ref<TutoringWaliClassMeta[]>([]);
+const groups = ref<TutoringParentClassMeta[]>([]);
 const currentGroupId = ref<string>('');
 const rawRows = ref<TutoringLeaderboardRow[]>([]);
 

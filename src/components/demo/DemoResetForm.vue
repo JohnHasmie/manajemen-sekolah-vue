@@ -40,7 +40,7 @@ import { computed, ref, watch } from 'vue';
 import {
   SCENARIO_DEFINITIONS,
   type DemoScenarioKey,
-  type Jenjang,
+  type EducationLevel,
 } from '@/types/demo';
 
 const props = defineProps<{
@@ -68,8 +68,8 @@ const mode = ref<'same' | 'tweak'>('same');
 
 // ── School name + jenjang ──────────────────────────────────────────
 const overrideName = ref('');
-const overrideJenjang = ref<Jenjang | ''>('');
-const JENJANG_OPTIONS: { value: Jenjang; label: string }[] = [
+const overrideJenjang = ref<EducationLevel | ''>('');
+const JENJANG_OPTIONS: { value: EducationLevel; label: string }[] = [
   { value: 'SD', label: 'SD' },
   { value: 'SMP', label: 'SMP' },
   { value: 'SMA', label: 'SMA' },
@@ -152,7 +152,7 @@ watch(
     overrideName.value = String(school.name ?? '');
     const j = String(school.education_level ?? school.jenjang ?? '');
     overrideJenjang.value = ['SD', 'SMP', 'SMA', 'SMK'].includes(j)
-      ? (j as Jenjang)
+      ? (j as EducationLevel)
       : '';
 
     const teachers = (b.teachers ?? {}) as Record<string, unknown>;

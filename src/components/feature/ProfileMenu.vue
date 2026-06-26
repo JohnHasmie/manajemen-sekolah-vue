@@ -10,7 +10,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useI18n } from 'vue-i18n';
 import { usePreferencesStore } from '@/stores/preferences';
-import { useTutoringThemeStore, type BimbelThemeMode } from '@/stores/tutoring-theme';
+import { useTutoringThemeStore, type TutoringThemeMode } from '@/stores/tutoring-theme';
 import { tenantKindFromRaw } from '@/composables/useTenant';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
@@ -19,7 +19,7 @@ import type { Role, School } from '@/types/auth';
 
 const auth = useAuthStore();
 const prefs = usePreferencesStore();
-const bimbelTheme = useTutoringThemeStore();
+const tutoringTheme = useTutoringThemeStore();
 const router = useRouter();
 const { t } = useI18n();
 
@@ -41,15 +41,15 @@ const isTutoringTenant = computed(() => {
 
 const showAppearancePicker = ref(false);
 const appearanceOptions = computed<
-  Array<{ mode: BimbelThemeMode; icon: string; titleKey: string; subKey: string }>
+  Array<{ mode: TutoringThemeMode; icon: string; titleKey: string; subKey: string }>
 >(() => [
   { mode: 'auto', icon: 'smartphone', titleKey: 'profileMenu.appearanceAuto', subKey: 'profileMenu.appearanceAutoSub' },
   { mode: 'light', icon: 'sun', titleKey: 'profileMenu.appearanceLight', subKey: 'profileMenu.appearanceLightSub' },
   { mode: 'dark', icon: 'moon', titleKey: 'profileMenu.appearanceDark', subKey: 'profileMenu.appearanceDarkSub' },
 ]);
 
-function pickAppearance(m: BimbelThemeMode) {
-  bimbelTheme.setMode(m);
+function pickAppearance(m: TutoringThemeMode) {
+  tutoringTheme.setMode(m);
   showAppearancePicker.value = false;
   open.value = false;
 }
@@ -439,7 +439,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
           </svg>
           <span class="flex-1">{{ t('profileMenu.appearance') }}</span>
-          <span class="text-[10px] font-bold text-slate-400 uppercase">{{ t(`profileMenu.appearance${bimbelTheme.mode.charAt(0).toUpperCase() + bimbelTheme.mode.slice(1)}`) }}</span>
+          <span class="text-[10px] font-bold text-slate-400 uppercase">{{ t(`profileMenu.appearance${tutoringTheme.mode.charAt(0).toUpperCase() + tutoringTheme.mode.slice(1)}`) }}</span>
         </button>
 
         <!-- Logout -->
@@ -574,7 +574,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
 
     <!--
       Appearance picker — three radio tiles (Otomatis / Selalu terang /
-      Selalu gelap). Picking a mode calls `bimbelTheme.setMode` which
+      Selalu gelap). Picking a mode calls `tutoringTheme.setMode` which
       mutates the store + persists to localStorage; AppShell's
       `tutoringSurfaceClass` is reactive so the surface flips on the
       same frame.
@@ -596,7 +596,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
             type="button"
             class="w-full text-left px-4 py-3 rounded-xl border flex items-start gap-3 transition-colors"
             :class="
-              bimbelTheme.mode === opt.mode
+              tutoringTheme.mode === opt.mode
                 ? 'border-brand-cobalt bg-brand-cobalt/5'
                 : 'border-slate-200 hover:bg-slate-50'
             "
@@ -605,7 +605,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
             <span
               class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
               :class="
-                bimbelTheme.mode === opt.mode
+                tutoringTheme.mode === opt.mode
                   ? 'bg-brand-cobalt text-white'
                   : 'bg-slate-100 text-slate-600'
               "
@@ -635,7 +635,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
               <span class="block text-[11px] text-slate-500">{{ t(opt.subKey) }}</span>
             </span>
             <span
-              v-if="bimbelTheme.mode === opt.mode"
+              v-if="tutoringTheme.mode === opt.mode"
               class="text-[10px] font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider"
             >
               {{ t('profileMenu.activeBadge') }}

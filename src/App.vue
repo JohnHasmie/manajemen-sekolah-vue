@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useTutoringThemeStore } from '@/stores/tutoring-theme';
 
 const auth = useAuthStore();
-const bimbelTheme = useTutoringThemeStore();
+const tutoringTheme = useTutoringThemeStore();
 
 // Rehydrate token / user from localStorage (persisted by Pinia plugin)
 // and verify it's still valid on app boot. Mirrors Flutter's startup check
@@ -16,7 +16,7 @@ const bimbelTheme = useTutoringThemeStore();
 // it's just a 60s setInterval that updates a Date ref.
 onMounted(() => {
   auth.restore();
-  bimbelTheme.startAutoTick();
+  tutoringTheme.startAutoTick();
 });
 </script>
 

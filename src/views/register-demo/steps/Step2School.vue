@@ -9,7 +9,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { DemoService, type NpsnLookupResult } from '@/services/demo.service';
-import type { Jenjang, SchoolSearchHit } from '@/types/demo';
+import type { EducationLevel, SchoolSearchHit } from '@/types/demo';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import { useToast } from '@/composables/useToast';
@@ -18,8 +18,8 @@ const { t } = useI18n();
 const wizard = useDemoWizardStore();
 const toast = useToast();
 
-const JENJANG_PRIMARY: Jenjang[] = ['SD', 'SMP', 'SMA', 'SMK'];
-const JENJANG_OTHERS: Jenjang[] = ['TK', 'PAUD', 'MI', 'MTs', 'MA', 'Pesantren'];
+const JENJANG_PRIMARY: EducationLevel[] = ['SD', 'SMP', 'SMA', 'SMK'];
+const JENJANG_OTHERS: EducationLevel[] = ['TK', 'PAUD', 'MI', 'MTs', 'MA', 'Pesantren'];
 
 const showOthers = ref(false);
 // `?? ''` is defensive: a restored payload may carry a null school name,
@@ -42,7 +42,7 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 const selectedJenjang = computed({
   get: () => wizard.payload.school.education_level,
-  set: (v: Jenjang) => wizard.patchPayload('school', { education_level: v }),
+  set: (v: EducationLevel) => wizard.patchPayload('school', { education_level: v }),
 });
 
 onMounted(() => {
@@ -80,7 +80,7 @@ async function runSearch() {
   }
 }
 
-function setJenjang(j: Jenjang) {
+function setJenjang(j: EducationLevel) {
   selectedJenjang.value = j;
   showOthers.value = false;
 }
@@ -100,7 +100,7 @@ function pickRegistryHit(hit: SchoolSearchHit) {
     name: hit.name,
     npsn: hit.npsn,
     city: hit.city ?? wizard.payload.school.city,
-    education_level: (hit.education_level as Jenjang) ?? selectedJenjang.value,
+    education_level: (hit.education_level as EducationLevel) ?? selectedJenjang.value,
   });
   toast.success('Sekolah diisi dari registri NPSN. Lanjut untuk klaim sebagai admin.');
   wizard.next();
@@ -162,7 +162,7 @@ function acceptNpsnHit() {
     name: npsnHit.value.name,
     npsn: npsnHit.value.npsn,
     city: npsnHit.value.city,
-    education_level: (npsnHit.value.education_level as Jenjang) ?? selectedJenjang.value,
+    education_level: (npsnHit.value.education_level as EducationLevel) ?? selectedJenjang.value,
   });
   query.value = npsnHit.value.name;
   toast.success(t('registerDemo.step2DapodikSuccess'));

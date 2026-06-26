@@ -22,14 +22,17 @@
  */
 import { defineStore } from 'pinia';
 
-export type BimbelThemeMode = 'auto' | 'light' | 'dark';
+export type TutoringThemeMode = 'auto' | 'light' | 'dark';
 
+/* Persisted localStorage keys keep the legacy `bimbel.*` prefix so
+ * existing user preferences survive the rename. The Pinia store id
+ * (`'bimbelTheme'` below) is kept for the same reason. */
 const STORAGE_KEY = 'bimbel.theme.mode';
 const LIGHT_HOUR_KEY = 'bimbel.theme.lightStartHour';
 const DARK_HOUR_KEY = 'bimbel.theme.darkStartHour';
 const DARK_MINUTE_KEY = 'bimbel.theme.darkStartMinute';
 
-function readMode(): BimbelThemeMode {
+function readMode(): TutoringThemeMode {
   const raw = typeof localStorage !== 'undefined'
     ? localStorage.getItem(STORAGE_KEY)
     : null;
@@ -44,8 +47,8 @@ function readInt(key: string, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
-interface BimbelThemeState {
-  mode: BimbelThemeMode;
+interface TutoringThemeState {
+  mode: TutoringThemeMode;
   /** Minutes-of-hour 0–23 when light kicks in (default 06:00). */
   lightStartHour: number;
   /** Hour when dark kicks in (default 18). */
@@ -59,7 +62,7 @@ interface BimbelThemeState {
 }
 
 export const useTutoringThemeStore = defineStore('bimbelTheme', {
-  state: (): BimbelThemeState => ({
+  state: (): TutoringThemeState => ({
     mode: readMode(),
     lightStartHour: readInt(LIGHT_HOUR_KEY, 6),
     darkStartHour: readInt(DARK_HOUR_KEY, 18),
@@ -114,7 +117,7 @@ export const useTutoringThemeStore = defineStore('bimbelTheme', {
     },
   },
   actions: {
-    setMode(m: BimbelThemeMode) {
+    setMode(m: TutoringThemeMode) {
       this.mode = m;
       try { localStorage.setItem(STORAGE_KEY, m); } catch {/* private mode */}
       // Re-read the clock immediately so the surface flips on the same

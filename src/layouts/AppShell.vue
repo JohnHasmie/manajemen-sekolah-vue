@@ -34,7 +34,7 @@ const auth = useAuthStore();
 const route = useRoute();
 const { t } = useI18n();
 const color = useRoleColor(() => auth.activeRole);
-const bimbelTheme = useTutoringThemeStore();
+const tutoringTheme = useTutoringThemeStore();
 
 // Active tenant is a tutoring center? The tenant_type lives on either
 // the User payload directly (post-login normalisation) or on the
@@ -109,7 +109,7 @@ const tutoringRoleClass = computed(() =>
  * consulted for those roles. Removing the branch lets the same store
  * drive all three roles.
  */
-const tutoringSurfaceClass = computed(() => bimbelTheme.rootClass);
+const tutoringSurfaceClass = computed(() => tutoringTheme.rootClass);
 
 /**
  * Mirror the bimbel surface classes (`.bimbel-light` / `.bimbel-dark`

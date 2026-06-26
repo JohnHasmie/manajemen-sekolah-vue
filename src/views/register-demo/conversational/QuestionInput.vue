@@ -10,10 +10,10 @@ import TutoringLocationPicker, {
   type PickedLocation,
 } from '@/components/tutoring/TutoringLocationPicker.vue';
 import {
-  BIMBEL_SCENARIO_DEFINITIONS,
+  TUTORING_SCENARIO_DEFINITIONS,
   DEMO_SOCIAL_CHANNELS,
-  type BimbelScenarioKey,
-  type DemoBimbelLocation,
+  type TutoringScenarioKey,
+  type DemoTutoringLocation,
   type DemoSocialChannel,
   type SchoolSearchHit,
 } from '@/types/demo';
@@ -278,9 +278,9 @@ const scenarioSet = computed<Set<string>>(() => {
  * emit) so we MERGE rather than replace, otherwise the second emit
  * would clobber the lat/lng with whatever defaults the picker sent.
  */
-const currentLocation = computed<DemoBimbelLocation | null>(() => {
+const currentLocation = computed<DemoTutoringLocation | null>(() => {
   const v = props.modelValue;
-  if (v && typeof v === 'object') return v as DemoBimbelLocation;
+  if (v && typeof v === 'object') return v as DemoTutoringLocation;
   return null;
 });
 
@@ -295,7 +295,7 @@ function onLocationPick(p: PickedLocation): void {
     // has_office defaults to true the first time we get a pick — user
     // can flip the toggle below.
     has_office: prev?.has_office ?? true,
-  } satisfies DemoBimbelLocation);
+  } satisfies DemoTutoringLocation);
 
   // ALSO mirror the resolved city into bimbel.city so the wizard's
   // next question (Kota) auto-skips. We do this via the patchPayload
@@ -318,7 +318,7 @@ function clearLocation(): void {
   emit('update', null);
 }
 
-function toggleScenario(key: BimbelScenarioKey) {
+function toggleScenario(key: TutoringScenarioKey) {
   const set = new Set(scenarioSet.value);
   if (set.has(key)) set.delete(key);
   else set.add(key);
@@ -722,7 +722,7 @@ function toggleScenario(key: BimbelScenarioKey) {
 
     <div v-else-if="question.input === 'scenarios'" class="grid sm:grid-cols-2 gap-2 max-w-2xl mx-auto">
       <button
-        v-for="s in BIMBEL_SCENARIO_DEFINITIONS"
+        v-for="s in TUTORING_SCENARIO_DEFINITIONS"
         :key="s.key"
         type="button"
         class="flex items-start gap-3 text-left px-3 py-3 rounded-xl border transition"

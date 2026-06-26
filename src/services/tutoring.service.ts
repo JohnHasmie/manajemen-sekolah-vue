@@ -273,11 +273,11 @@ export const TutoringService = {
    *  next session, latest score, and unread-7d announcement count. */
   async getWaliClassMeta(
     studentId: string,
-  ): Promise<import('@/types/tutoring').TutoringWaliClassMeta[]> {
+  ): Promise<import('@/types/tutoring').TutoringParentClassMeta[]> {
     const res = await api.get<ApiResponse<{
-      classes: import('@/types/tutoring').TutoringWaliClassMeta[];
+      classes: import('@/types/tutoring').TutoringParentClassMeta[];
     }>>(`/tutoring/students/${studentId}/parent-class-meta`);
-    return (extractData(res)?.classes ?? []) as import('@/types/tutoring').TutoringWaliClassMeta[];
+    return (extractData(res)?.classes ?? []) as import('@/types/tutoring').TutoringParentClassMeta[];
   },
 
   /** One combined fetch for the parent overview page (Promise.all). */
