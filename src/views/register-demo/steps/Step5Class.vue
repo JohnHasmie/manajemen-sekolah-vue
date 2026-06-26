@@ -12,14 +12,20 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 const { t } = useI18n();
 const wizard = useDemoWizardStore();
 
+/**
+ * Per-jenjang grade list. Keys are the canonical English wire values
+ * (post 2026-06-26 cutover) for the mainline four jenjang; the others
+ * (MI/MTs/MA/TK/PAUD/Pesantren) keep their Indonesian abbreviation
+ * because no English equivalent exists.
+ */
 const GRADE_LISTS: Record<string, string[]> = {
-  SD: ['1', '2', '3', '4', '5', '6'],
+  ELEMENTARY: ['1', '2', '3', '4', '5', '6'],          // SD
   MI: ['1', '2', '3', '4', '5', '6'],
-  SMP: ['7', '8', '9'],
+  JUNIOR_HIGH: ['7', '8', '9'],                         // SMP
   MTs: ['7', '8', '9'],
-  SMA: ['10', '11', '12'],
+  SENIOR_HIGH: ['10', '11', '12'],                      // SMA
   MA: ['10', '11', '12'],
-  SMK: ['10', '11', '12'],
+  VOCATIONAL_HIGH: ['10', '11', '12'],                  // SMK
   TK: ['A', 'B'],
   PAUD: ['KB'],
   Pesantren: ['7', '8', '9', '10', '11', '12'],
@@ -31,7 +37,7 @@ const PATTERN_DEFAULT: Record<'small' | 'medium' | 'large', number> = {
   large: 5,
 };
 
-const grades = computed(() => GRADE_LISTS[wizard.payload.school.education_level] ?? GRADE_LISTS.SMP);
+const grades = computed(() => GRADE_LISTS[wizard.payload.school.education_level] ?? GRADE_LISTS.JUNIOR_HIGH);
 
 const pattern = computed({
   get: () => wizard.payload.classes.pattern,

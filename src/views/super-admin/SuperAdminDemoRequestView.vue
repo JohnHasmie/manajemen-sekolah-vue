@@ -41,6 +41,7 @@ import Pagination from '@/components/data/Pagination.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import { formatDateTime } from '@/lib/format';
+import { normalizeTenantType } from '@/lib/labels';
 import type { Pagination as PaginationModel } from '@/types/api';
 
 const router = useRouter();
@@ -212,7 +213,7 @@ function goToDetail(row: DemoRequest) {
           <div
             class="w-10 h-10 rounded-xl bg-role-admin-soft text-role-admin grid place-items-center flex-shrink-0"
           >
-            <NavIcon :name="row.school_summary.tenant_type === 'bimbel' ? 'book-open' : 'school'" :size="18" />
+            <NavIcon :name="normalizeTenantType(row.school_summary.tenant_type) === 'tutoring' ? 'book-open' : 'school'" :size="18" />
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 flex-wrap">

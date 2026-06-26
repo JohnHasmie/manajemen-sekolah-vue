@@ -1219,7 +1219,7 @@ const routes: RouteRecordRaw[] = [
         // Tutor Tampilan — the light/dark mode picker for the bimbel
         // (tutor) surface. Route NAME contains "tutoring" so AppShell's
         // isTutoringRoute guard fires and the page renders on the bimbel
-        // surface; it picks `bimbel-light` / `bimbel-dark` via the
+        // surface; it picks `tutoring-light` / `tutoring-dark` via the
         // useTutoringThemeStore state so the user can preview their choice
         // live on this very screen.
         path: 'teacher/tutoring/appearance',

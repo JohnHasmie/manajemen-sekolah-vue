@@ -109,8 +109,8 @@ export const useDemoWizardStore = defineStore('demoWizard', {
      * mandatory for a meaningful demo request.
      */
     hasWizardData: (s) =>
-      s.payload.tenant_type === 'bimbel'
-        ? (s.payload.bimbel.name ?? '').trim().length > 0
+      s.payload.tenant_type === 'tutoring'
+        ? (s.payload.tutoring.name ?? '').trim().length > 0
         : (s.payload.school.name ?? '').trim().length > 0,
   },
 
@@ -243,10 +243,10 @@ export const useDemoWizardStore = defineStore('demoWizard', {
 
     /**
      * Pick the tenant kind on the landing screen. Defaults to
-     * 'sekolah' for back-compat with persisted payloads from before
+     * 'school' for back-compat with persisted payloads from before
      * tenant_type existed.
      */
-    setTenantType(t: 'sekolah' | 'bimbel'): void {
+    setTenantType(t: 'school' | 'tutoring'): void {
       this.payload = { ...this.payload, tenant_type: t };
       this._persist();
       this._scheduleRemoteSave();
@@ -407,14 +407,31 @@ function clamp(n: number, lo: number, hi: number): number {
  * Defensive merge — backend persists arbitrary JSON, but the FE
  * type defines new optional fields over time. mergeWithDefaults
  * fills in any missing keys so the form bindings never see undefined.
+ *
+ * Also handles cross-cutover hydration: a payload persisted before
+ * the 2026-06-26 English-enum rename uses the legacy keys
+ * `tenant_type: 'sekolah' | 'bimbel'` and `bimbel: {...}`. We
+ * normalise those to the canonical `'school' | 'tutoring'` +
+ * `tutoring: {...}` shape on hydrate so the rest of the wizard
+ * never sees a mixed payload.
  */
 function mergeWithDefaults(partial: Partial<DemoWizardPayload>): DemoWizardPayload {
   const d = defaultWizardPayload();
+  // Normalise legacy tenant_type values to the canonical English form.
+  const rawTenant = (partial.tenant_type ?? d.tenant_type) as string;
+  const tenantType: DemoWizardPayload['tenant_type'] =
+    rawTenant === 'bimbel' || rawTenant === 'tutoring'
+      ? 'tutoring'
+      : 'school';
+  // The `tutoring` slice may have been persisted under the legacy
+  // `bimbel` key — read both and let the new key win when present.
+  const legacyTutoring = (partial as { bimbel?: Partial<typeof d.tutoring> }).bimbel;
+  const partialTutoring = partial.tutoring ?? legacyTutoring;
   return {
-    // tenant_type was added with the bimbel feature; a persisted payload
+    // tenant_type was added with the tutoring feature; a persisted payload
     // from before that has no field, leaving the wizard with `undefined`
-    // and no way to fork the questions. Default to the sekolah path.
-    tenant_type: partial.tenant_type ?? d.tenant_type,
+    // and no way to fork the questions. Default to the school path.
+    tenant_type: tenantType,
     school: {
       ...d.school,
       ...(partial.school ?? {}),
@@ -434,17 +451,18 @@ function mergeWithDefaults(partial: Partial<DemoWizardPayload>): DemoWizardPaylo
     schedule: { ...d.schedule, ...(partial.schedule ?? {}) },
     billing: { ...d.billing, ...(partial.billing ?? {}) },
     scenarios: { ...d.scenarios, ...(partial.scenarios ?? {}) },
-    // The bimbel slice was added later, so any older persisted payload
+    // The tutoring slice was added later, so any older persisted payload
     // (from server or localStorage) is missing it. Without this merge,
-    // `payload.bimbel` was `undefined`, and as soon as the user picked
-    // the bimbel tenant the wizard's first `p.bimbel.name` / `p.bimbel.city`
-    // read crashed with "Cannot read properties of undefined".
-    bimbel: {
-      ...d.bimbel,
-      ...(partial.bimbel ?? {}),
+    // `payload.tutoring` was `undefined`, and as soon as the user picked
+    // the tutoring tenant the wizard's first `p.tutoring.name` /
+    // `p.tutoring.city` read crashed with "Cannot read properties of
+    // undefined". Also accepts the pre-rename `bimbel` key (see above).
+    tutoring: {
+      ...d.tutoring,
+      ...(partialTutoring ?? {}),
       // Same null-coercion pattern as `school.name`: keep the default
       // empty string if a restored payload has `name: null`.
-      name: partial.bimbel?.name ?? d.bimbel.name,
+      name: partialTutoring?.name ?? d.tutoring.name,
     },
     requester: {
       ...d.requester,

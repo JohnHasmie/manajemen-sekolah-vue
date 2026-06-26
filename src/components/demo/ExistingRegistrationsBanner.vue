@@ -6,15 +6,17 @@ import type { DemoRegistrationItem, ActiveSchoolItem } from '@/types/demo';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 // Canonical tenant_type value is English per project convention
-// ("indonesia hanya untuk translate" — Yahya, 2026-06-24).
-// The backend's TenantType enum stores 'TUTORING_CENTER' for bimbel
-// rows on the schools table. The legacy demo wizard payload still
-// emits a lowercase 'bimbel' literal stored on demo_requests, so this
-// helper tolerates both forms during migration — the new schools
-// path renders correctly today, and the demoRequests path keeps
-// working until the wizard payload is canonicalised in a follow-up.
-function isBimbel(tt: string | null | undefined): boolean {
-  return tt === 'TUTORING_CENTER' || tt === 'bimbel';
+// ("indonesia hanya untuk translate" — Yahya, 2026-06-24). After the
+// 2026-06-26 English-enum cutover the backend emits canonical
+// `'school' | 'tutoring'` on `demo_requests.tenant_type` and uppercase
+// `'SCHOOL' | 'TUTORING_CENTER'` on the schools table; legacy rows
+// pre-cutover may still carry `'bimbel' | 'sekolah'`. Delegate the
+// tri-form normalisation to `normalizeTenantType` so this view never
+// has to know the transition is in flight.
+import { normalizeTenantType } from '@/lib/labels';
+
+function isTutoring(tt: string | null | undefined): boolean {
+  return normalizeTenantType(tt) === 'tutoring';
 }
 
 const props = defineProps<{
@@ -69,7 +71,7 @@ function formatDate(dateStr: string | null) {
           <div v-for="school in activeSchools" :key="school.id" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-slate-50 border border-slate-100 rounded-xl hover:bg-slate-100/70 transition">
             <div class="flex items-center gap-3">
               <span class="text-lg">
-                {{ isBimbel(school.tenant_type) ? '📚' : '🏫' }}
+                {{ isTutoring(school.tenant_type) ? '📚' : '🏫' }}
               </span>
               <div>
                 <h4 class="text-sm font-bold text-slate-800 leading-tight">
@@ -77,7 +79,7 @@ function formatDate(dateStr: string | null) {
                 </h4>
                 <div class="flex items-center gap-2 mt-1">
                   <span class="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
-                    {{ isBimbel(school.tenant_type) ? 'Bimbel' : 'Sekolah' }}
+                    {{ isTutoring(school.tenant_type) ? 'Bimbel' : 'Sekolah' }}
                   </span>
                   <span class="w-1 h-1 rounded-full bg-slate-300"></span>
                   <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold uppercase tracking-wider">
@@ -101,7 +103,7 @@ function formatDate(dateStr: string | null) {
           <div v-for="req in demoRequests" :key="req.id" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-slate-50/50 border border-slate-100/50 rounded-xl hover:bg-slate-100/50 transition">
             <div class="flex items-center gap-3">
               <span class="text-lg">
-                {{ isBimbel(req.tenant_type) ? '📚' : '🏫' }}
+                {{ isTutoring(req.tenant_type) ? '📚' : '🏫' }}
               </span>
               <div>
                 <h4 class="text-sm font-semibold text-slate-700 leading-tight">
@@ -109,7 +111,7 @@ function formatDate(dateStr: string | null) {
                 </h4>
                 <div class="flex items-center gap-2 mt-1">
                   <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">
-                    {{ isBimbel(req.tenant_type) ? 'Bimbel' : 'Sekolah' }}
+                    {{ isTutoring(req.tenant_type) ? 'Bimbel' : 'Sekolah' }}
                   </span>
                   <span class="w-1 h-1 rounded-full bg-slate-300"></span>
                   <span v-if="req.status === 'pending'" class="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold uppercase tracking-wider">

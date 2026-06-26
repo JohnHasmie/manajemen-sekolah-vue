@@ -25,6 +25,7 @@ import {
   phoneMessage,
 } from '@/lib/gibberish';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
+import { educationLevelDisplay, normalizeEducationLevel } from '@/lib/labels';
 import type { Question } from './questions';
 
 const props = defineProps<{
@@ -161,7 +162,12 @@ function hitProvince(hit: SchoolSearchHit): string | null {
 }
 
 function pickSchoolHit(hit: SchoolSearchHit): void {
-  const lvl = hitEducationLevel(hit);
+  // Registry/Dapodik hits return the legacy Indonesian education_level
+  // (`SD`/`SMP`/`SMA`/`SMK`) — normalise to the canonical English wire
+  // form before committing to the payload so the rest of the wizard
+  // doesn't see a mixed value set.
+  const lvlRaw = hitEducationLevel(hit);
+  const lvl = lvlRaw ? normalizeEducationLevel(lvlRaw) : null;
   const city = hitCity(hit);
   emit('patchPayload', (p: any) => ({
     ...p,
@@ -297,13 +303,13 @@ function onLocationPick(p: PickedLocation): void {
     has_office: prev?.has_office ?? true,
   } satisfies DemoTutoringLocation);
 
-  // ALSO mirror the resolved city into bimbel.city so the wizard's
+  // ALSO mirror the resolved city into tutoring.city so the wizard's
   // next question (Kota) auto-skips. We do this via the patchPayload
   // event so the parent updates that slice atomically with location.
   if (p.city && p.city.trim().length >= 2) {
     emit('patchPayload', (payload: any) => ({
       ...payload,
-      bimbel: { ...payload.bimbel, city: p.city },
+      tutoring: { ...payload.tutoring, city: p.city },
     }));
   }
 }
@@ -403,7 +409,7 @@ function toggleScenario(key: TutoringScenarioKey) {
                 <div class="text-[11px] text-slate-500 truncate">
                   {{
                     [
-                      hitEducationLevel(hit),
+                      educationLevelDisplay(hitEducationLevel(hit)),
                       hitCity(hit),
                       hitProvince(hit),
                     ]

@@ -26,13 +26,14 @@ import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import Toast from '@/components/ui/Toast.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import { educationLevelDisplay, normalizeEducationLevel } from '@/lib/labels';
 
 const router = useRouter();
 const ayStore = useAcademicYearStore();
 const { t } = useI18n();
 
 const settings = ref<SchoolSettings>({
-  education_level: 'SMA',
+  education_level: 'SENIOR_HIGH',
   name: '',
   address: '',
 });
@@ -40,10 +41,24 @@ const activeSemester = ref<Semester | null>(null);
 const isLoading = ref(true);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
-const JENJANG_OPTIONS = ['SD', 'SMP', 'SMA', 'SMK'] as const;
+/** Canonical wire values per the 2026-06-26 cutover. UI chips show the
+ *  Indonesian abbreviation via `educationLevelDisplay()`. */
+const JENJANG_OPTIONS = [
+  'ELEMENTARY',         // SD
+  'JUNIOR_HIGH',        // SMP
+  'SENIOR_HIGH',        // SMA
+  'VOCATIONAL_HIGH',    // SMK
+] as const;
 
+/**
+ * Long i18n label for the level. Looks up by the Indonesian DISPLAY
+ * value (which the locale files key on) so the i18n keys stay stable;
+ * `normalizeEducationLevel` + `educationLevelDisplay` route both old
+ * and new wire values through the same key.
+ */
 function jenjangFullLabel(code: string): string {
-  switch (code) {
+  const display = educationLevelDisplay(normalizeEducationLevel(code) ?? code);
+  switch (display) {
     case 'SD': return t('admin.sekolah.school_level_settings.jenjang_sd');
     case 'SMP': return t('admin.sekolah.school_level_settings.jenjang_smp');
     case 'SMA': return t('admin.sekolah.school_level_settings.jenjang_sma');
@@ -72,13 +87,16 @@ onMounted(loadAll);
 const showEditModal = ref(false);
 const formName = ref('');
 const formAddress = ref('');
-const formJenjang = ref<string>('SMA');
+const formJenjang = ref<string>('SENIOR_HIGH');
 const isSaving = ref(false);
 
 function openEdit() {
   formName.value = settings.value.name;
   formAddress.value = settings.value.address;
-  formJenjang.value = settings.value.education_level || 'SMA';
+  // Backend may still return legacy SD/SMP/SMA/SMK during transition —
+  // normalise to canonical English so the chip-active comparison works.
+  formJenjang.value =
+    normalizeEducationLevel(settings.value.education_level) ?? 'SENIOR_HIGH';
   showEditModal.value = true;
 }
 
@@ -347,7 +365,7 @@ function goBack() {
                 : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'"
               @click="formJenjang = opt"
             >
-              {{ opt }}
+              {{ educationLevelDisplay(opt) }}
             </button>
           </div>
         </div>

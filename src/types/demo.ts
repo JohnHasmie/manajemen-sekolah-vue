@@ -8,19 +8,26 @@
  */
 
 /**
- * Education level for a formal school. String values are the canonical
- * jenjang abbreviations that map 1:1 to backend `schools.education_level`
- * and the Dapodik registry — they are user-facing labels too, so the
- * VALUES stay Indo. Only the TS type alias is English.
+ * Education level for a formal school. The four mainline jenjang
+ * (SD/SMP/SMA/SMK) now use canonical English wire values per the
+ * 2026-06-26 English-enum cutover; the remaining Indonesian-only
+ * jenjang stay as their original abbreviation since no English
+ * equivalent exists. Display layer uses `educationLevelDisplay()`
+ * from `@/lib/labels` to keep the Indonesian UX intact everywhere.
+ *
+ * Backend ships a compat shim that accepts EITHER old (SD/SMP/SMA/SMK)
+ * or new (ELEMENTARY/JUNIOR_HIGH/SENIOR_HIGH/VOCATIONAL_HIGH) on writes,
+ * and may return either on reads — `normalizeEducationLevel()` in
+ * `@/lib/labels` is the safe read boundary.
  */
 export type EducationLevel =
-  | 'SD'
+  | 'ELEMENTARY'         // SD
   | 'MI'
-  | 'SMP'
+  | 'JUNIOR_HIGH'        // SMP
   | 'MTs'
-  | 'SMA'
+  | 'SENIOR_HIGH'        // SMA
   | 'MA'
-  | 'SMK'
+  | 'VOCATIONAL_HIGH'    // SMK
   | 'TK'
   | 'PAUD'
   | 'Pesantren';
@@ -216,8 +223,8 @@ export interface DemoRequesterPayload {
 export interface DemoWizardPayload {
   /**
    * Tenant kind chosen on the conversational wizard's landing screen.
-   * The legacy sekolah flow keeps the same school/subjects/… slices;
-   * 'bimbel' uses the `bimbel` slice instead. Backend will fork on
+   * The legacy school flow keeps the same school/subjects/… slices;
+   * 'tutoring' uses the `tutoring` slice instead. Backend will fork on
    * this flag (formal school vs tutoring center provisioning).
    */
   tenant_type: TenantType;
@@ -232,23 +239,26 @@ export interface DemoWizardPayload {
   billing: DemoBillingPayload;
   scenarios: DemoScenariosPayload;
   /**
-   * Tutoring center answer slice — used when tenant_type='bimbel'.
-   * Field name kept as `bimbel` because that is the JSON key the
-   * backend's `ProvisionDemoTutoring` / `ApproveDemoRequestAction`
-   * reads (`$payload['bimbel']`).
+   * Tutoring center answer slice — used when tenant_type='tutoring'.
+   * JSON key renamed from `bimbel` → `tutoring` per the 2026-06-26
+   * English-enum cutover; backend's Phase-1 compat shim accepts BOTH
+   * `tutoring` (new, preferred) and `bimbel` (legacy) on writes so the
+   * web-vue / backend deploys can roll independently.
    */
-  bimbel: DemoTutoringPayload;
+  tutoring: DemoTutoringPayload;
   /** Requester identity — submitted with the pending demo request. */
   requester: DemoRequesterPayload;
 }
 
-/* ─── Bimbel (tutoring center) payload ─── */
+/* ─── Tutoring center payload ─── */
 
 /**
  * Which tenant flavour the requester is signing up for. Picked on the
  * tenant-choice landing screen before any wizard question is asked.
+ * Canonical English wire values after the 2026-06-26 cutover; backend's
+ * Phase-1 compat shim still accepts the legacy `sekolah` / `bimbel`.
  */
-export type TenantType = 'sekolah' | 'bimbel';
+export type TenantType = 'school' | 'tutoring';
 
 /**
  * Education level targeted by the tutoring center — distinct from a
@@ -589,7 +599,7 @@ export const SUBJECTS_TEMPLATE: Record<EducationLevel, string[]> = {
     'Pengembangan Fisik Motorik', 'Pengembangan Seni',
   ],
   PAUD: ['Pembiasaan', 'Bermain Peran', 'Eksplorasi', 'Seni & Kreativitas'],
-  SD: [
+  ELEMENTARY: [
     'Pendidikan Agama', 'Pendidikan Pancasila', 'Bahasa Indonesia',
     'Matematika', 'IPA', 'IPS', 'Penjas', 'Seni Budaya', 'Bahasa Daerah',
   ],
@@ -598,7 +608,7 @@ export const SUBJECTS_TEMPLATE: Record<EducationLevel, string[]> = {
     'Pendidikan Pancasila', 'Bahasa Indonesia', 'Matematika',
     'IPA', 'IPS', 'Penjas', 'Bahasa Arab',
   ],
-  SMP: [
+  JUNIOR_HIGH: [
     'Pendidikan Agama', 'Pendidikan Pancasila', 'Bahasa Indonesia',
     'Matematika', 'IPA', 'IPS', 'Bahasa Inggris',
     'Penjas', 'Seni Budaya', 'Informatika', 'Prakarya',
@@ -608,7 +618,7 @@ export const SUBJECTS_TEMPLATE: Record<EducationLevel, string[]> = {
     'Pendidikan Pancasila', 'Bahasa Indonesia', 'Matematika',
     'IPA', 'IPS', 'Bahasa Inggris', 'Bahasa Arab', 'Penjas',
   ],
-  SMA: [
+  SENIOR_HIGH: [
     'Pendidikan Agama', 'Pendidikan Pancasila', 'Bahasa Indonesia',
     'Matematika Wajib', 'Matematika Peminatan', 'Bahasa Inggris',
     'Fisika', 'Kimia', 'Biologi', 'Sejarah', 'Ekonomi', 'Geografi',
@@ -620,7 +630,7 @@ export const SUBJECTS_TEMPLATE: Record<EducationLevel, string[]> = {
     'Bahasa Inggris', 'Bahasa Arab', 'Sejarah Kebudayaan Islam',
     'Sejarah', 'Penjas', 'Seni Budaya',
   ],
-  SMK: [
+  VOCATIONAL_HIGH: [
     'Pendidikan Agama', 'Pendidikan Pancasila', 'Bahasa Indonesia',
     'Matematika', 'Bahasa Inggris', 'Penjas', 'Sejarah', 'Seni Budaya',
     'Informatika', 'Produktif 1 (Kejuruan)', 'Produktif 2 (Kejuruan)',
@@ -635,7 +645,7 @@ export const SUBJECTS_TEMPLATE: Record<EducationLevel, string[]> = {
 };
 
 export function defaultSubjectsFor(educationLevel: EducationLevel): string[] {
-  return [...(SUBJECTS_TEMPLATE[educationLevel] ?? SUBJECTS_TEMPLATE.SMP)];
+  return [...(SUBJECTS_TEMPLATE[educationLevel] ?? SUBJECTS_TEMPLATE.JUNIOR_HIGH)];
 }
 
 /* ─── Search step types ─── */
@@ -817,8 +827,9 @@ export type TutoringErrorKey =
  * fields only; scenarios are always optional). Returns a partial map
  * of field → i18n key. Empty map = valid.
  *
- * i18n keys (`registerDemo.bimbelErr*`) keep the legacy `bimbel`
- * naming on purpose so the existing locale files don't need a sweep.
+ * i18n keys use the canonical `registerDemo.tutoringErr*` prefix; the
+ * locale-file sweep for the matching translations is queued for
+ * whenever the tutoring-validator UI ships (no caller today).
  */
 export function validateTutoring(
   b: DemoTutoringPayload,
@@ -828,26 +839,26 @@ export function validateTutoring(
   const city = (b.city ?? '').trim();
 
   if (name.length < 3 || name.length > 160) {
-    errors.name = 'registerDemo.bimbelErrName';
+    errors.name = 'registerDemo.tutoringErrName';
   }
   if (city.length < 2 || city.length > 80) {
-    errors.city = 'registerDemo.bimbelErrCity';
+    errors.city = 'registerDemo.tutoringErrCity';
   }
   if (!Array.isArray(b.target_levels) || b.target_levels.length === 0) {
-    errors.target_levels = 'registerDemo.bimbelErrTargetLevels';
+    errors.target_levels = 'registerDemo.tutoringErrTargetLevels';
   }
   if (!b.student_scale) {
-    errors.student_scale = 'registerDemo.bimbelErrStudentScale';
+    errors.student_scale = 'registerDemo.tutoringErrStudentScale';
   }
   const programs = (b.programs ?? []).map((p) => p.trim()).filter(Boolean);
   if (programs.length === 0) {
-    errors.programs = 'registerDemo.bimbelErrPrograms';
+    errors.programs = 'registerDemo.tutoringErrPrograms';
   }
   if (!b.tutor_scale) {
-    errors.tutor_scale = 'registerDemo.bimbelErrTutorScale';
+    errors.tutor_scale = 'registerDemo.tutoringErrTutorScale';
   }
   if (!b.billing_mode) {
-    errors.billing_mode = 'registerDemo.bimbelErrBillingMode';
+    errors.billing_mode = 'registerDemo.tutoringErrBillingMode';
   }
   return errors;
 }
@@ -883,14 +894,14 @@ export function defaultWizardPayload(): DemoWizardPayload {
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
   return {
-    // 'sekolah' is the back-compat default — preserves behaviour for any
+    // 'school' is the back-compat default — preserves behaviour for any
     // partially-completed wizard state persisted before tenant_type
     // existed. The new flow forces a choice on the tenant-choice landing.
-    tenant_type: 'sekolah',
-    bimbel: defaultTutoringPayload(),
+    tenant_type: 'school',
+    tutoring: defaultTutoringPayload(),
     school: {
       name: '',
-      education_level: 'SMP',
+      education_level: 'JUNIOR_HIGH',
       city: null,
       npsn: null,
       academic_year_label: `${currentYear} / ${nextYear}`,
@@ -900,7 +911,7 @@ export function defaultWizardPayload(): DemoWizardPayload {
       primary_role: 'admin',
     },
     subjects: {
-      names: defaultSubjectsFor('SMP'),
+      names: defaultSubjectsFor('JUNIOR_HIGH'),
     },
     teachers: {
       count: 12,
@@ -978,7 +989,15 @@ export function defaultWizardPayload(): DemoWizardPayload {
 export interface DemoRegistrationItem {
   id: string;
   status: 'pending' | 'approved' | 'rejected' | 'expired';
-  tenant_type: 'sekolah' | 'bimbel';
+  /**
+   * Backend response tenant_type. Per the 2026-06-26 English-enum
+   * cutover the server emits `'school' | 'tutoring'`; legacy rows may
+   * still carry the Indonesian `'sekolah' | 'bimbel'` until backfill
+   * completes. Use `normalizeTenantType()` from `@/lib/labels` when
+   * comparing — string equality on this field is unsafe across the
+   * transition window.
+   */
+  tenant_type: TenantType | 'sekolah' | 'bimbel';
   school_name: string | null;
   demo_expires_at: string | null;
   activated_school_id: string | null;
@@ -989,7 +1008,8 @@ export interface ActiveSchoolItem {
   id: string;
   name: string;
   is_demo: boolean;
-  tenant_type: 'sekolah' | 'bimbel';
+  /** See `DemoRegistrationItem.tenant_type` — same transition rules. */
+  tenant_type: TenantType | 'sekolah' | 'bimbel';
   demo_expires_at: string | null;
 }
 

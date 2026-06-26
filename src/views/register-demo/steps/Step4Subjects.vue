@@ -10,12 +10,15 @@ import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { defaultSubjectsFor, SUBJECTS_TEMPLATE, type EducationLevel } from '@/types/demo';
+import { educationLevelDisplay } from '@/lib/labels';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
 const wizard = useDemoWizardStore();
 
 const jenjang = computed<EducationLevel>(() => wizard.payload.school.education_level);
+/** Indonesian display label (e.g. 'SD' / 'SMP') for the current wire value. */
+const jenjangDisplay = computed(() => educationLevelDisplay(jenjang.value));
 const names = computed({
   get: () => wizard.payload.subjects.names,
   set: (v: string[]) => wizard.patchPayload('subjects', { names: v }),
@@ -81,12 +84,12 @@ function resetToTemplate() {
     </h2>
     <p class="text-[13px] text-slate-600 mb-4">
       {{ t('registerDemo.step4Subtitle1') }}
-      <span class="font-bold text-slate-800">{{ jenjang }}</span>.
+      <span class="font-bold text-slate-800">{{ jenjangDisplay }}</span>.
       {{ t('registerDemo.step4Subtitle2') }}
     </p>
 
     <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      {{ t('registerDemo.step4TemplateLabel', { jenjang, count: templateNames.length }) }}
+      {{ t('registerDemo.step4TemplateLabel', { jenjang: jenjangDisplay, count: templateNames.length }) }}
     </p>
     <div class="flex flex-wrap gap-1.5 mb-1">
       <button

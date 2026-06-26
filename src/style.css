@@ -147,7 +147,7 @@
       light and dark mode.
 
    2. Per-MODE surface vars (--bimbel-bg / --bimbel-panel /
-      --bimbel-text-*) default to DARK on :root. The .bimbel-light
+      --bimbel-text-*) default to DARK on :root. The .tutoring-light
       class overrides them with a slate / white palette so every
       `bg-bimbel-panel` / `text-bimbel-text-hi` utility flips the
       surface without a single component edit.
@@ -189,7 +189,7 @@
    stays navy per brand identity (covered by the role tier vars above);
    on-hero text must use literal `text-white` to stay legible in both
    modes — `text-bimbel-text-hi` would flip to dark slate here. */
-.bimbel-light {
+.tutoring-light {
   --bimbel-bg: #f8fafc;
   --bimbel-panel: #ffffff;
   --bimbel-panel-navy: #f1f5f9;
@@ -201,61 +201,61 @@
   --bimbel-ring: #0b1424;
 }
 
-.bimbel-dark {
+.tutoring-dark {
   background-color: #0f1419;
   color: #f1f5f9;
 }
-.bimbel-light {
+.tutoring-light {
   background-color: #f8fafc;
   color: #0f172a;
 }
-.bimbel-dark ::-webkit-scrollbar-thumb {
+.tutoring-dark ::-webkit-scrollbar-thumb {
   background: #2a3147;
 }
 
 /* Safety net: school-shared chrome (BrandPageHeader, KpiStripCards,
    PageFilterToolbar, Modal, AppShell sidebar nav, …) rendered INSIDE
    a DARK bimbel page must read dark without forking those components.
-   The `.bimbel-light` variant doesn't need a counterpart — the shared
+   The `.tutoring-light` variant doesn't need a counterpart — the shared
    chrome is already light by default — so these overrides stay scoped
-   to `.bimbel-dark`. All values reference the same CSS vars set on
+   to `.tutoring-dark`. All values reference the same CSS vars set on
    `:root` above so a token swap propagates here too. */
-.bimbel-dark .bg-white {
+.tutoring-dark .bg-white {
   background-color: var(--bimbel-panel) !important;
 }
-.bimbel-dark .bg-slate-50 {
+.tutoring-dark .bg-slate-50 {
   background-color: var(--bimbel-bg) !important;
 }
-.bimbel-dark .bg-slate-100 {
+.tutoring-dark .bg-slate-100 {
   background-color: var(--bimbel-border-soft) !important;
 }
-.bimbel-dark .border-slate-100 {
+.tutoring-dark .border-slate-100 {
   border-color: var(--bimbel-border-soft) !important;
 }
-.bimbel-dark .border-slate-200,
-.bimbel-dark .ring-slate-200 {
+.tutoring-dark .border-slate-200,
+.tutoring-dark .ring-slate-200 {
   border-color: var(--bimbel-border) !important;
 }
-.bimbel-dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
-.bimbel-dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+.tutoring-dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.tutoring-dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
   border-color: var(--bimbel-border-soft) !important;
 }
-.bimbel-dark .text-slate-900,
-.bimbel-dark .text-slate-800 {
+.tutoring-dark .text-slate-900,
+.tutoring-dark .text-slate-800 {
   color: var(--bimbel-text-hi) !important;
 }
-.bimbel-dark .text-slate-700,
-.bimbel-dark .text-slate-600,
-.bimbel-dark .text-slate-500 {
+.tutoring-dark .text-slate-700,
+.tutoring-dark .text-slate-600,
+.tutoring-dark .text-slate-500 {
   color: var(--bimbel-text-mid) !important;
 }
-.bimbel-dark .text-slate-400,
-.bimbel-dark .text-slate-300 {
+.tutoring-dark .text-slate-400,
+.tutoring-dark .text-slate-300 {
   color: var(--bimbel-text-lo) !important;
 }
-.bimbel-dark .shadow-card,
-.bimbel-dark .shadow-md,
-.bimbel-dark .shadow-sm {
+.tutoring-dark .shadow-card,
+.tutoring-dark .shadow-md,
+.tutoring-dark .shadow-sm {
   box-shadow: none !important;
 }
 
@@ -265,33 +265,33 @@
    sidebar. Override every variant (admin / teacher / wali / parent /
    staff) so the active pill reads as a soft accent tint on dark and
    the icon + label render in the bright accent color. */
-.bimbel-dark .bg-role-admin-soft,
-.bimbel-dark .bg-role-teacher-soft,
-.bimbel-dark .bg-role-wali-soft,
-.bimbel-dark .bg-role-parent-soft,
-.bimbel-dark .bg-role-staff-soft {
+.tutoring-dark .bg-role-admin-soft,
+.tutoring-dark .bg-role-teacher-soft,
+.tutoring-dark .bg-role-wali-soft,
+.tutoring-dark .bg-role-parent-soft,
+.tutoring-dark .bg-role-staff-soft {
   background-color: color-mix(in srgb, var(--bimbel-accent) 16%, transparent) !important;
 }
-.bimbel-dark .text-role-admin,
-.bimbel-dark .text-role-teacher,
-.bimbel-dark .text-role-wali,
-.bimbel-dark .text-role-parent,
-.bimbel-dark .text-role-staff {
+.tutoring-dark .text-role-admin,
+.tutoring-dark .text-role-teacher,
+.tutoring-dark .text-role-wali,
+.tutoring-dark .text-role-parent,
+.tutoring-dark .text-role-staff {
   color: var(--bimbel-accent) !important;
 }
 
 /* Form inputs inside a dark bimbel page — Tailwind defaults to
    white-ish bg + light border which blow out on dark. Pin to the
    surface tokens so they sit on the panel without floating. */
-.bimbel-dark input,
-.bimbel-dark select,
-.bimbel-dark textarea {
+.tutoring-dark input,
+.tutoring-dark select,
+.tutoring-dark textarea {
   background-color: var(--bimbel-bg);
   border-color: var(--bimbel-border);
   color: var(--bimbel-text-hi);
 }
-.bimbel-dark input::placeholder,
-.bimbel-dark textarea::placeholder {
+.tutoring-dark input::placeholder,
+.tutoring-dark textarea::placeholder {
   color: var(--bimbel-text-lo);
 }
 
@@ -299,10 +299,10 @@
    only catch the base class; `.hover\:bg-slate-50:hover` is a separate
    Tailwind selector that needs its own dark override or sidebar items
    flash near-white when the cursor enters them. */
-.bimbel-dark .hover\:bg-slate-50:hover,
-.bimbel-dark .hover\:bg-white:hover {
+.tutoring-dark .hover\:bg-slate-50:hover,
+.tutoring-dark .hover\:bg-white:hover {
   background-color: var(--bimbel-border-soft) !important;
 }
-.bimbel-dark .hover\:bg-slate-100:hover {
+.tutoring-dark .hover\:bg-slate-100:hover {
   background-color: var(--bimbel-border) !important;
 }

@@ -13,7 +13,7 @@
     5. Honor ribbon — month_earnings (success tone, always shown)
     6. Yang baru feed — last 6 events from /tutoring/tutor-activity
 
-  Light/dark is automatic via the `bimbel-light` / `bimbel-dark`
+  Light/dark is automatic via the `tutoring-light` / `tutoring-dark`
   wrapper class applied by AppShell from useTutoringThemeStore.
 -->
 <script setup lang="ts">

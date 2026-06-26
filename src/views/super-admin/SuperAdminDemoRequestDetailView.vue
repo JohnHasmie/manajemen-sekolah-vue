@@ -49,6 +49,7 @@ import {
   type DemoRequestStatus,
 } from '@/types/demo-request';
 import { SCENARIO_DEFINITIONS, type DemoScenarioKey } from '@/types/demo';
+import { normalizeTenantType } from '@/lib/labels';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
@@ -96,6 +97,27 @@ const detailState = computed<AsyncState<DemoRequest>>(() => {
 
 // The stored wizard payload (may be null if the backend ever omits it).
 const payload = computed(() => detail.value?.school_payload ?? null);
+
+/**
+ * Was this payload a tutoring-tenant request? Tolerates the wire-value
+ * transition (`tutoring` new / `bimbel` legacy) — older rows persisted
+ * before the 2026-06-26 English-enum cutover still read `bimbel`, so a
+ * raw string equality would mis-classify them as `school`.
+ */
+const isTutoringPayload = computed(
+  () => normalizeTenantType(payload.value?.tenant_type) === 'tutoring',
+);
+
+/**
+ * The tutoring slice inside the payload — JSON key renamed from
+ * `bimbel` → `tutoring`. Read both during the transition: server may
+ * still emit `bimbel` for legacy rows until backfill, but new submits
+ * land under `tutoring`.
+ */
+const tutoringSlice = computed(() => {
+  const p = payload.value as Record<string, any> | null;
+  return p?.tutoring ?? p?.bimbel ?? null;
+});
 
 // ── Status pill styling (mirrors the list page) ─────────────────────
 function statusTone(status: DemoRequestStatus): string {
@@ -587,7 +609,7 @@ function onSchoolReset(result: {
             <!-- Active schools -->
             <div v-for="school in detail.active_schools" :key="school.id" class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-xs">
               <div class="flex items-center gap-2">
-                <span>{{ school.tenant_type === 'bimbel' ? '📚' : '🏫' }}</span>
+                <span>{{ normalizeTenantType(school.tenant_type) === 'tutoring' ? '📚' : '🏫' }}</span>
                 <div>
                   <div class="font-bold text-slate-800">{{ school.name }}</div>
                   <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Lembaga Aktif</div>
@@ -601,7 +623,7 @@ function onSchoolReset(result: {
             <!-- Other requests -->
             <div v-for="req in detail.other_requests" :key="req.id" class="flex items-center justify-between p-2.5 bg-slate-50/50 border border-slate-100/50 rounded-lg text-xs">
               <div class="flex items-center gap-2">
-                <span>{{ req.tenant_type === 'bimbel' ? '📚' : '🏫' }}</span>
+                <span>{{ normalizeTenantType(req.tenant_type) === 'tutoring' ? '📚' : '🏫' }}</span>
                 <div>
                   <div class="font-semibold text-slate-700">{{ req.school_name || 'Tanpa Nama' }}</div>
                   <div class="text-[10px] text-slate-400">Pengajuan: {{ formatDateTime(req.created_at) }}</div>
@@ -626,7 +648,7 @@ function onSchoolReset(result: {
         </section>
 
         <!-- SECTION 2 · DATA SEKOLAH ATAU BIMBEL -->
-        <section v-if="payload?.tenant_type === 'bimbel'" class="bg-white border border-slate-200 rounded-2xl p-4">
+        <section v-if="isTutoringPayload" class="bg-white border border-slate-200 rounded-2xl p-4">
           <h2
             class="text-[11px] font-black uppercase tracking-widest text-role-admin mb-3"
           >
@@ -638,7 +660,7 @@ function onSchoolReset(result: {
                 Nama Bimbel
               </dt>
               <dd class="font-semibold text-slate-900">
-                {{ payload?.bimbel?.name ?? detail.school_summary?.name ?? '—' }}
+                {{ tutoringSlice?.name ?? detail.school_summary?.name ?? '—' }}
               </dd>
             </div>
             <div>
@@ -646,7 +668,7 @@ function onSchoolReset(result: {
                 Jenjang
               </dt>
               <dd class="font-semibold text-slate-900">
-                {{ payload?.bimbel?.target_levels?.join(', ') ?? detail.school_summary?.education_level ?? '—' }}
+                {{ tutoringSlice?.target_levels?.join(', ') ?? detail.school_summary?.education_level ?? '—' }}
               </dd>
             </div>
             <div>
@@ -654,7 +676,7 @@ function onSchoolReset(result: {
                 Kota
               </dt>
               <dd class="font-semibold text-slate-900">
-                {{ payload?.bimbel?.city ?? detail.school_summary?.city ?? '—' }}
+                {{ tutoringSlice?.city ?? detail.school_summary?.city ?? '—' }}
               </dd>
             </div>
             <div>
@@ -662,7 +684,7 @@ function onSchoolReset(result: {
                 Skala Siswa
               </dt>
               <dd class="font-semibold text-slate-900">
-                {{ payload?.bimbel?.student_scale ?? '—' }}
+                {{ tutoringSlice?.student_scale ?? '—' }}
               </dd>
             </div>
             <div>
@@ -670,7 +692,7 @@ function onSchoolReset(result: {
                 Skala Tutor
               </dt>
               <dd class="font-semibold text-slate-900">
-                {{ payload?.bimbel?.tutor_scale ?? '—' }}
+                {{ tutoringSlice?.tutor_scale ?? '—' }}
               </dd>
             </div>
           </dl>
@@ -747,7 +769,7 @@ function onSchoolReset(result: {
           </dl>
         </section>
 
-        <template v-if="payload?.tenant_type !== 'bimbel'">
+        <template v-if="!isTutoringPayload">
         <!-- SECTION 3 · MATA PELAJARAN -->
         <section class="bg-white border border-slate-200 rounded-2xl p-4">
           <h2

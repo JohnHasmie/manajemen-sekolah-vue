@@ -9,7 +9,7 @@
  *     show the "Lewati" link)
  *
  * Both paths are defined here so the shell stays generic and the
- * only thing that differs between sekolah/bimbel is which array we
+ * only thing that differs between school/tutoring is which array we
  * iterate over.
  */
 import type {
@@ -155,18 +155,18 @@ const TUTORING_BILLING_OPTIONS: QuestionOption[] = (
         : 'Bayar sekali untuk seluruh paket program',
 }));
 
-/* `p.bimbel` field name kept — backend payload key. */
+/* `p.tutoring` is the canonical wire key after the 2026-06-26 cutover. */
 function patchTutoring<K extends keyof DemoTutoringPayload>(
   p: DemoWizardPayload,
   key: K,
   value: DemoTutoringPayload[K],
 ): DemoWizardPayload {
-  return { ...p, bimbel: { ...p.bimbel, [key]: value } };
+  return { ...p, tutoring: { ...p.tutoring, [key]: value } };
 }
 
 export const TUTORING_QUESTIONS: readonly Question[] = [
   {
-    key: 'bimbel.name',
+    key: 'tutoring.name',
     chapter: 'Tentang lembaga',
     prompt: 'Apa nama bimbel atau lembaga Anda?',
     helper: 'Nama yang akan tampil di kop tagihan, halaman tutor, dan akun siswa.',
@@ -174,29 +174,29 @@ export const TUTORING_QUESTIONS: readonly Question[] = [
     input: 'text',
     placeholder: 'mis. Cahaya Prestasi Bimbel',
     gibberishCheck: true,
-    value: (p) => p.bimbel.name,
+    value: (p) => p.tutoring.name,
     setValue: (p, v) => patchTutoring(p, 'name', String(v ?? '')),
-    isValid: (p) => p.bimbel.name.trim().length >= 3,
+    isValid: (p) => p.tutoring.name.trim().length >= 3,
   },
   {
-    key: 'bimbel.location',
+    key: 'tutoring.location',
     chapter: 'Tentang lembaga',
     prompt: 'Di mana lokasi bimbel Anda?',
     helper:
       'Cari alamat kantor di peta, atau klik “Lokasi saya” untuk pakai posisi sekarang. Belum punya kantor fisik? Tetap pakai lokasi sekarang — centang toggle di bawah peta supaya tim tahu itu lokasi operator, bukan kantor.',
     required: true,
     input: 'location',
-    value: (p) => p.bimbel.location,
+    value: (p) => p.tutoring.location,
     setValue: (p, v) =>
       patchTutoring(p, 'location', (v as DemoTutoringLocation | null) ?? null),
     isValid: (p) => {
-      const loc = p.bimbel.location;
+      const loc = p.tutoring.location;
       if (!loc) return false;
       return Number.isFinite(loc.lat) && Number.isFinite(loc.lng);
     },
   },
   {
-    key: 'bimbel.city',
+    key: 'tutoring.city',
     chapter: 'Tentang lembaga',
     prompt: 'Kota lembaga Anda?',
     helper: 'Untuk memetakan zona waktu dan opsi pembayaran lokal.',
@@ -207,37 +207,37 @@ export const TUTORING_QUESTIONS: readonly Question[] = [
     // Auto-skip when the previous question's map pick reverse-geocoded
     // a city for us. The user can still go Kembali to re-pin if they
     // want to override.
-    skipIf: (p) => (p.bimbel.city ?? '').trim().length >= 2 && p.bimbel.location != null,
-    value: (p) => p.bimbel.city ?? '',
+    skipIf: (p) => (p.tutoring.city ?? '').trim().length >= 2 && p.tutoring.location != null,
+    value: (p) => p.tutoring.city ?? '',
     setValue: (p, v) => patchTutoring(p, 'city', String(v ?? '') || null),
-    isValid: (p) => (p.bimbel.city ?? '').trim().length >= 2,
+    isValid: (p) => (p.tutoring.city ?? '').trim().length >= 2,
   },
   {
-    key: 'bimbel.target_levels',
+    key: 'tutoring.target_levels',
     chapter: 'Tentang lembaga',
-    prompt: 'EducationLevel apa saja yang Anda bimbing?',
+    prompt: 'Jenjang apa saja yang Anda bimbing?',
     helper: 'Pilih satu atau lebih. Bisa diubah lagi setelah demo aktif.',
     required: true,
     input: 'chips_multi',
     options: TUTORING_TARGET_OPTIONS,
-    value: (p) => p.bimbel.target_levels,
+    value: (p) => p.tutoring.target_levels,
     setValue: (p, v) => patchTutoring(p, 'target_levels', (v as TutoringEducationLevel[]) ?? []),
-    isValid: (p) => p.bimbel.target_levels.length > 0,
+    isValid: (p) => p.tutoring.target_levels.length > 0,
   },
   {
-    key: 'bimbel.student_scale',
+    key: 'tutoring.student_scale',
     chapter: 'Tentang lembaga',
     prompt: 'Kira-kira berapa siswa aktif saat ini?',
     helper: 'Estimasi kasar saja — data demo akan disesuaikan dengan skala ini.',
     required: true,
     input: 'pills',
     options: TUTORING_STUDENT_SCALE_OPTIONS,
-    value: (p) => p.bimbel.student_scale,
+    value: (p) => p.tutoring.student_scale,
     setValue: (p, v) => patchTutoring(p, 'student_scale', v as TutoringStudentScale),
-    isValid: (p) => !!p.bimbel.student_scale,
+    isValid: (p) => !!p.tutoring.student_scale,
   },
   {
-    key: 'bimbel.programs',
+    key: 'tutoring.programs',
     chapter: 'Program & tim',
     prompt: 'Program apa saja yang Anda jalankan?',
     helper: 'Tap untuk pilih dari saran, atau tambahkan program khusus Anda.',
@@ -245,7 +245,7 @@ export const TUTORING_QUESTIONS: readonly Question[] = [
     input: 'chips_add',
     suggestions: [...TUTORING_DEFAULT_PROGRAMS],
     placeholder: 'mis. Intensif SNBT 2026',
-    value: (p) => p.bimbel.programs,
+    value: (p) => p.tutoring.programs,
     setValue: (p, v) =>
       patchTutoring(
         p,
@@ -253,32 +253,32 @@ export const TUTORING_QUESTIONS: readonly Question[] = [
         ((v as string[]) ?? []).map((s) => s.trim()).filter(Boolean),
       ),
     isValid: (p) =>
-      Array.isArray(p.bimbel.programs) &&
-      p.bimbel.programs.filter((s) => s.trim().length > 0).length > 0,
+      Array.isArray(p.tutoring.programs) &&
+      p.tutoring.programs.filter((s) => s.trim().length > 0).length > 0,
   },
   {
-    key: 'bimbel.tutor_scale',
+    key: 'tutoring.tutor_scale',
     chapter: 'Program & tim',
     prompt: 'Berapa banyak tutor yang aktif mengajar?',
     helper: 'Untuk menentukan jumlah akun tutor dummy yang dibuatkan.',
     required: true,
     input: 'pills',
     options: TUTORING_TUTOR_SCALE_OPTIONS,
-    value: (p) => p.bimbel.tutor_scale,
+    value: (p) => p.tutoring.tutor_scale,
     setValue: (p, v) => patchTutoring(p, 'tutor_scale', v as TutoringTutorScale),
-    isValid: (p) => !!p.bimbel.tutor_scale,
+    isValid: (p) => !!p.tutoring.tutor_scale,
   },
   {
-    key: 'bimbel.billing_mode',
+    key: 'tutoring.billing_mode',
     chapter: 'Program & tim',
     prompt: 'Mode penagihan default yang Anda pakai?',
     helper: 'Bisa diubah per program / per siswa setelah demo aktif.',
     required: true,
     input: 'pills',
     options: TUTORING_BILLING_OPTIONS,
-    value: (p) => p.bimbel.billing_mode,
+    value: (p) => p.tutoring.billing_mode,
     setValue: (p, v) => patchTutoring(p, 'billing_mode', v as TutoringBillingMode),
-    isValid: (p) => !!p.bimbel.billing_mode,
+    isValid: (p) => !!p.tutoring.billing_mode,
   },
   {
     key: 'requester.full_name',
@@ -366,25 +366,51 @@ export const TUTORING_QUESTIONS: readonly Question[] = [
     },
   },
   {
-    key: 'bimbel.scenarios',
+    key: 'tutoring.scenarios',
     chapter: 'Skenario demo',
     prompt: 'Data dummy apa yang ingin disisipkan?',
     helper:
       'Tap untuk untoggle — semuanya default-on. Bisa diubah sebelum kirim.',
     required: true,
     input: 'scenarios',
-    value: (p) => p.bimbel.scenarios,
+    value: (p) => p.tutoring.scenarios,
     setValue: (p, v) =>
       patchTutoring(p, 'scenarios', (v as DemoTutoringPayload['scenarios']) ?? []),
     isValid: () => true,
   },
 ];
 
-/* ─────────────────────────── SEKOLAH PATH ─────────────────────────── */
+/* ─────────────────────────── SCHOOL PATH ──────────────────────────── */
 
+/**
+ * School education-level chip options. `value` is the canonical English
+ * wire value (post 2026-06-26 cutover) sent to the backend; `label` is
+ * the Indonesian display abbreviation the user sees on the chip. Use
+ * `educationLevelDisplay()` from `@/lib/labels` to map back when reading.
+ */
 const SCHOOL_EDUCATION_LEVEL_OPTIONS: QuestionOption[] = (
-  ['SD', 'MI', 'SMP', 'MTs', 'SMA', 'MA', 'SMK', 'TK', 'PAUD', 'Pesantren'] as EducationLevel[]
-).map((v) => ({ value: v, label: v }));
+  [
+    'ELEMENTARY',         // SD
+    'MI',
+    'JUNIOR_HIGH',        // SMP
+    'MTs',
+    'SENIOR_HIGH',        // SMA
+    'MA',
+    'VOCATIONAL_HIGH',    // SMK
+    'TK',
+    'PAUD',
+    'Pesantren',
+  ] as EducationLevel[]
+).map((v) => ({
+  value: v,
+  // Map ENGLISH wire values back to the Indonesian display label.
+  label:
+    v === 'ELEMENTARY' ? 'SD'
+      : v === 'JUNIOR_HIGH' ? 'SMP'
+        : v === 'SENIOR_HIGH' ? 'SMA'
+          : v === 'VOCATIONAL_HIGH' ? 'SMK'
+            : v,
+}));
 
 const SCHOOL_CLASS_PATTERN_OPTIONS: QuestionOption[] = [
   { value: 'small', label: 'Kecil', hint: '1–2 kelas per tingkat' },
@@ -418,7 +444,7 @@ export const SCHOOL_QUESTIONS: readonly Question[] = [
   {
     key: 'school.education_level',
     chapter: 'Tentang sekolah',
-    prompt: 'EducationLevel sekolah Anda?',
+    prompt: 'Jenjang sekolah Anda?',
     helper: 'Mata pelajaran default akan disesuaikan dengan jenjang.',
     required: true,
     input: 'pills',
@@ -685,6 +711,6 @@ export const SCHOOL_QUESTIONS: readonly Question[] = [
  * Single entry point used by the shell to pick the right list once
  * the tenant type is known.
  */
-export function questionsFor(tenant: 'sekolah' | 'bimbel'): readonly Question[] {
-  return tenant === 'bimbel' ? TUTORING_QUESTIONS : SCHOOL_QUESTIONS;
+export function questionsFor(tenant: 'school' | 'tutoring'): readonly Question[] {
+  return tenant === 'tutoring' ? TUTORING_QUESTIONS : SCHOOL_QUESTIONS;
 }

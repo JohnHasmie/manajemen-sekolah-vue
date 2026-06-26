@@ -10,7 +10,7 @@
 
   Colors are fixed to the parent brand (azure #21afe6) so the hero
   feels distinctly "wali" — body surfaces still adapt via
-  bimbel-light / bimbel-dark.
+  tutoring-light / tutoring-dark.
 -->
 <script setup lang="ts">
 withDefaults(

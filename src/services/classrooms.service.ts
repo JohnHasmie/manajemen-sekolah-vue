@@ -19,24 +19,32 @@ export interface ClassroomListParams {
  *
  * Mirrors Flutter's `ClassroomFilterHelper.generateGradeLevels`
  * (`lib/features/classrooms/.../classroom_filter_helper.dart`):
- *   SD  → 1-6
- *   SMP → 7-9
- *   SMA / SMK → 10-12
+ *   ELEMENTARY        → 1-6   (SD)
+ *   JUNIOR_HIGH       → 7-9   (SMP)
+ *   SENIOR_HIGH /
+ *   VOCATIONAL_HIGH   → 10-12 (SMA / SMK)
  * Anything else (null/unknown, e.g. MA/MTs/Pesantren) falls back to
  * the full 1-12 range so we never hide a valid option.
+ *
+ * Accepts BOTH the canonical English wire values (post 2026-06-26
+ * cutover) and the legacy Indonesian abbreviations during the
+ * transition window — backend may emit either until backfill lands.
  */
 export function generateGradeLevels(jenjang?: string | null): string[] {
   let start = 1;
   let end = 12;
   if (jenjang) {
     const j = jenjang.trim().toUpperCase();
-    if (j === 'SD') {
+    if (j === 'SD' || j === 'ELEMENTARY') {
       start = 1;
       end = 6;
-    } else if (j === 'SMP') {
+    } else if (j === 'SMP' || j === 'JUNIOR_HIGH') {
       start = 7;
       end = 9;
-    } else if (j === 'SMA' || j === 'SMK') {
+    } else if (
+      j === 'SMA' || j === 'SMK' ||
+      j === 'SENIOR_HIGH' || j === 'VOCATIONAL_HIGH'
+    ) {
       start = 10;
       end = 12;
     }

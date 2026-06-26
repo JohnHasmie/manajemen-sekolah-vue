@@ -4,7 +4,7 @@
   Mirrors `lib/features/tutoring/presentation/screens/tutoring_appearance_screen.dart`
   for the tutor role. Three radio tiles (Otomatis / Selalu terang /
   Selalu gelap) drive the `useTutoringThemeStore` mode; the tutor surface
-  then flips between `bimbel-dark` and `bimbel-light` via the AppShell
+  then flips between `tutoring-dark` and `tutoring-light` via the AppShell
   wrapper class.
 
   The page itself uses bimbel surface tokens, so it previews the chosen

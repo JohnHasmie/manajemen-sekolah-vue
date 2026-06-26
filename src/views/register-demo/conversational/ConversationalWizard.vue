@@ -31,7 +31,7 @@ const router = useRouter();
 const wizard = useDemoWizardStore();
 const toast = useToast();
 
-const tenant = computed<'sekolah' | 'bimbel'>(() => wizard.payload.tenant_type);
+const tenant = computed<'school' | 'tutoring'>(() => wizard.payload.tenant_type);
 const list = computed<readonly Question[]>(() => questionsFor(tenant.value));
 const total = computed(() => list.value.length);
 
@@ -271,7 +271,7 @@ watch(
           <div class="text-sm font-bold text-slate-900">
             Daftar demo
             <span class="ml-1 text-xs font-medium text-slate-500">
-              · {{ tenant === 'bimbel' ? 'Bimbel' : 'Sekolah' }}
+              · {{ tenant === 'tutoring' ? 'Bimbel' : 'Sekolah' }}
             </span>
           </div>
         </div>

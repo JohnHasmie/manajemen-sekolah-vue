@@ -99,11 +99,11 @@ const tutoringRoleClass = computed(() =>
  * mode pick (light / dark / auto) via the bimbel theme store. The
  * whole tokenised CSS-var system (`--bimbel-panel`, `--bimbel-text-hi`,
  * etc.) is the SHARED mechanism — each component already reads those
- * vars, so flipping `.bimbel-light` ↔ `.bimbel-dark` on this single
+ * vars, so flipping `.tutoring-light` ↔ `.tutoring-dark` on this single
  * `<main>` element re-skins every page underneath at once. No
  * per-page light/dark wiring needed.
  *
- * Previously the admin + wali branches were pinned to `'bimbel-dark'`,
+ * Previously the admin + wali branches were pinned to `'tutoring-dark'`,
  * which is why "/admin/tutoring" and friends came out fully dark even
  * with the tutor toggle set to light — the toggle simply wasn't
  * consulted for those roles. Removing the branch lets the same store
@@ -112,9 +112,9 @@ const tutoringRoleClass = computed(() =>
 const tutoringSurfaceClass = computed(() => tutoringTheme.rootClass);
 
 /**
- * Mirror the bimbel surface classes (`.bimbel-light` / `.bimbel-dark`
+ * Mirror the surface classes (`.tutoring-light` / `.tutoring-dark`
  * + role tier `.bimbel-tutor` / `.bimbel-admin` / `.bimbel-wali`)
- * onto `<html>` whenever we're rendering a bimbel route.
+ * onto `<html>` whenever we're rendering a tutoring route.
  *
  * Why this exists: `<main>` already carries those classes for the
  * in-tree cascade, but our `<Modal>` primitive teleports its content
@@ -127,38 +127,46 @@ const tutoringSurfaceClass = computed(() => tutoringTheme.rootClass);
  * inherits the same CSS-var values as the rest of the page.
  *
  * On school routes (and after logout) we strip the classes so we
- * don't leak the bimbel palette onto the standard school chrome.
+ * don't leak the tutoring palette onto the standard school chrome.
+ *
+ * NOTE: only the .tutoring-{light,dark} surface classes were renamed
+ * in the 2026-06-26 cutover. The role tier classes (.bimbel-{tutor,
+ * admin,wali}) and the underlying `--bimbel-*` CSS variables stay
+ * unchanged because they are tightly coupled to the `bimbel:` Tailwind
+ * namespace (see tailwind.config.ts), and renaming them would force a
+ * sweep across every component that uses `bg-bimbel-panel` /
+ * `text-bimbel-text-hi` / etc. — out of scope for this PR.
  */
-const BIMBEL_HTML_CLASSES = ['bimbel-light', 'bimbel-dark', 'bimbel-tutor', 'bimbel-admin', 'bimbel-wali'];
-function syncBimbelHtmlClasses() {
+const TUTORING_HTML_CLASSES = ['tutoring-light', 'tutoring-dark', 'bimbel-tutor', 'bimbel-admin', 'bimbel-wali'];
+function syncTutoringHtmlClasses() {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
-  // Clear any previous bimbel classes so role/mode swaps don't pile up.
-  root.classList.remove(...BIMBEL_HTML_CLASSES);
+  // Clear any previous classes so role/mode swaps don't pile up.
+  root.classList.remove(...TUTORING_HTML_CLASSES);
   if (isTutoringRoute.value) {
     root.classList.add(tutoringSurfaceClass.value);
     root.classList.add(tutoringRoleClass.value);
     return;
   }
-  // School (non-bimbel) routes still render the sidebar with
+  // School (non-tutoring) routes still render the sidebar with
   // `bg-bimbel-panel` / `text-bimbel-text-*` utilities. Those tokens
   // default to the DARK palette on `:root` — without a class on <html>
   // the school sidebar comes out fully dark while the page body is
   // light, which is what was reported. School has light-only mode, so
-  // force `bimbel-light` here. The role tier class isn't needed
+  // force `tutoring-light` here. The role tier class isn't needed
   // because the navy hero gradient isn't used on school pages.
-  root.classList.add('bimbel-light');
+  root.classList.add('tutoring-light');
 }
 watch(
   [isTutoringRoute, tutoringSurfaceClass, tutoringRoleClass],
-  syncBimbelHtmlClasses,
+  syncTutoringHtmlClasses,
   { immediate: true },
 );
 onBeforeUnmount(() => {
   // Logout / route to /login destroys AppShell — make sure the
   // login screen doesn't inherit a stale dark palette.
   if (typeof document !== 'undefined') {
-    document.documentElement.classList.remove(...BIMBEL_HTML_CLASSES);
+    document.documentElement.classList.remove(...TUTORING_HTML_CLASSES);
   }
 });
 
@@ -268,8 +276,8 @@ const schoolInitial = computed(() => {
       Surface:
         bg-bimbel-panel sits one tier above the page bg, so the page
         feels recessed below it. Border-right on bimbel-border-soft
-        gives a subtle seam. Tokens flip via .bimbel-light /
-        .bimbel-dark so the same markup serves both modes.
+        gives a subtle seam. Tokens flip via .tutoring-light /
+        .tutoring-dark so the same markup serves both modes.
 
       Brand header:
         Compact 60px row with the role-tinted square logo + school

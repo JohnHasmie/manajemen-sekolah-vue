@@ -1,6 +1,6 @@
 /**
- * Bimbel (tutoring) appearance store — controls light/dark/auto for
- * every tutor surface in the BIMBEL tenant.
+ * Tutoring appearance store — controls light/dark/auto for every tutor
+ * surface in the tutoring tenant.
  *
  * Mirrors the Flutter mobile store at
  * `lib/features/tutoring/presentation/theme/tutoring_theme_mode.dart`,
@@ -8,29 +8,32 @@
  *
  *   - `auto`  : flip based on local time-of-day (default — new users
  *               get the time-aware switch out of the box).
- *   - `light` : force `bimbel-light` always.
- *   - `dark`  : force `bimbel-dark` always.
+ *   - `light` : force `tutoring-light` always.
+ *   - `dark`  : force `tutoring-dark` always.
  *
  * `auto` consumes the configured light/dark start times (defaults
  * 06:00 / 18:30) against the local clock. A 60s tick in
  * `startAutoTick()` re-evaluates `_now` so the flip happens within a
  * minute of crossing the boundary while the tab is foregrounded.
  *
- * The whole point is `rootClass`: it returns `'bimbel-dark'` or
- * `'bimbel-light'` and is what AppShell (and any future page root)
+ * The whole point is `rootClass`: it returns `'tutoring-dark'` or
+ * `'tutoring-light'` and is what AppShell (and any future page root)
  * applies to swap the surface CSS variables defined in `style.css`.
  */
 import { defineStore } from 'pinia';
 
 export type TutoringThemeMode = 'auto' | 'light' | 'dark';
 
-/* Persisted localStorage keys keep the legacy `bimbel.*` prefix so
- * existing user preferences survive the rename. The Pinia store id
- * (`'bimbelTheme'` below) is kept for the same reason. */
-const STORAGE_KEY = 'bimbel.theme.mode';
-const LIGHT_HOUR_KEY = 'bimbel.theme.lightStartHour';
-const DARK_HOUR_KEY = 'bimbel.theme.darkStartHour';
-const DARK_MINUTE_KEY = 'bimbel.theme.darkStartMinute';
+/* Persisted localStorage keys use the canonical `tutoring.*` prefix
+ * after the 2026-06-26 English-enum cutover. This is a HARD CUTOVER —
+ * existing users will see their theme preference reset to `auto` on
+ * first load post-deploy (accepted UX cost per the rename plan). The
+ * Pinia store id (`'tutoringTheme'` below) was renamed at the same
+ * time so any devtools-saved snapshot also uses the canonical name. */
+const STORAGE_KEY = 'tutoring.theme.mode';
+const LIGHT_HOUR_KEY = 'tutoring.theme.lightStartHour';
+const DARK_HOUR_KEY = 'tutoring.theme.darkStartHour';
+const DARK_MINUTE_KEY = 'tutoring.theme.darkStartMinute';
 
 function readMode(): TutoringThemeMode {
   const raw = typeof localStorage !== 'undefined'
@@ -61,7 +64,7 @@ interface TutoringThemeState {
   _tickId: number | null;
 }
 
-export const useTutoringThemeStore = defineStore('bimbelTheme', {
+export const useTutoringThemeStore = defineStore('tutoringTheme', {
   state: (): TutoringThemeState => ({
     mode: readMode(),
     lightStartHour: readInt(LIGHT_HOUR_KEY, 6),
@@ -95,7 +98,7 @@ export const useTutoringThemeStore = defineStore('bimbelTheme', {
     },
     /** Class name to apply on the page / shell root. Always one of two. */
     rootClass(): string {
-      return this.isDark ? 'bimbel-dark' : 'bimbel-light';
+      return this.isDark ? 'tutoring-dark' : 'tutoring-light';
     },
     /**
      * Human label for the auto-mode hint chip, e.g.

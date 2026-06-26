@@ -1,6 +1,6 @@
 /**
  * useTenant — derives the active tenant kind (formal school vs tutoring
- * center / bimbel) from the auth store.
+ * center) from the auth store.
  *
  * The backend stamps `tenant_type` onto the user payload (switch-school)
  * and each /user/schools row (both since Phase 0). We read it off the
@@ -19,19 +19,27 @@ export interface TenantInfo {
   kind: ComputedRef<TenantKind>;
   /** True when the active tenant is a tutoring center. */
   isTutoringCenter: ComputedRef<boolean>;
-  /** Indonesian label: 'Sekolah' | 'Bimbel'. */
+  /**
+   * English label: 'School' | 'Tutoring' — canonical English per the
+   * 2026-06-26 enum-value cutover. Callers that need the Indonesian
+   * display word (Sekolah / Bimbel) should pick the literal at the
+   * usage site since the actual wording is context-dependent (e.g.
+   * "Bimbel formal" vs "Lembaga bimbel").
+   */
   label: ComputedRef<string>;
 }
 
 /** Parse a raw tenant_type string, defaulting to SCHOOL. */
 export function tenantKindFromRaw(raw: unknown): TenantKind {
-  return String(raw).toUpperCase() === 'TUTORING_CENTER'
-    ? 'TUTORING_CENTER'
-    : 'SCHOOL';
+  const v = String(raw).toLowerCase();
+  if (v === 'tutoring_center' || v === 'tutoring' || v === 'bimbel') {
+    return 'TUTORING_CENTER';
+  }
+  return 'SCHOOL';
 }
 
 export function tenantLabel(kind: TenantKind): string {
-  return kind === 'TUTORING_CENTER' ? 'Bimbel' : 'Sekolah';
+  return kind === 'TUTORING_CENTER' ? 'Tutoring' : 'School';
 }
 
 export function useTenant(): TenantInfo {

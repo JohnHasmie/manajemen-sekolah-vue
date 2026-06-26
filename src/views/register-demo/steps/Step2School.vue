@@ -10,6 +10,7 @@ import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { DemoService, type NpsnLookupResult } from '@/services/demo.service';
 import type { EducationLevel, SchoolSearchHit } from '@/types/demo';
+import { educationLevelDisplay, normalizeEducationLevel } from '@/lib/labels';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import { useToast } from '@/composables/useToast';
@@ -18,7 +19,14 @@ const { t } = useI18n();
 const wizard = useDemoWizardStore();
 const toast = useToast();
 
-const JENJANG_PRIMARY: EducationLevel[] = ['SD', 'SMP', 'SMA', 'SMK'];
+// Wire-canonical English values per the 2026-06-26 enum cutover; UI
+// shows the Indonesian abbreviation via `educationLevelDisplay()`.
+const JENJANG_PRIMARY: EducationLevel[] = [
+  'ELEMENTARY',         // SD
+  'JUNIOR_HIGH',        // SMP
+  'SENIOR_HIGH',        // SMA
+  'VOCATIONAL_HIGH',    // SMK
+];
 const JENJANG_OTHERS: EducationLevel[] = ['TK', 'PAUD', 'MI', 'MTs', 'MA', 'Pesantren'];
 
 const showOthers = ref(false);
@@ -95,12 +103,16 @@ function pickCreateNew() {
 
 function pickRegistryHit(hit: SchoolSearchHit) {
   // User adopted an NPSN row that isn't on Kamiledu yet. Prefill
-  // education_level / city / npsn from the registry hit.
+  // education_level / city / npsn from the registry hit. The Dapodik
+  // registry still returns legacy Indonesian education_level values
+  // (SD/SMP/SMA/SMK) — normalise to the canonical English wire form
+  // before committing so the rest of the wizard sees one shape.
+  const normalizedLevel = normalizeEducationLevel(hit.education_level);
   wizard.patchPayload('school', {
     name: hit.name,
     npsn: hit.npsn,
     city: hit.city ?? wizard.payload.school.city,
-    education_level: (hit.education_level as EducationLevel) ?? selectedJenjang.value,
+    education_level: (normalizedLevel as EducationLevel) ?? selectedJenjang.value,
   });
   toast.success('Sekolah diisi dari registri NPSN. Lanjut untuk klaim sebagai admin.');
   wizard.next();
@@ -158,11 +170,13 @@ function acceptNpsnHit() {
     toast.info(t('registerDemo.step2AlreadyExists'));
     return;
   }
+  // Same normalisation as pickRegistryHit — Dapodik returns SD/SMP/...
+  const normalizedLevel = normalizeEducationLevel(npsnHit.value.education_level);
   wizard.patchPayload('school', {
     name: npsnHit.value.name,
     npsn: npsnHit.value.npsn,
     city: npsnHit.value.city,
-    education_level: (npsnHit.value.education_level as EducationLevel) ?? selectedJenjang.value,
+    education_level: (normalizedLevel as EducationLevel) ?? selectedJenjang.value,
   });
   query.value = npsnHit.value.name;
   toast.success(t('registerDemo.step2DapodikSuccess'));
@@ -267,7 +281,7 @@ async function requestAccessForKamilEduMatch() {
         "
         @click="setJenjang(j)"
       >
-        {{ j }}
+        {{ educationLevelDisplay(j) }}
       </button>
       <button
         type="button"
@@ -279,7 +293,7 @@ async function requestAccessForKamilEduMatch() {
         "
         @click="showOthers = !showOthers"
       >
-        {{ JENJANG_OTHERS.includes(selectedJenjang) ? selectedJenjang : t('registerDemo.step2JenjangOthers') }}
+        {{ JENJANG_OTHERS.includes(selectedJenjang) ? educationLevelDisplay(selectedJenjang) : t('registerDemo.step2JenjangOthers') }}
         <NavIcon :name="showOthers ? 'chevron-up' : 'chevron-down'" :size="11" />
       </button>
     </div>
@@ -296,7 +310,7 @@ async function requestAccessForKamilEduMatch() {
         "
         @click="setJenjang(j)"
       >
-        {{ j }}
+        {{ educationLevelDisplay(j) }}
       </button>
     </div>
 
@@ -308,7 +322,7 @@ async function requestAccessForKamilEduMatch() {
       <input
         v-model="query"
         type="text"
-        :placeholder="t('registerDemo.step2NamePlaceholder', { selectedJenjang })"
+        :placeholder="t('registerDemo.step2NamePlaceholder', { selectedJenjang: educationLevelDisplay(selectedJenjang) })"
         class="flex-1 text-[14px] text-slate-900 placeholder-slate-400 outline-none bg-transparent"
         autocomplete="off"
       />
@@ -473,7 +487,7 @@ async function requestAccessForKamilEduMatch() {
         <div class="flex-1 min-w-0">
           <p class="text-[13px] font-bold text-slate-900 leading-tight">{{ npsnHit.name }}</p>
           <p class="text-[10.5px] text-slate-600 mt-0.5">
-            {{ [npsnHit.education_level, npsnHit.city, npsnHit.province].filter(Boolean).join(' · ') }}
+            {{ [educationLevelDisplay(npsnHit.education_level), npsnHit.city, npsnHit.province].filter(Boolean).join(' · ') }}
             <span v-if="npsnHit.akreditasi" class="ml-1 px-1.5 py-0.5 bg-emerald-200 text-emerald-800 rounded text-[9px] font-bold">
               Akreditasi {{ npsnHit.akreditasi }}
             </span>

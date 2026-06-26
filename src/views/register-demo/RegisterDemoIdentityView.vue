@@ -227,7 +227,7 @@ function dismissPendingDialog() {
 
 function handleBack() {
   // Return to the wizard so the user can review/adjust answers.
-  if (wizard.payload.tenant_type === 'bimbel') {
+  if (wizard.payload.tenant_type === 'tutoring') {
     router.push('/register-demo/conversational');
   } else {
     router.push('/register-demo');

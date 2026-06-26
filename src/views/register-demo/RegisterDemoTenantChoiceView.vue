@@ -59,7 +59,7 @@ onMounted(async () => {
   }
 });
 
-function pick(t: 'sekolah' | 'bimbel') {
+function pick(t: 'school' | 'tutoring') {
   wizard.setTenantType(t);
   router.push('/register-demo/wizard');
 }
@@ -141,7 +141,7 @@ function pick(t: 'sekolah' | 'bimbel') {
             <button
               type="button"
               class="group bg-white border border-slate-200 hover:border-brand-cobalt hover:shadow-card rounded-2xl p-7 text-left transition"
-              @click="pick('sekolah')"
+              @click="pick('school')"
             >
               <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 grid place-items-center mb-4">
                 <NavIcon name="building" :size="22" />
@@ -177,7 +177,7 @@ function pick(t: 'sekolah' | 'bimbel') {
             <button
               type="button"
               class="group bg-white border-2 border-brand-cobalt rounded-2xl p-7 text-left transition hover:shadow-card relative"
-              @click="pick('bimbel')"
+              @click="pick('tutoring')"
             >
               <span class="absolute top-3 right-3 text-[10px] font-black uppercase tracking-widest bg-brand-cobalt text-white px-2 py-0.5 rounded-md">
                 Baru

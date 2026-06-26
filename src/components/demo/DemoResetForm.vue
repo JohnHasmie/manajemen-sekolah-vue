@@ -42,6 +42,7 @@ import {
   type DemoScenarioKey,
   type EducationLevel,
 } from '@/types/demo';
+import { educationLevelDisplay, normalizeEducationLevel } from '@/lib/labels';
 
 const props = defineProps<{
   basePayload: Record<string, unknown> | null;
@@ -69,11 +70,13 @@ const mode = ref<'same' | 'tweak'>('same');
 // ── School name + jenjang ──────────────────────────────────────────
 const overrideName = ref('');
 const overrideJenjang = ref<EducationLevel | ''>('');
+// Canonical English wire values per the 2026-06-26 cutover; UI label
+// preserves the Indonesian display abbreviation via the display helper.
 const JENJANG_OPTIONS: { value: EducationLevel; label: string }[] = [
-  { value: 'SD', label: 'SD' },
-  { value: 'SMP', label: 'SMP' },
-  { value: 'SMA', label: 'SMA' },
-  { value: 'SMK', label: 'SMK' },
+  { value: 'ELEMENTARY',      label: educationLevelDisplay('ELEMENTARY') },        // SD
+  { value: 'JUNIOR_HIGH',     label: educationLevelDisplay('JUNIOR_HIGH') },       // SMP
+  { value: 'SENIOR_HIGH',     label: educationLevelDisplay('SENIOR_HIGH') },       // SMA
+  { value: 'VOCATIONAL_HIGH', label: educationLevelDisplay('VOCATIONAL_HIGH') },   // SMK
 ];
 
 // ── Teachers ────────────────────────────────────────────────────────
@@ -150,10 +153,15 @@ watch(
     if (!b) return;
     const school = (b.school ?? {}) as Record<string, unknown>;
     overrideName.value = String(school.name ?? '');
-    const j = String(school.education_level ?? school.jenjang ?? '');
-    overrideJenjang.value = ['SD', 'SMP', 'SMA', 'SMK'].includes(j)
-      ? (j as EducationLevel)
-      : '';
+    // Normalise legacy (SD/SMP/...) or new (ELEMENTARY/...) wire value
+    // to the canonical English form, then keep only the four mainline
+    // jenjang here (the picker doesn't offer MI / TK / Pesantren / etc.).
+    const j = normalizeEducationLevel(school.education_level ?? school.jenjang);
+    overrideJenjang.value =
+      j === 'ELEMENTARY' || j === 'JUNIOR_HIGH' ||
+      j === 'SENIOR_HIGH' || j === 'VOCATIONAL_HIGH'
+        ? (j as EducationLevel)
+        : '';
 
     const teachers = (b.teachers ?? {}) as Record<string, unknown>;
     if (typeof teachers.count === 'number') {
