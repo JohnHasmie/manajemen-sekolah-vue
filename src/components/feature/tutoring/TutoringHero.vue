@@ -18,7 +18,7 @@ withDefaults(
     accentName?: string;
     /** Optional sub-line under the title. */
     subtitle?: string;
-    /** Role accent token: 'admin' | 'tutor' | 'wali'. */
+    /** Role accent token: 'admin' | 'tutor' | 'parent'. */
     accent?: 'admin' | 'tutor' | 'wali';
   }>(),
   { accent: 'admin' },

@@ -1,5 +1,5 @@
 <!--
-  TutorClassesView — list of all kelompok where the current user is
+  TutorClassesView — list of all group where the current user is
   the assigned tutor. Mirrors mobile `TutorClassesScreen`.
 
   Header: navy hero with class count + a search box. Body: responsive
@@ -13,7 +13,7 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useAuthStore } from '@/stores/auth';
 import type { TutoringGroup } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import TutorClassCard from '@/components/feature/tutoring/TutorClassCard.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
@@ -53,7 +53,7 @@ function goToClass(g: TutoringGroup) {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('tutor.bimbel.classes.greeting')"
       :title="t('tutor.bimbel.classes.title_count', { count: myGroups.length })"
       :subtitle="t('tutor.bimbel.classes.subtitle')"

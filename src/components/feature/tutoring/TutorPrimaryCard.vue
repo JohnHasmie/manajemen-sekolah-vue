@@ -1,5 +1,5 @@
 <!--
-  TutorPrimaryCard — accent-stripe card used for the "Sesi berikutnya"
+  TutorPrimaryCard — accent-stripe card used for the "Session berikutnya"
   hero block + "Perlu perhatian" / "Hari ini" patterns. A 4px tinted
   bar on the left identifies tone (`brand` cyan, `success` green,
   `warning` amber, `danger` red).

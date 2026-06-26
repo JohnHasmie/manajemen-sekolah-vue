@@ -23,7 +23,7 @@ const allowMonthly = ref(true);
 const allowPerSession = ref(true);
 const defaultMode = ref<string | null>(null);
 
-// Payment account — surfaced on parent bill detail so wali knows
+// Payment account — surfaced on parent bill detail so parent knows
 // where to transfer. All fields optional; UI groups by channel.
 const bankName = ref('');
 const bankAccountNumber = ref('');

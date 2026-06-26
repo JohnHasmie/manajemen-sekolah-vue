@@ -104,7 +104,7 @@ function rowFromJson(raw: any, assessments: Assessment[]): GradeRow {
 
 export const GradeService = {
   /**
-   * School-wide grade overview for the admin Buku Nilai page.
+   * School-wide grade overview for the admin Gradebook page.
    *
    * Mirrors Flutter `GradeService.getAdminOverview`:
    *   `GET /grades/admin-overview?academic_year_id=…`
@@ -144,7 +144,7 @@ export const GradeService = {
   },
 
   /**
-   * Default landing data for the Nilai page — one item per (class,
+   * Default landing data for the Grade page — one item per (class,
    * subject) combo the teacher teaches, with a precomputed `avg_score`
    * + per-assessment averages so the dashboard card renders without a
    * second round-trip.

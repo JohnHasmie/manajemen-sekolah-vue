@@ -1,6 +1,6 @@
 <!--
-  TutorRibbon — a wide horizontal pill used for the Honor / Tagihan
-  ribbon on the Beranda. Tinted background, bold leading icon, value +
+  TutorRibbon — a wide horizontal pill used for the Honor / Bill
+  ribbon on the Home. Tinted background, bold leading icon, value +
   hint stacked, optional trailing chevron when clickable.
 
   Mirrors Flutter `_HonorRibbon` / `_TagihanRibbon` in

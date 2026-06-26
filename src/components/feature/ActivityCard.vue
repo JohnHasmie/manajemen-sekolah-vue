@@ -1,5 +1,5 @@
 <!--
-  ActivityCard.vue — shared Kegiatan Kelas card used by teacher /
+  ActivityCard.vue — shared Activity Kelas card used by teacher /
   admin / parent overview lists.
 
   Mirrors Flutter's `activity_card.dart` + `admin_activity_card.dart`
@@ -182,7 +182,7 @@ function formatDateShort(iso: string): string {
         {{ activity.description }}
       </p>
 
-      <!-- Teacher chip (admin + parent — guru name yang punya activity) -->
+      <!-- Teacher chip (admin + parent — teacher name yang punya activity) -->
       <p
         v-if="role !== 'teacher' && activity.teacher_name"
         class="text-[10px] text-slate-500 mt-1 truncate"

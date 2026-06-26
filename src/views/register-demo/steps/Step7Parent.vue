@@ -1,5 +1,5 @@
 <!--
-  Step 7 — Parents (wali). Auto-link or skip. Auto-link creates a
+  Step 7 — Parents (parent). Auto-link or skip. Auto-link creates a
   user per student; skip leaves the parent slots empty so the admin
   can invite later from /admin/manajemen.
 -->

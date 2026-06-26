@@ -3,8 +3,8 @@
   offsets the cron uses when sending reminders.
 
   Two tabs:
-    - Sesi      → offsets in MINUTES before scheduled_at  (tutor + wali)
-    - Tagihan   → offsets in DAYS before due_date         (wali only)
+    - Session      → offsets in MINUTES before scheduled_at  (tutor + parent)
+    - Bill   → offsets in DAYS before due_date         (parent only)
 
   Each tab keeps its own draft offset list + save/reset action. Cron
   reads each list per-tenant on every 5-minute tick.

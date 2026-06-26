@@ -8,7 +8,7 @@
   top of their template instead of writing a bespoke header.
 
   Props:
-    - role       — 'admin' | 'guru' | 'wali_kelas' | 'wali' | 'staff'
+    - role       — 'admin' | 'teacher' | 'wali_kelas' | 'parent' | 'staff'
                    Drives the gradient tint. Defaults to the active
                    role from the auth store.
     - kicker     — small uppercase eyebrow text above the title.

@@ -1,5 +1,5 @@
 <!--
-  ParentActivityCard.vue — single Kegiatan Kelas card for the parent
+  ParentActivityCard.vue — single Activity Kelas card for the parent
   feed. Web port of Flutter's `_ActivityCard` (parent_activity_list_
   builder_mixin.dart). Layout:
 
@@ -146,7 +146,7 @@ function fmtDeadlineShort(iso?: string | null): string {
 // `kind` = mobile-app `jenis`. Returns 'tugas' for the submission-
 // trackable types (tugas / ujian — plus legacy raws like 'pr' /
 // 'ulangan' / 'assignment' / 'test' that normalize onto them) and
-// 'materi' for everything else (aktivitas / catatan / materi). Matches
+// 'materi' for everything else (activity / catatan / materi). Matches
 // the mobile filter semantics so a "Materi" filter shows just material
 // rows.
 function parentKind(a: ClassActivity): 'tugas' | 'materi' {
@@ -155,7 +155,7 @@ function parentKind(a: ClassActivity): 'tugas' | 'materi' {
   if (a.type === 'tugas' || a.type === 'ujian') {
     return 'tugas';
   }
-  // aktivitas / catatan default to materi (no submission tracking).
+  // activity / catatan default to materi (no submission tracking).
   return 'materi';
 }
 </script>

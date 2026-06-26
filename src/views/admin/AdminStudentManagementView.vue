@@ -1,7 +1,7 @@
 <!--
   AdminStudentManagementView.vue — admin student management.
 
-  Uses the same chrome pattern as Admin Jadwal / Keuangan:
+  Uses the same chrome pattern as Admin Schedule / Keuangan:
     - BrandPageHeader admin (gradient)
     - KpiStripCards (4-up)
     - PageFilterToolbar with per-facet AppFilterChip buttons
@@ -61,8 +61,8 @@ const filters = reactive<{
   class_ids: string[];
   gender: 'L' | 'P' | null;
   /**
-   * Free-text search by guardian (wali) name. Matches the mobile UX:
-   * admin types the wali's name and the list filters by case-insensitive
+   * Free-text search by guardian (parent) name. Matches the mobile UX:
+   * admin types the parent's name and the list filters by case-insensitive
    * LIKE. Replaces the prior with/without dropdown.
    */
   guardian_name: string | null;
@@ -77,8 +77,8 @@ const filters = reactive<{
 // on every keystroke until the user confirms / closes the modal).
 const guardianNameDraft = ref('');
 
-// ── Wali (guardian) type-ahead state ───────────────────────────────
-// As the admin types in the "Cari Wali" modal we query
+// ── Parent (guardian) type-ahead state ───────────────────────────────
+// As the admin types in the "Cari Parent" modal we query
 // `GET /student/guardians?search=` (debounced) and surface matching
 // names in a dropdown — same UX as the Flutter app's
 // `Autocomplete<String>` in the student filter sheet. Selecting a
@@ -646,8 +646,8 @@ function topMeta(s: Student): string {
     @apply="(v) => { filters.gender = (v as 'L' | 'P' | '') || null; reload(1); }"
   />
   <!--
-    Guardian (wali) name search modal. A type-ahead: the admin types a
-    wali's name and matching names are surfaced in a dropdown
+    Guardian (parent) name search modal. A type-ahead: the admin types a
+    parent's name and matching names are surfaced in a dropdown
     (`GET /student/guardians?search=`, debounced). Picking a suggestion
     applies it immediately; submitting the raw text also works for names
     not yet in the suggestion list. Mirrors the Flutter app's

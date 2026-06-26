@@ -1,6 +1,6 @@
 <!--
   GeofenceMapPicker.vue — interactive OpenStreetMap picker for the school
-  geofence centre (Presensi Guru → Geofence Sekolah).
+  geofence centre (Presensi Teacher → Geofence Sekolah).
 
   OSM/Leaflet (no API key, no cost) per Yahya's choice. The admin drags the
   pin or taps the map to set the centre; we emit the picked coordinates and

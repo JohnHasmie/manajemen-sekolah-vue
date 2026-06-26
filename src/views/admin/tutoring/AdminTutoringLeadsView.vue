@@ -1,5 +1,5 @@
 <!--
-  AdminTutoringLeadsView — calon siswa funnel (TRIAL → CONVERTED |
+  AdminTutoringLeadsView — calon student funnel (TRIAL → CONVERTED |
   DROPPED). Admin manages the lead list, creates new ones (e.g.
   walk-in inquiry), and converts to enrollment by routing to the
   existing enroll flow with the lead's name/email/program prefilled.

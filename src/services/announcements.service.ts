@@ -147,7 +147,7 @@ export const AnnouncementService = {
     audience?: AnnouncementAudience;
     role_target?: string;
     target_ids?: string[];
-    /** Mobile-parity audience matrix: { guru, wali_kelas, wali_murid } → each
+    /** Mobile-parity audience matrix: { teacher, wali_kelas, wali_murid } → each
      *  'all' | tingkat | class-id. When present the backend uses this. */
     audience_matrix?: Record<string, (string | number)[]>;
     is_pinned?: boolean;

@@ -1,5 +1,5 @@
 <!--
-  ParentRecommendationView.vue — Rekomendasi belajar untuk wali murid.
+  ParentRecommendationView.vue — Rekomendasi belajar untuk parent.
 
   Web port of Flutter's `parent_recommendation_screen.dart`. Three
   modes share one screen, swapped by the active child chip:

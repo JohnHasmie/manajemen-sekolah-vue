@@ -15,17 +15,17 @@
  * Frontend canonical role keys — used for routing, theming, and
  * role-based access gates throughout the Vue app.
  *
- * Vue retains the Indonesian short-form (`guru`/`wali`) as the
+ * Vue retains the Indonesian short-form (`teacher`/`parent`) as the
  * canonical *internal* value because dozens of components hard-code
- * it (e.g. `<BrandPageHeader role="guru">`, `meta: { role: 'guru' }`
+ * it (e.g. `<BrandPageHeader role="teacher">`, `meta: { role: 'teacher' }`
  * on routes, theme colour maps in `useRoleColor`).
  *
  * Wire boundaries convert to/from the backend's canonical English
  * via `normalizeRoleString` / `denormalizeRole` in
  * `auth.service.ts`:
- *   FE 'guru'  ⇆ BE 'teacher'
- *   FE 'wali'  ⇆ BE 'parent'
- *   FE 'siswa' ⇆ BE 'student'
+ *   FE 'teacher'  ⇆ BE 'teacher'
+ *   FE 'parent'  ⇆ BE 'parent'
+ *   FE 'student' ⇆ BE 'student'
  *
  * `wali_kelas` is a derived homeroom-capability flag — not a stored
  * users_roles.role value.

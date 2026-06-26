@@ -10,7 +10,7 @@
 
   Why a sheet instead of inline buttons per section:
     - Teacher usually wants to redo 2-3 sections at once (e.g. all
-      "kegiatan" fields after changing the approach), not one at a
+      "activity" fields after changing the approach), not one at a
       time — clicking 3 separate regen buttons fires 3 separate jobs
       and racks up the AI quota.
     - The optional context box lets the teacher tell the model "make

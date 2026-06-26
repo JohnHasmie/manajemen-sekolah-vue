@@ -14,7 +14,7 @@ import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
 import type { TutoringStudentRow } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import AdminActionMenu from '@/components/feature/tutoring/AdminActionMenu.vue';
 import AdminConfirmDialog from '@/components/feature/tutoring/AdminConfirmDialog.vue';
@@ -198,7 +198,7 @@ function exportCsv() {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('admin.bimbel.students.hero_kicker')"
       :title="t('admin.bimbel.students.hero_title')"
       :subtitle="t('admin.bimbel.students.hero_subtitle', { active: counts.active, risk: counts.risk })"
@@ -227,7 +227,7 @@ function exportCsv() {
           <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.students.enroll_to_program') }}
         </button>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3 flex flex-wrap items-center gap-2">
       <div class="relative min-w-[200px] flex-1">

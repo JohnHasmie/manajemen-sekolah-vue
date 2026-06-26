@@ -1,12 +1,12 @@
 <!--
-  AdminScheduleManagementView.vue — Admin Jadwal hub.
+  AdminScheduleManagementView.vue — Admin Schedule hub.
 
   Web port of Flutter's `TeachingScheduleManagementScreen` (admin role).
 
   Layout:
     1. BrandPageHeader (admin) — kicker + title + actions
-    2. KpiStripCards — Total / Hari Ini / Bentrok / Guru
-    3. PageFilterToolbar — chips for Guru / Mapel / Hari / Kelas / Jam + search
+    2. KpiStripCards — Total / Hari Ini / Bentrok / Teacher
+    3. PageFilterToolbar — chips for Teacher / Mapel / Hari / Kelas / Jam + search
     4. View toggle (List / Matrix)
     5. Body — sticky-day list OR week × hour matrix
     6. Floating "Tambah" + bulk-mode CTAs (Phase 3+ wires them)

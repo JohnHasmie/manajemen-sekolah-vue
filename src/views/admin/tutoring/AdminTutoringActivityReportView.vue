@@ -8,7 +8,7 @@ import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import type { AdminActivityReport } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -48,7 +48,7 @@ function pctClass(pct: number | null): string {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('admin.bimbel.activity_report.hero_kicker')"
       :title="t('admin.bimbel.activity_report.hero_title')"
       :subtitle="t('admin.bimbel.activity_report.hero_subtitle')"
@@ -59,7 +59,7 @@ function pctClass(pct: number | null): string {
           <NavIcon name="download" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.activity_report.export') }}
         </button>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div class="flex gap-1.5 flex-wrap">
       <button

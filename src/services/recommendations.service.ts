@@ -303,11 +303,11 @@ interface ListParams {
 
 interface LearningRecListParams {
   /**
-   * Pass exactly one of `teacher_id` (guru view) or
-   * `homeroom_class_id` (wali kelas view). The backend 403s when
+   * Pass exactly one of `teacher_id` (teacher view) or
+   * `homeroom_class_id` (homeroom teacher view). The backend 403s when
    * both / neither are supplied. When both are present we prefer
    * `homeroom_class_id` because that's the cross-teacher scope a
-   * wali kelas actually wants — matches Flutter behavior.
+   * homeroom teacher actually wants — matches Flutter behavior.
    */
   teacher_id?: string;
   homeroom_class_id?: string;
@@ -502,7 +502,7 @@ export const RecommendationService = {
   /**
    * PATCH /recommendations/{id}/status — toggles a rec between
    * pending / in_progress / completed / dismissed. `teacher_id` is
-   * required (the AI backend checks both ownership AND wali-kelas
+   * required (the AI backend checks both ownership AND parent-kelas
    * authority).
    */
   async updateRecStatus(args: {
@@ -581,12 +581,12 @@ export const RecommendationService = {
   },
 
   /**
-   * POST /recommendations/share-all — Kirim semua ke wali.
+   * POST /recommendations/share-all — Kirim semua ke parent.
    *
    * Bulk-shares every shareable, not-yet-shared rec (status != dismissed
    * AND shared_with_parent_at IS NULL) for `teacher_id`, optionally scoped
    * to one `class_id`. Unlike `shareRecommendation`, the client sends NO
-   * `parents[]` — the backend resolves each rec's wali from the student's
+   * `parents[]` — the backend resolves each rec's parent from the student's
    * guardian_* fields itself. Returns a tally + per-rec breakdown so the
    * caller can show a "X terkirim, Y gagal, Z dilewati" summary.
    *
@@ -640,7 +640,7 @@ export const RecommendationService = {
    * Count not-yet-shared, shareable recs for a teacher (optionally scoped
    * to one class). Mirrors the backend's `share-all` selection rule
    * (status != dismissed AND shared_with_parent_at IS NULL) so the UI can
-   * enable/disable the "Kirim semua ke wali" button and show the count.
+   * enable/disable the "Kirim semua ke parent" button and show the count.
    *
    * Reuses the same paginated `GET /recommendations` walk as
    * `getStudentStatusCounts` — the backend has no dedicated counter.
@@ -743,7 +743,7 @@ export const RecommendationService = {
   },
 
   /**
-   * POST /mark-shares-seen — wali kelas marks every share recipient
+   * POST /mark-shares-seen — homeroom teacher marks every share recipient
    * of the rec they just opened as "seen by teacher". Fire-and-
    * forget by design (Flutter does the same): a failure should
    * never block the screen, and the dashboard auto-corrects on the
@@ -963,8 +963,8 @@ export const RecommendationService = {
    * and tally, exactly like Flutter's `getStudentStatusCounts`.
    *
    * Pass `homeroom_class_id` (NOT `teacher_id`) when the caller is
-   * the wali kelas — that returns recs across all authoring
-   * teachers in the homeroom, which is what the wali-kelas
+   * the homeroom teacher — that returns recs across all authoring
+   * teachers in the homeroom, which is what the parent-kelas
    * dashboard needs.
    */
   async getStudentStatusCounts(args: {
@@ -1095,7 +1095,7 @@ export const RecommendationService = {
     return out;
   },
 
-  // ── Parent (wali) inbox surface ─────────────────────────────────
+  // ── Parent (parent) inbox surface ─────────────────────────────────
   //
   // Mirrors Flutter's `ApiRecommendationService.getParentInbox` /
   // `getParentSummary` / `markRecommendationRead` / `replyToRec` /
@@ -1166,7 +1166,7 @@ export const RecommendationService = {
     }
   },
 
-  /** POST /recommendations/{id}/share/reply — parent reply to wali kelas. */
+  /** POST /recommendations/{id}/share/reply — parent reply to homeroom teacher. */
   async replyToRec(args: {
     recommendation_id: string;
     parent_user_id: string;
@@ -1181,7 +1181,7 @@ export const RecommendationService = {
   /**
    * POST /recommendations/{id}/share/mark-completed-by-parent — stamps
    * `parent_completed_at` (and optionally flips status to `completed`
-   * so the wali kelas's hub reflects it too).
+   * so the homeroom teacher's hub reflects it too).
    */
   async markRecCompletedByParent(args: {
     recommendation_id: string;

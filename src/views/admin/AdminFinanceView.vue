@@ -4,7 +4,7 @@
   Layout:
     1. BrandPageHeader (admin) — kicker + title + AcademicYearChip
     2. MoneyFlowStrip — pendapatan / outstanding / overdue + FlowBar
-    3. Tab nav — Tagihan · Pembayaran · Jenis (router-linked)
+    3. Tab nav — Bill · Pembayaran · Jenis (router-linked)
     4. <router-view /> for the active tab
 
   Sub-routes:

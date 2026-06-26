@@ -1,18 +1,18 @@
 <!--
-  GradeRecapSourcePickerModal.vue — "Sumber Nilai" picker for one recap
+  GradeRecapSourcePickerModal.vue — "Sumber Grade" picker for one recap
   column.
 
   Web port of Flutter's `column_source_picker_sheet.dart` (+ the source
-  step of `add_chapter_sheet.dart`). The Rekap Nilai matrix has fixed
+  step of `add_chapter_sheet.dart`). The Rekap Grade matrix has fixed
   columns (UTS / UAS / Skill) and per-Bab columns; mobile lets the
-  teacher choose *which assessment type* (jenis nilai) from the Buku
-  Nilai a column's value is pulled from, instead of typing every cell by
+  teacher choose *which assessment type* (jenis grade) from the Buku
+  Grade a column's value is pulled from, instead of typing every cell by
   hand. This modal is the web equivalent.
 
   Flow (mirrors mobile):
     1. On open, fetch the assessment pool for this (class, subject, year)
        via `GradeService.getMatrix` — same `/grades/teacher` source the
-       Buku Nilai matrix reads. Each assessment carries a per-student
+       Gradebook matrix reads. Each assessment carries a per-student
        score map (cells keyed by student_id).
     2. Filter the pool to the assessment types that semantically belong
        to the target column (see `ELIGIBLE_TYPES`).

@@ -1,8 +1,8 @@
 <!--
-  ParentTutoringOverviewView — wali Beranda.
+  ParentTutoringOverviewView — parent Home.
 
   Mockup-exact layout: hero + 3-cell KPI strip + "SESI HARI INI" tinted
-  card (with conditional red tagihan ribbon) + "YANG BARU" feed card.
+  card (with conditional red bill ribbon) + "YANG BARU" feed card.
 
   Reads:
     - TutoringService.getChildOverview(studentId) → upcoming/attendance/bills/progress
@@ -21,7 +21,7 @@ import type {
   TutoringFeedEvent,
 } from '@/types/tutoring';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
@@ -86,7 +86,7 @@ const attKpi = computed(() => {
   };
 });
 
-// ── KPI 2: rata-rata nilai ───────────────────────────────────────
+// ── KPI 2: rata-rata grade ───────────────────────────────────────
 const scoreKpi = computed(() => {
   const s = data.value?.progress?.summary?.overall;
   const avg = s?.average;
@@ -106,7 +106,7 @@ const scoreKpi = computed(() => {
   return { value: fmt, meta };
 });
 
-// ── KPI 3: tagihan jatuh tempo ───────────────────────────────────
+// ── KPI 3: bill jatuh tempo ───────────────────────────────────
 const unpaidBills = computed(() =>
   (data.value?.bills ?? []).filter((b) =>
     /unpaid|pending|due|overdue|belum/i.test(b.status ?? ''),
@@ -260,7 +260,7 @@ function goPayBill() {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.sekolah.tutoringOverview.kicker')"
       :title="t('wali.sekolah.tutoringOverview.title', { name: firstName })"
       :subtitle="t('wali.sekolah.tutoringOverview.subtitle', { count: childCount, school: schoolName })"
@@ -276,7 +276,7 @@ function goPayBill() {
           <NavIcon name="plus" :size="13" />{{ t('wali.sekolah.tutoringOverview.enroll') }}
         </button>
       </template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">{{ t('wali.sekolah.tutoringOverview.loading') }}</div>
 
@@ -307,7 +307,7 @@ function goPayBill() {
         </div>
       </div>
 
-      <!-- Sesi hari ini -->
+      <!-- Session hari ini -->
       <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">{{ t('wali.sekolah.tutoringOverview.todaysSession') }}</p>
       <div
         v-if="heroNext"
@@ -336,7 +336,7 @@ function goPayBill() {
         {{ t('wali.sekolah.tutoringOverview.noSessionToday') }}
       </div>
 
-      <!-- Tagihan ribbon -->
+      <!-- Bill ribbon -->
       <div
         v-if="topUnpaid"
         class="rounded-lg bg-bimbel-red-dim border border-red-300 p-3 mt-2 flex items-center gap-2.5"

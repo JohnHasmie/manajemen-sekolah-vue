@@ -1,5 +1,5 @@
 <!--
-  ParentVouchersView — wali voucher list. Mockup parent_web_pages_extra
+  ParentVouchersView — parent voucher list. Mockup parent_web_pages_extra
   frame 2: hero + 2-col voucher grid with dashed border / urgent flag /
   used-out opacity.
 -->
@@ -10,7 +10,7 @@ import { TutoringService } from '@/services/tutoring.service';
 import { formatRupiah } from '@/lib/format';
 import type { TutoringVoucher } from '@/types/tutoring';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -90,7 +90,7 @@ function mapVoucher(v: TutoringVoucher): VoucherView {
     valueLabel = formatRupiah(v.value);
     valueCls = used ? 'text-bimbel-text-mid' : 'text-bimbel-hero';
   }
-  // "Gratis 1 sesi" — backend never ships a free-session voucher type
+  // "Gratis 1 session" — backend never ships a free-session voucher type
   // yet, but if value === 0 and it's PERCENTAGE 100, show the friendlier
   // label per spec.
   if (v.type === 'PERCENTAGE' && v.value === 100) {
@@ -135,7 +135,7 @@ const visible = computed<VoucherView[]>(() => {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.vouchers.kicker')"
       :title="t('wali.bimbel.vouchers.title')"
       :subtitle="t('wali.bimbel.vouchers.subtitle', { active: activeCount, expiring: expiringCount })"
@@ -148,7 +148,7 @@ const visible = computed<VoucherView[]>(() => {
           @click="view = view === 'history' ? 'active' : 'history'"
         >{{ view === 'history' ? t('wali.bimbel.vouchers.toggle_active') : t('wali.bimbel.vouchers.toggle_history') }}</button>
       </template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.vouchers.loading') }}</div>
 

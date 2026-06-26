@@ -1,5 +1,5 @@
 <!--
-  TeacherCheckInView.vue — teacher self check-in/out (presensi harian guru).
+  TeacherCheckInView.vue — teacher self check-in/out (presensi harian teacher).
 
   One check-in per teaching day + an optional check-out (toggled per
   school by the admin). The teacher:
@@ -27,7 +27,7 @@
       (camera_required / location_required).
 
   Layout:
-    - BrandPageHeader (guru gradient) with server clock + date
+    - BrandPageHeader (teacher gradient) with server clock + date
     - Status banner: belum presensi / sudah masuk / sudah pulang +
       late + outside-geofence feedback
     - Today's teaching schedule strip

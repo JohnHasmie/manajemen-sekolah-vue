@@ -159,7 +159,7 @@ onMounted(load);
         </div>
       </div>
 
-      <!-- Catatan Sesi — surfaces on the wali "Yang Baru" feed -->
+      <!-- Catatan Session — surfaces on the parent "Yang Baru" feed -->
       <section class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4">
         <div class="flex items-center gap-2 mb-1.5">
           <NavIcon name="edit" :size="14" class="text-bimbel-accent" />

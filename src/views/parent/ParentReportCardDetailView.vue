@@ -6,20 +6,20 @@
 
   Sections (per the mobile Frame):
     1. Back chevron + sticky header download icon
-    2. ParentPageHeader (wali) — kicker, title "Rapor {nama}",
+    2. ParentPageHeader (parent) — kicker, title "Rapor {nama}",
        status pill in #actions
     3. Hero chip row (Kelas · Sem · UTS/UAS toggles)
-    4. KPI overlap card (Rata-rata · Peringkat · Kehadiran)
-    5. Sikap (Spiritual + Sosial) with "Wali kelas" trailing
-    6. Nilai per mata pelajaran — per-subject ParentRaporSubjectCard
+    4. KPI overlap card (Rata-rata · Ranking · Kehadiran)
+    5. Sikap (Spiritual + Sosial) with "Parent kelas" trailing
+    6. Grade per mata pelajaran — per-subject ParentRaporSubjectCard
        (tap → Deskripsi sheet)
     7. Ekstrakurikuler (auto-hidden when empty)
     8. Prestasi (auto-hidden when empty)
     9. Kehadiran 4-cell (Hadir / Sakit / Izin / Alpa)
-   10. Catatan Wali Kelas (auto-hidden when empty)
+   10. Catatan Homeroom Teacher (auto-hidden when empty)
    11. Promotion banner — Genap only; Ganjil shows a soft slate note
    12. Export note ("File PDF akan tersimpan…")
-   13. Sticky bottom: Bagikan + Cetak E-Raport (wali → certificate)
+   13. Sticky bottom: Bagikan + Cetak E-Raport (parent → certificate)
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';

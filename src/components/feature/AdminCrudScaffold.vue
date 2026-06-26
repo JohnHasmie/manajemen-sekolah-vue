@@ -1,7 +1,7 @@
 <!--
   AdminCrudScaffold.vue — shared admin manajemen-data shell.
 
-  Mirrors the chrome of the new admin hubs (Jadwal / Keuangan / Rapor):
+  Mirrors the chrome of the new admin hubs (Schedule / Keuangan / Rapor):
     1. BrandPageHeader (role-admin gradient banner with kicker + title + meta)
     2. KpiStripCards (4-up tinted icon-square cards) — optional
     3. PageFilterToolbar with per-facet AppFilterChip buttons (passed via slot)
@@ -16,7 +16,7 @@
     default         — the list/grid body
 
   Replaces the older title-bar/search-row scaffold so the 4 Manajemen
-  Data pages (Siswa / Guru / Kelas / Mapel) match the design pattern
+  Data pages (Student / Teacher / Kelas / Mapel) match the design pattern
   of the rest of the admin app.
 -->
 <script setup lang="ts">

@@ -4,7 +4,7 @@
   Mirrors Flutter's `admin_schedule_detail_sheet.dart`. Shows full
   metadata of a single schedule slot + a 2×2 quick-action grid:
     Edit        · Pindah Slot
-    Ganti Guru  · Hapus
+    Ganti Teacher  · Hapus
 
   Emits action events; the parent view handles the actual modals
   (form, reschedule, change-teacher, confirm-delete).

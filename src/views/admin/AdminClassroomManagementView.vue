@@ -1,7 +1,7 @@
 <!--
   AdminClassroomManagementView.vue — admin classroom management.
 
-  Uses the shared Jadwal/Keuangan chrome pattern.
+  Uses the shared Schedule/Keuangan chrome pattern.
 -->
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, shallowRef } from 'vue';

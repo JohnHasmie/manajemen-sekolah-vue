@@ -1,6 +1,6 @@
 <!--
   AppFilterChip.vue - label + value pill with icon, used in the filter
-  toolbar pattern for Teacher Presensi, Buku Nilai, and similar pages.
+  toolbar pattern for Teacher Presensi, Gradebook, and similar pages.
 
   Layout: [icon] [label / value] [chevron]
   Tone determines the icon-square color.

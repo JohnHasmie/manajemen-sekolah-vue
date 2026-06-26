@@ -1,5 +1,5 @@
 <!--
-  ParentPaymentSuccessView.vue — wali murid · Kuitansi pembayaran.
+  ParentPaymentSuccessView.vue — parent · Kuitansi pembayaran.
 
   Mirrors Flutter's `parent_payment_success_screen.dart`. Renders
   the verified-payment kuitansi with status hero, bill detail,

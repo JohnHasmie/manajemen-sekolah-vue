@@ -1,11 +1,11 @@
 <!--
-  TeacherLessonPlanView.vue — daftar RPP guru (Flutter parity).
+  TeacherLessonPlanView.vue — list RPP teacher (Flutter parity).
 
   Web port of `lib/features/lesson_plans/presentation/screens/
-  teacher_lesson_plan_screen.dart`. Chrome mirrors Buku Nilai / Presensi
-  / Jadwal / Kegiatan Kelas (guru tint):
+  teacher_lesson_plan_screen.dart`. Chrome mirrors Gradebook / Presensi
+  / Schedule / Activity Kelas (teacher tint):
 
-    1. <BrandPageHeader role="guru"> — kicker + title + meta + action
+    1. <BrandPageHeader role="teacher"> — kicker + title + meta + action
        cluster (Upload File · Generate AI)
     2. <KpiStripCards> — Total / Menunggu / Disetujui / AI (counts from
        /rpp/summary)
@@ -120,7 +120,7 @@ async function loadReferences() {
   try {
     // RPP pickers must show only the subjects this teacher actually teaches
     // (assigned + scheduled + grade-authored), not every subject in the
-    // school — mirror the Materi/Jadwal teacher-scoped pattern
+    // school — mirror the Materi/Schedule teacher-scoped pattern
     // (SubjectService.listForTeacher → GET /teacher/{id}/subjects). Falls
     // back to the full list only if the teacher id is somehow unavailable.
     const teacherId = auth.teacherId ?? auth.user?.id ?? '';
@@ -200,7 +200,7 @@ onUnmounted(() => {
 
 watch([classId, subjectId, formatFilter, tabKey], () => reload());
 
-// Debounced search refresh (mirrors Kegiatan Kelas pattern).
+// Debounced search refresh (mirrors Activity Kelas pattern).
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
 watch(searchQuery, () => {
   if (searchTimer) clearTimeout(searchTimer);
@@ -276,7 +276,7 @@ const tabOptions = computed(() => [
   { key: 'Rejected' as TabKey, label: t('tutor.sekolah.lessonPlanList.tabRejected'), meta: counts.value.rejected },
 ]);
 
-// ── Date grouping (mirrors Kegiatan Kelas) ──
+// ── Date grouping (mirrors Activity Kelas) ──
 interface PlanGroup {
   key: string;
   label: string;

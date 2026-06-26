@@ -9,7 +9,7 @@ import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import type { AdminAttendanceReport } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -49,7 +49,7 @@ function pctClass(p: number | null): string {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('admin.bimbel.attendance_report.hero_kicker')"
       :title="t('admin.bimbel.attendance_report.hero_title')"
       :subtitle="t('admin.bimbel.attendance_report.hero_subtitle')"
@@ -71,7 +71,7 @@ function pctClass(p: number | null): string {
           >{{ opt.label }}</button>
         </div>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('admin.bimbel.attendance_report.loading') }}</div>
 

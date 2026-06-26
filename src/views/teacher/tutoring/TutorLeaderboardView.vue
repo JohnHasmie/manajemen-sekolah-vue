@@ -12,7 +12,7 @@ import type {
   TutoringLeaderboardRow,
 } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 
 const { t } = useI18n();
 const auth = useAuthStore();
@@ -62,7 +62,7 @@ function rankColor(idx: number): string {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('tutor.bimbel.leaderboard.greeting')"
       :title="t('tutor.bimbel.leaderboard.title')"
       :subtitle="t('tutor.bimbel.leaderboard.subtitle')"
@@ -76,7 +76,7 @@ function rankColor(idx: number): string {
           <option v-for="g in groups" :key="g.id" :value="g.id" class="text-bimbel-text-hi">{{ g.name }}</option>
         </select>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div class="grid grid-cols-3 gap-2.5">
       <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">

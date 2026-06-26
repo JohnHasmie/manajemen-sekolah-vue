@@ -185,8 +185,8 @@ export const TeacherService = {
 
   /**
    * Full teacher-profile resolver. Returns the teacher_profile.id
-   * plus the wali-kelas class list so callers (auth store) can drive
-   * the wali-kelas role chip strip.
+   * plus the parent-kelas class list so callers (auth store) can drive
+   * the parent-kelas role chip strip.
    *
    * Two-step lookup, mirroring the Flutter app:
    *
@@ -281,7 +281,7 @@ export const TeacherService = {
             .filter((c) => c.id);
         } catch {
           // best-effort — leave homeroomClasses as the (empty) first
-          // pass; the chip strip just won't render the Wali chip.
+          // pass; the chip strip just won't render the Parent chip.
         }
       }
 

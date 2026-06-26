@@ -1,5 +1,5 @@
 <!--
-  AdminTutoringGroupsView — list of all kelompok in this tenant with
+  AdminTutoringGroupsView — list of all group in this tenant with
   full CRUD (create + edit + delete + assign tutor) per card.
 -->
 <script setup lang="ts">
@@ -10,7 +10,7 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringGroup, TutoringProgram, TutoringTutorRow } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import AdminActionMenu from '@/components/feature/tutoring/AdminActionMenu.vue';
 import AdminConfirmDialog from '@/components/feature/tutoring/AdminConfirmDialog.vue';
@@ -153,7 +153,7 @@ function cardActions(g: TutoringGroup) {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('admin.bimbel.groups.hero_kicker')"
       :title="t('admin.bimbel.groups.hero_title')"
       :subtitle="t('admin.bimbel.groups.hero_subtitle', { total: groups.length, needs: needsAttention })"
@@ -168,7 +168,7 @@ function cardActions(g: TutoringGroup) {
           <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.groups.create') }}
         </button>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div class="flex flex-wrap items-center gap-2">
       <div class="relative min-w-0 flex-1">

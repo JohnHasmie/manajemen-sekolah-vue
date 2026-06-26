@@ -1,5 +1,5 @@
 <!--
-  ParentNotificationsView — wali notifications. Mockup
+  ParentNotificationsView — parent notifications. Mockup
   parent_web_pages_account frame 1: hero + date-grouped timeline
   (HARI INI / KEMARIN / MINGGU LALU / LEBIH LAMA).
 -->
@@ -9,7 +9,7 @@ import { useI18n } from 'vue-i18n';
 import { NotificationService } from '@/services/notification.service';
 import type { AppNotification, NotificationCategory } from '@/types/notification';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -127,7 +127,7 @@ const groupLabels = computed<Record<GroupKey, string>>(() => ({
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.notifications.kicker')"
       :title="t('wali.bimbel.notifications.title')"
       :subtitle="t('wali.bimbel.notifications.subtitle', { unread: unreadCount, total: items.length })"
@@ -141,7 +141,7 @@ const groupLabels = computed<Record<GroupKey, string>>(() => ({
           @click="markAll"
         >{{ t('wali.bimbel.notifications.mark_all_read') }}</button>
       </template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.notifications.loading') }}</div>
 

@@ -1,8 +1,8 @@
 <!--
-  ParentClassCard — gradient kelas card on the wali Kelas list +
-  Beranda. Differs from TutorClassCard by also showing a "new"
+  ParentClassCard — gradient kelas card on the parent Kelas list +
+  Home. Differs from TutorClassCard by also showing a "new"
   badge (count of unread announcements) and a footer with
-  schedule + attendance % (the per-class wali context).
+  schedule + attendance % (the per-class parent context).
 -->
 <script setup lang="ts">
 import { computed } from 'vue';

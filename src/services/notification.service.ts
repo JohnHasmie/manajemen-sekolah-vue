@@ -24,8 +24,8 @@ const Endpoints = {
 
 /**
  * Map the logged-in user's active role onto the deep-link audience used
- * by `notificationHref`. Teacher + wali kelas share the teacher routes;
- * wali/orang tua are parents; admin/super-admin use the admin routes.
+ * by `notificationHref`. Teacher + homeroom teacher share the teacher routes;
+ * parent/orang tua are parents; admin/super-admin use the admin routes.
  * Shared so the REST mapper and the realtime mapper (echo.ts) resolve the
  * same target page for the same notification.
  */
@@ -56,7 +56,7 @@ export const NotificationService = {
     perPage = 20,
   ): Promise<{ items: AppNotification[]; pagination?: Pagination }> {
     // Pass the active-role audience so the backend role-scopes the list
-    // (e.g. a multi-role "guru" context doesn't get admin/parent billing
+    // (e.g. a multi-role "teacher" context doesn't get admin/parent billing
     // notifications). Backend accepts teacher/parent/admin.
     const audience = activeNotificationAudience();
     const res = await api.get<ApiPaginated<NotificationJson>>(Endpoints.list, {
@@ -96,7 +96,7 @@ export const NotificationService = {
     // therefore always yielded `undefined → 0`, so the bell badge showed 0
     // on mount regardless of real unread rows. Accept both shapes defensively.
     // Role-scope the badge count to match the list (see list() above), so a
-    // multi-role "guru" context doesn't have billing notifications inflate it.
+    // multi-role "teacher" context doesn't have billing notifications inflate it.
     const audience = activeNotificationAudience();
     const res = await api.get<{ count?: number } | ApiSuccess<{ count: number }>>(
       Endpoints.unreadCount,

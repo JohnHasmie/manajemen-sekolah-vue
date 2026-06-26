@@ -1,13 +1,13 @@
 <!--
   AdminEntityDetailSheet.vue — shared read-only detail sheet for admin
-  Manajemen Data pages (Siswa / Guru / Kelas / Mapel).
+  Manajemen Data pages (Student / Teacher / Kelas / Mapel).
 
   Mirrors Flutter's `showAdminEntityDetailSheet`. The host supplies the
   entity title + subtitle + grouped sections (key/value pairs grouped
   by header). Footer has Edit / Hapus buttons.
 
   Sections are passed as a structured array so the same component
-  renders Identitas / Akademik / Penugasan / etc.
+  renders Identitas / Academic / Penugasan / etc.
 -->
 <script setup lang="ts">
 import Modal from '@/components/ui/Modal.vue';

@@ -8,7 +8,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { SettingsService } from '@/services/settings.service';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -71,7 +71,7 @@ async function submit() {
       <NavIcon name="chevron-left" :size="13" /> {{ t('tutor.bimbel.change_password.back') }}
     </button>
 
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('tutor.bimbel.change_password.greeting')"
       :title="t('tutor.bimbel.change_password.title')"
       :subtitle="t('tutor.bimbel.change_password.subtitle')"

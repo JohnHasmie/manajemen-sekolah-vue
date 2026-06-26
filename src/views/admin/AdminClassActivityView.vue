@@ -1,5 +1,5 @@
 <!--
-  AdminClassActivityView.vue — Admin school-wide Kegiatan Kelas hub.
+  AdminClassActivityView.vue — Admin school-wide Activity Kelas hub.
 
   Web port of Flutter's `admin_class_activity_screen.dart` (Fix-FF
   Frame A). Consumes `GET /class-activities/admin-summary` which
@@ -9,8 +9,8 @@
   Layout:
     1. <BrandPageHeader> (admin navy)
     2. <KpiStripCards> — Total / Minggu Ini / Pending Submit
-    3. <PageFilterToolbar> — Kelas / Mapel / Guru chips + search
-    4. Type tabs — Semua / Tugas / PR / Ulangan / Lainnya
+    3. <PageFilterToolbar> — Kelas / Mapel / Teacher chips + search
+    4. Type tabs — Semua / Tugas / PR / Ulangan / More
     5. Period chips — Hari Ini / 7H / 30H / Semester / Tahun
     6. <ActivityCard role="admin"> recent-first list (with submission
        progress bar + teacher name)

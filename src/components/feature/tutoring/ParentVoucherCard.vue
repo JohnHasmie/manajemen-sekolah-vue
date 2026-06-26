@@ -1,5 +1,5 @@
 <!--
-  ParentVoucherCard — voucher "ticket" card on the wali Voucher page.
+  ParentVoucherCard — voucher "ticket" card on the parent Voucher page.
   Faux perforated edges via two absolute pseudo-circles cut into the
   left + right sides. Goes dim + struck-through when `used`.
 -->

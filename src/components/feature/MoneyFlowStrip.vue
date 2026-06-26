@@ -4,7 +4,7 @@
   Three tiles + a FlowBar:
     1. Pendapatan (this month) — emerald gradient, delta-vs-last-month
     2. Belum lunas             — amber, count + nominal
-    3. Lewat jatuh tempo       — red, count + wali count
+    3. Lewat jatuh tempo       — red, count + parent count
 
   Below the tiles, a horizontal FlowBar shows paid/outstanding/overdue
   percent split, mirroring Flutter's `MoneyFlowStrip + FlowBar`.

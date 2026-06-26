@@ -12,7 +12,7 @@ import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import type { TutoringTutorRow } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import InviteTutorModal from '@/views/admin/tutoring/InviteTutorModal.vue';
 import AdminActionMenu from '@/components/feature/tutoring/AdminActionMenu.vue';
@@ -110,7 +110,7 @@ function onInvited() {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('admin.bimbel.tutors.hero_kicker')"
       :title="t('admin.bimbel.tutors.hero_title')"
       :subtitle="t('admin.bimbel.tutors.hero_subtitle', { active: counts.active, pending: counts.pending })"
@@ -125,7 +125,7 @@ function onInvited() {
           <NavIcon name="mail" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.tutors.invite') }}
         </button>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3 flex flex-wrap items-center gap-2">
       <div class="relative min-w-[200px] flex-1">

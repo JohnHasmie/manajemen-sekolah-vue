@@ -159,7 +159,7 @@ export const AuthService = {
       // We use /switch-school with a role parameter, matching Flutter.
       //
       // IMPORTANT: The frontend normalizes roles to Indonesian canonical
-      // names (teacher→guru, parent→wali), but the backend expects the
+      // names (teacher→teacher, parent→parent), but the backend expects the
       // original English enum values. De-normalize before sending.
       const backendRole = denormalizeRole(role);
       const res = await api.post(Endpoints.switchSchool, {
@@ -325,9 +325,9 @@ function normalizeRoleString(raw: string): Role {
  * the backend's English UserRole enum values. This is the inverse
  * of `normalizeRoleString`. Required because the backend stores
  * roles as 'teacher'/'parent' but the frontend displays and stores
- * them as 'guru'/'wali'.
+ * them as 'teacher'/'parent'.
  *
- * Without this, switchRole sends 'guru' to the backend which
+ * Without this, switchRole sends 'teacher' to the backend which
  * doesn't match the UserRole enum and returns 422.
  */
 function denormalizeRole(role: Role): string {

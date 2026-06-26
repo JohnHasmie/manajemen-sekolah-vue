@@ -100,7 +100,7 @@ export const ASSESSMENT_LABELS: Record<AssessmentType, string> = {
 //
 // ── Admin school-wide overview (`/grades/admin-overview`) ─────────
 //
-// Returned by GradeController@adminOverview. Backs the Buku Nilai
+// Returned by GradeController@adminOverview. Backs the Gradebook
 // admin page — school-wide KPI stats + per-teacher cards with subject
 // breakdown. Cached server-side for 5 minutes.
 

@@ -1,11 +1,11 @@
 <!--
   ParentReportCardView.vue — parent rapor list (Frame parent).
 
-  Web port of `parent_report_card_screen.dart`. Lists the wali's
+  Web port of `parent_report_card_screen.dart`. Lists the parent's
   children that have a *published* raport, with:
 
-    1. BrandPageHeader (wali) + child segmented control
-    2. KpiStripCards (active child) — Rata-rata / Peringkat /
+    1. BrandPageHeader (parent) + child segmented control
+    2. KpiStripCards (active child) — Rata-rata / Ranking /
        Kehadiran / Status
     3. Semester chip strip (display-only — backend already scopes
        via X-Academic-Year header)

@@ -202,7 +202,7 @@ export const TutoringService = {
     await api.post(`/tutoring/bills/${id}/mark-paid`, payload);
   },
 
-  /** Tenant payment-account block (wali reads to know where to transfer). */
+  /** Tenant payment-account block (parent reads to know where to transfer). */
   async getPaymentAccount(): Promise<TutoringPaymentAccount | null> {
     const res = await api.get<ApiResponse<TutoringPaymentAccount | null>>(
       '/tutoring/payment-account',
@@ -268,8 +268,8 @@ export const TutoringService = {
     return extractData(res);
   },
 
-  /** Rich per-class list for the wali Kelas page. Backed by
-   *  GetWaliClassMetaAction — one row per kelompok with attendance,
+  /** Rich per-class list for the parent Kelas page. Backed by
+   *  GetWaliClassMetaAction — one row per group with attendance,
    *  next session, latest score, and unread-7d announcement count. */
   async getWaliClassMeta(
     studentId: string,
@@ -454,11 +454,11 @@ export const TutoringService = {
    *  Previously this hit /students (school endpoint) which kept coming
    *  back empty in this tenant because of subtle response-envelope
    *  differences between paginated and non-paginated branches.
-   *  Switch to the same /tutoring/students endpoint that the Siswa
+   *  Switch to the same /tutoring/students endpoint that the Student
    *  list page uses (getAdminStudents) — that one is confirmed
    *  working. It returns currently-enrolled students; freshly-created
    *  students without enrollments yet won't appear here, but the
-   *  Siswa list also covers them once they're enrolled.
+   *  Student list also covers them once they're enrolled.
    *
    *  Dedup by student_id since one student with two enrollments comes
    *  back as two rows. */
@@ -899,7 +899,7 @@ export const TutoringService = {
     return extractData(res);
   },
 
-  // ── Leads (calon siswa) ─────────────────────────────────────────
+  // ── Leads (calon student) ─────────────────────────────────────────
 
   async getLeads(opts: { status?: 'TRIAL' | 'CONVERTED' | 'DROPPED' } = {}):
     Promise<TutoringLead[]> {
@@ -1031,7 +1031,7 @@ export const TutoringService = {
     await api.put(`/tutoring/sessions/${sessionId}/feedback`, payload);
   },
 
-  // ── Group announcements (tutor → kelompok) ──────────────────────
+  // ── Group announcements (tutor → group) ──────────────────────
 
   async getGroupAnnouncements(opts: {
     group_id?: string;
@@ -1087,7 +1087,7 @@ export const TutoringService = {
 
   // ── Activity feeds (dashboard "What's New" widget) ──────────────
 
-  /** Wali feed: notes / scores / announcements / bills / attendance. */
+  /** Parent feed: notes / scores / announcements / bills / attendance. */
   async getStudentFeed(
     studentId: string,
     opts: { limit?: number; sinceDays?: number } = {},
@@ -1176,7 +1176,7 @@ export const TutoringService = {
     return extractData(res) ?? [];
   },
 
-  /** Partial update on a session — catatan sesi, topic, status. Used
+  /** Partial update on a session — catatan session, topic, status. Used
    *  by the attendance flow to attach a tutor note after class. */
   async updateSession(
     sessionId: string,

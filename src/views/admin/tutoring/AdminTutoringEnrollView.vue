@@ -26,7 +26,7 @@ const MODE_KEYS: Record<string, string> = {
 const modeLabel = (m: string) => (MODE_KEYS[m] ? t(MODE_KEYS[m]) : m);
 
 // When opened from a Program (route name `admin.tutoring.enroll`),
-// programId is the pinned program. From the Siswa list
+// programId is the pinned program. From the Student list
 // (`admin.tutoring.enroll-any`) it's empty and the admin picks
 // inside the form.
 const initialProgramId = String(route.params.programId ?? '');
@@ -147,7 +147,7 @@ async function load() {
 
 // Reactively re-fetch packages + groups whenever the admin picks a
 // different program inside the form. Resets dependent selections so
-// stale paket/kelompok don't survive a program switch.
+// stale paket/group don't survive a program switch.
 watch(programId, async (next) => {
   packageId.value = null;
   groupId.value = null;

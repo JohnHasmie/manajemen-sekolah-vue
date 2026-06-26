@@ -20,7 +20,7 @@
     │   • LKS Bab 4 SPLDV                                      │
     │   • Video Bab 4                                          │
     │                                                          │
-    │ 👁 3 dari 5 wali sudah baca (terkirim 2 jam lalu)        │
+    │ 👁 3 dari 5 parent sudah baca (terkirim 2 jam lalu)        │
     │ ─────────────────────────────────────────                │
     │ ⏰ Jatuh tempo: Jumat 30 Mei                              │
     │ [Riwayat]                  [✓ Tandai Diterapkan]         │

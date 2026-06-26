@@ -1,17 +1,17 @@
 <!--
-  TeacherGradeRecapView.vue — Rekap Nilai overview (teacher).
+  TeacherGradeRecapView.vue — Rekap Grade overview (teacher).
 
   Web port of Flutter's `teacher_grade_recap_overview.dart`. Same
-  shape as Buku Nilai's summary landing but with recap-specific KPIs
+  shape as Gradebook's summary landing but with recap-specific KPIs
   (progress %, Bab count, avg final) and a per-card "Buka Rekap" CTA
   that drills into the editable matrix (Phase 3).
 
   Layout:
-    1. <BrandPageHeader> (guru) + <RoleToggleChipRow> (Mengajar / Wali)
+    1. <BrandPageHeader> (teacher) + <RoleToggleChipRow> (Mengajar / Parent)
     2. <KpiStripCards> — Mapel·Kelas / Bab / Rerata / Kelengkapan%
     3. <PageFilterToolbar> — Kelas + Mapel chips + search
     4. Cards (one per class+subject) with:
-       avg badge · class+subject name · teacher chip (wali view) ·
+       avg badge · class+subject name · teacher chip (parent view) ·
        progress bar · Bab count · Rerata · "Buka ›"
 -->
 <script setup lang="ts">
@@ -47,7 +47,7 @@ const router = useRouter();
 const auth = useAuthStore();
 const { t } = useI18n();
 
-// ── Role toggle (Mengajar / Wali Kelas) ──
+// ── Role toggle (Mengajar / Homeroom Teacher) ──
 const selectedRoleId = ref<string>('mengajar');
 const roleOptions = computed<RoleOption[]>(() => {
   const out: RoleOption[] = [

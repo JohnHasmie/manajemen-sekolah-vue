@@ -2,7 +2,7 @@
   TeacherFilterSheet.vue — admin teacher filter sheet.
 
   Mirrors Flutter's `TeacherFilterSheet`. 5 facets:
-    Role (guru / wali_kelas)
+    Role (teacher / wali_kelas)
     Kelas Mengajar (single class)
     Gender (L / P)
     Status Kepegawaian (tetap / tidak_tetap / kontrak / honorer)

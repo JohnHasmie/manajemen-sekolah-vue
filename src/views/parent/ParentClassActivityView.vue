@@ -1,5 +1,5 @@
 <!--
-  ParentClassActivityView.vue — Kegiatan Kelas feed for wali murid.
+  ParentClassActivityView.vue — Activity Kelas feed for parent.
 
   Web port of Flutter's `parent_class_activity_screen.dart`. Flow:
     1. ParentPageHeader (built-in child chip pair when >1 child).
@@ -8,7 +8,7 @@
     3. Date-grouped feed — "HARI INI" / "KEMARIN" / "DD MMMM YYYY"
        section headers with ParentActivityCard rows inside.
     4. Tap a card → ParentActivityDetailModal (read-only) with the
-       mobile detail rows (Guru / Mapel / Tanggal / Batas Waktu /
+       mobile detail rows (Teacher / Mapel / Tanggal / Batas Waktu /
        Deskripsi / Materi / Sub-Bab tambahan). Opening a card also
        fires a single mark-read POST for that id.
     5. Auto mark-as-read via IntersectionObserver — cards visible
@@ -84,7 +84,7 @@ useAcademicYearWatcher(() => {
 
 // ── Client-side jenis filter (mirrors mobile's getter on activityList) ──
 // 'tugas' = submission-trackable types (tugas / ujian); everything else
-// (aktivitas / catatan / materi raws) reads as 'materi'.
+// (activity / catatan / materi raws) reads as 'materi'.
 function jenisOf(a: ClassActivity): 'tugas' | 'materi' {
   const raw = (a.raw_type ?? '').toLowerCase().trim();
   if (raw === 'materi' || raw === 'material' || raw === 'info') return 'materi';

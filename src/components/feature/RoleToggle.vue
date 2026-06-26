@@ -1,5 +1,5 @@
 <!--
-  RoleToggle.vue — guru ↔ wali_kelas switcher for teachers.
+  RoleToggle.vue — teacher ↔ wali_kelas switcher for teachers.
   Mirrors Flutter's RoleToggle in `lib/core/widgets/`.
 
   Only renders when both roles are available.

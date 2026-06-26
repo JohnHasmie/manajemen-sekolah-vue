@@ -1,6 +1,6 @@
 <!--
   PageFilterToolbar.vue — shared filter toolbar used across teacher
-  pages (Jadwal, Presensi, Buku Nilai, etc.).
+  pages (Schedule, Presensi, Gradebook, etc.).
 
   Layout:
     ┌─────────────────────────────────────────────────────────────┐

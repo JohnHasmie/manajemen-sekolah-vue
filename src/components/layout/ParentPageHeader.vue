@@ -1,5 +1,5 @@
 <!--
-  ParentPageHeader.vue — STANDARD header for every parent (wali) page.
+  ParentPageHeader.vue — STANDARD header for every parent (parent) page.
 
   Design contract (kept identical across the parent role for
   consistency):
@@ -25,7 +25,7 @@
 
   Usage:
     <ParentPageHeader
-      kicker="Akademik · Anak"
+      kicker="Academic · Anak"
       title="Kehadiran"
       :meta="`${classLabel} · ${semesterLabel}`"
     >

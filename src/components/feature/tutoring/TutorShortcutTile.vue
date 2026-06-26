@@ -1,6 +1,6 @@
 <!--
   TutorShortcutTile — square-ish icon tile used in 2×2 / 4-col shortcut
-  grids on the Beranda. Mirrors Flutter `_ShortcutsRow` items.
+  grids on the Home. Mirrors Flutter `_ShortcutsRow` items.
 
   Defaults to brand (cyan) tint. Optional `tone` lets a tile stand out
   (success/warning/danger) — e.g. honor → success, peringatan → danger.

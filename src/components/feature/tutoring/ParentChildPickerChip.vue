@@ -3,7 +3,7 @@
   corner of every parent page hero. Tap → opens dropdown to switch
   active child. Backed by useChildPicker().
 
-  When the wali has 0 children loaded, the chip flips to a "Daftar
+  When the parent has 0 children loaded, the chip flips to a "List
   anak" affordance that opens the enroll wizard instead of a dead
   dropdown.
 -->

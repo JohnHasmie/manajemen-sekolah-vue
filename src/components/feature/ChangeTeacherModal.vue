@@ -1,8 +1,8 @@
 <!--
-  ChangeTeacherModal.vue — admin "Ganti Guru" sheet.
+  ChangeTeacherModal.vue — admin "Ganti Teacher" sheet.
 
   Reassigns one schedule's teacher_id (PUT /teaching-schedule/{id}).
-  Used by the per-row detail sheet's "Ganti Guru" action. Bulk variant
+  Used by the per-row detail sheet's "Ganti Teacher" action. Bulk variant
   is in BulkTeacherPickerModal (Phase 5) which talks to /bulk/change-teacher.
 -->
 <script setup lang="ts">

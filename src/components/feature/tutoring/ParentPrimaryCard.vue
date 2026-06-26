@@ -1,6 +1,6 @@
 <!--
   ParentPrimaryCard — accent-stripe card for "Hari ini" (next
-  session) / "Perlu perhatian" patterns on parent Beranda. Mirror
+  session) / "Perlu perhatian" patterns on parent Home. Mirror
   of TutorPrimaryCard but with parent-tuned tone defaults.
 -->
 <script setup lang="ts">

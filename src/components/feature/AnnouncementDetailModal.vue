@@ -6,8 +6,8 @@
   with `whitespace-pre-wrap`; footer exposes role-specific actions:
 
     - admin → Tutup · Hapus · Edit
-    - guru  → Tutup · (Hapus when ownPost)
-    - wali  → Tutup
+    - teacher  → Tutup · (Hapus when ownPost)
+    - parent  → Tutup
 -->
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';

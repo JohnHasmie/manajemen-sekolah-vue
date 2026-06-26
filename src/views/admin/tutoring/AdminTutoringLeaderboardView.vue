@@ -1,5 +1,5 @@
 <!--
-  AdminTutoringLeaderboardView — ranking siswa per kelompok.
+  AdminTutoringLeaderboardView — ranking student per group.
   Composite score = attendance% × 0.5 + avg_assessment% × 0.5.
 
   Group selector in the filter row; row-1 is highlighted gold.

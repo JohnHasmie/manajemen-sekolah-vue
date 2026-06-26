@@ -6,7 +6,7 @@
     2. Payment history (chronological) — proof link per row.
     3. Mark-paid form (only when bill is still unpaid) + tenant
        payment-account preview so the admin can copy the bank info
-       to share with wali if they ask.
+       to share with parent if they ask.
 
   Server-side a successful mark-paid creates a verified Payment +
   flips bill.status → paid in one transaction. Re-emits `done` so
@@ -234,7 +234,7 @@ onMounted(load);
 
       <!-- Paid-bill actions: invoice PDF download + admin manual resend
            (email + WhatsApp). Backend already auto-fires both channels
-           on payment verification; these are explicit re-sends when wali
+           on payment verification; these are explicit re-sends when parent
            lost the original notification. -->
       <section v-if="isPaid" class="space-y-2">
         <button

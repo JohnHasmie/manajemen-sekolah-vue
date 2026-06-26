@@ -1,8 +1,8 @@
 /**
  * Billing types — full parity with Flutter `lib/features/finance/domain/models`.
  *
- * Shared canonical types used by both parent surface (Tagihan + Checkout +
- * Kuitansi) and admin surface (Operasional Keuangan hub — Tagihan /
+ * Shared canonical types used by both parent surface (Bill + Checkout +
+ * Kuitansi) and admin surface (Operasional Keuangan hub — Bill /
  * Pembayaran / Jenis tabs).
  *
  * Status normalization
@@ -78,7 +78,7 @@ export interface Bill {
 }
 
 // ───────────────────────────────────────────────────────────────────
-// Bill group — admin Tagihan hub (one row per payment_type × class × AY)
+// Bill group — admin Bill hub (one row per payment_type × class × AY)
 // ───────────────────────────────────────────────────────────────────
 
 export interface BillGroup {
@@ -106,7 +106,7 @@ export interface BillTingkatBucket {
   label: string;
   groups: BillGroup[];
   /** Distinct classes inside this tingkat — drives the "Per kelas:"
-   *  drill chips in the admin Tagihan tab. Sorted alphabetically. */
+   *  drill chips in the admin Bill tab. Sorted alphabetically. */
   classes: { id: string; name: string }[];
   total_amount: number;
   paid_amount: number;

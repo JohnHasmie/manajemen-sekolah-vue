@@ -185,7 +185,7 @@ const aiCount = computed(() =>
 );
 
 // Shared KpiStripCards source — mirrors the chrome used by Buku
-// Nilai / Presensi / Rekap Nilai so the four teacher screens read
+// Grade / Presensi / Rekap Grade so the four teacher screens read
 // identically. `accented` lights up the "AI" card when most
 // sub-bab have AI content (≥50%).
 const kpiCards = computed<KpiCard[]>(() => {
@@ -274,7 +274,7 @@ const essayQuizzes = computed<QuizItem[]>(() =>
 async function loadReferences() {
   try {
     // Scope the mapel filter to the subjects THIS teacher teaches (bug:
-    // Guru/Materi previously listed every school subject, so chapters/
+    // Teacher/Materi previously listed every school subject, so chapters/
     // sub-chapters from non-taught mapel leaked in). Fall back to the full
     // list only when there's no teacher context or the teacher has none
     // mapped yet, so the page never renders empty.

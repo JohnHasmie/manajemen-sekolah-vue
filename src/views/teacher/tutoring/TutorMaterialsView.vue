@@ -3,7 +3,7 @@
 
   Tutor pastes a share link (drive / dropbox / direct file host)
   rather than uploading inline — there's no MinIO put flow yet.
-  Published-at toggle controls draft vs visible-to-siswa.
+  Published-at toggle controls draft vs visible-to-student.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';

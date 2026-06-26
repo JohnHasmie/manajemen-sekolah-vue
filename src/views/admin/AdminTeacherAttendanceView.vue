@@ -9,7 +9,7 @@
         left blank. Partial PUT — only changed keys are sent.
     (b) Laporan — two stacked sections sharing one periode (date-range)
         filter:
-          · REKAP per-guru — aggregated Hadir/Telat/(Alpa/Izin…)/Total/%
+          · REKAP per-teacher — aggregated Hadir/Telat/(Alpa/Izin…)/Total/%
             table (GET …/admin/summary) with an Export Excel (CSV) button.
             Status columns are DYNAMIC — driven by meta.statuses.
           · Detail per-baris — the school-scoped per-row list
@@ -165,7 +165,7 @@ async function saveSettings() {
 // ─────────────────────────────────────────────────────────────────
 // Report tab — shared periode (date range) filter
 //
-// The periode drives BOTH the per-guru rekap (admin/summary) and the
+// The periode drives BOTH the per-teacher rekap (admin/summary) and the
 // detail per-row list (admin). Empty bounds let the backend default to
 // start-of-month → today.
 // ─────────────────────────────────────────────────────────────────
@@ -180,7 +180,7 @@ const reportPerPage = 25;
 /** Detail per-row list is collapsed by default — rekap leads. */
 const showDetail = ref(false);
 
-// ── Per-guru REKAP (admin/summary) ──────────────────────────────────
+// ── Per-teacher REKAP (admin/summary) ──────────────────────────────────
 const summary = ref<TeacherAttendanceAdminSummary | null>(null);
 const summaryLoading = ref(false);
 const summaryError = ref<string | null>(null);

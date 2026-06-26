@@ -1,5 +1,5 @@
 <!--
-  AdminFinanceBillsView.vue — admin · Tagihan tab.
+  AdminFinanceBillsView.vue — admin · Bill tab.
 
   Pulls `GET /finance/bill-groups` and renders one card per
   (payment_type × class × academic_year) bucket. Cards are grouped by

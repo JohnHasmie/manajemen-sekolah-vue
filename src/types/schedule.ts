@@ -6,7 +6,7 @@
  * `ScheduleConflict`, `LessonHour`, `Day`).
  *
  * Two co-existing models:
- *   - `ScheduleSession` — teacher / parent / wali read view (light shape,
+ *   - `ScheduleSession` — teacher / parent / parent read view (light shape,
  *     normalized day-short-key `mon`..`sat`).
  *   - `ScheduleRow`     — admin CRUD view (full nested entity rows with
  *     UUID `day_id` + `lesson_hour_days_id`).
@@ -18,7 +18,7 @@
 export type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat';
 
 // ───────────────────────────────────────────────────────────────────
-// Teacher / parent / wali read shape
+// Teacher / parent / parent read shape
 // ───────────────────────────────────────────────────────────────────
 
 export interface ScheduleSession {
@@ -26,7 +26,7 @@ export interface ScheduleSession {
   /**
    * UUID of the `lesson_hour` slot row this session occupies (each
    * day×hour tuple owns a distinct UUID). Distinct from `id`, which is
-   * the teaching-schedule row id. Carried so the Kegiatan form can tag
+   * the teaching-schedule row id. Carried so the Activity form can tag
    * a new activity with the exact lesson-hour the teacher picked —
    * mirrors Flutter's `Schedule.lessonHourId`.
    */

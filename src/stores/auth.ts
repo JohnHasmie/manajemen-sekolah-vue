@@ -32,7 +32,7 @@ import type {
  * Normalizes backend role strings to canonical FE keys used by the
  * router and components. Backend ships canonical English
  * (`teacher` / `parent` / `student`); FE uses Indonesian short-form
- * (`guru` / `wali` / `siswa`) as the *internal* canonical value
+ * (`teacher` / `parent` / `student`) as the *internal* canonical value
  * because the components and router meta hard-code it.
  *
  * Convert at the wire boundary, never inside the app.
@@ -111,8 +111,8 @@ interface AuthState {
   /**
    * Homeroom classes (kelas perwalian) the teacher oversees. Resolved
    * together with `teacherProfileId` from `/teacher/{user_id}`. Drives
-   * the wali kelas chips in `<RoleToggleChipRow>` on Jadwal / Presensi
-   * / Kegiatan Kelas / Buku Nilai / Rapor / Rekomendasi.
+   * the homeroom teacher chips in `<RoleToggleChipRow>` on Schedule / Presensi
+   * / Activity Kelas / Gradebook / Rapor / Rekomendasi.
    */
   homeroomClasses: { id: string; name: string }[];
   /**
@@ -500,7 +500,7 @@ export const useAuthStore = defineStore('auth', {
             SchoolService.getActiveSchool().catch(() => null),
             // Resolve the teacher_profile row (id + homeroom_classes).
             // Required for any endpoint scoped by teacher_profile.id and
-            // for the wali-kelas chip strip.
+            // for the parent-kelas chip strip.
             isTeacherLike && this.user?.id
               ? TeacherService.resolveProfile(this.user.id).catch(() => null)
               : Promise.resolve(null),
@@ -619,7 +619,7 @@ export const useAuthStore = defineStore('auth', {
         //    Normalize both sides before comparing because `this.roles`
         //    holds raw backend values ('admin'/'teacher'/'parent') while
         //    the stored role may be either raw OR an older
-        //    Indonesian alias ('guru'/'wali') from a previous session.
+        //    Indonesian alias ('teacher'/'parent') from a previous session.
         const stored = storage.get<Role>(StorageKeys.role);
         if (stored) {
           const normStored = normalizeRole(stored);
@@ -650,7 +650,7 @@ export const useAuthStore = defineStore('auth', {
         // and stripping it here guarantees an email/password user
         // can never be silently bounced into the demo wizard, even
         // if a future backend tweak starts emitting the flag here
-        // too. Users who want a demo must click "Daftar Demo"
+        // too. Users who want a demo must click "List Demo"
         // explicitly from the login screen.
         this._applyResponse(this._stripDapatBuatDemo(res));
         await this._autoAdvancePicker();
@@ -812,15 +812,15 @@ export const useAuthStore = defineStore('auth', {
       this._applyResponse(res);
 
       // ── 2. Auto-pick admin role for the owner ────────────────────
-      // Demo owner with `all_roles` mode ended up with admin + guru
-      // + wali. Backend returns `pilih_role` (→ step='role') for the
+      // Demo owner with `all_roles` mode ended up with admin + teacher
+      // + parent. Backend returns `pilih_role` (→ step='role') for the
       // multi-role case. We auto-pick admin so the user lands straight
       // on the dashboard — they can switch role anytime from
       // ProfileMenu. Single-role demos skip this entirely.
       if (this.step === 'role' && this.schoolId) {
         // `this.roles` holds raw backend values from /switch-school's
         // role_list — they're 'admin'/'teacher'/'parent' (English).
-        // Find admin; if not present (single_role guru/wali), fall
+        // Find admin; if not present (single_role teacher/parent), fall
         // back to whatever the user actually has so they still land
         // somewhere instead of being stuck on the picker.
         const pick = (this.roles as string[]).find((r) => r === 'admin')

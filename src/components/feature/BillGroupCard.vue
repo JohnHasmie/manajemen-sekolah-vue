@@ -1,5 +1,5 @@
 <!--
-  BillGroupCard.vue — admin Tagihan bucket card.
+  BillGroupCard.vue — admin Bill bucket card.
 
   One row per (payment_type × class × academic_year) bucket. Shows
   total / paid / unpaid / overdue counts with a completion progress

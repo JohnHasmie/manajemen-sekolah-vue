@@ -1,6 +1,6 @@
 <!--
-  AdminTutoringGroupAnnouncementsView — bimbel pengumuman per
-  kelompok. Audience filter (semua / per kelompok) + tulis CTA →
+  AdminTutoringGroupAnnouncementsView — bimbel announcement per
+  group. Audience filter (semua / per group) + tulis CTA →
   list of broadcast cards with delivery footer.
 -->
 <script setup lang="ts">
@@ -15,7 +15,7 @@ import type {
   TutoringGroupAnnouncement,
 } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const route = useRoute();
@@ -99,7 +99,7 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('admin.bimbel.group_announcements.hero_kicker')"
       :title="t('admin.bimbel.group_announcements.hero_title')"
       :subtitle="groupId ? t('admin.bimbel.group_announcements.hero_subtitle_filtered', { count: rows.length }) : t('admin.bimbel.group_announcements.hero_subtitle', { count: rows.length })"
@@ -114,7 +114,7 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
           <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.group_announcements.compose') }}
         </button>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3 flex flex-wrap items-center gap-2">
       <span class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">{{ t('admin.bimbel.group_announcements.audience_label') }}</span>

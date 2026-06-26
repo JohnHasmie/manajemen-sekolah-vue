@@ -1,17 +1,17 @@
 <!--
-  AdminTutoringDashboardView — admin Beranda redesign matching the
+  AdminTutoringDashboardView — admin Home redesign matching the
   approved mockup admin_web_pages_beranda_groups frame 1:
 
     1. Navy hero with kicker + greeting + subtitle + 3-stat strip
-       (Siswa / Kelompok / Sesi mgg)
+       (Student / Group / Session mgg)
     2. Two-column body:
        LEFT col
          a. "Perlu perhatian" accent card (first no-tutor group,
             warning-tone amber stripe)
          b. "Lead panas" amber ribbon with "Lihat leads" CTA
          c. 2-col grid of two panels:
-            - Kelompok perlu tutor (rows of groups without tutor)
-            - Tagihan tertunggak (top unpaid bills)
+            - Group perlu tutor (rows of groups without tutor)
+            - Bill tertunggak (top unpaid bills)
        RIGHT col
          - Yang baru feed (TutorActivityRow rows from
            getAdminActivity, limit 6)
@@ -31,7 +31,7 @@ import type {
   TutoringLead,
 } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import TutorPrimaryCard from '@/components/feature/tutoring/TutorPrimaryCard.vue';
 import TutorRibbon from '@/components/feature/tutoring/TutorRibbon.vue';
 import TutorActivityRow from '@/components/feature/tutoring/TutorActivityRow.vue';
@@ -144,7 +144,7 @@ function dueLabel(iso?: string | null): string {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="`${timeGreeting()} · ${t('admin.bimbel.dashboard.hero_kicker')}`"
       :title="t('admin.bimbel.dashboard.hero_title', { name: firstName })"
       :subtitle="t('admin.bimbel.dashboard.hero_subtitle', { school: auth.user?.school_name ?? 'Bimbel', count: stats?.students ?? 0 })"

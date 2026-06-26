@@ -8,7 +8,7 @@
     1. Back chevron → Laporan
     2. BrandPageHeader (admin) — title "Detail Presensi" + class/subject/date meta
     3. KpiStripCards — Hadir / Izin / Sakit / Alpa
-    4. Action bar — Edit toggle + Excel export + Hapus sesi
+    4. Action bar — Edit toggle + Excel export + Hapus session
     5. Roster — student rows with current status pill + tap to edit (when edit mode)
 -->
 <script setup lang="ts">

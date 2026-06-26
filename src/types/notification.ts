@@ -52,7 +52,7 @@ export type NotificationAudience = 'parent' | 'teacher' | 'admin' | null;
  *   - `kelas`                               → class-scoped announcement source
  *   - `system`                              → misc system rows
  * Plus class-activity sub-types that some older rows store directly in the
- * `type` column (`tugas`, `ujian`/`ulangan`, `materi`, `kegiatan`, …).
+ * `type` column (`tugas`, `ujian`/`ulangan`, `materi`, `activity`, …).
  *
  * Unknown / unmapped types fall back to `'other'` (shown as "LAIN").
  */

@@ -18,7 +18,7 @@
 /**
  * Backend "type" enum — controls the colour badge on the card.
  * Canonical values are lowercase English. Legacy Indonesian / mixed
- * inputs (`umum`, `pengumuman`, `acara`, `libur`, `penting`) are
+ * inputs (`umum`, `announcement`, `acara`, `libur`, `penting`) are
  * normalised on read.
  */
 export type AnnouncementCategory =
@@ -68,17 +68,17 @@ export interface Announcement {
   audience?: AnnouncementAudience;
   /** Target ids (class_id list when audience='class', etc.). */
   target_ids?: string[];
-  /** Mobile-parity audience matrix: { guru, wali_kelas, wali_murid } → each
+  /** Mobile-parity audience matrix: { teacher, wali_kelas, wali_murid } → each
    *  a list of 'all' | tingkat | class-id. Drives recipient resolution. */
   audience_matrix?: Record<string, (string | number)[]>;
   /** Canonical column: `announcements.role_target`. */
   role_target?: string;
   /**
-   * Friendly source label (e.g. "Sekolah" / "Wali Kelas Bu Sari").
+   * Friendly source label (e.g. "Sekolah" / "Homeroom Teacher Bu Sari").
    * Parent view especially relies on this.
    */
   source?: string | null;
-  /** Audience label rendered as a pill ("→ Guru", "→ 9A"). */
+  /** Audience label rendered as a pill ("→ Teacher", "→ 9A"). */
   audience_label?: string | null;
   is_pinned?: boolean;
   scheduled_at?: string | null;
@@ -152,7 +152,7 @@ export function normalizeAnnouncementStatus(
   return undefined;
 }
 
-/** Normalise legacy `role_target` values: `wali` → `parent`, etc. */
+/** Normalise legacy `role_target` values: `parent` → `parent`, etc. */
 export function normalizeRoleTarget(raw: unknown): string | undefined {
   const v = String(raw ?? '').toLowerCase().trim();
   if (!v) return undefined;
@@ -195,7 +195,7 @@ export function announcementFromJson(raw: Record<string, unknown>): Announcement
       ? (r.target_ids as unknown[]).map(String)
       : undefined,
     role_target: normalizeRoleTarget(r.role_target),
-    // Per-role audience targeting (guru / wali_kelas / wali_murid → 'all'
+    // Per-role audience targeting (teacher / wali_kelas / wali_murid → 'all'
     // or specific ids). Required so the admin edit form can rehydrate the
     // audience matrix; without it the matrix renders empty on edit.
     audience_matrix:

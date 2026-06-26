@@ -1,5 +1,5 @@
 <!--
-  ParentPayBillView — wali bayar-tagihan page. Hero with kicker + Kembali
+  ParentPayBillView — parent pay-bill page. Hero with kicker + Kembali
   chip, summary card (total + tenggat), 3-row method picker (QRIS / Bank /
   Tunai) using the bimbel border-2 + offset-pad active style, voucher
   field, and primary CTA. Mockup-exact body using bimbel tokens only.
@@ -14,7 +14,7 @@ import { useChildPicker } from '@/composables/useChildPicker';
 import { formatRupiah } from '@/lib/format';
 import type { TutoringBillDetail } from '@/types/tutoring';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -126,7 +126,7 @@ async function submit() {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.pay_bill.kicker')"
       :title="t('wali.bimbel.pay_bill.title', { source: billDisplay?.source_label || t('wali.bimbel.pay_bill.default_source') })"
       :subtitle="`${billDisplay?.subject_label || ''} · ${billDisplay?.group_label || ''} · ${childName}`"
@@ -142,7 +142,7 @@ async function submit() {
           {{ t('wali.bimbel.pay_bill.back') }}
         </button>
       </template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <!-- Summary -->
     <div class="rounded-lg bg-bimbel-accent-dim p-3.5">

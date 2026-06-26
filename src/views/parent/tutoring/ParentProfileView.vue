@@ -1,5 +1,5 @@
 <!--
-  ParentProfileView — wali profile.
+  ParentProfileView — parent profile.
 
   Mockup-exact: hero + 2/5 + 3/5 grid. Left col = avatar card + Anak
   saya list. Right col = Identitas form + Keamanan section. Reads
@@ -13,7 +13,7 @@ import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useChildPicker } from '@/composables/useChildPicker';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -22,7 +22,7 @@ const { children } = useChildPicker();
 
 const user = computed(() => auth.user);
 
-// Local-only form state — `save()` is a stub until a wali-profile
+// Local-only form state — `save()` is a stub until a parent-profile
 // update endpoint exists. Initialize from user when it loads.
 const form = reactive({ name: '', phone: '', address: '' });
 watch(
@@ -56,7 +56,7 @@ function childChipClass(i: number): string {
 }
 
 function save() {
-  // Placeholder — wali-profile update endpoint not wired yet.
+  // Placeholder — parent-profile update endpoint not wired yet.
 }
 function goPwd() {
   router.push({ name: 'parent.tutoring.change-password' });
@@ -65,7 +65,7 @@ function goPwd() {
 
 <template>
   <div class="space-y-4 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.profile.kicker')"
       :title="t('wali.bimbel.profile.title')"
       :subtitle="t('wali.bimbel.profile.subtitle')"
@@ -80,7 +80,7 @@ function goPwd() {
           {{ t('wali.bimbel.profile.save_changes') }}
         </button>
       </template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <div class="grid gap-3.5 lg:grid-cols-5">
       <!-- LEFT: avatar + Anak saya -->

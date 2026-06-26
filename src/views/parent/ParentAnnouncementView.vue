@@ -1,8 +1,8 @@
 <!--
-  ParentAnnouncementView.vue — Pengumuman sekolah untuk wali murid.
+  ParentAnnouncementView.vue — Announcement sekolah untuk parent.
 
   Web port of Flutter's `parent_announcement_screen.dart`. Same flow
-  shape as Jadwal/Presensi: BrandPageHeader (wali) + KpiStripCards +
+  shape as Schedule/Presensi: BrandPageHeader (parent) + KpiStripCards +
   PageFilterToolbar (search + Priority/Status chips) + list of shared
   AnnouncementCards grouped by month + shared detail modal + Event Banner.
 -->

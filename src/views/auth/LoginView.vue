@@ -5,7 +5,7 @@
     - Form-card overlapping the band by -24px
     - Dispatches body to LoginForm / OtpForm / SchoolPicker / RolePicker
       based on `authStore.step`
-    - Footer with "Lupa kata sandi?" + "Hubungi admin"
+    - Footer with "Lupa kata password?" + "Hubungi admin"
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';

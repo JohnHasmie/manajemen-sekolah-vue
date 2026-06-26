@@ -6,7 +6,7 @@
 
     ┌─────────────────────────────────────────────────────┐
     │ 🟢  Bu Sari              [WALI KELAS]              │  ← teacher row
-    │     Matematika · Wali Kelas · 2 jam lalu           │
+    │     Matematika · Homeroom Teacher · 2 jam lalu           │
     │  [PRIORITAS TINGGI] [MATEMATIKA] [SELESAI]         │  ← status pills
     │  Rekomendasi judul                                 │  ← bold title
     │  Deskripsi (HTML stripped) …                       │

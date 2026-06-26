@@ -1,8 +1,8 @@
 <!--
-  ParentBillingView.vue — wali murid · Tagihan & Pembayaran.
+  ParentBillingView.vue — parent · Bill & Pembayaran.
 
   Web port of Flutter's `parent_billing_screen.dart` (Mockup #6). Pulls
-  per-child bills from `/bill/parent` and lays them out under a wali
+  per-child bills from `/bill/parent` and lays them out under a parent
   BrandPageHeader + KPI strip + status / periode filter chips. Tapping
   an unpaid bill jumps to the checkout sheet (Phase 3); tapping a paid
   bill opens its kuitansi (Phase 4).

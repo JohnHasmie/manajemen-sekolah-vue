@@ -1,5 +1,5 @@
 <!--
-  ParentRecReplyModal.vue — Frame D ("Balas Wali Kelas") sheet.
+  ParentRecReplyModal.vue — Frame D ("Balas Homeroom Teacher") sheet.
 
   Web port of Flutter's `parent_recommendation_reply_sheet.dart`. Quick-
   reply chip strip (taps append, stacking nicely) plus a free-form

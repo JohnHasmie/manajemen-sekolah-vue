@@ -24,7 +24,7 @@ export interface TutoringSessionFeedbackSummary {
   avg: number | null;
 }
 
-/** Group announcement (tutor → kelompok broadcast). */
+/** Group announcement (tutor → group broadcast). */
 export interface TutoringGroupAnnouncement {
   id: string;
   tutoring_group_id: string;
@@ -47,7 +47,7 @@ export interface TutoringLeaderboardRow {
 }
 
 /** One row from /leaderboard/by-group — per-group avg composite, used
- *  by the admin leaderboard antar-kelompok strip. */
+ *  by the admin leaderboard antar-group strip. */
 export interface TutoringLeaderboardGroupRow {
   group_id: string;
   group_name: string;
@@ -56,7 +56,7 @@ export interface TutoringLeaderboardGroupRow {
   avg_composite: number;
 }
 
-/** Calon siswa (lead). Status drives the funnel column on the admin
+/** Calon student (lead). Status drives the funnel column on the admin
  *  list. converted_enrollment_id is set when the lead is converted. */
 export interface TutoringLead {
   id: string;
@@ -180,7 +180,7 @@ export interface TutoringNextSession {
   topic?: string | null;
 }
 
-/** KPI strip for the tutor's own "Sesi Saya" dashboard.
+/** KPI strip for the tutor's own "Session Saya" dashboard.
  *  Mirrors GetTutoringTutorStatsAction. `attendance_rate` is null when
  *  the tutor hasn't recorded any attendance in the last 30 days. */
 export interface TutoringTutorStats {
@@ -200,8 +200,8 @@ export interface TutoringTutorStats {
   rating_count: number;
 }
 
-/** One row in the admin or wali activity feed.
- *  wali  → note | score | announcement | bill | attendance
+/** One row in the admin or parent activity feed.
+ *  parent  → note | score | announcement | bill | attendance
  *  admin → enrollment_new | lead_new | lead_converted | session_done | bill_paid
  */
 export interface TutoringFeedEvent {
@@ -283,7 +283,7 @@ export interface TenantBillingSettings {
   allow_monthly: boolean;
   allow_per_session: boolean;
   default_mode?: string | null;
-  // Payment account — where wali transfers TO. All nullable so
+  // Payment account — where parent transfers TO. All nullable so
   // admin can configure incrementally (bank now, QRIS later).
   bank_name?: string | null;
   bank_account_number?: string | null;
@@ -504,8 +504,8 @@ export interface TutoringActivitySubmission {
   submitted_at?: string | null;
 }
 
-/** Rich per-class meta for the wali Kelas list page.
- *  Mirrors GetWaliClassMetaAction (one row per kelompok the student
+/** Rich per-class meta for the parent Kelas list page.
+ *  Mirrors GetWaliClassMetaAction (one row per group the student
  *  is enrolled in). */
 export interface TutoringParentClassMeta {
   group_id: string;

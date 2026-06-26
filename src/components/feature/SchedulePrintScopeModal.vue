@@ -1,7 +1,7 @@
 <!--
   SchedulePrintScopeModal.vue — admin Print PDF sheet.
 
-  Picks a scope (all / per kelas / per guru / per hari) + orientation,
+  Picks a scope (all / per kelas / per teacher / per hari) + orientation,
   then POSTs to /teaching-schedule/print-pdf (returns a PDF blob).
 -->
 <script setup lang="ts">

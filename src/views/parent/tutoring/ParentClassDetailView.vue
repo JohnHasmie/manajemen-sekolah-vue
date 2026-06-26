@@ -1,6 +1,6 @@
 <!--
-  ParentClassDetailView — wali kelas detail. 4 tabs (Aliran / Tugas /
-  Nilai / Siswa) per redesigned mockup. Single-column card layout under
+  ParentClassDetailView — homeroom teacher detail. 4 tabs (Aliran / Tugas /
+  Grade / Student) per redesigned mockup. Single-column card layout under
   a tab bar; no sidebar.
 -->
 <script setup lang="ts">
@@ -15,7 +15,7 @@ import type {
   TutoringParentClassMeta,
 } from '@/types/tutoring';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
@@ -204,14 +204,14 @@ const heroTitle = computed(() => {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.class_detail.kicker')"
       :title="heroTitle"
       :subtitle="heroSubtitle"
       :stats="[]"
     >
       <template #actions><ParentChildPickerChip /></template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <!-- Tabs (4) -->
     <div
@@ -289,7 +289,7 @@ const heroTitle = computed(() => {
       </p>
     </div>
 
-    <!-- Nilai tab -->
+    <!-- Grade tab -->
     <div
       v-if="activeTab === 'nilai'"
       class="rounded-b-lg bg-bimbel-panel border border-bimbel-border-soft border-t-0 p-3.5"
@@ -313,7 +313,7 @@ const heroTitle = computed(() => {
       </p>
     </div>
 
-    <!-- Siswa tab -->
+    <!-- Student tab -->
     <div
       v-if="activeTab === 'siswa'"
       class="rounded-b-lg bg-bimbel-panel border border-bimbel-border-soft border-t-0 p-3.5"

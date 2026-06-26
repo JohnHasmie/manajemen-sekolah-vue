@@ -1,7 +1,7 @@
 <!--
   SegmentedControl.vue - iOS-style segmented buttons inside a slate container.
 
-  Used for Session selector (Sesi 1/2/3/4) and Asesmen type selector
+  Used for Session selector (Session 1/2/3/4) and Asesmen type selector
   (Semua / Tugas / UH / UTS / UAS).
 
   Each option can carry an optional `meta` (e.g. start time, count) shown

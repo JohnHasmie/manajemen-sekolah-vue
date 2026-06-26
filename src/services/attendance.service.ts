@@ -188,7 +188,7 @@ export const AttendanceService = {
    *
    * When `args.classId` is provided we also pass `view='homeroom'`
    * so the backend includes the recording teacher's name (used by the
-   * Wali-Kelas chip in the UI).
+   * Parent-Kelas chip in the UI).
    */
   async listReports(args: {
     teacher_id: string;

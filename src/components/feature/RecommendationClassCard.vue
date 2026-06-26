@@ -3,8 +3,8 @@
 
   Web port of `lib/features/recommendations/presentation/widgets/
   recommendation_class_card.dart`. One card per class with a 4-cell
-  stats grid + gradient progress bar + dual CTA (Lihat Siswa / Buat
-  Baru). Used by both the Mengajar and Wali Kelas modes of the
+  stats grid + gradient progress bar + dual CTA (Lihat Student / Buat
+  Baru). Used by both the Mengajar and Homeroom Teacher modes of the
   recommendations hub — `isHomeroom` swaps the kicker style.
 
   Layout, top to bottom:
@@ -19,7 +19,7 @@
     │                                             │
     │ ▰▰▰▰▰▰▰▱▱▱  60%                            │
     │                                             │
-    │ [ Lihat Siswa ]      [ ✨ Buat Baru ]       │
+    │ [ Lihat Student ]      [ ✨ Buat Baru ]       │
     └─────────────────────────────────────────────┘
 
   Progress bar tone:
@@ -40,7 +40,7 @@ import Button from '@/components/ui/Button.vue';
 interface ClassMeta {
   id: string;
   name: string;
-  /** Optional — when present, drives the "n siswa" sub-meta. */
+  /** Optional — when present, drives the "n student" sub-meta. */
   student_count?: number;
   /** Optional — when present (Mengajar mode), shown next to class name. */
   subject_name?: string | null;
@@ -56,7 +56,7 @@ const props = withDefaults(
     isLoading?: boolean;
     /** Show the violet AI spinner on the Buat Baru button. */
     isGenerating?: boolean;
-    /** Wali-kelas scope → kicker says "VII A · WALI" + book icon. */
+    /** Parent-kelas scope → kicker says "VII A · WALI" + book icon. */
     isHomeroom?: boolean;
   }>(),
   {
@@ -68,7 +68,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  /** Tap card or "Lihat Siswa" → student list. */
+  /** Tap card or "Lihat Student" → student list. */
   viewStudents: [cls: ClassMeta];
   /** Tap "Buat Baru" → generate sheet. */
   generate: [cls: ClassMeta];

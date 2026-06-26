@@ -8,7 +8,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { SettingsService } from '@/services/settings.service';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -50,7 +50,7 @@ async function submit() {
       <NavIcon name="chevron-left" :size="13" /> {{ t('admin.bimbel.change_password.back') }}
     </button>
 
-    <TutorBerandaHero :greeting="t('admin.bimbel.change_password.hero_kicker')" :title="t('admin.bimbel.change_password.hero_title')" :subtitle="t('admin.bimbel.change_password.hero_subtitle')" :stats="[]" />
+    <TutorHomeHero :greeting="t('admin.bimbel.change_password.hero_kicker')" :title="t('admin.bimbel.change_password.hero_title')" :subtitle="t('admin.bimbel.change_password.hero_subtitle')" :stats="[]" />
 
     <div class="grid gap-4 lg:grid-cols-5">
       <form class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 lg:col-span-3 space-y-3" @submit.prevent="submit">

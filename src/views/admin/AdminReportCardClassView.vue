@@ -6,11 +6,11 @@
     /admin/report-cards/class/:classId
 
   Layout:
-    1. Back chevron + sticky actions (Export Excel + Kirim ke Wali)
+    1. Back chevron + sticky actions (Export Excel + Kirim ke Parent)
     2. BrandPageHeader (admin) — kicker class+TP, title roster
     3. KpiStripCards — Total / Terbit / Diperiksa / Draf
     4. Student rows — name + NIS + status pill
-    5. Sticky bottom-bar with Export Excel + Kirim ke Wali (publish)
+    5. Sticky bottom-bar with Export Excel + Kirim ke Parent (publish)
 
   Endpoints:
     GET  /raports?class_id=…

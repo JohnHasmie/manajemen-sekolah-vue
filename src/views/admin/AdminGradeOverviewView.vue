@@ -1,13 +1,13 @@
 <!--
-  AdminGradeOverviewView.vue — admin Buku Nilai (school-wide).
+  AdminGradeOverviewView.vue — admin Gradebook (school-wide).
 
   Port of Flutter's `admin_grade_overview_screen.dart`. The page is a
   school-wide overview, not a per-class drill:
 
-    1. BrandPageHeader (admin) — kicker "AKADEMIK" + title "Buku Nilai"
+    1. BrandPageHeader (admin) — kicker "AKADEMIK" + title "Gradebook"
     2. KPI strip (3 cells): NILAI / RATA-RATA / LULUS ≥75
-    3. Sebaran Nilai card — distribution bar (Tuntas/Perlu/Remedial)
-       + 3 tinted pills + meta chips (N guru · N siswa)
+    3. Sebaran Grade card — distribution bar (Tuntas/Perlu/Remedial)
+       + 3 tinted pills + meta chips (N teacher · N student)
     4. Search bar — filter the per-teacher cards by name
     5. "PER GURU · N ORANG" section header
     6. Per-teacher cards: 4px score edge, initial avatar, name +
@@ -220,7 +220,7 @@ const headerMeta = computed(() =>
           </div>
         </section>
 
-        <!-- 3. Sebaran Nilai card -->
+        <!-- 3. Sebaran Grade card -->
         <section class="bg-white border border-slate-200 rounded-2xl p-3.5">
           <header class="flex items-center justify-between mb-3">
             <h3 class="text-[13px] font-black text-slate-700 tracking-tight">

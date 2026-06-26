@@ -4,10 +4,10 @@
   Web port of `recommendation_generate_sheet.dart`. Violet-themed
   modal that replaces the legacy single-confirmation dialog. Body:
 
-    1. Cakupan Siswa — 3 radio tiles:
+    1. Cakupan Student — 3 radio tiles:
          - Hanya berisiko (at_risk, default) — backend's smart filter
-         - Semua siswa (all)                 — every active enrolment
-         - Pilih per siswa (per_student)     — inline FilterChipGrid
+         - Semua student (all)                 — every active enrolment
+         - Pilih per student (per_student)     — inline FilterChipGrid
     2. Mata Pelajaran — multi-select chip grid sourced from class.
     3. Periode — read-only chip showing the active academic year
        (when known).
@@ -44,7 +44,7 @@ interface Props {
   /** Backend-computed at-risk students; fallback to high-priority count. */
   atRiskCount: number;
   subjects: SubjectOption[];
-  /** Roster — drives the inline "Pilih per siswa" picker. */
+  /** Roster — drives the inline "Pilih per student" picker. */
   students?: StudentOption[];
   /** "Semester Ganjil 2025/2026" etc. Optional read-only chip. */
   periodeLabel?: string;

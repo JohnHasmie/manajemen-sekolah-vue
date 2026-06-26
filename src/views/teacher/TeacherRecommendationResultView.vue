@@ -2,11 +2,11 @@
   TeacherRecommendationResultView.vue — per-student rec list (Frame C).
 
   Web port of `recommendation_result_screen.dart`. Route entry:
-    /teacher/recommendations/class/:classId/student/:studentId?scope=wali
+    /teacher/recommendations/class/:classId/student/:studentId?scope=parent
 
   Layout:
     1. Back chevron row → kembali ke student list
-    2. BrandPageHeader (guru) — kicker `Kelas X · <Mode>`, title with
+    2. BrandPageHeader (teacher) — kicker `Kelas X · <Mode>`, title with
        student name, meta line with NIS / counts
     3. Hero card — 56dp avatar + name + meta + violet `n REC` pill +
        status mini-pills + DIBACA WALI pill when any rec has reads
@@ -89,7 +89,7 @@ async function loadContext() {
     cls.value = cRes.items.find((c) => c.id === classId.value) ?? null;
     student.value = sRes.items.find((s) => s.id === studentId.value) ?? null;
   } catch {
-    // graceful — header copy degrades to "Kelas — / Siswa —"
+    // graceful — header copy degrades to "Kelas — / Student —"
   }
 }
 
@@ -131,7 +131,7 @@ watch(
 useAcademicYearWatcher(() => loadRecs());
 
 // Fire-and-forget mark-seen — silences dashboard Signal E once the
-// wali kelas opens the result view. Wrapped per rec because the
+// homeroom teacher opens the result view. Wrapped per rec because the
 // backend records per-recipient seen flags scoped to the rec id.
 watch(items, (list) => {
   for (const rec of list) {

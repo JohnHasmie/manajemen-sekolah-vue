@@ -8,7 +8,7 @@ import { useI18n } from 'vue-i18n';
 import { NotificationService } from '@/services/notification.service';
 import type { AppNotification } from '@/types/notification';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -62,7 +62,7 @@ function rel(iso: string): string {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('admin.bimbel.notifications.hero_kicker')"
       :title="t('admin.bimbel.notifications.hero_title')"
       :subtitle="t('admin.bimbel.notifications.hero_subtitle', { unread, total: items.length })"
@@ -75,7 +75,7 @@ function rel(iso: string): string {
           @click="markAll"
         >{{ t('admin.bimbel.notifications.mark_all') }}</button>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div class="flex gap-1.5 flex-wrap">
       <button

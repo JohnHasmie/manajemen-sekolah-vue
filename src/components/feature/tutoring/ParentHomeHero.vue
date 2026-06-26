@@ -1,5 +1,5 @@
 <!--
-  ParentBerandaHero — cyan/azure hero used on every parent (wali) page.
+  ParentHomeHero — cyan/azure hero used on every parent (parent) page.
   Mirrors Flutter `_GreetingHero` in tutoring_child_overview_screen.dart
   + matches the mockup at:
     parent_web_pages_main / parent_web_pages_browse / etc.
@@ -9,7 +9,7 @@
   - Optional 3-4 KPI strip below
 
   Colors are fixed to the parent brand (azure #21afe6) so the hero
-  feels distinctly "wali" — body surfaces still adapt via
+  feels distinctly "parent" — body surfaces still adapt via
   tutoring-light / tutoring-dark.
 -->
 <script setup lang="ts">

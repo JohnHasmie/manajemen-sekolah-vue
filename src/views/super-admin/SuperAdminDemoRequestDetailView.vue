@@ -20,11 +20,11 @@
     1. Identitas Pemohon   — requester identity + social channels + meta
     2. Data Sekolah        — school name / level / city / npsn / TA + role mode
     3. Mata Pelajaran      — chip list of subject names
-    4. Guru                — count + fill mode + manual list table
+    4. Teacher                — count + fill mode + manual list table
     5. Kelas               — pattern + per-grade table
-    6. Siswa               — per-class + fill mode
+    6. Student               — per-class + fill mode
     7. Orang Tua           — link mode
-    8. Jadwal              — mode + active days + JP + hours
+    8. Schedule              — mode + active days + JP + hours
     9. Skenario            — enabled scenario chips (labelled)
    10. Pembayaran          — mode + SPP nominal + template chips
 

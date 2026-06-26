@@ -1,6 +1,6 @@
 <!--
-  ParentEnrollWizardView — wali 4-step enrollment wizard.
-  Steps: 1) Program  2) Paket  3) Mode bayar  4) Konfirmasi.
+  ParentEnrollWizardView — parent 4-step enrollment wizard.
+  Steps: 1) Program  2) Paket  3) Mode pay  4) Konfirmasi.
   Mockup-exact stepper + per-step option list with bimbel border-2 +
   offset-pad active style. Keeps the existing service calls
   (getPrograms/getPackages/getGroups/createEnrollment).
@@ -18,7 +18,7 @@ import type {
   TutoringProgram,
 } from '@/types/tutoring';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -208,7 +208,7 @@ function cancel() {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.enroll_wizard.kicker')"
       :title="t('wali.bimbel.enroll_wizard.title', { name: childFirstName })"
       :subtitle="t('wali.bimbel.enroll_wizard.subtitle_step', { current: currentStep, total: 4 })"
@@ -224,7 +224,7 @@ function cancel() {
           {{ t('wali.bimbel.enroll_wizard.cancel') }}
         </button>
       </template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <div
       v-if="successId"

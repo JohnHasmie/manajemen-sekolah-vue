@@ -1,5 +1,5 @@
 <!--
-  ParentSessionsView — wali Jadwal sesi list. Redesign: hero + subject
+  ParentSessionsView — parent Schedule session list. Redesign: hero + subject
   filter chips + grouped-by-day session list (no search, no extra
   inner card chrome).
 -->
@@ -11,7 +11,7 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type { TutoringSession } from '@/types/tutoring';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import SessionsCalendar from '@/components/feature/tutoring/SessionsCalendar.vue';
@@ -178,7 +178,7 @@ const grouped = computed(() => {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.sessions.kicker')"
       :title="t('wali.bimbel.sessions.title')"
       :subtitle="t('wali.bimbel.sessions.subtitle', { week: weekCount, month: monthCount })"
@@ -195,7 +195,7 @@ const grouped = computed(() => {
           {{ view === 'list' ? t('wali.bimbel.sessions.view_calendar') : t('wali.bimbel.sessions.view_list') }}
         </button>
       </template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <!-- Subject filter chips (both views) -->
     <div class="flex gap-1.5 flex-wrap">

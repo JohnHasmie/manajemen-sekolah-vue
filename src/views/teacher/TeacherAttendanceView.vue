@@ -1,18 +1,18 @@
 <!--
-  TeacherAttendanceView.vue — Presensi (daftar laporan kehadiran).
+  TeacherAttendanceView.vue — Presensi (list laporan kehadiran).
 
   Web port of the Flutter "Kehadiran" redesign — the landing page is
   a list of attendance reports per session, not a one-shot input form.
   Tapping a card routes the teacher to either:
-    - /teacher/attendance/detail  (sesi sudah tercatat → lihat / edit)
-    - /teacher/attendance/input   (sesi belum tercatat → input baru)
+    - /teacher/attendance/detail  (session sudah tercatat → lihat / edit)
+    - /teacher/attendance/input   (session belum tercatat → input baru)
 
   Layout (consistent with TeacherScheduleView):
     1. <BrandPageHeader> + <RoleToggleChipRow> — shared
     2. <KpiStripCards> — shared (Hari ini / Tercatat / Belum / Rerata)
     3. <PageFilterToolbar> — shared (Periode · Kelas · Mapel + search)
     4. AsyncView body — day-grouped <SessionReportCard>s
-    5. Floating "+ Tambah presensi sesi" CTA
+    5. Floating "+ Tambah presensi session" CTA
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -198,7 +198,7 @@ async function loadReports() {
   const teacherId = auth.teacherId ?? auth.user?.id ?? '';
   const { from, to } = dateRange(periodKey.value);
   try {
-    // In wali-kelas mode lock class_id to the homeroom; otherwise honour
+    // In parent-kelas mode lock class_id to the homeroom; otherwise honour
     // the filter chip.
     const effectiveClassId =
       activeHomeroomId.value || classId.value || undefined;
@@ -238,7 +238,7 @@ watch(searchQuery, () => {
   searchTimer = setTimeout(() => loadReports(), 300);
 });
 
-// When the user flips to a wali chip, lock the class filter.
+// When the user flips to a parent chip, lock the class filter.
 watch(activeHomeroomId, (newId) => {
   if (newId) classId.value = newId;
 });

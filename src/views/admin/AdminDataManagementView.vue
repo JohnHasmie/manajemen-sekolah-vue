@@ -2,9 +2,9 @@
   AdminDataManagementView.vue — admin Manajemen Data hub.
 
   Mirrors Flutter's `AdminDataManagementScreen` — a tile-card menu that
-  links to the four existing master-data CRUD screens (Siswa, Guru,
+  links to the four existing master-data CRUD screens (Student, Teacher,
   Kelas, Mapel). Each tile carries an icon, a one-line subtitle, and
-  a chevron — same chrome as the parent Akademik hub and the admin
+  a chevron — same chrome as the parent Academic hub and the admin
   People + Academic hubs so cross-role list menus render identically.
 
   Reached from the admin Sistem hub ("Manajemen Data" tile).

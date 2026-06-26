@@ -1,6 +1,6 @@
 <!--
   AdminFinanceBillGroupDetailView.vue — admin · per-bucket per-student
-  tagihan detail.
+  bill detail.
 
   Drilled into from AdminFinanceBillsView when a BillGroupCard is
   tapped. Fetches `GET /bills?payment_type_id=…&class_id=…&academic_year_id=…`

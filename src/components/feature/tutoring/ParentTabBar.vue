@@ -1,7 +1,7 @@
 <!--
   ParentTabBar — 3-tab segmented toggle styled in the parent (azure)
-  palette. Used on Kelas detail page (Aliran / Sesi / Nilai), Sesi
-  page (List / Kalender), Tagihan page (Aktif / Riwayat).
+  palette. Used on Kelas detail page (Aliran / Session / Grade), Session
+  page (List / Kalender), Bill page (Aktif / Riwayat).
 -->
 <script setup lang="ts">
 defineProps<{

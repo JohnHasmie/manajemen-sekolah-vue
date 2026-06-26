@@ -250,7 +250,7 @@ function openStudent(s: StudentBillSummary) {
   // Toggle an inline per-student bill detail. This view already aggregates
   // each student's bills (StudentBillSummary.bills), so we expand them in
   // place — there's no per-student drill route on the admin side, and the
-  // old behaviour just showed a toast telling admins to go to the Tagihan
+  // old behaviour just showed a toast telling admins to go to the Bill
   // tab, which is what the bug report was about.
   expandedStudentId.value =
     expandedStudentId.value === s.student.id ? null : s.student.id;

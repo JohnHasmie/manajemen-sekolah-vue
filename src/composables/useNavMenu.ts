@@ -126,7 +126,7 @@ const STAFF_NAV: NavSection[] = [
 /**
  * DEDICATED super-admin (KamilEdu-team) nav. This is the WHOLE menu for
  * a super-admin — it deliberately does NOT include any school-admin
- * items (Dashboard/Pengumuman/Siswa/Guru/Kelas etc.), because a
+ * items (Dashboard/Announcement/Student/Teacher/Kelas etc.), because a
  * super-admin has no school of their own. Surfaces only the platform
  * pages under the /super-admin subtree (see router/index.ts).
  */
@@ -260,14 +260,14 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
 ];
 
 /**
- * Wali bimbel sidebar. "Monitoring Anak" is the only per-anak route
- * (it embeds activeChildId from useChildPicker). Jadwal / Nilai /
+ * Parent bimbel sidebar. "Monitoring Anak" is the only per-anak route
+ * (it embeds activeChildId from useChildPicker). Schedule / Grade /
  * Kehadiran all live inside that same overview screen, so they're
  * NOT separate entries — adding them would just duplicate the
  * Monitoring path and light up three rows at once.
  *
- * When activeChildId is empty (initial load, or wali never opened the
- * picker), Monitoring falls back to /parent so the wali lands on the
+ * When activeChildId is empty (initial load, or parent never opened the
+ * picker), Monitoring falls back to /parent so the parent lands on the
  * dashboard child-switcher instead of a broken /parent/tutoring/
  * route.
  */
@@ -305,7 +305,7 @@ function parentTutoringNav(activeChildId: string): NavSection[] {
   ];
 }
 
-/** Static tenant menus. `wali` resolves dynamically (needs child id). */
+/** Static tenant menus. `parent` resolves dynamically (needs child id). */
 const TUTORING_MENUS: Partial<Record<Role, NavSection[]>> = {
   admin: ADMIN_TUTORING_NAV,
   guru: TEACHER_TUTORING_NAV,
@@ -328,7 +328,7 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
   const auth = useAuthStore();
   const { isTutoringCenter } = useTenant();
   // useChildPicker exposes a module-singleton activeChildId that
-  // updates reactively when the wali switches kid on the dashboard.
+  // updates reactively when the parent switches kid on the dashboard.
   const { activeChildId } = useChildPicker();
   return computed(() => {
     // Super-admins ALWAYS get the dedicated platform menu — never the
@@ -340,7 +340,7 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
     // Tutoring-center tenants get the bimbel menu (the school
     // data-management pages read empty for them).
     if (isTutoringCenter.value) {
-      // Wali nav is dynamic — Monitoring/Jadwal/Nilai entries embed
+      // Parent nav is dynamic — Monitoring/Schedule/Grade entries embed
       // the active child id so a single click lands directly on the
       // overview without a child-picker detour.
       if (role === 'wali') return parentTutoringNav(activeChildId.value);

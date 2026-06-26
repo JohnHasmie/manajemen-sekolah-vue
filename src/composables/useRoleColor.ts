@@ -2,7 +2,7 @@ import { computed, type ComputedRef } from 'vue';
 import type { Role } from '@/types/auth';
 
 /**
- * Mirrors `ColorUtils.getRoleColor('admin'|'guru'|'wali'|'staff')` from
+ * Mirrors `ColorUtils.getRoleColor('admin'|'teacher'|'parent'|'staff')` from
  * `lib/core/utils/color_utils.dart`.
  *
  * Returns Tailwind class names + raw hex (the latter is useful for SVG

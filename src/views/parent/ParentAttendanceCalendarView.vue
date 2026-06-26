@@ -2,7 +2,7 @@
   ParentAttendanceCalendarView.vue — kalender kehadiran anak.
 
   Phase-4 rebuild (Flutter parity with `ParentAttendanceCalendarScreen`):
-    1. BrandPageHeader (wali) — month label + chevrons + AttendanceMiniKpi
+    1. BrandPageHeader (parent) — month label + chevrons + AttendanceMiniKpi
        row (Hadir/Izin/Sakit/Alpa) sitting inside #role-toggle.
     2. AttendanceCalendarGrid — SEN-MIN 7-column grid, worst-status wins,
        click a day to drill in.

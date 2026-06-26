@@ -1,5 +1,5 @@
 /**
- * BillingService — parent surface for tagihan & pembayaran.
+ * BillingService — parent surface for bill & pembayaran.
  *
  * Hits the Laravel `/bill/*` endpoints (singular — `/billing/*` does NOT
  * exist, that was a bug in the original Vue port). Mirrors Flutter's
@@ -206,7 +206,7 @@ export const BillingService = {
   },
 
   /**
-   * POST /bill/{id}/checkout — open a Bayar checkout session.
+   * POST /bill/{id}/checkout — open a Pay checkout session.
    * Returns QRIS string, VA number, manual bank list, expires_at.
    */
   async openCheckout(billId: string): Promise<CheckoutSession> {

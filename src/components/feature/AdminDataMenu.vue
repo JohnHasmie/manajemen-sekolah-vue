@@ -2,7 +2,7 @@
   AdminDataMenu.vue — shared admin manajemen-data overflow menu.
 
   Mirrors Flutter's `AdminDataMenu` widget. Sits in the header of
-  Siswa / Guru / Kelas / Mapel pages and surfaces 4 actions:
+  Student / Teacher / Kelas / Mapel pages and surfaces 4 actions:
     Refresh · Export Excel · Import Excel · Unduh Template
 
   Each emits its action; the host wires the actual service call.

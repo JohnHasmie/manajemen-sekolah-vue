@@ -1,5 +1,5 @@
 <!--
-  ParentActivitiesView — wali tugas/ulangan list. Redesign: hero + type
+  ParentActivitiesView — parent tugas/ulangan list. Redesign: hero + type
   filter chips + single-column rows (icon | title/subtitle | pill).
 -->
 <script setup lang="ts">
@@ -13,7 +13,7 @@ import type {
   TutoringActivitySubmission,
 } from '@/types/tutoring';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
@@ -38,8 +38,8 @@ type FilterId = 'all' | 'pending' | 'ASSIGNMENT' | 'EXAM' | 'MATERIAL';
 // screen at lib/features/tutoring/presentation/screens/parent_
 // activities_screen.dart:27 also just calls getActivities() with no
 // scope — the backend index isn't student-aware, and we'd otherwise
-// hide rows the wali expects to see (e.g. Try-out for a different
-// kelompok of the same child, or activities pre-enrollment).
+// hide rows the parent expects to see (e.g. Try-out for a different
+// group of the same child, or activities pre-enrollment).
 type Row = {
   id: string;
   activity: TutoringActivity;
@@ -190,8 +190,8 @@ function title(r: Row): string {
   return r.activity.title || '—';
 }
 
-// Subtitle: "Type · Kelompok · trailing fact"
-//   GRADED   → "Nilai X/Y"
+// Subtitle: "Type · Group · trailing fact"
+//   GRADED   → "Grade X/Y"
 //   SUBMITTED→ "Dikumpul DD MMM"
 //   No sub + due → "Lewat N hari · DD MMM" or "N hari lagi · DD MMM"
 //   No sub + no due → "Tanpa tenggat"
@@ -262,14 +262,14 @@ function pillLabel(r: Row): string {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.activities.kicker')"
       :title="t('wali.bimbel.activities.title', { name: childFirstName })"
       :subtitle="t('wali.bimbel.activities.subtitle', { pending: pendingCount, done: doneThisMonth })"
       :stats="[]"
     >
       <template #actions><ParentChildPickerChip /></template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <!-- Filter chips -->
     <div class="flex gap-1.5 flex-wrap">

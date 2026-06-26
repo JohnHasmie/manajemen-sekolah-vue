@@ -50,7 +50,7 @@ const isTutoringTenant = computed(() => {
 });
 
 // Bimbel routes render on the bimbel surface (dark by default, light
-// when the user picks it in Tutor → Tampilan). Three paths into this:
+// when the user picks it in Tutor → Appearance). Three paths into this:
 //
 //  1. The dedicated tutor routes — their route names start with
 //     `teacher.tutoring` / contain `tutoring`, so the substring check
@@ -95,7 +95,7 @@ const tutoringRoleClass = computed(() =>
 /**
  * Surface class for bimbel pages.
  *
- * Every bimbel surface (admin / tutor / wali) now obeys the user's
+ * Every bimbel surface (admin / tutor / parent) now obeys the user's
  * mode pick (light / dark / auto) via the bimbel theme store. The
  * whole tokenised CSS-var system (`--bimbel-panel`, `--bimbel-text-hi`,
  * etc.) is the SHARED mechanism — each component already reads those
@@ -103,7 +103,7 @@ const tutoringRoleClass = computed(() =>
  * `<main>` element re-skins every page underneath at once. No
  * per-page light/dark wiring needed.
  *
- * Previously the admin + wali branches were pinned to `'tutoring-dark'`,
+ * Previously the admin + parent branches were pinned to `'tutoring-dark'`,
  * which is why "/admin/tutoring" and friends came out fully dark even
  * with the tutor toggle set to light — the toggle simply wasn't
  * consulted for those roles. Removing the branch lets the same store
@@ -113,7 +113,7 @@ const tutoringSurfaceClass = computed(() => tutoringTheme.rootClass);
 
 /**
  * Mirror the surface classes (`.tutoring-light` / `.tutoring-dark`
- * + role tier `.bimbel-tutor` / `.bimbel-admin` / `.bimbel-wali`)
+ * + role tier `.bimbel-tutor` / `.bimbel-admin` / `.bimbel-parent`)
  * onto `<html>` whenever we're rendering a tutoring route.
  *
  * Why this exists: `<main>` already carries those classes for the
@@ -122,7 +122,7 @@ const tutoringSurfaceClass = computed(() => tutoringTheme.rootClass);
  * `bg-bimbel-panel` / `text-bimbel-text-hi` inside a teleported
  * dialog fall through to the `:root` DARK defaults, so an admin
  * with the toggle set to "Selalu terang" still sees a dark
- * `Detail Tagihan` modal. By writing the classes to
+ * `Detail Bill` modal. By writing the classes to
  * `document.documentElement` (i.e. `<html>`), every teleport target
  * inherits the same CSS-var values as the rest of the page.
  *
@@ -131,7 +131,7 @@ const tutoringSurfaceClass = computed(() => tutoringTheme.rootClass);
  *
  * NOTE: only the .tutoring-{light,dark} surface classes were renamed
  * in the 2026-06-26 cutover. The role tier classes (.bimbel-{tutor,
- * admin,wali}) and the underlying `--bimbel-*` CSS variables stay
+ * admin,parent}) and the underlying `--bimbel-*` CSS variables stay
  * unchanged because they are tightly coupled to the `bimbel:` Tailwind
  * namespace (see tailwind.config.ts), and renaming them would force a
  * sweep across every component that uses `bg-bimbel-panel` /
@@ -206,10 +206,10 @@ const isActive = (to: string) => {
   ) {
     return false;
   }
-  // Bimbel parent's "Beranda" link is /parent/tutoring/:sid (with no
+  // Bimbel parent's "Home" link is /parent/tutoring/:sid (with no
   // further segments). Without this exception its prefix would match
   // every sibling page like /parent/tutoring/:sid/announcements and
-  // both Beranda + that page would highlight. Same shape applies to
+  // both Home + that page would highlight. Same shape applies to
   // any tutoring-home pattern (3 path segments under /parent/tutoring/).
   if (/^\/parent\/tutoring\/[^/]+$/.test(to)) {
     return false;
@@ -291,7 +291,7 @@ const schoolInitial = computed(() => {
         - Hover: subtle accent-tinted tint + brighter text.
         - Active: accent-tinted bg + accent text + a 3px left rail
           with role-color glow. The rail uses the role hex via
-          inline style so it matches admin navy / tutor cyan / wali
+          inline style so it matches admin navy / tutor cyan / parent
           azure precisely.
         - Collapsed: items become 44px squares centered on the icon,
           with the label as a tooltip on hover.

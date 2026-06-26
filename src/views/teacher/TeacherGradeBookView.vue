@@ -1,11 +1,11 @@
 <!--
-  TeacherGradeBookView.vue — Nilai Siswa (Buku Nilai).
+  TeacherGradeBookView.vue — Grade Student (Gradebook).
 
   Web port of Flutter's `teacher_grade_input_screen.dart`. Same flow
   shape as Presensi:
 
     Default landing (no specific filter):
-      1. <BrandPageHeader> (guru) + <RoleToggleChipRow> (Mengajar/Wali)
+      1. <BrandPageHeader> (teacher) + <RoleToggleChipRow> (Mengajar/Parent)
       2. <KpiStripCards> — Total mapel / Asesmen / Rerata / Belum
       3. <PageFilterToolbar> — Kelas + Mapel chips + search
       4. Day-style summary cards: one per (class, subject) combo, with
@@ -87,7 +87,7 @@ const effectiveTeacherId = computed<string>(
   () => routeTeacherId.value || auth.teacherId || auth.user?.id || '',
 );
 
-// ── Role toggle (Mengajar / Wali) ──
+// ── Role toggle (Mengajar / Parent) ──
 const selectedRoleId = ref<string>('mengajar');
 const roleOptions = computed<RoleOption[]>(() => {
   const out: RoleOption[] = [

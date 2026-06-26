@@ -1,5 +1,5 @@
 <!--
-  TeacherAttendanceInputView.vue — Input presensi (sesi baru).
+  TeacherAttendanceInputView.vue — Input presensi (session baru).
 
   Reachable from /teacher/attendance/input?class_id&subject_id&date.
   Same UI flow as the Detail view (header + KPI strip + filter

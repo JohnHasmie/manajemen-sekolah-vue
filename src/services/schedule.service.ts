@@ -78,7 +78,7 @@ function humanError(e: unknown, fallback: string): string {
 // Parsers
 // ───────────────────────────────────────────────────────────────────
 
-/** Light parser — teacher / parent / wali read view. */
+/** Light parser — teacher / parent / parent read view. */
 function sessionFromJson(raw: any): ScheduleSession {
   const subject =
     typeof raw.subject === 'object' && raw.subject !== null
@@ -185,7 +185,7 @@ function sessionFromJson(raw: any): ScheduleSession {
   // Eager-loaded TeachingSchedule responses nest the slot under
   // `lesson_hour.id`; legacy/flat rows expose `lesson_hour_id` /
   // `jam_pelajaran_id` directly. Mirror Flutter's Schedule.fromJson
-  // precedence so the Kegiatan form can persist the exact slot UUID.
+  // precedence so the Activity form can persist the exact slot UUID.
   const lessonHourId =
     lessonHour?.id ?? raw.lesson_hour_id ?? raw.jam_pelajaran_id ?? null;
 
@@ -383,7 +383,7 @@ export interface PaginatedSchedules {
 
 export const ScheduleService = {
   // ═════════════════════════════════════════════════════════════════
-  // Teacher / parent / wali read methods (existing)
+  // Teacher / parent / parent read methods (existing)
   // ═════════════════════════════════════════════════════════════════
 
   /**
@@ -426,7 +426,7 @@ export const ScheduleService = {
     }
   },
 
-  /** Wali-kelas view — full week for one class. */
+  /** Parent-kelas view — full week for one class. */
   async classWeek(
     classId: string,
     opts: {

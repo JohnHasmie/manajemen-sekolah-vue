@@ -1,19 +1,19 @@
 <!--
   KpiStripCards.vue — shared 4-up KPI strip used across teacher pages
-  (Jadwal, Presensi, Buku Nilai, etc.).
+  (Schedule, Presensi, Gradebook, etc.).
 
   Pattern (port of Flutter's `_HeaderStatChip` + the redesigned
   inline KPI strip in `teacher_schedule_screen.dart`):
 
     ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
     │ [▤] LABEL   │ │ [▤] LABEL   │ │ [▤] LABEL   │ │ [▤] LABEL   │
-    │ 24 sesi     │ │  8 hari ini │ │ 12 mapel    │ │ 92%         │
+    │ 24 session     │ │  8 hari ini │ │ 12 mapel    │ │ 92%         │
     └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘
 
   - tinted icon-square (28×28 rounded-lg) at top-left
   - uppercase 9.5px label next to it
   - large 2xl black value below
-  - optional `suffix` (small light suffix after the value, e.g. "sesi")
+  - optional `suffix` (small light suffix after the value, e.g. "session")
   - `accented` flips the card to use the tone color for label/value +
     an inset border accent (1px), matching the Schedule's "Hari Ini" card.
 
@@ -38,7 +38,7 @@ export interface KpiCard {
   label: string;
   /** The big value. Numbers are stringified by Vue. */
   value: string | number;
-  /** Small de-emphasised suffix after the value (e.g. "sesi", "%"). */
+  /** Small de-emphasised suffix after the value (e.g. "session", "%"). */
   suffix?: string;
   /** Icon-square + accent colour family. */
   tone?: KpiTone;

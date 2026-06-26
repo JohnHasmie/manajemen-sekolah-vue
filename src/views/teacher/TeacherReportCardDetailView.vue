@@ -6,11 +6,11 @@
 
   Layout:
     1. Back chevron row + sticky Simpan/Finalisasi actions
-    2. BrandPageHeader (guru) — kicker class+student NIS,
+    2. BrandPageHeader (teacher) — kicker class+student NIS,
        title student name, meta status pill + class context
-    3. 4-tab segmented switcher: Sikap / Nilai / Tambahan / Info
+    3. 4-tab segmented switcher: Sikap / Grade / Tambahan / Info
        - Sikap     — spiritual + social: predicate chips + desc
-       - Nilai     — per-subject score + predicate + description
+       - Grade     — per-subject score + predicate + description
        - Tambahan  — ekstrakurikuler + prestasi (add/remove rows)
        - Info      — attendance + homeroom notes + promotion
     4. Sticky footer (Simpan Draf / Finalisasi)
@@ -128,7 +128,7 @@ async function load() {
     // Fetch BOTH the saved raport AND the initial-data scaffold in
     // parallel. Reasoning:
     //  1. `/raport/show` may return a saved draft with empty
-    //     `raportSubjects` (teacher saved without filling the Nilai
+    //     `raportSubjects` (teacher saved without filling the Grade
     //     tab). Falling back ONLY when detail is null would miss
     //     this case — the form would render "0 mata pelajaran"
     //     forever. Always pull initial-data so we can seed the

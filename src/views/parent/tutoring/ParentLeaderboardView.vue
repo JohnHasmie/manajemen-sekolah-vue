@@ -1,6 +1,6 @@
 <!--
-  ParentLeaderboardView — wali leaderboard. Mockup parent_web_pages_extra
-  frame 3: hero + "Peringkat ANAK" highlight card + group ranking list.
+  ParentLeaderboardView — parent leaderboard. Mockup parent_web_pages_extra
+  frame 3: hero + "Ranking ANAK" highlight card + group ranking list.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -13,7 +13,7 @@ import type {
   TutoringParentClassMeta,
 } from '@/types/tutoring';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -68,7 +68,7 @@ const currentGroupShort = computed(() => {
 });
 
 // Simple cycle picker — no popup, just round-robin through enrolled
-// groups (mockup spec says: keep button visual). Single-group wali sees
+// groups (mockup spec says: keep button visual). Single-group parent sees
 // a no-op press.
 function openGroupPicker() {
   if (groups.value.length <= 1) return;
@@ -190,7 +190,7 @@ function deltaLabel(d: number): string {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.leaderboard.kicker')"
       :title="t('wali.bimbel.leaderboard.title')"
       :subtitle="t('wali.bimbel.leaderboard.subtitle', { group: currentGroupLabel })"
@@ -206,7 +206,7 @@ function deltaLabel(d: number): string {
           <NavIcon name="chevron-down" :size="12" />
         </button>
       </template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.leaderboard.loading') }}</div>
 

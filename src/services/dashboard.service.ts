@@ -43,8 +43,8 @@ export const DashboardService = {
   /**
    * Aggregated stats for the active role. The shape varies by role:
    *   admin   → { students_count, teachers_count, classes_count, … }
-   *   guru    → { today_sessions, pending_lessons, … }
-   *   wali    → { children, attendance, recent_grades, … }
+   *   teacher    → { today_sessions, pending_lessons, … }
+   *   parent    → { children, attendance, recent_grades, … }
    */
   async getStats(role: Role, academicYearId?: string): Promise<Payload> {
     try {
@@ -132,7 +132,7 @@ export const DashboardService = {
 
   /**
    * Capped parent Perlu Perhatian list. Fans out across every child
-   * the parent is wali of unless `studentId` narrows the scope.
+   * the parent is parent of unless `studentId` narrows the scope.
    */
   async parentPriorityInbox(
     studentId?: string,

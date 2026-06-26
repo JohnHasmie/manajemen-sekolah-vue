@@ -558,7 +558,7 @@ export interface SaveReportCardPayload {
  * `/report-card/show` + `/report-card` POST all validate
  * `semester_id` as required. The HTTP interceptor auto-injects
  * `academic_year_id` but NOT `semester_id`, so a bare class_id call
- * previously 400'd and the catch{} swallowed it as "Belum ada siswa
+ * previously 400'd and the catch{} swallowed it as "Belum ada student
  * di kelas ini".
  *
  * We resolve the current semester id from `/semesters` (looking for

@@ -1,8 +1,8 @@
 <!--
-  ParentAttendanceView.vue — daftar kehadiran anak.
+  ParentAttendanceView.vue — list kehadiran anak.
 
   Phase-3 rebuild (Flutter parity):
-    1. BrandPageHeader (wali) + child chip toggle (multi-child).
+    1. BrandPageHeader (parent) + child chip toggle (multi-child).
     2. AttendanceRingKpi — ring + 4-tile breakdown + delta vs bulan lalu.
     3. PageFilterToolbar — month shifter chip + status filter chip.
     4. AsyncView with dual-mode empty (filtered vs no data) and a

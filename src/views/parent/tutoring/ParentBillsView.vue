@@ -1,5 +1,5 @@
 <!--
-  ParentBillsView — wali Tagihan list.
+  ParentBillsView — parent Bill list.
 
   Mockup-exact: hero + red "outstanding" banner (when unpaid) + 3-tab
   row (Belum lunas / Sudah lunas / Semua) + bill cards. Data via
@@ -15,7 +15,7 @@ import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
 import type { TutoringBill } from '@/types/tutoring';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 
 const { t } = useI18n();
@@ -24,7 +24,7 @@ const router = useRouter();
 const { activeChildId } = useChildPicker();
 const toast = useToast();
 
-// One bill at a time is fine — wali typically downloads after a single
+// One bill at a time is fine — parent typically downloads after a single
 // payment. Tracking by id keeps the spinner local to the row instead of
 // blocking the whole list.
 const downloadingId = ref<string | null>(null);
@@ -155,7 +155,7 @@ function payFirst() {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.bills.kicker')"
       :title="t('wali.bimbel.bills.title')"
       :subtitle="t('wali.bimbel.bills.subtitle')"
@@ -164,7 +164,7 @@ function payFirst() {
       <template #actions>
         <ParentChildPickerChip />
       </template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <!-- Outstanding banner -->
     <div

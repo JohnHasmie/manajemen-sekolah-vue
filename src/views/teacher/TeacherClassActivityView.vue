@@ -1,10 +1,10 @@
 <!--
-  TeacherClassActivityView.vue — Kegiatan Kelas (Catat Kegiatan).
+  TeacherClassActivityView.vue — Activity Kelas (Catat Activity).
 
   Web port of Flutter's `teacher_class_activity_screen.dart`.
 
-  Layout (matches Buku Nilai / Presensi / Jadwal chrome):
-    1. <BrandPageHeader> (guru tint) — kicker + title + meta
+  Layout (matches Gradebook / Presensi / Schedule chrome):
+    1. <BrandPageHeader> (teacher tint) — kicker + title + meta
     2. <KpiStripCards> — Total / Minggu ini / Perlu Catat / Dengan Refleksi
     3. <PageFilterToolbar> — Kelas + Mapel chips + Type tabs + search
     4. Date-grouped timeline (Hari Ini / Kemarin / Minggu Lalu / dst)
@@ -375,7 +375,7 @@ function todayIso(): string {
 // ── Teacher schedule (drives the in-form Mapel + Jam pickers) ──
 //
 // Loaded lazily the first time the form opens; the same per-class /
-// per-day / per-lesson-hour source the Jadwal screen uses. Mirrors
+// per-day / per-lesson-hour source the Schedule screen uses. Mirrors
 // Flutter's `ActivityScheduleOptions`.
 const schedules = ref<ScheduleSession[]>([]);
 const schedulesLoaded = ref(false);
@@ -1096,7 +1096,7 @@ function pickSubject(id: string) {
           <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             Tipe
           </label>
-          <!-- 4 mobile types (Tugas / Aktivitas / Ujian / Catatan) with
+          <!-- 4 mobile types (Tugas / Activity / Ujian / Catatan) with
                the same descriptions as the Flutter form. Sends the raw
                value (form.type) the backend expects. -->
           <div class="grid grid-cols-2 gap-2 mt-1">

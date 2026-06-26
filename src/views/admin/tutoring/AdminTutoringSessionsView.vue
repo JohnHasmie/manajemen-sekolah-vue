@@ -123,7 +123,7 @@ function openAttendance(s: TutoringSession) {
   if (s.status === 'CANCELLED') return;
   router.push({
     // Admin-scoped route — same component as the tutor view, but the
-    // router guard on `teacher.tutoring.attendance` is 'guru'-only.
+    // router guard on `teacher.tutoring.attendance` is 'teacher'-only.
     name: 'admin.tutoring.session-attendance',
     params: { sessionId: s.id },
     query: {

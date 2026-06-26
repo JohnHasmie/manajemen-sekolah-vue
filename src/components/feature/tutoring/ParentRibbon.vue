@@ -1,6 +1,6 @@
 <!--
-  ParentRibbon — wide horizontal ribbon used on parent Beranda /
-  Tagihan for "Tagihan aktif", "Pengingat sesi", etc. Tinted bg +
+  ParentRibbon — wide horizontal ribbon used on parent Home /
+  Bill for "Bill aktif", "Pengingat session", etc. Tinted bg +
   border. Distinct from TutorRibbon by tone defaults.
 -->
 <script setup lang="ts">

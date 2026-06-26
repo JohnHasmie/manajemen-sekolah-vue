@@ -1,5 +1,5 @@
 <!--
-  ParentRegisterLeadView — wali calon "daftar anak baru" form.
+  ParentRegisterLeadView — parent calon "list anak baru" form.
   Hero + Batal chip, "Data anak" inputs, program choice cards with
   bimbel border-2 + offset-pad active style, notes textarea, and
   Simpan draft / Kirim CTA row. Keeps TutoringService.createLead path.
@@ -11,7 +11,7 @@ import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import type { TutoringProgram } from '@/types/tutoring';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -98,7 +98,7 @@ async function submit() {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.register_lead.kicker')"
       :title="t('wali.bimbel.register_lead.title')"
       :subtitle="t('wali.bimbel.register_lead.subtitle')"
@@ -114,7 +114,7 @@ async function submit() {
           {{ t('wali.bimbel.register_lead.cancel') }}
         </button>
       </template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
       {{ t('wali.bimbel.register_lead.child_data_heading') }}

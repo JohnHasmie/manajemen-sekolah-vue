@@ -5,7 +5,7 @@
   account counts of an ACTIVATED demo school grouped by role, with four
   destructive actions:
     • Hapus semua akun
-    • Hapus akun guru
+    • Hapus akun teacher
     • Hapus akun admin
     • Hapus akun orang tua
 

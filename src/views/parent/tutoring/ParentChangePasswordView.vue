@@ -1,5 +1,5 @@
 <!--
-  ParentChangePasswordView — wali ubah kata sandi. 2-column layout:
+  ParentChangePasswordView — parent ubah kata password. 2-column layout:
   form on the left (label-col + input with eye/check icons + strength
   bar) and tips checklist on the right with live met/unmet state.
   Keeps SettingsService.updatePassword submit path.
@@ -10,7 +10,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { SettingsService } from '@/services/settings.service';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -93,7 +93,7 @@ async function submit() {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.change_password.kicker')"
       :title="t('wali.bimbel.change_password.title')"
       :subtitle="t('wali.bimbel.change_password.subtitle')"

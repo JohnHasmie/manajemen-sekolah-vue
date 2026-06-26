@@ -72,7 +72,7 @@ export const DemoAccountService = {
    * DELETE /api/demo-schools/{schoolId}/accounts — delete demo-school
    * accounts by scope. IRREVERSIBLE.
    *
-   * @param mode all | guru | admin | wali
+   * @param mode all | teacher | admin | parent
    */
   async deleteAccounts(
     schoolId: string,

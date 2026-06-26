@@ -1,6 +1,6 @@
 <!--
   ProfileMenu.vue — topbar profile dropdown.
-  Shows avatar/initial, role, plus Ganti Sekolah / Ganti Peran / Profil /
+  Shows avatar/initial, role, plus Ganti Sekolah / Ganti Peran / Profile /
   Bahasa / Keluar actions. Switch flows reuse the auth store's
   selectSchool / selectRole pipeline (same as the login wizard).
 -->
@@ -416,7 +416,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
         </button>
 
         <!--
-          Appearance (Tampilan) — only shown on bimbel tenants because
+          Appearance (Appearance) — only shown on bimbel tenants because
           the light/dark switch is wired to the `--bimbel-*` CSS
           variables; school tenants render on the locked-light school
           chrome where the toggle would be a no-op.
@@ -580,8 +580,8 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
       same frame.
 
       We don't re-route to TutorAppearanceView because that screen is
-      tutor-themed (kicker "Bimbel · Tutor", role 'guru') and only
-      sits in the tutor nav — admins / wali wouldn't have a clean
+      tutor-themed (kicker "Bimbel · Tutor", role 'teacher') and only
+      sits in the tutor nav — admins / parent wouldn't have a clean
       back path. A small in-place modal keeps it role-agnostic.
     -->
     <Modal

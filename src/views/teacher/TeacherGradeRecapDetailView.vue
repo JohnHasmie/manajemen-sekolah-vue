@@ -1,15 +1,15 @@
 <!--
-  TeacherGradeRecapDetailView.vue — editable recap matrix (Bab × Siswa).
+  TeacherGradeRecapDetailView.vue — editable recap matrix (Bab × Student).
 
   Web port of Flutter's `teacher_grade_recap_screen.dart` step 2
   (table mode) + `grade_recap_table_view.dart`.
 
   Layout:
     BrandPageHeader (back chip · class+subject meta)
-    → KPI strip (Siswa · Bab · Rerata · Kelengkapan)
+    → KPI strip (Student · Bab · Rerata · Kelengkapan)
     → Toolbar (Search + Tambah Bab + Export)
     → Frozen-left matrix:
-        [#  Nama]  | Bab 1  Bab 2 ... | UTS | UAS | Final | Skill | Nilai | Desk.
+        [#  Nama]  | Bab 1  Bab 2 ... | UTS | UAS | Final | Skill | Grade | Desk.
     → Floating save bar when any cell is dirty
 
   Editable cells:
@@ -389,7 +389,7 @@ function confirmDeleteChapter() {
   toast.value = { message: t('tutor.sekolah.gradeRecapDetail.chapterDeletedToast'), tone: 'success' };
 }
 
-// ── Source picker (pull column values from Buku Nilai) ──
+// ── Source picker (pull column values from Gradebook) ──
 //
 // Web port of Flutter's `_showFixedColumnSourcePicker`: the modal
 // resolves a `student_id → score` map (or null for "Input Manual") and
@@ -1053,7 +1053,7 @@ function onPredikatBlur(rowId: string) {
       </div>
     </Modal>
 
-    <!-- SOURCE PICKER (pull column values from Buku Nilai) -->
+    <!-- SOURCE PICKER (pull column values from Gradebook) -->
     <GradeRecapSourcePickerModal
       v-if="sourcePicker"
       :column="sourcePicker.column"

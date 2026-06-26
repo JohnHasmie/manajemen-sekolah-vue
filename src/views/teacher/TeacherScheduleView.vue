@@ -1,5 +1,5 @@
 <!--
-  TeacherScheduleView.vue — Jadwal Mengajar (Pekan Ini).
+  TeacherScheduleView.vue — Schedule Mengajar (Pekan Ini).
 
   Web port of Flutter's `teacher_schedule_screen.dart` redesign:
     1. Header — live-dot kicker + h1 + meta, 2-state view toggle (Kartu/Matrix)
@@ -8,10 +8,10 @@
        Semester picker lives behind the bottom-sheet filter on mobile and
        is intentionally not surfaced as a primary toolbar control (parity
        with `teacher_schedule_screen.dart`).
-    4. Today banner — cobalt gradient with progress strip + "Buka sesi aktif"
+    4. Today banner — cobalt gradient with progress strip + "Buka session aktif"
     5. Kartu view — 2-column day-grouped grid with day-coloured cards
        (JP chip + subject + class pill + clock/room + SEDANG/SELANJUTNYA pill
-       + Presensi/Kegiatan/Materi action row on today's cards)
+       + Presensi/Activity/Materi action row on today's cards)
     6. Matrix view — JP-row × day-column week grid (live cell red, next cell
        dashed cobalt, today column tinted)
     7. Session detail modal (mirrors Flutter Frame E) — unchanged
@@ -56,7 +56,7 @@ type ViewKind = 'kartu' | 'matrix';
 const view = ref<ViewKind>('kartu');
 /**
  * Active role id from <RoleToggleChipRow>. `'mengajar'` for the
- * teaching view, or `'wali:<classId>'` for a specific homeroom.
+ * teaching view, or `'parent:<classId>'` for a specific homeroom.
  */
 const selectedRoleId = ref<string>('mengajar');
 const dayFilter = ref<'all' | DayKey>('all');
@@ -93,7 +93,7 @@ const roleOptions = computed<RoleOption[]>(() => {
   return out;
 });
 
-/** True when the active chip is a wali-kelas chip. */
+/** True when the active chip is a parent-kelas chip. */
 const isWaliMode = computed(() => selectedRoleId.value.startsWith('wali:'));
 /** Active homeroom class id (if isWaliMode). */
 const activeHomeroomId = computed(() =>
@@ -345,7 +345,7 @@ const nextSession = computed<ScheduleSession | null>(() => {
 });
 
 const todayDoneCount = computed(() => {
-  // "Done" mirrors Flutter — attendance.filled = true means the sesi
+  // "Done" mirrors Flutter — attendance.filled = true means the session
   // was properly recorded.
   return todaySessions.value.filter((s) => {
     const att = summaryFor(s)?.attendance;
@@ -372,7 +372,7 @@ async function reload() {
   isLoading.value = true;
   error.value = null;
   try {
-    // Wali-kelas mode → fetch the homeroom class's full week.
+    // Parent-kelas mode → fetch the homeroom class's full week.
     // Mengajar mode → fetch the teacher's own week via /current.
     const list = activeHomeroomId.value
       ? await ScheduleService.classWeek(activeHomeroomId.value)
@@ -645,7 +645,7 @@ onMounted(() => {
     <KpiStripCards :cards="kpiCards" />
 
     <!-- ── 3. Filter toolbar ────────────────────────────────── -->
-    <!-- Mode (Mengajar / Wali) lives in the brand header above —
+    <!-- Mode (Mengajar / Parent) lives in the brand header above —
          this row only carries day + class + semester + search. -->
     <PageFilterToolbar
       :search="searchQuery"

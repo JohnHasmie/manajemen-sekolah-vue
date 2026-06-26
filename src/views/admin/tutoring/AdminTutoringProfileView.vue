@@ -8,7 +8,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -24,7 +24,7 @@ function initials(name?: string | null): string {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('admin.bimbel.profile.hero_kicker')"
       :title="t('admin.bimbel.profile.hero_title')"
       :subtitle="t('admin.bimbel.profile.hero_subtitle')"
@@ -33,7 +33,7 @@ function initials(name?: string | null): string {
       <template #actions>
         <button class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold">{{ t('admin.bimbel.profile.save') }}</button>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div class="grid gap-4 lg:grid-cols-5">
       <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 text-center lg:col-span-2 h-fit">

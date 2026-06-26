@@ -1,12 +1,12 @@
 <!--
   SessionsCalendar — shared month-grid + per-day session strip for any
-  TutoringSession list. Same widget the tutor "Sesi Saya" uses, now
-  also used by the admin "Sesi" view so the calendar UX is identical
+  TutoringSession list. Same widget the tutor "Session Saya" uses, now
+  also used by the admin "Session" view so the calendar UX is identical
   across roles.
 
   Props:
     - sessions   — full list of sessions to render dots/days from.
-    - accent     — 'admin' | 'tutor' | 'wali' (drives the focus tint).
+    - accent     — 'admin' | 'tutor' | 'parent' (drives the focus tint).
     - onOpen     — optional click handler per session (passed to the
                    per-day list tiles).
 

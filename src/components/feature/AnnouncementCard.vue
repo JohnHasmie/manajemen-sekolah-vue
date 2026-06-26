@@ -1,6 +1,6 @@
 <!--
   AnnouncementCard.vue — single-row card used across the
-  admin / teacher / parent Pengumuman lists.
+  admin / teacher / parent Announcement lists.
 
   Mirrors Flutter's `AnnouncementCard` + `TeacherAnnouncementCard`
   + parent inbox row in `lib/features/announcements/presentation/widgets/`.
@@ -10,13 +10,13 @@
     │ ●  [Penting] [→ 9A]                       2 jam lalu │  ← meta strip
     │    Libur Idul Adha (Jumat)                            │  ← title
     │    Sekolah akan libur pada hari Jumat …               │  ← body clamp 2
-    │    Dibaca 12 / 28 wali murid                          │  ← read footer
+    │    Dibaca 12 / 28 parent                          │  ← read footer
     └──────────────────────────────────────────────────────┘
 
   Props per role:
     - admin   → shows priority + audience + read counter + delete
     - teacher → shows audience + read counter
-    - wali    → shows unread dot + source label + tinted bg when unread
+    - parent    → shows unread dot + source label + tinted bg when unread
 -->
 <script setup lang="ts">
 import { computed } from 'vue';

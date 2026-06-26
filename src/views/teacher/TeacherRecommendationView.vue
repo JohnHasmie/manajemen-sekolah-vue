@@ -4,8 +4,8 @@
   Web port of `recommendation_class_screen.dart`. Lands the teacher
   on a class-hub grid:
 
-    1. <BrandPageHeader role="guru"> — kicker + title + meta
-    2. <RoleToggleChipRow> — Mengajar ↔ Wali Kelas (auto-hidden when
+    1. <BrandPageHeader role="teacher"> — kicker + title + meta
+    2. <RoleToggleChipRow> — Mengajar ↔ Homeroom Teacher (auto-hidden when
        teacher has no homeroom)
     3. <KpiStripCards> — Total RPP rec / Pending / Selesai / Hari Ini
        (aggregate across visible classes)
@@ -59,8 +59,8 @@ const aiProgress = useAiProgressStore();
 const router = useRouter();
 const { t } = useI18n();
 
-// ── Mode toggle (Mengajar ↔ Wali Kelas) ──
-// `mengajar` = teacher_id scope; `wali:<classId>` = homeroom scope
+// ── Mode toggle (Mengajar ↔ Homeroom Teacher) ──
+// `mengajar` = teacher_id scope; `parent:<classId>` = homeroom scope
 // for the picked class. We pick the first role on mount and let
 // RoleToggleChipRow drive the change.
 const selectedRoleId = ref<string>('mengajar');
@@ -108,7 +108,7 @@ const subjects = ref<Subject[]>([]);
 // context for the picked class:
 //  - Mengajar mode → ONLY the subjects the logged-in teacher teaches in
 //    this class (GET /teacher/{id}/subjects?scope=teaching&class_id=…).
-//  - Wali mode → all school subjects (homeroom oversight is cross-teacher).
+//  - Parent mode → all school subjects (homeroom oversight is cross-teacher).
 // Previously this always loaded every school subject, so the Mengajar tab
 // listed subjects the teacher doesn't teach.
 async function loadSheetSubjects(classId: string) {
@@ -209,7 +209,7 @@ useAcademicYearWatcher(() => {
 const visibleClasses = computed(() => {
   let list = classes.value;
   if (isHomeroomMode.value && activeHomeroomId.value) {
-    // Wali mode → only the picked homeroom class is in scope.
+    // Parent mode → only the picked homeroom class is in scope.
     list = list.filter((c) => c.id === activeHomeroomId.value);
   }
   const q = searchQuery.value.trim().toLowerCase();

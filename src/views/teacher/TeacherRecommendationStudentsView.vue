@@ -2,12 +2,12 @@
   TeacherRecommendationStudentsView.vue — student list (Frame B).
 
   Web port of `recommendation_student_screen.dart`. Route entry:
-    /teacher/recommendations/class/:classId?scope=wali
+    /teacher/recommendations/class/:classId?scope=parent
 
   Layout:
     1. Back chevron row → kembali ke class hub
-    2. BrandPageHeader (guru) — kicker `Kelas <name> · Rekomendasi`,
-       title `Daftar Siswa`, meta line
+    2. BrandPageHeader (teacher) — kicker `Kelas <name> · Rekomendasi`,
+       title `List Student`, meta line
     3. KpiStripCards — SISWA / REKOMENDASI / PENDING / SELESAI
     4. PageFilterToolbar — search input + status chip strip
     5. List of student rows:
@@ -123,7 +123,7 @@ async function loadCounts() {
   try {
     const next = await RecommendationService.getStudentStatusCounts({
       class_id: classId.value,
-      // Mengajar mode → teacher_id. Wali mode → homeroom_class_id
+      // Mengajar mode → teacher_id. Parent mode → homeroom_class_id
       // (cross-teacher scope across the homeroom).
       teacher_id: isHomeroomMode.value
         ? undefined
@@ -138,11 +138,11 @@ async function loadCounts() {
   }
 }
 
-// ── Bulk share-to-wali ("Kirim semua ke wali") ──
+// ── Bulk share-to-parent ("Kirim semua ke parent") ──
 //
 // Only available in Mengajar mode: the bulk endpoint requires the
 // authoring teacher (auth:sanctum + role.teacher + teacher.owner) and
-// shares THIS teacher's not-yet-shared recs. In wali-kelas mode the
+// shares THIS teacher's not-yet-shared recs. In parent-kelas mode the
 // recs span multiple authoring teachers, so the single owner check
 // doesn't apply — we hide the button there.
 const unsharedCount = ref(0);
@@ -290,7 +290,7 @@ useAcademicYearWatcher(() => {
   loadUnsharedCount();
 });
 
-// React to scope flip (back+forward with ?scope=wali toggled).
+// React to scope flip (back+forward with ?scope=parent toggled).
 watch(
   () => route.fullPath,
   () => {

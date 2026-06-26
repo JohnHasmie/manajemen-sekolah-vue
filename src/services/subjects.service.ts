@@ -65,7 +65,7 @@ export const SubjectService = {
    * mapel the teacher actually teaches. The endpoint returns a bare array
    * (no `data`/pagination envelope), so handle both shapes defensively.
    *
-   * Pass scope='teaching' to drop the wali-kelas homeroom-class curriculum
+   * Pass scope='teaching' to drop the parent-kelas homeroom-class curriculum
    * and return ONLY the subjects the teacher teaches (assigned + scheduled
    * + grade-authored) — the schedule add/edit form needs this so picking a
    * homeroom teacher doesn't list every subject in the school.

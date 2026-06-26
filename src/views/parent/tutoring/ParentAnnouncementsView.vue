@@ -1,13 +1,13 @@
 <!--
-  ParentAnnouncementsView — wali pengumuman list.
+  ParentAnnouncementsView — parent announcement list.
 
-  Fetches announcements for EVERY child the wali has (Promise.all +
+  Fetches announcements for EVERY child the parent has (Promise.all +
   dedupe), so a multi-child family sees the full picture. Mirrors the
   mobile `parent_announcements_screen.dart:74` implementation.
 
   Two filter axes:
     - Anak chip (Semua anak / per-anak)        — drives the fetch scope
-    - Kelompok chip (Semua kelompok / per-group) — client-side filter
+    - Group chip (Semua group / per-group) — client-side filter
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -16,7 +16,7 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type { TutoringGroupAnnouncement } from '@/types/tutoring';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 
 const { t } = useI18n();
 const { children, activeChildId } = useChildPicker();
@@ -60,7 +60,7 @@ async function load() {
       }),
     );
     // Flatten + dedupe by announcement id (siblings sometimes share a
-    // kelompok and would otherwise create double rows).
+    // group and would otherwise create double rows).
     const seen = new Set<string>();
     const out: Row[] = [];
     for (const group of fetched) {
@@ -96,9 +96,9 @@ const childChips = computed(() => {
 });
 
 const groupChips = computed(() => {
-  // Group chips reflect only the kelompok present in the currently-
+  // Group chips reflect only the group present in the currently-
   // visible-by-child rows. Switching to "Anak A" should narrow the
-  // group chips to A's kelompok only.
+  // group chips to A's group only.
   const pool = childFilter.value === 'all'
     ? rows.value
     : rows.value.filter((r) => r.child_id === childFilter.value);
@@ -163,14 +163,14 @@ const subtitle = computed(() => {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.announcements.kicker')"
       :title="t('wali.bimbel.announcements.title')"
       :subtitle="subtitle"
       :stats="[]"
     />
 
-    <!-- Anak filter chips (only when wali has >1 child) -->
+    <!-- Anak filter chips (only when parent has >1 child) -->
     <div v-if="children.length > 1" class="flex gap-1.5 flex-wrap">
       <button
         v-for="c in childChips"

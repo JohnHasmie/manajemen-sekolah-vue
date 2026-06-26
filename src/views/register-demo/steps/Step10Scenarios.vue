@@ -6,10 +6,10 @@
 
     - Kehadiran        → backfill 5 days of absensi
     - RPP              → seed lesson_plans across mix of statuses
-    - Pengumuman       → seed school-wide + per-class announcements
+    - Announcement       → seed school-wide + per-class announcements
     - Progress sub-bab → seed chapters/sub-chapters with ~30% done
-    - Kegiatan kelas   → seed class_activities + submissions
-    - Tagihan          → run the billing seed (overrides skip)
+    - Activity kelas   → seed class_activities + submissions
+    - Bill          → run the billing seed (overrides skip)
 
   All are default-on so the very first demo has data everywhere. The
   next button on this step (not the billing step) triggers provision.

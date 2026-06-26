@@ -1,13 +1,13 @@
 <!--
-  TutorClassDetailView — single kelompok detail page with 3 tabs:
+  TutorClassDetailView — single group detail page with 3 tabs:
 
     - Aliran : chronological feed (recent sessions DONE + announcements
                + activities created), most recent first.
     - Tugas  : list of activities (HOMEWORK / QUIZ / EXAM / PROJECT)
                filtered by this group_id. Click → submissions page.
-    - Siswa  : enrollee roster.
+    - Student  : enrollee roster.
 
-  Mirrors mobile `TutorClassDetailScreen` (Aliran / Tugas / Siswa tabs).
+  Mirrors mobile `TutorClassDetailScreen` (Aliran / Tugas / Student tabs).
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
@@ -22,7 +22,7 @@ import type {
   TutoringGroupAnnouncement,
 } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import TutorActivityRow from '@/components/feature/tutoring/TutorActivityRow.vue';
 import TutoringListTile from '@/components/feature/tutoring/TutoringListTile.vue';
 import TutoringSectionHeader from '@/components/feature/tutoring/TutoringSectionHeader.vue';
@@ -131,7 +131,7 @@ function goCreateActivity() {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="group?.tutor?.name ? `${t('tutor.bimbel.class_detail.greeting_tutor_prefix')}: ${group.tutor.name}` : t('tutor.bimbel.class_detail.greeting_class')"
       :title="group?.name ?? t('tutor.bimbel.class_detail.loading_title')"
       :subtitle="
@@ -225,7 +225,7 @@ function goCreateActivity() {
       </p>
     </template>
 
-    <!-- Siswa -->
+    <!-- Student -->
     <template v-else>
       <div v-if="enrollees.length" class="grid gap-2 sm:grid-cols-2">
         <div

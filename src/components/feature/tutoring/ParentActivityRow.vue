@@ -1,6 +1,6 @@
 <!--
   ParentActivityRow — one row in the "Yang baru" feed on parent
-  Beranda + Kelas detail Aliran tab. Icon mapped by event type,
+  Home + Kelas detail Aliran tab. Icon mapped by event type,
   title + subtitle + relative-time chip.
 -->
 <script setup lang="ts">

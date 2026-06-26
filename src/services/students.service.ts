@@ -14,7 +14,7 @@ export interface StudentListParams {
   class_ids?: string[];
   gender?: string | null;
   /**
-   * Free-text search by guardian (wali) name. Backend StudentController
+   * Free-text search by guardian (parent) name. Backend StudentController
    * accepts `?guardian_name=...` and does a case-insensitive LIKE on the
    * `students.guardian_name` column. Mirrors the Flutter app's
    * `guardian_name` filter (mobile already uses a typed search field).
@@ -70,7 +70,7 @@ export const StudentService = {
   },
 
   /**
-   * Type-ahead lookup for guardian (wali) names.
+   * Type-ahead lookup for guardian (parent) names.
    *
    * Hits `GET /student/guardians?search=<query>` — the same endpoint the
    * Flutter app's `ApiStudentService.getGuardians` uses to power the
@@ -188,7 +188,7 @@ export const StudentService = {
        * full `student_classes[]` for the student (e.g. last year's
        * enrolment in 8A + this year's enrolment in 7A); picking the
        * first one indiscriminately leads to a 422 on POST /grades
-       * with "Mata pelajaran tidak tersedia untuk kelas siswa".
+       * with "Mata pelajaran tidak tersedia untuk kelas student".
        */
       function resolveScopedClassId(raw: Record<string, unknown>): string | null {
         const list =

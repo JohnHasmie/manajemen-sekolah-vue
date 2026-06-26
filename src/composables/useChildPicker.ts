@@ -5,7 +5,7 @@
  * a `setActive` setter. Single-child parents auto-select the only one.
  *
  * Source order:
- *   1. `dashboard.stats.slices` (primary — matches mobile bimbel wali,
+ *   1. `dashboard.stats.slices` (primary — matches mobile bimbel parent,
  *      where the school-side /student endpoint returns nothing because
  *      bimbel guardian link goes via enrollment, not the legacy
  *      guardian columns)
@@ -48,7 +48,7 @@ export function useChildPicker() {
     if (loaded.value) return;
     loaded.value = true;
 
-    // Primary: dashboard slices (tenant-aware, includes bimbel wali).
+    // Primary: dashboard slices (tenant-aware, includes bimbel parent).
     try {
       const stats = await DashboardService.getStats('wali');
       const fromDash = fromSlices(stats?.slices);

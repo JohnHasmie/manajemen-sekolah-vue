@@ -1,6 +1,6 @@
 /**
  * AdminDataExcelService — shared Excel helpers for admin Manajemen
- * Data pages (Siswa / Guru / Kelas / Mapel).
+ * Data pages (Student / Teacher / Kelas / Mapel).
  *
  * Each entity has the same 3-call surface on the backend:
  *   GET    /{entity}/template   — XLSX template download

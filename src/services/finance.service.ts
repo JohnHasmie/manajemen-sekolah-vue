@@ -8,7 +8,7 @@
  * Endpoints:
  *   GET    /finance/money-flow                    — hub hero
  *   GET    /finance/dashboard                     — KPI strip + chart
- *   GET    /finance/bill-groups                   — Tagihan tab (aggregated)
+ *   GET    /finance/bill-groups                   — Bill tab (aggregated)
  *   GET    /finance/available-years               — AY chip options
  *   GET    /bills?payment_type_id=…&class_id=…    — per-bucket drill
  *   POST   /bills                                 — create single bill
@@ -288,7 +288,7 @@ export const FinanceService = {
     }
   },
 
-  // ── Tagihan tab ──────────────────────────────────────────────────
+  // ── Bill tab ──────────────────────────────────────────────────
   async billGroups(filters: BillGroupFilters = {}): Promise<BillGroup[]> {
     try {
       const params = sanitize(filters);

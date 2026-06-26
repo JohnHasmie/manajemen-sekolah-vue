@@ -6,14 +6,14 @@
 
   Layout:
     1. Back chevron row + Simpan action
-    2. BrandPageHeader (guru) — kicker + title with rec title preview
+    2. BrandPageHeader (teacher) — kicker + title with rec title preview
     3. Body cards:
        a. Judul       (text input)
        b. Prioritas   (chip strip: high / medium / low)
        c. Deskripsi   (Quill rich-text via AppRichTextEditor)
        d. Materi Terkait (chip strip — tap chip to remove; add via
                           inline composer below)
-       e. Catatan Wali Kelas (textarea)
+       e. Catatan Homeroom Teacher (textarea)
     4. Sticky footer (Batal / Simpan)
 
   Endpoints:
@@ -168,7 +168,7 @@ async function save() {
     });
     if (updated) {
       toast.value = { message: t('tutor.sekolah.recommendationEdit.savedToast'), tone: 'success' };
-      // Bounce back to result so the wali kelas sees the patched row.
+      // Bounce back to result so the homeroom teacher sees the patched row.
       goBack();
     } else {
       toast.value = {

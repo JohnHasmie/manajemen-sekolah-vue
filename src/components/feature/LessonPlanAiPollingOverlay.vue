@@ -3,7 +3,7 @@
   kamiledu-ai service generates a lesson plan.
 
   Same shape as MaterialAiPollingOverlay but RPP-flavored copy
-  (sections are different: tujuan / kegiatan / penilaian instead of
+  (sections are different: tujuan / activity / penilaian instead of
   kuis / referensi). Status messages cycle every 2.5s; elapsed
   counter shows mm:ss.
 

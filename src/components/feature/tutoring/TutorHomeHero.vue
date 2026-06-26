@@ -1,5 +1,5 @@
 <!--
-  TutorBerandaHero — navy gradient hero with greeting, subtitle, and a
+  TutorHomeHero — navy gradient hero with greeting, subtitle, and a
   3-stat strip (used by tutor + admin + parent landing pages). Mirrors
   the Flutter `_GreetingHero` in tutor_beranda_screen.dart.
 

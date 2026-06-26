@@ -4,10 +4,10 @@
   switching tenants between SCHOOL and TUTORING_CENTER swaps the body
   without changing the URL.
 
-  - SCHOOL tenant → the original TeacherDashboardView (Jadwal /
-    Kehadiran / Aktivitas / Draft RPP / E-Rapor — all school modules).
+  - SCHOOL tenant → the original TeacherDashboardView (Schedule /
+    Kehadiran / Activity / Draft RPP / E-Rapor — all school modules).
   - TUTORING_CENTER → TutorTutoringHomeView (bimbel-native KPI strip
-    + quick actions: Sesi Saya / Buat Sesi / Generator Soal AI).
+    + quick actions: Session Saya / Buat Session / Generator Soal AI).
 -->
 <script setup lang="ts">
 import { computed } from 'vue';

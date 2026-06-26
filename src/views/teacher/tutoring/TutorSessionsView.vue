@@ -1,5 +1,5 @@
 <!--
-  TutorSessionsView — the tutor's "Sesi Mengajar" dashboard. Rebuilt to
+  TutorSessionsView — the tutor's "Session Mengajar" dashboard. Rebuilt to
   mirror the school-teacher page treatment + the Flutter side:
   hero greeting, KPI strip (sessions/hours/attendance/groups), view
   toggle (List/Calendar), and chip filters (range + group + status).
@@ -23,7 +23,7 @@ import type {
   TutoringTutorStats,
 } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -350,7 +350,7 @@ const kpiCards = computed<KpiCard[]>(() => {
 
 <template>
   <div class="space-y-md pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('tutor.bimbel.sessions.greeting')"
       :title="t('tutoring.sessions.title')"
       :subtitle="auth.user?.name ? t('tutor.bimbel.sessions.subtitle_hello', { name: auth.user.name }) : undefined"

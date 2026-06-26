@@ -1,5 +1,5 @@
 <!--
-  ParentBillCheckoutView.vue — wali murid · Bayar tagihan.
+  ParentBillCheckoutView.vue — parent · Pay bill.
 
   Mirrors Flutter's `parent_bill_checkout_screen.dart` (Mockup #6,
   Surface C). Opens a `POST /bill/{id}/checkout` session and renders

@@ -1,5 +1,5 @@
 <!--
-  ParentProgressView — wali nilai/progress. Mockup parent_web_pages_extra
+  ParentProgressView — parent grade/progress. Mockup parent_web_pages_extra
   frame 1: hero + 4-KPI strip + per-mapel pills + trend chart with
   group-average baseline.
 -->
@@ -11,7 +11,7 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type { TutoringProgress } from '@/types/tutoring';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 
 const { t } = useI18n();
@@ -112,14 +112,14 @@ const xLabels = ref(['Mar', 'Mei', 'Jul', 'Sep']);
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.progress.kicker')"
       :title="t('wali.bimbel.progress.title', { name: childFirstName })"
       :subtitle="t('wali.bimbel.progress.subtitle', { count: subjects.length })"
       :stats="[]"
     >
       <template #actions><ParentChildPickerChip /></template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.progress.loading') }}</div>
 

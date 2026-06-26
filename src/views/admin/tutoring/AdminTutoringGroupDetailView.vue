@@ -1,6 +1,6 @@
 <!--
-  AdminTutoringGroupDetailView — admin lens on one kelompok with 4
-  tabs: Siswa (default), Sesi, Tugas, Performa. Mockup
+  AdminTutoringGroupDetailView — admin lens on one group with 4
+  tabs: Student (default), Session, Tugas, Performa. Mockup
   admin_web_pages_beranda_groups frame 3.
 -->
 <script setup lang="ts">
@@ -15,7 +15,7 @@ import type {
   TutoringActivity,
 } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const route = useRoute();
@@ -79,7 +79,7 @@ function whenLabel(iso?: string | null): string {
       <NavIcon name="chevron-left" :size="13" /> {{ t('admin.bimbel.group_detail.back') }}
     </button>
 
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('admin.bimbel.group_detail.hero_kicker')"
       :title="group?.name ?? t('admin.bimbel.group_detail.loading_title')"
       :subtitle="group ? [group.tutor?.name ? t('admin.bimbel.group_detail.tutor_prefix', { name: group.tutor.name }) : t('admin.bimbel.group_detail.no_tutor'), t('admin.bimbel.group_detail.capacity_label', { enrolled: group.enrollments_count ?? 0, capacity: group.capacity })].join(' · ') : undefined"
@@ -89,7 +89,7 @@ function whenLabel(iso?: string | null): string {
         <button class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[14px] font-bold text-white"><NavIcon name="edit" :size="12" class="inline -mt-0.5" /> {{ t('admin.bimbel.group_detail.edit') }}</button>
         <button class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold"><NavIcon name="plus" :size="12" class="inline -mt-0.5" /> {{ t('admin.bimbel.group_detail.add_student') }}</button>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div class="flex gap-1 rounded-xl border border-bimbel-border-soft bg-bimbel-panel p-1 max-w-md">
       <button

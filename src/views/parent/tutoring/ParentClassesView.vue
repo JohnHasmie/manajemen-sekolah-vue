@@ -1,5 +1,5 @@
 <!--
-  ParentClassesView — wali Kelas list.
+  ParentClassesView — parent Kelas list.
 
   Mockup-exact: hero + search/filter row + 2-col grid of class cards
   with tutor initials chip, subject, meta (tutor + schedule), and
@@ -14,7 +14,7 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type { TutoringParentClassMeta } from '@/types/tutoring';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
@@ -155,7 +155,7 @@ function goEnroll() {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.classes.kicker')"
       :title="t('wali.bimbel.classes.title', { name: childFirstName })"
       :subtitle="t('wali.bimbel.classes.subtitle_active_group_count', { count: classes.length })"
@@ -164,7 +164,7 @@ function goEnroll() {
       <template #actions>
         <ParentChildPickerChip />
       </template>
-    </ParentBerandaHero>
+    </ParentHomeHero>
 
     <!-- Search row -->
     <div class="rounded-lg bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-mid flex items-center gap-2">

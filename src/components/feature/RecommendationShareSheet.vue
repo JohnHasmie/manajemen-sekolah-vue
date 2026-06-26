@@ -1,8 +1,8 @@
 <!--
-  RecommendationShareSheet.vue — Bagikan ke Wali (Frame H).
+  RecommendationShareSheet.vue — Bagikan ke Parent (Frame H).
 
   Web port of `recommendation_share_sheet.dart`. Cobalt-themed modal
-  that lets the wali kelas fan a rec out to one or more parents.
+  that lets the homeroom teacher fan a rec out to one or more parents.
 
   Body (top-down):
     1. Penerima — recipient picker, tap to toggle (default: all
@@ -50,7 +50,7 @@ const props = withDefaults(
     /**
      * Optional explicit recipient list. When omitted, falls back to
      * `rec.student_parents` denorm — parent always provides one or
-     * the other (an empty roster shows a "tidak ada wali" hint).
+     * the other (an empty roster shows a "tidak ada parent" hint).
      */
     availableParents?: ParentOption[];
     busy?: boolean;

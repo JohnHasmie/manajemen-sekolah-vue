@@ -7,7 +7,7 @@ import { computed } from 'vue';
 import { useTutoringThemeStore } from '@/stores/tutoring-theme';
 import { useI18n } from 'vue-i18n';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 
 const theme = useTutoringThemeStore();
 const { locale, t } = useI18n();
@@ -37,7 +37,7 @@ function toggle(key: string) {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('admin.bimbel.appearance.hero_kicker')"
       :title="t('admin.bimbel.appearance.hero_title')"
       :subtitle="t('admin.bimbel.appearance.hero_subtitle')"

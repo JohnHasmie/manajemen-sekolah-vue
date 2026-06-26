@@ -565,7 +565,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
       @close="showPrintModal = false"
     >
       <div class="space-y-3">
-        <!-- Choice 1: Format Guru -->
+        <!-- Choice 1: Format Teacher -->
         <button
           type="button"
           class="w-full text-left p-3 rounded-2xl border border-blue-200 bg-blue-50/20 hover:bg-blue-50/40 transition flex items-center gap-3"
@@ -583,7 +583,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
           <NavIcon name="chevron-right" :size="18" class="text-slate-400" />
         </button>
 
-        <!-- Choice 2: Format Wali -->
+        <!-- Choice 2: Format Parent -->
         <button
           type="button"
           class="w-full text-left p-3 rounded-2xl border border-purple-200 bg-purple-50/20 hover:bg-purple-50/40 transition flex items-center gap-3"

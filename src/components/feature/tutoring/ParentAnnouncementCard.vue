@@ -1,7 +1,7 @@
 <!--
-  ParentAnnouncementCard — one announcement on the wali Pengumuman
+  ParentAnnouncementCard — one announcement on the parent Announcement
   page. Avatar of source + meta line + title + body. Source chip
-  shows "tutor kelompok" / "admin".
+  shows "tutor group" / "admin".
 -->
 <script setup lang="ts">
 import { computed } from 'vue';

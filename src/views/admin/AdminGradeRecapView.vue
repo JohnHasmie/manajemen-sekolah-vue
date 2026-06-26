@@ -1,5 +1,5 @@
 <!--
-  AdminGradeRecapView.vue — Admin Rekap Nilai (school-wide).
+  AdminGradeRecapView.vue — Admin Rekap Grade (school-wide).
 
   Mirrors Flutter `admin_grade_recap_overview_screen.dart` Frame C.
   One per-slice card per (class × subject) row, summarising how
@@ -52,7 +52,7 @@ type SortKey = 'progress' | 'class' | 'subject' | 'teacher' | 'avg';
 const sortKey = ref<SortKey>('progress');
 const sortDir = ref<'asc' | 'desc'>('asc');
 
-// Filter by a specific Kelas / Mapel / Guru. Uses the same chip + facet-picker
+// Filter by a specific Kelas / Mapel / Teacher. Uses the same chip + facet-picker
 // pattern as the other admin pages (AppFilterChip + FilterFacetPickerModal).
 // Empty string = "Semua".
 const filterClass = ref('');
@@ -424,7 +424,7 @@ function exportCsv() {
         {{ t('admin.sekolah.grade_recap.incomplete_toggle') }}
       </button>
 
-      <!-- Kelas / Mapel / Guru filters — same chip + facet-picker pattern as
+      <!-- Kelas / Mapel / Teacher filters — same chip + facet-picker pattern as
            the other admin pages. -->
       <AppFilterChip
         icon-name="layers"
@@ -652,7 +652,7 @@ function exportCsv() {
             </span>
           </div>
 
-          <!-- Roster fill — N siswa punya rekap dari M total -->
+          <!-- Roster fill — N student punya rekap dari M total -->
           <p class="text-[10px] text-slate-500 pt-0.5">
             {{ t('admin.sekolah.grade_recap.roster_label', { withRecap: r.students_with_recap, total: r.students_total }) }}
           </p>

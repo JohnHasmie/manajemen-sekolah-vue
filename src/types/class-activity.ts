@@ -1,8 +1,8 @@
 /**
- * Class activity (Kegiatan Kelas) types — mirror Flutter's
+ * Class activity (Activity Kelas) types — mirror Flutter's
  * `lib/features/class_activity/domain/models/` exactly.
  *
- * Canonical Flutter enum is 4 values: tugas / aktivitas / ujian /
+ * Canonical Flutter enum is 4 values: tugas / activity / ujian /
  * catatan (the exact strings mobile writes to `class_activities.type`).
  * Earlier Vue revisions used a different bucket (assignment / homework /
  * test / other) — those, plus other legacy raws (material, ulangan, pr,
@@ -19,7 +19,7 @@
 //
 // Canonical values mirror the Flutter mobile app's 4 activity tiles and
 // are the exact strings written to the backend `class_activities.type`
-// column by mobile: tugas / aktivitas / ujian / catatan. Older clients
+// column by mobile: tugas / activity / ujian / catatan. Older clients
 // and legacy DB rows may carry English/alias values (assignment, test,
 // material, ulangan, pr, …) — `normalizeActivityType` collapses every
 // known alias onto these 4 so old data keeps rendering, and `catatan`
@@ -58,7 +58,7 @@ export function normalizeActivityType(raw: unknown): ActivityType {
   if (v === 'tugas' || v === 'assignment' || v === 'homework' || v === 'pr') {
     return 'tugas';
   }
-  // aktivitas family — discussion / practice / linked material.
+  // activity family — discussion / practice / linked material.
   if (
     v === 'aktivitas' ||
     v === 'activity' ||
@@ -82,7 +82,7 @@ export function normalizeActivityType(raw: unknown): ActivityType {
   ) {
     return 'ujian';
   }
-  // catatan family — general notes / "lainnya" / anything else known.
+  // catatan family — general notes / "more" / anything else known.
   if (
     v === 'catatan' ||
     v === 'note' ||
@@ -200,7 +200,7 @@ export interface ClassActivity {
   date: string;
   /** Optional 'HH:MM' time. */
   time?: string | null;
-  /** Optional session label (e.g. 'Sesi 1'). */
+  /** Optional session label (e.g. 'Session 1'). */
   session?: string | null;
   type: ActivityType;
   /** Raw type string from backend — preserved for write payloads. */

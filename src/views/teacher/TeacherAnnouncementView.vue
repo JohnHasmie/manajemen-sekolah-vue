@@ -1,9 +1,9 @@
 <!--
-  TeacherAnnouncementView.vue — Pengumuman untuk wali kelas / guru.
+  TeacherAnnouncementView.vue — Announcement untuk homeroom teacher / teacher.
 
   Web port of Flutter's `teacher_announcement_screen.dart`. Layout
-  mirrors Jadwal / Presensi for consistency:
-    1. <BrandPageHeader> (guru) with "+ Tulis pengumuman" action
+  mirrors Schedule / Presensi for consistency:
+    1. <BrandPageHeader> (teacher) with "+ Tulis announcement" action
     2. <KpiStripCards> — Total / Pekan ini / Total dibaca / Belum dibaca
     3. <PageFilterToolbar> with Priority + Status filter chips + search
     4. <AsyncView> wrapping a vertical list of <AnnouncementCard>s

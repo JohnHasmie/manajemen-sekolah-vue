@@ -18,7 +18,7 @@ import type {
   TutorPayoutSummary,
 } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import AdminConfirmDialog from '@/components/feature/tutoring/AdminConfirmDialog.vue';
 import { useToast } from '@/composables/useToast';
@@ -141,7 +141,7 @@ function whenLabel(iso?: string | null): string {
       <NavIcon name="chevron-left" :size="13" /> {{ t('admin.bimbel.tutor_detail.back') }}
     </button>
 
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('admin.bimbel.tutor_detail.hero_kicker')"
       :title="tutor?.name ?? t('admin.bimbel.tutor_detail.loading_title')"
       :subtitle="tutor ? [tutor.groups[0]?.program, t('admin.bimbel.tutors.groups_count', { count: tutor.group_count }), tutor.email].filter(Boolean).join(' · ') : undefined"
@@ -170,7 +170,7 @@ function whenLabel(iso?: string | null): string {
           <NavIcon name="wallet" :size="13" class="inline -mt-0.5" /> {{ t('admin.bimbel.tutor_detail.manage_payout') }}
         </button>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div v-if="showEdit" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="showEdit = false">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">

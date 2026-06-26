@@ -1,12 +1,12 @@
 <!--
   TeacherReportCardHubView.vue — Rapor hub (Frame A).
 
-  Web port of `teacher_report_card_overview.dart`. Lands the wali
+  Web port of `teacher_report_card_overview.dart`. Lands the parent
   kelas on a per-class grid:
 
-    1. BrandPageHeader (guru) — kicker "Akademik · Rapor", title
-       "Wali Kelas", meta `N kelas · M siswa`
-    2. KpiStripCards — Siswa total / Terbit / Diperiksa / Draft
+    1. BrandPageHeader (teacher) — kicker "Academic · Rapor", title
+       "Homeroom Teacher", meta `N kelas · M student`
+    2. KpiStripCards — Student total / Terbit / Diperiksa / Draft
     3. PageFilterToolbar — search input (filter class name)
     4. List of <ReportCardClassCard> — drill into per-class roster
 

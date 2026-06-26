@@ -1,8 +1,8 @@
 <!--
-  TutorEarningsView — tutor's "Penghasilan Saya" page.
+  TutorEarningsView — tutor's "Earnings Saya" page.
 
   Loads GET /tutoring/payouts/summary for the calling user with
-  optional ?month=YYYY-MM. Displays KPI strip (earnings/sesi/jam/rate)
+  optional ?month=YYYY-MM. Displays KPI strip (earnings/session/jam/rate)
   + month picker.
 -->
 <script setup lang="ts">
@@ -14,7 +14,7 @@ import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
 import type { TutorPayoutSummary, TutoringSession } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -168,7 +168,7 @@ const monthOptions = computed(() => {
 
 <template>
   <div class="space-y-md pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('tutor.bimbel.earnings.greeting')"
       :title="t('tutor.bimbel.earnings.title')"
       :subtitle="summary ? `${t('tutor.bimbel.earnings.period_prefix')} ${summary.period.label}` : undefined"

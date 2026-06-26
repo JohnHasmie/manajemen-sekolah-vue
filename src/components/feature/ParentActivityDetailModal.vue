@@ -3,7 +3,7 @@
   parent taps an activity card. Mirrors Flutter's `_ActivityDetailContent`
   (parent_activity_ui_builder_mixin.dart). Rows shown:
 
-    • Guru Pengajar (always)
+    • Teacher Pengajar (always)
     • Mata Pelajaran (always)
     • Tanggal — "Day · dd/MM/yyyy"
     • Batas Waktu — only for assignments with a deadline
@@ -11,7 +11,7 @@
     • Materi — only when chapter_title is set; sub_chapter on second line
     • Sub-Bab tambahan — one row per additional_material entry
 
-  Wali-tinted header (azure) to match the rest of the parent role.
+  Parent-tinted header (azure) to match the rest of the parent role.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';

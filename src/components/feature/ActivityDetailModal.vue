@@ -1,13 +1,13 @@
 <!--
   ActivityDetailModal.vue — full-screen detail dialog for one
-  Kegiatan Kelas record.
+  Activity Kelas record.
 
   Mirrors Flutter's `teacher_activity_detail_screen.dart` +
   `admin_activity_detail_screen.dart` collapsed into one role-aware
   modal:
 
     Header        title · subject·class·date (auto from props.activity)
-    KPI strip     Siswa / Submit / Belum  (hidden when no tracking)
+    KPI strip     Student / Submit / Belum  (hidden when no tracking)
     Informasi     tipe pill, deskripsi, materi terkait, lampiran count
     Submissions   per-student status table (admin + teacher), if loaded
     Footer        role-specific actions
@@ -38,7 +38,7 @@ import { formatDateLong } from '@/lib/format';
 interface Props {
   activity: ClassActivity;
   role?: 'teacher' | 'admin' | 'parent';
-  /** Per-student rows shown in Daftar Siswa section (admin + teacher). */
+  /** Per-student rows shown in List Student section (admin + teacher). */
   submissions?: ActivitySubmissionRow[];
   /** When true, hides Edit/Hapus on the footer (teacher viewing an
    *  archived/past activity). */
@@ -185,7 +185,7 @@ function statusLabel(s: ActivitySubmissionRow['status']) {
         </div>
       </section>
 
-      <!-- Daftar Siswa (when submissions roster loaded) -->
+      <!-- List Student (when submissions roster loaded) -->
       <section v-if="role !== 'parent' && submissions.length > 0">
         <div class="flex items-center justify-between mb-2">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">

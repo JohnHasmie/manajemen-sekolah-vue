@@ -1,5 +1,5 @@
 <!--
-  BulkTeacherPickerModal.vue — admin bulk "Ganti Guru" sheet.
+  BulkTeacherPickerModal.vue — admin bulk "Ganti Teacher" sheet.
 
   Reassigns N selected schedules to a single teacher. Backend enforces
   per-row teacher-slot uniqueness; collisions surface as `skipped[]`

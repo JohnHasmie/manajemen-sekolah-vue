@@ -8,7 +8,7 @@ import { useI18n } from 'vue-i18n';
 import { NotificationService } from '@/services/notification.service';
 import type { AppNotification } from '@/types/notification';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -51,7 +51,7 @@ const iconByCategory: Record<string, string> = {
   tutoring_group_assigned: 'users',
   tutoring_rating_received: 'star',
   tutoring_session_cancelled: 'x-circle',
-  // Finance (admin sees payment_submitted, wali sees the other three;
+  // Finance (admin sees payment_submitted, parent sees the other three;
   // tutor doesn't recipient on these but we map for completeness).
   bill_generated: 'wallet',
   payment_submitted: 'upload',
@@ -83,7 +83,7 @@ function rel(iso: string): string {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('tutor.bimbel.notifications.greeting')"
       :title="t('tutor.bimbel.notifications.title')"
       :subtitle="t('tutor.bimbel.notifications.subtitle', { unread, total: items.length })"
@@ -97,7 +97,7 @@ function rel(iso: string): string {
           @click="markAll"
         >{{ t('tutor.bimbel.notifications.mark_all_read') }}</button>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div class="flex gap-1.5">
       <button

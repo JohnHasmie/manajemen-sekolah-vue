@@ -87,7 +87,7 @@ export interface Question {
   input: QuestionInput;
   /** Long placeholder for text/tel/number inputs. */
   placeholder?: string;
-  /** Suffix label after a number/text input (e.g. "siswa", "tutor"). */
+  /** Suffix label after a number/text input (e.g. "student", "tutor"). */
   suffix?: string;
   /** Static option list for `pills`/`select`/`chips_multi`. */
   options?: QuestionOption[];

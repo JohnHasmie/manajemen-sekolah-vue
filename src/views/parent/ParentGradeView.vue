@@ -1,10 +1,10 @@
 <!--
-  ParentGradeView.vue — Nilai anak (read-only) untuk wali murid.
+  ParentGradeView.vue — Grade anak (read-only) untuk parent.
 
   Web port of Flutter's `parent_grade_screen.dart`. Layout shape:
     1. ParentPageHeader (built-in child chip pair)
     2. 3-column KPI strip — Penilaian / Rata-rata / Rentang
-    3. Tipe Nilai filter chip (single-select bottom sheet)
+    3. Tipe Grade filter chip (single-select bottom sheet)
     4. Per-subject sections — each with an UPPERCASE subject header +
        letter+avg pill, then one card per assessment row showing
        letter badge · title · type · date · score · KKM.
@@ -34,7 +34,7 @@ const { activeChildId, activeChild } = useChildPicker();
 // Semester defaults to 2 (Genap) — matches the mobile-app default.
 const semester = ref<'1' | '2'>('2');
 
-// Tipe Nilai — single-select.
+// Tipe Grade — single-select.
 const typeFilter = ref<string | null>(null);
 const showTypePicker = ref(false);
 // Grade-type options localised; `value` stays as the API key, only `label` switches.
@@ -498,7 +498,7 @@ const activeSemesterLabel = computed(
       </template>
     </AsyncView>
 
-    <!-- Tipe Nilai picker -->
+    <!-- Tipe Grade picker -->
     <Modal
       v-if="showTypePicker"
       :title="t('parent.grades.modalTypeTitle')"

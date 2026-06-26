@@ -12,7 +12,7 @@ import type {
   TutoringGroupAnnouncement,
 } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -86,7 +86,7 @@ function groupName(id: string): string {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('tutor.bimbel.announcements.greeting')"
       :title="t('tutor.bimbel.announcements.title')"
       :subtitle="t('tutor.bimbel.announcements.subtitle')"

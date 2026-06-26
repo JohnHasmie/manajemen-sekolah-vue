@@ -7,7 +7,7 @@
   the section list).
 
   Layout:
-    1. BrandPageHeader (guru) — title + format kicker + back chevron
+    1. BrandPageHeader (teacher) — title + format kicker + back chevron
     2. 3-cell KPI overlap — Section count · Alokasi · Status
     3. Revision banner — when status=Rejected/SentBack with admin_notes
     4. File preview card — when format=file

@@ -187,7 +187,7 @@ function buildClient(
       // server has now rejected). A 401 on a request that carried no
       // token is just an unauthenticated/public call being refused —
       // there was never a session to expire, so we must NOT clear
-      // state, redirect, or show the "Sesi Anda telah berakhir" toast.
+      // state, redirect, or show the "Session Anda telah berakhir" toast.
       //
       // Without this guard the public login page showed a spurious
       // session-expired toast: a 401 from any pre-auth call (or an

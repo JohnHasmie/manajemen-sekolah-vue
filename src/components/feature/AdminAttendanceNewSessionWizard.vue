@@ -3,7 +3,7 @@
 
   Mirrors Flutter's `TeacherSelectionSheet` → `AttendancePage` flow,
   ported to a single 3-step modal:
-    1. Pilih Guru (TeacherSelectionSheet)
+    1. Pilih Teacher (TeacherSelectionSheet)
     2. Pilih Kelas + Mapel
     3. Pilih Tanggal + Jam Pelajaran
 

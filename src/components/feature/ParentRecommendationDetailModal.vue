@@ -7,7 +7,7 @@
   (each rendered only when the underlying data is present):
     • Hero — priority pill, subject pill, "DARI WALI KELAS" pill,
       Selesai pill (when completed), title, sent-ago meta + due.
-    • Pesan dari Wali Kelas — quoted shared_message (left azure rail).
+    • Pesan dari Homeroom Teacher — quoted shared_message (left azure rail).
     • Yang Perlu Dilakukan — rec description (HTML-aware via v-html
       with a sanitised allowlist).
     • Materi Terkait — Bab (cobalt) + Sub-bab (amber) chips drawn
@@ -288,7 +288,7 @@ async function onComplete(payload: { note: string; notifyTeacher: boolean }) {
         </p>
       </section>
 
-      <!-- Pesan dari Wali Kelas -->
+      <!-- Pesan dari Homeroom Teacher -->
       <section v-if="sharedMessage">
         <header class="flex items-center gap-2 mb-2">
           <div

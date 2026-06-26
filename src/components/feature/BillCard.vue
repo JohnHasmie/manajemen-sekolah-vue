@@ -1,5 +1,5 @@
 <!--
-  BillCard.vue — single tagihan row card used by parent + admin lists.
+  BillCard.vue — single bill row card used by parent + admin lists.
 
   Layout:
     [icon-square] [title / subtitle / due-label]  [amount / status pill]

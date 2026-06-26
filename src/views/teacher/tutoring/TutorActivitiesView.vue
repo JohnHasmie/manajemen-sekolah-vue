@@ -1,6 +1,6 @@
 <!--
   TutorActivitiesView — list of activities (tugas / quiz / ujian /
-  proyek) the tutor has shipped to their kelompok. Header CTA opens
+  proyek) the tutor has shipped to their group. Header CTA opens
   the create modal; row click routes to the submissions screen.
 
   Backend Phase 5 (tutoring_activities + activity_submissions) already

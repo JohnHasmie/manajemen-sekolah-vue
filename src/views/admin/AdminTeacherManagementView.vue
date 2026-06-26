@@ -1,7 +1,7 @@
 <!--
   AdminTeacherManagementView.vue — admin teacher management.
 
-  Uses the shared Jadwal/Keuangan chrome pattern: gradient
+  Uses the shared Schedule/Keuangan chrome pattern: gradient
   BrandPageHeader + KpiStripCards + PageFilterToolbar with per-facet
   AppFilterChip buttons.
 -->

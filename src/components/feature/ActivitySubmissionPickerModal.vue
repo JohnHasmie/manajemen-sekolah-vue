@@ -83,7 +83,7 @@ const dirtyRows = computed(() =>
 const dirtyCount = computed(() => dirtyRows.value.length);
 
 // Scored activities surface the score input. Backend ignores `score`
-// for non-scored types but rendering it for "aktivitas" / "catatan"
+// for non-scored types but rendering it for "activity" / "catatan"
 // would confuse teachers, so we hide proactively.
 const showScoreColumn = computed(
   () => props.activity.type === 'tugas' || props.activity.type === 'ujian',

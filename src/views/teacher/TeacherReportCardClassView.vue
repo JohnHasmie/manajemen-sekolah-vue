@@ -6,9 +6,9 @@
 
   Layout:
     1. Back chevron row + Export Excel action
-    2. BrandPageHeader (guru) — kicker "Kelas X · Rapor",
-       title "Daftar Siswa", meta `N siswa · M sudah Terbit`
-    3. KpiStripCards — Siswa / Terbit / Diperiksa / Draft
+    2. BrandPageHeader (teacher) — kicker "Kelas X · Rapor",
+       title "List Student", meta `N student · M sudah Terbit`
+    3. KpiStripCards — Student / Terbit / Diperiksa / Draft
     4. Status chip strip (Semua / Belum / Draf / Diperiksa / Terbit)
     5. Student rows — avatar + NIS + status pill + chevron
 

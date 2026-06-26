@@ -151,13 +151,13 @@ export interface RecShareSummary {
   latest_sent_at?: string | null;
 }
 
-// ── Bulk share-to-wali (Kirim semua ke wali) ────────────────────────
+// ── Bulk share-to-parent (Kirim semua ke parent) ────────────────────────
 
 /** Per-rec outcome row of the bulk `POST /recommendations/share-all`. */
 export interface ShareAllResultRow {
   recommendation_id: string;
   student_name: string;
-  /** 'sent' on success, 'failed' on a per-rec exception, 'skipped' when no contactable wali. */
+  /** 'sent' on success, 'failed' on a per-rec exception, 'skipped' when no contactable parent. */
   status: 'sent' | 'failed' | 'skipped';
   /** Present only on 'failed' / 'skipped' rows. */
   error?: string | null;
@@ -165,7 +165,7 @@ export interface ShareAllResultRow {
 
 /**
  * Response envelope for the bulk share endpoint. The backend resolves
- * each rec's wali itself (no `parents[]` sent) and reports a tally plus
+ * each rec's parent itself (no `parents[]` sent) and reports a tally plus
  * a per-rec breakdown so the UI can show "X terkirim, Y gagal, Z
  * dilewati".
  */
@@ -177,7 +177,7 @@ export interface ShareAllResult {
   sent: number;
   /** A per-rec share threw (batch continues). */
   failed: number;
-  /** Student had no contactable wali. */
+  /** Student had no contactable parent. */
   skipped_no_wali: number;
   results: ShareAllResultRow[];
 }
@@ -188,7 +188,7 @@ export interface ShareAllResult {
  * Full per-student recommendation. Maps directly to the AI backend's
  * `/recommendations/{id}` shape. Many fields are optional because the
  * backend doesn't always populate them (e.g. the share-state columns
- * are only set after the wali kelas fans the rec out).
+ * are only set after the homeroom teacher fans the rec out).
  */
 export interface LearningRecommendation {
   id: string;
@@ -204,7 +204,7 @@ export interface LearningRecommendation {
   description?: string | null;
   /** AI's "why this matters" paragraph. */
   ai_reasoning?: string | null;
-  /** Teacher-added notes ("Catatan Wali Kelas"). */
+  /** Teacher-added notes ("Catatan Homeroom Teacher"). */
   teacher_notes?: string | null;
 
   /** Materials attached to the rec. */
@@ -232,7 +232,7 @@ export interface LearningRecommendation {
   subject_id?: string | null;
   subject_name?: string | null;
 
-  /** Authoring teacher (wali-kelas scope only). */
+  /** Authoring teacher (parent-kelas scope only). */
   teacher_id?: string;
   teacher_name?: string | null;
 
@@ -374,7 +374,7 @@ export interface RecommendationJob {
   progress: number;
 }
 
-// ── Parent inbox (wali) ─────────────────────────────────────────────
+// ── Parent inbox (parent) ─────────────────────────────────────────────
 //
 // Each row is `{ recipient_id, recommendation, sent_at, read_at,
 // replied_at, reply_text, parent_completed_at, parent_completion_note }`

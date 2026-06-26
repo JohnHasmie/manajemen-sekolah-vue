@@ -147,10 +147,10 @@ export interface DemoBillingPayload {
  *
  *  - kehadiran        → backfill 5 days of student_class_attendances
  *  - rpp              → seed lesson_plans (mix Approved/Pending/Draft)
- *  - pengumuman       → seed announcements (global + per-class)
+ *  - announcement       → seed announcements (global + per-class)
  *  - progress_subbab  → seed chapters/sub_chapters + ~30% marked done
  *  - kegiatan_kelas   → seed class_activities + a few submissions
- *  - tagihan          → run the billing seed (overrides billing.mode skip)
+ *  - bill          → run the billing seed (overrides billing.mode skip)
  *
  * Default-on so a fresh wizard creates a populated demo without extra
  * clicks. Backend re-validates the list and silently ignores unknown
@@ -288,7 +288,7 @@ export type TutoringBillingMode = 'PER_SESSION' | 'PER_MONTH' | 'PACKAGE';
  * Phase-aware seeder branch on the backend (sessions + attendance,
  * payouts, bills, vouchers, leads, announcements, etc.).
  *
- * NOTE: The string values (`'sesi_kehadiran'`, `'tagihan'`, ...) are
+ * NOTE: The string values (`'sesi_kehadiran'`, `'bill'`, ...) are
  * the wire payload values keyed by the backend; they MUST stay Indo.
  */
 export type TutoringScenarioKey =

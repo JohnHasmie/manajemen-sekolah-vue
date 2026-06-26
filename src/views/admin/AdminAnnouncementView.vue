@@ -2,8 +2,8 @@
   AdminAnnouncementView.vue — school-wide announcement broadcaster.
 
   Web port of Flutter's `admin_announcement_screen.dart`. Same flow
-  shape as Jadwal/Presensi for consistency:
-    1. <BrandPageHeader> (admin) with "+ Buat pengumuman" action
+  shape as Schedule/Presensi for consistency:
+    1. <BrandPageHeader> (admin) with "+ Buat announcement" action
     2. <KpiStripCards> — Total / Terkirim / Terjadwal / Draft
     3. <PageFilterToolbar> with Status + Prioritas + Audiens chips + search
     4. Lifecycle-grouped list: Disematkan / Terjadwal / Terkirim / Draft

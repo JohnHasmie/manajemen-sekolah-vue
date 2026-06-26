@@ -1,5 +1,5 @@
 <!--
-  ParentAppearanceView — wali Tampilan settings. 3 mode cards (Terang /
+  ParentAppearanceView — parent Appearance settings. 3 mode cards (Terang /
   Gelap / Otomatis) with literal preview swatches, time inputs for the
   auto schedule, and an info note pinned to bimbel scope. Live-wires to
   useTutoringThemeStore so the page reflects mode changes immediately.
@@ -9,7 +9,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useTutoringThemeStore } from '@/stores/tutoring-theme';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -50,7 +50,7 @@ const darkStart = computed({
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.appearance.kicker')"
       :title="t('wali.bimbel.appearance.title')"
       :subtitle="theme.autoHint || t('wali.bimbel.appearance.default_subtitle')"

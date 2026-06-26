@@ -6,8 +6,8 @@
 
   Layout:
     1. Back chevron → dashboard
-    2. BrandPageHeader (admin) — title "Laporan Sesi" + meta
-    3. KpiStripCards — Total Sesi / Filled / Pending / Rata
+    2. BrandPageHeader (admin) — title "Laporan Session" + meta
+    3. KpiStripCards — Total Session / Filled / Pending / Rata
     4. PageFilterToolbar — Date range / Kelas / Mapel / Hari / Jam-ke
     5. View toggle (List / Tabel)
     6. Paginated session list

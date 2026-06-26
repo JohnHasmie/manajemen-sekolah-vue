@@ -7,7 +7,7 @@
   Parent / teacher heads-up
   -------------------------
   Admin demo accounts always start clean. But a logged-in parent
-  (wali / wali murid) or teacher (guru / wali kelas) can ALSO get
+  (parent / parent) or teacher (teacher / homeroom teacher) can ALSO get
   here — and they often have an existing school/bimbel attached
   to their account from somewhere else. In that case we render a
   small info card listing the tenants + role they're already

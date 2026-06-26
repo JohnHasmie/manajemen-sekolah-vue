@@ -358,7 +358,7 @@ export const ParentService = {
 
   /**
    * Flat one-row-per-assessment fetch — mirrors the Flutter mobile
-   * parent Nilai screen. Hits `GET /grades?student_id&semester` and
+   * parent Grade screen. Hits `GET /grades?student_id&semester` and
    * normalises every paginated row into `ParentGradeEntry`.
    *
    * Pagination: pulls up to `limit` rows in one shot (default 500)

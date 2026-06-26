@@ -1,5 +1,5 @@
 <!--
-  TeacherAttendanceDetailView.vue — Detail satu sesi Presensi.
+  TeacherAttendanceDetailView.vue — Detail satu session Presensi.
 
   Reachable from the list page at /teacher/attendance/detail?class_id&
   subject_id&date&lesson_hour_id. Renders the per-student roster with
@@ -77,7 +77,7 @@ const historyStudent = ref<AttendanceRow | null>(null);
 // Read-only mode: the selected academic year is not the active one.
 const isReadOnly = computed(() => academicYearStore.isReadOnly);
 
-// Wali-kelas variant: when the list page handed off a `teacher_name`
+// Parent-kelas variant: when the list page handed off a `teacher_name`
 // query param, surface the recording teacher's name in the header
 // strip so the homeroom teacher knows whose session this is.
 const recordingTeacher = computed<string | null>(() => {

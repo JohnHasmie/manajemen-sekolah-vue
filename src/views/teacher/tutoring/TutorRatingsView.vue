@@ -8,7 +8,7 @@ import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import type { TutorRatingsSummary } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 
 const { t } = useI18n();
 
@@ -57,7 +57,7 @@ function stars(rating: number): string {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('tutor.bimbel.ratings.greeting')"
       :title="t('tutor.bimbel.ratings.title')"
       :subtitle="`${t('tutor.bimbel.ratings.subtitle_prefix')} · ${data?.overall.window_label ?? t('tutor.bimbel.ratings.window_default')}`"
@@ -80,7 +80,7 @@ function stars(rating: number): string {
           >{{ opt.label }}</button>
         </div>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('tutor.bimbel.ratings.loading') }}</div>
 

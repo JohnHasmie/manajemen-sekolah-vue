@@ -131,7 +131,7 @@ export interface ReportCardSubject {
   skill_description?: string;
   /**
    * Backend `/report-card/initial-data` ships these recap fields per
-   * subject (Flutter consumes them for the Nilai tab preview). They
+   * subject (Flutter consumes them for the Grade tab preview). They
    * mirror the daily-test average + midterm + final-exam columns so
    * the teacher doesn't have to cross-check the grade book.
    */
@@ -155,7 +155,7 @@ export interface ReportCardExtra {
 export interface ReportCardAchievement {
   id?: string;
   name: string;
-  /** "Akademik" / "Non-akademik" / "Tingkat sekolah" / etc. */
+  /** "Academic" / "Non-academic" / "Tingkat sekolah" / etc. */
   type?: string;
   description?: string;
 }
@@ -194,7 +194,7 @@ export interface ReportCardDetail {
   social_description?: string;
   social_predicate?: PredicateKey;
 
-  // ── Nilai (Tab 2) ──
+  // ── Grade (Tab 2) ──
   subjects: ReportCardSubject[];
 
   // ── Tambahan (Tab 3) ──

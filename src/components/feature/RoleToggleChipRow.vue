@@ -3,10 +3,10 @@
   switching inside a brand gradient header.
 
   Web port of Flutter's `RoleToggleChipRow` (lib/core/widgets/
-  role_toggle_chip_row.dart). Used by Jadwal, Presensi, Kegiatan
-  Kelas, Buku Nilai, Rapor and Rekomendasi to let a teacher swap
+  role_toggle_chip_row.dart). Used by Schedule, Presensi, Activity
+  Kelas, Gradebook, Rapor and Rekomendasi to let a teacher swap
   between their teaching schedule (Mengajar) and any homeroom
-  classes they oversee (Wali 7B, Wali 8A …).
+  classes they oversee (Parent 7B, Parent 8A …).
 
   Visual contract (mirrors Flutter `_RoleChip`):
     • Active chip:   solid white pill, brand-coloured avatar
@@ -24,9 +24,9 @@ import { computed } from 'vue';
 /** One option in the chip row. Mirrors Flutter's `RoleOption`. */
 export interface RoleOption {
   /** Stable id returned in the update event. `'mengajar'` for the
-   *  teaching view; `'wali:<classId>'` for homeroom chips. */
+   *  teaching view; `'parent:<classId>'` for homeroom chips. */
   id: string;
-  /** Bold label inside the pill (e.g. `Mengajar`, `Wali 7B`). */
+  /** Bold label inside the pill (e.g. `Mengajar`, `Parent 7B`). */
   shortName: string;
   /** Smaller sub-line below the label (e.g. `Kelas perwalian`). */
   subLabel?: string;

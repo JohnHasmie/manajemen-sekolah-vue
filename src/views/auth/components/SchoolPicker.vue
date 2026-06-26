@@ -145,7 +145,7 @@ async function handleConfirm() {
         </div>
       </div>
 
-      <!-- Lainnya -->
+      <!-- More -->
       <div v-if="lainnya.length > 0">
         <div class="text-[10px] font-extrabold text-slate-400 tracking-[0.8px] mb-2 uppercase">
           {{ utama.length === 0 ? t('auth.school.chooseLabel') : t('auth.school.othersLabel') }}

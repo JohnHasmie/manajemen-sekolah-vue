@@ -10,7 +10,7 @@ import { useAuthStore } from '@/stores/auth';
 import { TutoringService } from '@/services/tutoring.service';
 import type { TutoringTutorStats } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -38,7 +38,7 @@ function initials(name?: string | null): string {
 
 <template>
   <div class="space-y-4 pb-12">
-    <TutorBerandaHero
+    <TutorHomeHero
       :greeting="t('tutor.bimbel.profile.greeting')"
       :title="t('tutor.bimbel.profile.title')"
       :subtitle="t('tutor.bimbel.profile.subtitle')"
@@ -50,7 +50,7 @@ function initials(name?: string | null): string {
           class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold hover:opacity-90"
         >{{ t('tutor.bimbel.profile.save_changes_btn') }}</button>
       </template>
-    </TutorBerandaHero>
+    </TutorHomeHero>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('tutor.bimbel.profile.loading') }}</div>
 

@@ -40,7 +40,7 @@ const emit = defineEmits<{
  * labels `male` / `female` (left over from the rename migration), but the
  * <select> only has L/P options — so a male/female value would render the
  * field blank and (before the backend `in:L,P` fix) get re-sent verbatim,
- * tripping a 422 on edit guru. Normalising here makes the field pre-fill
+ * tripping a 422 on edit teacher. Normalising here makes the field pre-fill
  * correctly and always submit a valid code. Unknown values fall back to ''.
  */
 function normalizeGender(g: string | null | undefined): string {

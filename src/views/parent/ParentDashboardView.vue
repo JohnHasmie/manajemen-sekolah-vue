@@ -5,8 +5,8 @@
   Layout:
     1. Compact greeting + child switcher tabs (slice carousel per anak)
     2. Hero gradient card with active child's attendance %
-    3. KPI strip: rata-rata nilai / tagihan / tugas / pengumuman
-    4. Two-column: Aktivitas terbaru (left), Pintasan (right)
+    3. KPI strip: rata-rata grade / bill / tugas / announcement
+    4. Two-column: Activity terbaru (left), Pintasan (right)
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';

@@ -1,5 +1,5 @@
 <!--
-  ParentMoreView — wali "Lainnya" hub. Three sections (AKADEMIK ANAK /
+  ParentMoreView — parent "More" hub. Three sections (AKADEMIK ANAK /
   DAFTAR & PROMO / AKUN) each rendered as a 3-up tile grid. Each tile is
   a bimbel-panel button with colored icon box, label, and sub. Routes
   preserved via go(name).
@@ -10,7 +10,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useChildPicker } from '@/composables/useChildPicker';
 
-import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -78,7 +78,7 @@ function go(name: string) {
 
 <template>
   <div class="space-y-3 pb-12">
-    <ParentBerandaHero
+    <ParentHomeHero
       :kicker="t('wali.bimbel.more.kicker')"
       :title="t('wali.bimbel.more.title')"
       :subtitle="t('wali.bimbel.more.subtitle')"

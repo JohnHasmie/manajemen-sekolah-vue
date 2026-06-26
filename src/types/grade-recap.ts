@@ -1,5 +1,5 @@
 /**
- * Grade Recap (Rekap Nilai) types — mirror Flutter's grade_recap
+ * Grade Recap (Rekap Grade) types — mirror Flutter's grade_recap
  * domain. Distinct from `grades.ts` (assessment-level grades): a
  * recap is one *aggregated* row per (student × subject × academic
  * year) holding chapter (Bab) scores, UTS, UAS, final, skill,
@@ -80,7 +80,7 @@ export interface TeacherGradeRecapSubject {
   id: string;
   name: string;
   code: string | null;
-  /** Wali-kelas view only: subject teacher's name. */
+  /** Parent-kelas view only: subject teacher's name. */
   teacher_id?: string | null;
   teacher_name?: string | null;
   /** Students with at least one recap entry recorded. */

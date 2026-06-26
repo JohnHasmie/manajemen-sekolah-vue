@@ -5,8 +5,8 @@
  *   /login         → LoginView (no shell)
  *   /              → AppShell (wraps everything below)
  *     /admin/*     → admin role
- *     /teacher/*   → teacher (guru / wali_kelas) role
- *     /parent/*    → parent (wali) role
+ *     /teacher/*   → teacher (teacher / wali_kelas) role
+ *     /parent/*    → parent (parent) role
  *     /staff/*     → staff role
  *     /profile     → ProfileView (all roles)
  *     /notifications → NotificationListView (all roles)
@@ -592,7 +592,7 @@ const routes: RouteRecordRaw[] = [
         meta: { superAdmin: true },
       },
 
-      // Teacher / Wali Kelas subtree
+      // Teacher / Homeroom Teacher subtree
       {
         path: 'teacher',
         name: 'teacher.home',
@@ -612,7 +612,7 @@ const routes: RouteRecordRaw[] = [
         // PRESENSI GURU — the teacher's own daily check-in/out flow
         // (webcam selfie + GPS geofence). Distinct from
         // `teacher/attendance`, which is the per-session STUDENT
-        // attendance ("kehadiran siswa"). Named "my-attendance" so the
+        // attendance ("kehadiran student"). Named "my-attendance" so the
         // English path doesn't collide with that student route.
         path: 'teacher/my-attendance',
         name: 'teacher.my-attendance',
@@ -742,7 +742,7 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'guru' satisfies Role },
       },
 
-      // Parent / Wali Murid subtree
+      // Parent / Parent subtree
       {
         path: 'parent',
         name: 'parent.home',
@@ -965,10 +965,10 @@ const routes: RouteRecordRaw[] = [
       },
       {
         // Admin-scoped view of a single session: roster + attendance
-        // (read-write for admin) + catatan sesi. Reuses the tutor's
+        // (read-write for admin) + catatan session. Reuses the tutor's
         // attendance component because the backend already gates by
         // tenant + role; the only difference is the URL prefix so the
-        // 'guru'-only router guard doesn't bounce the admin.
+        // 'teacher'-only router guard doesn't bounce the admin.
         path: 'admin/tutoring/sessions/:sessionId/attendance',
         name: 'admin.tutoring.session-attendance',
         component: () =>
@@ -1025,7 +1025,7 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
-        // Standalone enroll route — used from the Siswa list where the
+        // Standalone enroll route — used from the Student list where the
         // admin hasn't picked a program yet. The wizard picks program
         // + package in step 2.
         path: 'admin/tutoring/enroll',
@@ -1216,7 +1216,7 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'guru' satisfies Role },
       },
       {
-        // Tutor Tampilan — the light/dark mode picker for the bimbel
+        // Tutor Appearance — the light/dark mode picker for the bimbel
         // (tutor) surface. Route NAME contains "tutoring" so AppShell's
         // isTutoringRoute guard fires and the page renders on the bimbel
         // surface; it picks `tutoring-light` / `tutoring-dark` via the

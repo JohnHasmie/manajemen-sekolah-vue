@@ -4,15 +4,15 @@
     - stats.slices[] carousel with _GuruSlice schema
     - HeroStatsCard captions: sessions / attendance / RPP / grades
     - PriorityInbox from stats.priority_inbox + priority_inbox_total
-    - stats.todays_schedule[] for the Jadwal hari ini strip
+    - stats.todays_schedule[] for the Schedule hari ini strip
 
   Layout follows the redesign mockup:
     1. Compact greeting row + tahun-pelajaran chip
     2. Inline KPI strip (no overlapping hero)
-    3. Jadwal hari ini (3-card strip, next session highlighted)
+    3. Schedule hari ini (3-card strip, next session highlighted)
     4. 2-column main:
        - Left (8/12): Perlu Perhatian
-       - Right (4/12): Aksi Cepat 2x2 + Modul Lainnya
+       - Right (4/12): Aksi Cepat 2x2 + Modul More
 -->
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
@@ -201,7 +201,7 @@ const priorityHeaderLabel = computed(() =>
 // kelas_nama, jam_mulai/jam_selesai) plus nested `subject`/`class` relation
 // OBJECTS — NOT the English subject_name/class_name/start_time the card reads.
 // Without mapping, `s.subject_name` was undefined and the template fell through
-// to rendering the raw `subject` object/id ("berupa id jadwal"). Mirror the
+// to rendering the raw `subject` object/id ("berupa id schedule"). Mirror the
 // normalisation Flutter already does in schedule.dart so names actually show.
 const todaysSchedule = computed<ScheduleEntry[]>(() => {
   const raw = stats.value.todays_schedule;
@@ -466,7 +466,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
             </div>
           </section>
 
-          <!-- 3. Jadwal hari ini (real schedule strip) -->
+          <!-- 3. Schedule hari ini (real schedule strip) -->
           <section class="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
             <header class="flex items-center justify-between mb-4 px-1">
               <div class="flex items-center gap-2.5">
@@ -575,7 +575,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
               </div>
             </section>
 
-            <!-- Right: Aksi Cepat + Modul Lainnya -->
+            <!-- Right: Aksi Cepat + Modul More -->
             <section class="lg:col-span-4 space-y-6">
               <!-- Aksi Cepat 2x2 -->
               <div class="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
@@ -608,7 +608,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
                 </div>
               </div>
 
-              <!-- Modul Lainnya - clean list, no gradient -->
+              <!-- Modul More - clean list, no gradient -->
               <div class="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
                 <header class="flex items-center gap-2.5 mb-4 px-1">
                   <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 grid place-items-center">

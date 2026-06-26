@@ -1,15 +1,15 @@
 <!--
-  TutorTutoringHomeView — bimbel tutor Beranda.
+  TutorTutoringHomeView — bimbel tutor Home.
 
   Layout mirrors mobile `tutor_beranda_screen.dart`:
 
     1. Greeting hero (navy, role-tier cyan) + 3-stat strip
-       Kelas / Sesi mgg ini / Rating
-    2. Sesi berikutnya — accent-stripe card with countdown chip
+       Kelas / Session mgg ini / Rating
+    2. Session berikutnya — accent-stripe card with countdown chip
        (success-tinted if ≤ 24h away) + Catatan kehadiran CTA
     3. Kelas saya — 3-col gradient class cards (filtered to groups
        where tutor_user_id = me)
-    4. 4 shortcuts row — Bahan Ajar / Soal AI / Rating / Sesi Berulang
+    4. 4 shortcuts row — Bahan Ajar / Soal AI / Rating / Session Berulang
     5. Honor ribbon — month_earnings (success tone, always shown)
     6. Yang baru feed — last 6 events from /tutoring/tutor-activity
 
@@ -28,7 +28,7 @@ import type {
   TutoringFeedEvent,
 } from '@/types/tutoring';
 
-import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import TutorPrimaryCard from '@/components/feature/tutoring/TutorPrimaryCard.vue';
 import TutorClassCard from '@/components/feature/tutoring/TutorClassCard.vue';
 import TutorShortcutTile from '@/components/feature/tutoring/TutorShortcutTile.vue';
@@ -122,7 +122,7 @@ const myGroups = computed(() =>
 
 const visibleGroups = computed(() => myGroups.value.slice(0, 6));
 
-// ── Sesi berikutnya — countdown + tone ────────────────────────────
+// ── Session berikutnya — countdown + tone ────────────────────────────
 const nextSession = computed(() => stats.value?.next_session ?? null);
 
 const nextSessionLabel = computed(() => {
@@ -176,9 +176,9 @@ function goToClass(g: TutoringGroup) {
 
 // ── 4 shortcuts ───────────────────────────────────────────────────
 // Synced with mobile (lib/.../tutor_home_screen.dart) after the
-// quick-action shuffle: Sesi Berulang slot replaced with Pengumuman so
-// the most common tutor task ("kirim info ke kelompok") is one tap
-// away. Sesi Berulang stays available from Lainnya → MENGAJAR.
+// quick-action shuffle: Session Berulang slot replaced with Announcement so
+// the most common tutor task ("kirim info ke group") is one tap
+// away. Session Berulang stays available from More → MENGAJAR.
 // Rating now goes to the actual ratings route (was mistakenly wired
 // to appearance).
 const shortcuts = computed(() => [
@@ -201,14 +201,14 @@ function goToShortcut(name: string) {
 
     <template v-else>
       <!-- 1. Hero -->
-      <TutorBerandaHero
+      <TutorHomeHero
         :greeting="timeGreeting()"
         :title="t('tutor.bimbel.home.title_hello', { name: firstName })"
         :subtitle="subtitle"
         :stats="heroStats"
       />
 
-      <!-- 2. Sesi berikutnya -->
+      <!-- 2. Session berikutnya -->
       <TutorPrimaryCard
         v-if="nextSession"
         icon="calendar"

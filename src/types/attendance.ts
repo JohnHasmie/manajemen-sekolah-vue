@@ -81,7 +81,7 @@ export const ATTENDANCE_LABELS: Record<NonNullable<AttendanceStatus>, string> = 
 export interface AttendanceHistoryEntry {
   id: string;
   date: string;
-  /** Display label for the session — e.g. "Sesi 1 (07.30)" or subject name. */
+  /** Display label for the session — e.g. "Session 1 (07.30)" or subject name. */
   session_label?: string | null;
   subject_id?: string | null;
   subject_name?: string | null;
@@ -144,7 +144,7 @@ export interface SessionReport {
   filled: boolean;
   /** 0..100 — hadir / total, rounded. */
   percentage: number;
-  /** Who recorded it (rendered only in wali-kelas mode). */
+  /** Who recorded it (rendered only in parent-kelas mode). */
   teacher_id?: string | null;
   teacher_name?: string | null;
 }
@@ -190,7 +190,7 @@ export interface AttendanceDashboard {
   kpi: {
     /** 7-day moving average of present pct. */
     avg_pct: number;
-    /** Total siswa "tidak hadir" today (excused + sick + alpha). */
+    /** Total student "tidak hadir" today (excused + sick + alpha). */
     absent_count: number;
     /** Delta of absent_count vs yesterday (positive = worse). */
     absent_delta: number;

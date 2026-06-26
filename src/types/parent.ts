@@ -14,9 +14,9 @@ export interface Announcement {
   id: string;
   title: string;
   body: string;
-  /** Source label: "Sekolah", "Wali Kelas", "Bu Ratna". */
+  /** Source label: "Sekolah", "Homeroom Teacher", "Bu Ratna". */
   source: string;
-  /** Closed enum: penting / pengumuman / acara / libur. */
+  /** Closed enum: penting / announcement / acara / libur. */
   category?: string;
   read_at?: string | null;
   created_at: string;
@@ -121,7 +121,7 @@ export interface ParentGradeRow {
 }
 
 /**
- * Flat one-row-per-assessment shape used by the parent Nilai screen.
+ * Flat one-row-per-assessment shape used by the parent Grade screen.
  * Mirrors the Flutter mobile `Map<String, dynamic>` payload that the
  * parent's `/grades` endpoint returns — each row is one graded
  * assessment for the student.
