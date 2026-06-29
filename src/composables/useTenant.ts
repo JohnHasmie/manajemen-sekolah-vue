@@ -70,11 +70,32 @@ export function useTenant(): TenantInfo {
       return tenantKindFromRaw(fromStore.tenant_type);
     }
 
-    // 4. Last resort: a single school in either list (no ambiguity).
+    // 4. Single school in either list (no ambiguity).
     const only =
       (auth.user?.schools?.length === 1 ? auth.user.schools[0] : null) ??
       (auth.schools.length === 1 ? auth.schools[0] : null);
-    return tenantKindFromRaw(only?.tenant_type);
+    if (only?.tenant_type) return tenantKindFromRaw(only.tenant_type);
+
+    // 5. Last-resort name heuristic. A user whose localStorage payload
+    //    predates the `tenant_type` field (older session, or any user
+    //    who hasn't called switchSchool since the field was added)
+    //    falls through 1-4 with no signal and silently gets the school
+    //    sidebar even when their school is obviously a bimbel. Sniff
+    //    the active school's display name for the canonical brand
+    //    words. Lossy, but biased the right way (`Yahya Bimbel` →
+    //    TUTORING_CENTER) and only fires after every authoritative
+    //    source comes up empty.
+    const activeFromStore =
+      auth.schools.find((s) => s.id === auth.schoolId)?.name;
+    const name = (
+      auth.user?.school_name ??
+      activeFromStore ??
+      ''
+    ).toLowerCase();
+    if (name.includes('bimbel') || name.includes('tutoring')) {
+      return 'TUTORING_CENTER';
+    }
+    return 'SCHOOL';
   });
 
   const isTutoringCenter = computed(() => kind.value === 'TUTORING_CENTER');
