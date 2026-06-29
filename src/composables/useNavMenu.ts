@@ -192,6 +192,8 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
       { to: '/admin/tutoring/billing-settings', labelKey: 'tutoring.nav.billingSettings', icon: 'settings' },
       { to: '/admin/tutoring/session-reminders', labelKey: 'tutoring.nav.sessionReminders', icon: 'bell' },
       { to: '/admin/tutoring/payouts', labelKey: 'tutoring.nav.payouts', icon: 'wallet' },
+      { to: '/admin/tutoring/payout-requests', labelKey: 'tutoring.nav.payoutRequests', icon: 'wallet' },
+      { to: '/admin/tutoring/payout-settings', labelKey: 'tutoring.nav.payoutSettings', icon: 'settings' },
       { to: '/admin/tutoring/leads', labelKey: 'tutoring.nav.leads', icon: 'users' },
       { to: '/admin/tutoring/vouchers', labelKey: 'tutoring.nav.vouchers', icon: 'wallet' },
       { to: '/admin/tutoring/group-announcements', labelKey: 'tutoring.nav.groupAnnouncements', icon: 'megaphone' },

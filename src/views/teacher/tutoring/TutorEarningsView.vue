@@ -12,13 +12,20 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
-import type { TutorPayoutSummary, TutoringSession } from '@/types/tutoring';
+import type {
+  TutorPayoutRequest,
+  TutorPayoutRequestStatus,
+  TutorPayoutSummary,
+  TutoringSession,
+} from '@/types/tutoring';
 
 import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
+import TutorWithdrawalDialog from '@/components/tutoring/TutorWithdrawalDialog.vue';
 
 const { t } = useI18n();
 const toast = useToast();
@@ -28,6 +35,21 @@ const loading = ref(true);
 const summary = ref<TutorPayoutSummary | null>(null);
 const sessions = ref<TutoringSession[]>([]);
 const month = ref<string>(''); // YYYY-MM; '' = current
+
+// ── Withdrawal flow state ────────────────────────────────────────
+const showWithdrawalDialog = ref(false);
+const withdrawalLoading = ref(false);
+const withdrawalRequests = ref<TutorPayoutRequest[]>([]);
+
+const STATUS_BADGE_CLASS: Record<TutorPayoutRequestStatus, string> = {
+  // Mirror TutoringStatusPill's tone tokens — *-dim backgrounds + the
+  // matching colored text. All four read on both light + dark surfaces
+  // because the underlying CSS vars are theme-aware.
+  PENDING: 'bg-tutoring-amber-dim text-tutoring-amber',
+  APPROVED: 'bg-tutoring-accent-dim text-tutoring-accent',
+  PAID: 'bg-tutoring-green-dim text-tutoring-green',
+  REJECTED: 'bg-tutoring-red-dim text-tutoring-red',
+};
 
 // Payslip PDF URL — same query the page is currently viewing.
 // Browser opens / downloads via the <a> in the header.
@@ -73,9 +95,63 @@ async function load() {
   } finally {
     loading.value = false;
   }
+  // Withdrawal history loads independently — a 4xx here mustn't block
+  // the main earnings strip from rendering.
+  loadWithdrawals();
 }
 onMounted(load);
 watch(month, load);
+
+async function loadWithdrawals() {
+  withdrawalLoading.value = true;
+  try {
+    const res = await TutoringService.listMyPayoutRequests({ per_page: 5 });
+    withdrawalRequests.value = res.items;
+  } catch {
+    withdrawalRequests.value = [];
+  } finally {
+    withdrawalLoading.value = false;
+  }
+}
+
+function openWithdrawal() {
+  showWithdrawalDialog.value = true;
+}
+
+function onWithdrawalSubmitted() {
+  showWithdrawalDialog.value = false;
+  loadWithdrawals();
+}
+
+function statusLabel(s: TutorPayoutRequestStatus): string {
+  return t(`tutor.bimbel.withdrawal.status_${s.toLowerCase()}`);
+}
+
+function statusBadgeClass(s: TutorPayoutRequestStatus): string {
+  return STATUS_BADGE_CLASS[s] ?? 'bg-tutoring-grey-dim text-tutoring-text-mid';
+}
+
+function periodLabel(req: TutorPayoutRequest): string {
+  if (!req.period_from || !req.period_to) return '—';
+  // Display dd MMM → dd MMM yyyy when both dates land in the same year.
+  const from = new Date(req.period_from);
+  const to = new Date(req.period_to);
+  const opt: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short' };
+  const optY: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric' };
+  const fmt = (d: Date, withY = false) =>
+    d.toLocaleDateString('id-ID', withY ? optY : opt);
+  return from.getFullYear() === to.getFullYear()
+    ? `${fmt(from)} → ${fmt(to, true)}`
+    : `${fmt(from, true)} → ${fmt(to, true)}`;
+}
+
+function reqAmount(req: TutorPayoutRequest): string {
+  return formatRupiah(req.amount_requested);
+}
+
+const canWithdraw = computed(
+  () => (summary.value?.earnings ?? 0) > 0,
+);
 
 // ── RITME — sessions per week bars (mirrors mobile tutor_earnings_screen) ──
 // Buckets DONE sessions in the period by Monday-start week, returns
@@ -192,6 +268,18 @@ const monthOptions = computed(() => {
     <template v-else-if="summary">
       <KpiStripCards :cards="kpiCards" />
 
+      <!-- Withdrawal CTA — hidden when there's nothing to withdraw -->
+      <div v-if="canWithdraw" class="flex justify-center sm:justify-end -mt-1">
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-tutoring-accent text-white text-[14px] font-bold hover:opacity-90 shadow-sm"
+          @click="openWithdrawal"
+        >
+          <NavIcon name="wallet" :size="16" />
+          {{ t('tutor.bimbel.withdrawal.cta') }}
+        </button>
+      </div>
+
       <!-- RITME — sessions per week bars (mobile parity) -->
       <div
         v-if="ritme.length"
@@ -265,12 +353,75 @@ const monthOptions = computed(() => {
           </p>
         </div>
       </div>
+
+      <!-- ── Riwayat Penarikan ──────────────────────────────────── -->
+      <div
+        class="bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4 sm:p-5"
+      >
+        <div class="flex items-baseline justify-between mb-3">
+          <p class="text-[12px] font-bold uppercase tracking-widest text-tutoring-text-mid">
+            {{ t('tutor.bimbel.withdrawal.history_heading') }}
+          </p>
+          <p class="text-[11px] text-tutoring-text-lo">
+            {{ t('tutor.bimbel.withdrawal.history_subtitle') }}
+          </p>
+        </div>
+
+        <div
+          v-if="withdrawalLoading"
+          class="py-6 text-center text-tutoring-text-mid text-sm"
+        >
+          {{ t('tutoring.common.loading') }}
+        </div>
+        <div
+          v-else-if="withdrawalRequests.length === 0"
+          class="py-6 text-center text-tutoring-text-mid text-sm"
+        >
+          {{ t('tutor.bimbel.withdrawal.history_empty') }}
+        </div>
+        <ul v-else class="divide-y divide-tutoring-border-soft">
+          <li
+            v-for="req in withdrawalRequests"
+            :key="req.id"
+            class="py-2.5 first:pt-0 last:pb-0 flex items-start justify-between gap-3"
+          >
+            <div class="min-w-0">
+              <p class="text-[13.5px] font-semibold text-tutoring-text-hi truncate">
+                {{ reqAmount(req) }}
+              </p>
+              <p class="text-[11.5px] text-tutoring-text-mid mt-0.5">
+                {{ periodLabel(req) }}
+              </p>
+              <p
+                v-if="req.status === 'REJECTED' && req.reject_reason"
+                class="text-[11px] text-tutoring-red mt-0.5 line-clamp-2"
+              >
+                {{ t('tutor.bimbel.withdrawal.reject_reason_prefix') }} {{ req.reject_reason }}
+              </p>
+            </div>
+            <span
+              class="shrink-0 inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide"
+              :class="statusBadgeClass(req.status)"
+            >
+              {{ statusLabel(req.status) }}
+            </span>
+          </li>
+        </ul>
+      </div>
     </template>
 
     <TutoringEmpty
       v-else
       :text="t('tutor.bimbel.earnings.load_failed_short')"
       icon="alert-circle"
+    />
+
+    <TutorWithdrawalDialog
+      v-if="showWithdrawalDialog"
+      :initial-eligible="summary?.earnings"
+      :initial-month="month || undefined"
+      @close="showWithdrawalDialog = false"
+      @submitted="onWithdrawalSubmitted"
     />
   </div>
 </template>

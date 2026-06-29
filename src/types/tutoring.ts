@@ -472,6 +472,55 @@ export interface TutorPayoutRate {
   updated_at?: string | null;
 }
 
+/** Tutor self-service honor-withdrawal request. Mirrors
+ *  TutorPayoutRequestController::toArray. */
+export type TutorPayoutRequestStatus = 'PENDING' | 'APPROVED' | 'PAID' | 'REJECTED';
+
+export interface TutorPayoutRequestPerson {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+}
+
+export interface TutorPayoutRequest {
+  id: string;
+  school_id: string;
+  user_id: string;
+  period_from: string | null;
+  period_to: string | null;
+  amount_requested: number;
+  amount_computed: number;
+  status: TutorPayoutRequestStatus;
+  bank_name?: string | null;
+  bank_account_number?: string | null;
+  bank_account_holder?: string | null;
+  notes?: string | null;
+  reject_reason?: string | null;
+  payment_notes?: string | null;
+  proof_file_url?: string | null;
+  requested_at?: string | null;
+  approved_at?: string | null;
+  rejected_at?: string | null;
+  paid_at?: string | null;
+  /** Embedded when the row was loaded with `user:id,name,email`. */
+  tutor?: TutorPayoutRequestPerson | null;
+  /** Only present on full-detail responses (show / mutate endpoints). */
+  approved_by?: TutorPayoutRequestPerson | null;
+  rejected_by?: TutorPayoutRequestPerson | null;
+  paid_by?: TutorPayoutRequestPerson | null;
+}
+
+/** Tenant-level toggles + min amount for the withdrawal flow.
+ *  GET /tutoring/payouts/settings → see TutorPayoutSettings model. */
+export interface TutorPayoutSettings {
+  school_id?: string;
+  allow_partial_withdrawal: boolean;
+  min_withdrawal_amount: number;
+  auto_approve_full_amount: boolean;
+  /** True when no row exists yet and the backend served the defaults. */
+  is_default?: boolean;
+}
+
 /** Computed monthly payout summary for one tutor. */
 export interface TutorPayoutSummary {
   user_id: string;

@@ -45,6 +45,10 @@ const iconMap: Record<string, string> = {
   PERHATIAN_ANNOUNCEMENT: 'megaphone',
   KEGIATAN: 'calendar',
   LAIN: 'circle',
+  // Tutor honor-withdrawal pipeline — admins see the
+  // `tutoring_payout_request_created` rows when a tutor files a new
+  // pending request. Both backend types collapse to this category.
+  tutoring_payout: 'wallet',
 };
 function iconFor(n: AppNotification): string { return iconMap[n.category] || 'circle'; }
 function rel(iso: string): string {

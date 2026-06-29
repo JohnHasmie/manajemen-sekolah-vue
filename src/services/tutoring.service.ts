@@ -42,6 +42,9 @@ import type {
   TutoringVoucher,
   TutoringVoucherPreview,
   TutorPayoutRate,
+  TutorPayoutRequest,
+  TutorPayoutRequestStatus,
+  TutorPayoutSettings,
   TutorPayoutSummary,
 } from '@/types/tutoring';
 
@@ -895,6 +898,196 @@ export const TutoringService = {
           ...(opts.month ? { month: opts.month } : {}),
         },
       },
+    );
+    return extractData(res);
+  },
+
+  // ── Honor-withdrawal requests (self-service) ────────────────────
+  // Backend endpoints:
+  //   POST   /tutoring/payouts/requests             tutor (own)
+  //   GET    /tutoring/payouts/requests             tutor own / admin all
+  //   GET    /tutoring/payouts/requests/{id}        scoped detail
+  //   PATCH  /tutoring/payouts/requests/{id}/approve         admin
+  //   PATCH  /tutoring/payouts/requests/{id}/reject          admin
+  //   PATCH  /tutoring/payouts/requests/{id}/mark-paid       admin (FormData)
+  //   PATCH  /tutoring/payouts/requests/{id}/rollback        admin
+  //   GET/PUT /tutoring/payouts/settings                      admin
+
+  /** Tutor: file a new withdrawal request for a period. Backend
+   *  computes the eligible amount internally; the tutor's
+   *  `amount_requested` may be less than that (when
+   *  allow_partial_withdrawal is on) but never more. */
+  async createPayoutRequest(payload: {
+    period_from: string; // YYYY-MM-DD
+    period_to: string;
+    amount_requested: number;
+    bank_name?: string | null;
+    bank_account_number?: string | null;
+    bank_account_holder?: string | null;
+    notes?: string | null;
+  }): Promise<TutorPayoutRequest> {
+    const res = await api.post<ApiResponse<TutorPayoutRequest>>(
+      '/tutoring/payouts/requests',
+      payload,
+    );
+    return extractData(res);
+  },
+
+  /**
+   * Tutor list: backend scopes to the caller automatically when
+   * `isAdmin === false`. The same endpoint serves both — but admins
+   * see all rows; non-admins see only their own. This wrapper is the
+   * "tutor-shaped" caller (no user_id filter).
+   */
+  async listMyPayoutRequests(opts: {
+    status?: TutorPayoutRequestStatus;
+    period_from?: string;
+    period_to?: string;
+    page?: number;
+    per_page?: number;
+  } = {}): Promise<{
+    items: TutorPayoutRequest[];
+    pagination: { page: number; per_page: number; total: number; last_page: number };
+  }> {
+    const res = await api.get<ApiResponse<{
+      items: TutorPayoutRequest[];
+      pagination: { page: number; per_page: number; total: number; last_page: number };
+    }>>('/tutoring/payouts/requests', {
+      params: {
+        ...(opts.status ? { status: opts.status } : {}),
+        ...(opts.period_from ? { period_from: opts.period_from } : {}),
+        ...(opts.period_to ? { period_to: opts.period_to } : {}),
+        ...(opts.page ? { page: opts.page } : {}),
+        ...(opts.per_page ? { per_page: opts.per_page } : {}),
+      },
+    });
+    return (
+      extractData(res) ?? {
+        items: [],
+        pagination: { page: 1, per_page: 20, total: 0, last_page: 1 },
+      }
+    );
+  },
+
+  /** Admin variant — same endpoint, but exposes the extra `user_id`
+   *  filter so the queue page can scope to one tutor. */
+  async listAllPayoutRequests(opts: {
+    status?: TutorPayoutRequestStatus;
+    period_from?: string;
+    period_to?: string;
+    user_id?: string;
+    page?: number;
+    per_page?: number;
+  } = {}): Promise<{
+    items: TutorPayoutRequest[];
+    pagination: { page: number; per_page: number; total: number; last_page: number };
+  }> {
+    const res = await api.get<ApiResponse<{
+      items: TutorPayoutRequest[];
+      pagination: { page: number; per_page: number; total: number; last_page: number };
+    }>>('/tutoring/payouts/requests', {
+      params: {
+        ...(opts.status ? { status: opts.status } : {}),
+        ...(opts.period_from ? { period_from: opts.period_from } : {}),
+        ...(opts.period_to ? { period_to: opts.period_to } : {}),
+        ...(opts.user_id ? { user_id: opts.user_id } : {}),
+        ...(opts.page ? { page: opts.page } : {}),
+        ...(opts.per_page ? { per_page: opts.per_page } : {}),
+      },
+    });
+    return (
+      extractData(res) ?? {
+        items: [],
+        pagination: { page: 1, per_page: 20, total: 0, last_page: 1 },
+      }
+    );
+  },
+
+  async getPayoutRequest(id: string): Promise<TutorPayoutRequest> {
+    const res = await api.get<ApiResponse<TutorPayoutRequest>>(
+      `/tutoring/payouts/requests/${id}`,
+    );
+    return extractData(res);
+  },
+
+  async approvePayoutRequest(id: string): Promise<TutorPayoutRequest> {
+    const res = await api.patch<ApiResponse<TutorPayoutRequest>>(
+      `/tutoring/payouts/requests/${id}/approve`,
+    );
+    return extractData(res);
+  },
+
+  async rejectPayoutRequest(
+    id: string,
+    payload: { reject_reason: string },
+  ): Promise<TutorPayoutRequest> {
+    const res = await api.patch<ApiResponse<TutorPayoutRequest>>(
+      `/tutoring/payouts/requests/${id}/reject`,
+      payload,
+    );
+    return extractData(res);
+  },
+
+  /**
+   * Multipart mark-paid — proof_file (max 2MB) is optional. Sent as
+   * FormData because of the file slot; the other fields ride along.
+   *
+   * Laravel doesn't natively accept files on PATCH (PHP's input parser
+   * strips files when method !== POST), so we POST and rely on the
+   * `_method` field to upgrade the route to PATCH server-side. Mirrors
+   * the same trick used by `markBillPaid`-style endpoints elsewhere.
+   */
+  async markPayoutRequestPaid(
+    id: string,
+    payload: {
+      paid_at?: string | null;
+      payment_notes?: string | null;
+      proof_file?: File | Blob | null;
+    } = {},
+  ): Promise<TutorPayoutRequest> {
+    const form = new FormData();
+    form.append('_method', 'PATCH');
+    if (payload.paid_at) form.append('paid_at', payload.paid_at);
+    if (payload.payment_notes) form.append('payment_notes', payload.payment_notes);
+    if (payload.proof_file) form.append('proof_file', payload.proof_file);
+    const res = await api.post<ApiResponse<TutorPayoutRequest>>(
+      `/tutoring/payouts/requests/${id}/mark-paid`,
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    );
+    return extractData(res);
+  },
+
+  /** Admin: roll one step back (APPROVED→PENDING / PAID→APPROVED). */
+  async rollbackPayoutRequest(id: string): Promise<TutorPayoutRequest> {
+    const res = await api.patch<ApiResponse<TutorPayoutRequest>>(
+      `/tutoring/payouts/requests/${id}/rollback`,
+    );
+    return extractData(res);
+  },
+
+  async getPayoutSettings(): Promise<TutorPayoutSettings> {
+    const res = await api.get<ApiResponse<TutorPayoutSettings>>(
+      '/tutoring/payouts/settings',
+    );
+    return (
+      extractData(res) ?? {
+        allow_partial_withdrawal: false,
+        min_withdrawal_amount: 0,
+        auto_approve_full_amount: false,
+        is_default: true,
+      }
+    );
+  },
+
+  async updatePayoutSettings(payload: {
+    allow_partial_withdrawal?: boolean;
+    min_withdrawal_amount?: number;
+    auto_approve_full_amount?: boolean;
+  }): Promise<TutorPayoutSettings> {
+    const res = await api.put<ApiResponse<TutorPayoutSettings>>(
+      '/tutoring/payouts/settings',
+      payload,
     );
     return extractData(res);
   },

@@ -51,6 +51,10 @@ const iconByCategory: Record<string, string> = {
   tutoring_group_assigned: 'users',
   tutoring_rating_received: 'star',
   tutoring_session_cancelled: 'x-circle',
+  // Self-service honor-withdrawal lifecycle. Both backend types
+  // (`tutoring_payout_request_created` + `_status`) collapse to the
+  // `tutoring_payout` category via notificationCategoryFromType.
+  tutoring_payout: 'wallet',
   // Finance (admin sees payment_submitted, parent sees the other three;
   // tutor doesn't recipient on these but we map for completeness).
   bill_generated: 'wallet',

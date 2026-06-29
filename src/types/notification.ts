@@ -10,6 +10,7 @@ export type NotificationCategory =
   | 'class_activity'
   | 'lesson_plan'
   | 'billing'
+  | 'tutoring_payout'
   | 'system'
   | 'other';
 
@@ -107,6 +108,16 @@ export function notificationCategoryFromType(
     case 'tagihan':
     case 'pembayaran':
       return 'billing';
+
+    // Tutor self-service honor-withdrawal pipeline. The backend ships
+    // exactly two type strings; the status-change row encodes
+    // APPROVED / REJECTED / PAID in `data.status` (see
+    // NotifyTutorPayoutRequestAction). Both collapse to the same
+    // category so a tutor's notifications screen + an admin's queue
+    // can icon-map and route them as one group.
+    case 'tutoring_payout_request_created':
+    case 'tutoring_payout_request_status':
+      return 'tutoring_payout';
 
     case 'system':
     case 'info':
@@ -213,6 +224,15 @@ export function notificationHref(
       return planId
         ? `/teacher/lesson-plans/${planId}`
         : '/teacher/lesson-plans';
+    }
+
+    case 'tutoring_payout': {
+      // Admins land on the queue page (they approve/reject from there),
+      // tutors land on their earnings page (which lists the recent
+      // withdrawal history). The web app has no `/:id` detail route for
+      // a single payout request — the list IS the experience.
+      if (audience === 'admin') return '/admin/tutoring/payout-requests';
+      return '/teacher/tutoring/earnings';
     }
 
     // `system` / `other` have no meaningful in-app target.

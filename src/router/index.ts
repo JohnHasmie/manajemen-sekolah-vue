@@ -1063,6 +1063,20 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
+        path: 'admin/tutoring/payout-requests',
+        name: 'admin.tutoring.payout-requests',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringPayoutRequestsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/payout-settings',
+        name: 'admin.tutoring.payout-settings',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringPayoutSettingsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
         path: 'admin/tutoring/leads',
         name: 'admin.tutoring.leads',
         component: () =>
