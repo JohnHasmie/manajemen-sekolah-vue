@@ -536,6 +536,14 @@ export interface TutorPayoutSummary {
   minutes: number;
   hours: number;
   earnings: number;
+  /** Default bank details persisted on the tutor's TutorPayoutRate.
+   *  Backend includes these top-level on the summary response so the
+   *  withdrawal dialog can prefill them without an extra fetch. Any of
+   *  the three can be null when the admin hasn't filled the rate's
+   *  bank fields yet. (Added with backend !223.) */
+  bank_name?: string | null;
+  bank_account_number?: string | null;
+  bank_account_holder?: string | null;
 }
 
 export interface TutoringActivitySubmission {

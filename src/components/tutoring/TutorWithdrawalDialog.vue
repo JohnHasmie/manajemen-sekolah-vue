@@ -18,10 +18,14 @@
       allow_partial = true.
     - Min amount comes from settings.min_withdrawal_amount.
 
-  Bank account: collapsible — opens a 3-input inline form. When the
-  fields are blank the backend reuses the tutor's persisted rate's
-  bank details (set on AdminTutoringPayoutsView), so leaving the
-  section closed is the common path.
+  Bank account: shows the tutor's default bank details (from the
+  TutorPayoutRate, served on the payout-summary response) as a
+  read-only summary. An "Ubah" toggle reveals a 3-input override form
+  for one-off transfers. Leaving the override blank keeps the default;
+  the backend uses the persisted rate's bank details (set on
+  AdminTutoringPayoutsView). When no default exists yet the read-only
+  block becomes a "Belum diatur" empty state and the user must fill
+  the override form to proceed.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -69,12 +73,27 @@ const rangeFrom = ref<string>(daysAgoIso(30));
 const rangeTo = ref<string>(todayIso());
 
 const amount = ref<number>(props.initialEligible ?? 0);
+// Default bank details from the tutor's TutorPayoutRate, surfaced by
+// the payout-summary response. Null when the admin hasn't filled
+// them yet — in that case the read-only block becomes an empty
+// state and the override form is the only way forward.
+const defaultBankName = ref<string | null>(null);
+const defaultBankAccountNumber = ref<string | null>(null);
+const defaultBankAccountHolder = ref<string | null>(null);
 const bankExpanded = ref(false);
 const bankName = ref('');
 const bankAccountNumber = ref('');
 const bankAccountHolder = ref('');
 const notes = ref('');
 const errMsg = ref<string | null>(null);
+
+// True when no default bank details exist yet. Drives the "Belum
+// diatur" empty state and auto-opens the override form so the tutor
+// can't accidentally submit without a destination.
+const hasDefaultBank = computed(
+  () =>
+    !!(defaultBankName.value && defaultBankName.value.trim().length > 0),
+);
 
 function currentMonthIso(): string {
   const d = new Date();
@@ -134,33 +153,31 @@ const monthOptions = computed(() => {
 async function loadInit() {
   loading.value = true;
   try {
-    // GET /payouts/settings is admin-only on the backend — tutor calls
-    // 403. We surface the lock-to-full rule as the safe default and
-    // proceed without partial UI.
-    const [settingsResult, summaryResult] = await Promise.allSettled([
+    // Both endpoints are open to any tenant member (backend !223
+    // dropped the admin-only restriction on /payouts/settings), so a
+    // plain Promise.all is enough — no per-call fallback needed.
+    const [settingsResp, summaryResp] = await Promise.all([
       TutoringService.getPayoutSettings(),
       TutoringService.getPayoutSummary({ month: month.value }),
     ]);
-    if (settingsResult.status === 'fulfilled') {
-      settings.value = settingsResult.value;
-    } else {
-      settings.value = {
-        allow_partial_withdrawal: false,
-        min_withdrawal_amount: 0,
-        auto_approve_full_amount: false,
-        is_default: true,
-      };
+    settings.value = settingsResp;
+    monthSummary.value = summaryResp;
+    // Seed amount to the eligible for that month — tutor can adjust
+    // later if partial is allowed.
+    if (amount.value <= 0 || !Number.isFinite(amount.value)) {
+      amount.value = Math.floor(summaryResp.earnings ?? 0);
     }
-    if (summaryResult.status === 'fulfilled') {
-      monthSummary.value = summaryResult.value;
-      // Seed amount to the eligible for that month — tutor can adjust
-      // later if partial is allowed.
-      if (
-        amount.value <= 0 ||
-        !Number.isFinite(amount.value)
-      ) {
-        amount.value = Math.floor(summaryResult.value.earnings ?? 0);
-      }
+    // Prefill default bank details from the summary response (added
+    // with backend !223). Any of these may be null when the admin
+    // hasn't filled the tutor's rate bank fields — we render the
+    // "Belum diatur" empty state in that case.
+    defaultBankName.value = summaryResp.bank_name ?? null;
+    defaultBankAccountNumber.value = summaryResp.bank_account_number ?? null;
+    defaultBankAccountHolder.value = summaryResp.bank_account_holder ?? null;
+    // When there's no default on file, auto-open the override form so
+    // the tutor can't submit a request that has no destination.
+    if (!hasDefaultBank.value) {
+      bankExpanded.value = true;
     }
   } catch {
     /* non-fatal — fall through with safe defaults */
@@ -431,7 +448,7 @@ const submitDisabled = computed(() => submitting.value || loading.value || amoun
         </p>
       </div>
 
-      <!-- Bank account (collapsible) -->
+      <!-- Bank account (default summary + collapsible override) -->
       <div
         class="bg-tutoring-panel border border-tutoring-border-soft rounded-2xl p-4 space-y-2"
       >
@@ -448,8 +465,50 @@ const submitDisabled = computed(() => submitting.value || loading.value || amoun
             <NavIcon :name="bankExpanded ? 'chevron-up' : 'chevron-down'" :size="14" />
           </span>
         </button>
+
+        <!--
+          Default summary — shows the persisted TutorPayoutRate bank
+          details (served on the payout-summary response). Renders as
+          a read-only block so the tutor knows where the money will
+          land if they leave the override empty. Falls back to a
+          "Belum diatur" empty state when no default is on file; in
+          that case the override form is auto-opened on mount.
+        -->
+        <div
+          v-if="hasDefaultBank"
+          class="rounded-lg border border-tutoring-border-soft bg-tutoring-bg/60 p-3 space-y-1"
+        >
+          <p class="text-[10.5px] font-bold uppercase tracking-widest text-tutoring-text-mid">
+            {{ t('tutor.bimbel.withdrawal.bank_default_label') }}
+          </p>
+          <p class="text-sm font-semibold text-tutoring-text-hi">
+            {{ defaultBankName }}
+            <span v-if="defaultBankAccountNumber" class="font-mono font-normal text-tutoring-text-mid">
+              · {{ defaultBankAccountNumber }}
+            </span>
+          </p>
+          <p v-if="defaultBankAccountHolder" class="text-[12px] text-tutoring-text-mid">
+            {{ t('tutor.bimbel.withdrawal.bank_holder_prefix') }} {{ defaultBankAccountHolder }}
+          </p>
+        </div>
+        <div
+          v-else
+          class="rounded-lg border border-dashed border-tutoring-border-soft bg-tutoring-bg/60 p-3"
+        >
+          <p class="text-[10.5px] font-bold uppercase tracking-widest text-tutoring-text-mid">
+            {{ t('tutor.bimbel.withdrawal.bank_default_label') }}
+          </p>
+          <p class="text-[12.5px] text-tutoring-text-mid mt-1">
+            {{ t('tutor.bimbel.withdrawal.bank_default_empty') }}
+          </p>
+        </div>
+
         <p class="text-[11.5px] text-tutoring-text-mid">
-          {{ t('tutor.bimbel.withdrawal.bank_hint') }}
+          {{
+            hasDefaultBank
+              ? t('tutor.bimbel.withdrawal.bank_hint')
+              : t('tutor.bimbel.withdrawal.bank_hint_no_default')
+          }}
         </p>
         <div v-if="bankExpanded" class="space-y-2 pt-1">
           <div class="grid grid-cols-2 gap-2">
