@@ -278,7 +278,7 @@ const listState = computed<AsyncState<AdminAttendanceSummary[]>>(() => {
 
 function openDetail(r: AdminAttendanceSummary) {
   router.push({
-    name: 'admin.attendance.detail',
+    name: 'admin.student-attendance.detail',
     query: {
       class_id: r.class_id,
       subject_id: r.subject_id,

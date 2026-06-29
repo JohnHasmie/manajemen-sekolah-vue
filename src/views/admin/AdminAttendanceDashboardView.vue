@@ -201,13 +201,13 @@ const trendWindowIsHistorical = computed(
 
 function openTingkatHeatmap(t: TingkatTrend) {
   router.push({
-    name: 'admin.attendance.tingkat',
+    name: 'admin.student-attendance.grade-level',
     params: { tingkat: String(t.tingkat) },
   });
 }
 
 function openLaporan() {
-  router.push({ name: 'admin.attendance.laporan' });
+  router.push({ name: 'admin.student-attendance.report' });
 }
 
 const showNewSessionWizard = ref(false);
@@ -221,7 +221,7 @@ function onWizardDone(payload: {
   lesson_hour_id?: string;
 }) {
   router.push({
-    name: 'admin.attendance.detail',
+    name: 'admin.student-attendance.detail',
     query: {
       class_id: payload.class_id,
       subject_id: payload.subject_id,

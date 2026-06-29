@@ -247,7 +247,7 @@ async function deleteSession() {
       lesson_hour_id: lessonHourId.value,
     });
     toast.value = { message: 'Sesi presensi dihapus.', tone: 'success' };
-    setTimeout(() => router.push({ name: 'admin.attendance.laporan' }), 600);
+    setTimeout(() => router.push({ name: 'admin.student-attendance.report' }), 600);
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
@@ -306,11 +306,11 @@ function goBack() {
   if (editMode.value && dirty.value.size > 0) {
     unsavedConfirm.value = {
       open: true,
-      onConfirm: () => router.push({ name: 'admin.attendance.laporan' }),
+      onConfirm: () => router.push({ name: 'admin.student-attendance.report' }),
     };
     return;
   }
-  router.push({ name: 'admin.attendance.laporan' });
+  router.push({ name: 'admin.student-attendance.report' });
 }
 
 const headerMeta = computed(() => {
