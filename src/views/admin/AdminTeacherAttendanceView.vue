@@ -40,10 +40,12 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Spinner from '@/components/ui/Spinner.vue';
+import { useAcademicYearStore } from '@/stores/academic-year';
 
 const toast = useToast();
 const { t } = useI18n();
 const route = useRoute();
+const ayStore = useAcademicYearStore();
 
 type Tab = 'settings' | 'checkin_rules' | 'rules' | 'report';
 // Determine mode based on route path instead of query parameter
@@ -169,9 +171,24 @@ async function saveSettings() {
 // detail per-row list (admin). Empty bounds let the backend default to
 // start-of-month → today.
 // ─────────────────────────────────────────────────────────────────
-const filterStartDate = ref('');
-const filterEndDate = ref('');
+// Rekap periode defaults to the active academic year's start/end so
+// the admin sees the year they're working in by default, not just the
+// last-30-days slice the backend falls back to. Luay called this out
+// (2026-06-29): the filter should follow whatever academic year the
+// dashboard picker is on. A watcher below keeps the two in sync —
+// flipping the dashboard picker also re-anchors this filter (unless
+// the user has manually narrowed it, in which case we leave their
+// pick alone). `userTouchedDates` tracks the manual-narrow case.
+function ayStart(): string {
+  return (ayStore.selectedYear?.start_date ?? '') as string;
+}
+function ayEnd(): string {
+  return (ayStore.selectedYear?.end_date ?? '') as string;
+}
+const filterStartDate = ref(ayStart());
+const filterEndDate = ref(ayEnd());
 const filterTeacher = ref('');
+const userTouchedDates = ref(false);
 /** Detail-only filters (the rekap ignores these). */
 const filterDate = ref('');
 const filterStatus = ref<'' | 'present' | 'late'>('');
@@ -352,14 +369,49 @@ function applyReportFilters() {
 
 function clearReportFilters() {
   filterDate.value = '';
-  filterStartDate.value = '';
-  filterEndDate.value = '';
+  // Reset to the active AY bounds (not empty) — "Kosongkan" should
+  // still respect the dashboard period the user is anchored on, per
+  // Luay 2026-06-29. Anyone who genuinely wants a custom range types
+  // it in; that path sets userTouchedDates and stops AY-following.
+  filterStartDate.value = ayStart();
+  filterEndDate.value = ayEnd();
+  userTouchedDates.value = false;
   filterTeacher.value = '';
   filterStatus.value = '';
   reportPage.value = 1;
   loadSummary();
   if (showDetail.value) loadReport();
 }
+
+// Watch the date inputs — once the user manually edits either, we stop
+// re-anchoring to the active AY on AY changes. They've expressed an
+// explicit periode preference; respect it until they hit Clear.
+watch([filterStartDate, filterEndDate], ([s, e], [ps, pe]) => {
+  if (s === ps && e === pe) return;
+  if (s === ayStart() && e === ayEnd()) {
+    // Switched BACK to the AY bounds (probably via clearReportFilters
+    // or programmatic re-anchor) — stop treating as user-narrowed.
+    userTouchedDates.value = false;
+    return;
+  }
+  userTouchedDates.value = true;
+});
+
+// Re-anchor when the dashboard AY picker flips, but only if the user
+// hasn't taken over the periode manually. This is the load-bearing
+// half of Luay's request: changing AY on the dashboard should pull the
+// rekap with it.
+watch(
+  () => ayStore.selectedYear?.id,
+  () => {
+    if (userTouchedDates.value) return;
+    filterStartDate.value = ayStart();
+    filterEndDate.value = ayEnd();
+    reportPage.value = 1;
+    loadSummary();
+    if (showDetail.value) loadReport();
+  },
+);
 
 /** Expand/collapse the detail per-row list; load it on first open. */
 function toggleDetail() {
