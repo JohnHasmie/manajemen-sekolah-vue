@@ -82,6 +82,21 @@ function clearMaster() {
   masterQuery.value = '';
 }
 
+// Inline `setTimeout(...)` in the template (the previous
+// `@blur="setTimeout(() => showMasterDropdown = false, 150)"`) does NOT
+// resolve `setTimeout` to the global. Vue compiles template expressions
+// against the component proxy, so the call becomes `_ctx.setTimeout(...)`
+// — and the component has no such property. Result in prod (minified):
+//   TypeError: c.setTimeout is not a function
+// blowing up the whole edit-mapel form (Luay 2026-06-29). Hoisting the
+// timer into a script-block function avoids that scoping trap and keeps
+// the same UX (give the dropdown click 150ms to register before hiding).
+function hideMasterDropdownAfterDelay(): void {
+  window.setTimeout(() => {
+    showMasterDropdown.value = false;
+  }, 150);
+}
+
 function validate(): boolean {
   Object.keys(errors).forEach((k) => delete errors[k]);
   if (!form.name.trim()) errors.name = 'Nama mata pelajaran wajib diisi.';
@@ -123,7 +138,7 @@ function submit() {
             class="w-full rounded-xl border border-slate-300 px-md py-sm pr-9 text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
             :disabled="isSaving"
             @focus="showMasterDropdown = true"
-            @blur="setTimeout(() => showMasterDropdown = false, 150)"
+            @blur="hideMasterDropdownAfterDelay"
           />
           <button
             v-if="form.master_subject_id"
