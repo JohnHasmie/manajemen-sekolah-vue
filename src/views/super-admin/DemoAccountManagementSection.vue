@@ -118,6 +118,8 @@ const deleting = ref(false);
 const deleteError = ref<string | null>(null);
 
 // Per-mode count + label so the modal can say exactly what will go.
+// `by_role` is English-first; falls back to the Indonesian legacy
+// keys (`guru`/`wali`) only for backends that still dual-emit them.
 function countFor(mode: DemoAccountDeleteMode): number {
   const c = counts.value;
   if (!c) return 0;
@@ -125,11 +127,11 @@ function countFor(mode: DemoAccountDeleteMode): number {
     case 'all':
       return c.total_accounts;
     case 'guru':
-      return c.by_role.guru;
+      return c.by_role.teacher ?? c.by_role.guru ?? 0;
     case 'admin':
       return c.by_role.admin;
     case 'wali':
-      return c.by_role.wali;
+      return c.by_role.parent ?? c.by_role.wali ?? 0;
   }
 }
 
@@ -307,9 +309,18 @@ const roleRows = computed<
 >(() => {
   const c = counts.value;
   return [
-    { mode: 'guru', icon: 'user-check', count: c?.by_role.guru ?? 0 },
+    {
+      mode: 'guru',
+      icon: 'user-check',
+      // English-first; Indonesian fallback for legacy dual-emit.
+      count: c?.by_role.teacher ?? c?.by_role.guru ?? 0,
+    },
     { mode: 'admin', icon: 'shield', count: c?.by_role.admin ?? 0 },
-    { mode: 'wali', icon: 'users', count: c?.by_role.wali ?? 0 },
+    {
+      mode: 'wali',
+      icon: 'users',
+      count: c?.by_role.parent ?? c?.by_role.wali ?? 0,
+    },
   ];
 });
 
@@ -413,7 +424,7 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
           variant="secondary"
           size="sm"
           block
-          :disabled="(counts.by_role.guru ?? 0) === 0"
+          :disabled="((counts.by_role.teacher ?? counts.by_role.guru) ?? 0) === 0"
           @click="startDelete('guru')"
         >
           <NavIcon name="user-check" :size="14" />
@@ -433,7 +444,7 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
           variant="secondary"
           size="sm"
           block
-          :disabled="(counts.by_role.wali ?? 0) === 0"
+          :disabled="((counts.by_role.parent ?? counts.by_role.wali) ?? 0) === 0"
           @click="startDelete('wali')"
         >
           <NavIcon name="users" :size="14" />

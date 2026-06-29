@@ -18,11 +18,24 @@
 /** Delete scope: all accounts, or a single role. */
 export type DemoAccountDeleteMode = 'all' | 'guru' | 'admin' | 'wali';
 
-/** Per-role account counts for a demo school. */
+/**
+ * Per-role account counts for a demo school.
+ *
+ * The backend currently dual-emits English + Indonesian keys
+ * (teacher/guru, parent/wali). Phase 8 will drop the Indonesian
+ * keys, so callers MUST prefer the English ones and fall back to
+ * the Indonesian only for older backends still in flight.
+ */
 export interface DemoAccountCountsByRole {
   admin: number;
-  guru: number;
-  wali: number;
+  /** English canonical (phase-8 forward). */
+  teacher?: number;
+  /** English canonical (phase-8 forward). */
+  parent?: number;
+  /** Indonesian legacy — DROPPED in phase 8 cleanup. */
+  guru?: number;
+  /** Indonesian legacy — DROPPED in phase 8 cleanup. */
+  wali?: number;
   /** Pivots whose role isn't one of the three managed buckets. */
   other: number;
 }
