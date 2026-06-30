@@ -303,7 +303,11 @@
     "systemSettings": "System",
     "dataManagement": "Data management",
     "platform": "Platform",
-    "demoRequests": "Demo requests"
+    "demoRequests": "Demo requests",
+    "attendanceQrSection": "QR attendance",
+    "attendanceQrGate": "Gate QR",
+    "attendanceQrCards": "Personnel QR cards",
+    "attendanceQrSettings": "Attendance settings"
   },
   "profile": {
     "title": "Profile",
@@ -326,6 +330,89 @@
     "passwordMismatch": "Password confirmation does not match."
   },
   "admin": {
+    "attendance": {
+      "qrDisplay": {
+        "kicker": "QR attendance",
+        "title": "Gate QR",
+        "meta": "School-wide rotating QR — display on a projector or print as a poster.",
+        "rotateNow": "Rotate now",
+        "rotating": "Rotating…",
+        "rotated": "Gate QR rotated.",
+        "rotateFail": "Failed to rotate the gate QR.",
+        "print": "Print",
+        "rotatesIn": "Auto-rotates in",
+        "instructions": "Open the KamilEdu app on your phone, choose My Attendance → Scan Gate QR, then point your camera at this code.",
+        "posterKicker": "ATTENDANCE QR",
+        "loadFail": "Failed to load the gate QR.",
+        "empty": "No gate QR yet. Click Rotate now to mint one.",
+        "fallbackSchool": "School"
+      },
+      "settings": {
+        "kicker": "QR attendance",
+        "title": "Attendance settings",
+        "meta": "Configure check-in methods, gate-QR rotation, and personnel cards.",
+        "loadFail": "Failed to load attendance settings.",
+        "saveFail": "Failed to save attendance settings.",
+        "saved": "Attendance settings saved.",
+        "save": "Save settings",
+        "method": {
+          "section": "Allowed check-in methods",
+          "sectionHint": "Pick at least one. Teachers can only use the methods you check here.",
+          "selfie": "Selfie",
+          "selfieDesc": "Selfie photo + GPS — the legacy method.",
+          "gateQr": "Gate QR",
+          "gateQrDesc": "Scan the rotating QR at the school gate.",
+          "cardQr": "Card QR",
+          "cardQrDesc": "Scan the QR on the user's printed card.",
+          "atLeastOne": "At least one method must remain enabled."
+        },
+        "rotation": {
+          "section": "Gate QR rotation",
+          "sectionHint": "How often the gate QR auto-rotates. Faster rotation is more resistant to photo-and-replay attacks.",
+          "minutes": "min",
+          "hint": "Range 5–60 minutes. Recommended: 15 minutes.",
+          "outOfRange": "Rotation must be between 5 and 60 minutes."
+        },
+        "flags": {
+          "section": "Extra options",
+          "sectionHint": "Fine-grained controls for QR geofence and student cards.",
+          "geofenceQr": "Require geofence on QR check-ins",
+          "geofenceQrHint": "When on, QR check-ins must also pass the geofence radius — not just selfies.",
+          "studentCards": "Issue student QR cards",
+          "studentCardsHint": "Enable to mint QR cards for students (default: teachers/staff only)."
+        }
+      },
+      "cards": {
+        "kicker": "QR attendance",
+        "title": "Personnel QR cards",
+        "meta": "Issue, revoke, and download QR cards for teachers and staff.",
+        "loadFail": "Failed to load personnel list.",
+        "searchPh": "Search name, employee number, or email…",
+        "roleAll": "All roles",
+        "roleGuru": "Teacher",
+        "roleWaliKelas": "Homeroom teacher",
+        "empty": "No matching personnel",
+        "emptyHint": "Adjust your filter or add a teacher from Data management.",
+        "selectAll": "Select all on this page",
+        "selectRow": "Select row",
+        "colName": "Name",
+        "colRole": "Role",
+        "colEmployeeNumber": "Employee #",
+        "colActions": "Actions",
+        "issue": "Issue cards ({count})",
+        "issued": "{count} cards issued",
+        "skipped": "{count} skipped",
+        "errored": "{count} failed",
+        "issueFail": "Failed to issue cards.",
+        "exportPdf": "Download PDF",
+        "exported": "Card PDF download started.",
+        "exportFail": "Failed to download card PDF.",
+        "revoke": "Revoke",
+        "revoking": "Revoking…",
+        "revoked": "Card for {name} revoked.",
+        "revokeFail": "Failed to revoke card."
+      }
+    },
     "dashboard": {
       "allLevels": "All levels",
       "totalStudents": "Total students",

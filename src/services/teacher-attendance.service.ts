@@ -147,6 +147,34 @@ function statusCountsFromJson(
   return out;
 }
 
+/** Allowed QR check-in method keys (MR !226). Anything else is dropped. */
+const ALLOWED_METHOD_KEYS = ['SELFIE', 'GATE_QR', 'CARD_QR'] as const;
+
+/**
+ * Coerce a raw `allowed_methods` field into a typed list. Accepts the
+ * server's JSON array, a comma-separated string (in case the legacy
+ * settings page serialised it that way), or null (treat as the default
+ * SELFIE-only). Unknown entries are silently dropped so a stray value
+ * doesn't break the typed select.
+ */
+function methodsFromJson(
+  raw: unknown,
+): import('@/types/attendance-qr').CheckInMethod[] {
+  let list: unknown[] = [];
+  if (Array.isArray(raw)) list = raw;
+  else if (typeof raw === 'string' && raw !== '') list = raw.split(',');
+  const out: import('@/types/attendance-qr').CheckInMethod[] = [];
+  for (const m of list) {
+    const k = String(m).trim().toUpperCase();
+    if ((ALLOWED_METHOD_KEYS as readonly string[]).includes(k)) {
+      out.push(k as import('@/types/attendance-qr').CheckInMethod);
+    }
+  }
+  // Guarantee at least one method — mirrors the backend's ≥1 constraint
+  // so a misconfigured row never renders an unselectable form.
+  return out.length > 0 ? out : ['SELFIE'];
+}
+
 /** Normalize a raw settings object (handles 0/1 + missing keys). */
 function settingsFromJson(
   raw: Record<string, unknown>,
@@ -164,6 +192,10 @@ function settingsFromJson(
     effective_geofence_lng: asNumOrNull(raw.effective_geofence_lng),
     school_latitude: asNumOrNull(raw.school_latitude),
     school_longitude: asNumOrNull(raw.school_longitude),
+    allowed_methods: methodsFromJson(raw.allowed_methods),
+    gate_qr_rotation_minutes: asInt(raw.gate_qr_rotation_minutes, 15),
+    geofence_required_for_qr: asBool(raw.geofence_required_for_qr, false),
+    issue_student_cards: asBool(raw.issue_student_cards, false),
   };
 }
 
@@ -345,6 +377,11 @@ export const TeacherAttendanceService = {
         'geofence_radius_m',
         'reject_outside_geofence',
         'late_grace_minutes',
+        // Gate QR + personnel card fields (MR !226).
+        'allowed_methods',
+        'gate_qr_rotation_minutes',
+        'geofence_required_for_qr',
+        'issue_student_cards',
       ];
       for (const k of keys) {
         if (patch[k] !== undefined) body[k] = patch[k];
