@@ -201,6 +201,29 @@ function pickPill(v: string) {
   emit('update', v);
 }
 
+// ── pills_with_other (single chip + free-text fallback) ────────────
+// "Other" is active when the current value doesn't exactly match any
+// preset option. The free-text input below is rendered in that state
+// + when the user explicitly clicks the "Lainnya…" chip (which
+// blanks the value so the input starts empty + focused).
+const isOtherActive = computed<boolean>(() => {
+  if (props.question.input !== 'pills_with_other') return false;
+  const v = String(props.modelValue ?? '').trim();
+  if (v === '') return true;
+  const opts = props.question.options ?? [];
+  return !opts.some((o) => o.value === v);
+});
+function pickOther() {
+  // Clear the value so the input below shows its placeholder. The
+  // user types their custom role into it; the chip "Lainnya…" stays
+  // visually active until the value matches a preset.
+  emit('update', '');
+}
+function onOtherInput(e: Event) {
+  const target = e.target as HTMLInputElement | null;
+  emit('update', target?.value ?? '');
+}
+
 // ── chips_multi (multi select toggle) ──────────────────────────────
 const multiValue = computed<string[]>(() => {
   const v = props.modelValue;
@@ -268,6 +291,29 @@ const socialLabels: Record<DemoSocialChannel, { label: string; icon: string; ph:
 const hasAnySocial = computed(() =>
   socialChannels.some((c) => (socialMap.value[c] ?? '').trim() !== ''),
 );
+
+/**
+ * WhatsApp deeplink for the "tidak punya medsos" escape-hatch — a
+ * minority of legitimate requesters (private individuals, low-
+ * engagement profiles) genuinely have no public social presence and
+ * would otherwise dead-end on this required step. Tapping the link
+ * opens WhatsApp with a pre-filled message to the verification team
+ * (+62 851-7981-9002) so they can route the requester through a
+ * manual identity check.
+ *
+ * The message is intentionally brief + factual — references the
+ * exact wizard step so the team can connect the chat back to the
+ * requester's pending demo_request.
+ */
+const noSocialContactHref = computed(() => {
+  const phone = '6285179819002';
+  const msg =
+    'Halo Tim KamilEdu,\n\nSaya ingin mendaftar demo KamilEdu tapi terkendala di ' +
+    'langkah verifikasi media sosial — saya tidak memiliki akun media sosial yang ' +
+    'aktif untuk dicantumkan.\n\nMohon panduan untuk verifikasi identitas melalui ' +
+    'jalur alternatif. Terima kasih.';
+  return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+});
 
 // ── scenarios (bimbel) ─────────────────────────────────────────────
 const scenarioSet = computed<Set<string>>(() => {
@@ -510,6 +556,58 @@ function toggleScenario(key: TutoringScenarioKey) {
       </button>
     </div>
 
+    <!--
+      pills_with_other ----------------------------------------------
+      Single-select chip picker with a free-text fallback for "Other".
+      The chip is active when modelValue exactly matches one of the
+      options; otherwise the "Lainnya" chip lights up and reveals an
+      input below for the custom role. setValue receives the final
+      STRING either way — backend doesn't care which path produced it.
+    -->
+    <div
+      v-else-if="question.input === 'pills_with_other'"
+      class="max-w-2xl mx-auto"
+    >
+      <div class="flex flex-wrap justify-center gap-2">
+        <button
+          v-for="o in question.options"
+          :key="o.value"
+          type="button"
+          class="px-4 py-2.5 rounded-xl border text-sm font-semibold transition"
+          :class="
+            modelValue === o.value
+              ? 'bg-brand-cobalt/10 border-brand-cobalt text-brand-cobalt'
+              : 'bg-white border-slate-200 text-slate-700 hover:border-brand-cobalt/40'
+          "
+          @click="pickPill(o.value)"
+        >
+          {{ o.label }}
+        </button>
+        <button
+          type="button"
+          class="px-4 py-2.5 rounded-xl border text-sm font-semibold transition"
+          :class="
+            isOtherActive
+              ? 'bg-brand-cobalt/10 border-brand-cobalt text-brand-cobalt'
+              : 'bg-white border-slate-200 text-slate-700 hover:border-brand-cobalt/40'
+          "
+          @click="pickOther"
+        >
+          Lainnya…
+        </button>
+      </div>
+      <div v-if="isOtherActive" class="mt-4 max-w-xl mx-auto">
+        <input
+          :value="modelValue ?? ''"
+          type="text"
+          :placeholder="question.placeholder ?? 'Ketik peran Anda'"
+          class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base text-slate-900 focus:outline-none focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 placeholder:text-slate-300"
+          @input="onOtherInput($event)"
+          @keydown.enter="onEnter"
+        />
+      </div>
+    </div>
+
     <!-- chips_multi -------------------------------------------------->
     <div
       v-else-if="question.input === 'chips_multi'"
@@ -629,6 +727,23 @@ function toggleScenario(key: TutoringScenarioKey) {
         />
         {{ hasAnySocial ? 'Cukup — minimal satu sudah terisi.' : 'Minimal satu channel wajib diisi.' }}
       </p>
+
+      <!--
+        Escape-hatch: a small minority of legitimate requesters genuinely
+        have no public social presence (private individuals, very-low-
+        engagement profiles). Rather than dead-end them on this required
+        step, surface a manual-review path that pre-fills a WhatsApp
+        message to the demo team. They can verify identity through
+        another channel.
+      -->
+      <a
+        :href="noSocialContactHref"
+        target="_blank"
+        rel="noopener"
+        class="mt-4 block text-center text-[12px] text-slate-500 hover:text-brand-cobalt underline underline-offset-2 transition"
+      >
+        Tidak punya media sosial? Hubungi tim verifikasi
+      </a>
     </div>
 
     <!-- scenarios (bimbel) ---------------------------------------- -->

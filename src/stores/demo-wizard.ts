@@ -213,6 +213,50 @@ export const useDemoWizardStore = defineStore('demoWizard', {
         this.hydrated = true;
         this.isLoading = false;
       }
+      // After hydrate, seed identity fields from the auth user if
+      // they're still blank. Google sign-up gives us the user's
+      // display name on the very first call — pre-filling
+      // `requester.full_name` saves one redundant type. Default
+      // `jabatan` to "Owner" since 90%+ of demo registrants are the
+      // institution owner; the chip picker on Step3 lets them
+      // switch in one tap or write a custom role.
+      this.prefillFromAuth();
+    },
+
+    /**
+     * Seed identity fields from the authenticated user's profile
+     * when they're still at their wizard default. Idempotent + safe
+     * to call multiple times — only sets fields the user hasn't
+     * typed into yet.
+     *
+     * Sources:
+     *   - `auth.user.name` → `requester.full_name` (Google display
+     *     name)
+     *   - hardcoded `'Owner'` → `requester.jabatan` (sensible
+     *     starting point; chip picker lets the user change it)
+     *
+     * Phone is intentionally NOT prefilled — Google sign-in doesn't
+     * return a phone and the User type doesn't carry one, so
+     * `requester.whatsapp` stays as a manual input.
+     */
+    prefillFromAuth(): void {
+      const auth = useAuthStore();
+      const next = { ...this.payload.requester };
+      let changed = false;
+      const fullName = String(auth.user?.name ?? '').trim();
+      if (!next.full_name.trim() && fullName.length > 0) {
+        next.full_name = fullName;
+        changed = true;
+      }
+      if (!next.jabatan.trim()) {
+        next.jabatan = 'Owner';
+        changed = true;
+      }
+      if (changed) {
+        this.payload = { ...this.payload, requester: next };
+        this._persist();
+        this._scheduleRemoteSave();
+      }
     },
 
     /** Replace a slice of the payload immutably + persist. */

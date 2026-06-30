@@ -42,6 +42,7 @@ export type QuestionInput =
   | 'number'
   | 'select'
   | 'pills'
+  | 'pills_with_other'
   | 'chips_multi'
   | 'chips_add'
   | 'location'
@@ -314,10 +315,26 @@ export const TUTORING_QUESTIONS: readonly Question[] = [
     key: 'requester.jabatan',
     chapter: 'Identitas Anda',
     prompt: 'Apa peran Anda di lembaga ini?',
-    helper: 'Mohon isi sebenarnya (Owner / Admin / Tutor / Akademik / dll). Tim verifikasi akan mengonfirmasi peran ini lewat WhatsApp.',
+    // Helper rephrased — picker is the primary path now; the custom
+    // input only surfaces when none of the chips match.
+    helper: 'Pilih peran Anda. Kalau tidak ada di daftar, ketik manual di kolom Lainnya. Tim verifikasi akan mengonfirmasi peran ini lewat WhatsApp.',
     required: true,
-    input: 'text',
-    placeholder: 'mis. Owner / Admin / Tutor',
+    // Chip picker with an "Other" fallback. The 5 presets cover ~95%
+    // of demo registrants per Yahya's review of past wizard sessions;
+    // anyone outside that distribution types into the free-text
+    // input that surfaces when "Lainnya" is selected. The
+    // `setValue` and `isValid` rules read the same string field
+    // either way — backend / persistence don't care which path the
+    // value came from.
+    input: 'pills_with_other',
+    options: [
+      { value: 'Owner', label: 'Owner' },
+      { value: 'Admin', label: 'Admin' },
+      { value: 'Tutor', label: 'Tutor' },
+      { value: 'Akademik', label: 'Akademik' },
+      { value: 'Kepala Sekolah', label: 'Kepala Sekolah' },
+    ],
+    placeholder: 'mis. Wakil Kepala / Staff',
     gibberishCheck: true,
     value: (p) => p.requester.jabatan,
     setValue: (p, v) => ({
