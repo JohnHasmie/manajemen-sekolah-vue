@@ -1,0 +1,480 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 3300" font-family="'Poppins', 'Inter', sans-serif">
+  <!-- ==========================================================
+       Phase E mockup · Web Vue admin · TUTORING tenant (dark theme)
+       Two-frame poster locked to the same AppShell as the school
+       mockup (256px sidebar + 1024px content + topbar gradient),
+       but flipped to the tutoring brand: deep night #0B0E1A bg,
+       indigo→cyan gradient hero, cyan accents, brighter type.
+       ========================================================== -->
+  <defs>
+    <linearGradient id="brandHeroTutoring" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1B0F47"/>
+      <stop offset="55%" stop-color="#3A1E9C"/>
+      <stop offset="100%" stop-color="#21AFE6"/>
+    </linearGradient>
+    <linearGradient id="brandTopbar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0C0820"/>
+      <stop offset="100%" stop-color="#3A1E9C"/>
+    </linearGradient>
+    <linearGradient id="kpiAccentCyan" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#21AFE6"/>
+      <stop offset="100%" stop-color="#0E7CB5"/>
+    </linearGradient>
+    <linearGradient id="kpiAccentViolet" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7C5CFF"/>
+      <stop offset="100%" stop-color="#3A1E9C"/>
+    </linearGradient>
+    <filter id="cardShadowDark" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <pattern id="dotsDark" width="14" height="14" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#1B2235" opacity="0.6"/>
+    </pattern>
+  </defs>
+
+  <!-- Backdrop -->
+  <rect width="1320" height="3300" fill="url(#dotsDark)"/>
+  <rect width="1320" height="3300" fill="#0B0E1A" opacity="0.92"/>
+
+  <!-- ===== POSTER TITLE STRIP ===== -->
+  <text x="48" y="44" fill="#94A3B8" font-size="11" font-weight="700" letter-spacing="1.6">PHASE E · WEB VUE · TUTORING TENANT (DARK)</text>
+  <text x="48" y="68" fill="#FFFFFF" font-size="22" font-weight="900">RBAC — School admin role &amp; permission management</text>
+  <text x="48" y="92" fill="#64748B" font-size="11">Cyan-on-night palette · Tutor / Mentor / Asisten / Front Desk · same backend, same components, theme-only delta</text>
+  <line x1="48" y1="108" x2="1272" y2="108" stroke="#1B2235" stroke-width="1"/>
+
+  <!-- =====================================================
+       FRAME A — Roles list  (y = 140 .. 1640)
+       ===================================================== -->
+  <g transform="translate(48, 140)">
+    <text x="0" y="-8" fill="#94A3B8" font-size="10" font-weight="700" letter-spacing="1.4">A · DAFTAR ROLE · /admin/roles</text>
+
+    <!-- App shell wrapper (1224 wide) -->
+    <rect x="0" y="0" width="1224" height="1480" rx="14" fill="#10162A" stroke="#1B2235"/>
+
+    <!-- Sidebar (256px) -->
+    <rect x="0" y="0" width="256" height="1480" rx="14" fill="#0A0F1F"/>
+    <rect x="244" y="0" width="12" height="1480" fill="#0A0F1F"/>
+    <rect x="16" y="20" width="224" height="40" rx="10" fill="url(#brandHeroTutoring)"/>
+    <text x="36" y="46" fill="#FFFFFF" font-size="13" font-weight="900">KamilEdu · Bimbel</text>
+    <text x="36" y="60" fill="#94A3B8" font-size="9">Bimbel Cendekia · admin</text>
+
+    <text x="32" y="98" fill="#475569" font-size="9" font-weight="700" letter-spacing="1.6">DASHBOARD</text>
+    <g font-size="11" font-weight="600" fill="#94A3B8">
+      <text x="48" y="124">Dashboard</text>
+      <text x="48" y="150">Pengumuman</text>
+    </g>
+    <text x="32" y="180" fill="#475569" font-size="9" font-weight="700" letter-spacing="1.6">SISWA / TUTOR</text>
+    <g font-size="11" font-weight="600" fill="#94A3B8">
+      <text x="48" y="206">Siswa Bimbel</text>
+      <text x="48" y="230">Tutor &amp; Mentor</text>
+      <text x="48" y="254">Kelas Bimbel</text>
+      <text x="48" y="278">Mata Pelajaran</text>
+      <text x="48" y="302">Jadwal</text>
+    </g>
+    <text x="32" y="332" fill="#475569" font-size="9" font-weight="700" letter-spacing="1.6">PROSES</text>
+    <g font-size="11" font-weight="600" fill="#94A3B8">
+      <text x="48" y="358">Presensi Siswa</text>
+      <text x="48" y="382">Presensi Tutor</text>
+      <text x="48" y="406">Kelas Aktif</text>
+      <text x="48" y="430">Tagihan &amp; Payout</text>
+    </g>
+    <text x="32" y="460" fill="#475569" font-size="9" font-weight="700" letter-spacing="1.6">PENGATURAN</text>
+    <g font-size="11" font-weight="600" fill="#94A3B8">
+      <text x="48" y="486">Pengaturan Bimbel</text>
+    </g>
+    <!-- Selected: Role & Permission -->
+    <rect x="20" y="500" width="220" height="36" rx="8" fill="rgba(33,175,230,0.16)"/>
+    <rect x="20" y="500" width="3" height="36" fill="#21AFE6"/>
+    <text x="48" y="522" fill="#21AFE6" font-size="11" font-weight="800">Role &amp; Permission</text>
+
+    <!-- Topbar (64px) -->
+    <rect x="256" y="0" width="968" height="64" rx="0" fill="url(#brandTopbar)"/>
+    <rect x="256" y="64" width="968" height="1" fill="#1B2235"/>
+    <text x="280" y="32" fill="#94A3B8" font-size="9" font-weight="700" letter-spacing="1.4">PENGATURAN</text>
+    <text x="280" y="50" fill="#FFFFFF" font-size="14" font-weight="800">Role &amp; Permission</text>
+    <!-- right cluster: bimbel pill + bell + avatar -->
+    <rect x="956" y="18" width="160" height="28" rx="14" fill="rgba(33,175,230,0.16)" stroke="rgba(33,175,230,0.4)"/>
+    <circle cx="970" cy="32" r="6" fill="#21AFE6"/>
+    <text x="982" y="36" fill="#A8E1F7" font-size="10" font-weight="700">Bimbel Cendekia</text>
+    <circle cx="1140" cy="32" r="14" fill="rgba(255,255,255,0.06)"/>
+    <text x="1140" y="36" fill="#94A3B8" font-size="10" font-weight="700" text-anchor="middle">🔔</text>
+    <circle cx="1180" cy="32" r="14" fill="#7C5CFF"/>
+    <text x="1180" y="36" fill="#FFFFFF" font-size="10" font-weight="700" text-anchor="middle">FA</text>
+
+    <!-- Content (1024px, padded to 968) starts at x=256+24=280 -->
+    <!-- Hero banner -->
+    <g transform="translate(280, 88)">
+      <rect width="920" height="120" rx="14" fill="url(#brandHeroTutoring)" filter="url(#cardShadowDark)"/>
+      <circle cx="20" cy="22" r="4" fill="#21AFE6"/>
+      <text x="32" y="26" fill="#A8E1F7" font-size="10" font-weight="700" letter-spacing="1.4">PENGATURAN</text>
+      <text x="20" y="60" fill="#FFFFFF" font-size="24" font-weight="900">Role &amp; Permission</text>
+      <text x="20" y="84" fill="rgba(255,255,255,0.78)" font-size="12">Atur siapa boleh apa di bimbel · 5 role · 4 sistem + 1 kustom</text>
+      <!-- Action button -->
+      <rect x="760" y="74" width="140" height="36" rx="10" fill="#FFFFFF"/>
+      <text x="830" y="97" fill="#1B0F47" font-size="12" font-weight="800" text-anchor="middle">+ Tambah Role</text>
+    </g>
+
+    <!-- KPI strip (4 cards) -->
+    <g transform="translate(280, 224)">
+      <g>
+        <rect width="218" height="92" rx="14" fill="#10162A" stroke="#1B2235"/>
+        <rect x="14" y="14" width="36" height="36" rx="10" fill="url(#kpiAccentViolet)"/>
+        <text x="14" y="68" fill="#94A3B8" font-size="9" font-weight="700" letter-spacing="1.2">TOTAL ROLE</text>
+        <text x="14" y="86" fill="#FFFFFF" font-size="22" font-weight="800">5</text>
+      </g>
+      <g transform="translate(234, 0)">
+        <rect width="218" height="92" rx="14" fill="#10162A" stroke="#1B2235"/>
+        <rect x="14" y="14" width="36" height="36" rx="10" fill="url(#kpiAccentCyan)"/>
+        <text x="14" y="68" fill="#94A3B8" font-size="9" font-weight="700" letter-spacing="1.2">ROLE SISTEM</text>
+        <text x="14" y="86" fill="#FFFFFF" font-size="22" font-weight="800">4</text>
+      </g>
+      <g transform="translate(468, 0)">
+        <rect width="218" height="92" rx="14" fill="#10162A" stroke="#1B2235"/>
+        <rect x="14" y="14" width="36" height="36" rx="10" fill="#A2660D"/>
+        <text x="14" y="68" fill="#94A3B8" font-size="9" font-weight="700" letter-spacing="1.2">ROLE KUSTOM</text>
+        <text x="14" y="86" fill="#FFFFFF" font-size="22" font-weight="800">1</text>
+      </g>
+      <g transform="translate(702, 0)">
+        <rect width="218" height="92" rx="14" fill="#10162A" stroke="#1B2235"/>
+        <rect x="14" y="14" width="36" height="36" rx="10" fill="#15803D"/>
+        <text x="14" y="68" fill="#94A3B8" font-size="9" font-weight="700" letter-spacing="1.2">PERMISSION TER-ASSIGN</text>
+        <text x="14" y="86" fill="#FFFFFF" font-size="22" font-weight="800">317</text>
+      </g>
+    </g>
+
+    <!-- Filter toolbar -->
+    <g transform="translate(280, 332)">
+      <rect width="920" height="56" rx="14" fill="#10162A" stroke="#1B2235"/>
+      <!-- Segmented control -->
+      <rect x="12" y="12" width="240" height="32" rx="10" fill="#0B1227"/>
+      <rect x="14" y="14" width="78" height="28" rx="8" fill="#21AFE6"/>
+      <text x="53" y="32" fill="#0B0E1A" font-size="11" font-weight="800" text-anchor="middle">Semua</text>
+      <text x="132" y="32" fill="#94A3B8" font-size="11" font-weight="600" text-anchor="middle">Sistem</text>
+      <text x="212" y="32" fill="#94A3B8" font-size="11" font-weight="600" text-anchor="middle">Kustom</text>
+      <!-- Search input -->
+      <rect x="700" y="12" width="208" height="32" rx="10" fill="#0B1227" stroke="#1B2235"/>
+      <text x="716" y="32" fill="#94A3B8" font-size="11" font-weight="500">🔍  Cari role…</text>
+    </g>
+
+    <!-- Section: SYSTEM ROLES -->
+    <text x="280" y="416" fill="#94A3B8" font-size="11" font-weight="700" letter-spacing="1.4">ROLE SISTEM · 4</text>
+    <text x="1200" y="416" fill="#94A3B8" font-size="11" font-weight="700" letter-spacing="0.6" text-anchor="end">PERMISSION · ANGGOTA</text>
+
+    <!-- Row 1: Admin Bimbel -->
+    <g transform="translate(280, 424)">
+      <rect width="920" height="76" rx="16" fill="#10162A" stroke="#1B2235"/>
+      <rect width="4" height="76" rx="0" fill="#21AFE6"/>
+      <rect x="22" y="22" width="32" height="32" rx="10" fill="rgba(33,175,230,0.18)"/>
+      <text x="38" y="42" fill="#21AFE6" font-size="14" font-weight="900" text-anchor="middle">▣</text>
+      <text x="68" y="32" fill="#FFFFFF" font-size="14" font-weight="800">Admin Bimbel</text>
+      <rect x="190" y="20" width="56" height="18" rx="6" fill="rgba(33,175,230,0.18)"/>
+      <text x="218" y="32" fill="#21AFE6" font-size="9" font-weight="800" text-anchor="middle">SISTEM</text>
+      <text x="68" y="50" fill="#94A3B8" font-size="11">3 anggota · admin bimbel · akses penuh</text>
+      <text x="794" y="32" fill="#FFFFFF" font-size="22" font-weight="800" text-anchor="end">132</text>
+      <text x="794" y="50" fill="#475569" font-size="10" text-anchor="end">permissions</text>
+      <rect x="858" y="22" width="40" height="32" rx="8" fill="#1B2235"/>
+      <text x="878" y="42" fill="#94A3B8" font-size="14" font-weight="700" text-anchor="middle">⋯</text>
+    </g>
+
+    <!-- Row 2: Tutor -->
+    <g transform="translate(280, 512)">
+      <rect width="920" height="76" rx="16" fill="#10162A" stroke="#1B2235"/>
+      <rect width="4" height="76" rx="0" fill="#7C5CFF"/>
+      <rect x="22" y="22" width="32" height="32" rx="10" fill="rgba(124,92,255,0.18)"/>
+      <text x="38" y="42" fill="#7C5CFF" font-size="14" font-weight="900" text-anchor="middle">▲</text>
+      <text x="68" y="32" fill="#FFFFFF" font-size="14" font-weight="800">Tutor</text>
+      <rect x="124" y="20" width="56" height="18" rx="6" fill="rgba(124,92,255,0.2)"/>
+      <text x="152" y="32" fill="#7C5CFF" font-size="9" font-weight="800" text-anchor="middle">SISTEM</text>
+      <text x="68" y="50" fill="#94A3B8" font-size="11">12 anggota · teacher · sesi, presensi, materi, laporan</text>
+      <text x="794" y="32" fill="#FFFFFF" font-size="22" font-weight="800" text-anchor="end">68</text>
+      <text x="794" y="50" fill="#475569" font-size="10" text-anchor="end">permissions</text>
+      <rect x="858" y="22" width="40" height="32" rx="8" fill="#1B2235"/>
+      <text x="878" y="42" fill="#94A3B8" font-size="14" font-weight="700" text-anchor="middle">⋯</text>
+    </g>
+
+    <!-- Row 3: Mentor -->
+    <g transform="translate(280, 600)">
+      <rect width="920" height="76" rx="16" fill="#10162A" stroke="#1B2235"/>
+      <rect width="4" height="76" rx="0" fill="#21AFE6"/>
+      <rect x="22" y="22" width="32" height="32" rx="10" fill="rgba(33,175,230,0.18)"/>
+      <text x="38" y="42" fill="#21AFE6" font-size="14" font-weight="900" text-anchor="middle">★</text>
+      <text x="68" y="32" fill="#FFFFFF" font-size="14" font-weight="800">Mentor</text>
+      <rect x="138" y="20" width="56" height="18" rx="6" fill="rgba(33,175,230,0.18)"/>
+      <text x="166" y="32" fill="#21AFE6" font-size="9" font-weight="800" text-anchor="middle">SISTEM</text>
+      <text x="68" y="50" fill="#94A3B8" font-size="11">5 anggota · staff · pendampingan + progres siswa</text>
+      <text x="794" y="32" fill="#FFFFFF" font-size="22" font-weight="800" text-anchor="end">42</text>
+      <text x="794" y="50" fill="#475569" font-size="10" text-anchor="end">permissions</text>
+      <rect x="858" y="22" width="40" height="32" rx="8" fill="#1B2235"/>
+      <text x="878" y="42" fill="#94A3B8" font-size="14" font-weight="700" text-anchor="middle">⋯</text>
+    </g>
+
+    <!-- Row 4: Wali Siswa -->
+    <g transform="translate(280, 688)">
+      <rect width="920" height="76" rx="16" fill="#10162A" stroke="#1B2235"/>
+      <rect width="4" height="76" rx="0" fill="#16A34A"/>
+      <rect x="22" y="22" width="32" height="32" rx="10" fill="rgba(22,163,74,0.18)"/>
+      <text x="38" y="42" fill="#22C55E" font-size="14" font-weight="900" text-anchor="middle">♥</text>
+      <text x="68" y="32" fill="#FFFFFF" font-size="14" font-weight="800">Wali Siswa</text>
+      <rect x="156" y="20" width="56" height="18" rx="6" fill="rgba(22,163,74,0.18)"/>
+      <text x="184" y="32" fill="#22C55E" font-size="9" font-weight="800" text-anchor="middle">SISTEM</text>
+      <text x="68" y="50" fill="#94A3B8" font-size="11">28 anggota · parent · lihat progres + pembayaran anak</text>
+      <text x="794" y="32" fill="#FFFFFF" font-size="22" font-weight="800" text-anchor="end">18</text>
+      <text x="794" y="50" fill="#475569" font-size="10" text-anchor="end">permissions</text>
+      <rect x="858" y="22" width="40" height="32" rx="8" fill="#1B2235"/>
+      <text x="878" y="42" fill="#94A3B8" font-size="14" font-weight="700" text-anchor="middle">⋯</text>
+    </g>
+
+    <!-- Section: CUSTOM ROLES -->
+    <text x="280" y="808" fill="#94A3B8" font-size="11" font-weight="700" letter-spacing="1.4">ROLE KUSTOM · 1</text>
+
+    <!-- Row C1: Front Desk -->
+    <g transform="translate(280, 816)">
+      <rect width="920" height="76" rx="16" fill="#10162A" stroke="#1B2235"/>
+      <rect width="4" height="76" rx="0" fill="#E89C2A"/>
+      <rect x="22" y="22" width="32" height="32" rx="10" fill="rgba(232,156,42,0.18)"/>
+      <text x="38" y="42" fill="#FBBE5A" font-size="14" font-weight="900" text-anchor="middle">⚐</text>
+      <text x="68" y="32" fill="#FFFFFF" font-size="14" font-weight="800">Front Desk / Resepsionis</text>
+      <text x="68" y="50" fill="#94A3B8" font-size="11">2 anggota · staff · daftar siswa, jadwal trial, jurnal kelas</text>
+      <text x="794" y="32" fill="#FFFFFF" font-size="22" font-weight="800" text-anchor="end">24</text>
+      <text x="794" y="50" fill="#475569" font-size="10" text-anchor="end">permissions</text>
+      <rect x="858" y="22" width="40" height="32" rx="8" fill="#1B2235"/>
+      <text x="878" y="42" fill="#94A3B8" font-size="14" font-weight="700" text-anchor="middle">⋯</text>
+    </g>
+
+    <!-- Empty-state hint for customs (when none) -->
+    <g transform="translate(280, 916)">
+      <rect width="920" height="64" rx="14" fill="#0B1227" stroke="#1B2235" stroke-dasharray="4 4"/>
+      <text x="460" y="34" fill="#94A3B8" font-size="11" text-anchor="middle">Butuh peran lain? Asisten Tutor, Operator BK, Kasir Cabang …</text>
+      <text x="460" y="52" fill="#21AFE6" font-size="11" font-weight="700" text-anchor="middle">+ Tambah role kustom</text>
+    </g>
+
+    <!-- Frame caption -->
+    <text x="280" y="1004" fill="#475569" font-size="10">Container: AppShell · 256+1024 · 64px topbar gradient · Poppins · dark night #0B0E1A · cyan accent</text>
+  </g>
+
+  <!-- =====================================================
+       FRAME B — Role detail (Permission tab) y = 1740 .. 3220
+       ===================================================== -->
+  <g transform="translate(48, 1740)">
+    <text x="0" y="-8" fill="#94A3B8" font-size="10" font-weight="700" letter-spacing="1.4">B · DETAIL ROLE · /admin/roles/:id — TAB PERMISSION</text>
+
+    <!-- App shell wrapper -->
+    <rect x="0" y="0" width="1224" height="1480" rx="14" fill="#10162A" stroke="#1B2235"/>
+
+    <!-- Sidebar (same as A, condensed) -->
+    <rect x="0" y="0" width="256" height="1480" rx="14" fill="#0A0F1F"/>
+    <rect x="244" y="0" width="12" height="1480" fill="#0A0F1F"/>
+    <rect x="16" y="20" width="224" height="40" rx="10" fill="url(#brandHeroTutoring)"/>
+    <text x="36" y="46" fill="#FFFFFF" font-size="13" font-weight="900">KamilEdu · Bimbel</text>
+    <text x="36" y="60" fill="#94A3B8" font-size="9">Bimbel Cendekia · admin</text>
+
+    <text x="32" y="98" fill="#475569" font-size="9" font-weight="700" letter-spacing="1.6">PENGATURAN</text>
+    <rect x="20" y="108" width="220" height="36" rx="8" fill="rgba(33,175,230,0.16)"/>
+    <rect x="20" y="108" width="3" height="36" fill="#21AFE6"/>
+    <text x="48" y="130" fill="#21AFE6" font-size="11" font-weight="800">Role &amp; Permission</text>
+
+    <!-- Topbar -->
+    <rect x="256" y="0" width="968" height="64" rx="0" fill="url(#brandTopbar)"/>
+    <rect x="256" y="64" width="968" height="1" fill="#1B2235"/>
+    <text x="280" y="32" fill="#94A3B8" font-size="9" font-weight="700" letter-spacing="1.4">/admin/roles/24</text>
+    <text x="280" y="50" fill="#FFFFFF" font-size="14" font-weight="800">Tutor</text>
+    <rect x="956" y="18" width="160" height="28" rx="14" fill="rgba(33,175,230,0.16)" stroke="rgba(33,175,230,0.4)"/>
+    <text x="982" y="36" fill="#A8E1F7" font-size="10" font-weight="700">Bimbel Cendekia</text>
+    <circle cx="1180" cy="32" r="14" fill="#7C5CFF"/>
+    <text x="1180" y="36" fill="#FFFFFF" font-size="10" font-weight="700" text-anchor="middle">FA</text>
+
+    <!-- Hero banner -->
+    <g transform="translate(280, 88)">
+      <rect width="920" height="120" rx="14" fill="url(#brandHeroTutoring)" filter="url(#cardShadowDark)"/>
+      <text x="20" y="26" fill="#A8E1F7" font-size="10" font-weight="700" letter-spacing="1.4">TEACHER · SISTEM</text>
+      <text x="20" y="60" fill="#FFFFFF" font-size="24" font-weight="900">Tutor</text>
+      <text x="20" y="84" fill="rgba(255,255,255,0.78)" font-size="12">12 anggota · 68 dari 135 permission</text>
+      <!-- Back button -->
+      <rect x="780" y="74" width="120" height="36" rx="10" fill="rgba(255,255,255,0.16)" stroke="rgba(255,255,255,0.32)"/>
+      <text x="840" y="97" fill="#FFFFFF" font-size="12" font-weight="700" text-anchor="middle">← Kembali</text>
+    </g>
+
+    <!-- Tab strip -->
+    <g transform="translate(280, 224)">
+      <rect width="320" height="44" rx="12" fill="#10162A" stroke="#1B2235"/>
+      <rect x="4" y="4" width="100" height="36" rx="8" fill="transparent"/>
+      <text x="54" y="28" fill="#94A3B8" font-size="11" font-weight="700" text-anchor="middle">Detail</text>
+      <rect x="108" y="4" width="106" height="36" rx="8" fill="#21AFE6"/>
+      <text x="161" y="28" fill="#0B0E1A" font-size="11" font-weight="800" text-anchor="middle">Permission</text>
+      <circle cx="200" cy="14" r="3" fill="#F59E0B"/>
+      <text x="262" y="28" fill="#94A3B8" font-size="11" font-weight="700" text-anchor="middle">Anggota</text>
+    </g>
+
+    <!-- Salin dari role lain -->
+    <g transform="translate(280, 284)">
+      <rect width="920" height="56" rx="14" fill="rgba(33,175,230,0.08)" stroke="rgba(33,175,230,0.24)"/>
+      <text x="14" y="34" fill="#A8E1F7" font-size="11" font-weight="700">Salin permission dari role lain</text>
+      <rect x="540" y="14" width="116" height="28" rx="8" fill="#0B1227" stroke="rgba(33,175,230,0.3)"/>
+      <text x="598" y="32" fill="#21AFE6" font-size="11" font-weight="700" text-anchor="middle">Admin Bimbel</text>
+      <rect x="668" y="14" width="100" height="28" rx="8" fill="#0B1227" stroke="rgba(124,92,255,0.3)"/>
+      <text x="718" y="32" fill="#7C5CFF" font-size="11" font-weight="700" text-anchor="middle">Mentor</text>
+      <rect x="780" y="14" width="116" height="28" rx="8" fill="#0B1227" stroke="rgba(22,163,74,0.3)"/>
+      <text x="838" y="32" fill="#22C55E" font-size="11" font-weight="700" text-anchor="middle">Wali Siswa</text>
+    </g>
+
+    <!-- Accordion 1 (open): Finance -->
+    <g transform="translate(280, 356)">
+      <rect width="920" height="324" rx="14" fill="#10162A" stroke="#1B2235"/>
+      <!-- Header -->
+      <rect x="14" y="14" width="32" height="32" rx="8" fill="rgba(232,156,42,0.18)"/>
+      <text x="30" y="36" fill="#FBBE5A" font-size="14" font-weight="900" text-anchor="middle">$</text>
+      <text x="58" y="30" fill="#FFFFFF" font-size="13" font-weight="800">Finance</text>
+      <text x="58" y="46" fill="#94A3B8" font-size="10">8 dari 12 dipilih</text>
+      <text x="896" y="36" fill="#94A3B8" font-size="14" font-weight="700" text-anchor="end">▾</text>
+      <line x1="0" y1="66" x2="920" y2="66" stroke="#1B2235"/>
+
+      <!-- 2-col rows -->
+      <g transform="translate(8, 78)">
+        <!-- Left col -->
+        <g>
+          <rect x="6" y="0" width="448" height="36" rx="8" fill="rgba(33,175,230,0.06)"/>
+          <rect x="14" y="10" width="16" height="16" rx="4" fill="#21AFE6"/>
+          <text x="22" y="22" fill="#0B0E1A" font-size="11" font-weight="900" text-anchor="middle">✓</text>
+          <text x="40" y="18" fill="#FFFFFF" font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">finance.bill.view</text>
+          <text x="40" y="30" fill="#64748B" font-size="10">Lihat daftar tagihan siswa</text>
+
+          <rect x="6" y="44" width="448" height="36" rx="8" fill="rgba(33,175,230,0.06)"/>
+          <rect x="14" y="54" width="16" height="16" rx="4" fill="#21AFE6"/>
+          <text x="22" y="66" fill="#0B0E1A" font-size="11" font-weight="900" text-anchor="middle">✓</text>
+          <text x="40" y="62" fill="#FFFFFF" font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">finance.payout.view</text>
+          <text x="40" y="74" fill="#64748B" font-size="10">Lihat payout tutor</text>
+
+          <rect x="14" y="98" width="16" height="16" rx="4" fill="transparent" stroke="#1B2235" stroke-width="1.4"/>
+          <text x="40" y="106" fill="#FFFFFF" font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">finance.bill.create</text>
+          <text x="40" y="118" fill="#64748B" font-size="10">Buat tagihan baru</text>
+
+          <rect x="6" y="132" width="448" height="36" rx="8" fill="rgba(33,175,230,0.06)"/>
+          <rect x="14" y="142" width="16" height="16" rx="4" fill="#21AFE6"/>
+          <text x="22" y="154" fill="#0B0E1A" font-size="11" font-weight="900" text-anchor="middle">✓</text>
+          <text x="40" y="150" fill="#FFFFFF" font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">finance.payout.request</text>
+          <text x="40" y="162" fill="#64748B" font-size="10">Ajukan payout pribadi (tutor)</text>
+
+          <rect x="14" y="186" width="16" height="16" rx="4" fill="transparent" stroke="#1B2235" stroke-width="1.4"/>
+          <text x="40" y="194" fill="#FFFFFF" font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">finance.payout.approve</text>
+          <text x="40" y="206" fill="#64748B" font-size="10">Setujui payout (admin only)</text>
+
+          <rect x="14" y="230" width="16" height="16" rx="4" fill="transparent" stroke="#1B2235" stroke-width="1.4"/>
+          <text x="40" y="238" fill="#FFFFFF" font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">finance.report.view</text>
+          <text x="40" y="250" fill="#64748B" font-size="10">Lihat laporan keuangan bimbel</text>
+        </g>
+        <!-- Right col -->
+        <g transform="translate(460, 0)">
+          <rect x="6" y="0" width="446" height="36" rx="8" fill="rgba(33,175,230,0.06)"/>
+          <rect x="14" y="10" width="16" height="16" rx="4" fill="#21AFE6"/>
+          <text x="22" y="22" fill="#0B0E1A" font-size="11" font-weight="900" text-anchor="middle">✓</text>
+          <text x="40" y="18" fill="#FFFFFF" font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">finance.bill.print</text>
+          <text x="40" y="30" fill="#64748B" font-size="10">Cetak invoice / kuitansi</text>
+
+          <rect x="14" y="54" width="16" height="16" rx="4" fill="transparent" stroke="#1B2235" stroke-width="1.4"/>
+          <text x="40" y="62" fill="#FFFFFF" font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">finance.bill.delete</text>
+          <text x="40" y="74" fill="#64748B" font-size="10">Hapus tagihan</text>
+
+          <rect x="6" y="88" width="446" height="36" rx="8" fill="rgba(33,175,230,0.06)"/>
+          <rect x="14" y="98" width="16" height="16" rx="4" fill="#21AFE6"/>
+          <text x="22" y="110" fill="#0B0E1A" font-size="11" font-weight="900" text-anchor="middle">✓</text>
+          <text x="40" y="106" fill="#FFFFFF" font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">finance.bill.send_reminder</text>
+          <text x="40" y="118" fill="#64748B" font-size="10">Kirim pengingat ke wali</text>
+
+          <rect x="6" y="132" width="446" height="36" rx="8" fill="rgba(33,175,230,0.06)"/>
+          <rect x="14" y="142" width="16" height="16" rx="4" fill="#21AFE6"/>
+          <text x="22" y="154" fill="#0B0E1A" font-size="11" font-weight="900" text-anchor="middle">✓</text>
+          <text x="40" y="150" fill="#FFFFFF" font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">finance.payout.history</text>
+          <text x="40" y="162" fill="#64748B" font-size="10">Lihat riwayat payout pribadi</text>
+
+          <rect x="14" y="186" width="16" height="16" rx="4" fill="transparent" stroke="#1B2235" stroke-width="1.4"/>
+          <text x="40" y="194" fill="#FFFFFF" font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">finance.report.export</text>
+          <text x="40" y="206" fill="#64748B" font-size="10">Ekspor laporan ke Excel</text>
+
+          <rect x="6" y="220" width="446" height="36" rx="8" fill="rgba(33,175,230,0.06)"/>
+          <rect x="14" y="230" width="16" height="16" rx="4" fill="#21AFE6"/>
+          <text x="22" y="242" fill="#0B0E1A" font-size="11" font-weight="900" text-anchor="middle">✓</text>
+          <text x="40" y="238" fill="#FFFFFF" font-family="ui-monospace,Menlo,monospace" font-size="11" font-weight="600">finance.payout.dispute</text>
+          <text x="40" y="250" fill="#64748B" font-size="10">Tandai sengketa pembayaran</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- Accordion 2 (collapsed): Attendance -->
+    <g transform="translate(280, 696)">
+      <rect width="920" height="56" rx="14" fill="#10162A" stroke="#1B2235"/>
+      <rect x="14" y="12" width="32" height="32" rx="8" fill="rgba(33,175,230,0.18)"/>
+      <text x="30" y="34" fill="#21AFE6" font-size="14" font-weight="900" text-anchor="middle">⏱</text>
+      <text x="58" y="28" fill="#FFFFFF" font-size="13" font-weight="800">Attendance · sesi tutor + siswa</text>
+      <text x="58" y="44" fill="#94A3B8" font-size="10">14 dari 14 dipilih · semua</text>
+      <text x="896" y="34" fill="#94A3B8" font-size="14" font-weight="700" text-anchor="end">▸</text>
+    </g>
+
+    <!-- Accordion 3: Academic (Materi & Sesi) -->
+    <g transform="translate(280, 768)">
+      <rect width="920" height="56" rx="14" fill="#10162A" stroke="#1B2235"/>
+      <rect x="14" y="12" width="32" height="32" rx="8" fill="rgba(124,92,255,0.18)"/>
+      <text x="30" y="34" fill="#7C5CFF" font-size="14" font-weight="900" text-anchor="middle">≡</text>
+      <text x="58" y="28" fill="#FFFFFF" font-size="13" font-weight="800">Academic · materi, modul, jurnal sesi</text>
+      <text x="58" y="44" fill="#94A3B8" font-size="10">22 dari 28 dipilih</text>
+      <text x="896" y="34" fill="#94A3B8" font-size="14" font-weight="700" text-anchor="end">▸</text>
+    </g>
+
+    <!-- Accordion 4: Communication -->
+    <g transform="translate(280, 840)">
+      <rect width="920" height="56" rx="14" fill="#10162A" stroke="#1B2235"/>
+      <rect x="14" y="12" width="32" height="32" rx="8" fill="rgba(22,163,74,0.18)"/>
+      <text x="30" y="34" fill="#22C55E" font-size="14" font-weight="900" text-anchor="middle">✉</text>
+      <text x="58" y="28" fill="#FFFFFF" font-size="13" font-weight="800">Communication · chat wali, broadcast</text>
+      <text x="58" y="44" fill="#94A3B8" font-size="10">9 dari 11 dipilih</text>
+      <text x="896" y="34" fill="#94A3B8" font-size="14" font-weight="700" text-anchor="end">▸</text>
+    </g>
+
+    <!-- Accordion 5: Activity Kelas -->
+    <g transform="translate(280, 912)">
+      <rect width="920" height="56" rx="14" fill="#10162A" stroke="#1B2235"/>
+      <rect x="14" y="12" width="32" height="32" rx="8" fill="rgba(232,156,42,0.18)"/>
+      <text x="30" y="34" fill="#FBBE5A" font-size="14" font-weight="900" text-anchor="middle">⚐</text>
+      <text x="58" y="28" fill="#FFFFFF" font-size="13" font-weight="800">Activity · kelas aktif, recap, foto</text>
+      <text x="58" y="44" fill="#94A3B8" font-size="10">8 dari 8 dipilih · semua</text>
+      <text x="896" y="34" fill="#94A3B8" font-size="14" font-weight="700" text-anchor="end">▸</text>
+    </g>
+
+    <!-- Accordion 6: Dashboard -->
+    <g transform="translate(280, 984)">
+      <rect width="920" height="56" rx="14" fill="#10162A" stroke="#1B2235"/>
+      <rect x="14" y="12" width="32" height="32" rx="8" fill="rgba(33,175,230,0.18)"/>
+      <text x="30" y="34" fill="#21AFE6" font-size="14" font-weight="900" text-anchor="middle">▤</text>
+      <text x="58" y="28" fill="#FFFFFF" font-size="13" font-weight="800">Dashboard · KPI tutor + bimbel</text>
+      <text x="58" y="44" fill="#94A3B8" font-size="10">7 dari 9 dipilih</text>
+      <text x="896" y="34" fill="#94A3B8" font-size="14" font-weight="700" text-anchor="end">▸</text>
+    </g>
+
+    <!-- Accordion 7: Roles & Permissions (locked for non-admin role) -->
+    <g transform="translate(280, 1056)">
+      <rect width="920" height="56" rx="14" fill="#0B1227" stroke="#1B2235"/>
+      <rect x="14" y="12" width="32" height="32" rx="8" fill="rgba(255,255,255,0.04)"/>
+      <text x="30" y="34" fill="#475569" font-size="14" font-weight="900" text-anchor="middle">🔒</text>
+      <text x="58" y="28" fill="#64748B" font-size="13" font-weight="800">Roles &amp; permissions · admin only</text>
+      <text x="58" y="44" fill="#475569" font-size="10">tidak tersedia untuk role tipe teacher</text>
+      <text x="896" y="34" fill="#475569" font-size="14" font-weight="700" text-anchor="end">▸</text>
+    </g>
+
+    <!-- Sticky save bar -->
+    <g transform="translate(280, 1180)">
+      <rect width="920" height="60" rx="14" fill="#10162A" stroke="#1B2235" filter="url(#cardShadowDark)"/>
+      <circle cx="20" cy="30" r="5" fill="#F59E0B"/>
+      <text x="34" y="34" fill="#FBBE5A" font-size="11" font-weight="700">3 perubahan belum disimpan</text>
+      <rect x="660" y="14" width="100" height="32" rx="10" fill="#0B1227" stroke="#1B2235"/>
+      <text x="710" y="34" fill="#94A3B8" font-size="12" font-weight="700" text-anchor="middle">Batal</text>
+      <rect x="772" y="14" width="136" height="32" rx="10" fill="#21AFE6"/>
+      <text x="840" y="34" fill="#0B0E1A" font-size="12" font-weight="900" text-anchor="middle">Simpan perubahan</text>
+    </g>
+
+    <!-- Frame caption -->
+    <text x="280" y="1280" fill="#475569" font-size="10">Same component tree as the school mockup — only the RbacPalette factory swaps to .tutoring() (dark night + cyan accent).</text>
+    <text x="280" y="1300" fill="#475569" font-size="10">Implementation note: at the Vue layer, dark theme is one CSS class on AppShell — the per-component styles already use brand tokens (#21AFE6 in tutoring vs #143068 in school).</text>
+  </g>
+
+  <!-- Footer note -->
+  <text x="48" y="3270" fill="#475569" font-size="10">v1 · 2026-06-30 · 2 frames · single-source mockup for tutoring tenant · drop-in implementation TBD after school MR !401 lands</text>
+</svg>
