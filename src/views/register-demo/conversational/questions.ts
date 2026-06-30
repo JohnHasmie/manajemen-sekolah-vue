@@ -277,14 +277,19 @@ export const TUTORING_QUESTIONS: readonly Question[] = [
   {
     key: 'tutoring.billing_mode',
     chapter: 'Program & tim',
-    prompt: 'Mode penagihan default yang Anda pakai?',
-    helper: 'Bisa diubah per program / per siswa setelah demo aktif.',
+    prompt: 'Mode penagihan yang Anda pakai?',
+    helper: 'Pilih satu atau lebih. Mode pertama yang dipilih menjadi default — bisa diubah per program / per siswa setelah demo aktif.',
     required: true,
-    input: 'pills',
+    // Multi-select: a lembaga can offer trial classes per-session AND
+    // regular cohorts per-month. Backend now accepts an array; the
+    // first selected entry becomes the tenant_billing_settings
+    // default_mode + each entry enables its allow_* flag during
+    // ProvisionDemoTutoringAction.
+    input: 'chips_multi',
     options: TUTORING_BILLING_OPTIONS,
     value: (p) => p.tutoring.billing_mode,
-    setValue: (p, v) => patchTutoring(p, 'billing_mode', v as TutoringBillingMode),
-    isValid: (p) => !!p.tutoring.billing_mode,
+    setValue: (p, v) => patchTutoring(p, 'billing_mode', (v as TutoringBillingMode[]) ?? []),
+    isValid: (p) => Array.isArray(p.tutoring.billing_mode) && p.tutoring.billing_mode.length > 0,
   },
   {
     key: 'requester.full_name',
