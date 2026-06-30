@@ -463,6 +463,19 @@ function mergeWithDefaults(partial: Partial<DemoWizardPayload>): DemoWizardPaylo
       // Same null-coercion pattern as `school.name`: keep the default
       // empty string if a restored payload has `name: null`.
       name: partialTutoring?.name ?? d.tutoring.name,
+      // Migrate legacy Indonesian target_levels values to canonical
+      // English. A user whose wizard state was persisted before the
+      // Phase-4 cutover has `['SMA']` in localStorage; submitting
+      // that now 422s on the backend (which only accepts
+      // ELEMENTARY/JUNIOR_HIGH/SENIOR_HIGH + SNBT/KARYAWAN/UMUM).
+      // SNBT/KARYAWAN/UMUM stay as-is; other values pass through.
+      target_levels: (partialTutoring?.target_levels ?? d.tutoring.target_levels)
+        .map((v: string) =>
+          v === 'SD' ? 'ELEMENTARY'
+            : v === 'SMP' ? 'JUNIOR_HIGH'
+              : v === 'SMA' || v === 'SMK' ? 'SENIOR_HIGH'
+                : v,
+        ) as DemoWizardPayload['tutoring']['target_levels'],
     },
     requester: {
       ...d.requester,

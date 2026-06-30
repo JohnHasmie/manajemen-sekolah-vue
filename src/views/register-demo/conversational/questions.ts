@@ -130,8 +130,14 @@ export interface Question {
 
 /* ────────────────────── TUTORING CENTER PATH ─────────────────────── */
 
+// Canonical English wire values for the chip values + Indonesian
+// display labels from TUTORING_EDUCATION_LEVEL_LABEL. The backend
+// `SubmitDemoRequestRequest` validator rejects Indonesian acronyms
+// post the 2026-06-26 Phase-4 cutover (causing the 422 a user hit on
+// register-demo last submit) — keep this list in sync with the
+// validator's Rule::in([...]).
 const TUTORING_TARGET_OPTIONS: QuestionOption[] = (
-  ['SD', 'SMP', 'SMA', 'SNBT', 'KARYAWAN', 'UMUM'] as TutoringEducationLevel[]
+  ['ELEMENTARY', 'JUNIOR_HIGH', 'SENIOR_HIGH', 'SNBT', 'KARYAWAN', 'UMUM'] as TutoringEducationLevel[]
 ).map((v) => ({ value: v, label: TUTORING_EDUCATION_LEVEL_LABEL[v] }));
 
 const TUTORING_STUDENT_SCALE_OPTIONS: QuestionOption[] = (

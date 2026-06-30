@@ -264,11 +264,18 @@ export type TenantType = 'school' | 'tutoring';
  * Education level targeted by the tutoring center — distinct from a
  * formal school's jenjang because bimbel often targets SNBT, working
  * professionals, or a general audience.
+ *
+ * Wire values are canonical English (post 2026-06-26 cutover —
+ * `SubmitDemoRequestRequest` validator only accepts these), mirroring
+ * the school-path migration in `lib/labels.ts`. Display labels (Indo
+ * `SD` / `SMP` / `SMA`) live in [TUTORING_EDUCATION_LEVEL_LABEL].
+ * The three tutoring-only options (`SNBT` / `KARYAWAN` / `UMUM`) have
+ * no Indo↔English mapping and stay as-is.
  */
 export type TutoringEducationLevel =
-  | 'SD'
-  | 'SMP'
-  | 'SMA'
+  | 'ELEMENTARY'    // SD
+  | 'JUNIOR_HIGH'   // SMP
+  | 'SENIOR_HIGH'   // SMA / SMK
   | 'SNBT'
   | 'KARYAWAN'
   | 'UMUM';
@@ -406,10 +413,15 @@ export const TUTORING_SCENARIO_DEFINITIONS: ReadonlyArray<{
   },
 ];
 
+/**
+ * Indonesian display labels keyed by the canonical English wire
+ * value. Keys MUST match [TutoringEducationLevel] exactly — TS will
+ * fail the build if they drift.
+ */
 export const TUTORING_EDUCATION_LEVEL_LABEL: Record<TutoringEducationLevel, string> = {
-  SD: 'SD',
-  SMP: 'SMP',
-  SMA: 'SMA / SMK',
+  ELEMENTARY: 'SD',
+  JUNIOR_HIGH: 'SMP',
+  SENIOR_HIGH: 'SMA / SMK',
   SNBT: 'SNBT / UTBK',
   KARYAWAN: 'Karyawan',
   UMUM: 'Umum',
@@ -869,7 +881,7 @@ export function defaultTutoringPayload(): DemoTutoringPayload {
   return {
     name: '',
     city: null,
-    target_levels: ['SMA'],
+    target_levels: ['SENIOR_HIGH'],
     student_scale: '50_200',
     programs: [],
     tutor_scale: '4_10',
