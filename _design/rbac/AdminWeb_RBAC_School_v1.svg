@@ -1,0 +1,788 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 5400" font-family="Poppins, -apple-system, BlinkMacSystemFont, sans-serif">
+  <!-- ============================================================ -->
+  <!-- Phase E · Web Vue Admin — School RBAC (high-fidelity)        -->
+  <!-- 4 frames stacked, layout = 256px sidebar + 1024px content     -->
+  <!-- Tokens: admin navy #143068, slate-50 page, white cards        -->
+  <!-- ============================================================ -->
+
+  <defs>
+    <linearGradient id="adminHero" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0A1F4D"/>
+      <stop offset="60%" stop-color="#143068"/>
+      <stop offset="100%" stop-color="#1B6FB8"/>
+    </linearGradient>
+    <linearGradient id="topbar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#143068"/>
+      <stop offset="60%" stop-color="#143068" stop-opacity="0.87"/>
+      <stop offset="100%" stop-color="#143068" stop-opacity="0.67"/>
+    </linearGradient>
+    <linearGradient id="avA" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#21AFE6"/><stop offset="100%" stop-color="#0E7CB5"/></linearGradient>
+    <linearGradient id="avB" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C5CFF"/><stop offset="100%" stop-color="#3A1E9C"/></linearGradient>
+    <linearGradient id="avC" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#E89C2A"/><stop offset="100%" stop-color="#A2660D"/></linearGradient>
+    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.06"/>
+    </filter>
+    <filter id="modalShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="20" stdDeviation="40" flood-color="#0F172A" flood-opacity="0.25"/>
+    </filter>
+    <filter id="activeRailGlow">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+  </defs>
+
+  <rect width="1320" height="5400" fill="#F8FAFC"/>
+
+  <text x="40" y="40" font-size="22" font-weight="900" fill="#143068">Phase E · Web Vue Admin — School RBAC (high-fidelity)</text>
+  <text x="40" y="64" font-size="13" fill="#64748b">256px sidebar + 1024px content · Poppins · admin navy #143068 · consumes the same backend as Mobile Phase B (MR 391)</text>
+
+  <!-- ============================================================ -->
+  <!-- FRAME A — Roles list page                                    -->
+  <!-- ============================================================ -->
+  <g transform="translate(20,100)">
+    <text x="0" y="-12" font-size="14" font-weight="700" fill="#0F172A">A · Daftar role · /admin/roles</text>
+
+    <!-- Browser chrome -->
+    <rect x="0" y="0" width="1280" height="1200" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <rect x="0" y="0" width="1280" height="36" rx="12" fill="#F1F5F9"/>
+    <circle cx="20" cy="18" r="6" fill="#F87171"/>
+    <circle cx="40" cy="18" r="6" fill="#FBBF24"/>
+    <circle cx="60" cy="18" r="6" fill="#34D399"/>
+    <rect x="160" y="8" width="640" height="20" rx="6" fill="#FFFFFF" stroke="#E2E8F0"/>
+    <text x="180" y="22" font-size="11" fill="#64748B">app.kamiledu.id/admin/roles</text>
+
+    <!-- Sidebar -->
+    <rect x="0" y="36" width="256" height="1164" fill="#FFFFFF" stroke="#E2E8F0"/>
+
+    <!-- Brand header in sidebar -->
+    <g transform="translate(16,52)">
+      <rect width="36" height="36" rx="9" fill="#143068"/>
+      <text x="18" y="24" font-size="14" font-weight="800" fill="#FFFFFF" text-anchor="middle">M</text>
+      <text x="48" y="20" font-size="13" font-weight="800" fill="#0F172A">MTs Al-Hidayah</text>
+      <text x="48" y="34" font-size="11" fill="#64748B">Admin</text>
+    </g>
+
+    <!-- Nav sections -->
+    <text x="28" y="120" font-size="11" font-weight="700" fill="#94A3B8" letter-spacing="1.4">UMUM</text>
+    <g transform="translate(16,128)">
+      <rect width="224" height="36" rx="8" fill="transparent"/>
+      <circle cx="22" cy="18" r="8" fill="none" stroke="#64748B" stroke-width="1.4"/>
+      <path d="M18 18 L22 14 L26 18 L26 22 L18 22 Z" fill="#64748B"/>
+      <text x="42" y="22" font-size="13" font-weight="600" fill="#475569">Dashboard</text>
+    </g>
+    <g transform="translate(16,168)">
+      <rect width="224" height="36" rx="8" fill="transparent"/>
+      <path d="M22 12 L30 22 L14 22 Z" fill="#64748B"/>
+      <text x="42" y="22" font-size="13" font-weight="600" fill="#475569">Pengumuman</text>
+    </g>
+
+    <text x="28" y="232" font-size="11" font-weight="700" fill="#94A3B8" letter-spacing="1.4">MANAJEMEN DATA</text>
+    <g transform="translate(16,240)">
+      <rect width="224" height="36" rx="8" fill="transparent"/>
+      <circle cx="22" cy="14" r="2.5" fill="#64748B"/><circle cx="28" cy="16" r="2" fill="#64748B"/><circle cx="16" cy="16" r="2" fill="#64748B"/>
+      <path d="M16 22 Q22 18 28 22" stroke="#64748B" stroke-width="1.4" fill="none"/>
+      <text x="42" y="22" font-size="13" font-weight="600" fill="#475569">Siswa</text>
+    </g>
+    <g transform="translate(16,280)">
+      <text x="42" y="22" font-size="13" font-weight="600" fill="#475569">Guru</text>
+    </g>
+    <g transform="translate(16,320)">
+      <text x="42" y="22" font-size="13" font-weight="600" fill="#475569">Kelas</text>
+    </g>
+    <g transform="translate(16,360)">
+      <text x="42" y="22" font-size="13" font-weight="600" fill="#475569">Mata Pelajaran</text>
+    </g>
+    <g transform="translate(16,400)">
+      <text x="42" y="22" font-size="13" font-weight="600" fill="#475569">Jadwal</text>
+    </g>
+
+    <text x="28" y="464" font-size="11" font-weight="700" fill="#94A3B8" letter-spacing="1.4">LAPORAN</text>
+    <g transform="translate(16,472)"><text x="42" y="22" font-size="13" font-weight="600" fill="#475569">Presensi Siswa</text></g>
+    <g transform="translate(16,512)"><text x="42" y="22" font-size="13" font-weight="600" fill="#475569">Presensi Guru</text></g>
+    <g transform="translate(16,552)"><text x="42" y="22" font-size="13" font-weight="600" fill="#475569">Keuangan</text></g>
+
+    <text x="28" y="616" font-size="11" font-weight="700" fill="#94A3B8" letter-spacing="1.4">PENGATURAN</text>
+    <g transform="translate(16,624)">
+      <rect width="224" height="36" rx="8" fill="transparent"/>
+      <text x="42" y="22" font-size="13" font-weight="600" fill="#475569">Sekolah</text>
+    </g>
+    <!-- ACTIVE nav item: Role & Permission -->
+    <g transform="translate(16,664)">
+      <rect width="224" height="36" rx="8" fill="#E8EEF7"/>
+      <rect x="-12" y="0" width="3" height="36" rx="1.5" fill="#143068" filter="url(#activeRailGlow)"/>
+      <rect x="-12" y="0" width="3" height="36" rx="1.5" fill="#143068"/>
+      <circle cx="22" cy="14" r="6" fill="none" stroke="#143068" stroke-width="1.6"/>
+      <path d="M22 11 L24 13 L24 16 Q24 18 22 19 Q20 18 20 16 L20 13 Z" fill="#143068"/>
+      <text x="42" y="22" font-size="13" font-weight="700" fill="#0F172A">Role &amp; Permission</text>
+    </g>
+
+    <!-- Topbar -->
+    <rect x="256" y="36" width="1024" height="64" fill="url(#topbar)"/>
+    <text x="280" y="76" font-size="14" font-weight="800" fill="#FFFFFF">Role &amp; Permission</text>
+    <g transform="translate(1080,52)">
+      <rect width="120" height="32" rx="8" fill="#FFFFFF" fill-opacity="0.16"/>
+      <text x="60" y="20" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">MTs Al-Hidayah</text>
+    </g>
+    <g transform="translate(1212,58)">
+      <circle r="14" fill="#FFFFFF" fill-opacity="0.16"/>
+      <path d="M-6 -2 L-2 -6 L2 -6 L6 -2 L6 4 L-6 4 Z" fill="#FFFFFF"/>
+      <circle cx="3" cy="-3" r="3" fill="#EF4444"/>
+    </g>
+    <g transform="translate(1248,58)">
+      <circle r="14" fill="#FFFFFF" fill-opacity="0.18"/>
+      <text y="4" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">YH</text>
+    </g>
+
+    <!-- ── CONTENT AREA ── -->
+    <g transform="translate(280,120)">
+      <!-- BrandPageHeader -->
+      <rect width="976" height="116" rx="16" fill="url(#adminHero)" filter="url(#cardShadow)"/>
+      <text x="24" y="36" font-size="11" font-weight="700" fill="#FFFFFF" fill-opacity="0.85" letter-spacing="1.6">PENGATURAN</text>
+      <text x="24" y="68" font-size="26" font-weight="900" fill="#FFFFFF">Role &amp; Permission</text>
+      <text x="24" y="92" font-size="12" fill="#FFFFFF" fill-opacity="0.85">Atur siapa boleh apa di sekolah · 7 role · 4 sistem + 3 kustom</text>
+      <!-- Right actions -->
+      <g transform="translate(810,32)">
+        <rect width="142" height="42" rx="10" fill="#FFFFFF"/>
+        <path d="M22 21 H32 M27 16 V26" stroke="#143068" stroke-width="2" stroke-linecap="round"/>
+        <text x="44" y="26" font-size="13" font-weight="800" fill="#143068">Tambah Role</text>
+      </g>
+
+      <!-- KPI strip -->
+      <g transform="translate(0,148)">
+        <g transform="translate(0,0)">
+          <rect width="232" height="92" rx="14" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+          <g transform="translate(18,18)"><rect width="28" height="28" rx="8" fill="#E8EEF7"/><path d="M14 10 L18 13 L18 16 Q18 19 14 20 Q10 19 10 16 L10 13 Z" fill="#143068"/></g>
+          <text x="56" y="32" font-size="10" font-weight="700" fill="#94A3B8" letter-spacing="1.2">TOTAL ROLE</text>
+          <text x="18" y="74" font-size="28" font-weight="800" fill="#0F172A">7</text>
+        </g>
+        <g transform="translate(248,0)">
+          <rect width="232" height="92" rx="14" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+          <g transform="translate(18,18)"><rect width="28" height="28" rx="8" fill="#E2F4FD"/><circle cx="14" cy="14" r="6" fill="#0E7CB5"/></g>
+          <text x="56" y="32" font-size="10" font-weight="700" fill="#94A3B8" letter-spacing="1.2">ROLE SISTEM</text>
+          <text x="18" y="74" font-size="28" font-weight="800" fill="#0F172A">4</text>
+        </g>
+        <g transform="translate(496,0)">
+          <rect width="232" height="92" rx="14" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+          <g transform="translate(18,18)"><rect width="28" height="28" rx="8" fill="#FBEEDA"/><path d="M10 14 H18 M10 17 H16" stroke="#A2660D" stroke-width="1.6" stroke-linecap="round"/></g>
+          <text x="56" y="32" font-size="10" font-weight="700" fill="#94A3B8" letter-spacing="1.2">ROLE KUSTOM</text>
+          <text x="18" y="74" font-size="28" font-weight="800" fill="#0F172A">3</text>
+        </g>
+        <g transform="translate(744,0)">
+          <rect width="232" height="92" rx="14" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+          <g transform="translate(18,18)"><rect width="28" height="28" rx="8" fill="#D1FAE5"/><circle cx="11" cy="14" r="3" fill="#10B981"/><circle cx="17" cy="14" r="3" fill="#10B981"/></g>
+          <text x="56" y="32" font-size="10" font-weight="700" fill="#94A3B8" letter-spacing="1.2">ANGGOTA AKTIF</text>
+          <text x="18" y="74" font-size="28" font-weight="800" fill="#0F172A">854</text>
+        </g>
+      </g>
+
+      <!-- Filter toolbar -->
+      <g transform="translate(0,264)">
+        <rect width="976" height="60" rx="16" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <!-- Tipe chip -->
+        <g transform="translate(14,12)">
+          <rect width="148" height="36" rx="10" fill="#F8FAFC" stroke="#E2E8F0"/>
+          <rect x="6" y="6" width="24" height="24" rx="6" fill="#E8EEF7"/>
+          <path d="M14 18 H26 M14 22 H22" stroke="#143068" stroke-width="1.6" stroke-linecap="round"/>
+          <text x="36" y="16" font-size="9" font-weight="700" fill="#94A3B8" letter-spacing="0.8">TIPE</text>
+          <text x="36" y="28" font-size="11" font-weight="800" fill="#0F172A">Semua</text>
+          <path d="M130 16 L134 20 L138 16" stroke="#94A3B8" stroke-width="1.4" fill="none"/>
+        </g>
+        <!-- Status chip -->
+        <g transform="translate(170,12)">
+          <rect width="148" height="36" rx="10" fill="#F8FAFC" stroke="#E2E8F0"/>
+          <rect x="6" y="6" width="24" height="24" rx="6" fill="#D1FAE5"/>
+          <circle cx="18" cy="18" r="3" fill="#10B981"/>
+          <text x="36" y="16" font-size="9" font-weight="700" fill="#94A3B8" letter-spacing="0.8">STATUS</text>
+          <text x="36" y="28" font-size="11" font-weight="800" fill="#0F172A">Aktif</text>
+          <path d="M130 16 L134 20 L138 16" stroke="#94A3B8" stroke-width="1.4" fill="none"/>
+        </g>
+        <!-- Segmented (System | Custom) -->
+        <g transform="translate(640,12)">
+          <rect width="180" height="36" rx="10" fill="#F1F5F9"/>
+          <rect x="3" y="3" width="87" height="30" rx="8" fill="#FFFFFF" stroke="#E2E8F0"/>
+          <text x="46" y="23" font-size="11" font-weight="700" fill="#143068" text-anchor="middle">Sistem</text>
+          <text x="135" y="23" font-size="11" font-weight="600" fill="#64748B" text-anchor="middle">Kustom</text>
+        </g>
+        <!-- Search bar -->
+        <g transform="translate(830,12)">
+          <rect width="132" height="36" rx="10" fill="#F8FAFC" stroke="#E2E8F0"/>
+          <circle cx="14" cy="18" r="5" fill="none" stroke="#94A3B8" stroke-width="1.4"/>
+          <path d="M18 22 L22 26" stroke="#94A3B8" stroke-width="1.6" stroke-linecap="round"/>
+          <text x="28" y="22" font-size="11" fill="#94A3B8">Cari role…</text>
+        </g>
+      </g>
+
+      <!-- Section: Role Sistem -->
+      <text x="0" y="360" font-size="11" font-weight="700" fill="#64748B" letter-spacing="1.4">ROLE SISTEM · 4</text>
+      <text x="976" y="360" font-size="11" font-weight="700" fill="#64748B" letter-spacing="0.6" text-anchor="end">PERMISSION · ANGGOTA</text>
+
+      <!-- Card: Admin -->
+      <g transform="translate(0,376)">
+        <rect width="976" height="76" rx="16" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <rect width="4" height="76" rx="2" fill="#143068"/>
+        <g transform="translate(24,22)"><rect width="32" height="32" rx="10" fill="#E8EEF7"/><path d="M16 11 L20 14 L20 18 Q20 22 16 24 Q12 22 12 18 L12 14 Z" fill="#143068"/></g>
+        <text x="72" y="36" font-size="14" font-weight="800" fill="#0F172A">Admin</text>
+        <g transform="translate(122,24)"><rect width="56" height="18" rx="6" fill="#E8EEF7"/><text x="28" y="13" font-size="9" font-weight="800" fill="#143068" text-anchor="middle">SISTEM</text></g>
+        <text x="72" y="56" font-size="11" fill="#64748B">Akses penuh ke seluruh modul sekolah</text>
+        <text x="780" y="36" font-size="11" fill="#64748B" text-anchor="end">12 anggota</text>
+        <text x="900" y="44" font-size="22" font-weight="800" fill="#0F172A" text-anchor="end">49</text>
+        <text x="900" y="58" font-size="10" fill="#94A3B8" text-anchor="end">permissions</text>
+        <!-- Action -->
+        <g transform="translate(920,22)">
+          <rect width="40" height="32" rx="8" fill="#F1F5F9"/>
+          <circle cx="14" cy="16" r="1.6" fill="#64748B"/><circle cx="20" cy="16" r="1.6" fill="#64748B"/><circle cx="26" cy="16" r="1.6" fill="#64748B"/>
+        </g>
+      </g>
+
+      <g transform="translate(0,468)">
+        <rect width="976" height="76" rx="16" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <rect width="4" height="76" rx="2" fill="#1B6FB8"/>
+        <g transform="translate(24,22)"><rect width="32" height="32" rx="10" fill="#E1EEFA"/><path d="M16 11 L24 15 L16 19 L8 15 Z M11 17 L11 20 Q16 23 21 20 L21 17" fill="none" stroke="#1B6FB8" stroke-width="1.8" stroke-linejoin="round"/></g>
+        <text x="72" y="36" font-size="14" font-weight="800" fill="#0F172A">Guru</text>
+        <g transform="translate(112,24)"><rect width="56" height="18" rx="6" fill="#E1EEFA"/><text x="28" y="13" font-size="9" font-weight="800" fill="#1B6FB8" text-anchor="middle">SISTEM</text></g>
+        <text x="72" y="56" font-size="11" fill="#64748B">Mengajar, input nilai, presensi siswa</text>
+        <text x="780" y="36" font-size="11" fill="#64748B" text-anchor="end">86 anggota</text>
+        <text x="900" y="44" font-size="22" font-weight="800" fill="#0F172A" text-anchor="end">28</text>
+        <text x="900" y="58" font-size="10" fill="#94A3B8" text-anchor="end">permissions</text>
+        <g transform="translate(920,22)"><rect width="40" height="32" rx="8" fill="#F1F5F9"/><circle cx="14" cy="16" r="1.6" fill="#64748B"/><circle cx="20" cy="16" r="1.6" fill="#64748B"/><circle cx="26" cy="16" r="1.6" fill="#64748B"/></g>
+      </g>
+
+      <g transform="translate(0,560)">
+        <rect width="976" height="76" rx="16" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <rect width="4" height="76" rx="2" fill="#21AFE6"/>
+        <g transform="translate(24,22)"><rect width="32" height="32" rx="10" fill="#E2F4FD"/><circle cx="13" cy="14" r="3" fill="#21AFE6"/><circle cx="19" cy="14" r="3" fill="#21AFE6"/><path d="M8 22 Q16 18 24 22" stroke="#21AFE6" stroke-width="1.8" fill="none"/></g>
+        <text x="72" y="36" font-size="14" font-weight="800" fill="#0F172A">Wali Murid</text>
+        <g transform="translate(150,24)"><rect width="56" height="18" rx="6" fill="#E2F4FD"/><text x="28" y="13" font-size="9" font-weight="800" fill="#0E7CB5" text-anchor="middle">SISTEM</text></g>
+        <text x="72" y="56" font-size="11" fill="#64748B">Lihat anak: nilai, presensi, tagihan</text>
+        <text x="780" y="36" font-size="11" fill="#64748B" text-anchor="end">342 anggota</text>
+        <text x="900" y="44" font-size="22" font-weight="800" fill="#0F172A" text-anchor="end">13</text>
+        <text x="900" y="58" font-size="10" fill="#94A3B8" text-anchor="end">permissions</text>
+        <g transform="translate(920,22)"><rect width="40" height="32" rx="8" fill="#F1F5F9"/><circle cx="14" cy="16" r="1.6" fill="#64748B"/><circle cx="20" cy="16" r="1.6" fill="#64748B"/><circle cx="26" cy="16" r="1.6" fill="#64748B"/></g>
+      </g>
+
+      <g transform="translate(0,652)">
+        <rect width="976" height="76" rx="16" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <rect width="4" height="76" rx="2" fill="#16A34A"/>
+        <g transform="translate(24,22)"><rect width="32" height="32" rx="10" fill="#D1FAE5"/><circle cx="16" cy="13" r="3.5" fill="#16A34A"/><path d="M9 23 Q16 18 23 23 L23 25 L9 25 Z" fill="#16A34A"/></g>
+        <text x="72" y="36" font-size="14" font-weight="800" fill="#0F172A">Siswa</text>
+        <g transform="translate(115,24)"><rect width="56" height="18" rx="6" fill="#D1FAE5"/><text x="28" y="13" font-size="9" font-weight="800" fill="#15803D" text-anchor="middle">SISTEM</text></g>
+        <text x="72" y="56" font-size="11" fill="#64748B">Lihat nilai, materi, jadwal sendiri</text>
+        <text x="780" y="36" font-size="11" fill="#64748B" text-anchor="end">412 anggota</text>
+        <text x="900" y="44" font-size="22" font-weight="800" fill="#0F172A" text-anchor="end">9</text>
+        <text x="900" y="58" font-size="10" fill="#94A3B8" text-anchor="end">permissions</text>
+        <g transform="translate(920,22)"><rect width="40" height="32" rx="8" fill="#F1F5F9"/><circle cx="14" cy="16" r="1.6" fill="#64748B"/><circle cx="20" cy="16" r="1.6" fill="#64748B"/><circle cx="26" cy="16" r="1.6" fill="#64748B"/></g>
+      </g>
+
+      <!-- Section: Role Kustom -->
+      <text x="0" y="772" font-size="11" font-weight="700" fill="#64748B" letter-spacing="1.4">ROLE KUSTOM · 3</text>
+
+      <g transform="translate(0,788)">
+        <rect width="976" height="68" rx="16" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <rect width="4" height="68" rx="2" fill="#E89C2A"/>
+        <g transform="translate(24,18)"><rect width="32" height="32" rx="10" fill="#FBEEDA"/><path d="M12 14 H20 M12 17 H20 M12 20 H17" stroke="#A2660D" stroke-width="1.8" stroke-linecap="round"/></g>
+        <text x="72" y="32" font-size="14" font-weight="800" fill="#0F172A">Bendahara</text>
+        <text x="72" y="50" font-size="11" fill="#64748B">2 anggota · staff · finance + presensi sendiri</text>
+        <text x="900" y="40" font-size="20" font-weight="800" fill="#0F172A" text-anchor="end">8</text>
+        <text x="900" y="54" font-size="10" fill="#94A3B8" text-anchor="end">permissions</text>
+        <g transform="translate(920,18)"><rect width="40" height="32" rx="8" fill="#F1F5F9"/><circle cx="14" cy="16" r="1.6" fill="#64748B"/><circle cx="20" cy="16" r="1.6" fill="#64748B"/><circle cx="26" cy="16" r="1.6" fill="#64748B"/></g>
+      </g>
+
+      <g transform="translate(0,872)">
+        <rect width="976" height="68" rx="16" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <rect width="4" height="68" rx="2" fill="#E89C2A"/>
+        <g transform="translate(24,18)"><rect width="32" height="32" rx="10" fill="#FBEEDA"/><path d="M11 11 L23 11 L23 21 L11 21 Z M11 14 L23 14" stroke="#A2660D" stroke-width="1.6" fill="none"/></g>
+        <text x="72" y="32" font-size="14" font-weight="800" fill="#0F172A">Tata Usaha (TU)</text>
+        <text x="72" y="50" font-size="11" fill="#64748B">4 anggota · staff · siswa view + announcement + presensi sendiri</text>
+        <text x="900" y="40" font-size="20" font-weight="800" fill="#0F172A" text-anchor="end">14</text>
+        <text x="900" y="54" font-size="10" fill="#94A3B8" text-anchor="end">permissions</text>
+        <g transform="translate(920,18)"><rect width="40" height="32" rx="8" fill="#F1F5F9"/><circle cx="14" cy="16" r="1.6" fill="#64748B"/><circle cx="20" cy="16" r="1.6" fill="#64748B"/><circle cx="26" cy="16" r="1.6" fill="#64748B"/></g>
+      </g>
+
+      <g transform="translate(0,956)">
+        <rect width="976" height="68" rx="16" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <rect width="4" height="68" rx="2" fill="#E89C2A"/>
+        <g transform="translate(24,18)"><rect width="32" height="32" rx="10" fill="#FBEEDA"/><circle cx="16" cy="14" r="4" fill="none" stroke="#A2660D" stroke-width="1.8"/><path d="M16 11 L16 14" stroke="#A2660D" stroke-width="1.4"/></g>
+        <text x="72" y="32" font-size="14" font-weight="800" fill="#0F172A">Penjaga Madrasah</text>
+        <text x="72" y="50" font-size="11" fill="#64748B">1 anggota · staff · presensi sendiri + announcement</text>
+        <text x="900" y="40" font-size="20" font-weight="800" fill="#0F172A" text-anchor="end">4</text>
+        <text x="900" y="54" font-size="10" fill="#94A3B8" text-anchor="end">permissions</text>
+        <g transform="translate(920,18)"><rect width="40" height="32" rx="8" fill="#F1F5F9"/><circle cx="14" cy="16" r="1.6" fill="#64748B"/><circle cx="20" cy="16" r="1.6" fill="#64748B"/><circle cx="26" cy="16" r="1.6" fill="#64748B"/></g>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- FRAME B — Role detail · Permission tab                       -->
+  <!-- ============================================================ -->
+  <g transform="translate(20,1380)">
+    <text x="0" y="-12" font-size="14" font-weight="700" fill="#0F172A">B · Detail role · tab Permission · /admin/roles/12 — checklist per modul</text>
+
+    <rect x="0" y="0" width="1280" height="1320" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <rect x="0" y="0" width="1280" height="36" rx="12" fill="#F1F5F9"/>
+    <circle cx="20" cy="18" r="6" fill="#F87171"/><circle cx="40" cy="18" r="6" fill="#FBBF24"/><circle cx="60" cy="18" r="6" fill="#34D399"/>
+    <rect x="160" y="8" width="640" height="20" rx="6" fill="#FFFFFF" stroke="#E2E8F0"/>
+    <text x="180" y="22" font-size="11" fill="#64748B">app.kamiledu.id/admin/roles/12 — Bendahara</text>
+
+    <!-- Sidebar (compact repeat) -->
+    <rect x="0" y="36" width="256" height="1284" fill="#FFFFFF" stroke="#E2E8F0"/>
+    <text x="28" y="120" font-size="11" font-weight="700" fill="#94A3B8" letter-spacing="1.4">PENGATURAN</text>
+    <g transform="translate(16,128)"><rect width="224" height="36" rx="8" fill="transparent"/><text x="42" y="22" font-size="13" font-weight="600" fill="#475569">Sekolah</text></g>
+    <g transform="translate(16,168)">
+      <rect width="224" height="36" rx="8" fill="#E8EEF7"/>
+      <rect x="-12" y="0" width="3" height="36" rx="1.5" fill="#143068"/>
+      <text x="42" y="22" font-size="13" font-weight="700" fill="#0F172A">Role &amp; Permission</text>
+    </g>
+
+    <!-- Topbar -->
+    <rect x="256" y="36" width="1024" height="64" fill="url(#topbar)"/>
+    <g transform="translate(280,68)">
+      <path d="M0 0 L6 -6 L6 -2 L18 -2 L18 2 L6 2 L6 6 Z" fill="#FFFFFF" fill-opacity="0.85"/>
+      <text x="32" y="8" font-size="12" font-weight="700" fill="#FFFFFF" fill-opacity="0.85">Role</text>
+      <path d="M68 -6 L72 0 L68 6" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="1.4" fill="none"/>
+      <text x="84" y="8" font-size="12" font-weight="800" fill="#FFFFFF">Bendahara</text>
+    </g>
+
+    <!-- Content -->
+    <g transform="translate(280,120)">
+      <!-- BrandPageHeader with tabs -->
+      <rect width="976" height="160" rx="16" fill="url(#adminHero)" filter="url(#cardShadow)"/>
+      <text x="24" y="36" font-size="11" font-weight="700" fill="#FFFFFF" fill-opacity="0.85" letter-spacing="1.6">ROLE KUSTOM · STAFF</text>
+      <text x="24" y="68" font-size="26" font-weight="900" fill="#FFFFFF">Bendahara</text>
+      <text x="24" y="92" font-size="12" fill="#FFFFFF" fill-opacity="0.85">2 anggota · 8 dari 135 permission terpilih</text>
+      <g transform="translate(24,108)">
+        <rect width="116" height="22" rx="11" fill="#FFFFFF" fill-opacity="0.16"/>
+        <circle cx="11" cy="11" r="3.4" fill="#34D399"/>
+        <text x="22" y="15" font-size="10" font-weight="800" fill="#FFFFFF">8 PERMISSION</text>
+      </g>
+      <g transform="translate(146,108)">
+        <rect width="116" height="22" rx="11" fill="#FFFFFF" fill-opacity="0.16"/>
+        <text x="58" y="15" font-size="10" font-weight="800" fill="#FFFFFF" text-anchor="middle">3 BELUM SIMPAN</text>
+      </g>
+      <!-- Right: Hapus button -->
+      <g transform="translate(820,32)">
+        <rect width="90" height="36" rx="10" fill="#FFFFFF" fill-opacity="0.16"/>
+        <text x="45" y="23" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">Hapus role</text>
+      </g>
+      <!-- Tab strip on hero bottom -->
+      <g transform="translate(0,140)">
+        <text x="32" y="14" font-size="12" font-weight="700" fill="#FFFFFF" fill-opacity="0.6">Detail</text>
+        <text x="112" y="14" font-size="12" font-weight="800" fill="#FFFFFF">Permission</text>
+        <rect x="92" y="22" width="64" height="3" rx="1.5" fill="#FFFFFF"/>
+        <text x="216" y="14" font-size="12" font-weight="700" fill="#FFFFFF" fill-opacity="0.6">Anggota</text>
+      </g>
+
+      <!-- Salin dari role lain bar -->
+      <g transform="translate(0,184)">
+        <rect width="976" height="48" rx="14" fill="#F1F5F9"/>
+        <text x="18" y="29" font-size="12" font-weight="700" fill="#0F172A">Salin permission dari role lain</text>
+        <g transform="translate(720,8)"><rect width="80" height="32" rx="8" fill="#FFFFFF" stroke="#E2E8F0"/><text x="40" y="20" font-size="11" font-weight="700" fill="#143068" text-anchor="middle">Admin</text></g>
+        <g transform="translate(808,8)"><rect width="80" height="32" rx="8" fill="#FFFFFF" stroke="#E2E8F0"/><text x="40" y="20" font-size="11" font-weight="700" fill="#143068" text-anchor="middle">Guru</text></g>
+        <g transform="translate(896,8)"><rect width="68" height="32" rx="8" fill="#FFFFFF" stroke="#E2E8F0"/><text x="34" y="20" font-size="11" font-weight="700" fill="#143068" text-anchor="middle">TU</text></g>
+      </g>
+
+      <!-- Module accordion: Finance (expanded) -->
+      <g transform="translate(0,256)">
+        <rect width="976" height="248" rx="14" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <g transform="translate(18,18)"><rect width="32" height="32" rx="8" fill="#FBEEDA"/><text x="16" y="22" font-size="14" font-weight="800" fill="#A2660D" text-anchor="middle">Rp</text></g>
+        <text x="60" y="32" font-size="13" font-weight="800" fill="#0F172A">Finance</text>
+        <text x="60" y="48" font-size="10" fill="#64748B">6 dari 10 dipilih · tagihan + verifikasi pembayaran + export laporan</text>
+        <path d="M932 26 L940 18 L948 26" stroke="#94A3B8" stroke-width="1.6" fill="none"/>
+        <!-- Checkboxes -->
+        <g transform="translate(18,72)">
+          <rect width="16" height="16" rx="4" fill="#143068"/><path d="M3 8 L7 12 L13 5" stroke="#FFFFFF" stroke-width="1.8" fill="none"/>
+          <text x="26" y="13" font-size="12" font-weight="600" font-family="ui-monospace, Menlo, monospace" fill="#0F172A">finance.bill.view</text>
+          <text x="26" y="26" font-size="10" fill="#64748B">Lihat semua tagihan</text>
+        </g>
+        <g transform="translate(18,108)">
+          <rect width="16" height="16" rx="4" fill="#143068"/><path d="M3 8 L7 12 L13 5" stroke="#FFFFFF" stroke-width="1.8" fill="none"/>
+          <text x="26" y="13" font-size="12" font-weight="600" font-family="ui-monospace, Menlo, monospace" fill="#0F172A">finance.bill.create</text>
+          <text x="26" y="26" font-size="10" fill="#64748B">Buat tagihan baru</text>
+        </g>
+        <g transform="translate(18,144)">
+          <rect width="16" height="16" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.4"/>
+          <text x="26" y="13" font-size="12" font-weight="600" font-family="ui-monospace, Menlo, monospace" fill="#94A3B8">finance.bill.delete</text>
+          <text x="26" y="26" font-size="10" fill="#94A3B8">Hapus tagihan</text>
+        </g>
+        <g transform="translate(18,180)">
+          <rect width="16" height="16" rx="4" fill="#143068"/><path d="M3 8 L7 12 L13 5" stroke="#FFFFFF" stroke-width="1.8" fill="none"/>
+          <text x="26" y="13" font-size="12" font-weight="600" font-family="ui-monospace, Menlo, monospace" fill="#0F172A">finance.payment.verify</text>
+          <text x="26" y="26" font-size="10" fill="#64748B">Verifikasi bukti pembayaran wali</text>
+        </g>
+        <g transform="translate(18,216)">
+          <rect width="16" height="16" rx="4" fill="#143068"/><path d="M3 8 L7 12 L13 5" stroke="#FFFFFF" stroke-width="1.8" fill="none"/>
+          <text x="26" y="13" font-size="12" font-weight="600" font-family="ui-monospace, Menlo, monospace" fill="#0F172A">finance.report.export</text>
+          <text x="26" y="26" font-size="10" fill="#64748B">Export laporan keuangan ke Excel/PDF</text>
+        </g>
+
+        <!-- Right side: select all / second column -->
+        <g transform="translate(500,72)">
+          <rect width="16" height="16" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.4"/>
+          <text x="26" y="13" font-size="12" font-weight="600" font-family="ui-monospace, Menlo, monospace" fill="#94A3B8">finance.bill.update</text>
+          <text x="26" y="26" font-size="10" fill="#94A3B8">Edit tagihan existing</text>
+        </g>
+        <g transform="translate(500,108)">
+          <rect width="16" height="16" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.4"/>
+          <text x="26" y="13" font-size="12" font-weight="600" font-family="ui-monospace, Menlo, monospace" fill="#94A3B8">finance.bill_type.manage</text>
+          <text x="26" y="26" font-size="10" fill="#94A3B8">Atur jenis tagihan (SPP, kegiatan, dll.)</text>
+        </g>
+        <g transform="translate(500,144)">
+          <rect width="16" height="16" rx="4" fill="#143068"/><path d="M3 8 L7 12 L13 5" stroke="#FFFFFF" stroke-width="1.8" fill="none"/>
+          <text x="26" y="13" font-size="12" font-weight="600" font-family="ui-monospace, Menlo, monospace" fill="#0F172A">finance.payment.view</text>
+          <text x="26" y="26" font-size="10" fill="#64748B">Lihat semua pembayaran masuk</text>
+        </g>
+      </g>
+
+      <!-- Module: Attendance (collapsed) -->
+      <g transform="translate(0,520)">
+        <rect width="976" height="64" rx="14" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <g transform="translate(18,18)"><rect width="32" height="32" rx="8" fill="#E1EEFA"/><circle cx="16" cy="16" r="9" fill="none" stroke="#1B6FB8" stroke-width="1.8"/><path d="M16 9 V16 L21 19" stroke="#1B6FB8" stroke-width="1.8" stroke-linecap="round"/></g>
+        <text x="60" y="32" font-size="13" font-weight="800" fill="#0F172A">Attendance</text>
+        <text x="60" y="48" font-size="10" fill="#64748B">2 dari 9 dipilih · self check-in + self check-out</text>
+        <path d="M932 30 L940 38 L948 30" stroke="#94A3B8" stroke-width="1.6" fill="none"/>
+      </g>
+
+      <g transform="translate(0,600)">
+        <rect width="976" height="64" rx="14" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <g transform="translate(18,18)"><rect width="32" height="32" rx="8" fill="#E2F4FD"/><path d="M10 14 L22 14 L22 21 L17 21 L15 23 L13 21 L10 21 Z" fill="#0E7CB5"/></g>
+        <text x="60" y="32" font-size="13" font-weight="800" fill="#0F172A">Communication</text>
+        <text x="60" y="48" font-size="10" fill="#64748B">0 dari 11 dipilih</text>
+        <path d="M932 30 L940 38 L948 30" stroke="#94A3B8" stroke-width="1.6" fill="none"/>
+      </g>
+
+      <g transform="translate(0,680)">
+        <rect width="976" height="64" rx="14" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <g transform="translate(18,18)"><rect width="32" height="32" rx="8" fill="#EEEDFE"/><path d="M11 11 L21 11 L21 21 L11 21 Z" fill="none" stroke="#534AB7" stroke-width="1.8"/><path d="M14 16 L17 19 L21 14" stroke="#534AB7" stroke-width="1.8" fill="none"/></g>
+        <text x="60" y="32" font-size="13" font-weight="800" fill="#0F172A">Activity (Kelas)</text>
+        <text x="60" y="48" font-size="10" fill="#64748B">0 dari 7 dipilih · admin oversight</text>
+        <path d="M932 30 L940 38 L948 30" stroke="#94A3B8" stroke-width="1.6" fill="none"/>
+      </g>
+
+      <!-- Sticky save bar -->
+      <g transform="translate(0,808)">
+        <rect width="976" height="56" rx="14" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <text x="18" y="32" font-size="11" fill="#64748B">3 perubahan belum disimpan</text>
+        <g transform="translate(720,10)">
+          <rect width="100" height="36" rx="10" fill="#FFFFFF" stroke="#E2E8F0"/>
+          <text x="50" y="23" font-size="12" font-weight="700" fill="#0F172A" text-anchor="middle">Batal</text>
+        </g>
+        <g transform="translate(828,10)">
+          <rect width="132" height="36" rx="10" fill="#143068"/>
+          <text x="66" y="23" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="middle">Simpan perubahan</text>
+        </g>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- FRAME C — Anggota tab + Picker modal overlay                  -->
+  <!-- ============================================================ -->
+  <g transform="translate(20,2780)">
+    <text x="0" y="-12" font-size="14" font-weight="700" fill="#0F172A">C · Tab Anggota + modal "Tambah anggota" (overlay)</text>
+
+    <rect x="0" y="0" width="1280" height="1320" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <rect x="0" y="0" width="1280" height="36" rx="12" fill="#F1F5F9"/>
+    <circle cx="20" cy="18" r="6" fill="#F87171"/><circle cx="40" cy="18" r="6" fill="#FBBF24"/><circle cx="60" cy="18" r="6" fill="#34D399"/>
+
+    <!-- Sidebar -->
+    <rect x="0" y="36" width="256" height="1284" fill="#FFFFFF" stroke="#E2E8F0"/>
+    <text x="28" y="120" font-size="11" font-weight="700" fill="#94A3B8" letter-spacing="1.4">PENGATURAN</text>
+    <g transform="translate(16,168)">
+      <rect width="224" height="36" rx="8" fill="#E8EEF7"/>
+      <rect x="-12" y="0" width="3" height="36" rx="1.5" fill="#143068"/>
+      <text x="42" y="22" font-size="13" font-weight="700" fill="#0F172A">Role &amp; Permission</text>
+    </g>
+
+    <!-- Topbar -->
+    <rect x="256" y="36" width="1024" height="64" fill="url(#topbar)"/>
+
+    <!-- BACKGROUND CONTENT (faded by modal) -->
+    <g transform="translate(280,120)">
+      <rect width="976" height="160" rx="16" fill="url(#adminHero)"/>
+      <text x="24" y="36" font-size="11" font-weight="700" fill="#FFFFFF" fill-opacity="0.85" letter-spacing="1.6">ROLE KUSTOM · STAFF</text>
+      <text x="24" y="68" font-size="26" font-weight="900" fill="#FFFFFF">Bendahara</text>
+      <text x="24" y="92" font-size="12" fill="#FFFFFF" fill-opacity="0.85">2 anggota · 8 dari 135 permission</text>
+      <g transform="translate(0,140)">
+        <text x="32" y="14" font-size="12" font-weight="700" fill="#FFFFFF" fill-opacity="0.6">Detail</text>
+        <text x="112" y="14" font-size="12" font-weight="700" fill="#FFFFFF" fill-opacity="0.6">Permission</text>
+        <text x="216" y="14" font-size="12" font-weight="800" fill="#FFFFFF">Anggota</text>
+        <rect x="196" y="22" width="64" height="3" rx="1.5" fill="#FFFFFF"/>
+      </g>
+
+      <!-- Members section -->
+      <g transform="translate(0,184)">
+        <text x="0" y="0" font-size="11" font-weight="700" fill="#64748B" letter-spacing="1.4">ANGGOTA AKTIF · 2</text>
+        <g transform="translate(770,-18)">
+          <rect width="140" height="36" rx="10" fill="#143068"/>
+          <path d="M22 18 H32 M27 13 V23" stroke="#FFFFFF" stroke-width="2"/>
+          <text x="44" y="23" font-size="12" font-weight="800" fill="#FFFFFF">Tambah anggota</text>
+        </g>
+      </g>
+
+      <!-- Member row 1 -->
+      <g transform="translate(0,200)">
+        <rect width="976" height="84" rx="14" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <circle cx="42" cy="42" r="22" fill="url(#avA)"/>
+        <text x="42" y="48" font-size="14" font-weight="800" fill="#FFFFFF" text-anchor="middle">AS</text>
+        <text x="80" y="32" font-size="14" font-weight="800" fill="#0F172A">Ahmad Subagja, S.E.</text>
+        <text x="80" y="50" font-size="11" fill="#64748B">ahmad.subagja@mts-alhidayah.sch.id · sejak Jan 2026</text>
+        <g transform="translate(80,58)">
+          <rect width="60" height="18" rx="6" fill="#D1FAE5"/>
+          <circle cx="9" cy="9" r="2.4" fill="#10B981"/>
+          <text x="16" y="13" font-size="9" font-weight="800" fill="#15803D">AKTIF</text>
+        </g>
+        <g transform="translate(900,24)">
+          <rect width="40" height="36" rx="8" fill="#F1F5F9"/>
+          <circle cx="14" cy="18" r="1.6" fill="#64748B"/><circle cx="20" cy="18" r="1.6" fill="#64748B"/><circle cx="26" cy="18" r="1.6" fill="#64748B"/>
+        </g>
+      </g>
+
+      <g transform="translate(0,300)">
+        <rect width="976" height="84" rx="14" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <circle cx="42" cy="42" r="22" fill="url(#avB)"/>
+        <text x="42" y="48" font-size="14" font-weight="800" fill="#FFFFFF" text-anchor="middle">FN</text>
+        <text x="80" y="32" font-size="14" font-weight="800" fill="#0F172A">Fitri Nurhaliza, A.Md.</text>
+        <text x="80" y="50" font-size="11" fill="#64748B">fitri.n@mts-alhidayah.sch.id · sejak Mar 2026</text>
+        <g transform="translate(80,58)">
+          <rect width="60" height="18" rx="6" fill="#D1FAE5"/>
+          <circle cx="9" cy="9" r="2.4" fill="#10B981"/>
+          <text x="16" y="13" font-size="9" font-weight="800" fill="#15803D">AKTIF</text>
+        </g>
+        <g transform="translate(148,58)">
+          <rect width="120" height="18" rx="6" fill="#E2F4FD"/>
+          <text x="60" y="13" font-size="9" font-weight="800" fill="#0E7CB5" text-anchor="middle">+ WALI MURID (7B)</text>
+        </g>
+        <g transform="translate(900,24)">
+          <rect width="40" height="36" rx="8" fill="#F1F5F9"/>
+          <circle cx="14" cy="18" r="1.6" fill="#64748B"/><circle cx="20" cy="18" r="1.6" fill="#64748B"/><circle cx="26" cy="18" r="1.6" fill="#64748B"/>
+        </g>
+      </g>
+
+      <g transform="translate(0,400)">
+        <rect width="976" height="56" rx="14" fill="#FEF3C7"/>
+        <g transform="translate(18,18)"><circle cx="10" cy="10" r="9" fill="none" stroke="#A2660D" stroke-width="1.4"/><text x="10" y="14" font-size="11" font-weight="800" fill="#A2660D" text-anchor="middle">i</text></g>
+        <text x="50" y="26" font-size="12" font-weight="700" fill="#A2660D">Anggota mewarisi semua 8 permission di role ini.</text>
+        <text x="50" y="42" font-size="11" fill="#7A4A09">Untuk melepas, klik tombol kanan dan pilih "Lepas dari role".</text>
+      </g>
+    </g>
+
+    <!-- BACKDROP -->
+    <rect x="0" y="36" width="1280" height="1284" fill="#0F172A" fill-opacity="0.45"/>
+
+    <!-- MODAL (centered) -->
+    <g transform="translate(310,180)" filter="url(#modalShadow)">
+      <rect width="660" height="640" rx="20" fill="#FFFFFF"/>
+      <!-- Header -->
+      <text x="32" y="48" font-size="20" font-weight="900" fill="#0F172A">Tambah anggota</text>
+      <text x="32" y="70" font-size="12" fill="#64748B">ke role <tspan font-weight="700" fill="#143068">Bendahara</tspan></text>
+      <g transform="translate(612,32)">
+        <rect width="28" height="28" rx="8" fill="#F1F5F9"/>
+        <path d="M9 9 L19 19 M19 9 L9 19" stroke="#64748B" stroke-width="1.8" stroke-linecap="round"/>
+      </g>
+
+      <!-- Search -->
+      <g transform="translate(32,98)">
+        <rect width="596" height="44" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+        <circle cx="20" cy="22" r="6" fill="none" stroke="#94A3B8" stroke-width="1.6"/>
+        <path d="M25 27 L30 32" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round"/>
+        <text x="40" y="27" font-size="13" font-weight="600" fill="#0F172A">budi</text>
+        <rect x="68" y="14" width="1.5" height="16" fill="#143068"/>
+      </g>
+
+      <!-- Selected chips -->
+      <text x="32" y="170" font-size="10" font-weight="700" fill="#64748B" letter-spacing="1.4">DIPILIH · 2</text>
+      <g transform="translate(32,180)">
+        <rect width="144" height="32" rx="16" fill="#143068"/>
+        <circle cx="16" cy="16" r="11" fill="url(#avC)"/>
+        <text x="16" y="20" font-size="10" font-weight="800" fill="#FFFFFF" text-anchor="middle">BS</text>
+        <text x="32" y="20" font-size="12" font-weight="700" fill="#FFFFFF">Budi Santoso</text>
+        <path d="M124 12 L132 20 M132 12 L124 20" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round"/>
+      </g>
+      <g transform="translate(184,180)">
+        <rect width="144" height="32" rx="16" fill="#143068"/>
+        <circle cx="16" cy="16" r="11" fill="url(#avC)"/>
+        <text x="16" y="20" font-size="10" font-weight="800" fill="#FFFFFF" text-anchor="middle">BH</text>
+        <text x="32" y="20" font-size="12" font-weight="700" fill="#FFFFFF">Budi Hartono</text>
+        <path d="M124 12 L132 20 M132 12 L124 20" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round"/>
+      </g>
+
+      <!-- Results -->
+      <text x="32" y="240" font-size="10" font-weight="700" fill="#64748B" letter-spacing="1.4">HASIL · 4 USER</text>
+
+      <g transform="translate(32,252)">
+        <rect width="596" height="60" rx="12" fill="#F1F5F9" stroke="#143068" stroke-width="1.4"/>
+        <g transform="translate(14,22)"><rect width="18" height="18" rx="5" fill="#143068"/><path d="M4 10 L8 13 L14 6" stroke="#FFFFFF" stroke-width="1.8" fill="none"/></g>
+        <circle cx="60" cy="30" r="16" fill="url(#avC)"/>
+        <text x="60" y="34" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="middle">BS</text>
+        <text x="86" y="28" font-size="13" font-weight="800" fill="#0F172A">Budi Santoso</text>
+        <text x="86" y="44" font-size="11" fill="#64748B">budi.s@mts-alhidayah.sch.id · sudah Guru</text>
+      </g>
+
+      <g transform="translate(32,322)">
+        <rect width="596" height="60" rx="12" fill="#F1F5F9" stroke="#143068" stroke-width="1.4"/>
+        <g transform="translate(14,22)"><rect width="18" height="18" rx="5" fill="#143068"/><path d="M4 10 L8 13 L14 6" stroke="#FFFFFF" stroke-width="1.8" fill="none"/></g>
+        <circle cx="60" cy="30" r="16" fill="url(#avC)"/>
+        <text x="60" y="34" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="middle">BH</text>
+        <text x="86" y="28" font-size="13" font-weight="800" fill="#0F172A">Budi Hartono</text>
+        <text x="86" y="44" font-size="11" fill="#64748B">budi.h@mts-alhidayah.sch.id · belum ada role</text>
+      </g>
+
+      <g transform="translate(32,392)">
+        <rect width="596" height="60" rx="12" fill="#FFFFFF" stroke="#E2E8F0"/>
+        <g transform="translate(14,22)"><rect width="18" height="18" rx="5" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.6"/></g>
+        <circle cx="60" cy="30" r="16" fill="url(#avC)"/>
+        <text x="60" y="34" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="middle">BR</text>
+        <text x="86" y="28" font-size="13" font-weight="800" fill="#0F172A">Budiana Rahayu</text>
+        <text x="86" y="44" font-size="11" fill="#64748B">budiana.r@mts-alhidayah.sch.id · sudah TU</text>
+      </g>
+
+      <g transform="translate(32,462)">
+        <rect width="596" height="60" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+        <g transform="translate(14,22)"><rect width="18" height="18" rx="5" fill="#D1FAE5" stroke="#15803D" stroke-width="1.4"/><path d="M4 10 L8 13 L14 6" stroke="#15803D" stroke-width="1.8" fill="none"/></g>
+        <circle cx="60" cy="30" r="16" fill="url(#avA)" opacity="0.55"/>
+        <text x="60" y="34" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="middle">AS</text>
+        <text x="86" y="28" font-size="13" font-weight="700" fill="#64748B">Ahmad Subagja</text>
+        <text x="86" y="44" font-size="11" fill="#94A3B8">sudah Bendahara · tidak bisa dipilih ulang</text>
+      </g>
+
+      <!-- Footer -->
+      <line x1="0" y1="556" x2="660" y2="556" stroke="#E2E8F0"/>
+      <g transform="translate(32,576)">
+        <rect width="120" height="40" rx="10" fill="#FFFFFF" stroke="#E2E8F0"/>
+        <text x="60" y="25" font-size="13" font-weight="700" fill="#0F172A" text-anchor="middle">Batal</text>
+      </g>
+      <g transform="translate(444,576)">
+        <rect width="184" height="40" rx="10" fill="#143068"/>
+        <text x="92" y="25" font-size="13" font-weight="800" fill="#FFFFFF" text-anchor="middle">Tambahkan 2 user</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- FRAME D — Create role modal                                   -->
+  <!-- ============================================================ -->
+  <g transform="translate(20,4180)">
+    <text x="0" y="-12" font-size="14" font-weight="700" fill="#0F172A">D · Modal "Tambah role kustom" (dipanggil dari Frame A FAB / + Tambah Role)</text>
+
+    <rect x="0" y="0" width="1280" height="1100" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <rect x="0" y="0" width="1280" height="36" rx="12" fill="#F1F5F9"/>
+    <circle cx="20" cy="18" r="6" fill="#F87171"/><circle cx="40" cy="18" r="6" fill="#FBBF24"/><circle cx="60" cy="18" r="6" fill="#34D399"/>
+
+    <!-- Background: roles list dimmed -->
+    <rect x="0" y="36" width="256" height="1064" fill="#FFFFFF" stroke="#E2E8F0"/>
+    <rect x="256" y="36" width="1024" height="64" fill="url(#topbar)"/>
+    <g transform="translate(280,120)" opacity="0.45">
+      <rect width="976" height="116" rx="16" fill="url(#adminHero)"/>
+      <text x="24" y="68" font-size="26" font-weight="900" fill="#FFFFFF">Role &amp; Permission</text>
+    </g>
+
+    <!-- Backdrop -->
+    <rect x="0" y="36" width="1280" height="1064" fill="#0F172A" fill-opacity="0.45"/>
+
+    <!-- Modal -->
+    <g transform="translate(370,160)" filter="url(#modalShadow)">
+      <rect width="540" height="720" rx="20" fill="#FFFFFF"/>
+
+      <!-- Header -->
+      <text x="32" y="48" font-size="20" font-weight="900" fill="#0F172A">Tambah role kustom</text>
+      <text x="32" y="70" font-size="12" fill="#64748B">Cocok untuk Bendahara, Tata Usaha, penjaga sekolah, satpam, dst.</text>
+      <g transform="translate(496,32)">
+        <rect width="28" height="28" rx="8" fill="#F1F5F9"/>
+        <path d="M9 9 L19 19 M19 9 L9 19" stroke="#64748B" stroke-width="1.8" stroke-linecap="round"/>
+      </g>
+
+      <!-- Field: Nama -->
+      <text x="32" y="118" font-size="12" font-weight="700" fill="#0F172A">Nama role</text>
+      <g transform="translate(32,128)">
+        <rect width="476" height="44" rx="10" fill="#FFFFFF" stroke="#E2E8F0"/>
+        <text x="14" y="28" font-size="13" font-weight="700" fill="#0F172A">Bendahara Utama</text>
+        <rect x="105" y="22" width="1.5" height="14" fill="#143068"/>
+      </g>
+      <text x="32" y="190" font-size="10" fill="#64748B">Tampil di UI dan di daftar role.</text>
+
+      <!-- Field: Key teknis -->
+      <text x="32" y="218" font-size="12" font-weight="700" fill="#0F172A">Key teknis</text>
+      <g transform="translate(32,228)">
+        <rect width="476" height="44" rx="10" fill="#F8FAFC" stroke="#E2E8F0"/>
+        <text x="14" y="28" font-size="13" font-family="ui-monospace, Menlo, monospace" fill="#143068">bendahara_utama</text>
+        <g transform="translate(420,12)">
+          <rect width="44" height="20" rx="10" fill="#E8EEF7"/>
+          <text x="22" y="14" font-size="9" font-weight="800" fill="#143068" text-anchor="middle">AUTO</text>
+        </g>
+      </g>
+      <text x="32" y="290" font-size="10" fill="#64748B">Otomatis dari nama. Hanya huruf kecil, angka, dan underscore.</text>
+
+      <!-- Field: Tipe -->
+      <text x="32" y="318" font-size="12" font-weight="700" fill="#0F172A">Tipe role</text>
+      <g transform="translate(32,328)">
+        <rect width="476" height="56" rx="10" fill="#FFFFFF" stroke="#E2E8F0"/>
+        <g transform="translate(14,16)">
+          <rect width="24" height="24" rx="6" fill="#FBEEDA"/>
+          <path d="M7 13 H17 M7 16 H14" stroke="#A2660D" stroke-width="1.4" stroke-linecap="round"/>
+        </g>
+        <text x="50" y="26" font-size="13" font-weight="700" fill="#0F172A">Staff</text>
+        <text x="50" y="42" font-size="10" fill="#64748B">TU, bendahara, penjaga, satpam, front-office</text>
+        <path d="M448 24 L454 32 L460 24" stroke="#94A3B8" stroke-width="1.6" fill="none"/>
+      </g>
+
+      <!-- Preset chooser -->
+      <text x="32" y="412" font-size="12" font-weight="700" fill="#0F172A">Permission awal</text>
+      <text x="508" y="412" font-size="11" font-weight="700" fill="#143068" text-anchor="end">Pilih nanti ▾</text>
+      <g transform="translate(32,422)">
+        <rect width="152" height="56" rx="12" fill="#FFFFFF" stroke="#E2E8F0"/>
+        <text x="76" y="22" font-size="11" font-weight="700" fill="#143068" text-anchor="middle">Kosong</text>
+        <text x="76" y="40" font-size="9" fill="#64748B" text-anchor="middle">0 permission</text>
+      </g>
+      <g transform="translate(194,422)">
+        <rect width="152" height="56" rx="12" fill="#143068"/>
+        <text x="76" y="22" font-size="11" font-weight="800" fill="#FFFFFF" text-anchor="middle">Salin Bendahara</text>
+        <text x="76" y="40" font-size="9" fill="#FFFFFF" fill-opacity="0.85" text-anchor="middle">8 permission</text>
+      </g>
+      <g transform="translate(356,422)">
+        <rect width="152" height="56" rx="12" fill="#FFFFFF" stroke="#E2E8F0"/>
+        <text x="76" y="22" font-size="11" font-weight="700" fill="#143068" text-anchor="middle">Salin TU</text>
+        <text x="76" y="40" font-size="9" fill="#64748B" text-anchor="middle">14 permission</text>
+      </g>
+
+      <!-- Preview -->
+      <g transform="translate(32,500)">
+        <rect width="476" height="80" rx="12" fill="#F8FAFC"/>
+        <text x="14" y="22" font-size="10" font-weight="700" fill="#64748B" letter-spacing="1.2">PREVIEW</text>
+        <g transform="translate(14,32)">
+          <rect width="120" height="22" rx="6" fill="#FBEEDA"/>
+          <text x="60" y="15" font-size="11" font-weight="700" fill="#A2660D" text-anchor="middle">Bendahara Utama</text>
+        </g>
+        <g transform="translate(142,32)">
+          <rect width="56" height="22" rx="6" fill="#E8EEF7"/>
+          <text x="28" y="15" font-size="10" font-weight="800" fill="#143068" text-anchor="middle">STAFF</text>
+        </g>
+        <g transform="translate(206,32)">
+          <rect width="70" height="22" rx="6" fill="#D1FAE5"/>
+          <text x="35" y="15" font-size="10" font-weight="800" fill="#15803D" text-anchor="middle">8 PERMS</text>
+        </g>
+      </g>
+
+      <!-- Footer -->
+      <line x1="0" y1="624" x2="540" y2="624" stroke="#E2E8F0"/>
+      <g transform="translate(32,644)">
+        <rect width="120" height="44" rx="10" fill="#FFFFFF" stroke="#E2E8F0"/>
+        <text x="60" y="28" font-size="13" font-weight="700" fill="#0F172A" text-anchor="middle">Batal</text>
+      </g>
+      <g transform="translate(280,644)">
+        <rect width="228" height="44" rx="10" fill="#143068"/>
+        <text x="114" y="28" font-size="13" font-weight="800" fill="#FFFFFF" text-anchor="middle">Buat &amp; lanjut atur permission</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- Bottom spec notes                                             -->
+  <!-- ============================================================ -->
+  <g transform="translate(20,5320)">
+    <text x="0" y="0" font-size="14" font-weight="900" fill="#143068">Spec ringkas — Vue Web Admin</text>
+    <text x="0" y="22" font-size="11" fill="#64748B">Layout: 256px AppShell sidebar (rounded pill nav, 3px left rail + glow on active) · 64px topbar with admin-navy gradient · max-w-7xl content · py-8 px-6</text>
+    <text x="0" y="40" font-size="11" fill="#64748B">Tokens: admin navy #143068 · BrandPageHeader gradient #0A1F4D → #143068 → #1B6FB8 · slate-50 page · slate-200 borders · Poppins 14/12/10 · semantic status colors</text>
+    <text x="0" y="58" font-size="11" fill="#64748B">Endpoints (sudah ada di Phase A/B backend): GET /api/schools/{id}/roles · POST/PUT/DELETE same · GET /api/permissions · GET /api/schools/{id}/roles/{rid}/members · POST/DELETE members · GET /api/schools/{id}/members?search=</text>
+    <text x="0" y="80" font-size="11" font-weight="700" fill="#143068">Komponen yang akan dipakai/dibangun</text>
+    <text x="0" y="98" font-size="11" fill="#64748B">Pakai langsung: BrandPageHeader, KpiStripCards, PageFilterToolbar+AppFilterChip, BrandListRow, Modal (centered), ConfirmationDialog, BottomSheetFooter, SearchBar</text>
+    <text x="0" y="116" font-size="11" fill="#64748B">Bangun baru: RoleCard, PermissionModuleAccordion, PermissionCheckboxRow, RoleTypePicker (select), MemberPickerRow (selectable BrandListRow variant), AssignConfirmationModal</text>
+  </g>
+</svg>
