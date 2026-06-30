@@ -722,6 +722,13 @@ export const useAuthStore = defineStore('auth', {
           .catch(() => {
             // non-fatal
           });
+        // RBAC roles/permissions are tenant-scoped — wipe the cache so
+        // the next /admin/roles visit refetches against the new school.
+        import('./rbac')
+          .then((m) => m.useRbacStore().reset())
+          .catch(() => {
+            // non-fatal — store may not be instantiated yet
+          });
         // If switchSchool returned a role picker (multi-role case),
         // immediately try to auto-advance — either because there's
         // really only one role or because we remember the last pick.

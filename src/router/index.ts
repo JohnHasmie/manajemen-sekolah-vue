@@ -95,6 +95,9 @@ const AdminReportCardDetailView = () =>
   import('@/views/admin/AdminReportCardDetailView.vue');
 const AdminSettingsView = () =>
   import('@/views/admin/AdminSettingsView.vue');
+const AdminRolesView = () => import('@/views/admin/AdminRolesView.vue');
+const AdminRoleDetailView = () =>
+  import('@/views/admin/AdminRoleDetailView.vue');
 const AdminDataManagementView = () =>
   import('@/views/admin/AdminDataManagementView.vue');
 const AdminSchoolLevelSettingsView = () =>
@@ -499,6 +502,19 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/settings',
         name: 'admin.settings',
         component: AdminSettingsView,
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/roles',
+        name: 'admin-roles',
+        component: AdminRolesView,
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/roles/:roleId',
+        name: 'admin-role-detail',
+        component: AdminRoleDetailView,
+        props: true,
         meta: { role: 'admin' satisfies Role },
       },
       {
