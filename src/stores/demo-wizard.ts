@@ -520,6 +520,18 @@ function mergeWithDefaults(partial: Partial<DemoWizardPayload>): DemoWizardPaylo
               : v === 'SMA' || v === 'SMK' ? 'SENIOR_HIGH'
                 : v,
         ) as DemoWizardPayload['tutoring']['target_levels'],
+      // Migrate legacy scalar `billing_mode: 'PER_MONTH'` to the
+      // multi-select array shape `billing_mode: ['PER_MONTH']`. A
+      // user who saved wizard state before this MR has a single
+      // string; the type + backend validator now expect an array,
+      // so a non-migrating hydrate would crash the chip picker
+      // (`p.tutoring.billing_mode.length` on a string returns the
+      // character count, not a chip count).
+      billing_mode: Array.isArray(partialTutoring?.billing_mode)
+        ? partialTutoring.billing_mode
+        : (typeof partialTutoring?.billing_mode === 'string'
+            ? [partialTutoring.billing_mode]
+            : d.tutoring.billing_mode) as DemoWizardPayload['tutoring']['billing_mode'],
     },
     requester: {
       ...d.requester,

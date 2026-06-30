@@ -210,7 +210,16 @@ function scheduleModeLabel(mode: string | undefined): string {
   return mode ?? '—';
 }
 
-function billingModeLabel(mode: string | undefined): string {
+function billingModeLabel(
+  mode: string | string[] | undefined,
+): string {
+  // The tutoring wizard now sends `billing_mode` as an array
+  // (multi-select). Older school-path payloads + legacy demo_requests
+  // rows still carry it as a single string — accept both shapes and
+  // pretty-print the array as a comma-joined list.
+  if (Array.isArray(mode)) {
+    return mode.length === 0 ? '—' : mode.join(', ');
+  }
   if (mode === 'build_year') return t('superAdmin.demoDetail.billingBuildYear');
   if (mode === 'skip') return t('superAdmin.demoDetail.billingSkip');
   return mode ?? '—';

@@ -284,9 +284,15 @@ export type TutoringStudentScale = 'lt50' | '50_200' | '200_500' | 'gt500';
 export type TutoringTutorScale = '1_3' | '4_10' | '11_30' | 'gt30';
 
 /**
- * Default billing mode for a tutoring center. Mirrors
+ * Billing modes a tutoring center offers. Mirrors
  * `tutoring_packages.billing_mode` so the backend seeder can seed
  * packages with the matching mode out of the box.
+ *
+ * Multi-select on the wizard: the lembaga may offer ONE OR MORE
+ * modes (per-session for trial classes + per-month for regular
+ * cohorts, etc.). The first selected mode is used as the
+ * `tenant_billing_settings.default_mode` and each selected mode
+ * enables its `allow_*` flag during provisioning.
  */
 export type TutoringBillingMode = 'PER_SESSION' | 'PER_MONTH' | 'PACKAGE';
 
@@ -337,8 +343,12 @@ export interface DemoTutoringPayload {
   programs: string[];
   /** Estimated scale of tutors. */
   tutor_scale: TutoringTutorScale;
-  /** Default billing mode for packages the seeder creates. */
-  billing_mode: TutoringBillingMode;
+  /**
+   * Billing modes the lembaga offers. Minimum 1, max 3.
+   * Multi-select on the wizard. The first entry is treated as the
+   * default mode for seeded packages.
+   */
+  billing_mode: TutoringBillingMode[];
   /**
    * Optional map pin. Null when the requester skipped the picker.
    * Used during demo-request verification to confirm the lembaga is
@@ -869,7 +879,7 @@ export function validateTutoring(
   if (!b.tutor_scale) {
     errors.tutor_scale = 'registerDemo.tutoringErrTutorScale';
   }
-  if (!b.billing_mode) {
+  if (!Array.isArray(b.billing_mode) || b.billing_mode.length === 0) {
     errors.billing_mode = 'registerDemo.tutoringErrBillingMode';
   }
   return errors;
@@ -885,7 +895,7 @@ export function defaultTutoringPayload(): DemoTutoringPayload {
     student_scale: '50_200',
     programs: [],
     tutor_scale: '4_10',
-    billing_mode: 'PER_MONTH',
+    billing_mode: ['PER_MONTH'],
     location: null,
     // Default-on so a fresh tutoring-center demo is populated end-to-end.
     // The user can untoggle any they don't want before submit.
