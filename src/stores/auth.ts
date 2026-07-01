@@ -521,6 +521,21 @@ export const useAuthStore = defineStore('auth', {
               // non-fatal
             });
         }
+
+        // Kick off /me so the freshest per-school+role ability set
+        // repopulates useMeStore.snapshot. On a hard refresh, only
+        // token+user are in localStorage — the Pinia me store is memory
+        // only, so without this call `hasAbility` falls back to the
+        // login-time `user.abilities` cache, which may lack permissions
+        // granted after the user's last login (e.g. new attendance-QR
+        // perms). Sidebar items gated by those perms would then be
+        // hidden until the next full login. Fire-and-forget: on failure,
+        // the fallback path still works.
+        void useMeStore()
+          .refresh()
+          .catch(() => {
+            // non-fatal — fall back to cached user.abilities
+          });
       }
     },
 
