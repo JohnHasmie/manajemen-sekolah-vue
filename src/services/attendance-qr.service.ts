@@ -314,10 +314,12 @@ export const AttendanceQrService = {
     try {
       const res = await api.get(Endpoints.cardsExportPdf, {
         params: { user_ids: userIds },
-        // Repeat the param key for each id (`user_ids[]=a&user_ids[]=b`),
-        // matching the Laravel array convention the backend expects.
+        // Emit brackets (`user_ids[]=a&user_ids[]=b`) — Laravel's
+        // `array` validator only unpacks a query key when the brackets
+        // are present. Bare `user_ids=a&user_ids=b` (axios `indexes: null`)
+        // collapses to the last value on the PHP side and returns 422.
         paramsSerializer: {
-          indexes: null,
+          indexes: false,
         },
         responseType: 'blob',
       });
