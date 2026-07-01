@@ -19,6 +19,7 @@ import { defineStore } from 'pinia';
 import { AuthService } from '@/services/auth.service';
 import { SchoolService } from '@/services/schools.service';
 import { TeacherService } from '@/services/teachers.service';
+import { useMeStore } from '@/stores/me';
 import { storage, StorageKeys } from '@/lib/storage';
 import type {
   AuthResponse,
@@ -211,10 +212,30 @@ export const useAuthStore = defineStore('auth', {
      * True when the active user holds the given permission token. Super
      * admins always pass. Used to gate sidebar items + page shells; the
      * authoritative gate stays server-side.
+     *
+     * Phase D preference: read from `useMeStore().snapshot.abilities`
+     * — the definitive per-school+role set from `GET /me`. The auth
+     * store also refreshes /me on login / selectSchool / selectRole,
+     * so this getter re-runs whenever the snapshot changes.
+     *
+     * Legacy fallback: for the brief window before the first /me lands
+     * (or in tests that skip /me), fall back to `user.abilities` if the
+     * login response happened to include one. When no source has data,
+     * fail-closed (returns false) so the sidebar never flashes a menu
+     * item the user can't actually use.
      */
     hasAbility(): (perm: string) => boolean {
-      const list = this.abilities;
-      return (perm: string) => list.includes('*') || list.includes(perm);
+      const me = useMeStore();
+      const snap = me.snapshot;
+      if (snap) {
+        if (snap.isSuperAdmin) return () => true;
+        return (perm: string) => snap.abilities.has(perm);
+      }
+      // Legacy fallback path.
+      if (this.isSuperAdmin) return () => true;
+      const list = this.user?.abilities;
+      const arr = Array.isArray(list) ? list : [];
+      return (perm: string) => arr.includes(perm);
     },
   },
 
@@ -416,6 +437,18 @@ export const useAuthStore = defineStore('auth', {
       storage.set(StorageKeys.user, user);
       if (this.schoolId) storage.set(StorageKeys.schoolId, this.schoolId);
       if (this.role) storage.set(StorageKeys.role, this.role);
+
+      // Phase D (RBAC): once the auth chain lands on `done`, kick off a
+      // fresh /me fetch so every downstream view can gate off abilities.
+      // Non-blocking — the picker step never depends on abilities, and
+      // views that need them fail-closed (`can()` returns false while
+      // the snapshot is still null).
+      void useMeStore()
+        .refresh()
+        .catch(() => {
+          // non-fatal — a super-admin without /me still routes via
+          // `authMethod`/`isSuperAdmin` fallbacks.
+        });
 
       // Cross-device language hydration: when the backend returns a
       // saved `preferred_language` on the user payload, adopt it so
@@ -729,6 +762,12 @@ export const useAuthStore = defineStore('auth', {
       this._setLoading(true);
       this.schoolId = schoolId;
       storage.set(StorageKeys.schoolId, schoolId);
+      // Wipe the ability snapshot BEFORE the switch call — the previous
+      // school's abilities are no longer valid, and views that read
+      // me.can() should fail-closed during the transition rather than
+      // flash a menu item the user can't actually use in the new school.
+      // The auto-load in `_applyResponse(step==='done')` will refill it.
+      useMeStore().reset();
       try {
         const res = await AuthService.switchSchool(schoolId);
         this._applyResponse(res);
@@ -773,6 +812,10 @@ export const useAuthStore = defineStore('auth', {
         this.step = 'school';
         return;
       }
+
+      // Wipe abilities for the same reason as `selectSchool`: the
+      // previous role's abilities are no longer valid.
+      useMeStore().reset();
 
       try {
         const res = await AuthService.switchRole(role, this.schoolId);
@@ -929,6 +972,18 @@ export const useAuthStore = defineStore('auth', {
         // from the backend's active year.
         import('./academic-year')
           .then((m) => m.useAcademicYearStore().reset())
+          .catch(() => {
+            // non-fatal
+          });
+        // Same treatment for RBAC + abilities so the next login can't
+        // transiently see the previous user's cache.
+        import('./rbac')
+          .then((m) => m.useRbacStore().reset())
+          .catch(() => {
+            // non-fatal
+          });
+        import('./me')
+          .then((m) => m.useMeStore().reset())
           .catch(() => {
             // non-fatal
           });

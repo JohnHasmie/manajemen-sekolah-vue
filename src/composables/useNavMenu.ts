@@ -97,10 +97,15 @@ const ADMIN_NAV: NavSection[] = [
     titleKey: 'nav.settings',
     items: [
       { to: '/admin/settings', labelKey: 'nav.schoolSettings', icon: 'settings' },
-      // Phase E (RBAC): role & permission management. Sidebar visibility
-      // can be tightened later via a `requiredAbility` field once the
-      // web auth store mirrors mobile's /me consumption.
-      { to: '/admin/roles', labelKey: 'nav.rolesAndPermissions', icon: 'shield' },
+      // Phase E (RBAC): role & permission management. Gated by Phase D's
+      // /me consumption — a Bendahara / TU with a stripped-down custom
+      // role no longer sees this entry.
+      {
+        to: '/admin/roles',
+        labelKey: 'nav.rolesAndPermissions',
+        icon: 'shield',
+        ability: 'rbac.role.view',
+      },
     ],
   },
 ];

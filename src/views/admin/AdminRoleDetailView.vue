@@ -19,6 +19,7 @@ import AddMembersModal from '@/views/admin/rbac/AddMembersModal.vue';
 
 import { useAuthStore } from '@/stores/auth';
 import { useRbacStore } from '@/stores/rbac';
+import { useMe } from '@/composables/useMe';
 
 type TabKey = 'detail' | 'permission' | 'anggota';
 
@@ -26,6 +27,9 @@ const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 const rbac = useRbacStore();
+const { can } = useMe();
+const canManageRoles = () => can('rbac.role.manage');
+const canManageMembers = () => can('rbac.member.assign');
 
 const {
   role,
@@ -227,6 +231,7 @@ function backToList() {
           />
         </div>
         <button
+          v-if="canManageMembers()"
           type="button"
           class="rd__add"
           @click="showAddMembers = true"
@@ -280,6 +285,7 @@ function backToList() {
             </div>
           </div>
           <button
+            v-if="canManageMembers()"
             type="button"
             class="rd__member-remove"
             @click="removeMember(m.user_id)"
@@ -293,9 +299,9 @@ function backToList() {
       </div>
     </section>
 
-    <!-- Sticky save bar (Permission tab only) -->
+    <!-- Sticky save bar (Permission tab only, manage-only) -->
     <div
-      v-if="activeTab === 'permission' && role"
+      v-if="activeTab === 'permission' && role && canManageRoles()"
       class="rd__save-bar"
     >
       <span class="rd__save-hint">

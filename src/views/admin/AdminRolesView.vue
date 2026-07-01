@@ -18,11 +18,18 @@ import RoleCard from '@/components/feature/rbac/RoleCard.vue';
 import CreateRoleModal from '@/views/admin/rbac/CreateRoleModal.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRbacStore } from '@/stores/rbac';
+import { useMe } from '@/composables/useMe';
 import type { RbacRole, RoleTypeFilter } from '@/types/rbac';
 
 const router = useRouter();
 const auth = useAuthStore();
 const rbac = useRbacStore();
+const { can } = useMe();
+// Phase D gate: only users holding `rbac.role.manage` can create /
+// edit / delete roles. Read-only viewers (rbac.role.view) still see
+// the list but the +Tambah button and per-card destructive actions
+// disappear. Server-side gate stays authoritative.
+const canManageRoles = () => can('rbac.role.manage');
 
 const {
   rolesLoading,
@@ -98,7 +105,12 @@ function onCreated(role: RbacRole) {
       :live-dot="false"
     >
       <template #default>
-        <button type="button" class="rl__add" @click="showCreateModal = true">
+        <button
+          v-if="canManageRoles()"
+          type="button"
+          class="rl__add"
+          @click="showCreateModal = true"
+        >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path
               d="M3 8 H13 M8 3 V13"
