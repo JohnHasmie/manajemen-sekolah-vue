@@ -56,19 +56,19 @@ const methods: { key: CheckInMethod; labelKey: string; descKey: string }[] = [
     descKey: 'admin.attendance.settings.method.selfieDesc',
   },
   {
-    key: 'GATE_QR',
+    key: 'QR_GATE',
     labelKey: 'admin.attendance.settings.method.gateQr',
     descKey: 'admin.attendance.settings.method.gateQrDesc',
   },
   {
-    key: 'CARD_QR',
+    key: 'QR_CARD',
     labelKey: 'admin.attendance.settings.method.cardQr',
     descKey: 'admin.attendance.settings.method.cardQrDesc',
   },
 ];
 
 /** Whether the form has gate-QR enabled — gates the rotation slider. */
-const showRotationSlider = computed(() => methodsSet.value.has('GATE_QR'));
+const showRotationSlider = computed(() => methodsSet.value.has('QR_GATE'));
 
 async function load() {
   loading.value = true;
@@ -186,7 +186,7 @@ onMounted(load);
                   :name="
                     m.key === 'SELFIE'
                       ? 'camera'
-                      : m.key === 'GATE_QR'
+                      : m.key === 'QR_GATE'
                       ? 'qr-code'
                       : 'id-card'
                   "

@@ -51,7 +51,7 @@ export interface TeacherAttendanceSettings {
   school_longitude?: number | null;
   /**
    * Which check-in methods are allowed for THIS school (MR !226).
-   * Subset of SELFIE / GATE_QR / CARD_QR — backend enforces ≥1 entry.
+   * Subset of SELFIE / QR_GATE / QR_CARD — backend enforces ≥1 entry.
    */
   allowed_methods?: import('./attendance-qr').CheckInMethod[];
   /**

@@ -13,16 +13,19 @@
 /**
  * Allowed check-in methods. Settings exposes this as an array — admins
  * pick any combination of the three. The server enforces at least one.
- *   - SELFIE       Camera selfie + GPS (the existing teacher check-in flow)
- *   - GATE_QR      Scan the school-wide rotating QR at the gate
- *   - CARD_QR      Tap your own printed personnel-card QR
+ * Wire values must match the backend `CheckInMethod` PHP enum + the
+ * `UpdateTeacherAttendanceSettingsRequest` `in:` rule (word order is
+ * QR_* not *_QR — sending GATE_QR/CARD_QR trips a 422 "invalid" error).
+ *   - SELFIE   Camera selfie + GPS (the existing teacher check-in flow)
+ *   - QR_GATE  Scan the school-wide rotating QR at the gate
+ *   - QR_CARD  Tap your own printed personnel-card QR
  */
-export type CheckInMethod = 'SELFIE' | 'GATE_QR' | 'CARD_QR';
+export type CheckInMethod = 'SELFIE' | 'QR_GATE' | 'QR_CARD';
 
 export const CHECK_IN_METHODS: readonly CheckInMethod[] = [
   'SELFIE',
-  'GATE_QR',
-  'CARD_QR',
+  'QR_GATE',
+  'QR_CARD',
 ] as const;
 
 /**

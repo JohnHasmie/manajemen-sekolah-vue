@@ -148,7 +148,7 @@ function statusCountsFromJson(
 }
 
 /** Allowed QR check-in method keys (MR !226). Anything else is dropped. */
-const ALLOWED_METHOD_KEYS = ['SELFIE', 'GATE_QR', 'CARD_QR'] as const;
+const ALLOWED_METHOD_KEYS = ['SELFIE', 'QR_GATE', 'QR_CARD'] as const;
 
 /**
  * Coerce a raw `allowed_methods` field into a typed list. Accepts the

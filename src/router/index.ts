@@ -561,7 +561,7 @@ const routes: RouteRecordRaw[] = [
 
       // ── Gate QR + personnel cards (MR !226) ───────────────────────
       // Distinct from the existing presensi-guru pages: these surfaces
-      // configure + drive the GATE_QR / CARD_QR check-in methods. The
+      // configure + drive the QR_GATE / QR_CARD check-in methods. The
       // `meta.ability` value names the RBAC token (backend MR !225);
       // the router guard maps it to `auth.hasAbility(...)` and bounces
       // a non-permitted admin home. Authoritative gate is server-side.

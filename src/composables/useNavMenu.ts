@@ -68,12 +68,22 @@ const ADMIN_NAV: NavSection[] = [
     ],
   },
   {
-    // ── Gate QR + personnel cards (MR !226) ─────────────────────────
-    // Sits as its own section so the three tiles are findable without
-    // scrolling past the reports group. Each item is RBAC-gated; the
-    // settings tile has no ability requirement (any admin can read it).
-    titleKey: 'nav.attendanceQrSection',
+    // ── PENGATURAN — school settings + attendance-QR configuration ──
+    // Merged the former standalone "PRESENSI QR" section in here so the
+    // three attendance-QR tiles (settings, gate display, personnel
+    // cards) live alongside general school settings instead of getting
+    // their own heading. Order: schoolSettings → attendance settings →
+    // gate QR → personnel cards → roles. Each item keeps its RBAC
+    // ability gate (settings + schoolSettings + roles have none — any
+    // admin can read them).
+    titleKey: 'nav.settings',
     items: [
+      { to: '/admin/settings', labelKey: 'nav.schoolSettings', icon: 'settings' },
+      {
+        to: '/admin/attendance/settings',
+        labelKey: 'nav.attendanceQrSettings',
+        icon: 'sliders',
+      },
       {
         to: '/admin/attendance/gate-qr',
         labelKey: 'nav.attendanceQrGate',
@@ -86,17 +96,6 @@ const ADMIN_NAV: NavSection[] = [
         icon: 'id-card',
         ability: 'attendance.cards.issue',
       },
-      {
-        to: '/admin/attendance/settings',
-        labelKey: 'nav.attendanceQrSettings',
-        icon: 'sliders',
-      },
-    ],
-  },
-  {
-    titleKey: 'nav.settings',
-    items: [
-      { to: '/admin/settings', labelKey: 'nav.schoolSettings', icon: 'settings' },
       // Phase E (RBAC): role & permission management. Gated by Phase D's
       // /me consumption — a Bendahara / TU with a stripped-down custom
       // role no longer sees this entry.
