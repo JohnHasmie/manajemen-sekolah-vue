@@ -24,7 +24,6 @@ import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
 import type { GateQrTokenInfo } from '@/types/attendance-qr';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import Button from '@/components/ui/Button.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
@@ -156,29 +155,41 @@ onBeforeUnmount(stopTicker);
         :meta="t('admin.attendance.qrDisplay.meta')"
         :live-dot="true"
       >
+        <!--
+          On-hero action buttons. The default <Button variant="secondary">
+          uses a slate-300 border + slate-700 text, which vanishes on the
+          admin-navy gradient (screenshot report: buttons look faded /
+          disabled even when enabled). We reach for the app-wide "chip
+          on dark hero" pattern (bg-white/15 + text-white +
+          hover:bg-white/25), matching AdminClassActivityView's Export
+          CSV button and PersonnelCardManagerView's Unduh PDF button.
+          Keeps parity across admin heros without introducing a bespoke
+          Button variant.
+        -->
         <div class="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="md"
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white px-md py-sm text-sm font-semibold border border-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             :disabled="loading || rotating"
             @click="rotateNow"
           >
-            <NavIcon name="refresh-cw" :size="16" />
+            <Spinner v-if="rotating" size="sm" />
+            <NavIcon v-else name="refresh-cw" :size="16" />
             {{
               rotating
                 ? t('admin.attendance.qrDisplay.rotating')
                 : t('admin.attendance.qrDisplay.rotateNow')
             }}
-          </Button>
-          <Button
-            variant="secondary"
-            size="md"
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white px-md py-sm text-sm font-semibold border border-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             :disabled="loading || !tokenInfo"
             @click="printDisplay"
           >
             <NavIcon name="printer" :size="16" />
             {{ t('admin.attendance.qrDisplay.print') }}
-          </Button>
+          </button>
         </div>
       </BrandPageHeader>
     </div>

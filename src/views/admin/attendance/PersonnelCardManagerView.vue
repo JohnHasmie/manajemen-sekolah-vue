@@ -1,58 +1,82 @@
 <!--
   PersonnelCardManagerView.vue — admin batch-issue + revoke + PDF export
-  for personnel QR cards. The source of truth for who's a personnel is
-  the existing teacher list (`TeacherService.list`); students are out of
-  scope by default (toggled via the settings page's "Cetak kartu siswa"
-  flag, which the issue endpoint enforces server-side). This page only
-  needs the teacher list — the cards table itself lives on the row, not
-  on a separate listing endpoint (the backend exposes issue/revoke and
-  the row's status comes back inline).
+  for personnel QR cards. The source of truth is the dedicated
+  `/attendance/personnel-cards/list` endpoint (backend api!234). Each
+  row carries a `user_id` (canonical selection key — the issue endpoint
+  keys on `users_schools.user_id`, NOT `teachers.id`) plus an inline
+  `card` summary that tells us whether the personnel already has an
+  active card.
 
-  TODO(future MR): when a dedicated `/attendance/personnel-cards/list`
-  endpoint lands, fetch it alongside the teacher list so we can show
-  "card issued at" / "qr_token preview" / "revoked_at" columns. For now
-  the page surfaces the action verbs and trusts the toast feedback on
-  each call to report status.
+  History: earlier iterations sourced rows from `TeacherService.list`
+  as a fallback and used `teachers.id` in the selection set. That broke
+  both issue + PDF export — the backend rejected every id as
+  `not_a_school_member` because it never mapped teacher-id → user-id.
+  See mobile!392 (documented TODO) + this fix.
+
+  Actions:
+    - Terbitkan Kartu (N) → POST /personnel-cards/issue { user_ids }
+    - Unduh PDF          → GET  /personnel-cards/export.pdf?user_ids[]=…
+    - Cabut (per row)    → DELETE /personnel-cards/{card.id}
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { TeacherService } from '@/services/teachers.service';
 import { AttendanceQrService } from '@/services/attendance-qr.service';
 import { useToast } from '@/composables/useToast';
-import type { Teacher } from '@/types/entities';
-import type { PersonnelCardIssueResult } from '@/types/attendance-qr';
+import type {
+  PersonnelCardIssueResult,
+  PersonnelCardListRow,
+  PersonnelRole,
+} from '@/types/attendance-qr';
+import type { Pagination } from '@/types/api';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import Button from '@/components/ui/Button.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import EmptyState from '@/components/data/EmptyState.vue';
+import PaginationWidget from '@/components/data/Pagination.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
 const toast = useToast();
 
 const loading = ref(true);
-const teachers = ref<Teacher[]>([]);
-/** Set of selected user_id values (NOT teacher_id — the backend keys by user). */
+const rows = ref<PersonnelCardListRow[]>([]);
+const pagination = ref<Pagination | null>(null);
+/** Set of selected user_id values — the backend keys on user_id. */
 const selected = ref<Set<string>>(new Set());
-/** Free-text search box over name + employee number. */
+/** Free-text search box over name + email + NIP (server-side). */
 const searchQuery = ref('');
-/** Role filter — Teacher.role is the FE role string (guru / wali_kelas). */
-const roleFilter = ref<'all' | 'guru' | 'wali_kelas'>('all');
+/** Role filter — matches backend `role=teacher|staff|student|all`. */
+const roleFilter = ref<'all' | PersonnelRole>('all');
+/** hasCard filter — 'all' = both, 'yes' = has-card, 'no' = no-card. */
+const hasCardFilter = ref<'all' | 'yes' | 'no'>('all');
+const currentPage = ref(1);
+const perPage = 20;
+
 const issuing = ref(false);
 const exporting = ref(false);
 /** Per-row revoke spinner state, keyed by user_id. */
 const revoking = ref<Set<string>>(new Set());
 
+/**
+ * Fetch a page of personnel with their current card state. Called on
+ * mount, whenever the filters change, and after every mutation
+ * (issue / revoke) so the "Sudah punya kartu?" column stays truthful.
+ */
 async function load() {
   loading.value = true;
   try {
-    // The Teacher list endpoint also doubles as the personnel listing
-    // (students aren't issued cards by default — see the settings
-    // `issue_student_cards` flag). show_all=true bypasses pagination so
-    // the user can batch-select across the full roster.
-    const res = await TeacherService.list({ show_all: true, per_page: 500 });
-    teachers.value = res.items;
+    const res = await AttendanceQrService.listPersonnelCards({
+      role: roleFilter.value,
+      has_card:
+        hasCardFilter.value === 'all'
+          ? undefined
+          : hasCardFilter.value === 'yes',
+      search: searchQuery.value.trim() || undefined,
+      page: currentPage.value,
+      per_page: perPage,
+    });
+    rows.value = res.items;
+    pagination.value = res.pagination;
   } catch (e) {
     toast.error(
       e instanceof Error ? e.message : t('admin.attendance.cards.loadFail'),
@@ -62,65 +86,63 @@ async function load() {
   }
 }
 
-/** Roster filtered by the search box + role filter. */
-const filteredTeachers = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase();
-  return teachers.value.filter((tt) => {
-    if (roleFilter.value !== 'all' && tt.role !== roleFilter.value) {
-      return false;
-    }
-    if (q === '') return true;
-    return (
-      tt.name.toLowerCase().includes(q) ||
-      (tt.employee_number ?? '').toLowerCase().includes(q) ||
-      tt.email.toLowerCase().includes(q)
-    );
-  });
-});
-
-/** Effective user-id picker — falls back to teacher id when user_id is null. */
-function userIdOf(tt: Teacher): string {
-  return tt.user_id ?? tt.id;
+/**
+ * Debounced re-fetch on search change. A tiny 250 ms window avoids
+ * firing one request per keystroke while still feeling live.
+ */
+let searchTimer: number | null = null;
+function scheduleSearchReload() {
+  if (searchTimer !== null) window.clearTimeout(searchTimer);
+  searchTimer = window.setTimeout(() => {
+    currentPage.value = 1;
+    void load();
+  }, 250);
 }
 
-function toggleRow(tt: Teacher) {
-  const uid = userIdOf(tt);
+watch(searchQuery, scheduleSearchReload);
+watch([roleFilter, hasCardFilter], () => {
+  currentPage.value = 1;
+  void load();
+});
+
+function onPageChange(page: number) {
+  currentPage.value = page;
+  void load();
+}
+
+function toggleRow(row: PersonnelCardListRow) {
   const next = new Set(selected.value);
-  if (next.has(uid)) next.delete(uid);
-  else next.add(uid);
+  if (next.has(row.user_id)) next.delete(row.user_id);
+  else next.add(row.user_id);
   selected.value = next;
 }
 
-function toggleAllFiltered() {
+function toggleAllOnPage() {
   const next = new Set(selected.value);
-  const allSelected = filteredTeachers.value.every((tt) =>
-    next.has(userIdOf(tt)),
-  );
-  for (const tt of filteredTeachers.value) {
-    const uid = userIdOf(tt);
-    if (allSelected) next.delete(uid);
-    else next.add(uid);
+  const allSelected = rows.value.every((r) => next.has(r.user_id));
+  for (const r of rows.value) {
+    if (allSelected) next.delete(r.user_id);
+    else next.add(r.user_id);
   }
   selected.value = next;
 }
 
 const selectedCount = computed(() => selected.value.size);
-const allFilteredSelected = computed(
+const allOnPageSelected = computed(
   () =>
-    filteredTeachers.value.length > 0 &&
-    filteredTeachers.value.every((tt) => selected.value.has(userIdOf(tt))),
+    rows.value.length > 0 &&
+    rows.value.every((r) => selected.value.has(r.user_id)),
 );
 
 /**
  * Build a human summary of an issue-response so the toast tells the
- * admin how many cards landed vs were skipped. The backend may return
- * `reason` strings; we surface up to two so a small batch doesn't lose
- * its feedback in an ellipsis.
+ * admin how many cards landed vs were skipped. Mirrors the phrasing
+ * from the earlier revision — no behavioural change.
  */
-function summariseResults(rows: PersonnelCardIssueResult[]): string {
-  const ok = rows.filter((r) => r.status === 'ok').length;
-  const skipped = rows.filter((r) => r.status === 'skipped');
-  const errored = rows.filter((r) => r.status === 'error');
+function summariseResults(results: PersonnelCardIssueResult[]): string {
+  const ok = results.filter((r) => r.status === 'ok').length;
+  const skipped = results.filter((r) => r.status === 'skipped');
+  const errored = results.filter((r) => r.status === 'error');
   const parts: string[] = [t('admin.attendance.cards.issued', { count: ok })];
   if (skipped.length > 0) {
     parts.push(t('admin.attendance.cards.skipped', { count: skipped.length }));
@@ -136,9 +158,11 @@ async function issueSelected() {
   issuing.value = true;
   try {
     const ids = Array.from(selected.value);
-    const rows = await AttendanceQrService.issuePersonnelCards(ids);
-    toast.success(summariseResults(rows));
+    const results = await AttendanceQrService.issuePersonnelCards(ids);
+    toast.success(summariseResults(results));
     selected.value = new Set();
+    // Refresh so the "Sudah punya kartu?" column reflects the new state.
+    await load();
   } catch (e) {
     toast.error(
       e instanceof Error ? e.message : t('admin.attendance.cards.issueFail'),
@@ -169,33 +193,46 @@ async function exportSelectedPdf() {
 }
 
 /**
- * Single-row revoke. Because the listing API surfaces *teachers*, not
- * card rows, we pass the teacher's id through as the `cardId` — the
- * backend resolves to the active card for the user. If a more granular
- * cardId is needed later (e.g. revoke a specific historical card), this
- * is the place to swap in the dedicated card list lookup.
- *
- * TODO(future MR): once the cards-list endpoint lands, key revoke by
- * the card row's id instead of the user id; show "Belum diterbitkan"
- * pill for users without a current card.
+ * Single-row revoke — uses `row.card.id` directly (the card row's
+ * primary key), which is much cleaner than resolving via user_id at
+ * the backend. `card` is guaranteed non-null when the button is
+ * clickable (the template hides Cabut when the row has no card).
  */
-async function revokeRow(tt: Teacher) {
-  const uid = userIdOf(tt);
-  if (revoking.value.has(uid)) return;
+async function revokeRow(row: PersonnelCardListRow) {
+  if (!row.card) return;
+  const cardId = row.card.id;
+  const userId = row.user_id;
+  if (revoking.value.has(userId)) return;
   const next = new Set(revoking.value);
-  next.add(uid);
+  next.add(userId);
   revoking.value = next;
   try {
-    await AttendanceQrService.revokePersonnelCard(uid);
-    toast.success(t('admin.attendance.cards.revoked', { name: tt.name }));
+    await AttendanceQrService.revokePersonnelCard(cardId);
+    toast.success(
+      t('admin.attendance.cards.revoked', { name: row.user_name }),
+    );
+    await load();
   } catch (e) {
     toast.error(
       e instanceof Error ? e.message : t('admin.attendance.cards.revokeFail'),
     );
   } finally {
     const after = new Set(revoking.value);
-    after.delete(uid);
+    after.delete(userId);
     revoking.value = after;
+  }
+}
+
+/** Localized label for a personnel role — the tiny badge in the table. */
+function roleLabel(role: PersonnelRole): string {
+  switch (role) {
+    case 'staff':
+      return t('admin.attendance.cards.roleStaff');
+    case 'student':
+      return t('admin.attendance.cards.roleStudent');
+    case 'teacher':
+    default:
+      return t('admin.attendance.cards.roleTeacher');
   }
 }
 
@@ -211,32 +248,42 @@ onMounted(load);
       :meta="t('admin.attendance.cards.meta')"
     >
       <div class="flex flex-wrap items-center gap-2">
-        <Button
-          variant="secondary"
-          size="md"
+        <!--
+          On-hero action buttons. The default <Button variant="secondary">
+          uses a slate-300 border + slate-700 text, which vanishes on the
+          admin-navy gradient. We reach for the app-wide "chip on dark
+          hero" pattern (bg-white/15 + text-white + hover:bg-white/25),
+          which is what AdminClassActivityView uses for its Export CSV
+          button on the same gradient. Keeps parity across admin heros
+          without introducing a new Button variant just for this page.
+        -->
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white px-md py-sm text-sm font-semibold border border-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           :disabled="selectedCount === 0 || exporting"
-          :loading="exporting"
           @click="exportSelectedPdf"
         >
-          <NavIcon name="download" :size="16" />
+          <Spinner v-if="exporting" size="sm" />
+          <NavIcon v-else name="download" :size="16" />
           {{ t('admin.attendance.cards.exportPdf') }}
-        </Button>
-        <Button
-          variant="primary"
-          size="md"
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-xl bg-white text-slate-900 hover:bg-white/90 px-md py-sm text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           :disabled="selectedCount === 0 || issuing"
-          :loading="issuing"
           @click="issueSelected"
         >
-          <NavIcon name="id-card" :size="16" />
+          <Spinner v-if="issuing" size="sm" />
+          <NavIcon v-else name="id-card" :size="16" />
           {{ t('admin.attendance.cards.issue', { count: selectedCount }) }}
-        </Button>
+        </button>
       </div>
     </BrandPageHeader>
 
-    <!-- Filter row: search + role dropdown.  Sits above the table so
-         the user filters before bulk-selecting; the master checkbox
-         operates on the filtered slice. -->
+    <!-- Filter row: search + role dropdown + has-card dropdown. All
+         server-side; changing any triggers a re-fetch (debounced for
+         the text box, immediate for the selects). The master checkbox
+         operates on the currently-loaded page. -->
     <div class="flex flex-wrap items-center gap-2">
       <div class="relative flex-1 min-w-[220px]">
         <input
@@ -256,10 +303,27 @@ onMounted(load);
         class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/30 focus:border-role-admin"
       >
         <option value="all">{{ t('admin.attendance.cards.roleAll') }}</option>
-        <option value="guru">{{ t('admin.attendance.cards.roleGuru') }}</option>
-        <option value="wali_kelas">{{
-          t('admin.attendance.cards.roleWaliKelas')
-        }}</option>
+        <option value="teacher">
+          {{ t('admin.attendance.cards.roleTeacher') }}
+        </option>
+        <option value="staff">
+          {{ t('admin.attendance.cards.roleStaff') }}
+        </option>
+        <option value="student">
+          {{ t('admin.attendance.cards.roleStudent') }}
+        </option>
+      </select>
+      <select
+        v-model="hasCardFilter"
+        class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/30 focus:border-role-admin"
+      >
+        <option value="all">
+          {{ t('admin.attendance.cards.hasCardAll') }}
+        </option>
+        <option value="yes">
+          {{ t('admin.attendance.cards.hasCardYes') }}
+        </option>
+        <option value="no">{{ t('admin.attendance.cards.hasCardNo') }}</option>
       </select>
     </div>
 
@@ -273,7 +337,7 @@ onMounted(load);
     </div>
 
     <EmptyState
-      v-else-if="filteredTeachers.length === 0"
+      v-else-if="rows.length === 0"
       :title="t('admin.attendance.cards.empty')"
       :description="t('admin.attendance.cards.emptyHint')"
     />
@@ -288,10 +352,10 @@ onMounted(load);
             <th class="px-3 py-2.5 text-left w-10">
               <input
                 type="checkbox"
-                :checked="allFilteredSelected"
+                :checked="allOnPageSelected"
                 class="h-4 w-4 rounded text-role-admin accent-role-admin"
                 :aria-label="t('admin.attendance.cards.selectAll')"
-                @change="toggleAllFiltered"
+                @change="toggleAllOnPage"
               />
             </th>
             <th class="px-3 py-2.5 text-left font-semibold">
@@ -301,7 +365,10 @@ onMounted(load);
               {{ t('admin.attendance.cards.colRole') }}
             </th>
             <th class="px-3 py-2.5 text-left font-semibold">
-              {{ t('admin.attendance.cards.colEmployeeNumber') }}
+              {{ t('admin.attendance.cards.colEmail') }}
+            </th>
+            <th class="px-3 py-2.5 text-left font-semibold w-40">
+              {{ t('admin.attendance.cards.colHasCard') }}
             </th>
             <th class="px-3 py-2.5 text-right font-semibold w-32">
               {{ t('admin.attendance.cards.colActions') }}
@@ -310,42 +377,65 @@ onMounted(load);
         </thead>
         <tbody>
           <tr
-            v-for="tt in filteredTeachers"
-            :key="tt.id"
+            v-for="row in rows"
+            :key="row.user_id"
             class="border-t border-slate-100 hover:bg-slate-50 cursor-pointer"
-            @click="toggleRow(tt)"
+            @click="toggleRow(row)"
           >
             <td class="px-3 py-2.5" @click.stop>
               <input
                 type="checkbox"
-                :checked="selected.has(userIdOf(tt))"
+                :checked="selected.has(row.user_id)"
                 class="h-4 w-4 rounded text-role-admin accent-role-admin"
                 :aria-label="t('admin.attendance.cards.selectRow')"
-                @change="toggleRow(tt)"
+                @change="toggleRow(row)"
               />
             </td>
             <td class="px-3 py-2.5">
-              <div class="font-semibold text-slate-900">{{ tt.name }}</div>
-              <div class="text-xs text-slate-500">{{ tt.email }}</div>
+              <div class="font-semibold text-slate-900">
+                {{ row.user_name || '–' }}
+              </div>
             </td>
             <td class="px-3 py-2.5 text-slate-600">
-              {{
-                tt.role === 'wali_kelas'
-                  ? t('admin.attendance.cards.roleWaliKelas')
-                  : t('admin.attendance.cards.roleGuru')
-              }}
+              {{ roleLabel(row.role) }}
             </td>
             <td class="px-3 py-2.5 text-slate-600">
-              {{ tt.employee_number ?? '–' }}
+              {{ row.user_email || '–' }}
+            </td>
+            <td class="px-3 py-2.5">
+              <!-- "Sudah punya kartu?" pill: green when a card is active,
+                   muted slate when not. Reads at a glance so the admin
+                   doesn't have to hunt the Aksi column. -->
+              <span
+                v-if="row.card"
+                class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-xs font-semibold"
+              >
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                {{ t('admin.attendance.cards.hasCardYes') }}
+              </span>
+              <span
+                v-else
+                class="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-500 px-2 py-0.5 text-xs font-semibold"
+              >
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                {{ t('admin.attendance.cards.hasCardNo') }}
+              </span>
             </td>
             <td class="px-3 py-2.5 text-right" @click.stop>
+              <!-- Revoke is only meaningful when there IS a card. When
+                   there isn't we leave the cell empty rather than
+                   render a disabled button that suggests otherwise. -->
               <button
+                v-if="row.card"
                 type="button"
                 class="text-xs font-semibold text-status-danger hover:underline disabled:opacity-50"
-                :disabled="revoking.has(userIdOf(tt))"
-                @click="revokeRow(tt)"
+                :disabled="revoking.has(row.user_id)"
+                @click="revokeRow(row)"
               >
-                <span v-if="revoking.has(userIdOf(tt))" class="inline-flex items-center gap-1">
+                <span
+                  v-if="revoking.has(row.user_id)"
+                  class="inline-flex items-center gap-1"
+                >
                   <Spinner size="sm" />
                   {{ t('admin.attendance.cards.revoking') }}
                 </span>
@@ -355,6 +445,13 @@ onMounted(load);
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Server-side pagination — the /list endpoint returns 20 rows per
+         page by default. Hidden while loading and when there's a single
+         page (nothing to navigate). -->
+    <div v-if="pagination && pagination.total_pages > 1" class="pt-2">
+      <PaginationWidget :pagination="pagination" @change="onPageChange" />
     </div>
   </div>
 </template>

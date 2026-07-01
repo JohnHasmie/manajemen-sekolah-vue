@@ -11,6 +11,7 @@
  * Routes:
  *   GET    /attendance/gate-qr/current             → current()
  *   POST   /attendance/gate-qr/rotate              → rotate()
+ *   GET    /attendance/personnel-cards/list        → list(params)  (api!234)
  *   POST   /attendance/personnel-cards/issue       → issue(userIds)
  *   DELETE /attendance/personnel-cards/{cardId}    → revoke(cardId)
  *   GET    /attendance/personnel-cards/export.pdf  → exportPdf(userIds)
@@ -20,14 +21,19 @@
  * its own file so the gate-QR + card surfaces can move independently.
  */
 import { api } from '@/lib/http';
+import type { Pagination } from '@/types/api';
 import type {
   GateQrTokenInfo,
   PersonnelCardIssueResult,
+  PersonnelCardListParams,
+  PersonnelCardListRow,
+  PersonnelRole,
 } from '@/types/attendance-qr';
 
 const Endpoints = {
   gateQrCurrent: '/attendance/gate-qr/current',
   gateQrRotate: '/attendance/gate-qr/rotate',
+  cardsList: '/attendance/personnel-cards/list',
   cardsIssue: '/attendance/personnel-cards/issue',
   cardsBase: '/attendance/personnel-cards',
   cardsExportPdf: '/attendance/personnel-cards/export.pdf',
@@ -102,6 +108,74 @@ function triggerBlobDownload(blob: Blob, filename: string): void {
   }
 }
 
+/**
+ * Coerce a personnel row from the wire into the FE shape. Defensive
+ * against nulls / missing keys — the backend was still evolving through
+ * api!234, and we'd rather show "–" than crash the table.
+ */
+function personnelRowFromJson(raw: unknown): PersonnelCardListRow {
+  const r = (raw as Record<string, unknown>) ?? {};
+  const roleRaw = String(r.role ?? 'teacher');
+  const role: PersonnelRole =
+    roleRaw === 'staff' || roleRaw === 'student' ? roleRaw : 'teacher';
+  const cardRaw = r.card as Record<string, unknown> | null | undefined;
+  return {
+    user_id: String(r.user_id ?? ''),
+    user_name: String(r.user_name ?? ''),
+    user_email: String(r.user_email ?? ''),
+    role,
+    card: cardRaw
+      ? {
+          id: String(cardRaw.id ?? ''),
+          qr_token: String(cardRaw.qr_token ?? ''),
+          issued_at: String(cardRaw.issued_at ?? ''),
+          revoked_at:
+            cardRaw.revoked_at == null ? null : String(cardRaw.revoked_at),
+        }
+      : null,
+  };
+}
+
+/**
+ * Normalize the `meta` block that /list returns into the app-wide
+ * `Pagination` shape the existing `<Pagination>` widget expects.
+ *
+ * The backend returns Laravel's default paginator envelope
+ *   `{ current_page, last_page, total, per_page? }`,
+ * which is *not* the app's canonical shape from `@/types/api`
+ *   `{ total_items, total_pages, current_page, per_page,
+ *      has_next_page, has_prev_page }`.
+ * Rather than teach every downstream widget a second shape, we map
+ * once here — cheap, and it means the `<Pagination>` component just
+ * works when the view drops it under the table.
+ */
+function paginationFromMeta(
+  raw: unknown,
+  fallbackPerPage: number,
+): Pagination {
+  const m = (raw as Record<string, unknown>) ?? {};
+  const currentPage = Math.max(1, Math.round(Number(m.current_page ?? 1)));
+  const lastPage = Math.max(1, Math.round(Number(m.last_page ?? 1)));
+  const total = Math.max(0, Math.round(Number(m.total ?? 0)));
+  const perPage = Math.max(
+    1,
+    Math.round(Number(m.per_page ?? fallbackPerPage)),
+  );
+  return {
+    total_items: total,
+    total_pages: lastPage,
+    current_page: currentPage,
+    per_page: perPage,
+    has_next_page: currentPage < lastPage,
+    has_prev_page: currentPage > 1,
+  };
+}
+
+export interface PersonnelCardListResult {
+  items: PersonnelCardListRow[];
+  pagination: Pagination;
+}
+
 export const AttendanceQrService = {
   /**
    * GET /attendance/gate-qr/current — the active token. 401/403 when the
@@ -131,6 +205,51 @@ export const AttendanceQrService = {
       return tokenFromJson(res.data);
     } catch (e) {
       throw new Error(humanError(e, 'Gagal memutar token QR gerbang.'));
+    }
+  },
+
+  /**
+   * GET /attendance/personnel-cards/list — paginated roster of
+   * card-issuable personnel (teachers, staff, opt-in students) with
+   * their current card state inline (`card: null` when no active card).
+   *
+   * Replaces the earlier "reuse the teacher list" fallback that keyed
+   * rows on `teachers.id` — the backend's IssuePersonnelQrCardAction
+   * looks up membership via `users_schools.user_id`, so submitting a
+   * teacher-id at issue time returned every row as `skipped:
+   * not_a_school_member`. The `/list` endpoint returns `user_id`
+   * directly, wiring the correct key through selection → issue → PDF.
+   */
+  async listPersonnelCards(
+    params: PersonnelCardListParams = {},
+  ): Promise<PersonnelCardListResult> {
+    try {
+      const perPage = params.per_page ?? 20;
+      const res = await api.get(Endpoints.cardsList, {
+        params: {
+          // Cache-buster so the list refreshes after issue / revoke —
+          // matches the pattern in teachers.service.ts.
+          _t: Date.now(),
+          page: params.page ?? 1,
+          per_page: perPage,
+          ...(params.role && params.role !== 'all' ? { role: params.role } : {}),
+          ...(params.has_card === undefined
+            ? {}
+            : { has_card: params.has_card ? 'true' : 'false' }),
+          ...(params.search ? { search: params.search } : {}),
+        },
+      });
+      const body = (res.data ?? {}) as {
+        data?: unknown[];
+        meta?: Record<string, unknown>;
+      };
+      const rows = Array.isArray(body.data) ? body.data : [];
+      return {
+        items: rows.map(personnelRowFromJson),
+        pagination: paginationFromMeta(body.meta, perPage),
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat daftar personel.'));
     }
   },
 

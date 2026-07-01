@@ -66,3 +66,52 @@ export interface PersonnelCardIssueResult {
   /** Human Indonesian reason for non-ok rows. */
   reason?: string;
 }
+
+/**
+ * The narrow personnel role surfaced by `/attendance/personnel-cards/list`.
+ * Distinct from the app-wide `Role` enum: this is scoped to *card-issuable*
+ * personnel — teachers, staff, and (opt-in) students. The listing endpoint
+ * filters by this string when the caller passes `role=`.
+ */
+export type PersonnelRole = 'teacher' | 'staff' | 'student';
+
+/**
+ * Nested card summary on a personnel row — present when the personnel
+ * currently has an active card, `null` otherwise. `id` is the card row's
+ * primary key (used by DELETE /personnel-cards/{id}); `qr_token` is only
+ * useful for debug preview since the printed PDF renders it as a QR.
+ */
+export interface PersonnelCardSummary {
+  id: string;
+  qr_token: string;
+  issued_at: string;
+  revoked_at: string | null;
+}
+
+/**
+ * One row from GET /attendance/personnel-cards/list. Keyed on `user_id`
+ * (the *canonical* selection key — earlier iterations of this page keyed
+ * on `teachers.id` and hit a "not_a_school_member" error at issue time
+ * because the backend looks up users_schools via user_id).
+ */
+export interface PersonnelCardListRow {
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  role: PersonnelRole;
+  card: PersonnelCardSummary | null;
+}
+
+/**
+ * Query params for GET /attendance/personnel-cards/list. All optional;
+ * omit `role` (or pass `'all'`) to include every personnel type the
+ * caller has access to.
+ */
+export interface PersonnelCardListParams {
+  role?: 'all' | PersonnelRole;
+  /** Server-side filter: `true` → only rows with an active card, `false` → only rows without. */
+  has_card?: boolean;
+  search?: string;
+  page?: number;
+  per_page?: number;
+}
