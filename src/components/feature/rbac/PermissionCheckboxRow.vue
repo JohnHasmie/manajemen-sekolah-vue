@@ -103,4 +103,24 @@ defineEmits<{
   font-size: 10px;
   color: #94a3b8;
 }
+
+/* Tutoring tenant (dark). */
+:global(.rbac-shell--tutoring) .perm-row:hover {
+  background: #14182a;
+}
+:global(.rbac-shell--tutoring) .perm-row__box {
+  background: #0b1227;
+  border-color: #1b2235;
+}
+:global(.rbac-shell--tutoring) .perm-row__box--checked {
+  background: #21afe6;
+  border-color: #21afe6;
+}
+:global(.rbac-shell--tutoring) .perm-row__key {
+  color: #f1f5f9;
+}
+:global(.rbac-shell--tutoring) .perm-row__label,
+:global(.rbac-shell--tutoring) .perm-row__desc {
+  color: #94a3b8;
+}
 </style>

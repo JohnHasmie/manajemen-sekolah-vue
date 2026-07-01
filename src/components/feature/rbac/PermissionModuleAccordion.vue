@@ -170,4 +170,28 @@ function onToggle(key: string) {
     grid-template-columns: 1fr;
   }
 }
+
+/* Tutoring tenant (dark). */
+:global(.rbac-shell--tutoring) .perm-acc {
+  background: #10162a;
+  border-color: #1b2235;
+}
+:global(.rbac-shell--tutoring) .perm-acc__head:hover {
+  background: #14182a;
+}
+:global(.rbac-shell--tutoring) .perm-acc__icon {
+  background: #1b2235;
+}
+:global(.rbac-shell--tutoring) .perm-acc__name {
+  color: #ffffff;
+}
+:global(.rbac-shell--tutoring) .perm-acc__count {
+  color: #94a3b8;
+}
+:global(.rbac-shell--tutoring) .perm-acc__body {
+  border-top-color: #1b2235;
+}
+:global(.rbac-shell--tutoring) .perm-acc__col {
+  border-right-color: #1b2235;
+}
 </style>

@@ -19,12 +19,14 @@ import CreateRoleModal from '@/views/admin/rbac/CreateRoleModal.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRbacStore } from '@/stores/rbac';
 import { useMe } from '@/composables/useMe';
+import { useTenant } from '@/composables/useTenant';
 import type { RbacRole, RoleTypeFilter } from '@/types/rbac';
 
 const router = useRouter();
 const auth = useAuthStore();
 const rbac = useRbacStore();
 const { can } = useMe();
+const { isTutoringCenter } = useTenant();
 // Phase D gate: only users holding `rbac.role.manage` can create /
 // edit / delete roles. Read-only viewers (rbac.role.view) still see
 // the list but the +Tambah button and per-card destructive actions
@@ -94,7 +96,10 @@ function onCreated(role: RbacRole) {
 </script>
 
 <template>
-  <div class="rl">
+  <div
+    class="rl rbac-shell"
+    :class="{ 'rbac-shell--tutoring': isTutoringCenter }"
+  >
     <BrandPageHeader
       role="admin"
       kicker="PENGATURAN"
@@ -389,5 +394,53 @@ function onCreated(role: RbacRole) {
   border: 1px dashed #e2e8f0;
   border-radius: 14px;
   font-size: 13px;
+}
+
+/*
+ * ── Tutoring tenant (dark) overrides ─────────────────────────────
+ * Phase F: reads the same visual delta as the mockup MR !402 —
+ * night bg #10162A, cyan accent #21AFE6, light text on dark panels.
+ * Everything else stays school-navy. :global() is Vue's escape hatch
+ * for reaching a parent-class selector from scoped CSS — the child
+ * classes still get the scope hash, so no leaks.
+ */
+:global(.rbac-shell--tutoring) .rl__kpi,
+:global(.rbac-shell--tutoring) .rl__toolbar {
+  background: #10162a;
+  border-color: #1b2235;
+}
+:global(.rbac-shell--tutoring) .rl__kpi-label,
+:global(.rbac-shell--tutoring) .rl__section-head h3,
+:global(.rbac-shell--tutoring) .rl__section-head span {
+  color: #94a3b8;
+}
+:global(.rbac-shell--tutoring) .rl__kpi-value {
+  color: #ffffff;
+}
+:global(.rbac-shell--tutoring) .rl__segments {
+  background: #0b1227;
+}
+:global(.rbac-shell--tutoring) .rl__seg--active {
+  background: #21afe6;
+  color: #0b0e1a;
+}
+:global(.rbac-shell--tutoring) .rl__search {
+  background: #0b1227;
+  border-color: #1b2235;
+}
+:global(.rbac-shell--tutoring) .rl__search input {
+  color: #f1f5f9;
+}
+:global(.rbac-shell--tutoring) .rl__add {
+  background: #21afe6;
+  color: #0b0e1a;
+}
+:global(.rbac-shell--tutoring) .rl__empty {
+  background: #0b1227;
+  border-color: #1b2235;
+  color: #94a3b8;
+}
+:global(.rbac-shell--tutoring) .rl__loading {
+  color: #94a3b8;
 }
 </style>

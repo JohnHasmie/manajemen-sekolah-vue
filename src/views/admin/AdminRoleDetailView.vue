@@ -20,6 +20,7 @@ import AddMembersModal from '@/views/admin/rbac/AddMembersModal.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRbacStore } from '@/stores/rbac';
 import { useMe } from '@/composables/useMe';
+import { useTenant } from '@/composables/useTenant';
 
 type TabKey = 'detail' | 'permission' | 'anggota';
 
@@ -28,6 +29,7 @@ const router = useRouter();
 const auth = useAuthStore();
 const rbac = useRbacStore();
 const { can } = useMe();
+const { isTutoringCenter } = useTenant();
 const canManageRoles = () => can('rbac.role.manage');
 const canManageMembers = () => can('rbac.member.assign');
 
@@ -107,7 +109,10 @@ function backToList() {
 </script>
 
 <template>
-  <div class="rd">
+  <div
+    class="rd rbac-shell"
+    :class="{ 'rbac-shell--tutoring': isTutoringCenter }"
+  >
     <BrandPageHeader
       role="admin"
       :kicker="
@@ -616,5 +621,75 @@ function backToList() {
 .rd__btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Tutoring tenant (dark). */
+:global(.rbac-shell--tutoring) .rd__tabs,
+:global(.rbac-shell--tutoring) .rd__detail,
+:global(.rbac-shell--tutoring) .rd__save-bar {
+  background: #10162a;
+  border-color: #1b2235;
+}
+:global(.rbac-shell--tutoring) .rd__tab--active {
+  background: #21afe6;
+  color: #0b0e1a;
+}
+:global(.rbac-shell--tutoring) .rd__tab {
+  color: #94a3b8;
+}
+:global(.rbac-shell--tutoring) .rd__field {
+  color: #f1f5f9;
+  border-bottom-color: #1b2235;
+}
+:global(.rbac-shell--tutoring) .rd__field-label,
+:global(.rbac-shell--tutoring) .rd__save-hint,
+:global(.rbac-shell--tutoring) .rd__member-meta,
+:global(.rbac-shell--tutoring) .rd__member-tags .rd__pill--info,
+:global(.rbac-shell--tutoring) .rd__members-search input,
+:global(.rbac-shell--tutoring) .rd__members-search {
+  color: #94a3b8;
+}
+:global(.rbac-shell--tutoring) .rd__field-mono {
+  background: #1b2235;
+  color: #f1f5f9;
+}
+:global(.rbac-shell--tutoring) .rd__copy-bar {
+  background: rgba(33, 175, 230, 0.08);
+}
+:global(.rbac-shell--tutoring) .rd__copy-label {
+  color: #a8e1f7;
+}
+:global(.rbac-shell--tutoring) .rd__copy-btn {
+  background: #0b1227;
+  border-color: rgba(33, 175, 230, 0.3);
+  color: #21afe6;
+}
+:global(.rbac-shell--tutoring) .rd__members-search,
+:global(.rbac-shell--tutoring) .rd__member {
+  background: #10162a;
+  border-color: #1b2235;
+}
+:global(.rbac-shell--tutoring) .rd__member-name {
+  color: #f1f5f9;
+}
+:global(.rbac-shell--tutoring) .rd__add,
+:global(.rbac-shell--tutoring) .rd__btn--primary {
+  background: #21afe6;
+  color: #0b0e1a;
+}
+:global(.rbac-shell--tutoring) .rd__btn--ghost {
+  background: #0b1227;
+  border-color: #1b2235;
+  color: #f1f5f9;
+}
+:global(.rbac-shell--tutoring) .rd__member-remove {
+  background: #0b1227;
+  border-color: #1b2235;
+  color: #fca5a5;
+}
+:global(.rbac-shell--tutoring) .rd__empty {
+  background: #0b1227;
+  border-color: #1b2235;
+  color: #94a3b8;
 }
 </style>

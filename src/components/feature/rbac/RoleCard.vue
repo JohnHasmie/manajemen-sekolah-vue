@@ -178,4 +178,34 @@ const permissionCount = computed(() => props.role.permission_keys?.length ?? 0);
 .role-card__more:hover {
   background: #e2e8f0;
 }
+
+/*
+ * Tutoring tenant (dark) overrides. Same mechanism as
+ * AdminRolesView.vue — parent .rbac-shell--tutoring flips the card
+ * background and text colors, leaving the per-role_type accent rail
+ * intact so the swatch-per-tipe visual language survives the swap.
+ */
+:global(.rbac-shell--tutoring) .role-card {
+  background: #10162a;
+  border-color: #1b2235;
+}
+:global(.rbac-shell--tutoring) .role-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+:global(.rbac-shell--tutoring) .role-card__title,
+:global(.rbac-shell--tutoring) .role-card__count-num {
+  color: #ffffff;
+}
+:global(.rbac-shell--tutoring) .role-card__subtitle {
+  color: #94a3b8;
+}
+:global(.rbac-shell--tutoring) .role-card__count-label {
+  color: #64748b;
+}
+:global(.rbac-shell--tutoring) .role-card__more {
+  background: #1b2235;
+}
+:global(.rbac-shell--tutoring) .role-card__more:hover {
+  background: #243246;
+}
 </style>
