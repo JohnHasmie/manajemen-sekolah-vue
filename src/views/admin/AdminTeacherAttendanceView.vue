@@ -253,6 +253,103 @@ function csvEscape(v: unknown): string {
   return s;
 }
 
+/**
+ * Export the per-day report rows as CSV. Distinct from
+ * [exportRekapCsv] (the aggregate per-teacher summary) — this one
+ * writes one row per (teacher × day) with the actual check-in and
+ * check-out times so admins can share/audit HR-relevant details
+ * without opening the app.
+ *
+ * We refetch with a wide `per_page` cap so the export isn't limited
+ * to the current 15-per-page report table. 5000 comfortably covers
+ * "a school × a full month" (say 60 teachers × 30 days = 1800 rows).
+ * If a school actually exceeds that we surface a toast asking them
+ * to narrow the filter; a wider ceiling risks OOM on the client.
+ */
+async function exportReportDetailCsv() {
+  const MAX_ROWS = 5000;
+  const params = {
+    date: filterDate.value || undefined,
+    start_date: filterStartDate.value || undefined,
+    end_date: filterEndDate.value || undefined,
+    teacher_id: filterTeacher.value.trim() || undefined,
+    status: filterStatus.value || undefined,
+    per_page: MAX_ROWS,
+    page: 1,
+  };
+  let bulk;
+  try {
+    bulk = await TeacherAttendanceService.adminReport(params);
+  } catch (e) {
+    toast.error(`Gagal mengambil detail: ${(e as Error).message}`);
+    return;
+  }
+  const items = bulk?.items ?? [];
+  if (items.length === 0) {
+    toast.error('Belum ada data detail untuk diekspor.');
+    return;
+  }
+  if ((bulk?.meta?.total ?? items.length) > MAX_ROWS) {
+    toast.error(
+      `Data terlalu banyak (${bulk?.meta?.total ?? '?'}). Persempit periode/guru.`,
+    );
+    return;
+  }
+  const header = [
+    'Nama Guru',
+    'NIP',
+    'Tanggal',
+    'Status',
+    'Jam Datang',
+    'Jam Pulang',
+  ];
+  const body = items.map((r) =>
+    [
+      r.teacher?.name ?? '-',
+      r.teacher?.employee_number ?? '',
+      // date arrives as YYYY-MM-DD; render dd/mm/yyyy so Excel doesn't
+      // misinterpret + so it matches the local admin conventions.
+      r.date ? fmtDateShort(r.date) : '-',
+      teacherAttendanceStatusColumnLabel(r.status),
+      fmtTime(r.check_in_at),
+      fmtTime(r.check_out_at),
+    ]
+      .map(csvEscape)
+      .join(','),
+  );
+  const csv = [header.map(csvEscape).join(','), ...body].join('\n');
+  // Same UTF-8 BOM prefix as exportRekapCsv so Excel renders id
+  // characters (Cendekia, Utama, Rekan) correctly.
+  const blob = new Blob(['﻿' + csv], {
+    type: 'text/csv;charset=utf-8;',
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const range = bulk?.meta
+    ? `${bulk.meta.start_date ?? bulk.meta.date ?? 'range'}_${bulk.meta.end_date ?? ''}`.replace(/_$/, '')
+    : new Date().toISOString().slice(0, 10);
+  a.download = `presensi_guru_detail_${range}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast.success(`Detail ${items.length} baris ter-export.`);
+}
+
+/**
+ * Format a YYYY-MM-DD date string as dd/mm/yyyy for the CSV — the
+ * detail export ships to admin desktops where Excel's default id-ID
+ * locale otherwise interprets `2026-06-30` as text and left-aligns
+ * it. This matches the dd/mm/yyyy convention the rest of the admin
+ * surface uses.
+ */
+function fmtDateShort(ymd: string): string {
+  const [y, m, d] = ymd.split('-');
+  if (!y || !m || !d) return ymd;
+  return `${d}/${m}/${y}`;
+}
+
 function exportRekapCsv() {
   if (summaryRows.value.length === 0) {
     toast.error('Belum ada data rekap untuk diekspor.');
@@ -1417,14 +1514,29 @@ onMounted(loadSettings);
               {{ summaryTotals?.teacher_count ?? summaryRows.length }} guru
             </p>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            :disabled="summaryRows.length === 0"
-            @click="exportRekapCsv"
-          >
-            <NavIcon name="download" :size="13" />Export Excel
-          </Button>
+          <div class="flex flex-wrap items-center gap-2">
+            <!--
+              Detail export ships one row per (teacher × day) with the
+              actual check-in and check-out times. Distinct from Export
+              Excel (the aggregate summary above) — HR / payroll users
+              asked for the per-day times, not just the daily counts.
+            -->
+            <Button
+              variant="secondary"
+              size="sm"
+              @click="exportReportDetailCsv"
+            >
+              <NavIcon name="download" :size="13" />Export Detail
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              :disabled="summaryRows.length === 0"
+              @click="exportRekapCsv"
+            >
+              <NavIcon name="download" :size="13" />Export Excel
+            </Button>
+          </div>
         </div>
 
         <AsyncView
