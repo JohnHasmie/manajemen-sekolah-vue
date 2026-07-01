@@ -21,6 +21,13 @@ export interface NavItem {
   labelKey: string;
   icon: string;
   badge?: number;
+  /**
+   * RBAC permission token (backend MR !225). When set, the item is
+   * filtered out unless `auth.hasAbility(ability)` returns true. The
+   * authoritative gate stays server-side — this only hides items the
+   * user can't act on.
+   */
+  ability?: string;
 }
 
 export interface NavSection {
@@ -58,6 +65,32 @@ const ADMIN_NAV: NavSection[] = [
       { to: '/admin/lesson-plans', labelKey: 'nav.lessonPlans', icon: 'file-text' },
       { to: '/admin/report-cards', labelKey: 'nav.reportCards', icon: 'clipboard' },
       { to: '/admin/finance', labelKey: 'nav.finance', icon: 'wallet' },
+    ],
+  },
+  {
+    // ── Gate QR + personnel cards (MR !226) ─────────────────────────
+    // Sits as its own section so the three tiles are findable without
+    // scrolling past the reports group. Each item is RBAC-gated; the
+    // settings tile has no ability requirement (any admin can read it).
+    titleKey: 'nav.attendanceQrSection',
+    items: [
+      {
+        to: '/admin/attendance/gate-qr',
+        labelKey: 'nav.attendanceQrGate',
+        icon: 'qr-code',
+        ability: 'attendance.gate_qr.manage',
+      },
+      {
+        to: '/admin/attendance/cards',
+        labelKey: 'nav.attendanceQrCards',
+        icon: 'id-card',
+        ability: 'attendance.cards.issue',
+      },
+      {
+        to: '/admin/attendance/settings',
+        labelKey: 'nav.attendanceQrSettings',
+        icon: 'sliders',
+      },
     ],
   },
   {
@@ -330,6 +363,24 @@ const MENUS: Record<Role, NavSection[]> = {
   super_admin: SUPER_ADMIN_NAV,
 };
 
+/**
+ * Drop nav items whose `ability` the active user doesn't hold (RBAC
+ * Phase A — backend MR !225). Sections that empty out after filtering
+ * are dropped wholesale so the sidebar doesn't render a blank section
+ * heading. Items without an `ability` always pass.
+ */
+function applyAbilityGate(
+  sections: NavSection[],
+  hasAbility: (perm: string) => boolean,
+): NavSection[] {
+  const out: NavSection[] = [];
+  for (const sec of sections) {
+    const items = sec.items.filter((it) => !it.ability || hasAbility(it.ability));
+    if (items.length > 0) out.push({ titleKey: sec.titleKey, items });
+  }
+  return out;
+}
+
 export function useNavMenu(): ComputedRef<NavSection[]> {
   const auth = useAuthStore();
   const { isTutoringCenter } = useTenant();
@@ -350,8 +401,10 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
       // the active child id so a single click lands directly on the
       // overview without a child-picker detour.
       if (role === 'wali') return parentTutoringNav(activeChildId.value);
-      if (TUTORING_MENUS[role]) return TUTORING_MENUS[role]!;
+      if (TUTORING_MENUS[role]) {
+        return applyAbilityGate(TUTORING_MENUS[role]!, auth.hasAbility);
+      }
     }
-    return MENUS[role] ?? [];
+    return applyAbilityGate(MENUS[role] ?? [], auth.hasAbility);
   });
 }

@@ -49,6 +49,28 @@ export interface TeacherAttendanceSettings {
   /** School pin — present in the admin settings payload only. */
   school_latitude?: number | null;
   school_longitude?: number | null;
+  /**
+   * Which check-in methods are allowed for THIS school (MR !226).
+   * Subset of SELFIE / GATE_QR / CARD_QR — backend enforces ≥1 entry.
+   */
+  allowed_methods?: import('./attendance-qr').CheckInMethod[];
+  /**
+   * Auto-rotate interval (minutes) for the school's gate QR token.
+   * Server clamps to 5..60. Lower = harder to photograph-and-replay,
+   * higher = fewer poster reprints.
+   */
+  gate_qr_rotation_minutes?: number;
+  /**
+   * Apply the existing geofence radius to QR check-ins too. When
+   * false, a teacher who scans the gate / card QR from anywhere
+   * passes — handy for off-site staff.
+   */
+  geofence_required_for_qr?: boolean;
+  /**
+   * Also mint student personnel cards (vs teachers/staff only).
+   * Off by default — most schools start with teacher cards.
+   */
+  issue_student_cards?: boolean;
 }
 
 /** Sensible client-side defaults mirroring the backend defaults(). */
@@ -65,6 +87,10 @@ export const DEFAULT_TEACHER_ATTENDANCE_SETTINGS: TeacherAttendanceSettings = {
   effective_geofence_lng: null,
   school_latitude: null,
   school_longitude: null,
+  allowed_methods: ['SELFIE'],
+  gate_qr_rotation_minutes: 15,
+  geofence_required_for_qr: false,
+  issue_student_cards: false,
 };
 
 /** Which methods were captured on a given check-in/out leg. */

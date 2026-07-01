@@ -194,6 +194,28 @@ export const useAuthStore = defineStore('auth', {
     teacherId(): string | null {
       return this.teacherProfileId ?? this.user?.id ?? null;
     },
+    /**
+     * Flat list of permission tokens the active user holds (RBAC Phase A,
+     * backend MR !225). Read off `user.abilities` if present. Super-admins
+     * implicitly clear every check (returns a sentinel `['*']`).
+     *
+     * Callers should use `hasAbility()` rather than indexing this list —
+     * the wildcard handling lives there.
+     */
+    abilities(): string[] {
+      if (this.isSuperAdmin) return ['*'];
+      const list = this.user?.abilities;
+      return Array.isArray(list) ? list : [];
+    },
+    /**
+     * True when the active user holds the given permission token. Super
+     * admins always pass. Used to gate sidebar items + page shells; the
+     * authoritative gate stays server-side.
+     */
+    hasAbility(): (perm: string) => boolean {
+      const list = this.abilities;
+      return (perm: string) => list.includes('*') || list.includes(perm);
+    },
   },
 
   actions: {

@@ -301,7 +301,11 @@
     "systemSettings": "Sistem",
     "dataManagement": "Manajemen Data",
     "platform": "Platform",
-    "demoRequests": "Permintaan Demo"
+    "demoRequests": "Permintaan Demo",
+    "attendanceQrSection": "Presensi QR",
+    "attendanceQrGate": "QR Gerbang",
+    "attendanceQrCards": "Kartu QR Personel",
+    "attendanceQrSettings": "Pengaturan Presensi"
   },
   "profile": {
     "title": "Profil",
@@ -324,6 +328,89 @@
     "passwordMismatch": "Konfirmasi password tidak cocok."
   },
   "admin": {
+    "attendance": {
+      "qrDisplay": {
+        "kicker": "Presensi QR",
+        "title": "QR Gerbang",
+        "meta": "QR sekolah yang berputar otomatis — tampilkan di proyektor atau cetak sebagai poster.",
+        "rotateNow": "Rotasi sekarang",
+        "rotating": "Memutar…",
+        "rotated": "QR gerbang berhasil diputar.",
+        "rotateFail": "Gagal memutar QR gerbang.",
+        "print": "Cetak",
+        "rotatesIn": "Rotasi otomatis dalam",
+        "instructions": "Buka aplikasi KamilEdu di ponsel, pilih Presensi Saya → Scan QR Gerbang, lalu arahkan kamera ke kode ini.",
+        "posterKicker": "QR PRESENSI",
+        "loadFail": "Gagal memuat QR gerbang.",
+        "empty": "QR gerbang belum tersedia. Klik Rotasi sekarang untuk membuat yang baru.",
+        "fallbackSchool": "Sekolah"
+      },
+      "settings": {
+        "kicker": "Presensi QR",
+        "title": "Pengaturan Presensi",
+        "meta": "Atur metode presensi, rotasi QR gerbang, dan kartu personel.",
+        "loadFail": "Gagal memuat pengaturan presensi.",
+        "saveFail": "Gagal menyimpan pengaturan presensi.",
+        "saved": "Pengaturan presensi tersimpan.",
+        "save": "Simpan Pengaturan",
+        "method": {
+          "section": "Metode Presensi yang Diizinkan",
+          "sectionHint": "Pilih satu atau lebih metode. Guru hanya dapat menggunakan metode yang dicentang.",
+          "selfie": "Selfie",
+          "selfieDesc": "Foto selfie + GPS — metode lama.",
+          "gateQr": "QR Gerbang",
+          "gateQrDesc": "Pindai QR berputar di gerbang sekolah.",
+          "cardQr": "Kartu QR",
+          "cardQrDesc": "Pindai QR pada kartu cetak pribadi.",
+          "atLeastOne": "Minimal satu metode harus tetap aktif."
+        },
+        "rotation": {
+          "section": "Rotasi QR Gerbang",
+          "sectionHint": "Berapa sering QR gerbang berputar otomatis. Rotasi lebih cepat lebih aman dari foto-dan-replay.",
+          "minutes": "menit",
+          "hint": "Rentang 5–60 menit. Rekomendasi: 15 menit.",
+          "outOfRange": "Rotasi harus antara 5 dan 60 menit."
+        },
+        "flags": {
+          "section": "Opsi Tambahan",
+          "sectionHint": "Pengaturan halus untuk geofence QR dan kartu siswa.",
+          "geofenceQr": "Geofence wajib untuk presensi QR",
+          "geofenceQrHint": "Saat aktif, presensi via QR juga harus berada di radius geofence — bukan hanya selfie.",
+          "studentCards": "Terbitkan kartu QR siswa",
+          "studentCardsHint": "Aktifkan untuk mencetak kartu QR siswa (default: hanya guru/staf)."
+        }
+      },
+      "cards": {
+        "kicker": "Presensi QR",
+        "title": "Kartu QR Personel",
+        "meta": "Terbitkan, cabut, dan unduh kartu QR untuk guru dan staf.",
+        "loadFail": "Gagal memuat daftar personel.",
+        "searchPh": "Cari nama, NIP, atau email…",
+        "roleAll": "Semua peran",
+        "roleGuru": "Guru",
+        "roleWaliKelas": "Wali Kelas",
+        "empty": "Tidak ada personel cocok",
+        "emptyHint": "Sesuaikan filter atau tambah guru dari halaman Manajemen Data.",
+        "selectAll": "Pilih semua di halaman ini",
+        "selectRow": "Pilih baris",
+        "colName": "Nama",
+        "colRole": "Peran",
+        "colEmployeeNumber": "NIP",
+        "colActions": "Aksi",
+        "issue": "Terbitkan Kartu ({count})",
+        "issued": "{count} kartu diterbitkan",
+        "skipped": "{count} dilewati",
+        "errored": "{count} gagal",
+        "issueFail": "Gagal menerbitkan kartu.",
+        "exportPdf": "Unduh PDF",
+        "exported": "PDF kartu sedang diunduh.",
+        "exportFail": "Gagal mengunduh PDF kartu.",
+        "revoke": "Cabut",
+        "revoking": "Mencabut…",
+        "revoked": "Kartu {name} dicabut.",
+        "revokeFail": "Gagal mencabut kartu."
+      }
+    },
     "dashboard": {
       "allLevels": "Semua tingkat",
       "totalStudents": "Total siswa",

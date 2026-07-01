@@ -114,6 +114,15 @@ export interface User {
    * on their phone gets English on a fresh browser too.
    */
   preferred_language?: 'id' | 'en' | null;
+  /**
+   * Flat list of permission tokens the user holds in the active school
+   * (RBAC Phase A — backend MR !225). Sourced from the `/me` endpoint
+   * and any login/switch-school response that carries it. Used to gate
+   * admin UI surfaces (e.g. `attendance.gate_qr.manage`,
+   * `attendance.cards.issue`). The authoritative gate stays server-side
+   * — this only hides menu items / page shells the user can't act on.
+   */
+  abilities?: string[];
 }
 
 /**

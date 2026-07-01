@@ -133,6 +133,14 @@ const ParentRecommendationView = () =>
   import('@/views/parent/ParentRecommendationView.vue');
 const AdminTeacherAttendanceView = () =>
   import('@/views/admin/AdminTeacherAttendanceView.vue');
+// Gate QR + personnel cards (MR !226). Lazy so the qrcode.vue payload
+// stays out of the main admin chunk.
+const GateQrDisplayView = () =>
+  import('@/views/admin/attendance/GateQrDisplayView.vue');
+const AttendanceSettingsView = () =>
+  import('@/views/admin/attendance/AttendanceSettingsView.vue');
+const PersonnelCardManagerView = () =>
+  import('@/views/admin/attendance/PersonnelCardManagerView.vue');
 // ── Super-admin (KamilEdu-team) area ──────────────────────────────────
 // Dedicated /super-admin subtree, visually distinct from the school-admin
 // shell but on the same theme tokens. Guarded to super_admin only.
@@ -549,6 +557,37 @@ const routes: RouteRecordRaw[] = [
         name: 'admin.teacher-attendance.settings',
         component: AdminTeacherAttendanceView,
         meta: { role: 'admin' satisfies Role },
+      },
+
+      // ── Gate QR + personnel cards (MR !226) ───────────────────────
+      // Distinct from the existing presensi-guru pages: these surfaces
+      // configure + drive the GATE_QR / CARD_QR check-in methods. The
+      // `meta.ability` value names the RBAC token (backend MR !225);
+      // the router guard maps it to `auth.hasAbility(...)` and bounces
+      // a non-permitted admin home. Authoritative gate is server-side.
+      {
+        path: 'admin/attendance/gate-qr',
+        name: 'admin.attendance.gate-qr',
+        component: GateQrDisplayView,
+        meta: {
+          role: 'admin' satisfies Role,
+          ability: 'attendance.gate_qr.manage',
+        },
+      },
+      {
+        path: 'admin/attendance/settings',
+        name: 'admin.attendance.settings',
+        component: AttendanceSettingsView,
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/attendance/cards',
+        name: 'admin.attendance.cards',
+        component: PersonnelCardManagerView,
+        meta: {
+          role: 'admin' satisfies Role,
+          ability: 'attendance.cards.issue',
+        },
       },
       {
         // LEGACY redirect — the Demo Requests review page moved into the
@@ -1377,6 +1416,15 @@ router.beforeEach((to) => {
   // client guard just keeps a non-super-admin admin from landing on a
   // page they can't use (they'd only see 403s). Bounce to their home.
   if (to.meta.superAdmin === true && !auth.isSuperAdmin) {
+    return { path: roleHomePath[auth.activeRole ?? ''] ?? '/login' };
+  }
+
+  // Per-permission guard (RBAC Phase A — backend MR !225). Routes that
+  // need a specific ability set `meta.ability = 'attendance.gate_qr.manage'`
+  // (or similar). The authoritative gate stays server-side; this just
+  // avoids dropping a school admin onto a page that's going to 403.
+  const requiredAbility = to.meta.ability as string | undefined;
+  if (requiredAbility && !auth.hasAbility(requiredAbility)) {
     return { path: roleHomePath[auth.activeRole ?? ''] ?? '/login' };
   }
 
