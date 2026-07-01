@@ -29,12 +29,19 @@ import ProfileMenu from '@/components/feature/ProfileMenu.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import { useNotificationsStore } from '@/stores/notifications';
 import { init as initRealtime } from '@/lib/echo';
+import { useSubscription } from '@/composables/useSubscription';
 
 const auth = useAuthStore();
 const route = useRoute();
 const { t } = useI18n();
 const color = useRoleColor(() => auth.activeRole);
 const tutoringTheme = useTutoringThemeStore();
+// Subscription status — drives the "Berlangganan" chip visibility in
+// the topbar. Fetched once per session via a shared module-level guard
+// (see composable), so mounting AppShell + /subscribe simultaneously
+// never fires two round-trips.
+const { shouldPromptSubscribe, ensureLoaded: loadSubscription } =
+  useSubscription();
 
 // Active tenant is a tutoring center? The tenant_type lives on either
 // the User payload directly (post-login normalisation) or on the
@@ -223,6 +230,12 @@ onMounted(async () => {
   // Reverb is configured (VITE_REVERB_APP_KEY set) and the user is
   // logged in — realtime is purely additive over the polling above.
   initRealtime(auth.user?.id);
+  // Fetch the tenant subscription status once so the "Berlangganan"
+  // chip can decide whether to render. Failures are swallowed
+  // (fail-open) inside the composable — never blocks the shell.
+  if (auth.isAuthenticated) {
+    loadSubscription();
+  }
 });
 
 // Hydrate the user's schools/roles lists so the SchoolPill shows the
@@ -530,6 +543,35 @@ const schoolInitial = computed(() => {
                internally guards on the /demo/expiry response so
                regular schools see nothing. -->
           <DemoCountdownBanner />
+
+          <!-- "Berlangganan" call-to-action — only shows when the
+               active tenant has no active paid subscription (composable
+               fails-open, so a fetch error hides the chip rather than
+               spamming a broken link). Sparkles icon matches the
+               "upgrade" language from the mockup; the pill styling
+               echoes DemoCountdownBanner so the topbar stays visually
+               consistent. -->
+          <RouterLink
+            v-if="shouldPromptSubscribe"
+            to="/subscribe"
+            class="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-white/15 hover:bg-white/25 px-3 py-1.5 text-xs font-semibold text-white transition-colors"
+            :title="t('subscribe.nav.chipTitle')"
+          >
+            <NavIcon name="sparkles" :size="14" />
+            <span>{{ t('subscribe.nav.chipLabel') }}</span>
+          </RouterLink>
+          <!-- Mobile-only compact icon variant so we don't crowd the
+               notch on small screens; label lives in the aria-title. -->
+          <RouterLink
+            v-if="shouldPromptSubscribe"
+            to="/subscribe"
+            class="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors"
+            :title="t('subscribe.nav.chipLabel')"
+            :aria-label="t('subscribe.nav.chipLabel')"
+          >
+            <NavIcon name="sparkles" :size="16" />
+          </RouterLink>
+
           <!-- NotificationBell reads the notifications store directly, so the
                badge stays reactive (mount hydration + realtime) without a
                prop snapshot. The shell still hydrates the count on mount

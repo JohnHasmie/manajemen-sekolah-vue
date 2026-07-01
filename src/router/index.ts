@@ -252,6 +252,20 @@ const routes: RouteRecordRaw[] = [
       import('@/views/register-demo/RegisterDemoTenantChoiceView.vue'),
     meta: { public: true, registerDemo: true },
   },
+
+  // ── /subscribe — tenant subscription flow ─────────────────────────
+  // Publicly reachable: an unauthenticated visitor can open the page,
+  // see pricing + the calculator, hit Google Sign-In (rendered inside
+  // the signup card), and complete signup + payment in a single flow.
+  // Authenticated users see their demo-tenant banner instead. The page
+  // stands alone (no AppShell chrome) so the pricing hero + calculator
+  // feel like a marketing surface rather than an app screen.
+  {
+    path: '/subscribe',
+    name: 'subscribe',
+    component: () => import('@/views/subscribe/SubscribeView.vue'),
+    meta: { public: true },
+  },
   {
     path: '/register-demo/wizard',
     name: 'register-demo-wizard',

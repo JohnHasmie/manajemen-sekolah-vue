@@ -25,6 +25,15 @@ import {
   type ManualBankAccount,
   type Payment,
 } from '@/types/billing';
+import type {
+  MySubscription,
+  PricingPlan,
+  QuoteRequest,
+  SubscribeRequest,
+  SubscribeResult,
+  SubscriptionQuote,
+  SubscriptionTenant,
+} from '@/types/subscription-billing';
 
 function asNum(v: unknown, fallback = 0): number {
   if (typeof v === 'number') return v;
@@ -401,3 +410,198 @@ function humanError(e: unknown, fallback: string): string {
   if (e instanceof Error) return e.message;
   return fallback;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// SubscriptionBillingService — tenant subscription flow (new /subscribe).
+// ═══════════════════════════════════════════════════════════════════
+//
+// DISTINCT from the parent-facing `BillingService` above. This surface
+// covers the school/bimbel owner subscribing to KamilEdu itself
+// (Midtrans Snap or manual bank transfer). Endpoints all live under
+// the plural `/billing/*` prefix (not `/bill/*`, which is the per-
+// student SPP surface).
+//
+// See `src/types/subscription-billing.ts` for the request/response
+// contract in detail.
+
+function parsePlan(raw: any): PricingPlan {
+  return {
+    currency: asStr(raw?.currency, 'IDR'),
+    price_per_student: asNum(raw?.price_per_student, 5000),
+    price_per_staff: asNum(raw?.price_per_staff, 5000),
+    yearly_discount_pct: asNum(raw?.yearly_discount_pct, 20),
+    supported_gateways: Array.isArray(raw?.supported_gateways)
+      ? raw.supported_gateways.map((g: unknown) => String(g))
+      : ['qris', 'gopay', 'ovo', 'dana', 'shopeepay', 'va', 'credit_card'],
+  };
+}
+
+function parseTenant(raw: any): SubscriptionTenant {
+  const rawType = String(raw?.tenant_type ?? '').toLowerCase();
+  const tenantType: SubscriptionTenant['tenant_type'] =
+    rawType === 'tutoring_center' ||
+    rawType === 'tutoring' ||
+    rawType === 'bimbel'
+      ? 'bimbel'
+      : 'sekolah';
+  return {
+    id: asStr(raw?.id),
+    name: asStr(raw?.name, 'Tenant'),
+    tenant_type: tenantType,
+    is_demo: Boolean(raw?.is_demo),
+    student_count: asNum(raw?.student_count),
+    staff_count: asNum(raw?.staff_count),
+    subscription_status: asStr(raw?.subscription_status, 'demo'),
+    subscription_expires_at: raw?.subscription_expires_at ?? null,
+  };
+}
+
+function parseQuote(raw: any): SubscriptionQuote {
+  return {
+    currency: asStr(raw?.currency, 'IDR'),
+    period: raw?.period === 'yearly' ? 'yearly' : 'monthly',
+    student_count: asNum(raw?.student_count),
+    staff_count: asNum(raw?.staff_count),
+    student_subtotal: asNum(raw?.student_subtotal),
+    staff_subtotal: asNum(raw?.staff_subtotal),
+    monthly_amount: asNum(raw?.monthly_amount),
+    yearly_amount: asNum(raw?.yearly_amount),
+    yearly_savings: asNum(raw?.yearly_savings),
+    chosen_amount: asNum(raw?.chosen_amount ?? raw?.amount),
+  };
+}
+
+function parseSubscribeResult(raw: any): SubscribeResult {
+  const gateway =
+    raw?.gateway === 'bank_transfer_manual'
+      ? 'bank_transfer_manual'
+      : 'midtrans';
+  const bti = raw?.bank_transfer_info ?? null;
+  return {
+    subscription_id: asStr(raw?.subscription_id),
+    order_id: asStr(raw?.order_id),
+    amount: asNum(raw?.amount),
+    gateway,
+    snap_token: raw?.snap_token ?? null,
+    snap_redirect_url: raw?.snap_redirect_url ?? null,
+    bank_transfer_info: bti
+      ? {
+          bank_name: asStr(bti?.bank_name ?? bti?.bank, 'BANK'),
+          account_number: asStr(bti?.account_number),
+          account_name: asStr(bti?.account_name),
+          amount: asNum(bti?.amount ?? raw?.amount),
+          reference: asStr(bti?.reference ?? raw?.order_id),
+          expires_at: bti?.expires_at ?? null,
+        }
+      : null,
+  };
+}
+
+function parseMySubscription(raw: any): MySubscription {
+  return {
+    has_subscription: Boolean(raw?.has_subscription),
+    is_active: Boolean(raw?.is_active),
+    status: asStr(raw?.status, 'demo'),
+    period:
+      raw?.period === 'yearly' || raw?.period === 'monthly'
+        ? raw.period
+        : null,
+    expires_at: raw?.expires_at ?? null,
+    tenant_id: raw?.tenant_id ?? null,
+  };
+}
+
+export const SubscriptionBillingService = {
+  /** GET /billing/plans — public catalog. */
+  async getPlans(): Promise<PricingPlan> {
+    try {
+      const res = await api.get('/billing/plans');
+      const body = res.data?.data ?? res.data;
+      return parsePlan(body);
+    } catch (e) {
+      // Fall back to defaults so the calculator still works offline /
+      // when the endpoint is not yet live in a given environment.
+      const msg = humanError(e, 'Gagal memuat paket langganan.');
+      // eslint-disable-next-line no-console
+      console.warn('[SubscriptionBillingService.getPlans]', msg);
+      return parsePlan({});
+    }
+  },
+
+  /**
+   * GET /billing/my-tenants — the signed-in user's owned tenants
+   * (including demos). Empty array when the user has no relations.
+   */
+  async getMyTenants(): Promise<SubscriptionTenant[]> {
+    try {
+      const res = await api.get('/billing/my-tenants');
+      const body = res.data?.data ?? res.data;
+      const list = Array.isArray(body?.tenants)
+        ? body.tenants
+        : Array.isArray(body)
+          ? body
+          : [];
+      return list.map(parseTenant);
+    } catch (e) {
+      // 401 is "not logged in" — surface an empty list, don't throw.
+      const status = (e as any)?.response?.status;
+      if (status === 401 || status === 403) return [];
+      throw new Error(humanError(e, 'Gagal memuat data tenant.'));
+    }
+  },
+
+  /**
+   * POST /billing/quote — server-side price computation. Callers pass
+   * `tenant_id` when quoting an existing tenant, otherwise raw counts
+   * for the fresh-signup path.
+   */
+  async getQuote(payload: QuoteRequest): Promise<SubscriptionQuote> {
+    try {
+      const res = await api.post('/billing/quote', payload);
+      const body = res.data?.data ?? res.data;
+      return parseQuote(body);
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menghitung tagihan.'));
+    }
+  },
+
+  /**
+   * POST /billing/subscribe — start a subscription. Returns either a
+   * Midtrans Snap token (opened via `window.snap.pay(...)`) or manual
+   * bank-transfer instructions.
+   */
+  async subscribe(payload: SubscribeRequest): Promise<SubscribeResult> {
+    try {
+      const res = await api.post('/billing/subscribe', payload);
+      const body = res.data?.data ?? res.data;
+      return parseSubscribeResult(body);
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memulai langganan.'));
+    }
+  },
+
+  /**
+   * GET /billing/my-subscription — used by the topbar chip to decide
+   * whether to show the "Berlangganan" call-to-action.
+   */
+  async getMySubscription(): Promise<MySubscription> {
+    try {
+      const res = await api.get('/billing/my-subscription');
+      const body = res.data?.data ?? res.data;
+      return parseMySubscription(body);
+    } catch (e) {
+      const status = (e as any)?.response?.status;
+      if (status === 401 || status === 403 || status === 404) {
+        return {
+          has_subscription: false,
+          is_active: false,
+          status: 'demo',
+          period: null,
+          expires_at: null,
+          tenant_id: null,
+        };
+      }
+      throw new Error(humanError(e, 'Gagal memuat status langganan.'));
+    }
+  },
+};

@@ -5597,5 +5597,132 @@
         "monthShortDec": "Des"
       }
     }
+  },
+  "subscribe": {
+    "nav": {
+      "chipLabel": "Berlangganan",
+      "chipTitle": "Aktifkan langganan KamilEdu",
+      "backToApp": "Kembali ke dashboard",
+      "signIn": "Sudah punya akun? Masuk"
+    },
+    "hero": {
+      "kicker": "Berlangganan",
+      "title": "Mulai berlangganan KamilEdu",
+      "subtitle": "Bayar per data siswa dan guru saja. Setup 15 menit, sinkron langsung dari akun demo."
+    },
+    "calc": {
+      "kicker": "Kalkulator biaya",
+      "title": "Sesuaikan dengan skala lembaga Anda",
+      "monthly": "Bulanan",
+      "yearly": "Tahunan",
+      "savePctPill": "hemat {pct}%",
+      "studentLabel": "Siswa",
+      "staffLabelSekolah": "Guru dan staf",
+      "staffLabelBimbel": "Tutor dan staf",
+      "unitStudent": "siswa",
+      "unitStaff": "guru/staf",
+      "unitTutor": "tutor/staf",
+      "activeTitle": "Tagihan aktif",
+      "breakdownTitle": "Rincian",
+      "breakdownStudent": "{count} siswa × {unit}",
+      "breakdownStaff": "{count} {label} × {unit}",
+      "monthlyLine": "Total per bulan",
+      "yearlyDiscountLine": "Diskon tahunan ({pct}%)",
+      "perMonth": "per bulan",
+      "perYear": "per tahun",
+      "demoNote": "Angka diambil dari data siswa dan personel di akun demo Anda. Anda bisa mengubahnya kapan saja."
+    },
+    "card": {
+      "monthlyTitle": "Bulanan",
+      "yearlyTitle": "Tahunan",
+      "recommended": "Direkomendasikan",
+      "monthlyCta": "Pilih Bulanan",
+      "yearlyCta": "Pilih Tahunan",
+      "yearlySavings": "Hemat {amount}",
+      "yearlyFreeMonths": "setara {months} bulan gratis",
+      "featSekolahReport": "Rapor digital dan raport PDF",
+      "featSekolahRapor": "Wali kelas dan manajemen nilai",
+      "featBimbelSessions": "Manajemen sesi dan pembayaran tutor",
+      "featBimbelPayouts": "Voucher, tagihan, dan honor tutor",
+      "featSharedAttendance": "Presensi siswa dan personel",
+      "featSharedAnnouncements": "Pengumuman ke wali dan siswa",
+      "featSharedSupport": "Dukungan WhatsApp dan email"
+    },
+    "banner": {
+      "title": "Sudah punya sekolah demo?",
+      "oneDetected": "Terdeteksi 1 akun demo: {name}. Data siswa dan personel akan dihitung otomatis.",
+      "manyDetected": "Terdeteksi {count} akun demo. Pilih salah satu untuk melanjutkan.",
+      "useOne": "Gunakan {name}",
+      "choose": "Pilih akun demo",
+      "clear": "Batalkan pilihan demo",
+      "selectedCounts": "{students} siswa · {staff} guru/staf"
+    },
+    "picker": {
+      "title": "Pilih akun demo",
+      "subtitle": "Kami akan mengonversi akun yang dipilih menjadi langganan berbayar. Data siswa, guru, dan konfigurasi tetap utuh.",
+      "students": "siswa",
+      "staff": "guru/staf",
+      "tutors": "tutor/staf",
+      "typeSekolah": "Sekolah",
+      "typeBimbel": "Lembaga",
+      "statusActive": "Aktif",
+      "statusExpired": "Kedaluwarsa",
+      "statusDemo": "Demo",
+      "confirm": "Gunakan akun ini",
+      "cancel": "Batal",
+      "clear": "Batalkan pilihan demo"
+    },
+    "form": {
+      "title": "Buat akun dan konfirmasi",
+      "subtitleNew": "Kami akan membuat akun berlangganan sesuai jenis lembaga Anda.",
+      "subtitleExisting": "Anda tinggal konfirmasi metode pembayaran — data demo yang dipilih akan diaktivasi.",
+      "divider": "atau",
+      "signedInFallback": "Akun Anda",
+      "googleError": "Login Google gagal dimuat. Coba lagi atau gunakan email.",
+      "googleInAppBrowser": "Buka halaman ini di Chrome atau Safari untuk masuk dengan Google.",
+      "tenantTypeLabel": "Jenis lembaga",
+      "tenantTypeSekolah": "Sekolah",
+      "tenantTypeSekolahHint": "SD, SMP, SMA, SMK",
+      "tenantTypeBimbel": "Lembaga bimbingan belajar",
+      "tenantTypeBimbelHint": "Bimbel, kursus, tutoring",
+      "tenantNameLabelSekolah": "Nama sekolah",
+      "tenantNameLabelBimbel": "Nama lembaga",
+      "tenantNamePlaceholderSekolah": "SMP Tunas Bangsa",
+      "tenantNamePlaceholderBimbel": "Bimbel Cendekia",
+      "whatsappLabel": "Nomor WhatsApp",
+      "emailLabel": "Email admin",
+      "submit": "Lanjut ke pembayaran",
+      "footNote": "Dengan lanjut, Anda menyetujui syarat & kebijakan privasi KamilEdu."
+    },
+    "gateway": {
+      "title": "Pembayaran melalui Midtrans Snap",
+      "subtitle": "Aman dan langsung diverifikasi. Kanal pembayaran yang tersedia:",
+      "manual": "Atau bayar via transfer bank manual",
+      "manualHint": "opsi cadangan"
+    },
+    "bank": {
+      "title": "Instruksi transfer bank",
+      "bank": "Bank",
+      "account": "Nomor rekening",
+      "name": "Nama pemilik",
+      "amount": "Jumlah transfer",
+      "reference": "Kode referensi",
+      "hint": "Lakukan transfer dengan jumlah persis seperti tertera. Setelah transfer, tim kami akan memverifikasi dan mengaktifkan langganan dalam 1×24 jam."
+    },
+    "errors": {
+      "tenantNameRequired": "Nama sekolah atau lembaga wajib diisi.",
+      "whatsappRequired": "Nomor WhatsApp wajib diisi.",
+      "emailRequired": "Email admin wajib diisi.",
+      "signInFirst": "Masuk terlebih dahulu dengan Google untuk melanjutkan.",
+      "snapLoadFailed": "Gagal memuat pembayaran Midtrans. Periksa koneksi Anda dan coba lagi.",
+      "snapUnavailable": "Pembayaran Midtrans tidak tersedia. Coba gunakan transfer bank manual."
+    },
+    "toast": {
+      "success": "Pembayaran berhasil. Terima kasih!",
+      "pending": "Pembayaran menunggu konfirmasi bank.",
+      "error": "Pembayaran gagal. Silakan coba lagi.",
+      "bankInstructions": "Instruksi transfer sudah kami tampilkan di halaman.",
+      "orderPlaced": "Pesanan langganan berhasil dibuat."
+    }
   }
 }

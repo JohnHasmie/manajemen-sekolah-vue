@@ -5601,5 +5601,132 @@
         "monthShortDec": "Dec"
       }
     }
+  },
+  "subscribe": {
+    "nav": {
+      "chipLabel": "Subscribe",
+      "chipTitle": "Activate your KamilEdu subscription",
+      "backToApp": "Back to dashboard",
+      "signIn": "Have an account? Sign in"
+    },
+    "hero": {
+      "kicker": "Subscribe",
+      "title": "Start your KamilEdu subscription",
+      "subtitle": "Pay only per student and teacher/staff. Setup in 15 minutes, syncs directly from your demo account."
+    },
+    "calc": {
+      "kicker": "Cost calculator",
+      "title": "Match the scale of your institution",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "savePctPill": "save {pct}%",
+      "studentLabel": "Students",
+      "staffLabelSekolah": "Teachers and staff",
+      "staffLabelBimbel": "Tutors and staff",
+      "unitStudent": "students",
+      "unitStaff": "teacher/staff",
+      "unitTutor": "tutor/staff",
+      "activeTitle": "Active bill",
+      "breakdownTitle": "Breakdown",
+      "breakdownStudent": "{count} students × {unit}",
+      "breakdownStaff": "{count} {label} × {unit}",
+      "monthlyLine": "Monthly total",
+      "yearlyDiscountLine": "Yearly discount ({pct}%)",
+      "perMonth": "per month",
+      "perYear": "per year",
+      "demoNote": "Numbers are pulled from your demo account's student and staff data. You can change them anytime."
+    },
+    "card": {
+      "monthlyTitle": "Monthly",
+      "yearlyTitle": "Yearly",
+      "recommended": "Recommended",
+      "monthlyCta": "Pick Monthly",
+      "yearlyCta": "Pick Yearly",
+      "yearlySavings": "Save {amount}",
+      "yearlyFreeMonths": "equivalent to {months} months free",
+      "featSekolahReport": "Digital and PDF report cards",
+      "featSekolahRapor": "Homeroom teacher and grade management",
+      "featBimbelSessions": "Session management and tutor payouts",
+      "featBimbelPayouts": "Vouchers, bills, and tutor payouts",
+      "featSharedAttendance": "Student and staff attendance",
+      "featSharedAnnouncements": "Announcements to parents and students",
+      "featSharedSupport": "WhatsApp and email support"
+    },
+    "banner": {
+      "title": "Already have a demo institution?",
+      "oneDetected": "Detected 1 demo account: {name}. Student and staff counts will be filled in automatically.",
+      "manyDetected": "Detected {count} demo accounts. Pick one to continue.",
+      "useOne": "Use {name}",
+      "choose": "Pick a demo account",
+      "clear": "Clear demo selection",
+      "selectedCounts": "{students} students · {staff} teachers/staff"
+    },
+    "picker": {
+      "title": "Pick a demo account",
+      "subtitle": "We'll convert the selected account into a paid subscription. Student, staff, and configuration data stay intact.",
+      "students": "students",
+      "staff": "teacher/staff",
+      "tutors": "tutor/staff",
+      "typeSekolah": "School",
+      "typeBimbel": "Institute",
+      "statusActive": "Active",
+      "statusExpired": "Expired",
+      "statusDemo": "Demo",
+      "confirm": "Use this account",
+      "cancel": "Cancel",
+      "clear": "Clear demo selection"
+    },
+    "form": {
+      "title": "Create account and confirm",
+      "subtitleNew": "We'll create a subscription account matching your institution type.",
+      "subtitleExisting": "Just confirm the payment method — your chosen demo data will be activated.",
+      "divider": "or",
+      "signedInFallback": "Your account",
+      "googleError": "Google sign-in failed to load. Try again or use email.",
+      "googleInAppBrowser": "Open this page in Chrome or Safari to sign in with Google.",
+      "tenantTypeLabel": "Institution type",
+      "tenantTypeSekolah": "School",
+      "tenantTypeSekolahHint": "Elementary, Middle, High, Vocational",
+      "tenantTypeBimbel": "Tutoring institute",
+      "tenantTypeBimbelHint": "Tutoring, courses, private tutoring",
+      "tenantNameLabelSekolah": "School name",
+      "tenantNameLabelBimbel": "Institute name",
+      "tenantNamePlaceholderSekolah": "SMP Tunas Bangsa",
+      "tenantNamePlaceholderBimbel": "Cendekia Tutoring",
+      "whatsappLabel": "WhatsApp number",
+      "emailLabel": "Admin email",
+      "submit": "Continue to payment",
+      "footNote": "By continuing, you agree to KamilEdu's terms and privacy policy."
+    },
+    "gateway": {
+      "title": "Payment via Midtrans Snap",
+      "subtitle": "Secure and instantly verified. Available payment channels:",
+      "manual": "Or pay via manual bank transfer",
+      "manualHint": "backup option"
+    },
+    "bank": {
+      "title": "Bank transfer instructions",
+      "bank": "Bank",
+      "account": "Account number",
+      "name": "Account holder",
+      "amount": "Transfer amount",
+      "reference": "Reference code",
+      "hint": "Transfer exactly the amount shown. After transferring, our team will verify and activate your subscription within 24 hours."
+    },
+    "errors": {
+      "tenantNameRequired": "School or institute name is required.",
+      "whatsappRequired": "WhatsApp number is required.",
+      "emailRequired": "Admin email is required.",
+      "signInFirst": "Sign in with Google first to continue.",
+      "snapLoadFailed": "Failed to load Midtrans payment. Check your connection and try again.",
+      "snapUnavailable": "Midtrans payment is unavailable. Try the manual bank transfer path."
+    },
+    "toast": {
+      "success": "Payment successful. Thank you!",
+      "pending": "Payment awaiting bank confirmation.",
+      "error": "Payment failed. Please try again.",
+      "bankInstructions": "Transfer instructions are displayed on the page.",
+      "orderPlaced": "Subscription order placed."
+    }
   }
 }
