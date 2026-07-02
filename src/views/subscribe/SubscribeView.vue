@@ -1066,16 +1066,16 @@ function onPickerClear() {
         <!--
           Actions row.
 
-          - `!transferNotified`: original two-button row — "Ubah pesanan"
-            (secondary, amber-tinted) + "Kembali ke dashboard" (primary
-            cobalt). Two options because the user still has choices
-            here (finish transferring, or bail out and re-edit).
-          - `transferNotified`: the "next action" is unambiguous — go
-            back to the app and wait for the activation email. Promote
-            "Kembali ke dashboard" to a big full-width emerald CTA (same
-            palette as the thanks card so it reads as the continuation
-            of that motion) and drop the secondary — nothing else makes
-            sense at that point.
+          - `!transferNotified` (menunggu pembayaran): only "Ubah
+            pesanan". No "Kembali ke dashboard" here — the order is
+            still pending; walking away would strand the user with
+            an unconfirmed transfer. Force them to either finish
+            (click "Saya sudah transfer") or edit + resubmit.
+          - `transferNotified` (transfer sudah diklaim): promote
+            "Kembali ke dashboard" to a big full-width emerald CTA
+            (same palette as the thanks card so it reads as the
+            continuation of that motion). Nothing else makes sense
+            at that point.
         -->
         <transition
           enter-active-class="transition-all duration-300 ease-out"
@@ -1086,16 +1086,9 @@ function onPickerClear() {
         >
           <div
             v-if="!transferNotified"
-            key="two-actions"
-            class="flex flex-col sm:flex-row-reverse gap-2 pt-1"
+            key="edit-only"
+            class="flex justify-end pt-1"
           >
-            <RouterLink
-              v-if="isAuthenticated"
-              to="/"
-              class="inline-flex items-center justify-center rounded-lg bg-brand-cobalt hover:bg-brand-dark-blue text-white font-semibold px-4 py-2.5 text-sm transition-colors"
-            >
-              {{ t('subscribe.orderStatus.backToAppCta') }}
-            </RouterLink>
             <button
               type="button"
               class="inline-flex items-center justify-center rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-900 font-semibold px-4 py-2.5 text-sm transition-colors"
@@ -1110,7 +1103,7 @@ function onPickerClear() {
           </div>
           <RouterLink
             v-else-if="isAuthenticated"
-            key="one-action"
+            key="back-to-dashboard"
             to="/"
             class="mt-1 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-3 text-sm shadow-sm transition-colors"
           >
