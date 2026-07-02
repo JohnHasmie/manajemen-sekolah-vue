@@ -539,6 +539,80 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    /**
+     * Hydrate the store from a token that arrived via the Google
+     * "redirect mode" callback (App.vue's kg_token fragment
+     * handler). Unlike `restore()`, we DON'T have a cached user in
+     * local storage — the redirect callback only gives us the token.
+     *
+     * Flow:
+     *   1. Set token so subsequent /me + /user/* calls carry the
+     *      Bearer header
+     *   2. Fetch /me — bare-minimum user shape (id + email + name)
+     *      + abilities + is_super_admin
+     *   3. Synthesize a User row with a placeholder role. Real
+     *      role/schools resolution happens in the background via
+     *      hydrateSchoolsRoles(); the SubscribeView flow only needs
+     *      isAuthenticated=true to render the tenant-picker banner
+     *   4. Persist to storage so a page refresh follows the normal
+     *      `restore()` fast path
+     *
+     * Any failure clears the token + throws — the App.vue caller
+     * shows a generic auth error and the user can retry Google.
+     */
+    async hydrateFromToken(token: string) {
+      this.token = token;
+      storage.set(StorageKeys.token, token);
+
+      const meStore = useMeStore();
+      let snap = null;
+      try {
+        snap = await meStore.refresh();
+      } catch {
+        // treat network errors as a failed hydration
+        snap = null;
+      }
+      if (!snap) {
+        this.token = null;
+        storage.remove(StorageKeys.token);
+        throw new Error('Gagal memuat profil pengguna setelah masuk Google.');
+      }
+
+      // Synthesize the User row. Placeholder `role: 'admin'` — the
+      // SubscribeView + topbar chip don't dispatch on role; the real
+      // role gets set the moment the user picks a tenant via banner
+      // (which triggers switchSchool → _applyResponse with a real
+      // role from the server). Cast because User's `role` is a
+      // required field of a union.
+      const synthesized: User = {
+        id: snap.user.id,
+        name: snap.user.name,
+        email: snap.user.email,
+        avatar: snap.user.photoUrl ?? null,
+        role: 'admin' as Role,
+        school_id: snap.schoolId ?? undefined,
+        school_name: null,
+        schools: [],
+        roles: [],
+        abilities: Array.from(snap.abilities),
+      };
+      this.user = synthesized;
+      this.schoolId = snap.schoolId ?? null;
+      this.role = 'admin' as Role;
+      this.step = 'done';
+      this.error = null;
+      this.authMethod = 'google';
+
+      storage.set(StorageKeys.user, synthesized);
+      if (this.schoolId) storage.set(StorageKeys.schoolId, this.schoolId);
+      storage.set(StorageKeys.role, 'admin' as Role);
+
+      // Fire-and-forget: populate schools + roles + teacher profile.
+      // Failures leave the user authenticated but with a bare pill;
+      // the /subscribe flow doesn't depend on this.
+      void this.hydrateSchoolsRoles();
+    },
+
     // ── Server-facing actions ─────────────────────────────────────────
     async checkHealth() {
       this.serverOnline = await AuthService.health();

@@ -64,11 +64,29 @@ function consumeGoogleRedirectFragment(): 'token_ok' | 'error' | 'none' {
 // from dark → light at 06:00 and back at 18:30 (defaults) while the
 // app is foregrounded. No-op for users who never touch a bimbel page;
 // it's just a 60s setInterval that updates a Date ref.
-onMounted(() => {
-  // MUST run before restore() so a freshly-arrived kg_token gets
-  // written to storage in time for restore() to pick it up.
-  consumeGoogleRedirectFragment();
-  auth.restore();
+onMounted(async () => {
+  const status = consumeGoogleRedirectFragment();
+  if (status === 'token_ok') {
+    // Fresh token from Google redirect → NO cached user in storage
+    // yet, so restore()'s `token && user` guard would silently no-op.
+    // hydrateFromToken fetches /me + synthesizes the user row so the
+    // /subscribe page (or wherever the redirect landed) can render
+    // as authenticated on this same tick.
+    const token = storage.get<string>(StorageKeys.token) ?? '';
+    if (token) {
+      try {
+        await auth.hydrateFromToken(token);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[auth] hydrateFromToken failed after Google redirect', err);
+      }
+    }
+  } else {
+    // Normal boot path — either no redirect happened, or a
+    // #kg_error= arrived (already logged). restore() picks up any
+    // pre-existing session from localStorage.
+    auth.restore();
+  }
   tutoringTheme.startAutoTick();
 });
 </script>
