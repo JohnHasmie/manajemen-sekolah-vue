@@ -51,27 +51,33 @@ const clearDemoIntent = () => {
 // Surface any initial error passed via the query string
 // (the 401 interceptor in http.ts redirects with ?reason=...).
 onMounted(async () => {
-  // Wipe any stale `demo_intent_v1` flag left in sessionStorage from a
-  // previous visit to the demo flow, UNLESS the URL clearly marks this
-  // visit as a demo-intent flow (`?intent=demo`).
-  //
-  // Without this guard a stale flag survived across tabs/visits and made
-  // every subsequent login — including super-admin logins — redirect to
-  // /register-demo instead of the user's normal home, because the watcher's
-  // `hasDemoIntent() && step === 'done'` branch fires before the plain
-  // `step === 'done' → /` branch. Yahya (super-admin) hit this on
-  // 2026-06-13. The DemoCtaCard click sets the flag AFTER mount, so the
-  // legitimate demo-CTA flow on this same page is not affected.
-  if (route.query.intent !== 'demo') {
-    clearDemoIntent();
-  }
+  // Snapshot the demo intent BEFORE any cleanup — the "wipe stale
+  // flags" branch below used to run first and killed the sessionStorage
+  // marker before this onMounted's own redirect check could read it.
+  // With Google in redirect mode the customer's DemoCtaCard click sets
+  // the flag, then the Google round-trip returns to /login with a
+  // multi-tenant `step='school'` state, then LoginView mounts — and
+  // clearing the flag on line 66 blew the redirect target off before
+  // we ever checked. Result: the user landed on the SchoolPicker for
+  // their existing tenants when they specifically wanted a NEW demo.
+  const startedWithDemoIntent = hasDemoIntent();
 
   // If the user wants to register a demo and is already authenticated,
   // skip the school/role selector and go straight to the wizard.
-  if (hasDemoIntent() && auth.isAuthenticated) {
+  if (startedWithDemoIntent && auth.isAuthenticated) {
     clearDemoIntent();
     router.replace('/register-demo');
     return;
+  }
+
+  // Wipe any stale `demo_intent_v1` flag left in sessionStorage from a
+  // previous visit to the demo flow. This still guards against Yahya's
+  // 2026-06-13 super-admin misroute — but runs AFTER the fresh-intent
+  // check above so a legitimate Google-redirect round-trip survives.
+  // Skip the wipe when the current URL still advertises the intent
+  // (`?intent=demo`) so a direct link stays honored.
+  if (route.query.intent !== 'demo' && !startedWithDemoIntent) {
+    clearDemoIntent();
   }
   // If the user is already fully authenticated, redirect immediately
   // instead of showing the "Menyiapkan Dashboard..." spinner forever.

@@ -84,8 +84,27 @@ onMounted(async () => {
         // instead of silently landing on whichever tenant was cached
         // in local storage from a prior session (which for someone who
         // just activated a NEW subscription is the wrong dashboard).
+        //
+        // Exception: when the sessionStorage `demo_intent_v1` flag is
+        // still set — meaning the user clicked "Buat Demo dengan
+        // Google" and hasn't been dispatched to /register-demo yet —
+        // send them straight to the demo wizard instead of forcing
+        // them to pick a tenant they don't care about. LoginView's
+        // onMounted handles the same case as a fallback, but a
+        // direct route here avoids a flash of the picker.
         if (auth.step === 'school') {
-          await router.replace('/login');
+          let demoIntent = false;
+          try {
+            demoIntent = sessionStorage.getItem('demo_intent_v1') === '1';
+          } catch {
+            /* private mode — fall through to picker */
+          }
+          if (demoIntent) {
+            try { sessionStorage.removeItem('demo_intent_v1'); } catch { /* non-fatal */ }
+            await router.replace('/register-demo');
+          } else {
+            await router.replace('/login');
+          }
         }
       } catch (err) {
         // eslint-disable-next-line no-console
