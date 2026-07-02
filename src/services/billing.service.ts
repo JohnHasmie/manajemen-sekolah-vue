@@ -436,6 +436,36 @@ function parsePlan(raw: any): PricingPlan {
   };
 }
 
+/**
+ * FE `TenantType` → backend `TenantType::payloadValues()`.
+ *
+ * Vue uses the UI-facing Indonesian shorthand ('sekolah' / 'bimbel')
+ * everywhere in state and copy; the wire format the Laravel
+ * `CreateSubscriptionRequest` accepts is English ('school' / 'tutoring').
+ * Kept as a tiny pure helper so both the top-level and the nested
+ * `new_tenant.tenant_type` on a subscribe payload can share the same
+ * mapping.
+ */
+function toWireTenantType(t: TenantType | undefined): 'school' | 'tutoring' {
+  return t === 'bimbel' ? 'tutoring' : 'school';
+}
+
+function toWireSubscribePayload(payload: SubscribeRequest): Record<string, unknown> {
+  const out: Record<string, unknown> = {
+    ...payload,
+    tenant_type: toWireTenantType(payload.tenant_type),
+  };
+  if (payload.new_tenant) {
+    out.new_tenant = {
+      ...payload.new_tenant,
+      tenant_type: toWireTenantType(
+        payload.new_tenant.tenant_type ?? payload.tenant_type,
+      ),
+    };
+  }
+  return out;
+}
+
 function parseTenant(raw: any): SubscriptionTenant {
   const rawType = String(raw?.tenant_type ?? '').toLowerCase();
   const tenantType: SubscriptionTenant['tenant_type'] =
@@ -612,10 +642,22 @@ export const SubscriptionBillingService = {
    * POST /billing/subscribe — start a subscription. Returns either a
    * Midtrans Snap token (opened via `window.snap.pay(...)`) or manual
    * bank-transfer instructions.
+   *
+   * Wire-format translation: the FE `TenantType` uses UI-facing
+   * Indonesian values ('sekolah' / 'bimbel') everywhere in the store +
+   * components; the backend's CreateSubscriptionRequest validates
+   * against `TenantType::payloadValues()` which is English
+   * ('school' / 'tutoring'). Translate here at the network boundary so
+   * every caller (SubscribeView + SubscribeNewWizardView) benefits
+   * without duplicating the mapping. Without this, /subscribe/new POSTs
+   * a `sekolah` / `bimbel` value into `new_tenant.tenant_type` and the
+   * backend responds with "The selected new tenant.tenant type is
+   * invalid.".
    */
   async subscribe(payload: SubscribeRequest): Promise<SubscribeResult> {
     try {
-      const res = await api.post('/billing/subscribe', payload);
+      const wirePayload = toWireSubscribePayload(payload);
+      const res = await api.post('/billing/subscribe', wirePayload);
       const body = res.data?.data ?? res.data;
       return parseSubscribeResult(body);
     } catch (e) {
