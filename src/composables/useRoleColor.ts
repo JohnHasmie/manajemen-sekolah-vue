@@ -68,12 +68,19 @@ const TABLE: Record<Role, RoleColor> = {
   },
 };
 
+// No-role fallback: used on public/pre-auth surfaces (/subscribe,
+// /register-demo, /login) where the shared Button component still
+// resolves a color. Point at the KamilEdu cobalt navy — the
+// `brand.*` scale is legacy indigo (#4F46E5, leftover from an earlier
+// iteration) and a `<Button variant="primary">` rendered against it
+// reads as a jarring purple against the rest of the marketing surface,
+// which uses `brand-cobalt` everywhere else.
 const FALLBACK: RoleColor = {
-  hex: '#4F46E5',
-  bg: 'bg-brand-600',
-  bgSoft: 'bg-brand-50',
-  text: 'text-brand-600',
-  ring: 'ring-brand-600',
+  hex: '#1B6FB8',
+  bg: 'bg-brand-cobalt',
+  bgSoft: 'bg-brand-cobalt/10',
+  text: 'text-brand-cobalt',
+  ring: 'ring-brand-cobalt',
 };
 
 export function getRoleColor(role: Role | null | undefined): RoleColor {
