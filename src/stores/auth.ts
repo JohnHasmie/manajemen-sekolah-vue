@@ -599,7 +599,6 @@ export const useAuthStore = defineStore('auth', {
       this.user = synthesized;
       this.schoolId = snap.schoolId ?? null;
       this.role = 'admin' as Role;
-      this.step = 'done';
       this.error = null;
       this.authMethod = 'google';
 
@@ -607,9 +606,61 @@ export const useAuthStore = defineStore('auth', {
       if (this.schoolId) storage.set(StorageKeys.schoolId, this.schoolId);
       storage.set(StorageKeys.role, 'admin' as Role);
 
-      // Fire-and-forget: populate schools + roles + teacher profile.
-      // Failures leave the user authenticated but with a bare pill;
-      // the /subscribe flow doesn't depend on this.
+      // Multi-tenant picker — /me returns `school_id: null` for a
+      // Google-authenticated user when the backend hasn't stamped a
+      // current_school_id yet (which it hasn't, because the redirect
+      // flow bypasses LoginAction's pilih_sekolah branch). If we set
+      // step='done' straight through, the user silently lands on
+      // whichever school was in local storage from a previous session
+      // — for someone who just activated a new bimbel subscription
+      // and expects to work THERE, that reads as "the app ignored
+      // what I paid for".
+      //
+      // Fetch the schools list synchronously (blocking hydrateFromToken
+      // by ~one round-trip is acceptable for a login moment) so we can
+      // route into the SchoolPicker instead of the wrong dashboard.
+      let schools: School[] | null = null;
+      try {
+        const list = await AuthService.listSchools();
+        schools = Array.isArray(list) ? list.map(normalizeSchool) : null;
+      } catch {
+        schools = null;
+      }
+
+      if (schools && schools.length > 0) {
+        this.user.schools = schools;
+        // SchoolPicker reads the store-level `schools`, not
+        // `user.schools`. Populate both so the picker has data.
+        this.schools = schools;
+        storage.set(StorageKeys.user, this.user);
+      }
+
+      const activeIsInList = (schools ?? []).some(
+        (s) => (s.id ?? s.school_id) === this.schoolId,
+      );
+
+      if (schools && schools.length > 1 && !activeIsInList) {
+        // Multi-tenant + no valid pre-selection → hand off to the
+        // SchoolPicker (rendered by LoginView at step='school'). We
+        // don't route here — the caller (App.vue) reads `step` after
+        // hydration and pushes to /login when needed.
+        this.step = 'school';
+      } else if (schools && schools.length === 1) {
+        // Single-tenant users skip the picker; auto-select so the
+        // user lands on their only tenant. `schoolId` here is a hint —
+        // the http layer will send it as X-Tenant-ID and the backend
+        // resolves the tenant.
+        const only = schools[0];
+        this.schoolId = (only.id ?? only.school_id) ?? this.schoolId;
+        if (this.schoolId) storage.set(StorageKeys.schoolId, this.schoolId);
+        this.step = 'done';
+      } else {
+        this.step = 'done';
+      }
+
+      // Populate roles + teacher profile in the background. Failures
+      // leave the user authenticated but with a bare pill — the
+      // /subscribe flow doesn't depend on this.
       void this.hydrateSchoolsRoles();
     },
 

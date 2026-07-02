@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useTutoringThemeStore } from '@/stores/tutoring-theme';
 import { storage, StorageKeys } from '@/lib/storage';
 
 const auth = useAuthStore();
 const tutoringTheme = useTutoringThemeStore();
+const router = useRouter();
 
 /**
  * Parse Google Identity Services redirect-mode fragments.
@@ -76,6 +78,15 @@ onMounted(async () => {
     if (token) {
       try {
         await auth.hydrateFromToken(token);
+        // Multi-tenant Google logins land here with step='school' —
+        // the picker lives on /login and reads auth.step. Route there
+        // so the user can pick which tenant they meant to open,
+        // instead of silently landing on whichever tenant was cached
+        // in local storage from a prior session (which for someone who
+        // just activated a NEW subscription is the wrong dashboard).
+        if (auth.step === 'school') {
+          await router.replace('/login');
+        }
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error('[auth] hydrateFromToken failed after Google redirect', err);
