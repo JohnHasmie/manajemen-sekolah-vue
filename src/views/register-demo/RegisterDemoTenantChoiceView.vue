@@ -91,7 +91,7 @@ function pick(t: 'school' | 'tutoring') {
           </div>
           <div class="text-left">
             <div class="text-sm font-bold text-slate-900 leading-tight">KamilEdu</div>
-            <div class="text-[10px] text-slate-500 font-medium">Daftar demo gratis</div>
+            <div class="text-[10px] text-slate-500 font-medium">Coba demo gratis 30 hari</div>
           </div>
         </button>
         <div class="flex items-center gap-4">
@@ -111,14 +111,15 @@ function pick(t: 'school' | 'tutoring') {
       <div class="w-full max-w-4xl">
         <div class="text-center mb-10">
           <p class="text-[11px] font-black tracking-[0.3em] uppercase text-brand-cobalt mb-3">
-            Langkah 1 dari 2 — pilih jenis lembaga
+            Coba dulu · gratis 30 hari
           </p>
           <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-3">
             Apa yang ingin Anda kelola?
           </h1>
           <p class="text-sm sm:text-base text-slate-500 max-w-xl mx-auto leading-relaxed">
-            Kami siapkan demo dengan data dummy yang relevan sesuai jenis lembaga Anda — agar bisa langsung
-            diuji tanpa setup manual.
+            Kami siapkan demo dengan data dummy yang relevan sesuai jenis lembaga Anda —
+            <strong class="text-slate-700 font-semibold">gratis 30 hari</strong>, tanpa kartu kredit,
+            bisa langsung diuji tanpa setup manual.
           </p>
         </div>
 
@@ -140,9 +141,12 @@ function pick(t: 'school' | 'tutoring') {
             <!-- Sekolah -->
             <button
               type="button"
-              class="group bg-white border border-slate-200 hover:border-brand-cobalt hover:shadow-card rounded-2xl p-7 text-left transition"
+              class="group bg-white border border-slate-200 hover:border-brand-cobalt hover:shadow-card rounded-2xl p-7 text-left transition relative"
               @click="pick('school')"
             >
+              <span class="absolute top-3 right-3 text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md">
+                Gratis 30 hari
+              </span>
               <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 grid place-items-center mb-4">
                 <NavIcon name="building" :size="22" />
               </div>
@@ -179,8 +183,13 @@ function pick(t: 'school' | 'tutoring') {
               class="group bg-white border-2 border-brand-cobalt rounded-2xl p-7 text-left transition hover:shadow-card relative"
               @click="pick('tutoring')"
             >
-              <span class="absolute top-3 right-3 text-[10px] font-black uppercase tracking-widest bg-brand-cobalt text-white px-2 py-0.5 rounded-md">
-                Baru
+              <span class="absolute top-3 right-3 flex items-center gap-1.5">
+                <span class="text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md">
+                  Gratis 30 hari
+                </span>
+                <span class="text-[10px] font-black uppercase tracking-widest bg-brand-cobalt text-white px-2 py-0.5 rounded-md">
+                  Baru
+                </span>
               </span>
               <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-700 grid place-items-center mb-4">
                 <NavIcon name="book" :size="22" />
@@ -211,6 +220,36 @@ function pick(t: 'school' | 'tutoring') {
                 <span class="text-[10.5px] text-slate-400 font-medium">~2 menit setup</span>
               </div>
             </button>
+          </div>
+
+          <!--
+            Bypass CTA — for visitors who don't want the trial and are
+            ready to subscribe directly. Deliberately muted:
+              * lives in a separate strip BELOW the primary cards
+              * ghost border + slate text (not brand color)
+              * one small link, not a bold button
+            The primary path stays the two big cards. This is an escape
+            hatch for expert users who already evaluated the product
+            elsewhere. Reachable at `/subscribe` — the route is public
+            and stands alone (no AppShell chrome) per the subscribe
+            view's design.
+          -->
+          <div class="mt-8 pt-6 border-t border-slate-200">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-center">
+              <span class="text-[13px] text-slate-500">
+                Sudah yakin dan siap berlangganan?
+              </span>
+              <router-link
+                to="/subscribe"
+                class="inline-flex items-center gap-1.5 text-[13px] font-semibold text-brand-cobalt hover:text-brand-dark-blue transition-colors"
+              >
+                Langsung berlangganan
+                <NavIcon name="arrow-right" :size="13" />
+              </router-link>
+            </div>
+            <p class="mt-2 text-center text-[11px] text-slate-400">
+              Lewati demo — pilih paket + bayar langsung di halaman berlangganan.
+            </p>
           </div>
         </template>
 
