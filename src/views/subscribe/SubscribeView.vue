@@ -1040,28 +1040,63 @@ function onPickerClear() {
           </div>
         </transition>
 
-        <!-- Actions: edit order (only while unnotified), back to app -->
-        <div class="flex flex-col sm:flex-row-reverse gap-2 pt-1">
-          <RouterLink
-            v-if="isAuthenticated"
-            to="/"
-            class="inline-flex items-center justify-center rounded-lg bg-brand-cobalt hover:bg-brand-dark-blue text-white font-semibold px-4 py-2.5 text-sm transition-colors"
+        <!--
+          Actions row.
+
+          - `!transferNotified`: original two-button row — "Ubah pesanan"
+            (secondary, amber-tinted) + "Kembali ke dashboard" (primary
+            cobalt). Two options because the user still has choices
+            here (finish transferring, or bail out and re-edit).
+          - `transferNotified`: the "next action" is unambiguous — go
+            back to the app and wait for the activation email. Promote
+            "Kembali ke dashboard" to a big full-width emerald CTA (same
+            palette as the thanks card so it reads as the continuation
+            of that motion) and drop the secondary — nothing else makes
+            sense at that point.
+        -->
+        <transition
+          enter-active-class="transition-all duration-300 ease-out"
+          leave-active-class="transition-all duration-200 ease-in"
+          enter-from-class="opacity-0 translate-y-1"
+          leave-to-class="opacity-0 translate-y-1"
+          mode="out-in"
+        >
+          <div
+            v-if="!transferNotified"
+            key="two-actions"
+            class="flex flex-col sm:flex-row-reverse gap-2 pt-1"
           >
+            <RouterLink
+              v-if="isAuthenticated"
+              to="/"
+              class="inline-flex items-center justify-center rounded-lg bg-brand-cobalt hover:bg-brand-dark-blue text-white font-semibold px-4 py-2.5 text-sm transition-colors"
+            >
+              {{ t('subscribe.orderStatus.backToAppCta') }}
+            </RouterLink>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-900 font-semibold px-4 py-2.5 text-sm transition-colors"
+              @click="onEditOrder"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              {{ t('subscribe.orderStatus.editCta') }}
+            </button>
+          </div>
+          <RouterLink
+            v-else-if="isAuthenticated"
+            key="one-action"
+            to="/"
+            class="mt-1 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-3 text-sm shadow-sm transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6h-2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            </svg>
             {{ t('subscribe.orderStatus.backToAppCta') }}
           </RouterLink>
-          <button
-            v-if="!transferNotified"
-            type="button"
-            class="inline-flex items-center justify-center rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-900 font-semibold px-4 py-2.5 text-sm transition-colors"
-            @click="onEditOrder"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-            {{ t('subscribe.orderStatus.editCta') }}
-          </button>
-        </div>
+        </transition>
       </div>
     </section>
 
