@@ -298,8 +298,10 @@ watch(
 
 <template>
   <div class="min-h-screen flex flex-col bg-slate-50">
-    <!-- Topbar -->
-    <header class="bg-white border-b border-slate-200">
+    <!-- Topbar. Sticky so the progress bar stays visible when the
+         question card grows long and the user scrolls to reach a
+         later input. -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
       <div class="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
         <div class="flex items-center gap-2.5">
           <div class="w-7 h-7 rounded-lg bg-brand-dark-blue text-white text-xs font-black grid place-items-center">
@@ -335,8 +337,12 @@ watch(
       </div>
     </header>
 
-    <!-- Body -->
-    <main class="flex-1 flex items-center justify-center px-6 py-8">
+    <!-- Body. Vertical centering only kicks in when the card fits the
+         viewport; tall cards (like the socials step with 5 inputs) flow
+         from the top so the "Lanjut" footer stays in reach without a
+         scroll into the void. Extra `pb-24` reserves space so the last
+         input isn't hidden under the sticky footer. -->
+    <main class="flex-1 flex flex-col items-center justify-start sm:justify-center px-6 py-8 pb-24">
       <!--
         Google auth gate. Blocks the entire question flow when the
         visitor is anonymous — the demo request record needs a real
@@ -507,8 +513,19 @@ watch(
     </Transition>
 
     <!-- Footer — hidden while the auth gate is up so there's no
-         "Lanjut" button to keyboard-mash past the sign-in. -->
-    <footer v-if="auth.isAuthenticated" class="bg-white border-t border-slate-200">
+         "Lanjut" button to keyboard-mash past the sign-in.
+
+         `sticky bottom-0` keeps the "Lanjut" / "Kirim permintaan demo"
+         button in the viewport regardless of question-card height. The
+         previous non-sticky layout let a tall card (e.g. the socials
+         step with five inputs) push the button past the fold, so the
+         user had to scroll before they could advance — reported at
+         2026-07-02. Shadow-2xl-lift so it visually separates from
+         the card scrolling behind it. -->
+    <footer
+      v-if="auth.isAuthenticated"
+      class="bg-white border-t border-slate-200 sticky bottom-0 z-20 shadow-[0_-4px_10px_-4px_rgb(15_23_42/0.08)]"
+    >
       <div class="max-w-3xl mx-auto px-6 py-3.5 flex items-center justify-between">
         <button
           type="button"
