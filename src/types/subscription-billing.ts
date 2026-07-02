@@ -97,6 +97,12 @@ export interface SubscribeRequest {
     admin_email: string;
     whatsapp: string;
   };
+  /**
+   * Existing-tenant path only. When true, the backend clears seeded
+   * demo scenario data (dummy siswa, guru, sesi, tagihan) as part of
+   * activation. Silently ignored on the new-tenant path.
+   */
+  wipe_demo_data?: boolean;
 }
 
 /** Manual-transfer bank instructions, returned when gateway=bank_transfer_manual. */

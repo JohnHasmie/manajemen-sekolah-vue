@@ -90,6 +90,15 @@ const submitting = ref(false);
 const errorMessage = ref<string | null>(null);
 const manualTransfer = ref(false);
 
+// Wipe demo scenarios (dummy siswa/guru/sesi/tagihan) on activation.
+// Default TRUE: when the user picks an existing demo tenant, we assume
+// they want to start real operations from an empty tenant — that's the
+// common case and avoids accidentally showing dummy data to real
+// students later. The toggle lets them opt OUT to keep the demo data
+// (useful for evaluating features against realistic-looking data
+// during trial).
+const wipeDemoData = ref(true);
+
 // Bank-transfer instructions shown after subscribing via manual path.
 // This is the fallback UI when there's no dedicated confirmation page;
 // the user sees the details right here so they can copy the VA / bank
@@ -344,6 +353,13 @@ async function onSubmit() {
             admin_email: (auth.user?.email ?? form.adminEmail).trim(),
             whatsapp: form.whatsapp.trim(),
           },
+      // Only meaningful for the existing-tenant path AND only when the
+      // tenant is still a demo — the backend also guards on `is_demo`,
+      // but we scope it here too so the request payload matches intent.
+      wipe_demo_data:
+        usingExistingTenant.value && (selectedTenant.value?.is_demo ?? false)
+          ? wipeDemoData.value
+          : undefined,
     });
 
     await handleSubscribeResult(result);
@@ -589,6 +605,34 @@ function onPickerClear() {
                 }) }}
             </span>
           </div>
+
+          <!--
+            Wipe demo scenarios toggle. Only shown when:
+              1. The picked tenant is still a demo (is_demo=true), AND
+              2. It actually has data worth wiping (student + staff > 0).
+            Default on — most admins converting demo→paid don't want the
+            dummy siswa/guru accidentally visible to real students later.
+          -->
+          <label
+            v-if="selectedTenant?.is_demo && (selectedTenant.student_count + selectedTenant.staff_count) > 0"
+            class="mt-3 flex items-start gap-2 rounded-md bg-white/80 border border-blue-200 p-2.5 cursor-pointer"
+          >
+            <input
+              type="checkbox"
+              class="mt-0.5 h-4 w-4 text-brand-cobalt focus:ring-brand-cobalt rounded border-slate-300"
+              :checked="wipeDemoData"
+              @change="wipeDemoData = ($event.target as HTMLInputElement).checked"
+            />
+            <span class="flex-1 min-w-0 text-[12px] text-blue-900 leading-snug">
+              <span class="font-semibold block">
+                Hapus data dummy dari demo (siswa, guru, sesi contoh)
+              </span>
+              <span class="text-blue-800/80 text-[11px]">
+                Mulai berlangganan dari kosong. Akun admin, WhatsApp, dan pengaturan tenant tetap aman —
+                yang dihapus hanya data seed contoh. Matikan untuk mempertahankan data demo saat ini.
+              </span>
+            </span>
+          </label>
         </div>
         <div class="flex flex-col sm:flex-row gap-2 flex-shrink-0">
           <Button size="sm" variant="primary" @click="onBannerCta">
