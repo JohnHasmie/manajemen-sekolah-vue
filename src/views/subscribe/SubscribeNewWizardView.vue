@@ -165,6 +165,17 @@ async function mountGoogleButton() {
     text: 'continue_with',
   });
 }
+
+// See SubscribeSignupForm — GIS in redirect mode navigates away before
+// the credential callback runs, so flagIntentFromFocusedGisButton()
+// never fires for a rendered-button click. Set the flag on pointerdown.
+function flagSubscribeIntent(): void {
+  try {
+    sessionStorage.setItem('subscribe_intent_v1', '1');
+  } catch {
+    /* non-fatal */
+  }
+}
 watch(showGoogle, (v) => {
   if (v) mountGoogleButton();
 });
@@ -556,6 +567,7 @@ watch(step, async (s) => {
             ref="googleContainer"
             data-google-intent="subscribe"
             class="w-full flex justify-center min-h-[42px]"
+            @pointerdown="flagSubscribeIntent"
           />
           <p v-if="google.error.value" class="mt-2 text-[11px] text-rose-600 text-center">
             {{ t('subscribe.form.googleError') }}
