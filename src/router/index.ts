@@ -156,6 +156,8 @@ const SuperAdminBroadcastView = () =>
   import('@/views/super-admin/SuperAdminBroadcastView.vue');
 const SuperAdminIncompleteRegistrationsView = () =>
   import('@/views/super-admin/SuperAdminIncompleteRegistrationsView.vue');
+const SuperAdminSubscriptionApprovalsView = () =>
+  import('@/views/super-admin/SuperAdminSubscriptionApprovalsView.vue');
 const TeacherCheckInView = () =>
   import('@/views/teacher/TeacherCheckInView.vue');
 const TeacherAttendanceHistoryView = () =>
@@ -658,6 +660,16 @@ const routes: RouteRecordRaw[] = [
         path: 'super-admin/broadcast',
         name: 'super-admin.broadcast',
         component: SuperAdminBroadcastView,
+        meta: { superAdmin: true },
+      },
+      {
+        // Manual-transfer subscription verification queue. Every row is
+        // an `awaiting_verify` subscription — customer claims to have
+        // transferred, KamilEdu bendahara must reconcile against BSI
+        // mutation history before approving.
+        path: 'super-admin/subscription-approvals',
+        name: 'super-admin.subscription-approvals',
+        component: SuperAdminSubscriptionApprovalsView,
         meta: { superAdmin: true },
       },
 

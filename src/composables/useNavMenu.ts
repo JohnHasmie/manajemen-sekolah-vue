@@ -187,6 +187,11 @@ const SUPER_ADMIN_NAV: NavSection[] = [
         icon: 'school',
       },
       {
+        to: '/super-admin/subscription-approvals',
+        labelKey: 'superAdmin.nav.subscriptionApprovals',
+        icon: 'credit-card',
+      },
+      {
         to: '/super-admin/demo-incomplete',
         labelKey: 'superAdmin.nav.incomplete',
         icon: 'clock',
