@@ -5654,17 +5654,17 @@
       "featSharedSupport": "WhatsApp and email support"
     },
     "banner": {
-      "title": "Already have a school/tutoring institute?",
-      "oneDetected": "Detected 1 account: {name}. Student and staff counts will be filled in automatically.",
-      "manyDetected": "Detected {count} accounts. Pick one to continue.",
+      "title": "Already have a demo school/institute?",
+      "oneDetected": "Detected 1 demo school/institute: {name}. Student and staff counts will be filled in automatically.",
+      "manyDetected": "Detected {count} demo schools/institutes. Pick one to continue.",
       "useOne": "Use {name}",
-      "choose": "Pick an account",
+      "choose": "Pick a school/institute",
       "clear": "Clear selection",
       "selectedCounts": "{students} students · {staff} teachers/staff"
     },
     "picker": {
-      "title": "Pick an account",
-      "subtitle": "We'll activate the subscription on the chosen account. Student, staff, and configuration data stay intact.",
+      "title": "Pick a demo school/institute",
+      "subtitle": "We'll activate the subscription on the selected school/institute. Student, staff, and configuration data stay intact.",
       "students": "students",
       "staff": "teacher/staff",
       "tutors": "tutor/staff",
@@ -5673,14 +5673,14 @@
       "statusActive": "Active",
       "statusExpired": "Expired",
       "statusDemo": "Demo",
-      "confirm": "Use this account",
+      "confirm": "Use this school/institute",
       "cancel": "Cancel",
-      "clear": "Clear demo selection"
+      "clear": "Clear selection"
     },
     "form": {
       "title": "Create account and confirm",
       "subtitleNew": "We'll create a subscription account matching your institution type.",
-      "subtitleExisting": "Just confirm the payment method — the chosen account will have its subscription activated.",
+      "subtitleExisting": "Just confirm the payment method — the selected school/institute will have its subscription activated.",
       "divider": "or",
       "signedInFallback": "Your account",
       "googleError": "Google sign-in failed to load. Try again or use email.",

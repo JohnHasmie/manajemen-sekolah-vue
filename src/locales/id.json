@@ -5650,17 +5650,17 @@
       "featSharedSupport": "Dukungan WhatsApp dan email"
     },
     "banner": {
-      "title": "Sudah punya sekolah/bimbel?",
-      "oneDetected": "Terdeteksi 1 akun Anda: {name}. Data siswa dan personel akan dihitung otomatis.",
-      "manyDetected": "Terdeteksi {count} akun Anda. Pilih salah satu untuk melanjutkan.",
+      "title": "Sudah punya sekolah/lembaga demo?",
+      "oneDetected": "Terdeteksi 1 sekolah/lembaga demo: {name}. Data siswa dan personel akan dihitung otomatis.",
+      "manyDetected": "Terdeteksi {count} sekolah/lembaga demo. Pilih salah satu untuk melanjutkan.",
       "useOne": "Gunakan {name}",
-      "choose": "Pilih akun",
+      "choose": "Pilih sekolah/lembaga",
       "clear": "Batalkan pilihan",
       "selectedCounts": "{students} siswa · {staff} guru/staf"
     },
     "picker": {
-      "title": "Pilih akun",
-      "subtitle": "Kami akan mengaktifkan langganan pada akun yang dipilih. Data siswa, guru, dan konfigurasi tetap utuh.",
+      "title": "Pilih sekolah/lembaga demo",
+      "subtitle": "Kami akan mengaktifkan langganan pada sekolah/lembaga yang dipilih. Data siswa, guru, dan konfigurasi tetap utuh.",
       "students": "siswa",
       "staff": "guru/staf",
       "tutors": "tutor/staf",
@@ -5669,14 +5669,14 @@
       "statusActive": "Aktif",
       "statusExpired": "Kedaluwarsa",
       "statusDemo": "Demo",
-      "confirm": "Gunakan akun ini",
+      "confirm": "Gunakan sekolah/lembaga ini",
       "cancel": "Batal",
-      "clear": "Batalkan pilihan demo"
+      "clear": "Batalkan pilihan"
     },
     "form": {
       "title": "Buat akun dan konfirmasi",
       "subtitleNew": "Kami akan membuat akun berlangganan sesuai jenis lembaga Anda.",
-      "subtitleExisting": "Anda tinggal konfirmasi metode pembayaran — akun yang dipilih akan diaktifkan langganannya.",
+      "subtitleExisting": "Anda tinggal konfirmasi metode pembayaran — sekolah/lembaga yang dipilih akan diaktifkan langganannya.",
       "divider": "atau",
       "signedInFallback": "Akun Anda",
       "googleError": "Login Google gagal dimuat. Coba lagi atau gunakan email.",
