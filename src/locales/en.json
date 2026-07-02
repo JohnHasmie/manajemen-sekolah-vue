@@ -5851,9 +5851,9 @@
       "markTransferredFallback": "Keep the reference code on the order card; our team will still reconcile from the BSI statement."
     },
     "wizardCta": {
-      "kicker": "First time signing up?",
-      "body": "We have a guided 5-step flow to collect your school/institute profile, admin contact, and scale — all with autosave.",
-      "action": "Use subscription wizard"
+      "kicker": "New to KamilEdu?",
+      "body": "We'll walk you through 5 short steps — school or institute profile, admin contact, and the plan that fits. Your entries save on their own, safe to pick up later.",
+      "action": "Start the guide"
     }
   }
 }

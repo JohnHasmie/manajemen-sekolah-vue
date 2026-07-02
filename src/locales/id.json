@@ -5847,9 +5847,9 @@
       "markTransferredFallback": "Simpan kode referensi di kartu pesanan, tim kami akan verifikasi otomatis dari mutasi BSI."
     },
     "wizardCta": {
-      "kicker": "Baru pertama daftar?",
-      "body": "Kami punya alur terpandu 5-langkah untuk mengumpulkan profil sekolah/lembaga, kontak admin, dan skala paket sekaligus. Draft-nya otomatis tersimpan.",
-      "action": "Pakai wizard berlangganan"
+      "kicker": "Baru mau berlangganan?",
+      "body": "Kami temani lewat 5 langkah singkat — mulai dari profil sekolah atau lembaga, kontak admin, sampai memilih paket yang pas. Isian Anda tersimpan sendiri, aman kalau harus lanjut nanti.",
+      "action": "Mulai panduan"
     }
   }
 }
