@@ -5640,6 +5640,7 @@
       "monthlyTitle": "Monthly",
       "yearlyTitle": "Yearly",
       "recommended": "Recommended",
+      "selected": "Selected",
       "monthlyCta": "Pick Monthly",
       "yearlyCta": "Pick Yearly",
       "yearlySavings": "Save {amount}",

@@ -5636,6 +5636,7 @@
       "monthlyTitle": "Bulanan",
       "yearlyTitle": "Tahunan",
       "recommended": "Direkomendasikan",
+      "selected": "Terpilih",
       "monthlyCta": "Pilih Bulanan",
       "yearlyCta": "Pilih Tahunan",
       "yearlySavings": "Hemat {amount}",

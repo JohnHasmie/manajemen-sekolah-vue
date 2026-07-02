@@ -240,8 +240,18 @@ onMounted(() => {
 // while the page is mounted). The useGoogleSignIn callback lives in the
 // auth store, so watching `isAuthenticated` catches that transition.
 watch(isAuthenticated, (v) => {
-  if (v) loadTenants();
-  else {
+  if (v) {
+    loadTenants();
+    // If the user hit "Lanjut ke pembayaran" BEFORE signing in, we
+    // stamped the `subscribe.errors.signInFirst` message under the
+    // form. That message is now stale — clear it so the submit-button
+    // area doesn't keep pointing at a solved problem. Any real
+    // network / server error will re-populate errorMessage on the
+    // next click.
+    if (errorMessage.value === t('subscribe.errors.signInFirst')) {
+      errorMessage.value = null;
+    }
+  } else {
     myTenants.value = [];
     selectedTenantId.value = null;
   }
@@ -511,9 +521,21 @@ function onPickerClear() {
     <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- Monthly card -->
       <div
-        class="relative rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 flex flex-col"
-        :class="calc.period === 'monthly' ? 'ring-2 ring-brand-cobalt/20' : ''"
+        class="relative rounded-2xl bg-white p-5 sm:p-6 flex flex-col transition-all duration-150"
+        :class="calc.period === 'monthly'
+          ? 'border-2 border-brand-cobalt bg-brand-50/40 ring-4 ring-brand-cobalt/15 shadow-md'
+          : 'border border-slate-200'"
       >
+        <!-- "TERPILIH" chip when selected — visual reinforcement so a
+             visitor scanning the two cards immediately spots which one
+             they're on. Same chip position/style as the yearly
+             "DIREKOMENDASIKAN" so the two feel symmetrical. -->
+        <span
+          v-if="calc.period === 'monthly'"
+          class="absolute -top-2.5 left-4 inline-flex items-center rounded-full bg-brand-cobalt text-white px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest shadow-sm"
+        >
+          {{ t('subscribe.card.selected') }}
+        </span>
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">
           {{ t('subscribe.card.monthlyTitle') }}
         </h3>
@@ -539,11 +561,25 @@ function onPickerClear() {
 
       <!-- Yearly card (recommended) -->
       <div
-        class="relative rounded-2xl border-2 bg-white p-5 sm:p-6 flex flex-col"
-        :class="calc.period === 'yearly' ? 'border-brand-cobalt ring-2 ring-brand-cobalt/20' : 'border-brand-cobalt'"
+        class="relative rounded-2xl border-2 border-brand-cobalt bg-white p-5 sm:p-6 flex flex-col transition-all duration-150"
+        :class="calc.period === 'yearly'
+          ? 'bg-brand-50/40 ring-4 ring-brand-cobalt/15 shadow-md'
+          : ''"
       >
-        <span class="absolute -top-2.5 left-4 inline-flex items-center rounded-full bg-brand-cobalt text-white px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest shadow-sm">
-          {{ t('subscribe.card.recommended') }}
+        <!-- Two chips side-by-side when selected: DIREKOMENDASIKAN
+             (permanent, so users always know this is the recommended
+             tier) + TERPILIH (only when active). Otherwise just the
+             recommendation chip. -->
+        <span class="absolute -top-2.5 left-4 inline-flex items-center gap-1.5">
+          <span class="inline-flex items-center rounded-full bg-brand-cobalt text-white px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest shadow-sm">
+            {{ t('subscribe.card.recommended') }}
+          </span>
+          <span
+            v-if="calc.period === 'yearly'"
+            class="inline-flex items-center rounded-full bg-emerald-500 text-white px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest shadow-sm"
+          >
+            {{ t('subscribe.card.selected') }}
+          </span>
         </span>
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">
           {{ t('subscribe.card.yearlyTitle') }}
