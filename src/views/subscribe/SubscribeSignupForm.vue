@@ -154,22 +154,6 @@ const canSubmit = computed(() => {
             ? t('subscribe.form.googleInAppBrowser')
             : t('subscribe.form.googleError') }}
       </p>
-      <!--
-        Always-present escape hatch. Google popups can fail silently
-        for a handful of reasons (Chrome COOP block on some networks,
-        third-party cookies blocked, Vercel edge partitioning). Rather
-        than debug those live, offer a one-click path to email/password
-        login. LoginView already handles the "come back with a session"
-        case; we return here after that.
-      -->
-      <p class="mt-2 text-center text-[11px] text-slate-500">
-        <router-link
-          to="/login"
-          class="font-semibold text-brand-cobalt hover:text-brand-dark-blue underline underline-offset-2"
-        >
-          {{ t('subscribe.form.emailFallback') }}
-        </router-link>
-      </p>
       <div class="mt-4 flex items-center gap-3">
         <div class="flex-1 h-px bg-slate-200" />
         <span class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">

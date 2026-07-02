@@ -234,26 +234,38 @@ function ensureInit(): Promise<void> {
         throw new Error('GIS not available after load');
       }
       if (!initialized) {
+        // GIS "redirect mode" — see App.vue's kg_token/kg_error hash
+        // handler for the return leg. Popup mode was silently failing
+        // on some Chrome M120+ environments due to COOP enforcement on
+        // the popup↔opener postMessage channel; redirect mode avoids
+        // that channel entirely by navigating the whole browser to
+        // Google and back.
+        //
+        // `state` carries the user's current path so the backend can
+        // 302 them back to it after auth. Query string preserved too
+        // so /subscribe?returnTo=... style flows keep their params.
+        // The backend guards against open-redirect by only accepting
+        // path-only `state` values.
+        const apiBase = ((import.meta.env.VITE_API_URL as string | undefined)
+          ?? 'http://localhost:8001/api').replace(/\/+$/, '');
         window.google.accounts.id.initialize({
           client_id: clientId,
+          // In redirect mode, `callback` only fires for the One Tap
+          // prompt path (which still uses FedCM below). The rendered
+          // button click goes through login_uri instead.
           callback: handleCredentialResponse,
-          ux_mode: 'popup',
+          ux_mode: 'redirect',
+          login_uri: `${apiBase}/auth/google-redirect`,
+          state: window.location.pathname + window.location.search,
           auto_select: false,
-          // Enable FedCM for the One Tap prompt path. Chrome M120+
-          // reports "Cross-Origin-Opener-Policy policy would block the
-          // window.postMessage call" warnings for the legacy postMessage
-          // channel — FedCM uses navigator.credentials.get() instead,
-          // which side-steps the popup ↔ opener message ping-pong that
-          // COOP inspects. GIS still falls back to the popup path for
-          // renderButton clicks when FedCM isn't offered (older Chrome,
-          // Safari, Firefox), so this is purely additive.
+          // Enable FedCM for the One Tap prompt path (independent of
+          // ux_mode). Chrome M120+ enforces COOP on the legacy
+          // postMessage channel that One Tap otherwise uses; FedCM
+          // uses navigator.credentials.get() and side-steps it.
           use_fedcm_for_prompt: true,
-          // Safari ITP (Intelligent Tracking Prevention) partitions
-          // third-party storage aggressively; without this hint GIS
-          // can lose the session cookie between the popup and the
-          // opener, silently failing the callback. Google's own docs
-          // recommend the flag whenever the site MIGHT be embedded in
-          // a partitioned context (Vercel edge domains sometimes are).
+          // Safari ITP partitions third-party storage aggressively;
+          // without this hint GIS can lose the session cookie between
+          // pages, silently failing. No-op on other browsers.
           itp_support: true,
         });
         initialized = true;
