@@ -29,7 +29,11 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
-import { SubscriptionBillingService } from '@/services/billing.service';
+import {
+  SubscriptionBillingService,
+  markTransferredByToken,
+  shareTokenFromUrl,
+} from '@/services/billing.service';
 import { useAuthStore } from '@/stores/auth';
 import { useTenant } from '@/composables/useTenant';
 import { useSubscription } from '@/composables/useSubscription';
@@ -135,6 +139,10 @@ type OrderSnapshot = {
   period: BillingPeriod;
   amount: number;
   gateway: 'midtrans' | 'bank_transfer_manual';
+  /** 48-char token from the backend share_url. Feeds the "sudah
+   *  transfer" CTA which calls /billing/public/transfer/{token}/
+   *  mark-transferred without needing an auth session. */
+  shareToken: string | null;
 };
 const orderSnapshot = ref<OrderSnapshot | null>(null);
 
@@ -142,6 +150,15 @@ const orderSnapshot = ref<OrderSnapshot | null>(null);
 // calculator/form so the visible transfer instructions can't
 // silently disagree with the amount stored in the backend.
 const orderLocked = computed(() => bankInfo.value !== null);
+
+// State machine for the "Sudah transfer" CTA. `submitting` while the
+// mark-transferred request is in flight; `notified` once the backend
+// confirms the sub is on the bendahara queue. The customer sees a
+// distinct thank-you card in the notified state so they know we
+// received their signal — separate from the "menunggu pembayaran"
+// kicker they were staring at a moment ago.
+const notifyingTransfer = ref(false);
+const transferNotified = ref(false);
 
 const { user } = storeToRefs(auth);
 
@@ -451,7 +468,9 @@ async function handleSubscribeResult(result: SubscribeResult) {
       period: calc.period,
       amount: result.bank_transfer_info.amount,
       gateway: 'bank_transfer_manual',
+      shareToken: shareTokenFromUrl(result.share_url),
     };
+    transferNotified.value = false;
     toast.success(t('subscribe.toast.bankInstructions'));
     // Scroll the instructions block into view so the user isn't left
     // wondering where the CTA disappeared to on tall screens.
@@ -479,8 +498,46 @@ async function handleSubscribeResult(result: SubscribeResult) {
 function onEditOrder() {
   bankInfo.value = null;
   orderSnapshot.value = null;
+  transferNotified.value = false;
   errorMessage.value = null;
   toast.info(t('subscribe.toast.orderEditing'));
+}
+
+/**
+ * Customer taps "Sudah transfer" — call the public mark-transferred
+ * endpoint using the share_token embedded in the create-subscription
+ * response. Backend has two rate-limits (5 req/min per IP, 1 successful
+ * flip per hour per token); a same-hour replay returns the current
+ * state silently, so we still flip the FE to the notified card if the
+ * request resolves without an axios error.
+ */
+async function onMarkTransferred() {
+  if (!orderSnapshot.value?.shareToken) {
+    // Older backend deployments don't emit share_url. Rather than
+    // stalling the user, tell them what to do and stay in the
+    // "menunggu pembayaran" state.
+    toast.info(t('subscribe.toast.markTransferredFallback'));
+    return;
+  }
+  if (notifyingTransfer.value) return;
+  notifyingTransfer.value = true;
+  try {
+    await markTransferredByToken(orderSnapshot.value.shareToken);
+    transferNotified.value = true;
+    toast.success(t('subscribe.toast.markTransferredOk'));
+    requestAnimationFrame(() => {
+      document
+        .getElementById('subscribe-order-summary')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  } catch (e) {
+    // 429 or 404 land here — surface as an inline error, not a modal,
+    // so the user can retry or hit "Ubah pesanan" if the token is
+    // genuinely stale.
+    errorMessage.value = (e as Error).message;
+  } finally {
+    notifyingTransfer.value = false;
+  }
 }
 
 function isValidEmail(s: string): boolean {
@@ -776,27 +833,72 @@ function onPickerClear() {
     <section
       v-if="orderLocked && bankInfo && orderSnapshot"
       id="subscribe-order-summary"
-      class="rounded-2xl border-2 border-amber-300 bg-amber-50/50 overflow-hidden shadow-sm"
+      class="rounded-2xl border-2 overflow-hidden shadow-sm transition-colors duration-300"
+      :class="transferNotified
+          ? 'border-emerald-300 bg-emerald-50/50'
+          : 'border-amber-300 bg-amber-50/50'"
     >
-      <header class="flex items-start gap-3 p-5 border-b border-amber-200 bg-amber-100/60">
-        <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-500 text-white grid place-items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-          </svg>
-        </div>
-        <div class="min-w-0 flex-1">
-          <p class="text-[10px] font-black uppercase tracking-widest text-amber-700">
-            {{ t('subscribe.orderStatus.kicker') }}
-          </p>
-          <h3 class="text-base font-bold text-amber-900 leading-tight mt-0.5">
-            {{ t('subscribe.orderStatus.title') }}
-          </h3>
-          <p class="text-[12px] text-amber-800/90 mt-1 leading-relaxed">
-            {{ t('subscribe.orderStatus.subtitle') }}
-          </p>
-        </div>
-      </header>
+      <!--
+        Header transforms once the customer taps "Sudah transfer":
+          - Amber "Menunggu pembayaran" clock → Emerald "Terima kasih!"
+            check icon that scales in from 90%. Copy explains verification
+            timeline so the customer isn't left wondering what happens next.
+        Transition is subtle (opacity + translate) so it doesn't feel
+        gaudy — the color swap alone is already a strong signal.
+      -->
+      <transition
+        enter-active-class="transition-all duration-300 ease-out"
+        leave-active-class="transition-all duration-200 ease-in"
+        enter-from-class="opacity-0 -translate-y-1"
+        leave-to-class="opacity-0 translate-y-1"
+        mode="out-in"
+      >
+        <header
+          v-if="!transferNotified"
+          key="pending"
+          class="flex items-start gap-3 p-5 border-b border-amber-200 bg-amber-100/60"
+        >
+          <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-500 text-white grid place-items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] font-black uppercase tracking-widest text-amber-700">
+              {{ t('subscribe.orderStatus.kicker') }}
+            </p>
+            <h3 class="text-base font-bold text-amber-900 leading-tight mt-0.5">
+              {{ t('subscribe.orderStatus.title') }}
+            </h3>
+            <p class="text-[12px] text-amber-800/90 mt-1 leading-relaxed">
+              {{ t('subscribe.orderStatus.subtitle') }}
+            </p>
+          </div>
+        </header>
+        <header
+          v-else
+          key="thanks"
+          class="flex items-start gap-3 p-5 border-b border-emerald-200 bg-emerald-100/60"
+        >
+          <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-500 text-white grid place-items-center animate-thanks-pop">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] font-black uppercase tracking-widest text-emerald-700">
+              {{ t('subscribe.orderStatus.thanksKicker') }}
+            </p>
+            <h3 class="text-base font-bold text-emerald-900 leading-tight mt-0.5">
+              {{ t('subscribe.orderStatus.thanksTitle') }}
+            </h3>
+            <p class="text-[12px] text-emerald-800/90 mt-1 leading-relaxed">
+              {{ t('subscribe.orderStatus.thanksSubtitle') }}
+            </p>
+          </div>
+        </header>
+      </transition>
 
       <div class="p-5 space-y-5">
         <!-- What the user ordered — visible at a glance -->
@@ -879,7 +981,66 @@ function onPickerClear() {
           </p>
         </div>
 
-        <!-- Actions: edit order, back to app -->
+        <!--
+          "Sudah transfer" CTA — the primary next action for the
+          customer while `!transferNotified`. After the click resolves
+          the whole card flips to the thanks state and this section
+          swaps for a soft confirmation strip so the user isn't tempted
+          to re-tap (backend rate-limits that to a silent no-op, but
+          suppressing the affordance is a nicer UX than a "you already
+          did this" hint).
+        -->
+        <transition
+          enter-active-class="transition-all duration-300 ease-out"
+          leave-active-class="transition-all duration-200 ease-in"
+          enter-from-class="opacity-0 scale-95"
+          leave-to-class="opacity-0 scale-95"
+          mode="out-in"
+        >
+          <div v-if="!transferNotified" key="cta" class="space-y-2">
+            <button
+              type="button"
+              class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white font-semibold px-4 py-3 text-sm shadow-sm transition-colors"
+              :disabled="notifyingTransfer"
+              @click="onMarkTransferred"
+            >
+              <svg v-if="notifyingTransfer" class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              {{ notifyingTransfer
+                  ? t('subscribe.orderStatus.markingTransferred')
+                  : t('subscribe.orderStatus.markTransferredCta') }}
+            </button>
+            <p class="text-[11px] text-slate-500 text-center leading-relaxed px-2">
+              {{ t('subscribe.orderStatus.markTransferredHint') }}
+            </p>
+          </div>
+          <div
+            v-else
+            key="confirmed"
+            class="rounded-xl border border-emerald-200 bg-white p-4 flex items-start gap-3"
+          >
+            <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 grid place-items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-[13px] font-bold text-emerald-900">
+                {{ t('subscribe.orderStatus.confirmedTitle') }}
+              </p>
+              <p class="mt-0.5 text-[11px] text-emerald-800/90 leading-relaxed">
+                {{ t('subscribe.orderStatus.confirmedSubtitle') }}
+              </p>
+            </div>
+          </div>
+        </transition>
+
+        <!-- Actions: edit order (only while unnotified), back to app -->
         <div class="flex flex-col sm:flex-row-reverse gap-2 pt-1">
           <RouterLink
             v-if="isAuthenticated"
@@ -889,6 +1050,7 @@ function onPickerClear() {
             {{ t('subscribe.orderStatus.backToAppCta') }}
           </RouterLink>
           <button
+            v-if="!transferNotified"
             type="button"
             class="inline-flex items-center justify-center rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-900 font-semibold px-4 py-2.5 text-sm transition-colors"
             @click="onEditOrder"
@@ -965,3 +1127,34 @@ function onPickerClear() {
     </main>
   </div>
 </template>
+
+<style scoped>
+/*
+  Tiny celebration for the "Terima kasih" check icon — a single pop
+  when the emerald header mounts. Kept scoped so no other check icon
+  on the page inherits this. We deliberately don't loop it: repeating
+  animation on a status card feels like an unfinished loading state.
+*/
+@keyframes thanks-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.animate-thanks-pop {
+  animation: thanks-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-thanks-pop {
+    animation: none;
+  }
+}
+</style>

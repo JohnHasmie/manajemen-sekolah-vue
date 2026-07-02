@@ -497,7 +497,47 @@ function parseSubscribeResult(raw: any): SubscribeResult {
           expires_at: bti?.expires_at ?? null,
         }
       : null,
+    share_url: raw?.share_url ?? null,
   };
+}
+
+/**
+ * POST /billing/public/transfer/{share_token}/mark-transferred
+ *
+ * Public endpoint (no auth) — the share_token is the credential. The
+ * backend advances pending_payment → awaiting_verify + is rate-limited
+ * at two layers (5 req/min per IP + 1 successful flip per hour per
+ * token). A same-hour replay is a silent no-op that returns the current
+ * state, so callers don't need to guard against double-clicks.
+ */
+export async function markTransferredByToken(
+  shareToken: string,
+): Promise<{ status: string; updated_at: string | null }> {
+  const res = await api.post(
+    `/billing/public/transfer/${encodeURIComponent(shareToken)}/mark-transferred`,
+  );
+  return {
+    status: String(res.data?.status ?? ''),
+    updated_at: res.data?.updated_at ?? null,
+  };
+}
+
+/**
+ * Extract the 48-char share_token from a `share_url` — the URL shape
+ * is `{frontend_url}/billing/transfer/{token}`, so the token is the
+ * last path segment. Returns null if the URL doesn't look right so
+ * the caller can short-circuit instead of firing a doomed request.
+ */
+export function shareTokenFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    const segments = u.pathname.split('/').filter(Boolean);
+    const last = segments[segments.length - 1] ?? '';
+    return last.length === 48 && /^[A-Za-z0-9]+$/.test(last) ? last : null;
+  } catch {
+    return null;
+  }
 }
 
 function parseMySubscription(raw: any): MySubscription {

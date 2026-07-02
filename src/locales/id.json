@@ -5726,7 +5726,15 @@
       "seatsLabel": "Jumlah seat",
       "amountLabel": "Total tagihan",
       "editCta": "Ubah pesanan",
-      "backToAppCta": "Kembali ke dashboard"
+      "backToAppCta": "Kembali ke dashboard",
+      "markTransferredCta": "Saya sudah transfer",
+      "markingTransferred": "Mengirim konfirmasi…",
+      "markTransferredHint": "Klik setelah Anda benar-benar sudah transfer. Tim kami akan mencocokkan dengan mutasi rekening dan mengaktifkan langganan.",
+      "thanksKicker": "Terima kasih!",
+      "thanksTitle": "Konfirmasi transfer Anda sudah kami terima",
+      "thanksSubtitle": "Tim keuangan akan mencocokkan dengan mutasi BSI dalam 1×24 jam kerja. Anda akan menerima email dan WhatsApp begitu langganan aktif — silakan lanjut ke dashboard, tidak perlu menunggu di halaman ini.",
+      "confirmedTitle": "Menunggu verifikasi tim keuangan",
+      "confirmedSubtitle": "Simpan kode referensi di atas kalau perlu ditanyakan ke customer support. Kami akan menghubungi Anda begitu langganan aktif."
     },
     "errors": {
       "tenantNameRequired": "Nama sekolah atau lembaga wajib diisi.",
@@ -5742,7 +5750,9 @@
       "error": "Pembayaran gagal. Silakan coba lagi.",
       "bankInstructions": "Instruksi transfer sudah kami tampilkan di halaman.",
       "orderPlaced": "Pesanan langganan berhasil dibuat.",
-      "orderEditing": "Silakan sesuaikan lagi. Klik \"Lanjut ke pembayaran\" untuk membuat pesanan baru dengan kode referensi baru."
+      "orderEditing": "Silakan sesuaikan lagi. Klik \"Lanjut ke pembayaran\" untuk membuat pesanan baru dengan kode referensi baru.",
+      "markTransferredOk": "Konfirmasi terkirim — tim kami akan memverifikasi.",
+      "markTransferredFallback": "Simpan kode referensi di kartu pesanan, tim kami akan verifikasi otomatis dari mutasi BSI."
     }
   }
 }

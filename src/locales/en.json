@@ -5730,7 +5730,15 @@
       "seatsLabel": "Seat count",
       "amountLabel": "Total due",
       "editCta": "Edit order",
-      "backToAppCta": "Back to dashboard"
+      "backToAppCta": "Back to dashboard",
+      "markTransferredCta": "I've transferred",
+      "markingTransferred": "Sending confirmation…",
+      "markTransferredHint": "Tap this after you've actually transferred. Our team will reconcile your transfer against the bank statement and activate your subscription.",
+      "thanksKicker": "Thank you!",
+      "thanksTitle": "We've received your transfer confirmation",
+      "thanksSubtitle": "Our finance team will reconcile it against the BSI statement within 1 business day. You'll get an email and WhatsApp the moment your subscription activates — feel free to head to the dashboard, no need to wait here.",
+      "confirmedTitle": "Awaiting finance team review",
+      "confirmedSubtitle": "Keep the reference code above in case customer support needs it. We'll reach out the moment your subscription is active."
     },
     "errors": {
       "tenantNameRequired": "School or institute name is required.",
@@ -5746,7 +5754,9 @@
       "error": "Payment failed. Please try again.",
       "bankInstructions": "Transfer instructions are displayed on the page.",
       "orderPlaced": "Subscription order placed.",
-      "orderEditing": "Feel free to adjust. Click \"Continue to payment\" to create a new order with a fresh reference code."
+      "orderEditing": "Feel free to adjust. Click \"Continue to payment\" to create a new order with a fresh reference code.",
+      "markTransferredOk": "Confirmation sent — our team will verify.",
+      "markTransferredFallback": "Keep the reference code on the order card; our team will still reconcile from the BSI statement."
     }
   }
 }

@@ -147,6 +147,13 @@ export interface SubscribeResult {
   snap_token?: string | null;
   snap_redirect_url?: string | null;
   bank_transfer_info?: ManualTransferInfo | null;
+  /**
+   * `bank_transfer_manual` only. Public share URL the backend mints:
+   *   {frontend_url}/billing/transfer/{share_token}
+   * We use it to derive the 48-char share_token — that token is the
+   * only identifier the public `mark-transferred` endpoint accepts.
+   */
+  share_url?: string | null;
 }
 
 /** GET /billing/my-subscription — used by the nav chip to decide visibility. */
