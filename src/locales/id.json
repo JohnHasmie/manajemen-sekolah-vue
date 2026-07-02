@@ -5699,7 +5699,12 @@
       "title": "Pembayaran melalui Midtrans Snap",
       "subtitle": "Aman dan langsung diverifikasi. Kanal pembayaran yang tersedia:",
       "manual": "Atau bayar via transfer bank manual",
-      "manualHint": "opsi cadangan"
+      "manualHint": "opsi cadangan",
+      "manualOnlyKicker": "Metode pembayaran",
+      "manualOnlyTitle": "Transfer bank manual",
+      "manualOnlyTransferTo": "Transfer ke ",
+      "manualOnlyAccountHolder": "atas nama",
+      "manualOnlyHint": "Setelah klik “Lanjut ke pembayaran”, kami tampilkan nomor referensi transfer. Bendahara kami akan verifikasi dalam 1×24 jam kerja."
     },
     "bank": {
       "title": "Instruksi transfer bank",

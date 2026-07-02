@@ -5703,7 +5703,12 @@
       "title": "Payment via Midtrans Snap",
       "subtitle": "Secure and instantly verified. Available payment channels:",
       "manual": "Or pay via manual bank transfer",
-      "manualHint": "backup option"
+      "manualHint": "backup option",
+      "manualOnlyKicker": "Payment method",
+      "manualOnlyTitle": "Manual bank transfer",
+      "manualOnlyTransferTo": "Transfer to ",
+      "manualOnlyAccountHolder": "under the name",
+      "manualOnlyHint": "After clicking “Continue to payment”, we'll show a reference number for the transfer. Our finance team verifies within 1×24 working hours."
     },
     "bank": {
       "title": "Bank transfer instructions",

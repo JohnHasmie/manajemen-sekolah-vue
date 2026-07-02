@@ -26,10 +26,25 @@ export interface PricingPlan {
   /** e.g. 20 for a 20% yearly discount. */
   yearly_discount_pct: number;
   /**
-   * Payment channels the backend + Midtrans setup accepts. Purely
-   * cosmetic on the client — real gating happens server-side.
+   * Top-level payment channels the backend is currently willing to
+   * accept. Server-side filtered: `midtrans` is DROPPED when the
+   * server has no Midtrans key configured, so an instance that only
+   * accepts manual transfers advertises `['bank_transfer_manual']`
+   * alone. FE uses this to decide whether to render the Midtrans
+   * option at all.
    */
   supported_gateways: string[];
+  /**
+   * Bank-transfer fallback info — used to render "Transfer ke X"
+   * upfront on /subscribe when manual is the only path. Kept
+   * optional because pre-!243 backends don't ship it; the FE
+   * shouldn't hard-fail on an older deployment.
+   */
+  bank_transfer?: {
+    bank_name: string;
+    account_number: string;
+    account_holder: string;
+  };
 }
 
 /** Tenant status shown in the demo picker + banner. */

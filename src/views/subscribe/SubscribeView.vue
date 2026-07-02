@@ -90,6 +90,25 @@ const submitting = ref(false);
 const errorMessage = ref<string | null>(null);
 const manualTransfer = ref(false);
 
+// Whether Midtrans is offered by THIS deployment (server sends the
+// filtered list on GET /billing/plans). When the deployment has no
+// Midtrans key configured, `midtrans` is missing from the list and
+// we force + lock the user onto manual transfer.
+const midtransAvailable = computed(
+  () => plan.value.supported_gateways.includes('midtrans'),
+);
+const manualOnly = computed(() => !midtransAvailable.value);
+// Auto-tick + lock manual when Midtrans isn't offered. Watching plan
+// covers the case where the plan payload arrives AFTER the component
+// mounted (network-slow first load).
+watch(
+  manualOnly,
+  (v) => {
+    if (v) manualTransfer.value = true;
+  },
+  { immediate: true },
+);
+
 // Wipe demo scenarios (dummy siswa/guru/sesi/tagihan) on activation.
 // Default TRUE: when the user picks an existing demo tenant, we assume
 // they want to start real operations from an empty tenant — that's the
@@ -750,12 +769,53 @@ function onPickerClear() {
       </p>
     </div>
 
-    <!-- ── Payment gateway strip ────────────────────────────────── -->
+    <!--
+      Payment gateway strip.
+      When Midtrans isn't offered by this deployment, the strip is
+      REPLACED by a compact "Metode pembayaran: transfer manual ke [X]"
+      panel so the user sees exactly how they'll pay upfront — no
+      confusing checkbox to tick, no Midtrans chips they can't use.
+    -->
     <PaymentGatewayStrip
+      v-if="!manualOnly"
       :supported-gateways="plan.supported_gateways"
       :manual-transfer="manualTransfer"
       @update:manualTransfer="manualTransfer = $event"
     />
+    <section
+      v-else
+      class="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5"
+    >
+      <div class="flex items-start gap-3">
+        <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-white text-slate-700 grid place-items-center border border-slate-200">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="7" width="18" height="12" rx="2" />
+            <path d="M3 11h18" />
+          </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-[11px] font-black uppercase tracking-widest text-slate-500">
+            {{ t('subscribe.gateway.manualOnlyKicker') }}
+          </p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">
+            {{ t('subscribe.gateway.manualOnlyTitle') }}
+          </p>
+          <p v-if="plan.bank_transfer" class="mt-2 text-[13px] text-slate-700">
+            <span>{{ t('subscribe.gateway.manualOnlyTransferTo') }}</span>
+            <span class="font-semibold">{{ plan.bank_transfer.bank_name }}</span>
+            <span> · </span>
+            <span class="font-mono font-semibold">{{ plan.bank_transfer.account_number }}</span>
+            <span class="block text-[12px] text-slate-500 mt-0.5">
+              {{ t('subscribe.gateway.manualOnlyAccountHolder') }}
+              <span class="text-slate-700 font-medium">{{ plan.bank_transfer.account_holder }}</span>
+            </span>
+          </p>
+          <p class="mt-2 text-[11px] text-slate-500 leading-relaxed">
+            {{ t('subscribe.gateway.manualOnlyHint') }}
+          </p>
+        </div>
+      </div>
+    </section>
 
     <!-- ── Multi-tenant picker modal ────────────────────────────── -->
     <DemoTenantPicker
