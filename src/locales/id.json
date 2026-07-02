@@ -5650,17 +5650,17 @@
       "featSharedSupport": "Dukungan WhatsApp dan email"
     },
     "banner": {
-      "title": "Sudah punya sekolah demo?",
-      "oneDetected": "Terdeteksi 1 akun demo: {name}. Data siswa dan personel akan dihitung otomatis.",
-      "manyDetected": "Terdeteksi {count} akun demo. Pilih salah satu untuk melanjutkan.",
+      "title": "Sudah punya sekolah/bimbel?",
+      "oneDetected": "Terdeteksi 1 akun Anda: {name}. Data siswa dan personel akan dihitung otomatis.",
+      "manyDetected": "Terdeteksi {count} akun Anda. Pilih salah satu untuk melanjutkan.",
       "useOne": "Gunakan {name}",
-      "choose": "Pilih akun demo",
-      "clear": "Batalkan pilihan demo",
+      "choose": "Pilih akun",
+      "clear": "Batalkan pilihan",
       "selectedCounts": "{students} siswa · {staff} guru/staf"
     },
     "picker": {
-      "title": "Pilih akun demo",
-      "subtitle": "Kami akan mengonversi akun yang dipilih menjadi langganan berbayar. Data siswa, guru, dan konfigurasi tetap utuh.",
+      "title": "Pilih akun",
+      "subtitle": "Kami akan mengaktifkan langganan pada akun yang dipilih. Data siswa, guru, dan konfigurasi tetap utuh.",
       "students": "siswa",
       "staff": "guru/staf",
       "tutors": "tutor/staf",
@@ -5676,7 +5676,7 @@
     "form": {
       "title": "Buat akun dan konfirmasi",
       "subtitleNew": "Kami akan membuat akun berlangganan sesuai jenis lembaga Anda.",
-      "subtitleExisting": "Anda tinggal konfirmasi metode pembayaran — data demo yang dipilih akan diaktivasi.",
+      "subtitleExisting": "Anda tinggal konfirmasi metode pembayaran — akun yang dipilih akan diaktifkan langganannya.",
       "divider": "atau",
       "signedInFallback": "Akun Anda",
       "googleError": "Login Google gagal dimuat. Coba lagi atau gunakan email.",

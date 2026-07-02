@@ -5654,17 +5654,17 @@
       "featSharedSupport": "WhatsApp and email support"
     },
     "banner": {
-      "title": "Already have a demo institution?",
-      "oneDetected": "Detected 1 demo account: {name}. Student and staff counts will be filled in automatically.",
-      "manyDetected": "Detected {count} demo accounts. Pick one to continue.",
+      "title": "Already have a school/tutoring institute?",
+      "oneDetected": "Detected 1 account: {name}. Student and staff counts will be filled in automatically.",
+      "manyDetected": "Detected {count} accounts. Pick one to continue.",
       "useOne": "Use {name}",
-      "choose": "Pick a demo account",
-      "clear": "Clear demo selection",
+      "choose": "Pick an account",
+      "clear": "Clear selection",
       "selectedCounts": "{students} students · {staff} teachers/staff"
     },
     "picker": {
-      "title": "Pick a demo account",
-      "subtitle": "We'll convert the selected account into a paid subscription. Student, staff, and configuration data stay intact.",
+      "title": "Pick an account",
+      "subtitle": "We'll activate the subscription on the chosen account. Student, staff, and configuration data stay intact.",
       "students": "students",
       "staff": "teacher/staff",
       "tutors": "tutor/staff",
@@ -5680,7 +5680,7 @@
     "form": {
       "title": "Create account and confirm",
       "subtitleNew": "We'll create a subscription account matching your institution type.",
-      "subtitleExisting": "Just confirm the payment method — your chosen demo data will be activated.",
+      "subtitleExisting": "Just confirm the payment method — the chosen account will have its subscription activated.",
       "divider": "or",
       "signedInFallback": "Your account",
       "googleError": "Google sign-in failed to load. Try again or use email.",
