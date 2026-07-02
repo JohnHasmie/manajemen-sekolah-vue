@@ -488,9 +488,12 @@ function parseSubscribeResult(raw: any): SubscribeResult {
       ? {
           bank_name: asStr(bti?.bank_name ?? bti?.bank, 'BANK'),
           account_number: asStr(bti?.account_number),
-          account_name: asStr(bti?.account_name),
+          // Backend emits `account_holder` (see CreateSubscriptionAction);
+          // fall through to legacy `account_name` for older deployments so
+          // this parser handles both shapes.
+          account_name: asStr(bti?.account_holder ?? bti?.account_name),
           amount: asNum(bti?.amount ?? raw?.amount),
-          reference: asStr(bti?.reference ?? raw?.order_id),
+          reference: asStr(bti?.reference ?? bti?.reference_code ?? raw?.order_id),
           expires_at: bti?.expires_at ?? null,
         }
       : null,
