@@ -171,25 +171,6 @@ const yearlyFreeMonths = computed(() => {
   return Math.round(raw * 10) / 10; // 1 decimal
 });
 
-const cardFeatures = computed(() => {
-  if (form.tenantType === 'bimbel') {
-    return [
-      t('subscribe.card.featBimbelSessions'),
-      t('subscribe.card.featBimbelPayouts'),
-      t('subscribe.card.featSharedAttendance'),
-      t('subscribe.card.featSharedAnnouncements'),
-      t('subscribe.card.featSharedSupport'),
-    ];
-  }
-  return [
-    t('subscribe.card.featSekolahReport'),
-    t('subscribe.card.featSekolahRapor'),
-    t('subscribe.card.featSharedAttendance'),
-    t('subscribe.card.featSharedAnnouncements'),
-    t('subscribe.card.featSharedSupport'),
-  ];
-});
-
 // ── Effects ──────────────────────────────────────────────────────────
 async function loadPlan() {
   planLoading.value = true;
@@ -567,14 +548,9 @@ function onPickerClear() {
           {{ money(monthlyAmount) }}
         </p>
         <p class="text-xs text-slate-500 mt-1">{{ t('subscribe.calc.perMonth') }}</p>
-        <ul class="mt-4 space-y-1.5 text-[13px] text-slate-700 flex-1">
-          <li v-for="(feat, i) in cardFeatures" :key="`m-${i}`" class="flex items-start gap-2">
-            <svg class="mt-0.5 flex-shrink-0 w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-            <span>{{ feat }}</span>
-          </li>
-        </ul>
+        <div class="flex-1 min-h-[24px]"></div>
         <Button
-          class="mt-5"
+          class="mt-6"
           :variant="calc.period === 'monthly' ? 'primary' : 'secondary'"
           block
           @click="calc.period = 'monthly'"
@@ -625,14 +601,9 @@ function onPickerClear() {
             · {{ t('subscribe.card.yearlyFreeMonths', { months: yearlyFreeMonths }) }}
           </span>
         </p>
-        <ul class="mt-4 space-y-1.5 text-[13px] text-slate-700 flex-1">
-          <li v-for="(feat, i) in cardFeatures" :key="`y-${i}`" class="flex items-start gap-2">
-            <svg class="mt-0.5 flex-shrink-0 w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-            <span>{{ feat }}</span>
-          </li>
-        </ul>
+        <div class="flex-1 min-h-[24px]"></div>
         <Button
-          class="mt-5"
+          class="mt-6"
           :variant="calc.period === 'yearly' ? 'primary' : 'secondary'"
           block
           @click="calc.period = 'yearly'"
