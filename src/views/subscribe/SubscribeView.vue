@@ -545,14 +545,19 @@ function onPickerClear() {
           ? 'border-2 border-brand-cobalt bg-brand-50/40 ring-4 ring-brand-cobalt/15 shadow-md'
           : 'border border-slate-200'"
       >
-        <!-- "TERPILIH" chip when selected — visual reinforcement so a
-             visitor scanning the two cards immediately spots which one
-             they're on. Same chip position/style as the yearly
-             "DIREKOMENDASIKAN" so the two feel symmetrical. -->
+        <!-- "TERPILIH" chip — semantically a STATE indicator (user's
+             current pick), so it uses emerald + a ✓ leading icon.
+             That distinguishes it from the persistent brand-cobalt
+             "DIREKOMENDASIKAN" label on the yearly card. Users can
+             now read the two chips at a glance: green ✓ = "aku pilih
+             ini", blue = "platform bilang ini paling worth it". -->
         <span
           v-if="calc.period === 'monthly'"
-          class="absolute -top-2.5 left-4 inline-flex items-center rounded-full bg-brand-cobalt text-white px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest shadow-sm"
+          class="absolute -top-2.5 left-4 inline-flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest shadow-sm"
         >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
           {{ t('subscribe.card.selected') }}
         </span>
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">
@@ -585,18 +590,25 @@ function onPickerClear() {
           ? 'bg-brand-50/40 ring-4 ring-brand-cobalt/15 shadow-md'
           : ''"
       >
-        <!-- Two chips side-by-side when selected: DIREKOMENDASIKAN
-             (permanent, so users always know this is the recommended
-             tier) + TERPILIH (only when active). Otherwise just the
-             recommendation chip. -->
+        <!-- Two chips side-by-side when selected:
+               - DIREKOMENDASIKAN — persistent brand-cobalt label,
+                 always present, means "platform recommends this
+                 tier".
+               - TERPILIH — emerald + ✓, only when active, means
+                 "user picked this".
+             Two visually distinct colors so the meaning of each is
+             obvious even when they sit next to each other. -->
         <span class="absolute -top-2.5 left-4 inline-flex items-center gap-1.5">
           <span class="inline-flex items-center rounded-full bg-brand-cobalt text-white px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest shadow-sm">
             {{ t('subscribe.card.recommended') }}
           </span>
           <span
             v-if="calc.period === 'yearly'"
-            class="inline-flex items-center rounded-full bg-emerald-500 text-white px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest shadow-sm"
+            class="inline-flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest shadow-sm"
           >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
             {{ t('subscribe.card.selected') }}
           </span>
         </span>
