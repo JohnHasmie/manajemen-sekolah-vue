@@ -5,11 +5,30 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import TenantBadge from '@/components/feature/TenantBadge.vue';
 
 const { t } = useI18n();
 const auth = useAuthStore();
+const router = useRouter();
+
+/**
+ * "Bukan akun Anda? Keluar" — must genuinely log out, not just pop
+ * back to the email/password form. The old handler called
+ * `auth.goBack()` which only reset `step` while leaving the token +
+ * user + schoolId in local storage; a subsequent page refresh had
+ * `restore()` re-hydrate them and the user landed back on the
+ * dashboard, defeating the purpose of the button.
+ *
+ * Route to /login explicitly after `auth.logout()` so we don't rely
+ * on the LoginView's mount reacting to the store reset — a hard
+ * navigate is what the user's mental model expects.
+ */
+async function handleLogout() {
+  await auth.logout();
+  await router.replace('/login');
+}
 
 const query = ref('');
 const candidateSchoolId = ref<string | null>(null);
@@ -203,8 +222,9 @@ async function handleConfirm() {
 
       <button
         type="button"
-        class="w-full text-center text-[12px] font-extrabold text-slate-500 hover:text-slate-800"
-        @click="auth.goBack()"
+        class="w-full text-center text-[12px] font-extrabold text-slate-500 hover:text-slate-800 disabled:opacity-60"
+        :disabled="auth.isLoading"
+        @click="handleLogout"
       >
         {{ t('auth.notYourAccountLogout') }}
       </button>
