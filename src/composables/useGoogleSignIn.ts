@@ -246,8 +246,41 @@ function ensureInit(): Promise<void> {
         // so /subscribe?returnTo=... style flows keep their params.
         // The backend guards against open-redirect by only accepting
         // path-only `state` values.
+        // login_uri resolution order — see the Google Cloud Console
+        // "Authorized redirect URIs" list; every value we emit here must
+        // be in it or Google returns `Error 400: redirect_uri_mismatch`.
+        //
+        //   1. `VITE_GOOGLE_LOGIN_URI` (preferred) — pin the exact URI in
+        //      the FE build. Set this once per deployment target and it
+        //      NEVER changes no matter how many times the backend is
+        //      redeployed. The right knob to reach for when the team has
+        //      a stable OAuth-callback subdomain (e.g. via nginx) that
+        //      shouldn't move with backend container churn.
+        //   2. Derive from `VITE_API_URL` — the historical behaviour, kept
+        //      as a fallback so the smaller repos + local dev checkouts
+        //      that never set the new var keep working. Downside: any
+        //      time VITE_API_URL rotates (e.g. testing against a fresh
+        //      ngrok tunnel) the URI changes too, which means re-adding
+        //      it to GCP each time.
+        //   3. Compile-time localhost default — last-resort dev fallback.
+        //
+        // If Google's error page reports a URI that doesn't match what
+        // this code sends, DevTools console will show the effective
+        // value (logged below) so you can compare against the GCP list.
+        const explicitLoginUri = (
+          import.meta.env.VITE_GOOGLE_LOGIN_URI as string | undefined
+        )?.trim();
         const apiBase = ((import.meta.env.VITE_API_URL as string | undefined)
           ?? 'http://localhost:8001/api').replace(/\/+$/, '');
+        const loginUri = explicitLoginUri && explicitLoginUri.length > 0
+          ? explicitLoginUri
+          : `${apiBase}/auth/google-redirect`;
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.info('[GIS] login_uri =', loginUri, {
+            source: explicitLoginUri ? 'VITE_GOOGLE_LOGIN_URI' : 'VITE_API_URL',
+          });
+        }
         window.google.accounts.id.initialize({
           client_id: clientId,
           // In redirect mode, `callback` only fires for the One Tap
@@ -255,7 +288,7 @@ function ensureInit(): Promise<void> {
           // button click goes through login_uri instead.
           callback: handleCredentialResponse,
           ux_mode: 'redirect',
-          login_uri: `${apiBase}/auth/google-redirect`,
+          login_uri: loginUri,
           state: window.location.pathname + window.location.search,
           auto_select: false,
           // Enable FedCM for the One Tap prompt path (independent of
