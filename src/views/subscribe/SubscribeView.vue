@@ -124,6 +124,25 @@ const wipeDemoData = ref(true);
 // account without losing context.
 const bankInfo = ref<ManualTransferInfo | null>(null);
 
+// Snapshot of the calculator state at the moment the pending order
+// was created. Used to render the "Pesanan Anda" summary while the
+// user waits to transfer — and to guarantee those numbers match
+// whatever we actually POSTed to /billing/subscribe even if the
+// backend's manual-transfer amount rounds differently for some plans.
+type OrderSnapshot = {
+  studentCount: number;
+  staffCount: number;
+  period: BillingPeriod;
+  amount: number;
+  gateway: 'midtrans' | 'bank_transfer_manual';
+};
+const orderSnapshot = ref<OrderSnapshot | null>(null);
+
+// True while a pending manual-transfer order is live. Locks the
+// calculator/form so the visible transfer instructions can't
+// silently disagree with the amount stored in the backend.
+const orderLocked = computed(() => bankInfo.value !== null);
+
 const { user } = storeToRefs(auth);
 
 // ── Derived ──────────────────────────────────────────────────────────
@@ -426,11 +445,42 @@ async function handleSubscribeResult(result: SubscribeResult) {
   // user sees the details right where they are and gets a toast reminder.
   if (result.bank_transfer_info) {
     bankInfo.value = result.bank_transfer_info;
+    orderSnapshot.value = {
+      studentCount: calc.studentCount,
+      staffCount: calc.staffCount,
+      period: calc.period,
+      amount: result.bank_transfer_info.amount,
+      gateway: 'bank_transfer_manual',
+    };
     toast.success(t('subscribe.toast.bankInstructions'));
+    // Scroll the instructions block into view so the user isn't left
+    // wondering where the CTA disappeared to on tall screens.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    requestAnimationFrame(() => {
+      document
+        .getElementById('subscribe-order-summary')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
     return;
   }
 
   toast.info(t('subscribe.toast.orderPlaced'));
+}
+
+/**
+ * Leave "order locked" mode: clear the bank instructions and let the
+ * user re-adjust the calculator. The previous pending order stays on
+ * the backend (it'll expire on its own) — we warn about that in the
+ * toast so the user knows a fresh reference code will be issued on
+ * the next submit. This is deliberately optimistic: doing a hard
+ * cancel would need a dedicated backend endpoint + a confirm dialog,
+ * which is overkill for a "typo in seat count" moment.
+ */
+function onEditOrder() {
+  bankInfo.value = null;
+  orderSnapshot.value = null;
+  errorMessage.value = null;
+  toast.info(t('subscribe.toast.orderEditing'));
 }
 
 function isValidEmail(s: string): boolean {
@@ -512,6 +562,7 @@ function onPickerClear() {
       :staff-count="calc.staffCount"
       :period="calc.period"
       :from-existing-tenant="usingExistingTenant"
+      :locked="orderLocked"
       @update:studentCount="calc.studentCount = $event"
       @update:staffCount="calc.staffCount = $event"
       @update:period="calc.period = $event"
@@ -553,6 +604,7 @@ function onPickerClear() {
           class="mt-6"
           :variant="calc.period === 'monthly' ? 'primary' : 'secondary'"
           block
+          :disabled="orderLocked"
           @click="calc.period = 'monthly'"
         >
           {{ t('subscribe.card.monthlyCta') }}
@@ -606,6 +658,7 @@ function onPickerClear() {
           class="mt-6"
           :variant="calc.period === 'yearly' ? 'primary' : 'secondary'"
           block
+          :disabled="orderLocked"
           @click="calc.period = 'yearly'"
         >
           {{ t('subscribe.card.yearlyCta') }}
@@ -615,7 +668,7 @@ function onPickerClear() {
 
     <!-- ── Existing demo banner ─────────────────────────────────── -->
     <div
-      v-if="isAuthenticated && hasTenants"
+      v-if="isAuthenticated && hasTenants && !orderLocked"
       class="rounded-xl border border-blue-200 bg-blue-50 p-4 sm:p-5"
     >
       <div class="flex items-start gap-3">
@@ -690,8 +743,9 @@ function onPickerClear() {
       </div>
     </div>
 
-    <!-- ── Signup / confirm card ────────────────────────────────── -->
+    <!-- ── Signup / confirm card (hidden after order placed) ────── -->
     <SubscribeSignupForm
+      v-if="!orderLocked"
       :is-authenticated="isAuthenticated"
       :using-existing-tenant="usingExistingTenant"
       :tenant-type="form.tenantType"
@@ -707,50 +761,147 @@ function onPickerClear() {
       @submit="onSubmit"
     />
 
-    <!-- ── Bank-transfer instructions (only after manual submit) ── -->
-    <div
-      v-if="bankInfo"
-      class="rounded-2xl border border-amber-200 bg-amber-50 p-5"
+    <!--
+      Order-status card — replaces the signup form once we've placed a
+      pending manual-transfer order. Holds three things:
+        1. A snapshot of what the user ordered (period, seats, amount)
+           so they can double-check before transferring.
+        2. Bank details + reference code, same info the amber block
+           used to show — folded in here so there's only one panel.
+        3. A prominent "Ubah pesanan" secondary CTA so a mistake in the
+           seat sliders doesn't dead-end the flow.
+      Rendered ABOVE the two pricing cards' section-order because it's
+      the primary "what do I do next?" surface once submitted.
+    -->
+    <section
+      v-if="orderLocked && bankInfo && orderSnapshot"
+      id="subscribe-order-summary"
+      class="rounded-2xl border-2 border-amber-300 bg-amber-50/50 overflow-hidden shadow-sm"
     >
-      <h3 class="text-sm font-bold text-amber-900">
-        {{ t('subscribe.bank.title') }}
-      </h3>
-      <dl class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
+      <header class="flex items-start gap-3 p-5 border-b border-amber-200 bg-amber-100/60">
+        <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-500 text-white grid place-items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-[10px] font-black uppercase tracking-widest text-amber-700">
+            {{ t('subscribe.orderStatus.kicker') }}
+          </p>
+          <h3 class="text-base font-bold text-amber-900 leading-tight mt-0.5">
+            {{ t('subscribe.orderStatus.title') }}
+          </h3>
+          <p class="text-[12px] text-amber-800/90 mt-1 leading-relaxed">
+            {{ t('subscribe.orderStatus.subtitle') }}
+          </p>
+        </div>
+      </header>
+
+      <div class="p-5 space-y-5">
+        <!-- What the user ordered — visible at a glance -->
+        <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-xl bg-white border border-amber-200 p-4">
+          <div>
+            <dt class="text-[10px] font-black uppercase tracking-widest text-slate-500">
+              {{ t('subscribe.orderStatus.planLabel') }}
+            </dt>
+            <dd class="mt-1 text-sm font-bold text-slate-900">
+              {{ orderSnapshot.period === 'yearly'
+                  ? t('subscribe.calc.yearly')
+                  : t('subscribe.calc.monthly') }}
+            </dd>
+          </div>
+          <div>
+            <dt class="text-[10px] font-black uppercase tracking-widest text-slate-500">
+              {{ t('subscribe.orderStatus.seatsLabel') }}
+            </dt>
+            <dd class="mt-1 text-sm font-semibold text-slate-900 tabular-nums leading-tight">
+              {{ orderSnapshot.studentCount }}
+              <span class="font-normal text-slate-500 text-xs">{{ t('subscribe.calc.unitStudent') }}</span>
+              <span class="text-slate-400"> · </span>
+              {{ orderSnapshot.staffCount }}
+              <span class="font-normal text-slate-500 text-xs">
+                {{ form.tenantType === 'bimbel'
+                    ? t('subscribe.calc.unitTutor')
+                    : t('subscribe.calc.unitStaff') }}
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-[10px] font-black uppercase tracking-widest text-slate-500">
+              {{ t('subscribe.orderStatus.amountLabel') }}
+            </dt>
+            <dd class="mt-1 text-lg font-black text-slate-900 tabular-nums leading-tight">
+              {{ money(orderSnapshot.amount) }}
+            </dd>
+          </div>
+        </dl>
+
+        <!-- Bank details block -->
         <div>
-          <dt class="text-amber-800/70 text-[11px] font-semibold uppercase tracking-wider">
-            {{ t('subscribe.bank.bank') }}
-          </dt>
-          <dd class="font-semibold text-amber-900">{{ bankInfo.bank_name }}</dd>
+          <h4 class="text-sm font-bold text-amber-900 mb-2">
+            {{ t('subscribe.bank.title') }}
+          </h4>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-[13px]">
+            <div>
+              <dt class="text-amber-800/70 text-[11px] font-semibold uppercase tracking-wider">
+                {{ t('subscribe.bank.bank') }}
+              </dt>
+              <dd class="font-semibold text-amber-900">{{ bankInfo.bank_name }}</dd>
+            </div>
+            <div>
+              <dt class="text-amber-800/70 text-[11px] font-semibold uppercase tracking-wider">
+                {{ t('subscribe.bank.account') }}
+              </dt>
+              <dd class="font-mono font-semibold text-amber-900">{{ bankInfo.account_number }}</dd>
+            </div>
+            <div>
+              <dt class="text-amber-800/70 text-[11px] font-semibold uppercase tracking-wider">
+                {{ t('subscribe.bank.name') }}
+              </dt>
+              <dd class="font-semibold text-amber-900">{{ bankInfo.account_name }}</dd>
+            </div>
+            <div>
+              <dt class="text-amber-800/70 text-[11px] font-semibold uppercase tracking-wider">
+                {{ t('subscribe.bank.amount') }}
+              </dt>
+              <dd class="font-bold text-amber-900 tabular-nums">{{ money(bankInfo.amount) }}</dd>
+            </div>
+            <div class="sm:col-span-2">
+              <dt class="text-amber-800/70 text-[11px] font-semibold uppercase tracking-wider">
+                {{ t('subscribe.bank.reference') }}
+              </dt>
+              <dd class="font-mono font-semibold text-amber-900">{{ bankInfo.reference }}</dd>
+            </div>
+          </dl>
+          <p class="mt-3 text-[12px] text-amber-800 leading-relaxed">
+            {{ t('subscribe.bank.hint') }}
+          </p>
         </div>
-        <div>
-          <dt class="text-amber-800/70 text-[11px] font-semibold uppercase tracking-wider">
-            {{ t('subscribe.bank.account') }}
-          </dt>
-          <dd class="font-mono font-semibold text-amber-900">{{ bankInfo.account_number }}</dd>
+
+        <!-- Actions: edit order, back to app -->
+        <div class="flex flex-col sm:flex-row-reverse gap-2 pt-1">
+          <RouterLink
+            v-if="isAuthenticated"
+            to="/"
+            class="inline-flex items-center justify-center rounded-lg bg-brand-cobalt hover:bg-brand-dark-blue text-white font-semibold px-4 py-2.5 text-sm transition-colors"
+          >
+            {{ t('subscribe.orderStatus.backToAppCta') }}
+          </RouterLink>
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-900 font-semibold px-4 py-2.5 text-sm transition-colors"
+            @click="onEditOrder"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="mr-1.5">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            {{ t('subscribe.orderStatus.editCta') }}
+          </button>
         </div>
-        <div>
-          <dt class="text-amber-800/70 text-[11px] font-semibold uppercase tracking-wider">
-            {{ t('subscribe.bank.name') }}
-          </dt>
-          <dd class="font-semibold text-amber-900">{{ bankInfo.account_name }}</dd>
-        </div>
-        <div>
-          <dt class="text-amber-800/70 text-[11px] font-semibold uppercase tracking-wider">
-            {{ t('subscribe.bank.amount') }}
-          </dt>
-          <dd class="font-bold text-amber-900 tabular-nums">{{ money(bankInfo.amount) }}</dd>
-        </div>
-        <div class="sm:col-span-2">
-          <dt class="text-amber-800/70 text-[11px] font-semibold uppercase tracking-wider">
-            {{ t('subscribe.bank.reference') }}
-          </dt>
-          <dd class="font-mono font-semibold text-amber-900">{{ bankInfo.reference }}</dd>
-        </div>
-      </dl>
-      <p class="mt-3 text-[12px] text-amber-800 leading-relaxed">
-        {{ t('subscribe.bank.hint') }}
-      </p>
-    </div>
+      </div>
+    </section>
 
     <!--
       Payment gateway strip.
@@ -758,15 +909,17 @@ function onPickerClear() {
       REPLACED by a compact "Metode pembayaran: transfer manual ke [X]"
       panel so the user sees exactly how they'll pay upfront — no
       confusing checkbox to tick, no Midtrans chips they can't use.
+      Hidden entirely once the order is locked — user is past choosing
+      a gateway at that point.
     -->
     <PaymentGatewayStrip
-      v-if="!manualOnly"
+      v-if="!manualOnly && !orderLocked"
       :supported-gateways="plan.supported_gateways"
       :manual-transfer="manualTransfer"
       @update:manualTransfer="manualTransfer = $event"
     />
     <section
-      v-else
+      v-else-if="manualOnly && !orderLocked"
       class="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5"
     >
       <div class="flex items-start gap-3">

@@ -5634,7 +5634,8 @@
       "yearlyDiscountLine": "Yearly discount ({pct}%)",
       "perMonth": "per month",
       "perYear": "per year",
-      "demoNote": "Numbers are pulled from your demo account's student and staff data. You can change them anytime."
+      "demoNote": "Numbers are pulled from your demo account's student and staff data. You can change them anytime.",
+      "lockedNotice": "Your order is pending payment. To change student or tutor counts, tap \"Edit order\" below."
     },
     "card": {
       "monthlyTitle": "Monthly",
@@ -5720,6 +5721,16 @@
       "reference": "Reference code",
       "hint": "Transfer exactly the amount shown. After transferring, our team will verify and activate your subscription within 24 hours."
     },
+    "orderStatus": {
+      "kicker": "Awaiting payment",
+      "title": "Your order is created",
+      "subtitle": "Transfer using the instructions below. If anything needs to change — student count, tutors, or the billing period — tap \"Edit order\" and resubmit for a fresh reference code.",
+      "planLabel": "Plan",
+      "seatsLabel": "Seat count",
+      "amountLabel": "Total due",
+      "editCta": "Edit order",
+      "backToAppCta": "Back to dashboard"
+    },
     "errors": {
       "tenantNameRequired": "School or institute name is required.",
       "whatsappRequired": "WhatsApp number is required.",
@@ -5733,7 +5744,8 @@
       "pending": "Payment awaiting bank confirmation.",
       "error": "Payment failed. Please try again.",
       "bankInstructions": "Transfer instructions are displayed on the page.",
-      "orderPlaced": "Subscription order placed."
+      "orderPlaced": "Subscription order placed.",
+      "orderEditing": "Feel free to adjust. Click \"Continue to payment\" to create a new order with a fresh reference code."
     }
   }
 }

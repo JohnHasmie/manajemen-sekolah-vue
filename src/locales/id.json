@@ -5630,7 +5630,8 @@
       "yearlyDiscountLine": "Diskon tahunan ({pct}%)",
       "perMonth": "per bulan",
       "perYear": "per tahun",
-      "demoNote": "Angka diambil dari data siswa dan personel di akun demo Anda. Anda bisa mengubahnya kapan saja."
+      "demoNote": "Angka diambil dari data siswa dan personel di akun demo Anda. Anda bisa mengubahnya kapan saja.",
+      "lockedNotice": "Pesanan Anda sedang menunggu pembayaran. Untuk mengubah jumlah siswa atau tutor, klik \"Ubah pesanan\" di bawah."
     },
     "card": {
       "monthlyTitle": "Bulanan",
@@ -5716,6 +5717,16 @@
       "reference": "Kode referensi",
       "hint": "Lakukan transfer dengan jumlah persis seperti tertera. Setelah transfer, tim kami akan memverifikasi dan mengaktifkan langganan dalam 1×24 jam."
     },
+    "orderStatus": {
+      "kicker": "Menunggu pembayaran",
+      "title": "Pesanan Anda sudah kami buat",
+      "subtitle": "Lakukan transfer sesuai instruksi di bawah. Jika ada yang perlu diubah — jumlah siswa, tutor, atau paket — klik \"Ubah pesanan\" dan submit ulang untuk mendapatkan kode referensi baru.",
+      "planLabel": "Paket",
+      "seatsLabel": "Jumlah seat",
+      "amountLabel": "Total tagihan",
+      "editCta": "Ubah pesanan",
+      "backToAppCta": "Kembali ke dashboard"
+    },
     "errors": {
       "tenantNameRequired": "Nama sekolah atau lembaga wajib diisi.",
       "whatsappRequired": "Nomor WhatsApp wajib diisi.",
@@ -5729,7 +5740,8 @@
       "pending": "Pembayaran menunggu konfirmasi bank.",
       "error": "Pembayaran gagal. Silakan coba lagi.",
       "bankInstructions": "Instruksi transfer sudah kami tampilkan di halaman.",
-      "orderPlaced": "Pesanan langganan berhasil dibuat."
+      "orderPlaced": "Pesanan langganan berhasil dibuat.",
+      "orderEditing": "Silakan sesuaikan lagi. Klik \"Lanjut ke pembayaran\" untuk membuat pesanan baru dengan kode referensi baru."
     }
   }
 }

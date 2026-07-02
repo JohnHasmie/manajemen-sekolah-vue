@@ -6,11 +6,24 @@
   the signup card + subscribe payload can read the same numbers. This
   component is pure UI + local formatting; it never calls the API.
 
-  Sliders:
-    - Siswa (0 - 2000, step 10, default 500)
-    - Guru/Tutor/Staf (0 - 200, step 1, default 30)
+  Sliders + custom inputs:
+    - Siswa: slider 0–2000 (step 10, default 500) + free-form number
+      input alongside that can go up to 100_000 (the backend's hard
+      max on `student_count`). When the typed value exceeds 2000 the
+      slider max grows to the current value so the thumb stays
+      draggable and stops feeling stuck at "2.000".
+    - Guru/Tutor/Staf: same shape, 0–200 slider (step 1, default 30),
+      input up to 100_000.
   Label swaps based on tenantType (sekolah → "Guru dan staf",
   bimbel → "Tutor dan staf").
+
+  Locked mode (`locked=true`):
+    - The user submitted and a pending bank-transfer order was
+      created upstream. Adjusting seats now WITHOUT explicitly
+      re-submitting would silently desync the calculator from the
+      amount printed on the transfer instructions, so we grey the
+      controls out. The parent shows an "Ubah pesanan" affordance to
+      leave locked mode.
 
   Toggle:
     - Bulanan (monthly)
@@ -38,6 +51,9 @@ const props = defineProps<{
    *  We don't disable the sliders — the user may want to project a
    *  higher usage — but the caption reflects the source. */
   fromExistingTenant: boolean;
+  /** Freeze the inputs after the user submitted and a pending order
+   *  was created. Parent unlocks via a dedicated "Ubah pesanan" flow. */
+  locked?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -45,6 +61,33 @@ const emit = defineEmits<{
   'update:staffCount': [number];
   'update:period': [BillingPeriod];
 }>();
+
+// Slider "typical" caps — most tenants sit under these, so we
+// keep the visual scale (0 → 2.000 / 0 → 200) meaningful.
+const STUDENT_SLIDER_BASE = 2000;
+const STAFF_SLIDER_BASE = 200;
+// Backend guardrail (CreateSubscriptionRequest validates
+// student_count/staff_count max=100000). Custom inputs cap here.
+const HARD_MAX = 100_000;
+
+/**
+ * Give the slider enough headroom to represent the current value.
+ * Without this the slider silently pins to 2.000 while the input
+ * shows 3.500 — user drags but sees no change.
+ */
+const studentSliderMax = computed(() =>
+  Math.max(STUDENT_SLIDER_BASE, props.studentCount || 0),
+);
+const staffSliderMax = computed(() =>
+  Math.max(STAFF_SLIDER_BASE, props.staffCount || 0),
+);
+
+function grouped(n: number): string {
+  return new Intl.NumberFormat('id-ID').format(n);
+}
+
+const studentSliderMaxLabel = computed(() => grouped(studentSliderMax.value));
+const staffSliderMaxLabel = computed(() => grouped(staffSliderMax.value));
 
 const { t } = useI18n();
 
@@ -93,14 +136,46 @@ const staffUnitLabel = computed(() =>
     : t('subscribe.calc.unitStaff'),
 );
 
+function clampCount(raw: number): number {
+  if (!Number.isFinite(raw)) return 0;
+  return Math.max(0, Math.min(HARD_MAX, Math.round(raw)));
+}
+
 function onSliderInput(kind: 'student' | 'staff', ev: Event) {
-  const v = Number((ev.target as HTMLInputElement).value);
-  if (!Number.isFinite(v)) return;
+  if (props.locked) return;
+  const v = clampCount(Number((ev.target as HTMLInputElement).value));
   if (kind === 'student') emit('update:studentCount', v);
   else emit('update:staffCount', v);
 }
 
+/**
+ * Number-input onInput handler. Uses valueAsNumber so an empty field
+ * reads back as NaN → collapses to 0 (rather than throwing the price
+ * to NaN → "Rp NaN"). Callers still see the raw input onscreen; the
+ * emitted value is what we commit to state.
+ */
+function onNumberInput(kind: 'student' | 'staff', ev: Event) {
+  if (props.locked) return;
+  const target = ev.target as HTMLInputElement;
+  const v = clampCount(target.valueAsNumber);
+  if (kind === 'student') emit('update:studentCount', v);
+  else emit('update:staffCount', v);
+}
+
+/**
+ * Rehydrate the input display when the user tabs out. If they had
+ * typed a value above HARD_MAX, the emitted state was already
+ * clamped — pushing that clamped value back into the DOM makes the
+ * ceiling visible.
+ */
+function onNumberBlur(kind: 'student' | 'staff', ev: Event) {
+  const target = ev.target as HTMLInputElement;
+  const committed = kind === 'student' ? props.studentCount : props.staffCount;
+  target.value = String(committed);
+}
+
 function setPeriod(p: BillingPeriod) {
+  if (props.locked) return;
   if (p !== props.period) emit('update:period', p);
 }
 </script>
@@ -109,10 +184,14 @@ function setPeriod(p: BillingPeriod) {
   <section class="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
     <!-- Toggle: Bulanan / Tahunan -->
     <div class="flex items-center justify-center mb-5">
-      <div class="inline-flex rounded-full bg-slate-100 p-1">
+      <div
+        class="inline-flex rounded-full bg-slate-100 p-1"
+        :class="locked ? 'opacity-60 pointer-events-none' : ''"
+      >
         <button
           type="button"
-          class="px-4 py-1.5 rounded-full text-sm font-semibold transition-colors"
+          :disabled="locked"
+          class="px-4 py-1.5 rounded-full text-sm font-semibold transition-colors disabled:cursor-not-allowed"
           :class="period === 'monthly'
             ? 'bg-white text-slate-900 shadow-sm'
             : 'text-slate-500 hover:text-slate-700'"
@@ -122,7 +201,8 @@ function setPeriod(p: BillingPeriod) {
         </button>
         <button
           type="button"
-          class="relative px-4 py-1.5 rounded-full text-sm font-semibold transition-colors"
+          :disabled="locked"
+          class="relative px-4 py-1.5 rounded-full text-sm font-semibold transition-colors disabled:cursor-not-allowed"
           :class="period === 'yearly'
             ? 'bg-white text-slate-900 shadow-sm'
             : 'text-slate-500 hover:text-slate-700'"
@@ -147,62 +227,90 @@ function setPeriod(p: BillingPeriod) {
       </h2>
     </header>
 
-    <!-- Sliders -->
-    <div class="space-y-5">
+    <!-- Sliders + custom number input -->
+    <div class="space-y-5" :class="locked ? 'opacity-60 pointer-events-none select-none' : ''">
       <div>
-        <div class="flex items-baseline justify-between mb-1.5">
+        <div class="flex items-center justify-between gap-3 mb-1.5">
           <label class="text-sm font-semibold text-slate-800">
             {{ t('subscribe.calc.studentLabel') }}
           </label>
-          <span class="text-sm font-bold text-slate-900 tabular-nums">
-            {{ studentCount }}
-            <span class="text-xs font-normal text-slate-500 ml-1">
+          <div class="flex items-center gap-2">
+            <input
+              type="number"
+              min="0"
+              :max="HARD_MAX"
+              step="1"
+              inputmode="numeric"
+              :value="studentCount"
+              :disabled="locked"
+              class="w-24 rounded-lg border border-slate-300 px-2.5 py-1 text-sm font-bold text-slate-900 tabular-nums text-right focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/20 focus:outline-none disabled:bg-slate-50 disabled:cursor-not-allowed"
+              @input="onNumberInput('student', $event)"
+              @blur="onNumberBlur('student', $event)"
+            />
+            <span class="text-xs text-slate-500">
               {{ t('subscribe.calc.unitStudent') }}
             </span>
-          </span>
+          </div>
         </div>
         <input
           type="range"
           min="0"
-          max="2000"
+          :max="studentSliderMax"
           step="10"
           :value="studentCount"
-          class="w-full accent-brand-cobalt"
+          :disabled="locked"
+          class="w-full accent-brand-cobalt disabled:cursor-not-allowed"
           @input="onSliderInput('student', $event)"
         />
         <div class="mt-1 flex justify-between text-[10px] text-slate-400">
           <span>0</span>
-          <span>2.000</span>
+          <span>{{ studentSliderMaxLabel }}</span>
         </div>
       </div>
 
       <div>
-        <div class="flex items-baseline justify-between mb-1.5">
+        <div class="flex items-center justify-between gap-3 mb-1.5">
           <label class="text-sm font-semibold text-slate-800">
             {{ staffLabel }}
           </label>
-          <span class="text-sm font-bold text-slate-900 tabular-nums">
-            {{ staffCount }}
-            <span class="text-xs font-normal text-slate-500 ml-1">
+          <div class="flex items-center gap-2">
+            <input
+              type="number"
+              min="0"
+              :max="HARD_MAX"
+              step="1"
+              inputmode="numeric"
+              :value="staffCount"
+              :disabled="locked"
+              class="w-24 rounded-lg border border-slate-300 px-2.5 py-1 text-sm font-bold text-slate-900 tabular-nums text-right focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/20 focus:outline-none disabled:bg-slate-50 disabled:cursor-not-allowed"
+              @input="onNumberInput('staff', $event)"
+              @blur="onNumberBlur('staff', $event)"
+            />
+            <span class="text-xs text-slate-500">
               {{ staffUnitLabel }}
             </span>
-          </span>
+          </div>
         </div>
         <input
           type="range"
           min="0"
-          max="200"
+          :max="staffSliderMax"
           step="1"
           :value="staffCount"
-          class="w-full accent-brand-cobalt"
+          :disabled="locked"
+          class="w-full accent-brand-cobalt disabled:cursor-not-allowed"
           @input="onSliderInput('staff', $event)"
         />
         <div class="mt-1 flex justify-between text-[10px] text-slate-400">
           <span>0</span>
-          <span>200</span>
+          <span>{{ staffSliderMaxLabel }}</span>
         </div>
       </div>
     </div>
+
+    <p v-if="locked" class="mt-3 text-[11px] text-slate-500 leading-relaxed">
+      {{ t('subscribe.calc.lockedNotice') }}
+    </p>
 
     <!-- Bottom split: TAGIHAN AKTIF · RINCIAN -->
     <div class="mt-6 grid grid-cols-1 md:grid-cols-2 rounded-xl border border-slate-200 overflow-hidden">
