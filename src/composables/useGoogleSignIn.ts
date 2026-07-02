@@ -239,10 +239,22 @@ function ensureInit(): Promise<void> {
           callback: handleCredentialResponse,
           ux_mode: 'popup',
           auto_select: false,
-          // Do NOT force FedCM-only; keep the legacy popup path available
-          // so the rendered-button click reliably opens the chooser even
-          // when FedCM is disabled by the browser/user.
-          use_fedcm_for_prompt: false,
+          // Enable FedCM for the One Tap prompt path. Chrome M120+
+          // reports "Cross-Origin-Opener-Policy policy would block the
+          // window.postMessage call" warnings for the legacy postMessage
+          // channel — FedCM uses navigator.credentials.get() instead,
+          // which side-steps the popup ↔ opener message ping-pong that
+          // COOP inspects. GIS still falls back to the popup path for
+          // renderButton clicks when FedCM isn't offered (older Chrome,
+          // Safari, Firefox), so this is purely additive.
+          use_fedcm_for_prompt: true,
+          // Safari ITP (Intelligent Tracking Prevention) partitions
+          // third-party storage aggressively; without this hint GIS
+          // can lose the session cookie between the popup and the
+          // opener, silently failing the callback. Google's own docs
+          // recommend the flag whenever the site MIGHT be embedded in
+          // a partitioned context (Vercel edge domains sometimes are).
+          itp_support: true,
         });
         initialized = true;
       }

@@ -5681,6 +5681,7 @@
       "signedInFallback": "Akun Anda",
       "googleError": "Login Google gagal dimuat. Coba lagi atau gunakan email.",
       "googleInAppBrowser": "Buka halaman ini di Chrome atau Safari untuk masuk dengan Google.",
+      "emailFallback": "Kesulitan dengan Google? Masuk pakai email/password →",
       "tenantTypeLabel": "Jenis lembaga",
       "tenantTypeSekolah": "Sekolah",
       "tenantTypeSekolahHint": "SD, SMP, SMA, SMK",

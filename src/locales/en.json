@@ -5685,6 +5685,7 @@
       "signedInFallback": "Your account",
       "googleError": "Google sign-in failed to load. Try again or use email.",
       "googleInAppBrowser": "Open this page in Chrome or Safari to sign in with Google.",
+      "emailFallback": "Trouble with Google? Sign in with email/password →",
       "tenantTypeLabel": "Institution type",
       "tenantTypeSekolah": "School",
       "tenantTypeSekolahHint": "Elementary, Middle, High, Vocational",
