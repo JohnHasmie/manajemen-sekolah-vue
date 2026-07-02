@@ -81,7 +81,8 @@ export interface QuoteRequest {
   tenant_type: TenantType;
   student_count: number;
   staff_count: number;
-  period: BillingPeriod;
+  // Wire name is `plan` — backend's SubscriptionPlan enum uses this key.
+  plan: BillingPeriod;
 }
 
 /** Quote response — used to confirm the amount before checkout. */
@@ -102,7 +103,9 @@ export interface SubscriptionQuote {
 export interface SubscribeRequest {
   tenant_id?: string;
   tenant_type: TenantType;
-  period: BillingPeriod;
+  // Wire name is `plan` — CreateSubscriptionRequest validates it under
+  // that key against SubscriptionPlan::values() (['monthly', 'yearly']).
+  plan: BillingPeriod;
   student_count: number;
   staff_count: number;
   gateway: 'midtrans' | 'bank_transfer_manual';

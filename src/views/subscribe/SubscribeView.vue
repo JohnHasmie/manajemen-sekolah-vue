@@ -352,7 +352,7 @@ async function onSubmit() {
     const result = await SubscriptionBillingService.subscribe({
       tenant_id: selectedTenantId.value ?? undefined,
       tenant_type: form.tenantType,
-      period: calc.period,
+      plan: calc.period,
       student_count: calc.studentCount,
       staff_count: calc.staffCount,
       gateway,
