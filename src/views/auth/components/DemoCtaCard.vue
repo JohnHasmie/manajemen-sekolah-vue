@@ -53,6 +53,19 @@ onMounted(async () => {
   }
 });
 
+// Flag the demo intent BEFORE Google's popup opens. Called on the
+// container's `pointerdown` (which fires even when the actual click
+// target is the cross-origin GIS iframe), so the flag is set by the
+// time `handleCredentialResponse` runs the router-branch check.
+// Idempotent — safe to call multiple times.
+function flagDemoIntent(): void {
+  try {
+    sessionStorage.setItem('demo_intent_v1', '1');
+  } catch {
+    // sessionStorage may throw in private mode; non-fatal.
+  }
+}
+
 // Copy the current URL so a user stuck in an in-app browser (Threads/IG/…)
 // can paste it into a real browser where Google sign-in / demo works.
 const linkCopied = ref(false);
@@ -124,13 +137,23 @@ async function copyCurrentLink() {
     </div>
 
     <!-- Real Google Sign-In button. Clicking it opens the account
-         chooser and runs the demo/login flow. -->
+         chooser and runs the demo/login flow.
+
+         Intent is flagged on `pointerdown` on the container — that
+         fires BEFORE Google's popup opens, unlike
+         `flagIntentFromFocusedGisButton()` which reads
+         `document.activeElement` at CALLBACK time (after the popup
+         closes `activeElement` is often `body` again, so the flag
+         never gets set and the user with existing schools falls
+         through to SchoolPicker instead of /register-demo). The
+         composable's activeElement fallback stays as belt+braces. -->
     <div v-else-if="google.isEnabled.value" class="flex justify-center min-h-[44px]">
       <div
         v-show="google.isReady.value"
         ref="googleButtonRef"
         class="w-full flex justify-center"
         data-google-intent="demo"
+        @pointerdown="flagDemoIntent"
       />
       <!-- Loading state while the GIS script loads -->
       <div
