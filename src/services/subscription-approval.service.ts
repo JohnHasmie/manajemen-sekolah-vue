@@ -63,7 +63,18 @@ export const SubscriptionApprovalService = {
         },
       });
       const body = res.data ?? {};
-      const items: PendingApproval[] = Array.isArray(body.data) ? body.data : [];
+      // Defensive parse: older backend deployments (pre the
+      // pending_payment-inclusion patch) don't emit `status` or
+      // `is_claimed`. Default them here so the FE is forward and
+      // backward compatible during the rollout window.
+      const items: PendingApproval[] = Array.isArray(body.data)
+        ? body.data.map((r: Partial<PendingApproval>) => ({
+            ...r,
+            status: r.status ?? 'awaiting_verify',
+            is_claimed:
+              r.is_claimed ?? (r.status ?? 'awaiting_verify') === 'awaiting_verify',
+          } as PendingApproval))
+        : [];
       const meta: PendingApprovalMeta = body.meta ?? {
         current_page: 1,
         last_page: 1,
