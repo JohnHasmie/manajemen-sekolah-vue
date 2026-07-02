@@ -234,15 +234,17 @@
     "demo": {
       "new": "Baru",
       "newToKamilEdu": "Baru di KamilEdu?",
-      "title": "Buat Demo dengan Google",
-      "description": "Coba semua fitur — guru, jadwal, nilai, tagihan — dengan data realistis. Bisa hapus kapan saja.",
+      "title": "Coba demo gratis",
+      "description": "Cobain semua fitur — guru, jadwal, nilai, tagihan — pakai data contoh. Bisa dihapus kapan saja.",
       "createButton": "Buat demo gratis",
       "twoMinSetup": "Setup 2 menit",
       "googleSignIn": "Login Google",
       "noCardRequired": "Tanpa kartu",
       "googleNotConfigured": "Login Google belum dikonfigurasi di server ini. Hubungi admin.",
       "googleInAppBrowser": "Buat demo pakai Google tidak bisa dari browser dalam-aplikasi (mis. Threads/Instagram). Buka halaman ini di Chrome/Safari.",
-      "clickGoogleButton": "Klik tombol Google di atas untuk lanjut membuat demo."
+      "clickGoogleButton": "Klik tombol Google di atas untuk lanjut membuat demo.",
+      "startCta": "Mulai daftar demo",
+      "trialDays": "Gratis {days} hari"
     },
     "errors": {
       "emailRequired": "Email wajib diisi.",

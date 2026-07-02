@@ -1,82 +1,22 @@
 <!--
-  DemoCtaCard.vue — "Buat sekolah demo" prompt on the login screen.
-  Variant A from the wireframe: tinted card with kicker + title +
-  benefit chips + a REAL Google Sign-In button.
+  DemoCtaCard.vue — "Coba demo gratis" prompt on the login screen.
 
-  ── Why a real GIS button (not a custom button) ──────────────────────
-  The demo wizard requires an authenticated user, so the CTA must sign
-  the user in with Google first. The backend requires a Google id_token
-  (GoogleLoginRequest → `id_token` required), which means the GIS
-  id_token flow — and GIS only emits that token from a button the user
-  clicks DIRECTLY. A custom button that proxies a synthetic `.click()`
-  to a hidden GIS button is silently ignored by GIS (its rendered button
-  only honours trusted, user-initiated clicks) — that was the previous
-  "nothing happens on click" bug. So we render the actual GIS button
-  here and let the user click it.
-
-  On callback (shared `handleCredentialResponse` in useGoogleSignIn):
-    - Brand-new Google user with no schools → backend returns
-      `dapat_buat_demo: true` → auth store routes to /register-demo.
-    - User who already has schools → normal login → dashboard.
+  Simplified to a plain "Daftar Demo" button. The Google login on this
+  card conflicted with the top-of-form Google login and often landed
+  multi-tenant users on the SchoolPicker for their existing tenants
+  instead of the demo path they wanted. Now this button just routes to
+  /register-demo — the wizard itself asks for Google identity at its
+  Data Diri step where the context makes the ask obvious.
 -->
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useGoogleSignIn } from '@/composables/useGoogleSignIn';
+import { useRouter } from 'vue-router';
 
 const { t } = useI18n();
-const google = useGoogleSignIn();
+const router = useRouter();
 
-const googleButtonRef = ref<HTMLDivElement | null>(null);
-
-// Render the real Google button into the card. The user clicks it
-// directly, which opens Google's account-chooser popup and yields an
-// id_token via the composable's shared callback.
-//
-// Intent is communicated to the shared callback via the
-// `data-google-intent="demo"` attribute on the container (see template).
-// When the user clicks the GIS button, focus moves into its iframe; the
-// composable reads `document.activeElement.closest('[data-google-intent]')`
-// and sets the demo flag for the post-auth router branch. This works
-// around the fact that GIS renders its button inside a cross-origin
-// iframe — DOM click listeners on the outer container never fire.
-onMounted(async () => {
-  if (!google.isEnabled.value) return;
-  if (googleButtonRef.value) {
-    await google.mountButton(googleButtonRef.value, {
-      theme: 'filled_blue',
-      text: 'continue_with',
-      width: googleButtonRef.value.clientWidth || 320,
-    });
-  } else {
-    await google.ensureReady();
-  }
-});
-
-// Flag the demo intent BEFORE Google's popup opens. Called on the
-// container's `pointerdown` (which fires even when the actual click
-// target is the cross-origin GIS iframe), so the flag is set by the
-// time `handleCredentialResponse` runs the router-branch check.
-// Idempotent — safe to call multiple times.
-function flagDemoIntent(): void {
-  try {
-    sessionStorage.setItem('demo_intent_v1', '1');
-  } catch {
-    // sessionStorage may throw in private mode; non-fatal.
-  }
-}
-
-// Copy the current URL so a user stuck in an in-app browser (Threads/IG/…)
-// can paste it into a real browser where Google sign-in / demo works.
-const linkCopied = ref(false);
-async function copyCurrentLink() {
-  try {
-    await navigator.clipboard.writeText(window.location.href);
-    linkCopied.value = true;
-    setTimeout(() => { linkCopied.value = false; }, 2000);
-  } catch {
-    // Clipboard may be blocked in the webview; the URL is still in the bar.
-  }
+function goToWizard() {
+  router.push({ path: '/register-demo', query: { intent: 'demo' } });
 }
 </script>
 
@@ -102,6 +42,7 @@ async function copyCurrentLink() {
         stroke-linecap="round"
         stroke-linejoin="round"
         class="text-brand-cobalt"
+        aria-hidden="true"
       >
         <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z" />
       </svg>
@@ -117,76 +58,32 @@ async function copyCurrentLink() {
       {{ t('auth.demo.description') }}
     </p>
 
-    <!-- In-app browser (Threads/IG/FB/…) OR GIS failed to load: creating a
-         demo needs Google sign-in, which can't work here. Tell the user to
-         open in a real browser + offer a copy-link. -->
-    <div
-      v-if="google.isInAppBrowser.value || google.error.value === 'GIS_LOAD_FAILED'"
-      class="w-full rounded-lg border-2 border-dashed border-amber-300 bg-amber-50 py-2.5 px-3 text-center text-[11px] font-bold text-amber-800 leading-relaxed"
+    <button
+      type="button"
+      class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-brand-cobalt hover:bg-brand-dark-blue text-white font-bold text-[13px] py-2.5 shadow-sm transition-colors"
+      @click="goToWizard"
     >
-      <p>{{ google.isInAppBrowser.value ? t('auth.demo.googleInAppBrowser') : t('auth.googleLoadFailed') }}</p>
-      <button
-        v-if="google.isInAppBrowser.value"
-        type="button"
-        class="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-white border border-amber-300 px-2.5 py-1.5 text-[10.5px] font-extrabold text-amber-900 hover:bg-amber-100 transition-colors"
-        @click="copyCurrentLink"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-        {{ linkCopied ? t('auth.linkCopied') : t('auth.copyLink') }}
-      </button>
-    </div>
-
-    <!-- Real Google Sign-In button. Clicking it opens the account
-         chooser and runs the demo/login flow.
-
-         Intent is flagged on `pointerdown` on the container — that
-         fires BEFORE Google's popup opens, unlike
-         `flagIntentFromFocusedGisButton()` which reads
-         `document.activeElement` at CALLBACK time (after the popup
-         closes `activeElement` is often `body` again, so the flag
-         never gets set and the user with existing schools falls
-         through to SchoolPicker instead of /register-demo). The
-         composable's activeElement fallback stays as belt+braces. -->
-    <div v-else-if="google.isEnabled.value" class="flex justify-center min-h-[44px]">
-      <div
-        v-show="google.isReady.value"
-        ref="googleButtonRef"
-        class="w-full flex justify-center"
-        data-google-intent="demo"
-        @pointerdown="flagDemoIntent"
-      />
-      <!-- Loading state while the GIS script loads -->
-      <div
-        v-if="!google.isReady.value"
-        class="w-full rounded-lg border-2 border-brand-dark-blue/30 bg-white/60 py-2.5 flex items-center justify-center gap-3 animate-pulse"
-      >
-        <div class="w-3.5 h-3.5 rounded-full bg-brand-dark-blue/20"></div>
-        <span class="text-[11px] font-extrabold text-brand-dark-blue/50 uppercase tracking-widest">{{ t('auth.loadingGoogle') }}</span>
-      </div>
-    </div>
-
-    <!-- Fallback when Google isn't configured (no VITE_GOOGLE_CLIENT_ID). -->
-    <div
-      v-else
-      class="w-full rounded-lg border-2 border-dashed border-slate-300 bg-white/60 py-2.5 px-3 text-center text-[11px] font-bold text-slate-500"
-    >
-      {{ t('auth.demo.googleNotConfigured') }}
-    </div>
+      {{ t('auth.demo.startCta') }}
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M5 12h14" />
+        <path d="m12 5 7 7-7 7" />
+      </svg>
+    </button>
 
     <div class="mt-2.5 flex items-center justify-center gap-2 flex-wrap text-[10px] text-slate-500">
       <span class="inline-flex items-center gap-1">
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
         {{ t('auth.demo.twoMinSetup') }}
       </span>
       <span class="text-slate-300">·</span>
       <span class="inline-flex items-center gap-1">
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        {{ t('auth.demo.googleSignIn') }}
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        {{ t('auth.demo.noCardRequired') }}
       </span>
       <span class="text-slate-300">·</span>
       <span class="inline-flex items-center gap-1">
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        {{ t('auth.demo.noCardRequired') }}
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        {{ t('auth.demo.trialDays', { days: 7 }) }}
       </span>
     </div>
   </div>

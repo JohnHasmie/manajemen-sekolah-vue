@@ -237,15 +237,17 @@
     "demo": {
       "new": "New",
       "newToKamilEdu": "New to KamilEdu?",
-      "title": "Create Demo with Google",
-      "description": "Try all features — teachers, schedules, grades, billing — with realistic data. Delete anytime.",
+      "title": "Try a free demo",
+      "description": "Play with every feature — teachers, schedules, grades, billing — using sample data. Delete anytime.",
       "createButton": "Create free demo",
       "twoMinSetup": "2 minute setup",
       "googleSignIn": "Google sign-in",
       "noCardRequired": "No card required",
       "googleNotConfigured": "Google sign-in isn't configured. Please contact admin.",
       "googleInAppBrowser": "Creating a demo with Google doesn't work in in-app browsers (e.g. Threads/Instagram). Open this page in Chrome/Safari.",
-      "clickGoogleButton": "Click the Google button above to continue creating a demo."
+      "clickGoogleButton": "Click the Google button above to continue creating a demo.",
+      "startCta": "Start demo signup",
+      "trialDays": "{days}-day trial"
     },
     "errors": {
       "emailRequired": "Email is required.",
