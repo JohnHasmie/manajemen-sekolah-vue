@@ -237,15 +237,17 @@
     "demo": {
       "new": "New",
       "newToKamilEdu": "New to KamilEdu?",
-      "title": "Create Demo with Google",
-      "description": "Try all features — teachers, schedules, grades, billing — with realistic data. Delete anytime.",
+      "title": "Try a free demo",
+      "description": "Play with every feature — teachers, schedules, grades, billing — using sample data. Delete anytime.",
       "createButton": "Create free demo",
       "twoMinSetup": "2 minute setup",
       "googleSignIn": "Google sign-in",
       "noCardRequired": "No card required",
       "googleNotConfigured": "Google sign-in isn't configured. Please contact admin.",
       "googleInAppBrowser": "Creating a demo with Google doesn't work in in-app browsers (e.g. Threads/Instagram). Open this page in Chrome/Safari.",
-      "clickGoogleButton": "Click the Google button above to continue creating a demo."
+      "clickGoogleButton": "Click the Google button above to continue creating a demo.",
+      "startCta": "Start demo signup",
+      "trialDays": "{days}-day trial"
     },
     "errors": {
       "emailRequired": "Email is required.",
@@ -2896,6 +2898,14 @@
     "step1Bullet2": "Check your school first — don't duplicate",
     "step1Bullet3": "Accounts for admin, teacher, and parent — can try all",
     "step1Bullet4": "Can continue later — progress saved",
+    "googleGateKicker": "Sign in first",
+    "googleGateTitle": "Sign in with Google to start",
+    "googleGateSubtitle": "We need your email so we can send you the activation link and verification updates. Once you're signed in, the wizard picks up here.",
+    "googleGateFootnote": "We only take your email and name from Google — nothing else.",
+    "signedInKicker": "Signed in as",
+    "signedInAnon": "Your Google account",
+    "signInRequiredTitle": "Sign in with Google first",
+    "signInRequiredMsg": "Tap the Google button above to sign in. The wizard continues once you're in.",
     "step2Label": "School",
     "step2Title": "Search your school first",
     "step2Subtitle": "Select level, then check the name — to avoid duplication with real or other demo schools.",
@@ -5830,7 +5840,9 @@
       "thanksTitle": "We've received your transfer confirmation",
       "thanksSubtitle": "Our finance team will reconcile it against the BSI statement within 1 business day. You'll get an email and WhatsApp the moment your subscription activates — feel free to head to the dashboard, no need to wait here.",
       "confirmedTitle": "Awaiting finance team review",
-      "confirmedSubtitle": "Keep the reference code above in case customer support needs it. We'll reach out the moment your subscription is active."
+      "confirmedSubtitle": "Keep the reference code above in case customer support needs it. We'll reach out the moment your subscription is active.",
+      "expiredAwaitTitle": "Waiting for admin confirmation",
+      "expiredAwaitBody": "Your demo has ended, so the dashboard stays locked until our team verifies your transfer and reactivates the subscription. Hang tight — we'll email + WhatsApp the moment your account is active again."
     },
     "errors": {
       "tenantNameRequired": "School or institute name is required.",
@@ -5851,9 +5863,9 @@
       "markTransferredFallback": "Keep the reference code on the order card; our team will still reconcile from the BSI statement."
     },
     "wizardCta": {
-      "kicker": "First time signing up?",
-      "body": "We have a guided 5-step flow to collect your school/institute profile, admin contact, and scale — all with autosave.",
-      "action": "Use subscription wizard"
+      "kicker": "New to KamilEdu?",
+      "body": "We'll walk you through 5 short steps — school or institute profile, admin contact, and the plan that fits. Your entries save on their own, safe to pick up later.",
+      "action": "Start the guide"
     }
   }
 }

@@ -681,6 +681,12 @@ export const useAuthStore = defineStore('auth', {
      */
     async hydrateSchoolsRoles() {
       if (!this.token || !this.user) return;
+      // Bail while the user is still on the multi-tenant picker: none of
+      // the tenant-scoped follow-ups (school/settings, teacher profile,
+      // etc.) will succeed without a chosen schoolId, and firing them
+      // now just triggers noisy 401s on marketing routes like /subscribe
+      // that the user was legitimately routed to post-Google-return.
+      if (this.step === 'school' || this.step === 'role') return;
       try {
         const isTeacherLike =
           this.activeRole === 'guru' ||

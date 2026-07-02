@@ -170,6 +170,14 @@ const selectedTenant = computed<SubscriptionTenant | null>(() =>
 const usingExistingTenant = computed(() => !!selectedTenant.value);
 const hasTenants = computed(() => myTenants.value.length > 0);
 
+// True when the picked tenant is a demo whose trial has already lapsed.
+// Drives the post-transfer "wait for admin" panel — the dashboard would
+// 403 them until the sub is verified & activated, so we don't offer the
+// "Kembali ke dashboard" CTA in that state.
+const isDemoExpired = computed(
+  () => selectedTenant.value?.subscription_status === 'expired',
+);
+
 const bannerText = computed(() => {
   const n = myTenants.value.length;
   if (n === 1) {
@@ -1066,16 +1074,16 @@ function onPickerClear() {
         <!--
           Actions row.
 
-          - `!transferNotified`: original two-button row — "Ubah pesanan"
-            (secondary, amber-tinted) + "Kembali ke dashboard" (primary
-            cobalt). Two options because the user still has choices
-            here (finish transferring, or bail out and re-edit).
-          - `transferNotified`: the "next action" is unambiguous — go
-            back to the app and wait for the activation email. Promote
-            "Kembali ke dashboard" to a big full-width emerald CTA (same
-            palette as the thanks card so it reads as the continuation
-            of that motion) and drop the secondary — nothing else makes
-            sense at that point.
+          - `!transferNotified` (menunggu pembayaran): only "Ubah
+            pesanan". No "Kembali ke dashboard" here — the order is
+            still pending; walking away would strand the user with
+            an unconfirmed transfer. Force them to either finish
+            (click "Saya sudah transfer") or edit + resubmit.
+          - `transferNotified` (transfer sudah diklaim): promote
+            "Kembali ke dashboard" to a big full-width emerald CTA
+            (same palette as the thanks card so it reads as the
+            continuation of that motion). Nothing else makes sense
+            at that point.
         -->
         <transition
           enter-active-class="transition-all duration-300 ease-out"
@@ -1086,16 +1094,9 @@ function onPickerClear() {
         >
           <div
             v-if="!transferNotified"
-            key="two-actions"
-            class="flex flex-col sm:flex-row-reverse gap-2 pt-1"
+            key="edit-only"
+            class="flex justify-end pt-1"
           >
-            <RouterLink
-              v-if="isAuthenticated"
-              to="/"
-              class="inline-flex items-center justify-center rounded-lg bg-brand-cobalt hover:bg-brand-dark-blue text-white font-semibold px-4 py-2.5 text-sm transition-colors"
-            >
-              {{ t('subscribe.orderStatus.backToAppCta') }}
-            </RouterLink>
             <button
               type="button"
               class="inline-flex items-center justify-center rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-900 font-semibold px-4 py-2.5 text-sm transition-colors"
@@ -1108,9 +1109,36 @@ function onPickerClear() {
               {{ t('subscribe.orderStatus.editCta') }}
             </button>
           </div>
+          <!--
+            Expired-demo path: the dashboard is inaccessible until an
+            admin verifies the transfer and flips the sub to active, so
+            surfacing a "Kembali ke dashboard" CTA would just lead the
+            user to a locked screen. Show a waiting-for-confirmation
+            panel instead — same emerald palette so it reads as the
+            same "we've got you" moment, just without the false-affordance
+            button.
+          -->
+          <div
+            v-else-if="isDemoExpired"
+            key="await-admin-confirmation"
+            class="mt-1 w-full rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-start gap-3"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5 text-emerald-700">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <div class="min-w-0 flex-1">
+              <p class="text-[13px] font-bold text-emerald-900">
+                {{ t('subscribe.orderStatus.expiredAwaitTitle') }}
+              </p>
+              <p class="mt-0.5 text-[11px] text-emerald-800/90 leading-relaxed">
+                {{ t('subscribe.orderStatus.expiredAwaitBody') }}
+              </p>
+            </div>
+          </div>
           <RouterLink
             v-else-if="isAuthenticated"
-            key="one-action"
+            key="back-to-dashboard"
             to="/"
             class="mt-1 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-3 text-sm shadow-sm transition-colors"
           >

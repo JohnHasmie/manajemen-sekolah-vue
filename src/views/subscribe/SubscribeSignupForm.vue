@@ -84,6 +84,20 @@ async function mountGoogleButton() {
   });
 }
 
+// GIS in redirect mode navigates the whole browser away the instant
+// the user clicks the button — before any credential callback runs.
+// That means `flagIntentFromFocusedGisButton()` in the composable never
+// gets a chance to write `subscribe_intent_v1` for a rendered-button
+// click. Do it here on pointerdown instead, so App.vue's post-hydration
+// router can route the user back to /subscribe instead of the picker.
+function flagSubscribeIntent(): void {
+  try {
+    sessionStorage.setItem('subscribe_intent_v1', '1');
+  } catch {
+    /* private mode — non-fatal */
+  }
+}
+
 onMounted(() => {
   if (showGoogle.value) mountGoogleButton();
 });
@@ -147,7 +161,9 @@ const canSubmit = computed(() => {
     <div v-if="showGoogle" class="mb-4">
       <div
         ref="googleContainer"
+        data-google-intent="subscribe"
         class="w-full flex justify-center min-h-[42px]"
+        @pointerdown="flagSubscribeIntent"
       />
       <p v-if="google.error.value" class="mt-2 text-[11px] text-rose-600 text-center">
         {{ google.error.value === 'IN_APP_BROWSER'

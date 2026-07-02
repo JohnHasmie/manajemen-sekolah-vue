@@ -205,10 +205,26 @@ function buildClient(
         storage.remove(StorageKeys.schoolId);
         storage.remove(StorageKeys.role);
 
-        if (
-          typeof window !== 'undefined' &&
-          window.location.pathname !== '/login'
-        ) {
+        // Do NOT yank the user off marketing / self-serve routes on a
+        // background 401 — /subscribe, /register-demo, and /login are
+        // meant to render in an unauthenticated state anyway, so a stale
+        // token being rejected mid-flow (e.g. hydrateSchoolsRoles firing
+        // a tenant-scoped call while the user is still at step='school'
+        // on the multi-tenant Google-return path) should just clear the
+        // token silently — not do a full-page navigation that pulls the
+        // user off the page they intentionally landed on.
+        const PUBLIC_PREFIXES = [
+          '/login',
+          '/subscribe',
+          '/register-demo',
+        ] as const;
+        const pathname =
+          typeof window !== 'undefined' ? window.location.pathname : '';
+        const onPublicRoute = PUBLIC_PREFIXES.some(
+          (p) => pathname === p || pathname.startsWith(p + '/'),
+        );
+
+        if (typeof window !== 'undefined' && !onPublicRoute) {
           window.location.assign(
             '/login?reason=Sesi+Anda+telah+berakhir.+Silakan+masuk+kembali.',
           );

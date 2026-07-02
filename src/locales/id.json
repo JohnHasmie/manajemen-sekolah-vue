@@ -234,15 +234,17 @@
     "demo": {
       "new": "Baru",
       "newToKamilEdu": "Baru di KamilEdu?",
-      "title": "Buat Demo dengan Google",
-      "description": "Coba semua fitur — guru, jadwal, nilai, tagihan — dengan data realistis. Bisa hapus kapan saja.",
+      "title": "Coba demo gratis",
+      "description": "Cobain semua fitur — guru, jadwal, nilai, tagihan — pakai data contoh. Bisa dihapus kapan saja.",
       "createButton": "Buat demo gratis",
       "twoMinSetup": "Setup 2 menit",
       "googleSignIn": "Login Google",
       "noCardRequired": "Tanpa kartu",
       "googleNotConfigured": "Login Google belum dikonfigurasi di server ini. Hubungi admin.",
       "googleInAppBrowser": "Buat demo pakai Google tidak bisa dari browser dalam-aplikasi (mis. Threads/Instagram). Buka halaman ini di Chrome/Safari.",
-      "clickGoogleButton": "Klik tombol Google di atas untuk lanjut membuat demo."
+      "clickGoogleButton": "Klik tombol Google di atas untuk lanjut membuat demo.",
+      "startCta": "Mulai daftar demo",
+      "trialDays": "Gratis {days} hari"
     },
     "errors": {
       "emailRequired": "Email wajib diisi.",
@@ -2892,6 +2894,14 @@
     "step1Bullet2": "Cek dulu sekolah Anda — jangan sampai dobel",
     "step1Bullet3": "Akun untuk admin, guru, dan wali — bisa coba semua",
     "step1Bullet4": "Bisa lanjut nanti — progress tersimpan",
+    "googleGateKicker": "Wajib login dulu",
+    "googleGateTitle": "Masuk dengan Google untuk mulai",
+    "googleGateSubtitle": "Kami perlu email Anda supaya bisa kirim tautan aktivasi dan info verifikasi. Setelah masuk, wizard bisa dilanjutkan.",
+    "googleGateFootnote": "Kami cuma pakai email dan nama dari Google — tidak ada yang lain.",
+    "signedInKicker": "Masuk sebagai",
+    "signedInAnon": "Akun Google Anda",
+    "signInRequiredTitle": "Masuk dulu dengan Google",
+    "signInRequiredMsg": "Klik tombol Google di atas untuk masuk. Wizard baru bisa lanjut setelah Anda masuk.",
     "step2Label": "Sekolah",
     "step2Title": "Cari sekolah Anda dulu",
     "step2Subtitle": "Pilih jenjang, lalu cek nama — supaya tidak dobel dengan sekolah asli atau demo lain.",
@@ -5826,7 +5836,9 @@
       "thanksTitle": "Konfirmasi transfer Anda sudah kami terima",
       "thanksSubtitle": "Tim keuangan akan mencocokkan dengan mutasi BSI dalam 1×24 jam kerja. Anda akan menerima email dan WhatsApp begitu langganan aktif — silakan lanjut ke dashboard, tidak perlu menunggu di halaman ini.",
       "confirmedTitle": "Menunggu verifikasi tim keuangan",
-      "confirmedSubtitle": "Simpan kode referensi di atas kalau perlu ditanyakan ke customer support. Kami akan menghubungi Anda begitu langganan aktif."
+      "confirmedSubtitle": "Simpan kode referensi di atas kalau perlu ditanyakan ke customer support. Kami akan menghubungi Anda begitu langganan aktif.",
+      "expiredAwaitTitle": "Menunggu konfirmasi admin",
+      "expiredAwaitBody": "Masa demo Anda sudah berakhir, jadi dashboard baru bisa dibuka setelah tim kami memverifikasi transfer dan mengaktifkan langganan. Silakan tunggu — kami akan mengirim email & WhatsApp begitu akun aktif kembali."
     },
     "errors": {
       "tenantNameRequired": "Nama sekolah atau lembaga wajib diisi.",
@@ -5847,9 +5859,9 @@
       "markTransferredFallback": "Simpan kode referensi di kartu pesanan, tim kami akan verifikasi otomatis dari mutasi BSI."
     },
     "wizardCta": {
-      "kicker": "Baru pertama daftar?",
-      "body": "Kami punya alur terpandu 5-langkah untuk mengumpulkan profil sekolah/lembaga, kontak admin, dan skala paket sekaligus. Draft-nya otomatis tersimpan.",
-      "action": "Pakai wizard berlangganan"
+      "kicker": "Baru mau berlangganan?",
+      "body": "Kami temani lewat 5 langkah singkat — mulai dari profil sekolah atau lembaga, kontak admin, sampai memilih paket yang pas. Isian Anda tersimpan sendiri, aman kalau harus lanjut nanti.",
+      "action": "Mulai panduan"
     }
   }
 }

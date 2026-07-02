@@ -93,17 +93,42 @@ onMounted(async () => {
         // onMounted handles the same case as a fallback, but a
         // direct route here avoids a flash of the picker.
         if (auth.step === 'school') {
-          let demoIntent = false;
-          try {
-            demoIntent = sessionStorage.getItem('demo_intent_v1') === '1';
-          } catch {
-            /* private mode — fall through to picker */
-          }
-          if (demoIntent) {
+          // If Google brought us back to a self-serve marketing route
+          // (/subscribe, /subscribe/new, /register-demo, …), just stay
+          // put. Those pages handle their own multi-tenant flow — they
+          // don't need the /login picker. This is the ground-truth
+          // signal (we're literally on that URL right now) so it can't
+          // desync from sessionStorage flags or GIS state races.
+          const path = window.location.pathname;
+          const staysOnPage =
+            path === '/subscribe' ||
+            path.startsWith('/subscribe/') ||
+            path === '/register-demo' ||
+            path.startsWith('/register-demo/');
+
+          if (staysOnPage) {
+            // Clear any lingering intent flags so a future visit to
+            // /login (fresh session) doesn't misroute on them.
             try { sessionStorage.removeItem('demo_intent_v1'); } catch { /* non-fatal */ }
-            await router.replace('/register-demo');
+            try { sessionStorage.removeItem('subscribe_intent_v1'); } catch { /* non-fatal */ }
           } else {
-            await router.replace('/login');
+            let demoIntent = false;
+            let subscribeIntent = false;
+            try {
+              demoIntent = sessionStorage.getItem('demo_intent_v1') === '1';
+              subscribeIntent = sessionStorage.getItem('subscribe_intent_v1') === '1';
+            } catch {
+              /* private mode — fall through to picker */
+            }
+            if (demoIntent) {
+              try { sessionStorage.removeItem('demo_intent_v1'); } catch { /* non-fatal */ }
+              await router.replace('/register-demo');
+            } else if (subscribeIntent) {
+              try { sessionStorage.removeItem('subscribe_intent_v1'); } catch { /* non-fatal */ }
+              await router.replace('/subscribe');
+            } else {
+              await router.replace('/login');
+            }
           }
         }
       } catch (err) {

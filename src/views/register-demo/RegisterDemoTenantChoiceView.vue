@@ -91,7 +91,7 @@ function pick(t: 'school' | 'tutoring') {
           </div>
           <div class="text-left">
             <div class="text-sm font-bold text-slate-900 leading-tight">KamilEdu</div>
-            <div class="text-[10px] text-slate-500 font-medium">Coba demo gratis 30 hari</div>
+            <div class="text-[10px] text-slate-500 font-medium">Coba demo gratis 7 hari</div>
           </div>
         </button>
         <div class="flex items-center gap-4">
@@ -111,14 +111,14 @@ function pick(t: 'school' | 'tutoring') {
       <div class="w-full max-w-4xl">
         <div class="text-center mb-10">
           <p class="text-[11px] font-black tracking-[0.3em] uppercase text-brand-cobalt mb-3">
-            Coba dulu · gratis 30 hari
+            Coba dulu · gratis 7 hari
           </p>
           <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-3">
             Apa yang ingin Anda kelola?
           </h1>
           <p class="text-sm sm:text-base text-slate-500 max-w-xl mx-auto leading-relaxed">
             Kami siapkan demo dengan data dummy yang relevan sesuai jenis lembaga Anda —
-            <strong class="text-slate-700 font-semibold">gratis 30 hari</strong>, tanpa kartu kredit,
+            <strong class="text-slate-700 font-semibold">gratis 7 hari</strong>, tanpa kartu kredit,
             bisa langsung diuji tanpa setup manual.
           </p>
         </div>
@@ -145,7 +145,7 @@ function pick(t: 'school' | 'tutoring') {
               @click="pick('school')"
             >
               <span class="absolute top-3 right-3 text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md">
-                Gratis 30 hari
+                Gratis 7 hari
               </span>
               <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 grid place-items-center mb-4">
                 <NavIcon name="building" :size="22" />
@@ -185,7 +185,7 @@ function pick(t: 'school' | 'tutoring') {
             >
               <span class="absolute top-3 right-3 flex items-center gap-1.5">
                 <span class="text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md">
-                  Gratis 30 hari
+                  Gratis 7 hari
                 </span>
                 <span class="text-[10px] font-black uppercase tracking-widest bg-brand-cobalt text-white px-2 py-0.5 rounded-md">
                   Baru
