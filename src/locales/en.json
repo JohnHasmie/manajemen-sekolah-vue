@@ -5622,6 +5622,79 @@
       }
     }
   },
+  "subscribeNew": {
+    "nav": {
+      "hasExisting": "Have a demo? Subscribe via the legacy page →",
+      "back": "Back",
+      "next": "Next",
+      "submit": "Place order & review payment"
+    },
+    "stepIndicator": "Step {current} of {total}",
+    "steps": {
+      "type": "Type",
+      "profile": "Profile",
+      "contact": "Contact",
+      "scale": "Scale & plan",
+      "pay": "Pay"
+    },
+    "step1": {
+      "title": "School or tutoring institute?",
+      "subtitle": "Pick the type that fits — we tailor the layout, terminology, and features. Your choice can differ from other tenants you manage.",
+      "sekolahTitle": "Formal school",
+      "sekolahDesc": "SD · SMP · SMA · SMK · MI/MTs/MA. Homeroom teachers, classrooms, subjects, report cards.",
+      "bimbelTitle": "Tutoring institute",
+      "bimbelDesc": "Bimbel, courses, tutoring. Programs, tutor sessions, per-package billing."
+    },
+    "step2": {
+      "titleSekolah": "School profile",
+      "titleBimbel": "Institute profile",
+      "subtitle": "Only the name is required. The rest speeds up setup — you can fill it later from settings.",
+      "nameLabelSekolah": "School name",
+      "nameLabelBimbel": "Institute name",
+      "namePlaceholderSekolah": "SMP Tunas Bangsa",
+      "namePlaceholderBimbel": "Bimbel Cendekia",
+      "educationLevel": "Education level",
+      "city": "City",
+      "cityPlaceholder": "Bandung",
+      "address": "Address",
+      "addressPlaceholder": "Jl. Merdeka No. 42",
+      "npsn": "NPSN",
+      "npsnHint": "No NPSN yet? Leave it blank — you can add it later.",
+      "optional": "optional"
+    },
+    "step3": {
+      "title": "Person in charge",
+      "subtitle": "We send the activation link, invoice, and payment receipt here. Can be the school admin or IT operator.",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Your full name",
+      "jobTitle": "Job title",
+      "jobTitlePlaceholder": "Vice Principal · Principal · Operator",
+      "whatsapp": "WhatsApp",
+      "adminEmail": "Admin email",
+      "footNote": "The admin email becomes your first login. Sign in with Google or via email + OTP."
+    },
+    "step4": {
+      "title": "Scale and subscription plan",
+      "subtitle": "Estimated student and staff counts at activation. You can adjust later from settings once real data is in."
+    },
+    "step5": {
+      "title": "Review order & payment method",
+      "subtitle": "Once payment is verified, your tenant is active — with no seed sample data.",
+      "tenantNameSekolah": "School name",
+      "tenantNameBimbel": "Institute name",
+      "admin": "Admin",
+      "package": "Plan",
+      "seats": "Scale",
+      "savings": "save {amount}",
+      "totalDue": "Total due",
+      "seedNoteLabel": "Initial data",
+      "seedNote": "Empty — ready for real students and staff. No sample seed data.",
+      "methodKicker": "Payment method",
+      "methodTitle": "Manual bank transfer",
+      "methodHint": "After you place the order we'll show a reference number for the transfer. Finance team verifies within 1×24 working hours after you tap \"I've transferred\".",
+      "termsAgree": "I agree to the KamilEdu terms & privacy policy."
+    }
+  },
   "subscribe": {
     "nav": {
       "chipLabel": "Subscribe",
@@ -5776,6 +5849,11 @@
       "orderEditing": "Feel free to adjust. Click \"Continue to payment\" to create a new order with a fresh reference code.",
       "markTransferredOk": "Confirmation sent — our team will verify.",
       "markTransferredFallback": "Keep the reference code on the order card; our team will still reconcile from the BSI statement."
+    },
+    "wizardCta": {
+      "kicker": "First time signing up?",
+      "body": "We have a guided 5-step flow to collect your school/institute profile, admin contact, and scale — all with autosave.",
+      "action": "Use subscription wizard"
     }
   }
 }

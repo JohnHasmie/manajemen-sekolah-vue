@@ -5618,6 +5618,79 @@
       }
     }
   },
+  "subscribeNew": {
+    "nav": {
+      "hasExisting": "Punya demo? Berlangganan lewat halaman lama →",
+      "back": "Kembali",
+      "next": "Lanjut",
+      "submit": "Buat pesanan & tinjau pembayaran"
+    },
+    "stepIndicator": "Langkah {current} dari {total}",
+    "steps": {
+      "type": "Jenis",
+      "profile": "Profil",
+      "contact": "Penanggung jawab",
+      "scale": "Skala & paket",
+      "pay": "Bayar"
+    },
+    "step1": {
+      "title": "Sekolah atau lembaga bimbingan belajar?",
+      "subtitle": "Pilih jenis yang cocok — kami sesuaikan tampilan, istilah, dan fitur. Pilihan ini bisa berbeda dengan tenant lain yang Anda kelola.",
+      "sekolahTitle": "Sekolah formal",
+      "sekolahDesc": "SD · SMP · SMA · SMK · MI/MTs/MA. Wali kelas, rombel, mata pelajaran, rapor per semester.",
+      "bimbelTitle": "Bimbel / lembaga bimbingan",
+      "bimbelDesc": "Bimbel, kursus, tutoring. Program, sesi tutor, tagihan per paket."
+    },
+    "step2": {
+      "titleSekolah": "Profil sekolah",
+      "titleBimbel": "Profil lembaga",
+      "subtitle": "Nama wajib. Sisanya untuk mempercepat setup — bisa dilengkapi dari halaman pengaturan setelah aktif.",
+      "nameLabelSekolah": "Nama sekolah",
+      "nameLabelBimbel": "Nama lembaga",
+      "namePlaceholderSekolah": "SMP Tunas Bangsa",
+      "namePlaceholderBimbel": "Bimbel Cendekia",
+      "educationLevel": "Jenjang",
+      "city": "Kota",
+      "cityPlaceholder": "Bandung",
+      "address": "Alamat",
+      "addressPlaceholder": "Jl. Merdeka No. 42",
+      "npsn": "NPSN",
+      "npsnHint": "Belum punya? Kosongkan saja — bisa ditambahkan nanti.",
+      "optional": "opsional"
+    },
+    "step3": {
+      "title": "Kontak penanggung jawab",
+      "subtitle": "Kami kirim link aktivasi, invoice, dan bukti pembayaran ke sini. Bisa admin sekolah atau operator IT.",
+      "fullName": "Nama lengkap",
+      "fullNamePlaceholder": "Nama lengkap Anda",
+      "jobTitle": "Jabatan",
+      "jobTitlePlaceholder": "Wakasek Kurikulum · Kepala Sekolah · Operator",
+      "whatsapp": "WhatsApp",
+      "adminEmail": "Email admin",
+      "footNote": "Email admin jadi akun login pertama. Anda bisa masuk pakai Google atau email + OTP."
+    },
+    "step4": {
+      "title": "Skala dan paket langganan",
+      "subtitle": "Perkiraan jumlah siswa dan guru saat aktif. Bisa diubah dari pengaturan setelah data real masuk."
+    },
+    "step5": {
+      "title": "Tinjau pesanan & metode pembayaran",
+      "subtitle": "Setelah bayar dan tim keuangan verifikasi, tenant Anda langsung aktif — tanpa data seed contoh.",
+      "tenantNameSekolah": "Nama sekolah",
+      "tenantNameBimbel": "Nama lembaga",
+      "admin": "Admin",
+      "package": "Paket",
+      "seats": "Skala",
+      "savings": "hemat {amount}",
+      "totalDue": "Total tagihan",
+      "seedNoteLabel": "Data awal",
+      "seedNote": "Kosong — siap Anda isi dengan data siswa dan guru asli. Tidak ada data seed contoh.",
+      "methodKicker": "Metode pembayaran",
+      "methodTitle": "Transfer bank manual",
+      "methodHint": "Setelah klik \"Buat pesanan\", kami tampilkan nomor referensi transfer. Tim keuangan akan verifikasi dalam 1×24 jam kerja setelah Anda klik \"Saya sudah transfer\".",
+      "termsAgree": "Saya setuju dengan syarat & kebijakan privasi KamilEdu."
+    }
+  },
   "subscribe": {
     "nav": {
       "chipLabel": "Berlangganan",
@@ -5772,6 +5845,11 @@
       "orderEditing": "Silakan sesuaikan lagi. Klik \"Lanjut ke pembayaran\" untuk membuat pesanan baru dengan kode referensi baru.",
       "markTransferredOk": "Konfirmasi terkirim — tim kami akan memverifikasi.",
       "markTransferredFallback": "Simpan kode referensi di kartu pesanan, tim kami akan verifikasi otomatis dari mutasi BSI."
+    },
+    "wizardCta": {
+      "kicker": "Baru pertama daftar?",
+      "body": "Kami punya alur terpandu 5-langkah untuk mengumpulkan profil sekolah/lembaga, kontak admin, dan skala paket sekaligus. Draft-nya otomatis tersimpan.",
+      "action": "Pakai wizard berlangganan"
     }
   }
 }

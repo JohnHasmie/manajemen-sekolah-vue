@@ -800,6 +800,29 @@ function onPickerClear() {
       </div>
     </div>
 
+    <!-- Wizard CTA — visible only on the fresh-signup path (no
+         existing demo tenant selected). Redirects to /subscribe/new
+         for users who prefer a guided multi-step flow. -->
+    <div
+      v-if="!orderLocked && !usingExistingTenant"
+      class="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4"
+    >
+      <div class="flex-1 min-w-0">
+        <p class="text-[11px] font-black uppercase tracking-widest text-brand-cobalt">
+          {{ t('subscribe.wizardCta.kicker') }}
+        </p>
+        <p class="mt-1 text-sm text-slate-800 leading-relaxed">
+          {{ t('subscribe.wizardCta.body') }}
+        </p>
+      </div>
+      <RouterLink
+        to="/subscribe/new"
+        class="inline-flex items-center justify-center rounded-lg bg-brand-cobalt hover:bg-brand-dark-blue text-white font-semibold px-4 py-2.5 text-sm transition-colors whitespace-nowrap"
+      >
+        {{ t('subscribe.wizardCta.action') }} →
+      </RouterLink>
+    </div>
+
     <!-- ── Signup / confirm card (hidden after order placed) ────── -->
     <SubscribeSignupForm
       v-if="!orderLocked"

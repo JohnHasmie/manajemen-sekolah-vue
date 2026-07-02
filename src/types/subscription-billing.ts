@@ -112,8 +112,21 @@ export interface SubscribeRequest {
   /** Only present when creating a fresh tenant (no tenant_id). */
   new_tenant?: {
     name: string;
+    tenant_type?: TenantType;
     admin_email: string;
-    whatsapp: string;
+    /** Newer submissions from /subscribe/new use `admin_whatsapp`;
+     *  older /subscribe one-page form still ships `whatsapp`. Both
+     *  are optional at the type level so callers can pick one. */
+    admin_whatsapp?: string;
+    whatsapp?: string;
+    // /subscribe/new wizard extras; optional so legacy submissions
+    // still validate.
+    education_level?: string | null;
+    city?: string;
+    address?: string;
+    npsn?: string;
+    admin_name?: string;
+    admin_job_title?: string;
   };
   /**
    * Existing-tenant path only. When true, the backend clears seeded

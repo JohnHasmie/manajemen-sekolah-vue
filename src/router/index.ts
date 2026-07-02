@@ -158,6 +158,8 @@ const SuperAdminIncompleteRegistrationsView = () =>
   import('@/views/super-admin/SuperAdminIncompleteRegistrationsView.vue');
 const SuperAdminSubscriptionApprovalsView = () =>
   import('@/views/super-admin/SuperAdminSubscriptionApprovalsView.vue');
+const SubscribeNewWizardView = () =>
+  import('@/views/subscribe/SubscribeNewWizardView.vue');
 const TeacherCheckInView = () =>
   import('@/views/teacher/TeacherCheckInView.vue');
 const TeacherAttendanceHistoryView = () =>
@@ -266,6 +268,15 @@ const routes: RouteRecordRaw[] = [
     path: '/subscribe',
     name: 'subscribe',
     component: () => import('@/views/subscribe/SubscribeView.vue'),
+    meta: { public: true },
+  },
+  {
+    // Multi-step wizard for brand-new paid tenants (no demo, no seed
+    // data). Distinct from /subscribe which handles the existing-demo
+    // conversion path plus a one-page new-signup form.
+    path: '/subscribe/new',
+    name: 'subscribe-new',
+    component: SubscribeNewWizardView,
     meta: { public: true },
   },
   {
