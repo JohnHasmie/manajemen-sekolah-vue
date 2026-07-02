@@ -94,14 +94,24 @@ onMounted(async () => {
         // direct route here avoids a flash of the picker.
         if (auth.step === 'school') {
           let demoIntent = false;
+          let subscribeIntent = false;
           try {
             demoIntent = sessionStorage.getItem('demo_intent_v1') === '1';
+            subscribeIntent = sessionStorage.getItem('subscribe_intent_v1') === '1';
           } catch {
             /* private mode — fall through to picker */
           }
           if (demoIntent) {
             try { sessionStorage.removeItem('demo_intent_v1'); } catch { /* non-fatal */ }
             await router.replace('/register-demo');
+          } else if (subscribeIntent) {
+            // Mirror of demo intent: the user clicked "Lanjutkan dengan
+            // Google" on /subscribe (or /subscribe/new). Multi-tenant
+            // users otherwise land on the school picker, which is the
+            // wrong destination — /subscribe already knows how to route
+            // them to their demo tenant / new-tenant wizard.
+            try { sessionStorage.removeItem('subscribe_intent_v1'); } catch { /* non-fatal */ }
+            await router.replace('/subscribe');
           } else {
             await router.replace('/login');
           }

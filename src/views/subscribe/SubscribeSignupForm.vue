@@ -147,6 +147,7 @@ const canSubmit = computed(() => {
     <div v-if="showGoogle" class="mb-4">
       <div
         ref="googleContainer"
+        data-google-intent="subscribe"
         class="w-full flex justify-center min-h-[42px]"
       />
       <p v-if="google.error.value" class="mt-2 text-[11px] text-rose-600 text-center">

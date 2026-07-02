@@ -168,8 +168,11 @@ function flagIntentFromFocusedGisButton(): void {
     const active = document.activeElement;
     if (!(active instanceof HTMLIFrameElement)) return;
     const ancestor = active.closest<HTMLElement>('[data-google-intent]');
-    if (ancestor?.dataset.googleIntent === 'demo') {
+    const intent = ancestor?.dataset.googleIntent;
+    if (intent === 'demo') {
       sessionStorage.setItem('demo_intent_v1', '1');
+    } else if (intent === 'subscribe') {
+      sessionStorage.setItem('subscribe_intent_v1', '1');
     }
   } catch {
     // sessionStorage can throw in private mode; non-fatal
