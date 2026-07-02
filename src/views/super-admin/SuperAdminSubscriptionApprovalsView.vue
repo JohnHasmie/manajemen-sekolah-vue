@@ -314,22 +314,6 @@ function compactRupiah(v: number): string {
                 {{ planLabel(row.plan) }}
               </span>
               <span
-                v-if="row.is_claimed"
-                class="text-[10px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded inline-flex items-center gap-1"
-                title="Customer sudah klik “sudah transfer”"
-              >
-                <NavIcon name="check-circle" :size="10" />
-                Diklaim
-              </span>
-              <span
-                v-else
-                class="text-[10px] font-bold uppercase tracking-wide bg-slate-50 text-slate-500 border border-slate-200 px-2 py-0.5 rounded inline-flex items-center gap-1"
-                title="Customer belum konfirmasi transfer — verifikasi langsung dari mutasi rekening"
-              >
-                <NavIcon name="clock" :size="10" />
-                Belum diklaim
-              </span>
-              <span
                 class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border inline-flex items-center gap-1"
                 :class="toneClass(waitingTone(row.waiting_hours))"
               >

@@ -115,20 +115,6 @@ const waLink = computed(() => {
             <span class="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
               {{ planLabel }}
             </span>
-            <span
-              v-if="approval.is_claimed"
-              class="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded inline-flex items-center gap-1"
-            >
-              <NavIcon name="check-circle" :size="10" />
-              Diklaim
-            </span>
-            <span
-              v-else
-              class="text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate-500 border border-slate-200 px-2 py-0.5 rounded inline-flex items-center gap-1"
-            >
-              <NavIcon name="clock" :size="10" />
-              Belum diklaim
-            </span>
           </div>
           <h2 class="mt-1.5 text-base font-bold text-slate-900 truncate">
             {{ approval.tenant_name }}
