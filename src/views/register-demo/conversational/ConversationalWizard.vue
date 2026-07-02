@@ -15,6 +15,8 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
+import { useAuthStore } from '@/stores/auth';
+import { useGoogleSignIn } from '@/composables/useGoogleSignIn';
 import { DemoService } from '@/services/demo.service';
 import { useToast } from '@/composables/useToast';
 import NavIcon from '@/components/feature/NavIcon.vue';
@@ -29,7 +31,37 @@ import type { DemoWizardPayload } from '@/types/demo';
 
 const router = useRouter();
 const wizard = useDemoWizardStore();
+const auth = useAuthStore();
+const google = useGoogleSignIn();
 const toast = useToast();
+
+// Google auth gate — anonymous visitors must sign in before any
+// question renders. A demo request without a real identity leaves
+// dangling records the team can't follow up on. Mounts the real GIS
+// button when unauthenticated; the shared handler flips step='done'
+// once the redirect lands back here.
+const googleButtonRef = ref<HTMLDivElement | null>(null);
+async function mountGoogleButton() {
+  if (auth.isAuthenticated) return;
+  if (!google.isEnabled.value) return;
+  if (!googleButtonRef.value) return;
+  const width = googleButtonRef.value.clientWidth || 320;
+  await google.mountButton(googleButtonRef.value, {
+    theme: 'filled_blue',
+    text: 'signin_with',
+    width,
+  });
+}
+function flagDemoIntent(): void {
+  try {
+    sessionStorage.setItem('demo_intent_v1', '1');
+  } catch {
+    /* private mode — non-fatal */
+  }
+}
+watch(() => auth.isAuthenticated, (v) => {
+  if (!v) void mountGoogleButton();
+});
 
 const tenant = computed<'school' | 'tutoring'>(() => wizard.payload.tenant_type);
 const list = computed<readonly Question[]>(() => questionsFor(tenant.value));
@@ -238,6 +270,10 @@ watch(
 // ── keyboard shortcut: Enter advances when input isn't focused ──────
 function onGlobalEnter(e: KeyboardEvent): void {
   if (e.key !== 'Enter') return;
+  // Auth gate is up — swallow Enter so a fast-typing user can't
+  // accidentally trigger next() (which would toast "lengkapi jawaban"
+  // for a question they never even saw).
+  if (!auth.isAuthenticated) return;
   const target = e.target as HTMLElement | null;
   // Let inputs handle their own Enter (they emit @submit to us).
   if (target && ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(target.tagName)) {
@@ -249,6 +285,7 @@ function onGlobalEnter(e: KeyboardEvent): void {
 onMounted(async () => {
   await wizard.hydrate();
   document.addEventListener('keydown', onGlobalEnter);
+  void mountGoogleButton();
 });
 
 watch(
@@ -300,7 +337,74 @@ watch(
 
     <!-- Body -->
     <main class="flex-1 flex items-center justify-center px-6 py-8">
+      <!--
+        Google auth gate. Blocks the entire question flow when the
+        visitor is anonymous — the demo request record needs a real
+        identity so the team can reach the requester with the
+        activation link + verification updates. Rendered as the ONLY
+        thing on the main pane in this state so the ask is
+        unambiguous.
+      -->
+      <section
+        v-if="!auth.isAuthenticated"
+        class="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-sm p-8 sm:p-10 text-center"
+      >
+        <div class="w-14 h-14 rounded-2xl bg-brand-cobalt/10 text-brand-cobalt mx-auto mb-4 grid place-items-center">
+          <NavIcon name="lock" :size="24" />
+        </div>
+        <p class="text-[10px] font-black tracking-[0.3em] uppercase text-brand-cobalt mb-2">
+          Wajib login dulu
+        </p>
+        <h1 class="text-2xl sm:text-[26px] font-bold text-slate-900 tracking-tight leading-tight mb-2">
+          Masuk dengan Google untuk mulai
+        </h1>
+        <p class="text-sm text-slate-500 mb-7 max-w-sm mx-auto leading-relaxed">
+          Kami perlu email Anda supaya bisa kirim tautan aktivasi dan info
+          verifikasi. Setelah masuk, wizard akan lanjut otomatis.
+        </p>
+
+        <div
+          v-if="google.isInAppBrowser.value || google.error.value === 'GIS_LOAD_FAILED'"
+          class="rounded-lg border-2 border-dashed border-amber-300 bg-amber-50 py-3 px-3 text-center text-[12px] font-bold text-amber-800 leading-relaxed"
+        >
+          Buat demo pakai Google tidak bisa dari browser dalam-aplikasi (mis.
+          Threads/Instagram). Buka halaman ini di Chrome/Safari.
+        </div>
+        <div
+          v-else-if="google.isEnabled.value"
+          class="flex justify-center min-h-[44px]"
+        >
+          <div
+            v-show="google.isReady.value"
+            ref="googleButtonRef"
+            class="w-full flex justify-center"
+            data-google-intent="demo"
+            @pointerdown="flagDemoIntent"
+          />
+          <div
+            v-if="!google.isReady.value"
+            class="w-full rounded-lg border-2 border-brand-dark-blue/30 bg-white/60 py-2.5 flex items-center justify-center gap-3 animate-pulse"
+          >
+            <div class="w-3.5 h-3.5 rounded-full bg-brand-dark-blue/20"></div>
+            <span class="text-[11px] font-extrabold text-brand-dark-blue/50 uppercase tracking-widest">
+              Menyiapkan Google…
+            </span>
+          </div>
+        </div>
+        <div
+          v-else
+          class="rounded-lg border-2 border-dashed border-slate-300 bg-white/60 py-2.5 px-3 text-center text-[11px] font-bold text-slate-500"
+        >
+          Login Google belum dikonfigurasi di server ini. Hubungi admin.
+        </div>
+
+        <p class="mt-4 text-[11px] text-slate-400 leading-relaxed">
+          Kami cuma pakai email dan nama dari Google — tidak ada yang lain.
+        </p>
+      </section>
+
       <Transition
+        v-else
         enter-active-class="transition duration-300 ease-out"
         enter-from-class="opacity-0 translate-y-2"
         enter-to-class="opacity-100 translate-y-0"
@@ -402,8 +506,9 @@ watch(
       </div>
     </Transition>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200">
+    <!-- Footer — hidden while the auth gate is up so there's no
+         "Lanjut" button to keyboard-mash past the sign-in. -->
+    <footer v-if="auth.isAuthenticated" class="bg-white border-t border-slate-200">
       <div class="max-w-3xl mx-auto px-6 py-3.5 flex items-center justify-between">
         <button
           type="button"
