@@ -25,6 +25,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
+import { useAuthStore } from '@/stores/auth';
 import { DEMO_STEPS, type DemoStepKey } from '@/types/demo';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Spinner from '@/components/ui/Spinner.vue';
@@ -47,6 +48,7 @@ import Step10Scenarios from './steps/Step10Scenarios.vue';
 
 const { t } = useI18n();
 const wizard = useDemoWizardStore();
+const auth = useAuthStore();
 const router = useRouter();
 const toast = useToast();
 
@@ -118,6 +120,21 @@ function goTo(idx: number) {
 }
 
 function handleNext() {
+  // Google auth gate at Step 1 (Welcome). Anonymous visitors must
+  // Google-sign-in before the wizard advances — the sign-in card
+  // inside Step1Welcome renders a real GIS button; this guard just
+  // makes sure the "Mulai" footer button can't skip past it via
+  // keyboard or a fast double-tap. A completed demo request without
+  // an authenticated user leaves an inbox record the team can't
+  // reach for provisioning + activation.
+  if (wizard.currentKey === 'welcome' && !auth.isAuthenticated) {
+    toast.show({
+      tone: 'error',
+      title: t('registerDemo.signInRequiredTitle'),
+      message: t('registerDemo.signInRequiredMsg'),
+    });
+    return;
+  }
   // Block leaving the School step until a school is set — either typed as a
   // custom name or picked from the search/NPSN results. `hasWizardData` is
   // true once `school.name` is non-empty. Without it every downstream step
@@ -318,6 +335,10 @@ const nextLabel = computed(() => {
             </button>
             <button
               type="button"
+              :disabled="wizard.currentKey === 'welcome' && !auth.isAuthenticated"
+              :title="wizard.currentKey === 'welcome' && !auth.isAuthenticated
+                  ? t('registerDemo.signInRequiredMsg')
+                  : undefined"
               class="flex-1 lg:flex-initial inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg bg-role-admin text-white text-[13px] font-bold hover:bg-role-admin/90 disabled:opacity-60 disabled:cursor-not-allowed"
               @click="handleNext"
             >
