@@ -170,6 +170,14 @@ const selectedTenant = computed<SubscriptionTenant | null>(() =>
 const usingExistingTenant = computed(() => !!selectedTenant.value);
 const hasTenants = computed(() => myTenants.value.length > 0);
 
+// True when the picked tenant is a demo whose trial has already lapsed.
+// Drives the post-transfer "wait for admin" panel — the dashboard would
+// 403 them until the sub is verified & activated, so we don't offer the
+// "Kembali ke dashboard" CTA in that state.
+const isDemoExpired = computed(
+  () => selectedTenant.value?.subscription_status === 'expired',
+);
+
 const bannerText = computed(() => {
   const n = myTenants.value.length;
   if (n === 1) {
@@ -1100,6 +1108,33 @@ function onPickerClear() {
               </svg>
               {{ t('subscribe.orderStatus.editCta') }}
             </button>
+          </div>
+          <!--
+            Expired-demo path: the dashboard is inaccessible until an
+            admin verifies the transfer and flips the sub to active, so
+            surfacing a "Kembali ke dashboard" CTA would just lead the
+            user to a locked screen. Show a waiting-for-confirmation
+            panel instead — same emerald palette so it reads as the
+            same "we've got you" moment, just without the false-affordance
+            button.
+          -->
+          <div
+            v-else-if="isDemoExpired"
+            key="await-admin-confirmation"
+            class="mt-1 w-full rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-start gap-3"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5 text-emerald-700">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <div class="min-w-0 flex-1">
+              <p class="text-[13px] font-bold text-emerald-900">
+                {{ t('subscribe.orderStatus.expiredAwaitTitle') }}
+              </p>
+              <p class="mt-0.5 text-[11px] text-emerald-800/90 leading-relaxed">
+                {{ t('subscribe.orderStatus.expiredAwaitBody') }}
+              </p>
+            </div>
           </div>
           <RouterLink
             v-else-if="isAuthenticated"

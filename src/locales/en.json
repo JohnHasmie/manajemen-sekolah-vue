@@ -5840,7 +5840,9 @@
       "thanksTitle": "We've received your transfer confirmation",
       "thanksSubtitle": "Our finance team will reconcile it against the BSI statement within 1 business day. You'll get an email and WhatsApp the moment your subscription activates — feel free to head to the dashboard, no need to wait here.",
       "confirmedTitle": "Awaiting finance team review",
-      "confirmedSubtitle": "Keep the reference code above in case customer support needs it. We'll reach out the moment your subscription is active."
+      "confirmedSubtitle": "Keep the reference code above in case customer support needs it. We'll reach out the moment your subscription is active.",
+      "expiredAwaitTitle": "Waiting for admin confirmation",
+      "expiredAwaitBody": "Your demo has ended, so the dashboard stays locked until our team verifies your transfer and reactivates the subscription. Hang tight — we'll email + WhatsApp the moment your account is active again."
     },
     "errors": {
       "tenantNameRequired": "School or institute name is required.",

@@ -5836,7 +5836,9 @@
       "thanksTitle": "Konfirmasi transfer Anda sudah kami terima",
       "thanksSubtitle": "Tim keuangan akan mencocokkan dengan mutasi BSI dalam 1×24 jam kerja. Anda akan menerima email dan WhatsApp begitu langganan aktif — silakan lanjut ke dashboard, tidak perlu menunggu di halaman ini.",
       "confirmedTitle": "Menunggu verifikasi tim keuangan",
-      "confirmedSubtitle": "Simpan kode referensi di atas kalau perlu ditanyakan ke customer support. Kami akan menghubungi Anda begitu langganan aktif."
+      "confirmedSubtitle": "Simpan kode referensi di atas kalau perlu ditanyakan ke customer support. Kami akan menghubungi Anda begitu langganan aktif.",
+      "expiredAwaitTitle": "Menunggu konfirmasi admin",
+      "expiredAwaitBody": "Masa demo Anda sudah berakhir, jadi dashboard baru bisa dibuka setelah tim kami memverifikasi transfer dan mengaktifkan langganan. Silakan tunggu — kami akan mengirim email & WhatsApp begitu akun aktif kembali."
     },
     "errors": {
       "tenantNameRequired": "Nama sekolah atau lembaga wajib diisi.",
