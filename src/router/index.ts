@@ -162,6 +162,8 @@ const SubscribeNewWizardView = () =>
   import('@/views/subscribe/SubscribeNewWizardView.vue');
 const SubscribeAddonView = () =>
   import('@/views/subscribe/SubscribeAddonView.vue');
+const ManageModulesView = () =>
+  import('@/views/subscribe/ManageModulesView.vue');
 const TeacherCheckInView = () =>
   import('@/views/teacher/TeacherCheckInView.vue');
 const TeacherAttendanceHistoryView = () =>
@@ -287,6 +289,16 @@ const routes: RouteRecordRaw[] = [
     path: '/subscribe/addon',
     name: 'subscribe-addon',
     component: SubscribeAddonView,
+  },
+  {
+    // Admin self-service module management. Path matches the upgrade_url
+    // the kamiledu-ai EnsureAiModuleEntitled middleware emits on 402, so
+    // clicking "upgrade" on a locked AI feature lands here directly.
+    // Requires a signed-in user + an active subscription for the scoped
+    // tenant; empty-state renders when neither is true.
+    path: '/subscribe/manage-modules',
+    name: 'subscribe-manage-modules',
+    component: ManageModulesView,
   },
   {
     path: '/register-demo/wizard',

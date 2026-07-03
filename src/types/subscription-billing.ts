@@ -316,3 +316,57 @@ export interface MySubscription {
   expires_at?: string | null;
   tenant_id?: string | null;
 }
+
+/**
+ * GET /billing/modules/mine — powers the "Kelola Modul" self-service
+ * page. Richer per-row data than /entitlements (which is a flat
+ * string[]): every row carries its own cancel_at_period_end flag,
+ * source (paid vs comp), and price snapshots so the FE can render
+ * accurate status pills + strike-through amounts.
+ */
+export interface MyModuleRow {
+  module_key: string;
+  source: 'paid' | 'comp';
+  cancel_at_period_end: boolean;
+  price_per_student_snapshot: number;
+  price_per_staff_snapshot: number;
+  monthly_extra_quota: number;
+  monthly_amount: number;
+}
+
+export interface MyModulesSubscription {
+  id: string;
+  plan: BillingPeriod;
+  status: string;
+  starts_at: string | null;
+  expires_at: string | null;
+  student_count: number;
+  staff_count: number;
+  days_remaining: number;
+  currency: string;
+}
+
+export interface MyModules {
+  subscription: MyModulesSubscription | null;
+  modules: MyModuleRow[];
+}
+
+/**
+ * POST /billing/modules/add response — mirrors AddonCreated but keyed
+ * by the module the tenant just bought instead of a seat delta.
+ */
+export interface ModuleAddonCreated {
+  addon_id: string;
+  order_id: string;
+  module_key: string;
+  amount: number;
+  currency: string;
+  days_remaining: number;
+  share_url: string;
+  bank_transfer_info: {
+    bank_name: string;
+    account_number: string;
+    account_holder: string;
+    reference_code: string;
+  };
+}

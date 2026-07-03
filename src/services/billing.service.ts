@@ -767,6 +767,86 @@ export const SubscriptionBillingService = {
   },
 
   /**
+   * GET /billing/modules/mine — subscription + per-row module status.
+   * Powers the "Kelola Modul" self-service page. Returns {subscription:null,
+   * modules:[]} when the tenant has no active subscription — the caller
+   * renders an empty state instead of throwing.
+   */
+  async getMyModules(): Promise<import('@/types/subscription-billing').MyModules> {
+    try {
+      const res = await api.get('/billing/modules/mine');
+      const body = res.data?.data ?? res.data;
+      return {
+        subscription: body?.subscription ?? null,
+        modules: Array.isArray(body?.modules) ? body.modules : [],
+      };
+    } catch (e) {
+      const status = (e as any)?.response?.status;
+      if (status === 401 || status === 403 || status === 400) {
+        return { subscription: null, modules: [] };
+      }
+      throw new Error(humanError(e, 'Gagal memuat modul langganan.'));
+    }
+  },
+
+  /**
+   * POST /billing/modules/add — buy a new module mid-cycle. Backend
+   * prorates to the days remaining and returns a share_url + bank
+   * transfer info; caller opens the transfer confirmation UX. Module
+   * activates on super-admin (or webhook) approval of the addon.
+   */
+  async addModule(payload: {
+    subscription_id: string;
+    module_key: string;
+  }): Promise<import('@/types/subscription-billing').ModuleAddonCreated> {
+    try {
+      const res = await api.post('/billing/modules/add', payload);
+      const body = res.data?.data ?? res.data;
+      return body as import('@/types/subscription-billing').ModuleAddonCreated;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menambahkan modul.'));
+    }
+  },
+
+  /**
+   * POST /billing/modules/{key}/cancel — flag the module as
+   * cancel_at_period_end=true. Stays entitled until expires_at, then
+   * drops from the renewal quote. Idempotent.
+   */
+  async cancelModule(payload: {
+    subscription_id: string;
+    module_key: string;
+  }): Promise<void> {
+    try {
+      await api.post(
+        `/billing/modules/${encodeURIComponent(payload.module_key)}/cancel`,
+        { subscription_id: payload.subscription_id },
+      );
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal mematikan modul.'));
+    }
+  },
+
+  /**
+   * POST /billing/modules/{key}/resume — clear cancel_at_period_end.
+   * The module keeps its snapshot rates and rolls into the next
+   * period as normal.
+   */
+  async resumeModule(payload: {
+    subscription_id: string;
+    module_key: string;
+  }): Promise<void> {
+    try {
+      await api.post(
+        `/billing/modules/${encodeURIComponent(payload.module_key)}/resume`,
+        { subscription_id: payload.subscription_id },
+      );
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal mengaktifkan kembali modul.'));
+    }
+  },
+
+  /**
    * POST /billing/addon — create the pending addon + return share
    * URL + bank instructions. Activation happens on super-admin
    * approval.
