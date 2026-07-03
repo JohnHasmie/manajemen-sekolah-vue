@@ -34,6 +34,7 @@ import AdminEntityDetailSheet, {
   type DetailSection,
 } from '@/components/feature/AdminEntityDetailSheet.vue';
 import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vue';
+import SubscriptionUsageBanner from '@/components/billing/SubscriptionUsageBanner.vue';
 import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
 
@@ -530,6 +531,10 @@ function statusFor(t: Teacher) {
         @import-excel="showImport = true"
         @download-template="downloadTemplate"
       />
+    </template>
+
+    <template #banner>
+      <SubscriptionUsageBanner />
     </template>
 
     <template #filter-chips>

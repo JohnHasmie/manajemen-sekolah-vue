@@ -169,6 +169,71 @@ export interface SubscribeResult {
   share_url?: string | null;
 }
 
+/**
+ * GET /billing/seat-usage — live headcount vs. paid quota for the
+ * currently-scoped tenant. Powers the SubscriptionUsageBanner + the
+ * hard-cap 402 handler.
+ */
+export type SeatZone = 'normal' | 'grace' | 'overage' | 'hard';
+
+export interface SeatUsage {
+  subscription_id: string | null;
+  is_demo: boolean;
+  paid_student: number;
+  paid_staff: number;
+  hard_student: number;
+  hard_staff: number;
+  grace_flat: number;
+  live_student: number;
+  live_staff: number;
+  over_student: number;
+  over_staff: number;
+  zone_student: SeatZone;
+  zone_staff: SeatZone;
+  days_remaining: number | null;
+  expires_at: string | null;
+}
+
+/** POST /billing/addon/quote response. */
+export interface AddonQuote {
+  daily_rate: number;
+  days_remaining: number;
+  seats_delta_total: number;
+  amount: number;
+  currency: string;
+}
+
+/** POST /billing/addon response (creates the pending addon). */
+export interface AddonCreated {
+  addon_id: string;
+  order_id: string;
+  amount: number;
+  currency: string;
+  share_url: string;
+  bank_transfer_info: {
+    bank_name: string;
+    account_number: string;
+    account_holder: string;
+    reference_code: string;
+  };
+  quote: AddonQuote;
+}
+
+/** 402 payload returned when a create/import trips the hard cap. */
+export interface SeatHardCapError {
+  error: 'seat_hard_cap_reached';
+  message: string;
+  dimension: 'student' | 'staff';
+  is_demo: boolean;
+  seats_paid: number;
+  seats_live: number;
+  seats_hard: number;
+  batch_size: number;
+  days_remaining: number | null;
+  top_up_url_web: string;
+  top_up_deeplink_mobile: string;
+}
+
 /** GET /billing/my-subscription — used by the nav chip to decide visibility. */
 export interface MySubscription {
   has_subscription: boolean;

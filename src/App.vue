@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useTutoringThemeStore } from '@/stores/tutoring-theme';
 import { storage, StorageKeys } from '@/lib/storage';
+import SeatHardCapModal from '@/components/billing/SeatHardCapModal.vue';
 
 const auth = useAuthStore();
 const tutoringTheme = useTutoringThemeStore();
@@ -148,4 +149,5 @@ onMounted(async () => {
 
 <template>
   <RouterView />
+  <SeatHardCapModal />
 </template>

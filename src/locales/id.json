@@ -5701,7 +5701,56 @@
       "termsAgree": "Saya setuju dengan syarat & kebijakan privasi KamilEdu."
     }
   },
+  "billing": {
+    "hardCap": {
+      "title": "Kuota mencapai batas maksimum",
+      "demoTitle": "Demo mencapai batas maksimum",
+      "paid": "Kuota bayar",
+      "live": "Terpakai sekarang",
+      "hard": "Batas maksimum",
+      "daysRemaining": "Sisa periode",
+      "topUpCta": "Top up sekarang"
+    }
+  },
+  "addon": {
+    "kicker": "Top up seat",
+    "title": "Tambah kuota sisa periode",
+    "subtitle": "Biaya dihitung prorata sesuai sisa hari langganan aktif — dibayar via transfer bank manual, dikonfirmasi tim keuangan.",
+    "form": {
+      "studentLabel": "Tambahan siswa",
+      "staffLabel": "Tambahan guru/staf",
+      "dailyRate": "Rate harian",
+      "daysRemaining": "Sisa periode",
+      "total": "Total tagihan",
+      "submit": "Buat pesanan top up"
+    },
+    "success": {
+      "title": "Pesanan top up sudah dibuat",
+      "subtitle": "Lakukan transfer sesuai instruksi di bawah. Tim keuangan akan memverifikasi dan mengaktifkan tambahan seat dalam 1×24 jam kerja.",
+      "orderCode": "Kode referensi",
+      "amount": "Jumlah transfer",
+      "bank": "Bank",
+      "account": "Nomor rekening",
+      "holder": "Nama pemilik",
+      "instruction": "Transfer dengan jumlah persis seperti tertera. Kami akan mengirim email + WhatsApp begitu tambahan seat aktif.",
+      "backToDashboard": "Kembali ke dashboard"
+    },
+    "errors": {
+      "missingSubscription": "Subscription ID tidak ditemukan. Buka halaman ini dari banner kuota atau modal top up.",
+      "minSeat": "Minimal top up 1 seat."
+    }
+  },
   "subscribe": {
+    "usageBanner": {
+      "graceTitle": "Anda hampir mencapai kuota",
+      "graceBody": "Sekolah Anda punya {live_student} siswa (kuota bayar {paid_student}) dan {live_staff} guru/staf (kuota bayar {paid_staff}). Lima seat pertama di atas kuota masih gratis — sisanya akan ditagihkan di perpanjangan berikutnya.",
+      "overageTitle": "Kuota terlampaui",
+      "overageBody": "{over_summary} di atas kuota. Top up sekarang untuk sisa periode, atau tagihannya akan otomatis muncul di perpanjangan berikutnya.",
+      "hardTitle": "Kuota mencapai batas 10 % di atas kuota bayar",
+      "hardBody": "Sudah mencapai batas maksimum ({hard_student} siswa · {hard_staff} guru/staf). Top up untuk menambah head baru.",
+      "topUpCta": "Top up sekarang",
+      "demoNotice": "Ini akun demo — hubungi admin untuk berlangganan agar bisa menambah kapasitas."
+    },
     "nav": {
       "chipLabel": "Berlangganan",
       "chipTitle": "Aktifkan langganan KamilEdu",

@@ -160,6 +160,8 @@ const SuperAdminSubscriptionApprovalsView = () =>
   import('@/views/super-admin/SuperAdminSubscriptionApprovalsView.vue');
 const SubscribeNewWizardView = () =>
   import('@/views/subscribe/SubscribeNewWizardView.vue');
+const SubscribeAddonView = () =>
+  import('@/views/subscribe/SubscribeAddonView.vue');
 const TeacherCheckInView = () =>
   import('@/views/teacher/TeacherCheckInView.vue');
 const TeacherAttendanceHistoryView = () =>
@@ -278,6 +280,13 @@ const routes: RouteRecordRaw[] = [
     name: 'subscribe-new',
     component: SubscribeNewWizardView,
     meta: { public: true },
+  },
+  {
+    // Mid-cycle top-up. Requires an active subscription id in the
+    // query string; the view rejects the load otherwise.
+    path: '/subscribe/addon',
+    name: 'subscribe-addon',
+    component: SubscribeAddonView,
   },
   {
     path: '/register-demo/wizard',

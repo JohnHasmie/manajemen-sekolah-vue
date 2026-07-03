@@ -198,6 +198,22 @@ function buildClient(
         (error.config as AuthAwareRequestConfig | undefined)?.__hadAuthToken,
       );
 
+      // 402 Payment Required — the backend's EnsureSeatUnderHardCap
+      // middleware refused a create/import because the tenant sits at
+      // (or would exceed) paid_seats × 1.10. Route the payload into
+      // the billing-ui store so the global modal in App.vue can prompt
+      // the user to top up. We STILL reject the promise so the caller
+      // can also react (spinner off, form re-enabled).
+      if (status === 402 && error.response?.data?.error === 'seat_hard_cap_reached') {
+        try {
+          // Lazy-import to avoid a circular dep at module init.
+          const { useBillingUiStore } = await import('@/stores/billing-ui');
+          useBillingUiStore().reportHardCap(error.response.data);
+        } catch {
+          /* non-fatal — the caller still sees the reject */
+        }
+      }
+
       if (status === 401 && hadAuthToken) {
         // Token expired or invalidated. Clear state and bounce to /login.
         storage.remove(StorageKeys.token);

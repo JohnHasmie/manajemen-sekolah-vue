@@ -103,6 +103,11 @@ watch(searchValue, (v) => {
     <!-- KPI strip (optional) -->
     <KpiStripCards v-if="kpiCards.length > 0" :cards="kpiCards" />
 
+    <!-- Cross-page interstitial slot — used by the seat-quota
+         SubscriptionUsageBanner, and any future page-level nudge that
+         should sit between the KPIs and the toolbar. -->
+    <slot name="banner" />
+
     <!-- Toolbar — per-facet chips on the left, search on the right -->
     <PageFilterToolbar
       v-model:search="searchValue"

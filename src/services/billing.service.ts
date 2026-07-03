@@ -26,9 +26,12 @@ import {
   type Payment,
 } from '@/types/billing';
 import type {
+  AddonCreated,
+  AddonQuote,
   MySubscription,
   PricingPlan,
   QuoteRequest,
+  SeatUsage,
   SubscribeRequest,
   SubscribeResult,
   SubscriptionQuote,
@@ -687,6 +690,61 @@ export const SubscriptionBillingService = {
         };
       }
       throw new Error(humanError(e, 'Gagal memuat status langganan.'));
+    }
+  },
+
+  /**
+   * GET /billing/seat-usage — live headcount vs. paid quota for the
+   * currently-scoped tenant. Returns a null-shaped fallback on 401/403
+   * so the banner just doesn't render for signed-out visitors.
+   */
+  async getSeatUsage(): Promise<SeatUsage | null> {
+    try {
+      const res = await api.get('/billing/seat-usage');
+      const body = res.data?.data ?? res.data;
+      return body as SeatUsage;
+    } catch (e) {
+      const status = (e as any)?.response?.status;
+      if (status === 401 || status === 403 || status === 400) return null;
+      // Never let a usage read failure block the page — banners are
+      // informational and hiding them silently is better than a red toast.
+      return null;
+    }
+  },
+
+  /**
+   * POST /billing/addon/quote — dry-run price preview for a top-up.
+   */
+  async quoteAddon(payload: {
+    parent_subscription_id: string;
+    seats_delta_student?: number;
+    seats_delta_staff?: number;
+  }): Promise<AddonQuote> {
+    try {
+      const res = await api.post('/billing/addon/quote', payload);
+      const body = res.data?.data ?? res.data;
+      return body as AddonQuote;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menghitung biaya top up.'));
+    }
+  },
+
+  /**
+   * POST /billing/addon — create the pending addon + return share
+   * URL + bank instructions. Activation happens on super-admin
+   * approval.
+   */
+  async createAddon(payload: {
+    parent_subscription_id: string;
+    seats_delta_student?: number;
+    seats_delta_staff?: number;
+  }): Promise<AddonCreated> {
+    try {
+      const res = await api.post('/billing/addon', payload);
+      const body = res.data?.data ?? res.data;
+      return body as AddonCreated;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal membuat top up.'));
     }
   },
 };

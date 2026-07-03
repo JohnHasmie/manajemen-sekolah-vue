@@ -5705,7 +5705,56 @@
       "termsAgree": "I agree to the KamilEdu terms & privacy policy."
     }
   },
+  "billing": {
+    "hardCap": {
+      "title": "Seat cap reached",
+      "demoTitle": "Demo cap reached",
+      "paid": "Paid quota",
+      "live": "Currently used",
+      "hard": "Hard cap",
+      "daysRemaining": "Days remaining",
+      "topUpCta": "Top up now"
+    }
+  },
+  "addon": {
+    "kicker": "Seat top up",
+    "title": "Add capacity for the remaining period",
+    "subtitle": "Cost is prorated by remaining days of your active subscription — paid via manual bank transfer, confirmed by our finance team.",
+    "form": {
+      "studentLabel": "Additional students",
+      "staffLabel": "Additional teachers/staff",
+      "dailyRate": "Daily rate",
+      "daysRemaining": "Days remaining",
+      "total": "Total",
+      "submit": "Create top-up order"
+    },
+    "success": {
+      "title": "Top-up order created",
+      "subtitle": "Transfer using the instructions below. Our finance team will verify and activate the extra seats within 1 business day.",
+      "orderCode": "Reference code",
+      "amount": "Amount",
+      "bank": "Bank",
+      "account": "Account number",
+      "holder": "Account holder",
+      "instruction": "Transfer the exact amount shown. We'll email + WhatsApp you the moment the extra seats activate.",
+      "backToDashboard": "Back to dashboard"
+    },
+    "errors": {
+      "missingSubscription": "Subscription ID not found. Open this page from the quota banner or top-up modal.",
+      "minSeat": "Minimum top-up is 1 seat."
+    }
+  },
   "subscribe": {
+    "usageBanner": {
+      "graceTitle": "You're near your seat cap",
+      "graceBody": "Your school has {live_student} students (paid {paid_student}) and {live_staff} teachers/staff (paid {paid_staff}). The first 5 seats over your cap are free — anything more will be billed at your next renewal.",
+      "overageTitle": "Seat cap exceeded",
+      "overageBody": "{over_summary} above your cap. Top up now for the rest of the period, or the charge will appear automatically on your next renewal.",
+      "hardTitle": "Reached the 10 % hard cap over your paid seats",
+      "hardBody": "You've hit the maximum ({hard_student} students · {hard_staff} teachers/staff). Top up to add more.",
+      "topUpCta": "Top up now",
+      "demoNotice": "This is a demo account — contact admin to subscribe and add more capacity."
+    },
     "nav": {
       "chipLabel": "Subscribe",
       "chipTitle": "Activate your KamilEdu subscription",

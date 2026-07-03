@@ -36,6 +36,7 @@ import AdminEntityDetailSheet, {
   type DetailSection,
 } from '@/components/feature/AdminEntityDetailSheet.vue';
 import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vue';
+import SubscriptionUsageBanner from '@/components/billing/SubscriptionUsageBanner.vue';
 import Toast from '@/components/ui/Toast.vue';
 import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
@@ -528,6 +529,10 @@ function topMeta(s: Student): string {
         @import-excel="showImport = true"
         @download-template="downloadTemplate"
       />
+    </template>
+
+    <template #banner>
+      <SubscriptionUsageBanner />
     </template>
 
     <template #filter-chips>
