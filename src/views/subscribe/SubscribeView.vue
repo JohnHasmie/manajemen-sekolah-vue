@@ -240,8 +240,12 @@ async function loadTenants() {
 // non-empty starting number.
 function applyDefaultSelection() {
   if (!catalog.value) return;
+  // Post-split default: `attendance_student` used to be one module.
+  // Now both children (class + gate) are preselected to keep the
+  // out-of-the-box calculator total comparable.
   selectedKeys.value = new Set([
-    'attendance_student',
+    'attendance_class',
+    'attendance_gate',
     'attendance_staff',
     'grades',
     'finance',

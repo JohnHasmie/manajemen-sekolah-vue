@@ -74,7 +74,12 @@ const catalog = ref<ModuleCatalog | null>(null);
 const period = ref<BillingPeriod>('monthly');
 const gateway = ref<'bank_transfer_manual' | 'midtrans'>('bank_transfer_manual');
 const selectedKeys = ref<Set<string>>(new Set([
-  'attendance_student',
+  // Post-split (Jul 2026): the old `attendance_student` default now
+  // materialises as both `attendance_class` (per-session teacher flow)
+  // and `attendance_gate` (student QR at gerbang). Preselecting both
+  // matches what the old single-module default gave the user.
+  'attendance_class',
+  'attendance_gate',
   'attendance_staff',
   'grades',
   'report_cards',

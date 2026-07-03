@@ -205,9 +205,10 @@ function formatMoney(n: number): string {
 
 /**
  * Human-friendly price snippet. Some modules charge per-student only
- * (attendance_student), some per-staff only (attendance_staff / AI),
- * a few per both (communication). Only render the units that carry a
- * non-zero rate so a per-student module doesn't say "+ Rp 0 / guru".
+ * (attendance_class, attendance_gate, grades, finance), some per-staff
+ * only (attendance_staff / AI), a few per both (communication). Only
+ * render the units that carry a non-zero rate so a per-student module
+ * doesn't say "+ Rp 0 / guru".
  */
 function priceSnippet(row: AdminTenantModuleRow): string {
   const parts: string[] = [];

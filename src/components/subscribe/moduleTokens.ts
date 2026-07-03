@@ -21,7 +21,15 @@ export const CATEGORY_TINTS: Record<string, { bg: string; fg: string }> = {
 
 /** Per-module Tabler icon name (no `ti-` prefix). */
 export const MODULE_ICONS: Record<string, string> = {
+  // Legacy — grandfathered rows may still surface in ManageModulesView
+  // during the migration window. Falls back to `user-check` so nothing
+  // renders iconless.
   attendance_student: 'user-check',
+  // Split (Jul 2026): `attendance_class` = teacher marks per-session
+  // presence in classroom, `attendance_gate` = student self-scans at
+  // school entrance.
+  attendance_class: 'clipboard-check',
+  attendance_gate: 'door-enter',
   attendance_staff: 'id-badge-2',
   grades: 'list-numbers',
   report_cards: 'report',
@@ -39,6 +47,10 @@ export const MODULE_ICONS: Record<string, string> = {
 /** Short marketing tagline shown under each module (default = sekolah). */
 export const MODULE_TAGLINES: Record<string, string> = {
   attendance_student: 'Presensi harian, ekspor, QR pintu masuk.',
+  attendance_class:
+    'Guru tandai hadir/absen/izin per jam pelajaran, ekspor rekap.',
+  attendance_gate:
+    'Siswa scan QR di gerbang, log harian masuk-pulang, ekspor.',
   attendance_staff: 'Self check-in, QR gate, kartu personel PDF.',
   grades: 'Input nilai per KD, rekap, ekspor Excel.',
   report_cards: 'Cetak raport, sertifikat, transkrip PDF.',
@@ -61,7 +73,10 @@ export const MODULE_TAGLINES: Record<string, string> = {
  * endpoints don't route bimbel traffic. A bimbel admin buying any of
  * these would pay for a module that gates nothing they can use:
  *
- *   - attendance_student / _staff → bimbel uses `tutoring.session.mark_attendance`
+ *   - attendance_class            → bimbel uses `tutoring.session.mark_attendance`
+ *                                   for per-session peserta presence
+ *   - attendance_student (legacy) → same reasoning; grandfathered rows only
+ *   - attendance_staff            → bimbel uses `tutoring.session.mark_attendance` for tutor
  *   - grades / report_cards       → bimbel has no grade entry / raport
  *   - class_activity              → bimbel has `tutoring.activity.*`
  *   - schedule                    → bimbel schedules via `tutoring.session.*`
@@ -74,6 +89,10 @@ export const MODULE_TAGLINES: Record<string, string> = {
  *                                   chapter). Zero bimbel checks in the
  *                                   kamiledu-ai service.
  *
+ * NB: `attendance_gate` is deliberately NOT in this list — bimbel
+ * centers with a physical location use QR gate check-in for peserta
+ * arrivals, and `bundle_tutoring` includes it by design.
+ *
  * The FE hides these from the bimbel wizard + Kelola Modul add list.
  * Existing entitlements are not touched — a bimbel tenant that
  * somehow already bought one of these keeps their row (backwards
@@ -81,6 +100,7 @@ export const MODULE_TAGLINES: Record<string, string> = {
  */
 export const SEKOLAH_ONLY_MODULE_KEYS: readonly string[] = Object.freeze([
   'attendance_student',
+  'attendance_class',
   'attendance_staff',
   'grades',
   'report_cards',
@@ -139,6 +159,18 @@ export const BIMBEL_LABEL_OVERRIDES: Record<string, { label?: string; tagline?: 
   attendance_student: {
     label: 'Absensi Peserta',
     tagline: 'Presensi per sesi, ekspor, QR pintu masuk.',
+  },
+  // The two split children. `attendance_class` is a sekolah-only
+  // concept for bimbel (session-based presence lives in tutoring)
+  // but the override is kept for grandfathered rows to at least
+  // read in peserta vocabulary. `attendance_gate` is bimbel-friendly.
+  attendance_class: {
+    label: 'Presensi Sesi',
+    tagline: 'Tutor tandai hadir/absen/izin per sesi, ekspor rekap.',
+  },
+  attendance_gate: {
+    label: 'Absensi Kehadiran Peserta',
+    tagline: 'Peserta scan QR di pintu masuk, log kehadiran harian.',
   },
   attendance_staff: {
     label: 'Absensi Tutor & Staf',

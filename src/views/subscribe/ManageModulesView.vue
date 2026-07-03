@@ -82,8 +82,8 @@ const availableCatalog = computed(() => {
       if (held.has(key)) return false;
       // Same sekolah↔bimbel visibility rule the wizard picker uses —
       // a bimbel admin never gets offered modules whose backend
-      // endpoints don't route bimbel traffic (attendance_student etc.),
-      // and vice versa.
+      // endpoints don't route bimbel traffic (attendance_class,
+      // sekolah-only finance/lms/grades/etc.), and vice versa.
       return !isModuleHiddenFor(key, item.group, tt);
     })
     .map(([key, item]) => ({ key, item }));
