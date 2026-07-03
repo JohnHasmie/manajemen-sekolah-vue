@@ -129,15 +129,11 @@ function onPlan(p: BillingPeriod) {
       Belum ada modul dipilih.
     </div>
 
-    <BundleNudge
-      v-if="showNudge && bundleBenchmark"
-      :alacarte-total="monthlyAmount"
-      :bundle-total="bundleBenchmark.monthlyTotal"
-      :bonus-module-count="bundleBenchmark.bonusModuleCount"
-      @switch="emit('switch-to-bundle', bundleBenchmark.key)"
-      @skip="() => {}"
-    />
-
+    <!-- Total + primary CTA sit BEFORE the bundle nudge so the user
+         never has to scroll the sidebar to see the amount they're
+         paying or the button that submits it. The nudge is
+         opportunistic — if they want the cheaper bundle, they can act
+         on it, but it's not allowed to hide the total. -->
     <div class="pc-total">
       <div class="pc-total-lbl">
         Total per {{ plan === 'yearly' ? 'tahun' : 'bulan' }}
@@ -163,6 +159,15 @@ function onPlan(p: BillingPeriod) {
       </button>
       <div class="pc-cta-back">Ubah kapan saja · tanpa biaya batal</div>
     </div>
+
+    <BundleNudge
+      v-if="showNudge && bundleBenchmark"
+      :alacarte-total="monthlyAmount"
+      :bundle-total="bundleBenchmark.monthlyTotal"
+      :bonus-module-count="bundleBenchmark.bonusModuleCount"
+      @switch="emit('switch-to-bundle', bundleBenchmark.key)"
+      @skip="() => {}"
+    />
   </div>
 </template>
 

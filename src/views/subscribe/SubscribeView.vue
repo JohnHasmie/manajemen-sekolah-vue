@@ -855,7 +855,9 @@ watch(() => auth.isAuthenticated, (v) => {
 
 .sv-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
+  /* Matches the wizard — 340px keeps large IDR amounts on one line
+     and the bundle CTA from wrapping. */
+  grid-template-columns: minmax(0, 1fr) 340px;
   gap: 0;
   border-top: 0.5px solid #E7ECF3;
   background: #FFFFFF;

@@ -23,147 +23,166 @@ defineEmits<{
 
 <template>
   <div class="bn-nudge">
-    <div class="bn-nudge-row">
-      <div class="bn-nudge-icon">
-        <i class="ti ti-sparkles" aria-hidden="true" />
+    <div class="bn-nudge-head">
+      <div class="bn-nudge-icon" aria-hidden="true">
+        <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
+          <path d="M10 1.5l2.1 4.9 5.3.5-4 3.6 1.2 5.2L10 13l-4.6 2.7 1.2-5.2-4-3.6 5.3-.5z" />
+        </svg>
       </div>
-      <div class="bn-nudge-body">
-        <div class="bn-nudge-title">Paket Lengkap malah lebih hemat</div>
-        <div class="bn-nudge-desc">
-          Dengan pilihan Anda sekarang, biayanya
-          <strong>{{ money(alacarteTotal) }}</strong>/bln. Paket Lengkap
-          semua modul non-AI cuma
-          <strong>{{ money(bundleTotal) }}</strong>/bln.
-        </div>
-        <div class="bn-savings-pill">
-          <i class="ti ti-trending-down" aria-hidden="true" />
-          Hemat {{ money(alacarteTotal - bundleTotal) }}/bln
-          <template v-if="bonusModuleCount > 0">
-            + dapat {{ bonusModuleCount }} modul bonus
-          </template>
-        </div>
+      <div class="bn-nudge-title">
+        Paket Lengkap lebih hemat
+      </div>
+      <div class="bn-savings-pill" aria-hidden="true">
+        <span>−{{ money(alacarteTotal - bundleTotal) }}</span>
       </div>
     </div>
 
-    <div class="bn-swap-row">
-      <div class="bn-swap-card">
-        <div class="bn-swap-lbl">Pilihan Anda</div>
-        <div class="bn-swap-val strike">{{ money(alacarteTotal) }}</div>
+    <p class="bn-nudge-desc">
+      À la carte Anda <strong>{{ money(alacarteTotal) }}</strong>/bln.
+      Paket Lengkap cuma <strong>{{ money(bundleTotal) }}</strong>/bln —
+      <template v-if="bonusModuleCount > 0">
+        dapat {{ bonusModuleCount }} modul bonus tambahan.
+      </template>
+      <template v-else>
+        semua modul non-AI langsung aktif.
+      </template>
+    </p>
+
+    <!-- Compact side-by-side compare. Grid columns split evenly + let
+         the price own the row, no more tiny 100px cards. -->
+    <div class="bn-compare">
+      <div class="bn-compare-cell">
+        <span class="bn-compare-lbl">Pilihan Anda</span>
+        <span class="bn-compare-val strike">{{ money(alacarteTotal) }}</span>
       </div>
-      <div class="bn-swap-card is-primary">
-        <div class="bn-swap-lbl">Paket Lengkap</div>
-        <div class="bn-swap-val">{{ money(bundleTotal) }}</div>
+      <div class="bn-compare-arrow" aria-hidden="true">→</div>
+      <div class="bn-compare-cell is-primary">
+        <span class="bn-compare-lbl">Paket Lengkap</span>
+        <span class="bn-compare-val">{{ money(bundleTotal) }}</span>
       </div>
     </div>
 
     <button type="button" class="bn-nudge-btn" @click="$emit('switch')">
-      <i class="ti ti-package" aria-hidden="true" />
-      Ambil Paket Lengkap · hemat {{ money(alacarteTotal - bundleTotal) }}
+      Ambil Paket Lengkap
     </button>
-    <div class="bn-nudge-skip">
-      Atau
-      <button type="button" class="bn-nudge-skip-btn" @click="$emit('skip')">
-        tetap pakai pilihan à la carte
-      </button>
-    </div>
+    <button
+      type="button"
+      class="bn-nudge-skip"
+      @click="$emit('skip')"
+    >
+      Tetap pakai pilihan à la carte
+    </button>
   </div>
 </template>
 
 <style scoped>
+/* Full-bleed nudge inside the calculator sidebar. Sits under the
+   Total + CTA (parent controls order) so it never hides the primary
+   action. Wider sidebar (340px) means we can breathe: rows can hold
+   Indonesian rupiah amounts on one line without truncation. */
 .bn-nudge {
-  margin: 4px 14px 12px;
+  margin: 12px 14px 14px;
   border-radius: 12px;
-  background: linear-gradient(180deg, #E1F5EE 0%, #C6EDDD 100%);
+  background: linear-gradient(180deg, #E1F5EE 0%, #D2EFE0 100%);
   border: 0.5px solid #5DCAA5;
-  padding: 14px 14px 12px;
+  padding: 12px;
   position: relative; overflow: hidden;
 }
-.bn-nudge::before {
-  content: '';
-  position: absolute; top: -20px; right: -20px;
-  width: 80px; height: 80px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.55) 0%, transparent 70%);
-  pointer-events: none;
-}
 
-.bn-nudge-row { display: flex; align-items: flex-start; gap: 10px; position: relative; }
+/* Header row — icon + title + savings chip on the right. */
+.bn-nudge-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+}
 .bn-nudge-icon {
-  width: 32px; height: 32px; border-radius: 10px;
+  width: 26px; height: 26px; border-radius: 8px;
   background: #1D9E75; color: #fff;
   display: grid; place-items: center;
   flex-shrink: 0;
-  font-size: 18px;
 }
-.bn-nudge-body { flex: 1; }
+.bn-nudge-icon svg { display: block; }
 .bn-nudge-title {
-  font-size: 13px; font-weight: 500; color: #085041;
+  font-size: 12.5px; font-weight: 600; color: #085041;
+  letter-spacing: -0.1px;
+  flex: 1;
 }
+.bn-savings-pill {
+  background: #0F6E56; color: #fff;
+  padding: 3px 8px; border-radius: 6px;
+  font-size: 11px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
 .bn-nudge-desc {
   font-size: 11.5px; color: #0F6E56;
-  margin-top: 3px; line-height: 1.5;
+  margin: 0 0 10px; line-height: 1.5;
 }
 .bn-nudge-desc strong { font-weight: 600; }
-.bn-savings-pill {
-  display: inline-flex; align-items: center; gap: 4px;
-  margin-top: 8px;
-  background: rgba(255, 255, 255, 0.7);
-  color: #085041;
-  padding: 3px 8px; border-radius: 999px;
-  font-size: 10.5px; font-weight: 500;
-}
-.bn-savings-pill .ti { font-size: 11px; }
 
-.bn-swap-row {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 8px; margin-top: 12px;
-  position: relative;
+/* Compare row — full-width, grid with an arrow between. Each cell
+   uses full column width so 7-digit rupiah amounts have room to
+   breathe (Rp 8.100.000 fit fine, no truncation). */
+.bn-compare {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 6px; align-items: stretch;
+  margin-bottom: 12px;
 }
-.bn-swap-card {
-  background: rgba(255, 255, 255, 0.72);
+.bn-compare-cell {
+  background: rgba(255, 255, 255, 0.75);
   border: 0.5px solid rgba(15, 111, 86, 0.18);
-  border-radius: 10px;
-  padding: 8px 10px;
+  border-radius: 8px;
+  padding: 7px 9px;
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 0;
 }
-.bn-swap-card.is-primary {
+.bn-compare-cell.is-primary {
   background: #FFFFFF;
   border-color: #1D9E75;
+  box-shadow: 0 1px 2px rgba(29, 158, 117, 0.15);
 }
-.bn-swap-lbl {
-  font-size: 10px;
+.bn-compare-lbl {
+  font-size: 9.5px;
   text-transform: uppercase; letter-spacing: 0.4px;
-  color: #085041; font-weight: 500;
+  color: #0F6E56; font-weight: 500;
 }
-.bn-swap-val {
-  font-size: 14px; font-weight: 600; color: #0F6E56;
-  margin-top: 2px; font-variant-numeric: tabular-nums;
+.bn-compare-val {
+  font-size: 12.5px; font-weight: 600; color: #085041;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.bn-swap-val.strike {
+.bn-compare-val.strike {
   text-decoration: line-through;
   text-decoration-color: rgba(15, 111, 86, 0.4);
   color: rgba(15, 111, 86, 0.65);
   font-weight: 500;
 }
+.bn-compare-arrow {
+  align-self: center;
+  color: #0F6E56;
+  font-size: 13px;
+  padding: 0 2px;
+}
 
 .bn-nudge-btn {
-  margin-top: 12px; width: 100%;
+  width: 100%;
   background: #1D9E75; color: #fff; border: none;
   padding: 10px 12px; border-radius: 8px;
   font-size: 12.5px; font-weight: 500;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 6px;
-  position: relative;
+  white-space: nowrap;
 }
 .bn-nudge-btn:hover { background: #0F6E56; }
+
 .bn-nudge-skip {
-  margin-top: 6px; text-align: center;
-  font-size: 11px; color: #085041;
-  position: relative;
-}
-.bn-nudge-skip-btn {
+  margin-top: 8px; width: 100%;
   background: none; border: none;
   color: #0F6E56;
+  font: inherit; font-size: 11px;
   text-decoration: underline; text-underline-offset: 2px;
-  cursor: pointer; font: inherit;
-  padding: 0;
+  cursor: pointer;
+  padding: 4px 0;
 }
 </style>

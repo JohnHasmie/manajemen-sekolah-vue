@@ -60,8 +60,24 @@ const unit = computed(() => seatUnit(props.item, props.tenantType));
         <div class="mc-title">{{ label }}</div>
         <div class="mc-desc">{{ tagline }}</div>
       </div>
-      <div class="mc-check" :class="{ 'is-on': selected }">
-        <i v-if="selected" class="ti ti-check" aria-hidden="true" />
+      <div class="mc-check" :class="{ 'is-on': selected }" aria-hidden="true">
+        <!-- Inline SVG check so we don't depend on the Tabler icon
+             font shipping at a legible weight/size — the previous
+             `ti-check` at 12px rendered as a hairline that read as
+             blank on high-DPI screens. -->
+        <svg
+          v-if="selected"
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="3 8.5 6.5 12 13 4.5" />
+        </svg>
       </div>
     </div>
 
@@ -91,11 +107,14 @@ const unit = computed(() => seatUnit(props.item, props.tenantType));
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .mc-root:hover { border-color: #C7D2E1; }
+/* Selected state — enough visual weight to read at a glance: brand-
+   blue border, tinted background that matches ModuleRow, and a soft
+   blue focus-ring. The filled check marker at top-right does the rest. */
 .mc-root.is-on {
   border: 1.5px solid #1B6FB8;
   padding: 11.5px 13.5px;
-  background: #FBFDFF;
-  box-shadow: 0 0 0 3px rgba(27, 111, 184, 0.06);
+  background: #F0F7FF;
+  box-shadow: 0 0 0 3px rgba(27, 111, 184, 0.10);
 }
 
 .mc-top { display: flex; align-items: flex-start; gap: 8px; }
@@ -113,18 +132,20 @@ const unit = computed(() => seatUnit(props.item, props.tenantType));
 }
 
 .mc-check {
-  width: 18px; height: 18px; border-radius: 5px;
+  width: 20px; height: 20px; border-radius: 6px;
   border: 1.5px solid #CBD5E1;
   display: grid; place-items: center;
   flex-shrink: 0;
   color: transparent;
-  font-size: 12px;
+  transition: background 0.12s, border-color 0.12s;
 }
 .mc-check.is-on {
   background: #1B6FB8;
   border-color: #1B6FB8;
   color: #fff;
+  box-shadow: 0 1px 2px rgba(27, 111, 184, 0.28);
 }
+.mc-check svg { display: block; }
 
 .mc-req {
   font-size: 10px; color: #B45309;

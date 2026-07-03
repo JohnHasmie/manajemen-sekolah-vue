@@ -826,7 +826,11 @@ function flagSubscribeIntent(): void {
 
 .sn-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
+  /* 340px is wide enough to keep the calculator's line items on one
+     row for 7-digit rupiah amounts + hosts a comfortable Ambil Paket
+     Lengkap CTA without wrapping. Below 720px we collapse to single
+     column (see media query). */
+  grid-template-columns: minmax(0, 1fr) 340px;
   gap: 0;
   flex: 1;
 }
