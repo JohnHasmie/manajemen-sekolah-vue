@@ -40,6 +40,20 @@ export interface MeSnapshot {
    */
   abilities: Set<string>;
   /**
+   * Sellable-module keys the tenant currently entitles, e.g.
+   *   { "attendance_class", "grades", "communication" }
+   *
+   * Emitted by MeController alongside `abilities` (see backend
+   * MeController.php `modules` field). Distinct from abilities
+   * because a nav item can gate on "tenant owns any module that
+   * needs siswa roster" — that's a fact about modules, not any
+   * single permission key.
+   *
+   * Empty Set for demo tenants pre-hydration; super-admin should
+   * NOT check this — they see everything regardless.
+   */
+  modules: Set<string>;
+  /**
    * Backend timestamp of the snapshot. Used by the debug page to show
    * "last refreshed" — never load-bearing for gating.
    */
@@ -57,5 +71,6 @@ export interface MeResponseShape {
   school_id?: string | null;
   is_super_admin?: boolean;
   abilities?: string[];
+  modules?: string[];
   fetched_at?: string;
 }

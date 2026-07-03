@@ -90,6 +90,96 @@ export const useMeStore = defineStore('me', () => {
   }
 
   /**
+   * Modules the tenant currently owns — used by nav / route guards
+   * that gate on "any module that requires a student roster" rather
+   * than on a specific permission key.
+   *
+   * Returns false (fail-closed) pre-hydration. Super-admin bypass:
+   * they see every module.
+   */
+  function hasModule(key: string): boolean {
+    const snap = snapshot.value;
+    if (!snap) return false;
+    if (snap.isSuperAdmin) return true;
+    return snap.modules.has(key);
+  }
+
+  function hasAnyModule(keys: Iterable<string>): boolean {
+    const snap = snapshot.value;
+    if (!snap) return false;
+    if (snap.isSuperAdmin) return true;
+    for (const k of keys) {
+      if (snap.modules.has(k)) return true;
+    }
+    return false;
+  }
+
+  /**
+   * "Student-touching" modules — a tenant owning ANY of these needs
+   * a siswa roster (to bill them, mark attendance, grade them, send
+   * them announcements, etc.). If none are owned (e.g. tenant bought
+   * only attendance_staff), siswa/kelas/mapel menus can hide because
+   * they have nothing to model.
+   *
+   * `attendance_student` is the legacy pre-split key kept for
+   * grandfathered rows during the migration window — treat it as
+   * student-touching too.
+   *
+   * Keep this list in lockstep with the Flutter equivalent
+   * `MeSnapshot.STUDENT_TOUCHING_MODULES` (data/me_service.dart).
+   */
+  const STUDENT_TOUCHING_MODULES: readonly string[] = Object.freeze([
+    'attendance_student', // legacy
+    'attendance_class',
+    'attendance_gate',
+    'grades',
+    'report_cards',
+    'class_activity',
+    'schedule',
+    'lms',
+    'finance',
+    'communication',
+    'tutoring',
+    'ai_recommendation',
+    'ai_material_quiz',
+    'ai_rpp',
+  ]);
+
+  /** "Academic-context" modules — a tenant owning any of these needs
+   *  the Mata Pelajaran (subject) roster. Grades + raport reference
+   *  subjects directly; schedule/lms/class_activity index materials
+   *  by subject. Absensi doesn't need it (records are per lesson-hour
+   *  which is separate). Comm/AI/finance don't need it either.
+   */
+  const ACADEMIC_CONTEXT_MODULES: readonly string[] = Object.freeze([
+    'grades',
+    'report_cards',
+    'schedule',
+    'lms',
+    'class_activity',
+  ]);
+
+  const hasStudentContext = computed<boolean>(() => {
+    const snap = snapshot.value;
+    if (!snap) return false;
+    if (snap.isSuperAdmin) return true;
+    for (const k of STUDENT_TOUCHING_MODULES) {
+      if (snap.modules.has(k)) return true;
+    }
+    return false;
+  });
+
+  const hasAcademicContext = computed<boolean>(() => {
+    const snap = snapshot.value;
+    if (!snap) return false;
+    if (snap.isSuperAdmin) return true;
+    for (const k of ACADEMIC_CONTEXT_MODULES) {
+      if (snap.modules.has(k)) return true;
+    }
+    return false;
+  });
+
+  /**
    * Wipe. Called by the auth store on logout so the next login can't
    * transiently see the previous user's abilities.
    */
@@ -108,10 +198,14 @@ export const useMeStore = defineStore('me', () => {
     // derived
     hasSnapshot,
     isInitialLoading,
+    hasStudentContext,
+    hasAcademicContext,
     // actions
     refresh,
     can,
     canAny,
+    hasModule,
+    hasAnyModule,
     reset,
   };
 });

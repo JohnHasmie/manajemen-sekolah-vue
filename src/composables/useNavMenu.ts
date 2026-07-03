@@ -12,6 +12,7 @@
  */
 import { computed, type ComputedRef } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useMeStore } from '@/stores/me';
 import { useTenant } from '@/composables/useTenant';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type { Role } from '@/types/auth';
@@ -28,6 +29,22 @@ export interface NavItem {
    * user can't act on.
    */
   ability?: string;
+  /**
+   * "Any of" ability gate. Used when a single nav item legitimately
+   * fronts multiple flows — e.g. Absensi is useful to a tenant that
+   * owns EITHER attendance_class (student.view/submit) OR only
+   * attendance_gate (student.view_own/export). Filter passes if the
+   * user holds at least one.
+   */
+  abilityAny?: readonly string[];
+  /**
+   * Module-context gate for entries backed by CORE permissions but
+   * only meaningful when the tenant owns a module that USES the
+   * entity. Siswa/Kelas need `student-context`; Mata Pelajaran needs
+   * `academic-context`. Without this a staff-only tenant sees dead
+   * roster screens they have no reason to model.
+   */
+  needs?: 'student-context' | 'academic-context';
 }
 
 export interface NavSection {
@@ -40,31 +57,108 @@ const ADMIN_NAV: NavSection[] = [
   {
     titleKey: '',
     items: [
+      // Dashboard is always available — every role home.
       { to: '/admin', labelKey: 'nav.dashboard', icon: 'home' },
-      { to: '/admin/announcements', labelKey: 'nav.announcements', icon: 'megaphone' },
+      {
+        to: '/admin/announcements',
+        labelKey: 'nav.announcements',
+        icon: 'megaphone',
+        ability: 'communication.announcement.view',
+      },
     ],
   },
   {
     titleKey: 'nav.dataManagement',
     items: [
-      { to: '/admin/students', labelKey: 'nav.students', icon: 'users' },
+      // Siswa/Kelas/Mapel are backed by CORE `school.*` permissions
+      // that every tenant holds, so the ability gate alone leaves them
+      // visible even when the tenant has nothing to do with students
+      // (e.g. only attendance_staff). Use `needs` to hide them when
+      // no student- / academic-touching module is entitled.
+      {
+        to: '/admin/students',
+        labelKey: 'nav.students',
+        icon: 'users',
+        needs: 'student-context',
+      },
+      // Guru roster stays available — every tenant with
+      // attendance_staff needs it to model non-teaching personnel
+      // and assign QR cards.
       { to: '/admin/teachers', labelKey: 'nav.teachers', icon: 'user-check' },
-      { to: '/admin/classes', labelKey: 'nav.classes', icon: 'layers' },
-      { to: '/admin/subjects', labelKey: 'nav.subjects', icon: 'book' },
-      { to: '/admin/schedule', labelKey: 'nav.schedule', icon: 'calendar' },
+      {
+        to: '/admin/classes',
+        labelKey: 'nav.classes',
+        icon: 'layers',
+        needs: 'student-context',
+      },
+      {
+        to: '/admin/subjects',
+        labelKey: 'nav.subjects',
+        icon: 'book',
+        needs: 'academic-context',
+      },
+      {
+        to: '/admin/schedule',
+        labelKey: 'nav.schedule',
+        icon: 'calendar',
+        ability: 'academic.schedule.view',
+      },
     ],
   },
   {
     titleKey: 'nav.reports',
     items: [
-      { to: '/admin/student-attendance', labelKey: 'nav.attendance', icon: 'check-square' },
-      { to: '/admin/teacher-attendance/report', labelKey: 'nav.teacherAttendance', icon: 'camera' },
-      { to: '/admin/class-activity', labelKey: 'nav.classActivity', icon: 'activity' },
-      { to: '/admin/grades', labelKey: 'nav.grades', icon: 'bar-chart' },
-      { to: '/admin/grade-recap', labelKey: 'nav.gradeRecap', icon: 'check-square' },
-      { to: '/admin/lesson-plans', labelKey: 'nav.lessonPlans', icon: 'file-text' },
-      { to: '/admin/report-cards', labelKey: 'nav.reportCards', icon: 'clipboard' },
-      { to: '/admin/finance', labelKey: 'nav.finance', icon: 'wallet' },
+      // Absensi (student) — attendance_class owners get view+submit;
+      // attendance_gate-only owners get view_own+export. Either is
+      // enough to justify the menu entry.
+      {
+        to: '/admin/student-attendance',
+        labelKey: 'nav.attendance',
+        icon: 'check-square',
+        abilityAny: ['attendance.student.view', 'attendance.student.export'],
+      },
+      {
+        to: '/admin/teacher-attendance/report',
+        labelKey: 'nav.teacherAttendance',
+        icon: 'camera',
+        ability: 'attendance.staff.report.view',
+      },
+      {
+        to: '/admin/class-activity',
+        labelKey: 'nav.classActivity',
+        icon: 'activity',
+        ability: 'activity.view',
+      },
+      {
+        to: '/admin/grades',
+        labelKey: 'nav.grades',
+        icon: 'bar-chart',
+        ability: 'academic.grade.view',
+      },
+      {
+        to: '/admin/grade-recap',
+        labelKey: 'nav.gradeRecap',
+        icon: 'check-square',
+        ability: 'academic.grade.recap.view',
+      },
+      {
+        to: '/admin/lesson-plans',
+        labelKey: 'nav.lessonPlans',
+        icon: 'file-text',
+        ability: 'academic.lesson_plan.view',
+      },
+      {
+        to: '/admin/report-cards',
+        labelKey: 'nav.reportCards',
+        icon: 'clipboard',
+        ability: 'academic.report_card.view',
+      },
+      {
+        to: '/admin/finance',
+        labelKey: 'nav.finance',
+        icon: 'wallet',
+        ability: 'finance.bill.view',
+      },
     ],
   },
   {
@@ -83,6 +177,7 @@ const ADMIN_NAV: NavSection[] = [
         to: '/admin/attendance/settings',
         labelKey: 'nav.attendanceQrSettings',
         icon: 'sliders',
+        ability: 'attendance.staff.settings.manage',
       },
       {
         to: '/admin/attendance/gate-qr',
@@ -114,22 +209,80 @@ const TEACHER_NAV: NavSection[] = [
     titleKey: '',
     items: [
       { to: '/teacher', labelKey: 'nav.dashboard', icon: 'home' },
-      { to: '/teacher/my-attendance', labelKey: 'nav.myAttendance', icon: 'camera' },
-      { to: '/teacher/schedule', labelKey: 'nav.schedule', icon: 'calendar' },
-      { to: '/teacher/announcements', labelKey: 'nav.announcements', icon: 'megaphone' },
+      {
+        to: '/teacher/my-attendance',
+        labelKey: 'nav.myAttendance',
+        icon: 'camera',
+        ability: 'attendance.self.view_own',
+      },
+      {
+        to: '/teacher/schedule',
+        labelKey: 'nav.schedule',
+        icon: 'calendar',
+        ability: 'academic.schedule.view',
+      },
+      {
+        to: '/teacher/announcements',
+        labelKey: 'nav.announcements',
+        icon: 'megaphone',
+        ability: 'communication.announcement.view',
+      },
     ],
   },
   {
     titleKey: 'role.guru',
     items: [
-      { to: '/teacher/attendance', labelKey: 'nav.attendance', icon: 'check-square' },
-      { to: '/teacher/grades', labelKey: 'nav.grades', icon: 'edit' },
-      { to: '/teacher/grade-recap', labelKey: 'nav.gradeRecap', icon: 'bar-chart' },
-      { to: '/teacher/class-activity', labelKey: 'nav.classActivity', icon: 'activity' },
-      { to: '/teacher/materials', labelKey: 'nav.materials', icon: 'book' },
-      { to: '/teacher/lesson-plans', labelKey: 'nav.lessonPlans', icon: 'file-text' },
-      { to: '/teacher/recommendations', labelKey: 'nav.recommendations', icon: 'sparkles' },
-      { to: '/teacher/report-cards', labelKey: 'nav.reportCards', icon: 'clipboard' },
+      {
+        to: '/teacher/attendance',
+        labelKey: 'nav.attendance',
+        icon: 'check-square',
+        abilityAny: ['attendance.student.submit', 'attendance.student.view'],
+      },
+      {
+        to: '/teacher/grades',
+        labelKey: 'nav.grades',
+        icon: 'edit',
+        ability: 'academic.grade.input',
+      },
+      {
+        to: '/teacher/grade-recap',
+        labelKey: 'nav.gradeRecap',
+        icon: 'bar-chart',
+        ability: 'academic.grade.recap.view',
+      },
+      {
+        to: '/teacher/class-activity',
+        labelKey: 'nav.classActivity',
+        icon: 'activity',
+        ability: 'activity.view',
+      },
+      {
+        to: '/teacher/materials',
+        labelKey: 'nav.materials',
+        icon: 'book',
+        ability: 'academic.material.view',
+      },
+      {
+        to: '/teacher/lesson-plans',
+        labelKey: 'nav.lessonPlans',
+        icon: 'file-text',
+        ability: 'academic.lesson_plan.view',
+      },
+      {
+        to: '/teacher/recommendations',
+        labelKey: 'nav.recommendations',
+        icon: 'sparkles',
+        abilityAny: [
+          'communication.recommendation.view',
+          'communication.recommendation.create',
+        ],
+      },
+      {
+        to: '/teacher/report-cards',
+        labelKey: 'nav.reportCards',
+        icon: 'clipboard',
+        ability: 'academic.report_card.view',
+      },
     ],
   },
 ];
@@ -139,18 +292,53 @@ const PARENT_NAV: NavSection[] = [
     titleKey: '',
     items: [
       { to: '/parent', labelKey: 'nav.dashboard', icon: 'home' },
-      { to: '/parent/announcements', labelKey: 'nav.announcements', icon: 'megaphone' },
+      {
+        to: '/parent/announcements',
+        labelKey: 'nav.announcements',
+        icon: 'megaphone',
+        ability: 'communication.announcement.view',
+      },
     ],
   },
   {
     titleKey: 'role.wali',
     items: [
-      { to: '/parent/attendance', labelKey: 'nav.attendance', icon: 'check-square' },
-      { to: '/parent/grades', labelKey: 'nav.grades', icon: 'bar-chart' },
-      { to: '/parent/class-activity', labelKey: 'nav.classActivity', icon: 'activity' },
-      { to: '/parent/recommendations', labelKey: 'nav.recommendations', icon: 'sparkles' },
-      { to: '/parent/report-cards', labelKey: 'nav.reportCards', icon: 'clipboard' },
-      { to: '/parent/billing', labelKey: 'nav.billing', icon: 'wallet' },
+      {
+        to: '/parent/attendance',
+        labelKey: 'nav.attendance',
+        icon: 'check-square',
+        ability: 'attendance.student.view_own',
+      },
+      {
+        to: '/parent/grades',
+        labelKey: 'nav.grades',
+        icon: 'bar-chart',
+        ability: 'academic.grade.view',
+      },
+      {
+        to: '/parent/class-activity',
+        labelKey: 'nav.classActivity',
+        icon: 'activity',
+        ability: 'activity.view',
+      },
+      {
+        to: '/parent/recommendations',
+        labelKey: 'nav.recommendations',
+        icon: 'sparkles',
+        ability: 'communication.recommendation.view',
+      },
+      {
+        to: '/parent/report-cards',
+        labelKey: 'nav.reportCards',
+        icon: 'clipboard',
+        ability: 'academic.report_card.view',
+      },
+      {
+        to: '/parent/billing',
+        labelKey: 'nav.billing',
+        icon: 'wallet',
+        ability: 'finance.bill.view_own',
+      },
     ],
   },
 ];
@@ -373,18 +561,35 @@ const MENUS: Record<Role, NavSection[]> = {
 };
 
 /**
- * Drop nav items whose `ability` the active user doesn't hold (RBAC
- * Phase A — backend MR !225). Sections that empty out after filtering
- * are dropped wholesale so the sidebar doesn't render a blank section
- * heading. Items without an `ability` always pass.
+ * Filter nav items by their declared gates.
+ *
+ * Passing rules (all must hold):
+ *   - `ability`     → `hasAbility(ability)` returns true.
+ *   - `abilityAny`  → at least one of the listed abilities is held.
+ *   - `needs`       → the corresponding entitlement flag on the me
+ *                     store is true (`hasStudentContext` /
+ *                     `hasAcademicContext`). This is how siswa/kelas/
+ *                     mapel disappear when the tenant has no module
+ *                     that actually consumes those entities.
+ *
+ * Sections that empty out after filtering are dropped wholesale so
+ * the sidebar doesn't render a blank section heading.
  */
-function applyAbilityGate(
+function applyGates(
   sections: NavSection[],
   hasAbility: (perm: string) => boolean,
+  hasStudentContext: boolean,
+  hasAcademicContext: boolean,
 ): NavSection[] {
   const out: NavSection[] = [];
   for (const sec of sections) {
-    const items = sec.items.filter((it) => !it.ability || hasAbility(it.ability));
+    const items = sec.items.filter((it) => {
+      if (it.ability && !hasAbility(it.ability)) return false;
+      if (it.abilityAny && !it.abilityAny.some((a) => hasAbility(a))) return false;
+      if (it.needs === 'student-context' && !hasStudentContext) return false;
+      if (it.needs === 'academic-context' && !hasAcademicContext) return false;
+      return true;
+    });
     if (items.length > 0) out.push({ titleKey: sec.titleKey, items });
   }
   return out;
@@ -392,6 +597,7 @@ function applyAbilityGate(
 
 export function useNavMenu(): ComputedRef<NavSection[]> {
   const auth = useAuthStore();
+  const me = useMeStore();
   const { isTutoringCenter } = useTenant();
   // useChildPicker exposes a module-singleton activeChildId that
   // updates reactively when the parent switches kid on the dashboard.
@@ -403,6 +609,8 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
     if (auth.isSuperAdmin) return SUPER_ADMIN_NAV;
     const role = auth.activeRole;
     if (!role) return [];
+    const studentCtx = me.hasStudentContext;
+    const academicCtx = me.hasAcademicContext;
     // Tutoring-center tenants get the bimbel menu (the school
     // data-management pages read empty for them).
     if (isTutoringCenter.value) {
@@ -411,9 +619,9 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
       // overview without a child-picker detour.
       if (role === 'wali') return parentTutoringNav(activeChildId.value);
       if (TUTORING_MENUS[role]) {
-        return applyAbilityGate(TUTORING_MENUS[role]!, auth.hasAbility);
+        return applyGates(TUTORING_MENUS[role]!, auth.hasAbility, studentCtx, academicCtx);
       }
     }
-    return applyAbilityGate(MENUS[role] ?? [], auth.hasAbility);
+    return applyGates(MENUS[role] ?? [], auth.hasAbility, studentCtx, academicCtx);
   });
 }

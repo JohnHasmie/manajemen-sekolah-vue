@@ -23,6 +23,7 @@ import {
   type RouteRecordRaw,
 } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useMeStore } from '@/stores/me';
 import { tenantKindFromRaw } from '@/composables/useTenant';
 import type { Role } from '@/types/auth';
 
@@ -367,7 +368,7 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/students',
         name: 'admin.students',
         component: AdminStudentManagementView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, needs: 'student-context' },
       },
       {
         path: 'admin/teachers',
@@ -379,109 +380,121 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/classes',
         name: 'admin.classes',
         component: AdminClassroomManagementView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, needs: 'student-context' },
       },
       {
         path: 'admin/subjects',
         name: 'admin.subjects',
         component: AdminSubjectManagementView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, needs: 'academic-context' },
       },
       {
         path: 'admin/subjects/:subjectId/classes',
         name: 'admin.subjects.classes',
         component: AdminSubjectClassManagementView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, needs: 'academic-context' },
       },
       {
         path: 'admin/lesson-plans',
         name: 'admin.lesson-plans',
         component: AdminLessonPlanReviewView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'academic.lesson_plan.view' },
       },
       {
         path: 'admin/lesson-plans/:id',
         name: 'admin.lesson-plans.detail',
         component: AdminLessonPlanDetailView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'academic.lesson_plan.view' },
       },
       {
         path: 'admin/schedule',
         name: 'admin.schedule',
         component: AdminScheduleManagementView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'academic.schedule.view' },
       },
       {
         path: 'admin/schedule/lesson-hours',
         name: 'admin.schedule.lesson-hours',
         component: AdminLessonHourSettingsView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'academic.schedule.view' },
       },
       {
         path: 'admin/announcements',
         name: 'admin.announcements',
         component: AdminAnnouncementView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'communication.announcement.view' },
       },
       {
         path: 'admin/announcements/calendar',
         name: 'admin.announcements.calendar',
         component: AdminAnnouncementCalendarView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'communication.announcement.view' },
       },
       {
         path: 'admin/student-attendance',
         name: 'admin.student-attendance',
         component: AdminAttendanceDashboardView,
-        meta: { role: 'admin' satisfies Role },
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['attendance.student.view', 'attendance.student.export'],
+        },
       },
       {
         path: 'admin/student-attendance/grade-level/:tingkat',
         name: 'admin.student-attendance.grade-level',
         component: AdminAttendanceTingkatHeatmapView,
-        meta: { role: 'admin' satisfies Role },
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['attendance.student.view', 'attendance.student.export'],
+        },
       },
       {
         path: 'admin/student-attendance/report',
         name: 'admin.student-attendance.report',
         component: AdminAttendanceReportView,
-        meta: { role: 'admin' satisfies Role },
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['attendance.student.view', 'attendance.student.export'],
+        },
       },
       {
         path: 'admin/student-attendance/detail',
         name: 'admin.student-attendance.detail',
         component: AdminAttendanceDetailView,
-        meta: { role: 'admin' satisfies Role },
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['attendance.student.view', 'attendance.student.export'],
+        },
       },
       {
         path: 'admin/class-activity',
         name: 'admin.class-activity',
         component: AdminClassActivityView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'activity.view' },
       },
       {
         path: 'admin/finance',
         component: AdminFinanceView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'finance.bill.view' },
         redirect: { name: 'admin.finance.bills' },
         children: [
           {
             path: 'tagihan',
             name: 'admin.finance.bills',
             component: AdminFinanceBillsView,
-            meta: { role: 'admin' satisfies Role },
+            meta: { role: 'admin' satisfies Role, ability: 'finance.bill.view' },
           },
           {
             path: 'pembayaran',
             name: 'admin.finance.payments',
             component: AdminFinancePaymentsView,
-            meta: { role: 'admin' satisfies Role },
+            meta: { role: 'admin' satisfies Role, ability: 'finance.payment.view' },
           },
           {
             path: 'jenis',
             name: 'admin.finance.types',
             component: AdminFinanceJenisView,
-            meta: { role: 'admin' satisfies Role },
+            meta: { role: 'admin' satisfies Role, ability: 'finance.bill_type.manage' },
           },
         ],
       },
@@ -495,25 +508,25 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/finance/bills/:classId/:paymentTypeId',
         name: 'admin.finance.bills.detail',
         component: AdminFinanceBillGroupDetailView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'finance.bill.view' },
       },
       {
         path: 'admin/finance/class/:classId',
         name: 'admin.finance.class',
         component: AdminClassFinanceReportView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'finance.bill.view' },
       },
       {
         path: 'admin/grades',
         name: 'admin.grades',
         component: AdminGradeOverviewView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'academic.grade.view' },
       },
       {
         path: 'admin/grade-recap',
         name: 'admin.grade-recap',
         component: AdminGradeRecapView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'academic.grade.recap.view' },
       },
       {
         // Admin-side drill from AdminGradeRecapView per-slice card —
@@ -525,7 +538,7 @@ const routes: RouteRecordRaw[] = [
         name: 'admin.grade-recap.detail',
         component: TeacherGradeRecapDetailView,
         props: true,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'academic.grade.recap.view' },
       },
       {
         // Admin-side drill from AdminGradeOverviewView per-teacher
@@ -536,25 +549,25 @@ const routes: RouteRecordRaw[] = [
         name: 'admin.grades.teacher',
         component: TeacherGradeBookView,
         props: true,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'academic.grade.view' },
       },
       {
         path: 'admin/report-cards',
         name: 'admin.report-cards',
         component: AdminReportCardHubView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'academic.report_card.view' },
       },
       {
         path: 'admin/report-cards/class/:classId',
         name: 'admin.report-cards.class',
         component: AdminReportCardClassView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'academic.report_card.view' },
       },
       {
         path: 'admin/report-cards/class/:classId/student/:studentClassId',
         name: 'admin.report-cards.detail',
         component: AdminReportCardDetailView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'academic.report_card.view' },
       },
       {
         path: 'admin/settings',
@@ -599,14 +612,14 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/teacher-attendance/report',
         name: 'admin.teacher-attendance.report',
         component: AdminTeacherAttendanceView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'attendance.staff.report.view' },
       },
       {
         // PRESENSI GURU — admin settings for teacher daily attendance
         path: 'admin/teacher-attendance/settings',
         name: 'admin.teacher-attendance.settings',
         component: AdminTeacherAttendanceView,
-        meta: { role: 'admin' satisfies Role },
+        meta: { role: 'admin' satisfies Role, ability: 'attendance.staff.settings.manage' },
       },
 
       // ── Gate QR + personnel cards (MR !226) ───────────────────────
@@ -1494,6 +1507,31 @@ router.beforeEach((to) => {
   const requiredAbility = to.meta.ability as string | undefined;
   if (requiredAbility && !auth.hasAbility(requiredAbility)) {
     return { path: roleHomePath[auth.activeRole ?? ''] ?? '/login' };
+  }
+
+  // "Any of" ability gate. Same intent as `ability` — a single route
+  // sometimes legitimately covers two flows (e.g. admin absensi is
+  // useful to a tenant with EITHER attendance_class OR attendance_gate
+  // alone). Passes if the user holds at least one.
+  const requiredAny = to.meta.abilityAny as readonly string[] | undefined;
+  if (requiredAny && !requiredAny.some((a) => auth.hasAbility(a))) {
+    return { path: roleHomePath[auth.activeRole ?? ''] ?? '/login' };
+  }
+
+  // Module-context gate. `needs: 'student-context'` on a route means:
+  // route only makes sense if the tenant owns any module that uses
+  // students (attendance_class, grades, finance, etc.). Same for
+  // `academic-context` (grades/lms/schedule etc use subjects). Uses
+  // the me store's derived flags so the router agrees with useNavMenu.
+  const needs = to.meta.needs as 'student-context' | 'academic-context' | undefined;
+  if (needs) {
+    const me = useMeStore();
+    if (needs === 'student-context' && !me.hasStudentContext) {
+      return { path: roleHomePath[auth.activeRole ?? ''] ?? '/login' };
+    }
+    if (needs === 'academic-context' && !me.hasAcademicContext) {
+      return { path: roleHomePath[auth.activeRole ?? ''] ?? '/login' };
+    }
   }
 
   return true;

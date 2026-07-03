@@ -28,6 +28,13 @@ function normalizeSnapshot(raw: MeResponseShape): MeSnapshot {
       : [],
   );
 
+  const modulesRaw = raw.modules;
+  const modules = new Set<string>(
+    Array.isArray(modulesRaw)
+      ? modulesRaw.filter((m): m is string => typeof m === 'string')
+      : [],
+  );
+
   return {
     user: {
       id: String(raw.user?.id ?? ''),
@@ -38,6 +45,7 @@ function normalizeSnapshot(raw: MeResponseShape): MeSnapshot {
     schoolId: raw.school_id ?? null,
     isSuperAdmin: raw.is_super_admin === true,
     abilities,
+    modules,
     fetchedAt: raw.fetched_at ?? null,
   };
 }
