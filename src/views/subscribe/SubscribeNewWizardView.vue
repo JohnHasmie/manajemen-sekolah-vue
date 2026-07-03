@@ -187,6 +187,14 @@ async function loadCatalog() {
   try { catalog.value = await SubscriptionBillingService.getModuleCatalog(); } catch { /* fail-soft */ }
 }
 
+/**
+ * Refresh the quote for the current form state. Prefers the backend
+ * (authoritative — it also applies the yearly discount + any config
+ * overrides), but falls back to a local compute when the caller is
+ * anonymous (POST /billing/quote requires auth). Without the fallback,
+ * the sidebar reads "Belum ada modul dipilih · Rp 0" while modules are
+ * visibly ticked, which reads as a bug.
+ */
 async function refreshQuote() {
   if (!catalog.value || selectedKeys.value.size === 0) {
     quote.value = null;
@@ -201,8 +209,98 @@ async function refreshQuote() {
       ai_quota: aiQuota.value,
     });
   } catch (e) {
-    console.warn('[SubscribeNewWizard.refreshQuote]', (e as Error).message);
+    // Backend refused (usually 401 while browsing anonymously) — compute
+    // locally from the catalog so the sidebar still reflects the user's
+    // selection. Backend re-verifies the exact number at subscribe time.
+    console.warn('[SubscribeNewWizard.refreshQuote] falling back to local compute:', (e as Error).message);
+    quote.value = computeLocalQuote();
   }
+}
+
+/**
+ * Client-side mirror of ComputeSubscriptionQuoteAction::executeWithModules().
+ * Uses the module catalog prices we already loaded from GET /billing/plans
+ * + /modules/catalog. Yearly discount comes from `plan.yearly_discount_pct`.
+ */
+function computeLocalQuote(): ModularQuote | null {
+  const cat = catalog.value;
+  if (!cat) return null;
+  const selected = Array.from(selectedKeys.value);
+  const bundleKeys = selected.filter((k) => k in cat.bundles);
+  const bundleMemberCoverage = new Set<string>();
+  bundleKeys.forEach((bk) => cat.bundles[bk]?.members.forEach((m) => bundleMemberCoverage.add(m)));
+  const optionalKeys = selected.filter(
+    (k) => !(k in cat.bundles) && k in cat.optional && !bundleMemberCoverage.has(k),
+  );
+
+  // Also pull in required deps (report_cards → grades) so the calc
+  // matches backend when a require is auto-included.
+  const withRequires = new Set(optionalKeys);
+  optionalKeys.forEach((k) => cat.optional[k]?.requires.forEach((r) => withRequires.add(r)));
+
+  const perModule: { key: string; price_per_student: number; price_per_staff: number; monthly_line: number }[] = [];
+  let monthly = 0;
+
+  for (const bk of bundleKeys) {
+    const b = cat.bundles[bk];
+    if (!b) continue;
+    const line = b.price_per_student * form.student_count + b.price_per_staff * form.staff_count;
+    perModule.push({
+      key: bk,
+      price_per_student: b.price_per_student,
+      price_per_staff: b.price_per_staff,
+      monthly_line: line,
+    });
+    monthly += line;
+  }
+  for (const k of withRequires) {
+    const it = cat.optional[k];
+    if (!it) continue;
+    const line = it.price_per_student * form.student_count + it.price_per_staff * form.staff_count;
+    perModule.push({
+      key: k,
+      price_per_student: it.price_per_student,
+      price_per_staff: it.price_per_staff,
+      monthly_line: line,
+    });
+    monthly += line;
+  }
+
+  // AI quota extras — must mirror what backend adds in
+  // ComputeSubscriptionQuoteAction so the local preview matches
+  // when the user bumps a stepper.
+  const aiLines: { key: string; extra_generates: number; monthly_line: number }[] = [];
+  for (const [k, extra] of Object.entries(aiQuota.value)) {
+    if (!extra) continue;
+    const cfg = aiQuotaCfg[k as keyof typeof aiQuotaCfg];
+    if (!cfg) continue;
+    const steps = Math.ceil(extra / 10);
+    const line = steps * cfg.stepPrice * form.staff_count;
+    aiLines.push({ key: k, extra_generates: extra, monthly_line: line });
+    monthly += line;
+  }
+
+  const discountPct = plan.value?.yearly_discount_pct ?? 20;
+  const yearlyGross = monthly * 12;
+  const yearlySavings = Math.round((yearlyGross * discountPct) / 100);
+  const yearlyAmount = yearlyGross - yearlySavings;
+  const chosen = period.value === 'yearly' ? yearlyAmount : monthly;
+
+  return {
+    selected_keys: selected,
+    expanded_modules: [...bundleMemberCoverage, ...withRequires],
+    student_count: form.student_count,
+    staff_count: form.staff_count,
+    per_module: perModule,
+    ai_quota_lines: aiLines,
+    monthly_amount: monthly,
+    yearly_gross: yearlyGross,
+    yearly_amount: yearlyAmount,
+    yearly_savings: yearlySavings,
+    chosen_amount: chosen,
+    chosen_plan: period.value,
+    currency: plan.value?.currency ?? 'IDR',
+  };
 }
 
 let quoteDebounce: number | null = null;
@@ -215,9 +313,147 @@ watch(
   { deep: true },
 );
 
+// ── Draft persistence (localStorage) ────────────────────────────────
+// The wizard has a few steps and users bail + resume all the time — a
+// browser refresh or accidentally closed tab shouldn't wipe half an
+// hour of typing. Snapshot form + selectedKeys + aiQuota + period into
+// localStorage on every change (debounced), keyed by the signed-in
+// email if available and 'anon' otherwise. On sign-in we transplant
+// the anon draft to the email-scoped slot so the same person seeing
+// the Google prompt then completing sign-in doesn't start over.
+//
+// Cleared on a successful subscribe so the next tenant creation starts
+// clean. Backend-side draft sync (POST /billing/subscription-wizard)
+// exists but requires auth — this local layer is what makes the
+// anonymous-then-sign-in path feel seamless.
+const DRAFT_VERSION = 'v3';
+const DRAFT_ROOT = `subscribe_wizard_draft_${DRAFT_VERSION}`;
+
+function draftKeyFor(email: string | null | undefined): string {
+  return `${DRAFT_ROOT}:${email ? email.toLowerCase().trim() : 'anon'}`;
+}
+
+interface WizardDraft {
+  form: Record<string, unknown>;
+  selectedKeys: string[];
+  aiQuota: Record<string, number>;
+  period: BillingPeriod;
+  stepIndex: number;
+  savedAt: string;
+}
+
+function snapshotDraft(): WizardDraft {
+  return {
+    form: JSON.parse(JSON.stringify(form)),
+    selectedKeys: Array.from(selectedKeys.value),
+    aiQuota: { ...aiQuota.value },
+    period: period.value,
+    stepIndex: stepIndex.value,
+    savedAt: new Date().toISOString(),
+  };
+}
+
+function saveDraft(): void {
+  try {
+    const key = draftKeyFor(auth.user?.email);
+    localStorage.setItem(key, JSON.stringify(snapshotDraft()));
+  } catch { /* quota exceeded / disabled — non-fatal */ }
+}
+
+function loadDraft(email: string | null | undefined): WizardDraft | null {
+  try {
+    const raw = localStorage.getItem(draftKeyFor(email));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as WizardDraft;
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function applyDraft(d: WizardDraft): void {
+  if (d.form && typeof d.form === 'object') {
+    Object.assign(form, d.form);
+  }
+  if (Array.isArray(d.selectedKeys)) {
+    selectedKeys.value = new Set(d.selectedKeys.filter((k) => typeof k === 'string'));
+  }
+  if (d.aiQuota && typeof d.aiQuota === 'object') {
+    aiQuota.value = { ...d.aiQuota };
+  }
+  if (d.period === 'monthly' || d.period === 'yearly') {
+    period.value = d.period;
+  }
+  if (typeof d.stepIndex === 'number' && d.stepIndex >= 0 && d.stepIndex < STEPS.length) {
+    // Only restore stepIndex if the user got past step 1 — a fresh
+    // return should still show the intro step so they orient.
+    if (d.stepIndex > 0) stepIndex.value = d.stepIndex;
+  }
+}
+
+function clearDraft(email: string | null | undefined): void {
+  try {
+    localStorage.removeItem(draftKeyFor(email));
+  } catch { /* non-fatal */ }
+}
+
+let draftSaveTimer: number | null = null;
+watch(
+  [
+    () => form.tenant_name,
+    () => form.tenant_type,
+    () => form.education_level,
+    () => form.city,
+    () => form.address,
+    () => form.npsn,
+    () => form.admin_name,
+    () => form.admin_job_title,
+    () => form.admin_whatsapp,
+    () => form.admin_email,
+    () => form.student_count,
+    () => form.staff_count,
+    selectedKeys,
+    aiQuota,
+    period,
+    stepIndex,
+  ],
+  () => {
+    if (draftSaveTimer !== null) window.clearTimeout(draftSaveTimer);
+    draftSaveTimer = window.setTimeout(saveDraft, 500) as unknown as number;
+  },
+  { deep: true },
+);
+
+// When the user signs in mid-flow, migrate the anonymous draft to
+// the email-keyed slot so their answers survive the login round-trip.
+watch(
+  () => auth.user?.email ?? null,
+  (newEmail, oldEmail) => {
+    if (newEmail && oldEmail !== newEmail) {
+      const anon = loadDraft(null);
+      const emailSlot = loadDraft(newEmail);
+      if (anon && !emailSlot) {
+        try {
+          localStorage.setItem(draftKeyFor(newEmail), JSON.stringify(anon));
+        } catch { /* non-fatal */ }
+      }
+      clearDraft(null);
+      if (!emailSlot && anon) applyDraft(anon);
+      if (emailSlot) applyDraft(emailSlot);
+    }
+  },
+);
+
 onMounted(async () => {
   await Promise.all([loadPlan(), loadCatalog()]);
   if (!auth.isAuthenticated) setTimeout(mountGoogleButton, 100);
+  // Restore a saved draft BEFORE prefilling from the auth store — the
+  // draft's admin_name/email are the user's own words and should win
+  // over the Google profile defaults.
+  const restored =
+    loadDraft(auth.user?.email) ?? loadDraft(null);
+  if (restored) applyDraft(restored);
   if (!form.admin_email && auth.user?.email) form.admin_email = auth.user.email;
   if (!form.admin_name && auth.user?.name) form.admin_name = auth.user.name;
 });
@@ -340,6 +576,11 @@ async function handleSubscribeResult(result: SubscribeResult) {
     }
     return;
   }
+  // Draft served its purpose — the order is created, next visit to
+  // /subscribe/new should start clean (a returning customer likely
+  // wants a DIFFERENT tenant, not the one they just paid for).
+  clearDraft(auth.user?.email);
+  clearDraft(null);
   order.value = {
     planLabel: buildPlanLabel(),
     studentCount: form.student_count,
