@@ -32,6 +32,7 @@ import type {
 
 import WizardChrome from '@/components/subscribe/WizardChrome.vue';
 import BundleStrip from '@/components/subscribe/BundleStrip.vue';
+import { isModuleHiddenFor } from '@/components/subscribe/moduleTokens';
 import ModuleCatalogGrid from '@/components/subscribe/ModuleCatalogGrid.vue';
 import AiQuotaStepper from '@/components/subscribe/AiQuotaStepper.vue';
 import PricingCalculatorV2 from '@/components/subscribe/PricingCalculatorV2.vue';
@@ -570,6 +571,50 @@ function onAiQuotaUpdate(key: string, extra: number) {
 }
 
 /**
+ * When the tenant type flips (sekolah ↔ bimbel), purge any picked
+ * modules that are hidden for the new type. Without this, a user who
+ * selects AI modules while on sekolah, then flips to bimbel, still
+ * has AI in `selectedKeys` — the picker cards are hidden but the
+ * `<AiQuotaStepper>` block below the grid still renders (it iterates
+ * `selectedAiKeys` off the raw selection) AND the calculator still
+ * bills for them. Same story in the reverse direction for the
+ * bimbel-only `tutoring` module. `bundle_complete` is sekolah-only
+ * too — it's a sekolah preset.
+ *
+ * Also purges the matching `aiQuota` entries so the calculator's AI
+ * quota line disappears alongside the module row.
+ */
+watch(() => form.tenant_type, (newType, oldType) => {
+  if (!newType || newType === oldType) return;
+  const cat = catalog.value;
+  if (!cat) return;
+
+  const next = new Set<string>();
+  selectedKeys.value.forEach((k) => {
+    // Bundle keys aren't in `cat.optional` — evaluate them by their
+    // key alone. Currently only `bundle_complete` exists and it's
+    // sekolah-oriented, so drop it for bimbel.
+    if (k in cat.bundles) {
+      if (newType === 'bimbel' && k === 'bundle_complete') return;
+      next.add(k);
+      return;
+    }
+    const item = cat.optional[k];
+    if (!item) return;
+    if (!isModuleHiddenFor(k, item.group, newType)) next.add(k);
+  });
+  selectedKeys.value = next;
+
+  // Drop AI quota entries whose module is no longer selected — no
+  // point keeping the value alive if the module row is gone.
+  const nextAi: Record<string, number> = {};
+  Object.entries(aiQuota.value).forEach(([k, v]) => {
+    if (next.has(k)) nextAi[k] = v;
+  });
+  aiQuota.value = nextAi;
+});
+
+/**
  * "Bulanan · N modul" is wrong when the user picked a bundle — the
  * user sees `selectedKeys.size === 1` and thinks they only bought one
  * module. Render the bundle label when a bundle is present, otherwise
@@ -909,12 +954,15 @@ function flagSubscribeIntent(): void {
             biaya batal.
           </p>
 
+          <!-- bundle_complete = Paket Lengkap (Sekolah). Its members are
+               sekolah-only modules (attendance_*, grades, report_cards,
+               etc.) that don't route bimbel traffic — offering it to a
+               bimbel admin sells them a bundle where none of the parts
+               work. Hide until we ship a bimbel-native bundle. -->
           <BundleStrip
-            v-if="catalog.bundles.bundle_complete"
+            v-if="catalog.bundles.bundle_complete && form.tenant_type !== 'bimbel'"
             label="Paket Lengkap · semua modul non-AI"
-            :description="form.tenant_type === 'bimbel'
-              ? '9 modul: absensi, nilai, laporan progres, jadwal sesi, materi ajar, pembayaran, komunikasi, tugas.'
-              : '9 modul: absensi, nilai, raport, jadwal, RPP, keuangan, komunikasi, aktivitas kelas.'"
+            description="9 modul: absensi, nilai, raport, jadwal, RPP, keuangan, komunikasi, aktivitas kelas."
             :price-per-student="catalog.bundles.bundle_complete.price_per_student"
             :active="selectedKeys.has('bundle_complete')"
             @select="toggleModule('bundle_complete')"
