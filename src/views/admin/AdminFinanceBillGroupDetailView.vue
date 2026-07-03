@@ -23,10 +23,27 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import TagihReminderModal from '@/components/feature/TagihReminderModal.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { formatRupiah } from '@/lib/format';
+import { useMeStore } from '@/stores/me';
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
+const me = useMeStore();
+
+/**
+ * "Kirim Pengingat" (bulk WA/email reminder) requires the
+ * `communication` module — the reminder fan-out flows through the
+ * announcement / notification pipeline (see backend
+ * TagihReminderService). Without the module the modal opens, the
+ * user picks recipients, then the send call 402s. Gate the button
+ * up front so the interaction is impossible when unentitled.
+ *
+ * Uses `hasModule('communication')` rather than a specific
+ * `communication.*.send` permission because there isn't one — the
+ * reminder pipeline is scoped by module entitlement, not per-key
+ * ability.
+ */
+const canRemind = computed<boolean>(() => me.hasModule('communication'));
 
 const classId = computed(() => String(route.params.classId ?? ''));
 const paymentTypeId = computed(() => String(route.params.paymentTypeId ?? ''));
@@ -255,7 +272,12 @@ const kicker = computed(() =>
       <Button variant="secondary" size="sm" @click="selectedIds = new Set()">
         {{ t('admin.sekolah.bill_group_detail.cancel') }}
       </Button>
-      <Button variant="primary" size="sm" @click="showReminder = true">
+      <Button
+        v-if="canRemind"
+        variant="primary"
+        size="sm"
+        @click="showReminder = true"
+      >
         <NavIcon name="bell" :size="13" />
         {{ t('admin.sekolah.bill_group_detail.bulk_remind', { count: selectedIds.size }) }}
       </Button>
