@@ -758,7 +758,18 @@ function flagSubscribeIntent(): void {
 }
 .sn-google-slot { min-height: 42px; display: flex; justify-content: center; }
 
-.sn-step { padding: 22px; max-width: 640px; }
+/* Center the step content horizontally so the form sits in the
+   middle of a wide viewport instead of pinning to the top-left. On
+   tall viewports the flex-column layout of .sn-page + auto margins
+   above/below keep the form near the vertical middle too. max-width
+   640px keeps line-lengths readable at desktop widths. */
+.sn-step {
+  padding: 32px 22px;
+  max-width: 640px;
+  width: 100%;
+  margin: auto;
+  align-self: center;
+}
 .sn-h { margin-bottom: 18px; }
 .sn-h1 {
   font-size: 22px; font-weight: 500;
