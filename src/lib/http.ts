@@ -182,6 +182,57 @@ function buildClient(
     async (error) => {
       const status = error.response?.status;
 
+      // 400 "No active school context" → treat GET requests as an
+      // empty state instead of a hard error.
+      //
+      // Rationale: a fresh admin (or a super-admin briefly between
+      // schools) legitimately has no active school selected for a
+      // fraction of a second, and every list endpoint the shell
+      // fires (kelas, guru, siswa, mapel, jadwal, stats,
+      // filter-options, settings) responds 400. Rendering "Terjadi
+      // kesalahan / Request failed with status code 400" for ALL of
+      // them reads as a broken app rather than the truthful "you
+      // haven't picked a school yet".
+      //
+      // Rewrite the error into a resolved 200 with an empty envelope
+      // so the standard AsyncView empty-state fires everywhere. Only
+      // GET is safe — mutations (POST/PUT/DELETE) still error because
+      // they legitimately can't proceed without school context.
+      const method = String(error.config?.method ?? '').toUpperCase();
+      const errBody = error.response?.data;
+      const isMissingContext =
+        status === 400 &&
+        typeof errBody?.error === 'string' &&
+        errBody.error.toLowerCase().includes('no active school context');
+      if (isMissingContext && method === 'GET') {
+        // Log once so devs can trace unexpected empty states in
+        // Sentry / server logs — the app SURFACE stays quiet.
+        // eslint-disable-next-line no-console
+        console.warn(
+          '[http] No active school context on GET',
+          error.config?.url,
+          '→ rewriting to empty envelope',
+        );
+        return {
+          ...error.response,
+          status: 200,
+          statusText: 'OK (empty context)',
+          data: {
+            success: true,
+            data: [],
+            pagination: {
+              total_items: 0,
+              total_pages: 0,
+              current_page: 1,
+              per_page: 0,
+              has_next_page: false,
+              has_prev_page: false,
+            },
+            _empty_context: true,
+          },
+        } as AxiosResponse;
+      }
+
       // Only treat a 401 as a *session expiry* when the request was
       // actually made with a bearer token (a real session that the
       // server has now rejected). A 401 on a request that carried no
