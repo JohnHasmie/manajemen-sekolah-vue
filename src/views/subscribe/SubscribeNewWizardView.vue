@@ -270,6 +270,26 @@ function onAiQuotaUpdate(key: string, extra: number) {
   aiQuota.value = { ...aiQuota.value, [key]: extra };
 }
 
+/**
+ * "Bulanan · N modul" is wrong when the user picked a bundle — the
+ * user sees `selectedKeys.size === 1` and thinks they only bought one
+ * module. Render the bundle label when a bundle is present, otherwise
+ * count expanded keys (bundle members counted individually so 9-member
+ * bundles read as 9 modules, not 1).
+ */
+function buildPlanLabel(): string {
+  const periodLbl = period.value === 'yearly' ? 'Tahunan' : 'Bulanan';
+  const cat = catalog.value;
+  if (cat) {
+    const bundleKeys = [...selectedKeys.value].filter((k) => k in cat.bundles);
+    if (bundleKeys.length) {
+      return `${periodLbl} · ${bundleKeys.map((k) => cat.bundles[k].label).join(' + ')}`;
+    }
+  }
+  const n = expandedKeys.value.length || selectedKeys.value.size;
+  return `${periodLbl} · ${n} modul`;
+}
+
 // ── Submit ─────────────────────────────────────────────────────────
 async function onSubmit() {
   if (!auth.isAuthenticated) {
@@ -321,7 +341,7 @@ async function handleSubscribeResult(result: SubscribeResult) {
     return;
   }
   order.value = {
-    planLabel: `${period.value === 'yearly' ? 'Tahunan' : 'Bulanan'} · ${selectedKeys.value.size} modul`,
+    planLabel: buildPlanLabel(),
     studentCount: form.student_count,
     staffCount: form.staff_count,
     amount: result.amount ?? quote.value?.chosen_amount ?? 0,
@@ -645,8 +665,14 @@ function flagSubscribeIntent(): void {
       <div class="sn-h">
         <h1 class="sn-h1">Cara bayar</h1>
         <p class="sn-sub">
-          Pilih transfer manual (verifikasi 1×24 jam) atau Midtrans
-          (aktivasi otomatis dalam hitungan menit).
+          <template v-if="midtransAvailable">
+            Pilih transfer manual (verifikasi 1×24 jam) atau Midtrans
+            (aktivasi otomatis dalam hitungan menit).
+          </template>
+          <template v-else>
+            Transfer manual ke rekening tim keuangan kami. Setelah
+            transfer, aktivasi maks 1×24 jam kerja.
+          </template>
         </p>
       </div>
       <PaymentMethodCards

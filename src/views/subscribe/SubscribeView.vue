@@ -316,6 +316,25 @@ function switchToBundle(key: string) {
   selectedKeys.value = next;
 }
 
+/**
+ * "Bulanan · N modul" is wrong when a bundle is picked — user only has
+ * one key selected but the bundle covers multiple modules. Show the
+ * bundle label instead; if only bare modules are picked, count expanded
+ * keys (bundle members counted individually).
+ */
+function buildPlanLabel(): string {
+  const periodLbl = period.value === 'yearly' ? 'Tahunan' : 'Bulanan';
+  const cat = catalog.value;
+  if (cat) {
+    const bundleKeys = [...selectedKeys.value].filter((k) => k in cat.bundles);
+    if (bundleKeys.length) {
+      return `${periodLbl} · ${bundleKeys.map((k) => cat.bundles[k].label).join(' + ')}`;
+    }
+  }
+  const n = expandedKeys.value.length || selectedKeys.value.size;
+  return `${periodLbl} · ${n} modul`;
+}
+
 function goToNewTenant() {
   router.push('/subscribe/new');
 }
@@ -362,7 +381,7 @@ async function handleSubscribeResult(result: SubscribeResult) {
   }
   // Manual transfer path
   order.value = {
-    planLabel: `${period.value === 'yearly' ? 'Tahunan' : 'Bulanan'} · ${selectedKeys.value.size} modul`,
+    planLabel: buildPlanLabel(),
     studentCount: selectedTenant.value?.student_count ?? 0,
     staffCount: selectedTenant.value?.staff_count ?? 0,
     amount: result.amount ?? quote.value?.chosen_amount ?? 0,
