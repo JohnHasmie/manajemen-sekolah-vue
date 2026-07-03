@@ -13,6 +13,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
+import { useMeStore } from '@/stores/me';
 import { DashboardService } from '@/services/dashboard.service';
 import { formatNumber, formatRupiah } from '@/lib/format';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
@@ -33,6 +34,7 @@ type StatsPayload = Record<string, any>;
 type Slice = Record<string, any>;
 
 const auth = useAuthStore();
+const me = useMeStore();
 const router = useRouter();
 const { t } = useI18n();
 // A tutoring-center admin gets the bimbel dashboard; the school KPIs
@@ -152,22 +154,50 @@ interface QuickAction {
   labelKey: string;
   icon: string;
   to: string;
+  /**
+   * Gate the action against the tenant's entitlement. Predicate
+   * evaluates once per computed refresh — the `visible` field on
+   * `quickActions` (see below) resolves it into a filter.
+   *
+   * `undefined` = ungated (Guru is always available; every tenant
+   *                       with attendance_staff needs the roster).
+   */
+  visible?: () => boolean;
 }
 
-const quickActions: QuickAction[] = [
-  { labelKey: 'nav.students', icon: 'users', to: '/admin/students' },
-  { labelKey: 'nav.teachers', icon: 'user-check', to: '/admin/teachers' },
-  { labelKey: 'nav.classes', icon: 'layers', to: '/admin/classes' },
-  { labelKey: 'nav.subjects', icon: 'book', to: '/admin/subjects' },
-  { labelKey: 'nav.schedule', icon: 'calendar', to: '/admin/schedule' },
-  { labelKey: 'nav.attendance', icon: 'check-square', to: '/admin/student-attendance' },
-  { labelKey: 'nav.lessonPlans', icon: 'file-text', to: '/admin/lesson-plans' },
-  { labelKey: 'nav.finance', icon: 'wallet', to: '/admin/finance' },
-  { labelKey: 'nav.grades', icon: 'edit-3', to: '/admin/grades' },
-  { labelKey: 'nav.gradeRecap', icon: 'bar-chart', to: '/admin/grade-recap' },
-  { labelKey: 'nav.reportCards', icon: 'file-plus', to: '/admin/report-cards' },
-  { labelKey: 'nav.announcements', icon: 'megaphone', to: '/admin/announcements' },
-];
+// Same mirror as `useNavMenu.ts` — siswa/kelas gate on
+// hasStudentContext (any student-touching module owned) and mapel on
+// hasAcademicContext (grades/report_cards/schedule/lms/class_activity).
+// Reports quick-actions gate on the same abilities the router now uses
+// so what the sidebar and dashboard grid show ALWAYS agree.
+const quickActions = computed<QuickAction[]>(() => {
+  const raw: QuickAction[] = [
+    { labelKey: 'nav.students', icon: 'users', to: '/admin/students',
+      visible: () => me.hasStudentContext },
+    { labelKey: 'nav.teachers', icon: 'user-check', to: '/admin/teachers' },
+    { labelKey: 'nav.classes', icon: 'layers', to: '/admin/classes',
+      visible: () => me.hasStudentContext },
+    { labelKey: 'nav.subjects', icon: 'book', to: '/admin/subjects',
+      visible: () => me.hasAcademicContext },
+    { labelKey: 'nav.schedule', icon: 'calendar', to: '/admin/schedule',
+      visible: () => me.can('academic.schedule.view') },
+    { labelKey: 'nav.attendance', icon: 'check-square', to: '/admin/student-attendance',
+      visible: () => me.canAny(['attendance.student.view', 'attendance.student.export']) },
+    { labelKey: 'nav.lessonPlans', icon: 'file-text', to: '/admin/lesson-plans',
+      visible: () => me.can('academic.lesson_plan.view') },
+    { labelKey: 'nav.finance', icon: 'wallet', to: '/admin/finance',
+      visible: () => me.can('finance.bill.view') },
+    { labelKey: 'nav.grades', icon: 'edit-3', to: '/admin/grades',
+      visible: () => me.can('academic.grade.view') },
+    { labelKey: 'nav.gradeRecap', icon: 'bar-chart', to: '/admin/grade-recap',
+      visible: () => me.can('academic.grade.recap.view') },
+    { labelKey: 'nav.reportCards', icon: 'file-plus', to: '/admin/report-cards',
+      visible: () => me.can('academic.report_card.view') },
+    { labelKey: 'nav.announcements', icon: 'megaphone', to: '/admin/announcements',
+      visible: () => me.can('communication.announcement.view') },
+  ];
+  return raw.filter((a) => !a.visible || a.visible());
+});
 
 // Heatmap data - reads stats.attendance_heatmap[] when backend supplies it,
 // otherwise synthesises a placeholder grid so the section is never empty.
@@ -247,8 +277,15 @@ const financePct = computed(() =>
           />
 
           <!-- 2. KPI strip (inline, no floating) -->
+          <!-- KPI strip. Each card only renders when its destination
+               route is entitled — Students hides when the tenant has
+               no student-touching module, Attendance hides without
+               any attendance.student.* ability, Pending Lesson Plans
+               hides without academic.lesson_plan.view. Guru card is
+               unconditional (roster always available). -->
           <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <StatSummaryCard
+              v-if="me.hasStudentContext"
               :label="t('admin.dashboard.totalStudents')"
               :value="formatNumber(num('total_students') || topLevelNum('total_students'))"
               tone="brand"
@@ -275,6 +312,7 @@ const financePct = computed(() =>
               @click="router.push('/admin/teachers')"
             />
             <StatSummaryCard
+              v-if="me.canAny(['attendance.student.view', 'attendance.student.export'])"
               :label="t('admin.dashboard.attendanceToday')"
               :value="`${num('attendance_rate') || topLevelNum('attendance_rate')}%`"
               tone="success"
@@ -296,6 +334,7 @@ const financePct = computed(() =>
               @click="router.push('/admin/student-attendance')"
             />
             <StatSummaryCard
+              v-if="me.can('academic.lesson_plan.view')"
               :label="t('admin.dashboard.pendingLessonPlans')"
               :value="formatNumber(num('pending_lesson_plans') || topLevelNum('pending_lesson_plans'))"
               tone="warning"
@@ -310,9 +349,15 @@ const financePct = computed(() =>
             />
           </section>
 
-          <!-- 3. Heatmap + Finance -->
+          <!-- 3. Heatmap + Finance. Whole cards hide when the tenant
+               doesn't own the module — a staff-only tenant sees zero
+               empty cards instead of Attendance/Finance panels with
+               placeholder digits + dead "Details" buttons. -->
           <section class="grid grid-cols-1 lg:grid-cols-3 gap-md">
-            <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4">
+            <div
+              v-if="me.canAny(['attendance.student.view', 'attendance.student.export'])"
+              class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4"
+            >
               <header class="flex items-center justify-between mb-3 px-1">
                 <div class="flex items-center gap-2.5">
                   <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 grid place-items-center">
@@ -353,7 +398,10 @@ const financePct = computed(() =>
               </div>
             </div>
 
-            <div class="bg-white border border-slate-200 rounded-2xl p-4">
+            <div
+              v-if="me.can('finance.bill.view')"
+              class="bg-white border border-slate-200 rounded-2xl p-4"
+            >
               <header class="flex items-center justify-between mb-3 px-1">
                 <div class="flex items-center gap-2.5">
                   <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 grid place-items-center">

@@ -13,6 +13,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
+import { useMeStore } from '@/stores/me';
 import { DashboardService } from '@/services/dashboard.service';
 import { formatNumber, formatRelative, formatRupiah } from '@/lib/format';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
@@ -42,6 +43,7 @@ interface FeedItem {
 }
 
 const auth = useAuthStore();
+const me = useMeStore();
 const showYearPicker = ref(false);
 const { mapToPriorityItems, handlePriorityTap, priorityCountLabel } =
   usePriorityInbox('parent');
@@ -188,33 +190,46 @@ interface QuickAction {
   tone?: 'parent' | 'amber';
 }
 
-const quickActions = computed<QuickAction[]>(() => [
-  {
-    label: t('parent.dashboard.quickAttendance'),
-    icon: 'check-square',
-    to: '/parent/attendance',
-    hint: t('parent.dashboard.daysPresent', { count: attendancePresent.value }),
-  },
-  {
-    label: t('parent.dashboard.quickGrades'),
-    icon: 'bar-chart',
-    to: '/parent/grades',
-    hint: t('parent.dashboard.subjectsCount', { count: num('subjects_count') || 10 }),
-  },
-  {
-    label: t('parent.dashboard.quickBills'),
-    icon: 'wallet',
-    to: '/parent/billing',
-    hint: formatRupiah(num('overdue_total') || num('outstanding_bills')),
-    tone: 'amber',
-  },
-  {
-    label: t('parent.dashboard.quickReports'),
-    icon: 'clipboard',
-    to: '/parent/report-cards',
-    hint: t('parent.dashboard.semesterValue', { n: 2 }),
-  },
-]);
+// Each tile mirrors the ability the sidebar + router use for the same
+// destination (see `useNavMenu.ts` PARENT_NAV + `router/index.ts`
+// parent meta). A wali whose school doesn't own the module never sees
+// a dead tile.
+const quickActions = computed<QuickAction[]>(() => {
+  const raw: (QuickAction & { visible?: () => boolean })[] = [
+    {
+      label: t('parent.dashboard.quickAttendance'),
+      icon: 'check-square',
+      to: '/parent/attendance',
+      hint: t('parent.dashboard.daysPresent', { count: attendancePresent.value }),
+      visible: () => me.can('attendance.student.view_own'),
+    },
+    {
+      label: t('parent.dashboard.quickGrades'),
+      icon: 'bar-chart',
+      to: '/parent/grades',
+      hint: t('parent.dashboard.subjectsCount', { count: num('subjects_count') || 10 }),
+      visible: () => me.can('academic.grade.view'),
+    },
+    {
+      label: t('parent.dashboard.quickBills'),
+      icon: 'wallet',
+      to: '/parent/billing',
+      hint: formatRupiah(num('overdue_total') || num('outstanding_bills')),
+      tone: 'amber',
+      visible: () => me.can('finance.bill.view_own'),
+    },
+    {
+      label: t('parent.dashboard.quickReports'),
+      icon: 'clipboard',
+      to: '/parent/report-cards',
+      hint: t('parent.dashboard.semesterValue', { n: 2 }),
+      visible: () => me.can('academic.report_card.view'),
+    },
+  ];
+  return raw
+    .filter((a) => !a.visible || a.visible())
+    .map(({ visible: _v, ...rest }) => rest);
+});
 
 function feedTone(type?: string) {
   switch (type) {
@@ -334,9 +349,12 @@ watch(sliceKey, () => {
             </div>
           </section>
 
-          <!-- 3. KPI strip per anak -->
+          <!-- 3. KPI strip per anak. Each card hides when its module
+               is missing so a wali whose school didn't buy grades/
+               finance/comm sees the module dropped, not a blank card. -->
           <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <StatSummaryCard
+              v-if="me.can('academic.grade.view')"
               :label="t('parent.dashboard.avgGrade')"
               :value="num('avg_grade') || num('average_grade') || '—'"
               tone="success"
@@ -348,6 +366,7 @@ watch(sliceKey, () => {
               @click="router.push('/parent/grades')"
             />
             <StatSummaryCard
+              v-if="me.can('finance.bill.view_own')"
               :label="t('parent.dashboard.bills')"
               :value="formatRupiah(num('overdue_total') || num('outstanding_bills'))"
               tone="warning"
@@ -359,6 +378,7 @@ watch(sliceKey, () => {
               @click="router.push('/parent/billing')"
             />
             <StatSummaryCard
+              v-if="me.can('activity.view')"
               :label="t('parent.dashboard.pendingTasks')"
               :value="formatNumber(num('tugas_pending'))"
               tone="info"
@@ -367,9 +387,10 @@ watch(sliceKey, () => {
               :slices="sliceOptions.length"
               :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
               :slice-progress="1"
-              @click="router.push('/parent/grades')"
+              @click="router.push('/parent/class-activity')"
             />
             <StatSummaryCard
+              v-if="me.can('communication.announcement.view')"
               :label="t('parent.dashboard.newAnnouncements')"
               :value="formatNumber(num('unread_announcements'))"
               tone="brand"

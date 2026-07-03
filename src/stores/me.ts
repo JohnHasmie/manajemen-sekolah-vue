@@ -180,6 +180,21 @@ export const useMeStore = defineStore('me', () => {
   });
 
   /**
+   * "Tutoring-context" — a tenant owning the `tutoring` module gets
+   * access to every bimbel surface (sessions, groups, programs, bills,
+   * payouts, leads, vouchers, announcements, leaderboard, etc). The
+   * FE bimbel routes + nav items gate on this so a school tenant that
+   * types `/admin/tutoring/xxx` in the URL bar hits the fail-home
+   * redirect instead of a page that 402s on API call.
+   */
+  const hasTutoringContext = computed<boolean>(() => {
+    const snap = snapshot.value;
+    if (!snap) return false;
+    if (snap.isSuperAdmin) return true;
+    return snap.modules.has('tutoring');
+  });
+
+  /**
    * Wipe. Called by the auth store on logout so the next login can't
    * transiently see the previous user's abilities.
    */
@@ -200,6 +215,7 @@ export const useMeStore = defineStore('me', () => {
     isInitialLoading,
     hasStudentContext,
     hasAcademicContext,
+    hasTutoringContext,
     // actions
     refresh,
     can,

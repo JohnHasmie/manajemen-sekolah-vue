@@ -21,6 +21,7 @@ import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
+import { useMeStore } from '@/stores/me';
 import { DashboardService, type InboxResponse } from '@/services/dashboard.service';
 import { formatNumber, formatTime } from '@/lib/format';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
@@ -48,6 +49,7 @@ interface ScheduleEntry {
 }
 
 const auth = useAuthStore();
+const me = useMeStore();
 const router = useRouter();
 const { t } = useI18n();
 
@@ -292,45 +294,67 @@ interface QuickAction {
   hint?: string;
 }
 
-const quickActions = computed<QuickAction[]>(() => [
-  {
-    label: t('common.schedule'),
-    icon: 'calendar',
-    to: '/teacher/schedule',
-    hint: `${todaysSchedule.value.length} ${t('teacher.dashboard.sessionsToday')}`,
-  },
-  {
-    label: t('common.attendance'),
-    icon: 'check-square',
-    to: '/teacher/attendance',
-    hint:
-      num('sessions_today') > 0
-        ? `${num('sessions_today') - num('sessions_today_done')} ${t('common.pending')}`
-        : t('teacher.dashboard.viewAttendance'),
-  },
-  {
-    label: t('common.activity'),
-    icon: 'activity',
-    to: '/teacher/class-activity',
-    hint: t('teacher.dashboard.recordActivity'),
-  },
-  {
-    label: t('teacher.dashboard.inputGrades'),
-    icon: 'edit',
-    to: '/teacher/grades',
-    hint:
-      num('grades_pending_sessions') > 0
-        ? `${num('grades_pending_sessions')} ${t('teacher.dashboard.classesReady')}`
-        : t('teacher.dashboard.allCompleted'),
-  },
-]);
+// Each action carries the same gate the sidebar + router use (see
+// `useNavMenu.ts` TEACHER_NAV and `router/index.ts` teacher meta) so
+// dashboard tiles and menu items agree on what a tenant sees. `visible`
+// undefined = always shown; filter drops tiles whose predicate is false.
+type GatedAction = QuickAction & { visible?: () => boolean };
 
-const secondaryActions = computed<{ label: string; icon: string; to: string }[]>(() => [
-  { label: t('common.materials'), icon: 'book', to: '/teacher/materials' },
-  { label: t('teacher.dashboard.draftLessonPlan'), icon: 'file-text', to: '/teacher/lesson-plans' },
-  { label: t('teacher.dashboard.aiRecommendations'), icon: 'sparkles', to: '/teacher/recommendations' },
-  { label: t('teacher.dashboard.eReportCard'), icon: 'file-plus', to: '/teacher/report-cards' },
-]);
+const quickActions = computed<QuickAction[]>(() => {
+  const raw: GatedAction[] = [
+    {
+      label: t('common.schedule'),
+      icon: 'calendar',
+      to: '/teacher/schedule',
+      hint: `${todaysSchedule.value.length} ${t('teacher.dashboard.sessionsToday')}`,
+      visible: () => me.can('academic.schedule.view'),
+    },
+    {
+      label: t('common.attendance'),
+      icon: 'check-square',
+      to: '/teacher/attendance',
+      hint:
+        num('sessions_today') > 0
+          ? `${num('sessions_today') - num('sessions_today_done')} ${t('common.pending')}`
+          : t('teacher.dashboard.viewAttendance'),
+      visible: () => me.canAny(['attendance.student.submit', 'attendance.student.view']),
+    },
+    {
+      label: t('common.activity'),
+      icon: 'activity',
+      to: '/teacher/class-activity',
+      hint: t('teacher.dashboard.recordActivity'),
+      visible: () => me.can('activity.view'),
+    },
+    {
+      label: t('teacher.dashboard.inputGrades'),
+      icon: 'edit',
+      to: '/teacher/grades',
+      hint:
+        num('grades_pending_sessions') > 0
+          ? `${num('grades_pending_sessions')} ${t('teacher.dashboard.classesReady')}`
+          : t('teacher.dashboard.allCompleted'),
+      visible: () => me.can('academic.grade.input'),
+    },
+  ];
+  return raw.filter((a) => !a.visible || a.visible());
+});
+
+const secondaryActions = computed<{ label: string; icon: string; to: string }[]>(() => {
+  const raw: (GatedAction & { hint?: undefined })[] = [
+    { label: t('common.materials'), icon: 'book', to: '/teacher/materials',
+      visible: () => me.can('academic.material.view') },
+    { label: t('teacher.dashboard.draftLessonPlan'), icon: 'file-text', to: '/teacher/lesson-plans',
+      visible: () => me.can('academic.lesson_plan.view') },
+    { label: t('teacher.dashboard.aiRecommendations'), icon: 'sparkles', to: '/teacher/recommendations',
+      visible: () => me.canAny(['communication.recommendation.view', 'communication.recommendation.create']) },
+    { label: t('teacher.dashboard.eReportCard'), icon: 'file-plus', to: '/teacher/report-cards',
+      visible: () => me.can('academic.report_card.view') },
+  ];
+  return raw
+    .filter((a) => !a.visible || a.visible())
+    .map(({ label, icon, to }) => ({ label, icon, to }));
+});
 
 // handlePriorityTap supplied by usePriorityInbox('teacher') above.
 </script>

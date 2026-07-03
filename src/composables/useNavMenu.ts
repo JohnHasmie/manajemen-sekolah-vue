@@ -41,10 +41,11 @@ export interface NavItem {
    * Module-context gate for entries backed by CORE permissions but
    * only meaningful when the tenant owns a module that USES the
    * entity. Siswa/Kelas need `student-context`; Mata Pelajaran needs
-   * `academic-context`. Without this a staff-only tenant sees dead
-   * roster screens they have no reason to model.
+   * `academic-context`; every bimbel surface needs `tutoring-module`.
+   * Without this a staff-only tenant sees dead roster screens, and a
+   * school tenant can URL-nav into bimbel routes it doesn't own.
    */
-  needs?: 'student-context' | 'academic-context';
+  needs?: 'student-context' | 'academic-context' | 'tutoring-module';
 }
 
 export interface NavSection {
@@ -580,6 +581,7 @@ function applyGates(
   hasAbility: (perm: string) => boolean,
   hasStudentContext: boolean,
   hasAcademicContext: boolean,
+  hasTutoringContext: boolean,
 ): NavSection[] {
   const out: NavSection[] = [];
   for (const sec of sections) {
@@ -588,6 +590,7 @@ function applyGates(
       if (it.abilityAny && !it.abilityAny.some((a) => hasAbility(a))) return false;
       if (it.needs === 'student-context' && !hasStudentContext) return false;
       if (it.needs === 'academic-context' && !hasAcademicContext) return false;
+      if (it.needs === 'tutoring-module' && !hasTutoringContext) return false;
       return true;
     });
     if (items.length > 0) out.push({ titleKey: sec.titleKey, items });
@@ -611,17 +614,21 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
     if (!role) return [];
     const studentCtx = me.hasStudentContext;
     const academicCtx = me.hasAcademicContext;
+    const tutoringCtx = me.hasTutoringContext;
     // Tutoring-center tenants get the bimbel menu (the school
-    // data-management pages read empty for them).
-    if (isTutoringCenter.value) {
+    // data-management pages read empty for them). Also require
+    // `hasTutoringContext` — a bimbel tenant that (edge case) doesn't
+    // own the tutoring module shouldn't see 175 broken bimbel routes;
+    // it falls through to the empty-nav path below.
+    if (isTutoringCenter.value && tutoringCtx) {
       // Parent nav is dynamic — Monitoring/Schedule/Grade entries embed
       // the active child id so a single click lands directly on the
       // overview without a child-picker detour.
       if (role === 'wali') return parentTutoringNav(activeChildId.value);
       if (TUTORING_MENUS[role]) {
-        return applyGates(TUTORING_MENUS[role]!, auth.hasAbility, studentCtx, academicCtx);
+        return applyGates(TUTORING_MENUS[role]!, auth.hasAbility, studentCtx, academicCtx, tutoringCtx);
       }
     }
-    return applyGates(MENUS[role] ?? [], auth.hasAbility, studentCtx, academicCtx);
+    return applyGates(MENUS[role] ?? [], auth.hasAbility, studentCtx, academicCtx, tutoringCtx);
   });
 }
