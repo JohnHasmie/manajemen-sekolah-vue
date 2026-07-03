@@ -511,6 +511,14 @@ onMounted(async () => {
   // the user's own words always win over the Google profile default.
   if (!form.admin_email && auth.user?.email) form.admin_email = auth.user.email;
   if (!form.admin_name && auth.user?.name) form.admin_name = auth.user.name;
+  // Kick the quote ONCE now that the catalog is loaded. Vue's watch is
+  // lazy — since selectedKeys already had its 5 defaults at setup, the
+  // reactive value never "changed" and the save-on-change watcher never
+  // fired refreshQuote(). Result: sidebar reads "Belum ada modul dipilih
+  // · Rp 0" while 5 module cards are visibly ticked. Firing it here
+  // primes the sidebar with a real number before the first paint the
+  // user actually looks at.
+  refreshQuote();
 });
 
 // ── Step navigation ────────────────────────────────────────────────
