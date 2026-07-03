@@ -166,6 +166,26 @@ const bundleSavings = computed<{
   };
 });
 
+/**
+ * Scale monthly savings into the period the user is actually viewing.
+ * `bundleSavings.savings` is per-month (catalog rates × seat counts).
+ * `chosenAmount` is per-period (yearly with discount when plan=yearly).
+ * Ratio (chosen / monthly) lets us surface the strike + pill in the
+ * SAME denomination as the big total number — no mixed-currency-math
+ * flash where "hemat Rp 290k" sits next to a Rp 11jt yearly total.
+ */
+const savingsForPeriod = computed<number>(() => {
+  const bs = bundleSavings.value;
+  if (!bs) return 0;
+  if (!monthlyAmount.value) return bs.savings;
+  const ratio = chosenAmount.value / monthlyAmount.value;
+  return Math.round(bs.savings * ratio);
+});
+
+const alaCarteEquivalent = computed<number>(() =>
+  chosenAmount.value + savingsForPeriod.value,
+);
+
 function onPlan(p: BillingPeriod) {
   emit('update:plan', p);
 }
@@ -225,24 +245,47 @@ function onPlan(p: BillingPeriod) {
          paying or the button that submits it. The nudge is
          opportunistic — if they want the cheaper bundle, they can act
          on it, but it's not allowed to hide the total. -->
-    <div class="pc-total">
+    <!-- Total block. Two rendering modes:
+         (a) Plain — no bundle selected. Just label + big number.
+         (b) Compare-anchored — a bundle is selected AND its members
+             would cost strictly more à la carte. Strikethrough shows
+             what the same setup would cost without the bundle, then
+             the bundle price wins as the final number with a check
+             icon, and a hemat pill anchors the delta. Familiar
+             e-commerce pattern so users read it in one glance. -->
+    <div class="pc-total" :class="{ 'is-bundle': !!bundleSavings }">
       <div class="pc-total-lbl">
         Total per {{ plan === 'yearly' ? 'tahun' : 'bulan' }}
       </div>
-      <div class="pc-total-val">{{ money(chosenAmount) }}</div>
+
+      <div v-if="bundleSavings" class="pc-total-strike-row">
+        <span class="pc-total-strike-lbl">Kalau beli terpisah</span>
+        <span class="pc-total-strike-val">{{ money(alaCarteEquivalent) }}</span>
+      </div>
+
+      <div class="pc-total-final-row">
+        <div v-if="bundleSavings" class="pc-total-final-lbl">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8.5l3.5 3.5L13 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          {{ bundleSavings.bundleLabel }}
+        </div>
+        <div class="pc-total-val">{{ money(chosenAmount) }}</div>
+      </div>
+
+      <div v-if="bundleSavings" class="pc-total-hemat">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 1v6M8 9v6M1 8h6M9 8h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3" fill="none" opacity="0.35"/>
+        </svg>
+        Hemat pakai bundle
+        <span class="pc-total-hemat-amt">
+          {{ money(savingsForPeriod) }}/{{ plan === 'yearly' ? 'thn' : 'bln' }}
+        </span>
+      </div>
+
       <div v-if="studentCount > 0" class="pc-total-per">
         ≈ {{ money(perStudent) }} per {{ perUnitWord }} / bln
-      </div>
-      <!-- Bundle-savings affirmation. Renders when a bundle is
-           selected and the à la carte equivalent of its members costs
-           strictly more than the bundle. Gives the customer visible
-           credit for the choice — otherwise they see the bundle price
-           in isolation and can't tell that they saved anything. -->
-      <div v-if="bundleSavings" class="pc-total-saved">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path d="M3 8.5l3.5 3.5L13 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        Hemat {{ money(bundleSavings.savings) }}/bln pakai {{ bundleSavings.bundleLabel }}
       </div>
     </div>
 
@@ -365,22 +408,88 @@ function onPlan(p: BillingPeriod) {
   letter-spacing: -0.5px; color: #113E75;
   margin-top: 3px;
   font-variant-numeric: tabular-nums;
+  line-height: 1.05;
 }
 .pc-total-per {
   font-size: 11px; color: #64748B;
-  margin-top: 1px;
+  margin-top: 4px;
 }
-.pc-total-saved {
-  margin-top: 8px;
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: #DCFCE7;
-  color: #0F6E56;
-  font-size: 11px; font-weight: 600;
+
+/* Bundle-mode overrides. Emerald tint anchors the whole block as
+   "you saved here" without changing the ink of the big number
+   itself — we want the price to stay #113E75 like every other
+   total in the app, only the framing changes. */
+.pc-total.is-bundle {
+  background: linear-gradient(180deg, #F0FDF6 0%, #E8FAF0 100%);
+  border-top: 0.5px solid #C6ECDA;
+}
+
+/* Strike row = "kalau beli terpisah Rp 1.220.000". Sits between
+   the label and the final number so the eye reads top-to-bottom:
+   old price → new price → savings badge. */
+.pc-total-strike-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+}
+.pc-total-strike-lbl {
+  font-size: 11px; color: #64748B; font-weight: 500;
+  text-transform: none; letter-spacing: 0;
+}
+.pc-total-strike-val {
+  font-size: 12.5px;
+  color: #64748B;
+  text-decoration: line-through;
+  text-decoration-color: rgba(100, 116, 139, 0.5);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.pc-total-saved svg { flex-shrink: 0; }
+
+/* Final row wraps the big price. In non-bundle mode it's the
+   price alone (flex-end via justify-end so nothing looks
+   asymmetric). In bundle mode it gains a green label with a
+   check icon on the left. */
+.pc-total-final-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 10px;
+  margin-top: 2px;
+}
+.pc-total:not(.is-bundle) .pc-total-final-row { justify-content: flex-start; }
+.pc-total-final-lbl {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 600;
+  color: #0A5744;
+  letter-spacing: -0.1px;
+  min-width: 0;
+}
+.pc-total-final-lbl svg { color: #1D9E75; flex-shrink: 0; }
+
+/* Hemat pill — full-bleed row with amount in a white capsule on
+   the right. Anchored right below the final price so the eye
+   immediately connects "big number → why it's smaller than the
+   strike above". */
+.pc-total-hemat {
+  margin-top: 8px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: #DCFCE7;
+  color: #0A5744;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: -0.1px;
+}
+.pc-total-hemat svg { flex-shrink: 0; opacity: 0.85; }
+.pc-total-hemat-amt {
+  margin-left: auto;
+  background: #FFFFFF;
+  color: #0A5744;
+  border: 0.5px solid #A7E7CF;
+  padding: 1px 7px;
+  border-radius: 5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 
 .pc-cta { padding: 10px 14px 14px; }
 .pc-cta-btn {
