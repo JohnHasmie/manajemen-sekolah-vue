@@ -93,6 +93,20 @@ const state = computed<'landing' | 'convert' | 'order' | 'thanks'>(() => {
   return 'landing';
 });
 
+/**
+ * Short content states (signin card, order transfer, thanks) look
+ * marooned in the top-half of a tall viewport when they hug the top —
+ * so we centre those vertically. Landing + convert states have their
+ * own tall content that scrolls naturally and looks wrong when
+ * centred, so they stay top-aligned.
+ */
+const centerContent = computed<boolean>(() => {
+  if (!auth.isAuthenticated) return true;
+  if (state.value === 'order') return true;
+  if (state.value === 'thanks') return true;
+  return false;
+});
+
 const midtransAvailable = computed(
   () => !!plan.value?.supported_gateways.includes('midtrans'),
 );
@@ -514,36 +528,42 @@ watch(() => auth.isAuthenticated, (v) => {
       </div>
     </div>
 
-    <!-- ANONYMOUS: sign in first -->
-    <div v-if="!auth.isAuthenticated" class="sv-signin">
-      <div class="sv-signin-card">
-        <div class="sv-signin-h1">Masuk untuk mulai berlangganan</div>
-        <p class="sv-signin-sub">
-          Kami perlu tahu lembaga demo mana yang mau dilanjutkan. Masuk
-          dengan akun Google yang sama seperti saat mendaftar demo.
-        </p>
-        <div
-          ref="googleContainer"
-          data-google-intent="subscribe"
-          class="sv-google-slot"
-          @pointerdown="flagSubscribeIntent"
-        />
-        <div class="sv-signin-alt">
-          Belum punya demo? <a href="/register-demo">Coba demo dulu</a>
-          atau <a href="/subscribe/new">daftar langsung berbayar</a>.
+    <!-- Main region flexes to fill vertical space between nav + footer.
+         When a state's content is short (signin card, thanks card) the
+         region centres it; when the content is tall (landing, convert)
+         it scrolls normally. Keeps the footer sticky at the bottom
+         without introducing empty gaps above it on wide viewports. -->
+    <main class="sv-main-region" :class="{ 'is-centered': centerContent }">
+      <!-- ANONYMOUS: sign in first -->
+      <div v-if="!auth.isAuthenticated" class="sv-signin">
+        <div class="sv-signin-card">
+          <div class="sv-signin-h1">Masuk untuk mulai berlangganan</div>
+          <p class="sv-signin-sub">
+            Kami perlu tahu lembaga demo mana yang mau dilanjutkan. Masuk
+            dengan akun Google yang sama seperti saat mendaftar demo.
+          </p>
+          <div
+            ref="googleContainer"
+            data-google-intent="subscribe"
+            class="sv-google-slot"
+            @pointerdown="flagSubscribeIntent"
+          />
+          <div class="sv-signin-alt">
+            Belum punya demo? <a href="/register-demo">Coba demo dulu</a>
+            atau <a href="/subscribe/new">daftar langsung berbayar</a>.
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- STATE_LANDING: tenant picker -->
-    <TenantPickerHero
-      v-else-if="state === 'landing'"
-      :user-name="auth.user?.name ?? 'Anda'"
-      :tenants="myTenants"
-      :loading="loadingTenants"
-      @select="pickTenant"
-      @new-tenant="goToNewTenant"
-    />
+      <!-- STATE_LANDING: tenant picker -->
+      <TenantPickerHero
+        v-else-if="state === 'landing'"
+        :user-name="auth.user?.name ?? 'Anda'"
+        :tenants="myTenants"
+        :loading="loadingTenants"
+        @select="pickTenant"
+        @new-tenant="goToNewTenant"
+      />
 
     <!-- STATE_CONVERT: selected + module picker + calculator -->
     <template v-else-if="state === 'convert' && selectedTenant && catalog">
@@ -683,9 +703,16 @@ watch(() => auth.isAuthenticated, (v) => {
         @invoice="downloadInvoice"
       />
     </div>
+    </main>
 
-    <!-- Trust footer — compact centered card that anchors the page
-         without stretching four items across a wide screen. -->
+    <!-- Minimal footer — brand + legal micro-strip. The four trust
+         chips (TLS / Midtrans-BSI / cancel / support) have been
+         dropped: TLS is table-stakes, payment methods live inline on
+         the picker, cancel-anytime is already in the calculator
+         subcopy, and Bantuan is still one click away in the nav
+         above. What's left tells the user WHOSE product this is
+         and where the legals are — nothing that competes for
+         attention with the primary CTA. -->
     <footer class="sv-trust">
       <div class="sv-trust-inner">
         <div class="sv-trust-brand">
@@ -695,36 +722,11 @@ watch(() => auth.isAuthenticated, (v) => {
             <div class="sv-trust-brand-tag">Manajemen sekolah &amp; bimbel</div>
           </div>
         </div>
-
-        <div class="sv-trust-badges">
-          <div class="sv-trust-badge">
-            <i class="ti ti-shield-check" aria-hidden="true" />
-            <span>Enkripsi TLS</span>
-          </div>
-          <div class="sv-trust-badge">
-            <i class="ti ti-credit-card" aria-hidden="true" />
-            <span>Midtrans &middot; BSI</span>
-          </div>
-          <div class="sv-trust-badge">
-            <i class="ti ti-arrow-back-up" aria-hidden="true" />
-            <span>Batal kapan saja</span>
-          </div>
-          <a
-            class="sv-trust-badge is-link"
-            href="https://wa.me/6285179819002"
-            target="_blank"
-            rel="noopener"
-          >
-            <i class="ti ti-brand-whatsapp" aria-hidden="true" />
-            <span>Bantuan 1&times;24 jam</span>
-          </a>
+        <div class="sv-trust-legal">
+          &copy; {{ new Date().getFullYear() }} KamilEdu &middot;
+          <a href="/legal/terms">Syarat</a> &middot;
+          <a href="/legal/privacy">Privasi</a>
         </div>
-      </div>
-
-      <div class="sv-trust-legal">
-        &copy; {{ new Date().getFullYear() }} KamilEdu &middot;
-        <a href="/legal/terms">Syarat</a> &middot;
-        <a href="/legal/privacy">Privasi</a>
       </div>
     </footer>
   </div>
@@ -736,6 +738,27 @@ watch(() => auth.isAuthenticated, (v) => {
   background: #FBFCFE;
   color: #0F172A;
   font-family: var(--font-sans);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Grows to fill vertical space between nav + footer so the footer
+   naturally sticks to the bottom on short-content states, without
+   introducing awkward empty gaps under long-content ones. */
+.sv-main-region {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+/* .is-centered — grid drop-in for the short states so the card sits
+   in the exact middle of the region on every viewport height. Uses
+   grid instead of flex align-items so wide-viewport centring still
+   collapses gracefully on mobile without the card being cut off. */
+.sv-main-region.is-centered {
+  display: grid;
+  place-items: center;
+  padding: 32px 22px;
 }
 
 .sv-nav {
@@ -814,7 +837,10 @@ watch(() => auth.isAuthenticated, (v) => {
 .sv-account-switch:disabled { opacity: 0.6; cursor: not-allowed; }
 .sv-account-switch i { color: #1B6FB8; }
 
-.sv-signin { padding: 60px 22px; display: grid; place-items: center; }
+/* Sign-in wrapper is now a plain block — vertical centring lives on
+   the parent .sv-main-region.is-centered so the card sits at the
+   exact optical midpoint between nav + footer on every viewport. */
+.sv-signin { width: 100%; display: flex; justify-content: center; }
 .sv-signin-card {
   background: #FFFFFF;
   border: 0.5px solid #E2E8F0;
@@ -949,19 +975,21 @@ watch(() => auth.isAuthenticated, (v) => {
   margin: 0 auto;
 }
 
-/* Redesigned footer — a bordered card with brand on the left, trust
-   badges in the centre, and a legal micro-strip underneath. Keeps the
-   page anchored without stretching four items across the whole width
-   on wide screens. */
+/* Minimal footer — brand mark on the left, legal micro-strip on the
+   right. Cheap trust chips (TLS / Midtrans / cancel / support) were
+   the wrong signal to lead with: they read as filler at the bottom of
+   an otherwise clean surface. Kept: WHOSE product this is + where the
+   legals live. Everything else lives inline where the user actually
+   needs it (payment picker, calculator subcopy, Bantuan link in the
+   nav above). */
 .sv-trust {
-  margin-top: 24px;
   border-top: 0.5px solid #E7ECF3;
-  background: linear-gradient(180deg, #FBFDFF 0%, #F5F8FC 100%);
+  background: #FBFDFF;
 }
 .sv-trust-inner {
   max-width: 960px;
   margin: 0 auto;
-  padding: 18px 22px 14px;
+  padding: 16px 22px;
   display: flex; align-items: center; gap: 18px;
   flex-wrap: wrap;
 }
@@ -970,58 +998,34 @@ watch(() => auth.isAuthenticated, (v) => {
   min-width: 0;
 }
 .sv-trust-logo {
-  width: 32px; height: 32px; border-radius: 8px;
+  width: 30px; height: 30px; border-radius: 8px;
   background: linear-gradient(135deg, #1B6FB8 0%, #113E75 100%);
   color: #fff;
   display: grid; place-items: center;
-  font-weight: 600; font-size: 13px;
+  font-weight: 600; font-size: 12.5px;
   flex-shrink: 0;
 }
 .sv-trust-brand-name {
-  font-size: 12.5px; font-weight: 600; color: #0F172A;
+  font-size: 12px; font-weight: 600; color: #0F172A;
   letter-spacing: -0.1px;
 }
 .sv-trust-brand-tag {
   font-size: 10.5px; color: #64748B;
   margin-top: 1px;
 }
-.sv-trust-badges {
-  margin-left: auto;
-  display: flex; align-items: center;
-  gap: 6px; flex-wrap: wrap;
-}
-.sv-trust-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 10px;
-  background: #FFFFFF;
-  border: 0.5px solid #E2E8F0;
-  border-radius: 999px;
-  font-size: 11px; color: #475569;
-  text-decoration: none;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
-}
-.sv-trust-badge i { color: #1D9E75; font-size: 13px; }
-.sv-trust-badge.is-link { cursor: pointer; }
-.sv-trust-badge.is-link:hover {
-  background: #F0F7FF;
-  border-color: #C7DBEF;
-  color: #185FA5;
-}
-.sv-trust-badge.is-link:hover i { color: #185FA5; }
 .sv-trust-legal {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 22px 16px;
-  font-size: 10.5px; color: #94A3B8;
-  text-align: center;
+  margin-left: auto;
+  font-size: 11px; color: #94A3B8;
 }
 .sv-trust-legal a { color: #64748B; text-decoration: none; }
 .sv-trust-legal a:hover { color: #1B6FB8; text-decoration: underline; }
 
 @media (max-width: 640px) {
-  .sv-trust-inner { justify-content: center; text-align: center; }
-  .sv-trust-brand { margin: 0 auto; }
-  .sv-trust-badges { margin-left: 0; justify-content: center; }
+  .sv-trust-inner {
+    justify-content: center; text-align: center;
+    gap: 8px;
+  }
+  .sv-trust-legal { margin-left: 0; }
 }
 
 @media (max-width: 720px) {
