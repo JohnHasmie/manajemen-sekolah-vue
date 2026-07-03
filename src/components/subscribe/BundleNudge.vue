@@ -1,7 +1,7 @@
 <!--
   BundleNudge.vue — emerald recommendation banner that appears in the
-  calculator when the à la carte total meets or exceeds the flat
-  Paket Lengkap price. Matches mockup 2 (`subscribe_bundle_nudge`).
+  calculator when the per-module selection total meets or exceeds the
+  flat Paket Lengkap price. Matches mockup 2 (`subscribe_bundle_nudge`).
 
   Emits `switch` when the user clicks the primary CTA; parent replaces
   their selection with the bundle key.
@@ -38,7 +38,7 @@ defineEmits<{
     </div>
 
     <p class="bn-nudge-desc">
-      À la carte Anda <strong>{{ money(alacarteTotal) }}</strong>/bln.
+      Pilihan Anda saat ini <strong>{{ money(alacarteTotal) }}</strong>/bln.
       Paket Lengkap cuma <strong>{{ money(bundleTotal) }}</strong>/bln —
       <template v-if="bonusModuleCount > 0">
         dapat {{ bonusModuleCount }} modul bonus tambahan.
@@ -70,7 +70,7 @@ defineEmits<{
       class="bn-nudge-skip"
       @click="$emit('skip')"
     >
-      Tetap pakai pilihan à la carte
+      Tetap pakai pilihan saya
     </button>
   </div>
 </template>

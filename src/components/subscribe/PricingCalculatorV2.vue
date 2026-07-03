@@ -33,7 +33,7 @@ const props = defineProps<{
   /** Tenant type — swaps siswa/peserta + guru/tutor in labels + hint. */
   tenantType?: 'sekolah' | 'bimbel' | null;
   /**
-   * When set, we compare alacarte_total to this value. If ≥, render
+   * When set, we compare per-module total to this value. If ≥, render
    * BundleNudge to help the user save.
    */
   bundleBenchmark?: {

@@ -301,7 +301,7 @@ function toggleModule(key: string) {
   if (next.has(key)) {
     next.delete(key);
   } else {
-    // Selecting a bundle wipes the à la carte keys it covers.
+    // Selecting a bundle wipes the per-module keys it covers.
     if (cat && key in cat.bundles) {
       const members = cat.bundles[key].members;
       members.forEach((m) => next.delete(m));
