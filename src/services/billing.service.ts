@@ -28,6 +28,8 @@ import {
 import type {
   AddonCreated,
   AddonQuote,
+  ModuleCatalog,
+  ModularQuote,
   MySubscription,
   PricingPlan,
   QuoteRequest,
@@ -665,6 +667,41 @@ export const SubscriptionBillingService = {
       return parseSubscribeResult(body);
     } catch (e) {
       throw new Error(humanError(e, 'Gagal memulai langganan.'));
+    }
+  },
+
+  /**
+   * GET /billing/modules/catalog — the sellable module list + bundles
+   * + core prefixes. Feeds the subscribe wizard's module picker.
+   */
+  async getModuleCatalog(): Promise<ModuleCatalog> {
+    try {
+      const res = await api.get('/billing/modules/catalog');
+      const body = res.data?.data ?? res.data;
+      return body as ModuleCatalog;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat katalog modul.'));
+    }
+  },
+
+  /**
+   * POST /billing/quote with `modules[]` — the modular pricing quote.
+   * Same endpoint as the legacy per-seat quote; the presence of
+   * `modules` in the payload flips the backend into modular mode.
+   */
+  async quoteModular(payload: {
+    student_count: number;
+    staff_count: number;
+    plan: 'monthly' | 'yearly';
+    modules: string[];
+    ai_quota?: Record<string, number>;
+  }): Promise<ModularQuote> {
+    try {
+      const res = await api.post('/billing/quote', payload);
+      const body = res.data?.data ?? res.data;
+      return body as ModularQuote;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menghitung harga.'));
     }
   },
 

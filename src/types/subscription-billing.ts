@@ -134,6 +134,16 @@ export interface SubscribeRequest {
    * activation. Silently ignored on the new-tenant path.
    */
   wipe_demo_data?: boolean;
+  /**
+   * Modular-SaaS: array of module + bundle keys the customer picked.
+   * Empty → backend falls back to legacy flat-per-seat pricing.
+   */
+  modules?: string[];
+  /**
+   * AI quota upgrades per AI module — extra monthly generates over
+   * the base included. Keyed by module key (e.g. { ai_rpp: 30 }).
+   */
+  ai_quota?: Record<string, number>;
 }
 
 /** Manual-transfer bank instructions, returned when gateway=bank_transfer_manual. */
@@ -232,6 +242,69 @@ export interface SeatHardCapError {
   days_remaining: number | null;
   top_up_url_web: string;
   top_up_deeplink_mobile: string;
+}
+
+/**
+ * Modular-SaaS catalog (GET /billing/modules/catalog).
+ *
+ * `optional` = sellable feature modules keyed by module key.
+ * `bundles` = preset bundles (Complete, Tutoring, AI) with flat rates.
+ * `core_prefixes` = always-on permission prefixes (informational).
+ */
+export interface ModuleCatalogItem {
+  key: string;
+  label: string;
+  group: string;
+  prefixes: string[];
+  price_per_student: number;
+  price_per_staff: number;
+  pricing_seat: 'student' | 'staff';
+  requires: string[];
+  is_ai: boolean;
+}
+
+export interface BundleCatalogItem {
+  key: string;
+  label: string;
+  members: string[];
+  price_per_student: number;
+  price_per_staff: number;
+}
+
+export interface ModuleCatalog {
+  optional: Record<string, ModuleCatalogItem>;
+  bundles: Record<string, BundleCatalogItem>;
+  core_prefixes: string[];
+}
+
+/** Modular quote breakdown (POST /billing/quote with `modules[]`). */
+export interface ModularQuoteLine {
+  key: string;
+  price_per_student: number;
+  price_per_staff: number;
+  monthly_line: number;
+}
+
+export interface ModularAiQuotaLine {
+  key: string;
+  extra_generates: number;
+  monthly_line: number;
+}
+
+export interface ModularQuote {
+  selected_keys: string[];
+  expanded_modules: string[];
+  student_count: number;
+  staff_count: number;
+  per_module: ModularQuoteLine[];
+  ai_quota_lines: ModularAiQuotaLine[];
+  monthly_amount: number;
+  yearly_gross: number;
+  yearly_amount: number;
+  yearly_savings: number;
+  chosen_amount: number;
+  chosen_plan: BillingPeriod;
+  currency: string;
 }
 
 /** GET /billing/my-subscription — used by the nav chip to decide visibility. */
