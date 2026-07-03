@@ -202,6 +202,20 @@ async function loadTenants() {
   } finally {
     loadingTenants.value = false;
   }
+
+  // If the signed-in user has ZERO demo tenants, the landing page has
+  // literally nothing to show them — the whole surface exists to convert
+  // an existing demo. Forward them to the fresh-signup wizard instead of
+  // an empty state that they'd bounce off. Guarded by state === 'landing'
+  // so a mid-flight redirect can't yank someone out of the order/thanks
+  // screens if they somehow land here after clearing a tenant.
+  if (
+    auth.isAuthenticated
+    && myTenants.value.length === 0
+    && state.value === 'landing'
+  ) {
+    router.replace('/subscribe/new');
+  }
 }
 
 // Preselect a sensible default: user's demo student/staff modules.
