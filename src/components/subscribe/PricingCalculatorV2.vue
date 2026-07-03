@@ -100,11 +100,70 @@ const perStudent = computed(() => {
   return Math.round(total / denom);
 });
 
+const alreadyOnBundle = computed<boolean>(() => {
+  const b = props.bundleBenchmark;
+  if (!b || !props.quote) return false;
+  return props.quote.selected_keys.includes(b.key);
+});
+
 const showNudge = computed(() => {
   const b = props.bundleBenchmark;
   if (!b) return false;
-  const alreadyOnBundle = props.quote?.selected_keys.includes(b.key);
-  return !alreadyOnBundle && monthlyAmount.value >= b.monthlyTotal;
+  return !alreadyOnBundle.value && monthlyAmount.value >= b.monthlyTotal;
+});
+
+/**
+ * When the user IS on the bundle, they can't see the savings the
+ * bundle bought them because the à la carte alternative is invisible.
+ * Compute what those same modules would cost if bought individually
+ * and expose the delta as "Hemat Rp X pakai Paket Lengkap" under the
+ * total. Fires on mount because it's a pure computed off the catalog
+ * + form counts + selected bundle — no extra network call needed.
+ *
+ * Only surfaces when:
+ *   - a bundle is actually selected (alreadyOnBundle),
+ *   - the bundle exists in the catalog (defensive),
+ *   - the à la carte equivalent is strictly greater (defensive: if
+ *     the owner retunes rates so bundle costs MORE, we don't lie
+ *     about savings).
+ */
+const bundleSavings = computed<{
+  bundleKey: string;
+  bundleLabel: string;
+  alaCarteAmount: number;
+  bundleAmount: number;
+  savings: number;
+} | null>(() => {
+  if (!alreadyOnBundle.value) return null;
+  const cat = props.catalog;
+  if (!cat) return null;
+
+  // Find the selected bundle key + its catalog entry.
+  const bundleKey = props.quote?.selected_keys.find((k) => k in cat.bundles);
+  if (!bundleKey) return null;
+  const bundle = cat.bundles[bundleKey];
+  if (!bundle) return null;
+
+  // Sum the bundle's member modules at à la carte rates.
+  let alaCarte = 0;
+  for (const m of bundle.members) {
+    const item = cat.optional[m];
+    if (!item) continue;
+    alaCarte += item.price_per_student * props.studentCount
+      + item.price_per_staff * props.staffCount;
+  }
+  const bundleAmount = bundle.price_per_student * props.studentCount
+    + bundle.price_per_staff * props.staffCount;
+  const savings = alaCarte - bundleAmount;
+  if (savings <= 0) return null;
+
+  return {
+    bundleKey,
+    bundleLabel: bundle.label,
+    alaCarteAmount: alaCarte,
+    bundleAmount,
+    savings,
+  };
 });
 
 function onPlan(p: BillingPeriod) {
@@ -173,6 +232,17 @@ function onPlan(p: BillingPeriod) {
       <div class="pc-total-val">{{ money(chosenAmount) }}</div>
       <div v-if="studentCount > 0" class="pc-total-per">
         ≈ {{ money(perStudent) }} per {{ perUnitWord }} / bln
+      </div>
+      <!-- Bundle-savings affirmation. Renders when a bundle is
+           selected and the à la carte equivalent of its members costs
+           strictly more than the bundle. Gives the customer visible
+           credit for the choice — otherwise they see the bundle price
+           in isolation and can't tell that they saved anything. -->
+      <div v-if="bundleSavings" class="pc-total-saved">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 8.5l3.5 3.5L13 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Hemat {{ money(bundleSavings.savings) }}/bln pakai {{ bundleSavings.bundleLabel }}
       </div>
     </div>
 
@@ -300,6 +370,17 @@ function onPlan(p: BillingPeriod) {
   font-size: 11px; color: #64748B;
   margin-top: 1px;
 }
+.pc-total-saved {
+  margin-top: 8px;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #DCFCE7;
+  color: #0F6E56;
+  font-size: 11px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.pc-total-saved svg { flex-shrink: 0; }
 
 .pc-cta { padding: 10px 14px 14px; }
 .pc-cta-btn {
