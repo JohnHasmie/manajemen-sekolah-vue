@@ -33,6 +33,7 @@ import type {
 import {
   CATEGORY_TINTS,
   MODULE_ICONS,
+  isModuleHiddenFor,
   moduleLabel,
   moduleTagline,
   money,
@@ -75,14 +76,15 @@ const cancelledRows = computed<MyModuleRow[]>(() =>
 const availableCatalog = computed(() => {
   if (!catalog.value) return [] as { key: string; item: NonNullable<ModuleCatalog['optional'][string]> }[];
   const held = new Set(mine.value.modules.map((r) => r.module_key));
-  const isSekolah = tenantType.value === 'sekolah';
+  const tt = tenantType.value;
   return Object.entries(catalog.value.optional)
     .filter(([key, item]) => {
       if (held.has(key)) return false;
-      // Bimbel-only modules stay hidden from sekolah tenants — a school
-      // admin has no reason to buy tutor enrollment/sesi/pembayaran.
-      if (isSekolah && item.group === 'Bimbel') return false;
-      return true;
+      // Same sekolah↔bimbel visibility rule the wizard picker uses —
+      // a bimbel admin never gets offered modules whose backend
+      // endpoints don't route bimbel traffic (attendance_student etc.),
+      // and vice versa.
+      return !isModuleHiddenFor(key, item.group, tt);
     })
     .map(([key, item]) => ({ key, item }));
 });

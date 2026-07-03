@@ -6,7 +6,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { ModuleCatalog, ModuleCatalogItem } from '@/types/subscription-billing';
-import { CATEGORY_TINTS, GROUP_ORDER, moduleLabel } from './moduleTokens';
+import { CATEGORY_TINTS, GROUP_ORDER, isModuleHiddenFor, moduleLabel } from './moduleTokens';
 import ModuleCard from './ModuleCard.vue';
 
 const props = defineProps<{
@@ -28,11 +28,11 @@ interface Group {
 const groupedModules = computed<Group[]>(() => {
   const groups: Record<string, ModuleCatalogItem[]> = {};
   Object.values(props.catalog.optional).forEach((item) => {
-    // Bimbel-only modules (tutoring, enrollment, sesi) don't belong in
-    // a sekolah picker — a sekolah admin picking "Bimbel · Enrollment,
-    // sesi, pembayaran tutor" is confusing at best. Filter them out
-    // upstream so the Bimbel group doesn't render at all for sekolah.
-    if (props.tenantType === 'sekolah' && item.group === 'Bimbel') return;
+    // Tenant-type filter — sekolah hides bimbel-native modules; bimbel
+    // hides sekolah-only modules that don't route bimbel traffic
+    // (attendance_*, grades, report_cards, lms, finance, communication,
+    // ai_*). See moduleTokens.SEKOLAH_ONLY_MODULE_KEYS for evidence.
+    if (isModuleHiddenFor(item.key, item.group, props.tenantType)) return;
     (groups[item.group] ??= []).push(item);
   });
 

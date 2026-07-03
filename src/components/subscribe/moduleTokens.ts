@@ -47,7 +47,7 @@ export const MODULE_TAGLINES: Record<string, string> = {
   lms: 'RPP dan materi ajar terpusat.',
   finance: 'Tagihan SPP, pelunasan, bukti bayar.',
   communication: 'Pengumuman, push notif ke wali.',
-  tutoring: 'Enrollment, sesi, pembayaran tutor.',
+  tutoring: 'Sesi, kelompok, tutor, tagihan, payout — semua dalam satu modul.',
   ai_recommendation:
     'Rekomendasi belajar siswa · 20 generate / guru / bln, bisa dinaikkan.',
   ai_material_quiz:
@@ -57,13 +57,85 @@ export const MODULE_TAGLINES: Record<string, string> = {
 };
 
 /**
- * Bimbel-specific label + tagline overrides. Bimbel tenants call
- * siswa → peserta, guru → tutor, raport → laporan progres. The module
- * KEYS stay identical (backend gating stays the same) — only the
- * user-facing strings shift so the wizard reads natural for a
- * tutoring center.
+ * Module keys that ONLY work for sekolah tenants — their backend
+ * endpoints don't route bimbel traffic. A bimbel admin buying any of
+ * these would pay for a module that gates nothing they can use:
+ *
+ *   - attendance_student / _staff → bimbel uses `tutoring.session.mark_attendance`
+ *   - grades / report_cards       → bimbel has no grade entry / raport
+ *   - class_activity              → bimbel has `tutoring.activity.*`
+ *   - schedule                    → bimbel schedules via `tutoring.session.*`
+ *   - lms                         → bimbel materials are flat under `tutoring.material.*`
+ *   - finance                     → bimbel bills via `tutoring.bill.*`
+ *   - communication               → bimbel announces via `tutoring.group_announcement.*`
+ *   - ai_recommendation / _material_quiz / _rpp
+ *                                 → all three reference sekolah-only
+ *                                   concepts (RPP kurikulum, KD, semester,
+ *                                   chapter). Zero bimbel checks in the
+ *                                   kamiledu-ai service.
+ *
+ * The FE hides these from the bimbel wizard + Kelola Modul add list.
+ * Existing entitlements are not touched — a bimbel tenant that
+ * somehow already bought one of these keeps their row (backwards
+ * compat), it just won't be re-offered.
+ */
+export const SEKOLAH_ONLY_MODULE_KEYS: readonly string[] = Object.freeze([
+  'attendance_student',
+  'attendance_staff',
+  'grades',
+  'report_cards',
+  'class_activity',
+  'schedule',
+  'lms',
+  'finance',
+  'communication',
+  'ai_recommendation',
+  'ai_material_quiz',
+  'ai_rpp',
+]);
+
+/**
+ * True if `key` should be HIDDEN from the picker for the given tenant type.
+ * Combines the earlier bimbel-only Group filter with the new sekolah-only
+ * filter so callers get one predicate to answer "should I render this row".
+ */
+export function isModuleHiddenFor(
+  key: string,
+  group: string | undefined,
+  tenantType: 'sekolah' | 'bimbel' | null | undefined,
+): boolean {
+  if (tenantType === 'sekolah') {
+    return group === 'Operasional Bimbel' || group === 'Bimbel';
+  }
+  if (tenantType === 'bimbel') {
+    return SEKOLAH_ONLY_MODULE_KEYS.includes(key);
+  }
+  return false;
+}
+
+/**
+ * Bimbel-specific label + tagline overrides.
+ *
+ * We KEEP entries for the sekolah-only keys even though the picker
+ * hides them, because a legacy bimbel entitlement (grandfathered from
+ * before the SEKOLAH_ONLY_MODULE_KEYS filter shipped) can still surface
+ * in ManageModulesView's "Aktif" list. When that happens we want the
+ * row to read in peserta/tutor vocabulary, not siswa/guru — the label
+ * lookup runs regardless of the picker filter.
+ *
+ * Additive-only for `tutoring` and any future bimbel-native modules:
+ * their sekolah override is a no-op because they're bimbel-native to
+ * begin with.
  */
 export const BIMBEL_LABEL_OVERRIDES: Record<string, { label?: string; tagline?: string }> = {
+  // Bimbel-native — clarify what the umbrella covers.
+  tutoring: {
+    label: 'Manajemen Sesi & Peserta',
+    tagline: 'Sesi, kelompok, tutor, tagihan, payout — semua dalam satu modul bimbel.',
+  },
+  // The rest are sekolah-only in current architecture (hidden by
+  // isModuleHiddenFor). Kept here so legacy entitlements render in
+  // bimbel vocabulary if they somehow persist.
   attendance_student: {
     label: 'Absensi Peserta',
     tagline: 'Presensi per sesi, ekspor, QR pintu masuk.',

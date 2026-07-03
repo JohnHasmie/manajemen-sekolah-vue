@@ -44,6 +44,7 @@ import PricingCalculatorV2 from '@/components/subscribe/PricingCalculatorV2.vue'
 import PaymentMethodCards from '@/components/subscribe/PaymentMethodCards.vue';
 import OrderTransferCard from '@/components/subscribe/OrderTransferCard.vue';
 import OrderThanksCard from '@/components/subscribe/OrderThanksCard.vue';
+import { isModuleHiddenFor } from '@/components/subscribe/moduleTokens';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -153,18 +154,18 @@ const autoIncluded = computed(() => {
 });
 
 /**
- * Optional-module keys visible to the current tenant. Bimbel-only
- * groups (currently just `Bimbel` — enrollment/sesi/tutor) are hidden
- * from sekolah tenants so the picker doesn't offer a module a school
- * would never activate.
+ * Optional-module keys visible to the current tenant. Delegates the
+ * sekolah↔bimbel visibility rules to `isModuleHiddenFor` so all three
+ * pickers (this convert flow + wizard grid + Kelola Modul add list)
+ * stay in lockstep on what a tenant can actually activate.
  */
 const visibleModuleKeys = computed<string[]>(() => {
   const cat = catalog.value;
   if (!cat) return [];
-  const isSekolah = selectedTenant.value?.tenant_type === 'sekolah';
+  const tt = selectedTenant.value?.tenant_type ?? null;
   return Object.keys(cat.optional).filter((key) => {
-    if (isSekolah && cat.optional[key]?.group === 'Bimbel') return false;
-    return true;
+    const item = cat.optional[key];
+    return item ? !isModuleHiddenFor(key, item.group, tt) : true;
   });
 });
 
