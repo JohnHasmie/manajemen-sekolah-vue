@@ -65,6 +65,7 @@ const gateway = ref<'bank_transfer_manual' | 'midtrans'>('bank_transfer_manual')
 const quote = ref<ModularQuote | null>(null);
 const submitting = ref(false);
 const errorMessage = ref<string | null>(null);
+const loggingOut = ref(false);
 
 interface OrderSnapshot {
   planLabel: string;
@@ -433,6 +434,37 @@ async function mountGoogleButton() {
 function flagSubscribeIntent(): void {
   try { sessionStorage.setItem('subscribe_intent_v1', '1'); } catch { /* non-fatal */ }
 }
+
+/**
+ * Ganti akun Google. The user got here signed in with the wrong Gmail
+ * (e.g. clicked the wrong Chrome profile) and needs to swap. We clear
+ * the session locally + on the server, reset the picker state, then
+ * re-mount the Google button so they can pick a different account in
+ * the same tab — no full page reload needed.
+ */
+async function onSwitchAccount(): Promise<void> {
+  if (loggingOut.value) return;
+  loggingOut.value = true;
+  try {
+    await auth.logout();
+  } catch (e) {
+    // Non-fatal — auth.logout already clears session locally.
+    console.warn('[SubscribeView.switchAccount]', (e as Error).message);
+  } finally {
+    // Reset view state so the wrong tenant list vanishes with the
+    // wrong account, and the anonymous card renders again.
+    myTenants.value = [];
+    selectedTenant.value = null;
+    order.value = null;
+    quote.value = null;
+    transferNotified.value = false;
+    loggingOut.value = false;
+    flagSubscribeIntent();
+    // Re-mount the Google button on the next tick so the anonymous
+    // signin card actually gets a fresh button.
+    setTimeout(mountGoogleButton, 100);
+  }
+}
 watch(() => auth.isAuthenticated, (v) => {
   if (v) {
     loadTenants();
@@ -447,15 +479,37 @@ watch(() => auth.isAuthenticated, (v) => {
       <div class="sv-logo">K</div>
       <div class="sv-brand">KamilEdu</div>
       <div class="sv-nav-links">
-        <a href="/subscribe" class="sv-nav-link">Harga</a>
         <a
           href="https://wa.me/6285179819002"
           target="_blank"
           rel="noopener"
           class="sv-nav-link"
-        >Bantuan</a>
-        <div v-if="auth.isAuthenticated" class="sv-avatar">
-          {{ (auth.user?.name ?? auth.user?.email ?? '?').slice(0, 2).toUpperCase() }}
+        >
+          <i class="ti ti-message-circle" aria-hidden="true" />
+          Bantuan
+        </a>
+        <div
+          v-if="auth.isAuthenticated"
+          class="sv-account"
+        >
+          <div class="sv-avatar" :title="auth.user?.email ?? undefined">
+            {{ (auth.user?.name ?? auth.user?.email ?? '?').slice(0, 2).toUpperCase() }}
+          </div>
+          <div class="sv-account-menu">
+            <div class="sv-account-email">
+              {{ auth.user?.email ?? auth.user?.name ?? 'Akun Google' }}
+            </div>
+            <button
+              type="button"
+              class="sv-account-switch"
+              :disabled="loggingOut"
+              @click="onSwitchAccount"
+            >
+              <i class="ti ti-switch-horizontal" aria-hidden="true" />
+              <template v-if="loggingOut">Keluar…</template>
+              <template v-else>Ganti akun Google</template>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -465,7 +519,7 @@ watch(() => auth.isAuthenticated, (v) => {
       <div class="sv-signin-card">
         <div class="sv-signin-h1">Masuk untuk mulai berlangganan</div>
         <p class="sv-signin-sub">
-          Kami perlu tahu tenant demo mana yang mau dilanjutkan. Masuk
+          Kami perlu tahu lembaga demo mana yang mau dilanjutkan. Masuk
           dengan akun Google yang sama seperti saat mendaftar demo.
         </p>
         <div
@@ -495,7 +549,7 @@ watch(() => auth.isAuthenticated, (v) => {
     <template v-else-if="state === 'convert' && selectedTenant && catalog">
       <a class="sv-back" href="#" @click.prevent="switchTenant">
         <i class="ti ti-arrow-left" style="font-size:13px" aria-hidden="true" />
-        Kembali ke daftar tenant
+        Kembali ke daftar lembaga
       </a>
 
       <SelectedTenantStrip
@@ -527,6 +581,7 @@ watch(() => auth.isAuthenticated, (v) => {
               :key="key"
               :item="catalog.optional[key]"
               :selected="selectedKeys.has(key) || expandedKeys.includes(key)"
+              :tenant-type="selectedTenant.tenant_type"
               @toggle="toggleModule(key)"
             />
           </div>
@@ -583,6 +638,7 @@ watch(() => auth.isAuthenticated, (v) => {
             v-model:plan="period"
             :quote="quote"
             :catalog="catalog"
+            :tenant-type="selectedTenant.tenant_type"
             :submitting="submitting"
             :yearly-discount-pct="plan?.yearly_discount_pct"
             :bundle-benchmark="bundleBenchmark"
@@ -628,13 +684,49 @@ watch(() => auth.isAuthenticated, (v) => {
       />
     </div>
 
-    <!-- Trust footer -->
-    <div class="sv-trust">
-      <div class="sv-trust-item"><i class="ti ti-shield-check" aria-hidden="true" />Enkripsi TLS</div>
-      <div class="sv-trust-item"><i class="ti ti-credit-card" aria-hidden="true" />Midtrans / transfer BSI</div>
-      <div class="sv-trust-item"><i class="ti ti-arrow-back-up" aria-hidden="true" />Batal kapan saja</div>
-      <div class="sv-trust-item"><i class="ti ti-headset" aria-hidden="true" />Support WA 1×24 jam</div>
-    </div>
+    <!-- Trust footer — compact centered card that anchors the page
+         without stretching four items across a wide screen. -->
+    <footer class="sv-trust">
+      <div class="sv-trust-inner">
+        <div class="sv-trust-brand">
+          <div class="sv-trust-logo">K</div>
+          <div>
+            <div class="sv-trust-brand-name">KamilEdu</div>
+            <div class="sv-trust-brand-tag">Manajemen sekolah &amp; bimbel</div>
+          </div>
+        </div>
+
+        <div class="sv-trust-badges">
+          <div class="sv-trust-badge">
+            <i class="ti ti-shield-check" aria-hidden="true" />
+            <span>Enkripsi TLS</span>
+          </div>
+          <div class="sv-trust-badge">
+            <i class="ti ti-credit-card" aria-hidden="true" />
+            <span>Midtrans &middot; BSI</span>
+          </div>
+          <div class="sv-trust-badge">
+            <i class="ti ti-arrow-back-up" aria-hidden="true" />
+            <span>Batal kapan saja</span>
+          </div>
+          <a
+            class="sv-trust-badge is-link"
+            href="https://wa.me/6285179819002"
+            target="_blank"
+            rel="noopener"
+          >
+            <i class="ti ti-brand-whatsapp" aria-hidden="true" />
+            <span>Bantuan 1&times;24 jam</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="sv-trust-legal">
+        &copy; {{ new Date().getFullYear() }} KamilEdu &middot;
+        <a href="/legal/terms">Syarat</a> &middot;
+        <a href="/legal/privacy">Privasi</a>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -665,14 +757,62 @@ watch(() => auth.isAuthenticated, (v) => {
   display: flex; align-items: center; gap: 16px;
   font-size: 12px; color: #64748B;
 }
-.sv-nav-link { color: #64748B; text-decoration: none; }
+.sv-nav-link {
+  color: #64748B; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px;
+}
 .sv-nav-link:hover { color: #1B6FB8; }
+.sv-account {
+  position: relative;
+  display: flex; align-items: center;
+}
 .sv-avatar {
   width: 30px; height: 30px; border-radius: 50%;
   background: #E6F1FB; color: #185FA5;
   display: grid; place-items: center;
   font-size: 11px; font-weight: 600;
+  cursor: pointer;
 }
+.sv-account-menu {
+  position: absolute;
+  top: calc(100% + 8px); right: 0;
+  min-width: 210px;
+  background: #FFFFFF;
+  border: 0.5px solid #E2E8F0;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.10),
+              0 12px 36px rgba(15, 23, 42, 0.06);
+  padding: 10px;
+  opacity: 0; transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+  z-index: 20;
+}
+.sv-account:hover .sv-account-menu,
+.sv-account:focus-within .sv-account-menu {
+  opacity: 1; transform: translateY(0);
+  pointer-events: auto;
+}
+.sv-account-email {
+  font-size: 11.5px; color: #0F172A;
+  padding: 4px 6px 8px;
+  border-bottom: 0.5px solid #F1F5F9;
+  margin-bottom: 6px;
+  word-break: break-all;
+}
+.sv-account-switch {
+  width: 100%;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: transparent; border: none;
+  font-family: inherit;
+  font-size: 12px; color: #185FA5;
+  cursor: pointer; text-align: left;
+}
+.sv-account-switch:hover:not(:disabled) { background: #F0F7FF; }
+.sv-account-switch:disabled { opacity: 0.6; cursor: not-allowed; }
+.sv-account-switch i { color: #1B6FB8; }
 
 .sv-signin { padding: 60px 22px; display: grid; place-items: center; }
 .sv-signin-card {
@@ -807,18 +947,80 @@ watch(() => auth.isAuthenticated, (v) => {
   margin: 0 auto;
 }
 
+/* Redesigned footer — a bordered card with brand on the left, trust
+   badges in the centre, and a legal micro-strip underneath. Keeps the
+   page anchored without stretching four items across the whole width
+   on wide screens. */
 .sv-trust {
-  padding: 12px 22px;
-  background: #F5F8FC;
+  margin-top: 24px;
   border-top: 0.5px solid #E7ECF3;
-  display: flex; justify-content: space-between; align-items: center;
-  flex-wrap: wrap; gap: 10px;
+  background: linear-gradient(180deg, #FBFDFF 0%, #F5F8FC 100%);
 }
-.sv-trust-item {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 11px; color: #64748B;
+.sv-trust-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 18px 22px 14px;
+  display: flex; align-items: center; gap: 18px;
+  flex-wrap: wrap;
 }
-.sv-trust-item i { color: #1D9E75; }
+.sv-trust-brand {
+  display: flex; align-items: center; gap: 10px;
+  min-width: 0;
+}
+.sv-trust-logo {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, #1B6FB8 0%, #113E75 100%);
+  color: #fff;
+  display: grid; place-items: center;
+  font-weight: 600; font-size: 13px;
+  flex-shrink: 0;
+}
+.sv-trust-brand-name {
+  font-size: 12.5px; font-weight: 600; color: #0F172A;
+  letter-spacing: -0.1px;
+}
+.sv-trust-brand-tag {
+  font-size: 10.5px; color: #64748B;
+  margin-top: 1px;
+}
+.sv-trust-badges {
+  margin-left: auto;
+  display: flex; align-items: center;
+  gap: 6px; flex-wrap: wrap;
+}
+.sv-trust-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px;
+  background: #FFFFFF;
+  border: 0.5px solid #E2E8F0;
+  border-radius: 999px;
+  font-size: 11px; color: #475569;
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.sv-trust-badge i { color: #1D9E75; font-size: 13px; }
+.sv-trust-badge.is-link { cursor: pointer; }
+.sv-trust-badge.is-link:hover {
+  background: #F0F7FF;
+  border-color: #C7DBEF;
+  color: #185FA5;
+}
+.sv-trust-badge.is-link:hover i { color: #185FA5; }
+.sv-trust-legal {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 22px 16px;
+  font-size: 10.5px; color: #94A3B8;
+  text-align: center;
+}
+.sv-trust-legal a { color: #64748B; text-decoration: none; }
+.sv-trust-legal a:hover { color: #1B6FB8; text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .sv-trust-inner { justify-content: center; text-align: center; }
+  .sv-trust-brand { margin: 0 auto; }
+  .sv-trust-badges { margin-left: 0; justify-content: center; }
+}
 
 @media (max-width: 720px) {
   .sv-body { grid-template-columns: 1fr; }

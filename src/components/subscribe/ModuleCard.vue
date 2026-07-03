@@ -10,7 +10,8 @@ import type { ModuleCatalogItem } from '@/types/subscription-billing';
 import {
   CATEGORY_TINTS,
   MODULE_ICONS,
-  MODULE_TAGLINES,
+  moduleLabel,
+  moduleTagline,
   money,
   seatUnit,
 } from './moduleTokens';
@@ -19,6 +20,8 @@ const props = defineProps<{
   item: ModuleCatalogItem;
   selected: boolean;
   autoInclude?: string[];
+  /** Tenant type so labels/taglines/units read naturally for bimbel. */
+  tenantType?: 'sekolah' | 'bimbel' | null;
 }>();
 
 defineEmits<{
@@ -29,14 +32,14 @@ const tint = computed(
   () => CATEGORY_TINTS[props.item.group] ?? CATEGORY_TINTS.Default,
 );
 const icon = computed(() => MODULE_ICONS[props.item.key] ?? 'circle-plus');
-const tagline = computed(
-  () => MODULE_TAGLINES[props.item.key] ?? props.item.label,
-);
+const label = computed(() => moduleLabel(props.item, props.tenantType));
+const tagline = computed(() => moduleTagline(props.item, props.tenantType));
 const price = computed(() =>
   props.item.pricing_seat === 'staff'
     ? props.item.price_per_staff
     : props.item.price_per_student,
 );
+const unit = computed(() => seatUnit(props.item, props.tenantType));
 </script>
 
 <template>
@@ -54,7 +57,7 @@ const price = computed(() =>
         <i :class="`ti ti-${icon}`" aria-hidden="true" />
       </div>
       <div class="mc-body">
-        <div class="mc-title">{{ item.label }}</div>
+        <div class="mc-title">{{ label }}</div>
         <div class="mc-desc">{{ tagline }}</div>
       </div>
       <div class="mc-check" :class="{ 'is-on': selected }">
@@ -69,7 +72,7 @@ const price = computed(() =>
 
     <div class="mc-price">
       <span class="mc-price-n">{{ money(price) }}</span>
-      <span class="mc-price-u">{{ seatUnit(item) }} / bln</span>
+      <span class="mc-price-u">{{ unit }} / bln</span>
     </div>
   </button>
 </template>

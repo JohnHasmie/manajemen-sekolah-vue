@@ -135,11 +135,11 @@ const expiredCount = computed(
         Selamat datang kembali, {{ userName }}
       </div>
       <h1 class="tp-hero-h1">
-        <span class="n">{{ tenants.length }} tenant demo</span>
+        <span class="n">{{ tenants.length }} lembaga demo</span>
         terdeteksi di akun Anda
       </h1>
       <p class="tp-hero-sub">
-        Pilih tenant yang ingin dilanjutkan ke langganan berbayar. Data
+        Pilih lembaga yang ingin dilanjutkan ke langganan berbayar. Data
         siswa, guru, dan riwayat yang sudah ada akan otomatis terbawa —
         Anda tinggal pilih modul yang dipakai dan cara bayar.
       </p>
@@ -149,7 +149,7 @@ const expiredCount = computed(
       <div class="tp-tsec-head">
         <span class="tp-tsec-lbl">Demo Anda</span>
         <span class="tp-tsec-count">
-          {{ tenants.length }} tenant · {{ activeCount }} aktif ·
+          {{ tenants.length }} lembaga · {{ activeCount }} aktif ·
           {{ expiredCount }} kadaluarsa
         </span>
       </div>
@@ -260,15 +260,15 @@ const expiredCount = computed(
         </div>
         <div>
           <div class="tp-newstrip-title">
-            Atau daftarkan sekolah / bimbel baru
+            Atau daftarkan lembaga baru
           </div>
           <div class="tp-newstrip-desc">
-            Belum punya tenant demo di sini? Bikin akun berbayar langsung
+            Belum punya lembaga demo di sini? Bikin akun berbayar langsung
             tanpa periode uji coba.
           </div>
         </div>
         <div class="tp-newstrip-cta">
-          Bikin tenant baru
+          Daftar lembaga baru
           <i
             class="ti ti-arrow-right"
             style="font-size: 13px"

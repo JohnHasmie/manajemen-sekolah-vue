@@ -15,7 +15,7 @@ import type {
   ModularQuote,
   ModuleCatalog,
 } from '@/types/subscription-billing';
-import { money } from './moduleTokens';
+import { money, moduleLabel } from './moduleTokens';
 import BundleNudge from './BundleNudge.vue';
 
 const props = defineProps<{
@@ -30,6 +30,8 @@ const props = defineProps<{
   yearlyDiscountPct?: number;
   /** Show the "Bulanan" / "Tahunan" toggle in the header. */
   showPlanToggle?: boolean;
+  /** Tenant type — swaps siswa/peserta + guru/tutor in labels + hint. */
+  tenantType?: 'sekolah' | 'bimbel' | null;
   /**
    * When set, we compare alacarte_total to this value. If ≥, render
    * BundleNudge to help the user save.
@@ -53,12 +55,14 @@ const lines = computed(() => props.quote?.per_module ?? []);
 const aiLines = computed(() => props.quote?.ai_quota_lines ?? []);
 
 function labelFor(key: string): string {
-  return (
-    props.catalog?.optional[key]?.label ??
-    props.catalog?.bundles[key]?.label ??
-    key
-  );
+  const optional = props.catalog?.optional[key];
+  if (optional) return moduleLabel(optional, props.tenantType);
+  return props.catalog?.bundles[key]?.label ?? key;
 }
+
+const perUnitWord = computed(() =>
+  props.tenantType === 'bimbel' ? 'peserta' : 'siswa',
+);
 
 const monthlyAmount = computed(() => props.quote?.monthly_amount ?? 0);
 const chosenAmount = computed(() => props.quote?.chosen_amount ?? 0);
@@ -140,7 +144,7 @@ function onPlan(p: BillingPeriod) {
       </div>
       <div class="pc-total-val">{{ money(chosenAmount) }}</div>
       <div v-if="studentCount > 0" class="pc-total-per">
-        ≈ {{ money(perStudent) }} per siswa / bln
+        ≈ {{ money(perStudent) }} per {{ perUnitWord }} / bln
       </div>
     </div>
 

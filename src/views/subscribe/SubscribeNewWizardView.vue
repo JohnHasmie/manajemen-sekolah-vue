@@ -44,7 +44,7 @@ const auth = useAuthStore();
 const google = useGoogleSignIn();
 
 const STEPS = [
-  { key: 'sekolah', label: 'Data sekolah' },
+  { key: 'lembaga', label: 'Data lembaga' },
   { key: 'admin', label: 'Admin' },
   { key: 'kapasitas', label: 'Kapasitas' },
   { key: 'modul', label: 'Pilih modul' },
@@ -225,7 +225,7 @@ onMounted(async () => {
 // ── Step navigation ────────────────────────────────────────────────
 const canGoNext = computed(() => {
   switch (activeStep.value) {
-    case 'sekolah':
+    case 'lembaga':
       return !!form.tenant_type && form.tenant_name.trim().length >= 3;
     case 'admin':
       return (
@@ -449,13 +449,13 @@ function flagSubscribeIntent(): void {
       </div>
     </div>
 
-    <!-- STEP 1: SEKOLAH -->
-    <div v-else-if="activeStep === 'sekolah'" class="sn-step">
+    <!-- STEP 1: LEMBAGA -->
+    <div v-else-if="activeStep === 'lembaga'" class="sn-step">
       <div class="sn-h">
-        <h1 class="sn-h1">Ceritakan sekolah / bimbel Anda</h1>
+        <h1 class="sn-h1">Ceritakan lembaga Anda</h1>
         <p class="sn-sub">
-          Info dasar ini kami pakai untuk membuat tenant baru dan
-          mencetak dokumen resmi (raport, sertifikat).
+          Info dasar ini kami pakai untuk membuat akun lembaga baru dan
+          mencetak dokumen resmi ({{ form.tenant_type === 'bimbel' ? 'laporan progres, sertifikat' : 'raport, sertifikat' }}).
         </p>
       </div>
       <div class="sn-form">
@@ -474,12 +474,16 @@ function flagSubscribeIntent(): void {
             :class="{ 'is-on': form.tenant_type === 'bimbel' }"
             @click="form.tenant_type = 'bimbel'"
           >
-            <i class="ti ti-books" aria-hidden="true" /> Bimbel
+            <i class="ti ti-books" aria-hidden="true" /> Bimbel / kursus
           </button>
         </div>
         <label class="sn-field">
-          <span class="sn-lbl">Nama tenant</span>
-          <input v-model="form.tenant_name" type="text" placeholder="SMP Rushd" />
+          <span class="sn-lbl">Nama lembaga</span>
+          <input
+            v-model="form.tenant_name"
+            type="text"
+            :placeholder="form.tenant_type === 'bimbel' ? 'Bimbel Rushd' : 'SMP Rushd'"
+          />
         </label>
         <label v-if="form.tenant_type === 'sekolah'" class="sn-field">
           <span class="sn-lbl">Jenjang</span>
@@ -542,7 +546,9 @@ function flagSubscribeIntent(): void {
     <!-- STEP 3: KAPASITAS -->
     <div v-else-if="activeStep === 'kapasitas'" class="sn-step">
       <div class="sn-h">
-        <h1 class="sn-h1">Berapa besar sekolah Anda?</h1>
+        <h1 class="sn-h1">
+          Berapa besar {{ form.tenant_type === 'bimbel' ? 'bimbel' : 'sekolah' }} Anda?
+        </h1>
         <p class="sn-sub">
           Perkiraan cukup — Anda bisa naikkan atau turunkan kapan saja
           di dashboard, kami hitung ulang saat perpanjangan.
@@ -551,11 +557,15 @@ function flagSubscribeIntent(): void {
       <div class="sn-form">
         <div class="sn-field-row">
           <label class="sn-field">
-            <span class="sn-lbl">Jumlah siswa</span>
+            <span class="sn-lbl">
+              Jumlah {{ form.tenant_type === 'bimbel' ? 'peserta' : 'siswa' }}
+            </span>
             <input v-model.number="form.student_count" type="number" min="0" />
           </label>
           <label class="sn-field">
-            <span class="sn-lbl">Jumlah guru / staf</span>
+            <span class="sn-lbl">
+              Jumlah {{ form.tenant_type === 'bimbel' ? 'tutor / staf' : 'guru / staf' }}
+            </span>
             <input v-model.number="form.staff_count" type="number" min="0" />
           </label>
         </div>
@@ -578,7 +588,9 @@ function flagSubscribeIntent(): void {
           <BundleStrip
             v-if="catalog.bundles.bundle_complete"
             label="Paket Lengkap · semua modul non-AI"
-            description="9 modul: absensi, nilai, raport, jadwal, RPP, keuangan, komunikasi, aktivitas kelas."
+            :description="form.tenant_type === 'bimbel'
+              ? '9 modul: absensi, nilai, laporan progres, jadwal sesi, materi ajar, pembayaran, komunikasi, tugas.'
+              : '9 modul: absensi, nilai, raport, jadwal, RPP, keuangan, komunikasi, aktivitas kelas.'"
             :price-per-student="catalog.bundles.bundle_complete.price_per_student"
             :active="selectedKeys.has('bundle_complete')"
             @select="toggleModule('bundle_complete')"
@@ -588,6 +600,7 @@ function flagSubscribeIntent(): void {
             :catalog="catalog"
             :selected-keys="new Set(expandedKeys)"
             :auto-included="autoIncluded"
+            :tenant-type="form.tenant_type"
             @toggle="toggleModule"
           />
 
@@ -610,12 +623,13 @@ function flagSubscribeIntent(): void {
 
         <div class="sn-side">
           <PricingCalculatorV2
-            :tenant-name="form.tenant_name || 'Sekolah Anda'"
+            :tenant-name="form.tenant_name || (form.tenant_type === 'bimbel' ? 'Bimbel Anda' : 'Sekolah Anda')"
             :student-count="form.student_count"
             :staff-count="form.staff_count"
             v-model:plan="period"
             :quote="quote"
             :catalog="catalog"
+            :tenant-type="form.tenant_type"
             :yearly-discount-pct="plan?.yearly_discount_pct"
             :bundle-benchmark="bundleBenchmark"
             submit-label="Lanjut ke pembayaran"

@@ -11,7 +11,8 @@ import type { ModuleCatalogItem } from '@/types/subscription-billing';
 import {
   CATEGORY_TINTS,
   MODULE_ICONS,
-  MODULE_TAGLINES,
+  moduleLabel,
+  moduleTagline,
   money,
   seatUnit,
 } from './moduleTokens';
@@ -19,6 +20,7 @@ import {
 const props = defineProps<{
   item: ModuleCatalogItem;
   selected: boolean;
+  tenantType?: 'sekolah' | 'bimbel' | null;
 }>();
 
 defineEmits<{ toggle: [] }>();
@@ -27,14 +29,14 @@ const tint = computed(
   () => CATEGORY_TINTS[props.item.group] ?? CATEGORY_TINTS.Default,
 );
 const icon = computed(() => MODULE_ICONS[props.item.key] ?? 'circle-plus');
-const tagline = computed(
-  () => MODULE_TAGLINES[props.item.key] ?? props.item.label,
-);
+const label = computed(() => moduleLabel(props.item, props.tenantType));
+const tagline = computed(() => moduleTagline(props.item, props.tenantType));
 const price = computed(() =>
   props.item.pricing_seat === 'staff'
     ? props.item.price_per_staff
     : props.item.price_per_student,
 );
+const unit = computed(() => seatUnit(props.item, props.tenantType));
 </script>
 
 <template>
@@ -51,12 +53,12 @@ const price = computed(() =>
       <i :class="`ti ti-${icon}`" aria-hidden="true" />
     </div>
     <div class="mr-body">
-      <div class="mr-title">{{ item.label }}</div>
+      <div class="mr-title">{{ label }}</div>
       <div class="mr-desc">{{ tagline }}</div>
     </div>
     <div class="mr-price">
       {{ money(price) }}
-      <span class="u">{{ seatUnit(item) }}</span>
+      <span class="u">{{ unit }}</span>
     </div>
     <div class="mr-tog" />
   </button>

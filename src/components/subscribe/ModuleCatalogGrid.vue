@@ -6,13 +6,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { ModuleCatalog, ModuleCatalogItem } from '@/types/subscription-billing';
-import { CATEGORY_TINTS, GROUP_ORDER } from './moduleTokens';
+import { CATEGORY_TINTS, GROUP_ORDER, moduleLabel } from './moduleTokens';
 import ModuleCard from './ModuleCard.vue';
 
 const props = defineProps<{
   catalog: ModuleCatalog;
   selectedKeys: Set<string>;
   autoIncluded: Map<string, string[]>;
+  tenantType?: 'sekolah' | 'bimbel' | null;
 }>();
 
 defineEmits<{ toggle: [key: string] }>();
@@ -41,10 +42,15 @@ const groupedModules = computed<Group[]>(() => {
     items.forEach((it) => {
       if (it.requires.length) {
         const reqLabels = it.requires
-          .map((r) => props.catalog.optional[r]?.label)
-          .filter(Boolean);
+          .map((r) => {
+            const dep = props.catalog.optional[r];
+            return dep ? moduleLabel(dep, props.tenantType) : null;
+          })
+          .filter(Boolean) as string[];
         if (reqLabels.length) {
-          noteBits.push(`${it.label} butuh ${reqLabels.join(', ')}`);
+          noteBits.push(
+            `${moduleLabel(it, props.tenantType)} butuh ${reqLabels.join(', ')}`,
+          );
         }
       }
     });
@@ -92,6 +98,7 @@ const groupIcon: Record<string, string> = {
           :item="item"
           :selected="selectedKeys.has(item.key)"
           :auto-include="autoIncluded.get(item.key)"
+          :tenant-type="tenantType"
           @toggle="$emit('toggle', item.key)"
         />
       </div>
