@@ -152,6 +152,8 @@ const SuperAdminDemoRequestDetailView = () =>
   import('@/views/super-admin/SuperAdminDemoRequestDetailView.vue');
 const SuperAdminSchoolsView = () =>
   import('@/views/super-admin/SuperAdminSchoolsView.vue');
+const SuperAdminTenantModulesView = () =>
+  import('@/views/super-admin/SuperAdminTenantModulesView.vue');
 const SuperAdminBroadcastView = () =>
   import('@/views/super-admin/SuperAdminBroadcastView.vue');
 const SuperAdminIncompleteRegistrationsView = () =>
@@ -677,6 +679,14 @@ const routes: RouteRecordRaw[] = [
         path: 'super-admin/schools',
         name: 'super-admin.schools',
         component: SuperAdminSchoolsView,
+        meta: { superAdmin: true },
+      },
+      {
+        // Modular-SaaS super-admin surface — grant/revoke/comp modules
+        // on any tenant. Backed by /billing/admin/tenants/*/modules.
+        path: 'super-admin/tenant-modules',
+        name: 'super-admin.tenant-modules',
+        component: SuperAdminTenantModulesView,
         meta: { superAdmin: true },
       },
       {
