@@ -28,6 +28,11 @@ interface Group {
 const groupedModules = computed<Group[]>(() => {
   const groups: Record<string, ModuleCatalogItem[]> = {};
   Object.values(props.catalog.optional).forEach((item) => {
+    // Bimbel-only modules (tutoring, enrollment, sesi) don't belong in
+    // a sekolah picker — a sekolah admin picking "Bimbel · Enrollment,
+    // sesi, pembayaran tutor" is confusing at best. Filter them out
+    // upstream so the Bimbel group doesn't render at all for sekolah.
+    if (props.tenantType === 'sekolah' && item.group === 'Bimbel') return;
     (groups[item.group] ??= []).push(item);
   });
 

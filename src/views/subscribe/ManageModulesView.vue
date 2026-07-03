@@ -75,8 +75,15 @@ const cancelledRows = computed<MyModuleRow[]>(() =>
 const availableCatalog = computed(() => {
   if (!catalog.value) return [] as { key: string; item: NonNullable<ModuleCatalog['optional'][string]> }[];
   const held = new Set(mine.value.modules.map((r) => r.module_key));
+  const isSekolah = tenantType.value === 'sekolah';
   return Object.entries(catalog.value.optional)
-    .filter(([key]) => !held.has(key))
+    .filter(([key, item]) => {
+      if (held.has(key)) return false;
+      // Bimbel-only modules stay hidden from sekolah tenants — a school
+      // admin has no reason to buy tutor enrollment/sesi/pembayaran.
+      if (isSekolah && item.group === 'Bimbel') return false;
+      return true;
+    })
     .map(([key, item]) => ({ key, item }));
 });
 

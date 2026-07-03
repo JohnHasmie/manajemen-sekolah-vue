@@ -152,6 +152,22 @@ const autoIncluded = computed(() => {
   return map;
 });
 
+/**
+ * Optional-module keys visible to the current tenant. Bimbel-only
+ * groups (currently just `Bimbel` — enrollment/sesi/tutor) are hidden
+ * from sekolah tenants so the picker doesn't offer a module a school
+ * would never activate.
+ */
+const visibleModuleKeys = computed<string[]>(() => {
+  const cat = catalog.value;
+  if (!cat) return [];
+  const isSekolah = selectedTenant.value?.tenant_type === 'sekolah';
+  return Object.keys(cat.optional).filter((key) => {
+    if (isSekolah && cat.optional[key]?.group === 'Bimbel') return false;
+    return true;
+  });
+});
+
 const bundleBenchmark = computed(() => {
   const cat = catalog.value;
   if (!cat || !selectedTenant.value) return null;
@@ -611,7 +627,7 @@ watch(() => auth.isAuthenticated, (v) => {
 
           <div class="sv-modrows">
             <ModuleRow
-              v-for="key in Object.keys(catalog.optional)"
+              v-for="key in visibleModuleKeys"
               :key="key"
               :item="catalog.optional[key]"
               :selected="selectedKeys.has(key) || expandedKeys.includes(key)"

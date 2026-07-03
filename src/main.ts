@@ -3,6 +3,13 @@ import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 import LogRocket from 'logrocket';
 
+// Tabler icons webfont — powers every `<i class="ti ti-*">` used across
+// the app (subscribe surface, admin views, etc.). Loaded once at boot
+// so components can use icons without their own imports; without this
+// the `ti` classes are inert and the app ships coloured squares where
+// icons should be.
+import '@tabler/icons-webfont/dist/tabler-icons.min.css';
+
 import App from './App.vue';
 import router from './router';
 import { i18n } from './lib/i18n';

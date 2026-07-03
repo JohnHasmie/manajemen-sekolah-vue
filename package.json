@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@fontsource/poppins": "^5.0.14",
+    "@tabler/icons-webfont": "^3.44.0",
     "@types/leaflet": "^1.9.21",
     "@vueuse/core": "^11.1.0",
     "axios": "^1.7.7",
