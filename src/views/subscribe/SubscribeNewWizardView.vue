@@ -696,10 +696,6 @@ function flagSubscribeIntent(): void {
         <i class="ti ti-arrow-left" style="font-size:13px" aria-hidden="true" />
         Kembali
       </button>
-      <div class="sn-foot-trust">
-        <i class="ti ti-shield-check" aria-hidden="true" />
-        Data aman · enkripsi TLS · pembayaran via Midtrans / transfer BSI
-      </div>
       <button
         v-if="activeStep === 'bayar'"
         type="button"
@@ -896,11 +892,6 @@ function flagSubscribeIntent(): void {
 }
 .sn-foot-next:hover:not(:disabled) { background: #185FA5; }
 .sn-foot-next:disabled { background: #CBD5E1; cursor: not-allowed; }
-.sn-foot-trust {
-  font-size: 11px; color: #64748B;
-  display: flex; align-items: center; gap: 6px;
-  margin: 0 auto;
-}
 
 @media (max-width: 720px) {
   .sn-body { grid-template-columns: 1fr; }

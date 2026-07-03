@@ -63,6 +63,32 @@ function labelFor(key: string): string {
 const perUnitWord = computed(() =>
   props.tenantType === 'bimbel' ? 'peserta' : 'siswa',
 );
+const staffWord = computed(() =>
+  props.tenantType === 'bimbel' ? 'tutor' : 'guru',
+);
+
+/**
+ * Human-readable "how did we get this number" breakdown for a per-module
+ * quote line. Renders "500 siswa × Rp 2.000 + 10 guru × Rp 2.500" when
+ * both seat types contribute; drops the zero-priced side so a per-guru
+ * module doesn't say "+ 500 siswa × Rp 0" (confusing).
+ *
+ * Without this, the sidebar collapses each module to just its total
+ * (Rp 25.000) and users assume the staff seats weren't counted — this
+ * exposes the arithmetic explicitly.
+ */
+function breakdownFor(l: {
+  key: string;
+  price_per_student?: number;
+  price_per_staff?: number;
+}): string {
+  const parts: string[] = [];
+  const ps = Number(l.price_per_student ?? 0);
+  const pt = Number(l.price_per_staff ?? 0);
+  if (ps > 0) parts.push(`${props.studentCount} ${perUnitWord.value} × ${money(ps)}`);
+  if (pt > 0) parts.push(`${props.staffCount} ${staffWord.value} × ${money(pt)}`);
+  return parts.join(' + ');
+}
 
 const monthlyAmount = computed(() => props.quote?.monthly_amount ?? 0);
 const chosenAmount = computed(() => props.quote?.chosen_amount ?? 0);
@@ -115,13 +141,19 @@ function onPlan(p: BillingPeriod) {
 
     <div class="pc-lines" v-if="lines.length">
       <div v-for="l in lines" :key="l.key" class="pc-line">
-        <span class="pc-line-lbl">{{ labelFor(l.key) }}</span>
+        <div class="pc-line-body">
+          <div class="pc-line-lbl">{{ labelFor(l.key) }}</div>
+          <div class="pc-line-sub">{{ breakdownFor(l) }}</div>
+        </div>
         <span class="pc-line-val">{{ money(l.monthly_line) }}</span>
       </div>
       <div v-for="ai in aiLines" :key="`ai-${ai.key}`" class="pc-line">
-        <span class="pc-line-lbl">
-          {{ labelFor(ai.key) }} · kuota +{{ ai.extra_generates }}
-        </span>
+        <div class="pc-line-body">
+          <div class="pc-line-lbl">{{ labelFor(ai.key) }}</div>
+          <div class="pc-line-sub">
+            kuota +{{ ai.extra_generates }} / {{ staffWord }} / bln
+          </div>
+        </div>
         <span class="pc-line-val">{{ money(ai.monthly_line) }}</span>
       </div>
     </div>
@@ -219,13 +251,24 @@ function onPlan(p: BillingPeriod) {
 .pc-lines { padding: 10px 14px; }
 .pc-line {
   display: flex; justify-content: space-between;
-  align-items: baseline;
-  padding: 4px 0; font-size: 11.5px;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0; font-size: 11.5px;
 }
-.pc-line-lbl { color: #475569; }
-.pc-line-val {
-  font-weight: 500; color: #0F172A;
+.pc-line + .pc-line { border-top: 0.5px solid #F1F5F9; padding-top: 8px; }
+.pc-line-body { min-width: 0; flex: 1; }
+.pc-line-lbl { color: #0F172A; font-weight: 500; }
+.pc-line-sub {
+  font-size: 10.5px; color: #64748B;
+  margin-top: 2px;
   font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+}
+.pc-line-val {
+  font-weight: 600; color: #0F172A;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .pc-empty {
