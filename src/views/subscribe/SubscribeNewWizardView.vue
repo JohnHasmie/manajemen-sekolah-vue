@@ -372,23 +372,40 @@ function loadDraft(email: string | null | undefined): WizardDraft | null {
   }
 }
 
+/**
+ * True while we're writing loaded draft state INTO the reactive form.
+ * The save-on-change watcher checks this and skips — otherwise the
+ * draft we just wrote overwrites the draft we're loading, spuriously
+ * "empty" if the user is fast on a keyboard while the restore is
+ * running.
+ */
+let hydrating = false;
+
 function applyDraft(d: WizardDraft): void {
-  if (d.form && typeof d.form === 'object') {
-    Object.assign(form, d.form);
-  }
-  if (Array.isArray(d.selectedKeys)) {
-    selectedKeys.value = new Set(d.selectedKeys.filter((k) => typeof k === 'string'));
-  }
-  if (d.aiQuota && typeof d.aiQuota === 'object') {
-    aiQuota.value = { ...d.aiQuota };
-  }
-  if (d.period === 'monthly' || d.period === 'yearly') {
-    period.value = d.period;
-  }
-  if (typeof d.stepIndex === 'number' && d.stepIndex >= 0 && d.stepIndex < STEPS.length) {
-    // Only restore stepIndex if the user got past step 1 — a fresh
-    // return should still show the intro step so they orient.
-    if (d.stepIndex > 0) stepIndex.value = d.stepIndex;
+  hydrating = true;
+  try {
+    if (d.form && typeof d.form === 'object') {
+      Object.assign(form, d.form);
+    }
+    if (Array.isArray(d.selectedKeys)) {
+      selectedKeys.value = new Set(d.selectedKeys.filter((k) => typeof k === 'string'));
+    }
+    if (d.aiQuota && typeof d.aiQuota === 'object') {
+      aiQuota.value = { ...d.aiQuota };
+    }
+    if (d.period === 'monthly' || d.period === 'yearly') {
+      period.value = d.period;
+    }
+    if (typeof d.stepIndex === 'number' && d.stepIndex >= 0 && d.stepIndex < STEPS.length) {
+      // Only restore stepIndex if the user got past step 1 — a fresh
+      // return should still show the intro step so they orient.
+      if (d.stepIndex > 0) stepIndex.value = d.stepIndex;
+    }
+  } finally {
+    // Flush the microtask queue before releasing the guard so the
+    // reactivity system finishes propagating our writes to any
+    // watchers we tripped mid-apply.
+    Promise.resolve().then(() => { hydrating = false; });
   }
 }
 
@@ -397,6 +414,20 @@ function clearDraft(email: string | null | undefined): void {
     localStorage.removeItem(draftKeyFor(email));
   } catch { /* non-fatal */ }
 }
+
+// Restore the draft SYNCHRONOUSLY at setup — BEFORE the save-on-change
+// watcher registers, and long before `await Promise.all(loadPlan/Catalog)`
+// gives up the microtask queue. Without this, a fast typist can enter a
+// character during the ~1-2 s of network loading, `saveDraft` fires 500 ms
+// later, and then `onMounted` calls `applyDraft` which overwrites what
+// they just typed with the older draft.
+//
+// The load helpers are already synchronous (localStorage is sync), so
+// there's no reason to defer this to onMounted at all.
+(() => {
+  const restored = loadDraft(auth.user?.email) ?? loadDraft(null);
+  if (restored) applyDraft(restored);
+})();
 
 let draftSaveTimer: number | null = null;
 watch(
@@ -419,41 +450,65 @@ watch(
     stepIndex,
   ],
   () => {
+    // Silence writes we're triggering ourselves during a restore, so
+    // an in-progress load doesn't schedule a save that would overwrite
+    // exactly what we're loading.
+    if (hydrating) return;
     if (draftSaveTimer !== null) window.clearTimeout(draftSaveTimer);
     draftSaveTimer = window.setTimeout(saveDraft, 500) as unknown as number;
   },
   { deep: true },
 );
 
-// When the user signs in mid-flow, migrate the anonymous draft to
-// the email-keyed slot so their answers survive the login round-trip.
+// When the user signs in mid-flow — OR when auth hydrates after mount
+// and turns out to already be signed in — migrate the anonymous draft
+// to the email-keyed slot so their answers survive the login round-trip.
+// `immediate: true` fires this handler at registration too, so the
+// "already-signed-in-on-mount" case does the migration once even
+// though newEmail didn't strictly change.
 watch(
   () => auth.user?.email ?? null,
   (newEmail, oldEmail) => {
-    if (newEmail && oldEmail !== newEmail) {
+    if (!newEmail) return;
+    if (oldEmail === newEmail) {
+      // Immediate-fire on mount with no prior email — check for an
+      // anon draft one more time (in case the sync restore above ran
+      // before auth hydrated) and adopt it under the email slot.
       const anon = loadDraft(null);
       const emailSlot = loadDraft(newEmail);
       if (anon && !emailSlot) {
         try {
           localStorage.setItem(draftKeyFor(newEmail), JSON.stringify(anon));
+          clearDraft(null);
+          applyDraft(anon);
         } catch { /* non-fatal */ }
+      } else if (emailSlot && !form.tenant_name) {
+        // Auth arrived AFTER our setup-time restore; if we haven't
+        // hydrated the email-scoped draft yet, do it now.
+        applyDraft(emailSlot);
       }
-      clearDraft(null);
-      if (!emailSlot && anon) applyDraft(anon);
-      if (emailSlot) applyDraft(emailSlot);
+      return;
     }
+    // Real email change (sign-in mid-flow).
+    const anon = loadDraft(null);
+    const emailSlot = loadDraft(newEmail);
+    if (anon && !emailSlot) {
+      try {
+        localStorage.setItem(draftKeyFor(newEmail), JSON.stringify(anon));
+      } catch { /* non-fatal */ }
+    }
+    clearDraft(null);
+    if (!emailSlot && anon) applyDraft(anon);
+    if (emailSlot) applyDraft(emailSlot);
   },
+  { immediate: true },
 );
 
 onMounted(async () => {
   await Promise.all([loadPlan(), loadCatalog()]);
   if (!auth.isAuthenticated) setTimeout(mountGoogleButton, 100);
-  // Restore a saved draft BEFORE prefilling from the auth store — the
-  // draft's admin_name/email are the user's own words and should win
-  // over the Google profile defaults.
-  const restored =
-    loadDraft(auth.user?.email) ?? loadDraft(null);
-  if (restored) applyDraft(restored);
+  // Fill from the auth store ONLY when the draft didn't provide a value —
+  // the user's own words always win over the Google profile default.
   if (!form.admin_email && auth.user?.email) form.admin_email = auth.user.email;
   if (!form.admin_name && auth.user?.name) form.admin_name = auth.user.name;
 });
