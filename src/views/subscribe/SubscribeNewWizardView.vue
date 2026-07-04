@@ -1219,11 +1219,12 @@ function flagSubscribeIntent(): void {
 
 .sn-body {
   display: grid;
-  /* 340px is wide enough to keep the calculator's line items on one
-     row for 7-digit rupiah amounts + hosts a comfortable Ambil Paket
-     Lengkap CTA without wrapping. Below 720px we collapse to single
-     column (see media query). */
-  grid-template-columns: minmax(0, 1fr) 340px;
+  /* 400px so the calculator can host 8-digit rupiah amounts alongside
+     the Ambil button on the swap card (Rp -83.000 needed room), the
+     capacity pills stay on one line, and "Paket Lengkap (Sekolah)"
+     doesn't have to wrap in the swap-card title. Below 900px we
+     collapse to single column (see media query). */
+  grid-template-columns: minmax(0, 1fr) 400px;
   gap: 0;
   flex: 1;
 }
@@ -1279,7 +1280,7 @@ function flagSubscribeIntent(): void {
 .sn-foot-next:hover:not(:disabled) { background: #185FA5; }
 .sn-foot-next:disabled { background: #CBD5E1; cursor: not-allowed; }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .sn-body { grid-template-columns: 1fr; }
   .sn-side { border-left: none; border-top: 0.5px solid #E7ECF3; }
 }

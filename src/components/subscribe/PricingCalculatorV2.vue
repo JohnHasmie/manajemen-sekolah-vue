@@ -487,7 +487,23 @@ function onPlan(p: BillingPeriod) {
   font-weight: 500; margin-top: 1px;
 }
 
-.pc-lines { padding: 10px 14px; }
+/* Cap the line list at ~5 rows so 13+-module bundles don't push the
+   Total + CTA off-screen. Overflow scrolls INSIDE this section
+   (visible scrollbar on hover), while the Total block + emerald
+   hemat strip + CTA stay pinned below — the user always sees what
+   they'll pay and the button that submits it. */
+.pc-lines {
+  padding: 10px 14px;
+  max-height: 260px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
+}
+.pc-lines::-webkit-scrollbar { width: 6px; }
+.pc-lines::-webkit-scrollbar-thumb {
+  background: #CBD5E1; border-radius: 3px;
+}
+.pc-lines::-webkit-scrollbar-track { background: transparent; }
 .pc-line {
   display: flex; justify-content: space-between;
   align-items: flex-start;
@@ -641,7 +657,7 @@ function onPlan(p: BillingPeriod) {
    underneath, "Ambil" button on the right. */
 .pc-total-swap {
   margin-top: 10px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border-radius: 10px;
   background: linear-gradient(180deg, #ECFDF5 0%, #D6F5E3 100%);
   border: 0.5px solid #A7E7CF;
@@ -650,26 +666,28 @@ function onPlan(p: BillingPeriod) {
 .pc-total-swap-body { flex: 1; min-width: 0; }
 .pc-total-swap-top {
   display: flex; align-items: center; gap: 5px;
-  font-size: 11.5px; font-weight: 600;
+  font-size: 12px; font-weight: 600;
   color: #0A5744;
   letter-spacing: -0.1px;
+  min-width: 0;
 }
 .pc-total-swap-top svg { color: #1D9E75; flex-shrink: 0; }
 .pc-total-swap-title {
   min-width: 0;
+  flex: 1;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .pc-total-swap-hemat {
-  margin-left: auto;
   background: #FFFFFF;
   color: #0A5744;
   border: 0.5px solid #A7E7CF;
-  padding: 1px 6px;
+  padding: 2px 7px;
   border-radius: 4px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .pc-total-swap-sub {
   font-size: 10.5px; color: #0F6E56;

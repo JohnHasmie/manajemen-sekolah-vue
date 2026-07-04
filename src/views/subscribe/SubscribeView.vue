@@ -938,9 +938,10 @@ watch(() => auth.isAuthenticated, (v) => {
 
 .sv-body {
   display: grid;
-  /* Matches the wizard — 340px keeps large IDR amounts on one line
-     and the bundle CTA from wrapping. */
-  grid-template-columns: minmax(0, 1fr) 340px;
+  /* 400px matches the wizard step 4 sidebar so the swap-card title
+     ("Paket Lengkap (Sekolah)"), the -Rp X hemat chip, and the Ambil
+     button all fit on one row without truncation. */
+  grid-template-columns: minmax(0, 1fr) 400px;
   gap: 0;
   border-top: 0.5px solid #E7ECF3;
   background: #FFFFFF;
@@ -1085,7 +1086,7 @@ watch(() => auth.isAuthenticated, (v) => {
   .sv-trust-legal { margin-left: 0; }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .sv-body { grid-template-columns: 1fr; }
   .sv-side { border-left: none; border-top: 0.5px solid #E7ECF3; }
 }
