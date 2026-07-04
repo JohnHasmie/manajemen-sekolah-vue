@@ -996,8 +996,14 @@ function flagSubscribeIntent(): void {
       </div>
     </div>
 
-    <!-- STEP 4: MODUL — the star -->
-    <template v-else-if="activeStep === 'modul' && catalog">
+    <!-- STEP 4: MODUL — the star. Also gates on `!order` so that when
+         we skip the payment-method picker (single-gateway path via
+         `next()`) and `onSubmit()` sets `order.value` while stepIndex
+         is still 3, the v-else-if chain falls through past this block
+         and renders the OrderTransferCard below. Without this guard
+         `activeStep === 'modul'` keeps matching first and the user
+         sees nothing happen on click — silent success. -->
+    <template v-else-if="activeStep === 'modul' && catalog && !order">
       <div class="sn-body">
         <div class="sn-main">
           <h1 class="sn-h1">
