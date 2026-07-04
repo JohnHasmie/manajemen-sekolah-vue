@@ -361,7 +361,7 @@ export const TutoringService = {
 
   async getGroups(programId: string): Promise<TutoringGroup[]> {
     const res = await api.get<ApiResponse<TutoringGroup[]>>(
-      '/tutoring/groups',
+      '/tutoring/classes',
       { params: { program_id: programId } },
     );
     return extractData(res) ?? [];
@@ -369,7 +369,7 @@ export const TutoringService = {
 
   /** All tenant groups (no program filter). */
   async getAllGroups(): Promise<TutoringGroup[]> {
-    const res = await api.get<ApiResponse<TutoringGroup[]>>('/tutoring/groups');
+    const res = await api.get<ApiResponse<TutoringGroup[]>>('/tutoring/classes');
     return extractData(res) ?? [];
   },
 
@@ -380,7 +380,7 @@ export const TutoringService = {
     tutor_user_id?: string;
   }): Promise<TutoringGroup> {
     const res = await api.post<ApiResponse<TutoringGroup>>(
-      '/tutoring/groups',
+      '/tutoring/classes',
       payload,
     );
     return extractData(res);
@@ -390,15 +390,15 @@ export const TutoringService = {
     groupId: string,
     payload: { name?: string; capacity?: number },
   ): Promise<void> {
-    await api.put(`/tutoring/groups/${groupId}`, payload);
+    await api.put(`/tutoring/classes/${groupId}`, payload);
   },
 
   async deleteGroup(groupId: string): Promise<void> {
-    await api.delete(`/tutoring/groups/${groupId}`);
+    await api.delete(`/tutoring/classes/${groupId}`);
   },
 
   async assignGroupTutor(groupId: string, tutorUserId: string | null): Promise<void> {
-    await api.post(`/tutoring/groups/${groupId}/assign-tutor`, {
+    await api.post(`/tutoring/classes/${groupId}/assign-tutor`, {
       tutor_user_id: tutorUserId,
     });
   },
@@ -1231,7 +1231,7 @@ export const TutoringService = {
     student_id?: string;
   } = {}): Promise<TutoringGroupAnnouncement[]> {
     const res = await api.get<ApiResponse<TutoringGroupAnnouncement[]>>(
-      '/tutoring/group-announcements',
+      '/tutoring/class-announcements',
       {
         params: {
           ...(opts.group_id ? { group_id: opts.group_id } : {}),
@@ -1248,14 +1248,14 @@ export const TutoringService = {
     body: string;
   }): Promise<{ id: string }> {
     const res = await api.post<ApiResponse<{ id: string }>>(
-      '/tutoring/group-announcements',
+      '/tutoring/class-announcements',
       payload,
     );
     return extractData(res);
   },
 
   async deleteGroupAnnouncement(id: string): Promise<void> {
-    await api.delete(`/tutoring/group-announcements/${id}`);
+    await api.delete(`/tutoring/class-announcements/${id}`);
   },
 
   // ── Leaderboard ─────────────────────────────────────────────────
@@ -1265,7 +1265,7 @@ export const TutoringService = {
     opts: { limit?: number } = {},
   ): Promise<TutoringLeaderboardRow[]> {
     const res = await api.get<ApiResponse<TutoringLeaderboardRow[]>>(
-      `/tutoring/groups/${groupId}/leaderboard`,
+      `/tutoring/classes/${groupId}/leaderboard`,
       { params: opts.limit ? { limit: opts.limit } : {} },
     );
     return extractData(res) ?? [];
