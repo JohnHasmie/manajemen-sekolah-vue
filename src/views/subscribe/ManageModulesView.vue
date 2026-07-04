@@ -31,14 +31,12 @@ import type {
   TenantType,
 } from '@/types/subscription-billing';
 import {
-  CATEGORY_TINTS,
-  MODULE_ICONS,
   isModuleHiddenFor,
   moduleLabel,
   moduleTagline,
   money,
-  seatUnit,
 } from '@/components/subscribe/moduleTokens';
+import ModuleTile from '@/components/subscribe/ModuleTile.vue';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -274,11 +272,32 @@ function shareTokenFromShareUrl(url: string | null | undefined): string | null {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
-function tintFor(group: string): { bg: string; fg: string } {
-  return CATEGORY_TINTS[group] ?? CATEGORY_TINTS.Default;
-}
-function iconFor(key: string): string {
-  return MODULE_ICONS[key] ?? 'circle-plus';
+// `tintFor` + `iconFor` used to live here as inline lookups over the
+// moduleTokens maps. Deleted because `<ModuleTile>` now handles the
+// tint/icon resolution internally — every place we render a module
+// row (subscribe picker, kelola modul, admin dashboard) reads from
+// the same visual pipeline.
+/**
+ * Resolve a module_key back to its catalog entry, with a defensive
+ * fallback so the row still renders (with just the key as label) when
+ * the catalog fetch failed mid-load. Keeps `<ModuleTile>` happy — the
+ * child expects a full `ModuleCatalogItem` and we don't want to guard
+ * `v-if` around every row.
+ */
+function itemFor(key: string) {
+  return (
+    catalog.value?.optional[key] ?? {
+      key,
+      label: key,
+      group: 'Default',
+      prefixes: [] as string[],
+      price_per_student: 0,
+      price_per_staff: 0,
+      pricing_seat: 'student' as const,
+      requires: [] as string[],
+      is_ai: false,
+    }
+  );
 }
 function labelFor(key: string): string {
   const item = catalog.value?.optional[key];
@@ -302,8 +321,26 @@ function seatBreakdown(row: MyModuleRow): string {
   }
   return parts.join(' + ');
 }
-function seatSuffixFor(item: NonNullable<ModuleCatalog['optional'][string]>): string {
-  return `${seatUnit(item, tenantType.value)} / bln`;
+/**
+ * Sub-line seat breakdown for AVAILABLE-to-add rows (which live off
+ * `item` rates rather than a `row`'s snapshot). Same shape as
+ * `seatBreakdown()` above but uses live catalog rates so a mid-cycle
+ * add reflects any rate retune that landed after the tenant's
+ * original purchase.
+ */
+function availSeatBreakdown(item: ModuleCatalog['optional'][string]): string {
+  if (!sub.value) return '';
+  const parts: string[] = [];
+  if (item.price_per_student > 0) {
+    parts.push(
+      `${sub.value.student_count.toLocaleString('id-ID')} ${perUnitWord.value} × ${money(item.price_per_student)}`,
+    );
+  }
+  if (item.price_per_staff > 0) {
+    const staffWord = tenantType.value === 'bimbel' ? 'tutor' : 'guru';
+    parts.push(`${sub.value.staff_count} ${staffWord} × ${money(item.price_per_staff)}`);
+  }
+  return parts.join(' + ');
 }
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -403,52 +440,27 @@ function formatDate(iso: string | null | undefined): string {
               Tidak ada modul aktif di langganan ini.
             </div>
 
-            <article
+            <ModuleTile
               v-for="row in activeRows"
               :key="`a-${row.module_key}`"
-              class="mm-row"
+              :item="itemFor(row.module_key)"
+              :tenant-type="tenantType"
+              mode="managed"
+              :monthly-amount="row.source === 'comp' ? 0 : row.monthly_amount"
+              :pill-label="row.source === 'comp' ? 'Gratis · hadiah' : 'Aktif'"
+              :pill-tone="row.source === 'comp' ? 'muted' : 'success'"
+              :seat-breakdown-text="seatBreakdown(row) || null"
+              :price-unit-override="row.source === 'comp' ? 'Gratis' : null"
             >
-              <div
-                class="mm-row-icon"
-                :style="{
-                  background: tintFor(catalog?.optional[row.module_key]?.group ?? 'Default').bg,
-                  color: tintFor(catalog?.optional[row.module_key]?.group ?? 'Default').fg,
-                }"
-              >
-                <i :class="`ti ti-${iconFor(row.module_key)}`" aria-hidden="true" />
-              </div>
-              <div class="mm-row-body">
-                <div class="mm-row-title">
-                  {{ labelFor(row.module_key) }}
-                  <span
-                    class="pill"
-                    :class="row.source === 'comp' ? 'is-comp' : 'is-active'"
-                  >{{ row.source === 'comp' ? 'Gratis · hadiah' : 'Aktif' }}</span>
-                </div>
-                <div class="mm-row-sub">
-                  {{ taglineFor(row.module_key) }}
-                  <span v-if="seatBreakdown(row)"> · <strong>{{ seatBreakdown(row) }}</strong></span>
-                </div>
-              </div>
-              <div class="mm-row-price">
-                <template v-if="row.source === 'comp'">
-                  Rp 0
-                  <span class="u">Gratis</span>
-                </template>
-                <template v-else>
-                  {{ money(row.monthly_amount) }}
-                  <span class="u">/ bln</span>
-                </template>
-              </div>
-              <div class="mm-row-action">
+              <template #trailing>
                 <button
                   v-if="row.source !== 'comp'"
                   type="button"
                   class="row-cta is-danger"
                   @click="askCancel(row.module_key)"
                 >Matikan modul</button>
-              </div>
-            </article>
+              </template>
+            </ModuleTile>
           </section>
 
           <!-- AKAN BERAKHIR -->
@@ -468,42 +480,25 @@ function formatDate(iso: string | null | undefined): string {
               </div>
             </div>
 
-            <article
+            <ModuleTile
               v-for="row in cancelledRows"
               :key="`c-${row.module_key}`"
-              class="mm-row is-cancel"
+              :item="itemFor(row.module_key)"
+              :tenant-type="tenantType"
+              mode="managed"
+              :monthly-amount="row.monthly_amount"
+              :pill-label="`Aktif sampai ${expiresDate}`"
+              pill-tone="warn"
+              :seat-breakdown-text="`${seatBreakdown(row)}${seatBreakdown(row) ? ' · ' : ''}tersisa ${daysRemaining} hari`"
+              price-unit-override="/ bln, terakhir"
             >
-              <div
-                class="mm-row-icon"
-                :style="{
-                  background: tintFor(catalog?.optional[row.module_key]?.group ?? 'Default').bg,
-                  color: tintFor(catalog?.optional[row.module_key]?.group ?? 'Default').fg,
-                }"
-              >
-                <i :class="`ti ti-${iconFor(row.module_key)}`" aria-hidden="true" />
-              </div>
-              <div class="mm-row-body">
-                <div class="mm-row-title">
-                  {{ labelFor(row.module_key) }}
-                  <span class="pill is-warn">Aktif sampai {{ expiresDate }}</span>
-                </div>
-                <div class="mm-row-sub">
-                  {{ taglineFor(row.module_key) }}
-                  <span v-if="seatBreakdown(row)"> · <strong>{{ seatBreakdown(row) }}</strong></span>
-                  · tersisa {{ daysRemaining }} hari
-                </div>
-              </div>
-              <div class="mm-row-price">
-                {{ money(row.monthly_amount) }}
-                <span class="u">/ bln, terakhir</span>
-              </div>
-              <div class="mm-row-action">
+              <template #trailing>
                 <button type="button" class="row-cta is-resume" @click="askResume(row.module_key)">
                   <i class="ti ti-refresh" aria-hidden="true" />
                   Batalkan penonaktifan
                 </button>
-              </div>
-            </article>
+              </template>
+            </ModuleTile>
           </section>
 
           <!-- TAMBAH MODUL -->
@@ -514,41 +509,23 @@ function formatDate(iso: string | null | undefined): string {
               <span class="mm-sec-hint">Biaya prorata untuk sisa periode berjalan</span>
             </header>
 
-            <article
+            <ModuleTile
               v-for="{ key, item } in availableCatalog"
               :key="`v-${key}`"
-              class="mm-row is-avail"
+              :item="item"
+              :tenant-type="tenantType"
+              mode="managed"
+              :monthly-amount="item.price_per_student * sub.student_count + item.price_per_staff * sub.staff_count"
+              :seat-breakdown-text="availSeatBreakdown(item)"
+              price-unit-override="/ bln, +prorata"
             >
-              <div
-                class="mm-row-icon"
-                :style="{ background: tintFor(item.group).bg, color: tintFor(item.group).fg }"
-              >
-                <i :class="`ti ti-${iconFor(key)}`" aria-hidden="true" />
-              </div>
-              <div class="mm-row-body">
-                <div class="mm-row-title">{{ moduleLabel(item, tenantType) }}</div>
-                <div class="mm-row-sub">
-                  {{ moduleTagline(item, tenantType) }} ·
-                  <template v-if="item.price_per_student > 0">
-                    {{ sub.student_count }} {{ perUnitWord }} × {{ money(item.price_per_student) }}
-                  </template>
-                  <template v-if="item.price_per_student > 0 && item.price_per_staff > 0"> + </template>
-                  <template v-if="item.price_per_staff > 0">
-                    {{ sub.staff_count }} {{ tenantType === 'bimbel' ? 'tutor' : 'guru' }} × {{ money(item.price_per_staff) }}
-                  </template>
-                </div>
-              </div>
-              <div class="mm-row-price">
-                {{ money(item.price_per_student * sub.student_count + item.price_per_staff * sub.staff_count) }}
-                <span class="u">/ bln, +prorata</span>
-              </div>
-              <div class="mm-row-action">
+              <template #trailing>
                 <button type="button" class="row-cta is-add" @click="askAdd(key)">
                   <i class="ti ti-plus" aria-hidden="true" />
                   Tambahkan
                 </button>
-              </div>
-            </article>
+              </template>
+            </ModuleTile>
           </section>
         </div>
 
@@ -882,64 +859,16 @@ function formatDate(iso: string | null | undefined): string {
   border-radius: 10px;
 }
 
-/* Row */
-.mm-row {
+/* Row-frame around each ModuleTile so the managed-mode surfaces get
+   the card look (rounded border + white bg) — the tile itself is
+   surface-agnostic so the caller decides how to frame it. */
+:deep(.mt-row.is-managed) {
   background: #fff;
   border: 0.5px solid #E2E8F0;
   border-radius: 12px;
   padding: 14px 16px;
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 14px;
   margin-bottom: 10px;
 }
-.mm-row-icon {
-  width: 40px; height: 40px; border-radius: 10px;
-  display: grid; place-items: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-.mm-row-body { min-width: 0; }
-.mm-row-title {
-  font-size: 13.5px; font-weight: 600; color: #0F172A;
-  display: flex; align-items: center; gap: 8px;
-  letter-spacing: -0.1px;
-  flex-wrap: wrap;
-}
-.mm-row-sub {
-  font-size: 11.5px; color: #64748B;
-  margin-top: 3px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.45;
-}
-.mm-row-sub strong { color: #0F172A; font-weight: 500; }
-.mm-row-price {
-  font-size: 13px; font-weight: 600; color: #0F172A;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  white-space: nowrap;
-}
-.mm-row-price .u {
-  display: block; font-size: 10px;
-  color: #64748B; font-weight: 500;
-  letter-spacing: 0.2px;
-}
-.mm-row-action {
-  display: flex; align-items: center; gap: 8px;
-}
-
-.mm-row.is-cancel {
-  background: #FFFBEB;
-  border-color: #FDE68A;
-}
-.mm-row.is-cancel .mm-row-sub { color: #92400E; }
-
-.mm-row.is-avail {
-  background: #FBFDFF;
-  border: 0.5px dashed #C7DBEF;
-}
-.mm-row.is-avail .mm-row-title { color: #185FA5; font-weight: 500; }
 
 /* Row CTA */
 .row-cta {
@@ -965,21 +894,8 @@ function formatDate(iso: string | null | undefined): string {
 }
 .row-cta.is-resume:hover { background: #BBF7D0; }
 
-/* Pills */
-.pill {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 10px; font-weight: 600;
-  padding: 2px 8px; border-radius: 999px;
-  letter-spacing: 0.2px;
-  line-height: 1.5;
-}
-.pill.is-active { background: #DCFCE7; color: #0F6E56; }
-.pill.is-active::before {
-  content: ""; width: 6px; height: 6px; border-radius: 50%;
-  background: #1D9E75; display: inline-block;
-}
-.pill.is-warn { background: #FEF3C7; color: #B45309; }
-.pill.is-comp { background: #EDE9FE; color: #6D28D9; }
+/* Pills used to live here; now handled inside ModuleTile via
+   :pill-label + :pill-tone. Keeping the comment as breadcrumb. */
 
 /* Note strip inside cancelled section */
 .mm-note-strip {
