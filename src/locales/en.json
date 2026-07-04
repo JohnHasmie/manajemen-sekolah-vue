@@ -8,6 +8,21 @@
     "name": "KamilEdu",
     "tagline": "Integrated School Management Platform"
   },
+  "hubs": {
+    "announcements": {
+      "tab_list": "List",
+      "tab_calendar": "Calendar"
+    },
+    "myAttendance": {
+      "tab_check_in": "Check-in",
+      "tab_history": "History"
+    },
+    "studentAttendance": {
+      "tab_summary": "Summary",
+      "tab_report": "Report",
+      "tab_detail": "Detail"
+    }
+  },
   "common": {
     "save": "Save",
     "saveChanges": "Save changes",

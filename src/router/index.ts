@@ -62,8 +62,12 @@ const AdminScheduleManagementView = () =>
   import('@/views/admin/AdminScheduleManagementView.vue');
 const AdminLessonHourSettingsView = () =>
   import('@/views/admin/AdminLessonHourSettingsView.vue');
+const AdminAnnouncementsHub = () =>
+  import('@/views/admin/AdminAnnouncementsHub.vue');
 const AdminAnnouncementView = () =>
   import('@/views/admin/AdminAnnouncementView.vue');
+const AdminStudentAttendanceHub = () =>
+  import('@/views/admin/AdminStudentAttendanceHub.vue');
 const AdminAttendanceDashboardView = () =>
   import('@/views/admin/AdminAttendanceDashboardView.vue');
 const AdminAttendanceTingkatHeatmapView = () =>
@@ -170,6 +174,8 @@ const SubscribeAddonView = () =>
   import('@/views/subscribe/SubscribeAddonView.vue');
 const ManageModulesView = () =>
   import('@/views/subscribe/ManageModulesView.vue');
+const TeacherMyAttendanceHub = () =>
+  import('@/views/teacher/TeacherMyAttendanceHub.vue');
 const TeacherCheckInView = () =>
   import('@/views/teacher/TeacherCheckInView.vue');
 const TeacherAttendanceHistoryView = () =>
@@ -422,48 +428,79 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role, ability: 'academic.schedule.view' },
       },
       {
+        // Wave 4 IA merge — Pengumuman hub: "Daftar" + "Kalender" as sibling
+        // tabs under one parent. AdminAnnouncementsHub renders a tab bar above
+        // <router-view>; the two former standalone views become children with
+        // their route names preserved, so all cross-navigation between them
+        // keeps working and the sidebar entry (/admin/announcements) still lands
+        // on the list tab.
         path: 'admin/announcements',
-        name: 'admin.announcements',
-        component: AdminAnnouncementView,
+        component: AdminAnnouncementsHub,
         meta: { role: 'admin' satisfies Role, ability: 'communication.announcement.view' },
+        children: [
+          {
+            path: '',
+            name: 'admin.announcements',
+            component: AdminAnnouncementView,
+            meta: { role: 'admin' satisfies Role, ability: 'communication.announcement.view' },
+          },
+          {
+            path: 'calendar',
+            name: 'admin.announcements.calendar',
+            component: AdminAnnouncementCalendarView,
+            meta: { role: 'admin' satisfies Role, ability: 'communication.announcement.view' },
+          },
+        ],
       },
       {
-        path: 'admin/announcements/calendar',
-        name: 'admin.announcements.calendar',
-        component: AdminAnnouncementCalendarView,
-        meta: { role: 'admin' satisfies Role, ability: 'communication.announcement.view' },
-      },
-      {
+        // Wave 4 IA merge — Kehadiran Siswa hub: "Ringkasan" (dashboard) +
+        // "Laporan" + "Detail" as sibling tabs under one parent. The three
+        // former standalone routes become children with their names preserved
+        // (report/detail cross-navigate via named routes + query params, which
+        // stay intact). The grade-level heatmap remains a standalone drill-down
+        // route below — it is a parametric :tingkat view, not a sibling tab.
         path: 'admin/student-attendance',
-        name: 'admin.student-attendance',
-        component: AdminAttendanceDashboardView,
+        component: AdminStudentAttendanceHub,
         meta: {
           role: 'admin' satisfies Role,
           abilityAny: ['attendance.student.view', 'attendance.student.export'],
         },
+        children: [
+          {
+            path: '',
+            name: 'admin.student-attendance',
+            component: AdminAttendanceDashboardView,
+            meta: {
+              role: 'admin' satisfies Role,
+              abilityAny: ['attendance.student.view', 'attendance.student.export'],
+            },
+          },
+          {
+            path: 'report',
+            name: 'admin.student-attendance.report',
+            component: AdminAttendanceReportView,
+            meta: {
+              role: 'admin' satisfies Role,
+              abilityAny: ['attendance.student.view', 'attendance.student.export'],
+            },
+          },
+          {
+            path: 'detail',
+            name: 'admin.student-attendance.detail',
+            component: AdminAttendanceDetailView,
+            meta: {
+              role: 'admin' satisfies Role,
+              abilityAny: ['attendance.student.view', 'attendance.student.export'],
+            },
+          },
+        ],
       },
       {
+        // Grade-level heatmap — parametric drill-down (kept standalone, NOT a
+        // hub tab). Reached from the dashboard's tingkat cards.
         path: 'admin/student-attendance/grade-level/:tingkat',
         name: 'admin.student-attendance.grade-level',
         component: AdminAttendanceTingkatHeatmapView,
-        meta: {
-          role: 'admin' satisfies Role,
-          abilityAny: ['attendance.student.view', 'attendance.student.export'],
-        },
-      },
-      {
-        path: 'admin/student-attendance/report',
-        name: 'admin.student-attendance.report',
-        component: AdminAttendanceReportView,
-        meta: {
-          role: 'admin' satisfies Role,
-          abilityAny: ['attendance.student.view', 'attendance.student.export'],
-        },
-      },
-      {
-        path: 'admin/student-attendance/detail',
-        name: 'admin.student-attendance.detail',
-        component: AdminAttendanceDetailView,
         meta: {
           role: 'admin' satisfies Role,
           abilityAny: ['attendance.student.view', 'attendance.student.export'],
@@ -762,16 +799,29 @@ const routes: RouteRecordRaw[] = [
         // `teacher/attendance`, which is the per-session STUDENT
         // attendance ("kehadiran student"). Named "my-attendance" so the
         // English path doesn't collide with that student route.
+        //
+        // Wave 4 IA merge — hosted under TeacherMyAttendanceHub which renders
+        // a "Presensi" / "Riwayat" tab bar above <router-view>. The check-in
+        // and history views become children with their names/paths preserved,
+        // so the sidebar entry (/teacher/my-attendance) and the two views'
+        // mutual navigation keep working.
         path: 'teacher/my-attendance',
-        name: 'teacher.my-attendance',
-        component: TeacherCheckInView,
+        component: TeacherMyAttendanceHub,
         meta: { role: 'guru' satisfies Role, ability: 'attendance.self.view_own' },
-      },
-      {
-        path: 'teacher/my-attendance/history',
-        name: 'teacher.my-attendance.history',
-        component: TeacherAttendanceHistoryView,
-        meta: { role: 'guru' satisfies Role, ability: 'attendance.self.view_own' },
+        children: [
+          {
+            path: '',
+            name: 'teacher.my-attendance',
+            component: TeacherCheckInView,
+            meta: { role: 'guru' satisfies Role, ability: 'attendance.self.view_own' },
+          },
+          {
+            path: 'history',
+            name: 'teacher.my-attendance.history',
+            component: TeacherAttendanceHistoryView,
+            meta: { role: 'guru' satisfies Role, ability: 'attendance.self.view_own' },
+          },
+        ],
       },
       {
         path: 'teacher/attendance',

@@ -3,6 +3,21 @@
     "name": "KamilEdu",
     "tagline": "Platform Manajemen Sekolah Terpadu"
   },
+  "hubs": {
+    "announcements": {
+      "tab_list": "Daftar",
+      "tab_calendar": "Kalender"
+    },
+    "myAttendance": {
+      "tab_check_in": "Presensi",
+      "tab_history": "Riwayat"
+    },
+    "studentAttendance": {
+      "tab_summary": "Ringkasan",
+      "tab_report": "Laporan",
+      "tab_detail": "Detail"
+    }
+  },
   "languageSwitcher": {
     "label": "Pilih bahasa",
     "switchToId": "Ganti ke Bahasa Indonesia",
