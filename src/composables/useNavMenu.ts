@@ -201,6 +201,18 @@ const ADMIN_NAV: NavSection[] = [
         icon: 'shield',
         ability: 'rbac.role.view',
       },
+      // Kelola Modul & Paket — self-service admin entry point to the
+      // ManageModulesView (add mid-cycle prorata, cancel-at-period-end,
+      // resume, plus the top-level plan swap). Route already existed
+      // at `/subscribe/manage-modules` but had no sidebar entry, so the
+      // only way in was the topbar Berlangganan chip — which hides
+      // once the tenant IS on a paid subscription, leaving admin with
+      // no persistent way to add modules mid-period.
+      {
+        to: '/subscribe/manage-modules',
+        labelKey: 'nav.manageModules',
+        icon: 'package',
+      },
     ],
   },
 ];
