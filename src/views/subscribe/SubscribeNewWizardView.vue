@@ -578,11 +578,40 @@ function back() {
 function toggleModule(key: string) {
   const next = new Set(selectedKeys.value);
   const cat = catalog.value;
-  if (next.has(key)) {
-    next.delete(key);
-    if (cat?.optional[key]?.is_ai) delete aiQuota.value[key];
+  if (!cat) return;
+
+  // The picker checkbox reads from `expandedKeys`, which merges bundle
+  // members into the visible-selected set. So a click on a module
+  // whose only source of selection is a bundle expansion needs to
+  // "explode" the bundle: drop the bundle from selectedKeys, promote
+  // its OTHER members to individual selections, and skip the
+  // just-unchecked module. Result — the bundle chip auto-deselects,
+  // sidebar switches from bundle pricing to à la carte pricing on the
+  // remaining modules, and the module the user just tapped is dropped.
+  const wasSelected = next.has(key) || expandedKeys.value.includes(key);
+
+  if (wasSelected) {
+    if (next.has(key)) {
+      // Directly-selected module (à la carte, or a bundle key itself).
+      next.delete(key);
+      if (cat.optional[key]?.is_ai) delete aiQuota.value[key];
+    } else {
+      // Bundle-expanded selection — find the owning bundle + explode.
+      for (const selKey of Array.from(next)) {
+        const bundle = cat.bundles[selKey];
+        if (bundle && bundle.members.includes(key)) {
+          next.delete(selKey);
+          bundle.members.forEach((m) => {
+            if (m !== key) next.add(m);
+          });
+          break;
+        }
+      }
+    }
   } else {
-    if (cat && key in cat.bundles) {
+    // Adding a bundle wipes the à la carte members it covers so the
+    // sidebar doesn't double-count them.
+    if (key in cat.bundles) {
       cat.bundles[key].members.forEach((m) => next.delete(m));
     }
     next.add(key);

@@ -302,11 +302,34 @@ function switchTenant() {
 function toggleModule(key: string) {
   const next = new Set(selectedKeys.value);
   const cat = catalog.value;
-  if (next.has(key)) {
-    next.delete(key);
+  if (!cat) return;
+
+  // Unchecking a module currently shown via bundle expansion "explodes"
+  // the bundle: bundle drops from selectedKeys, its OTHER members
+  // promote to individual selections, the just-unchecked module is
+  // dropped. Result — bundle chip deselects, sidebar re-prices as à
+  // la carte on remaining modules. See the wizard toggleModule for
+  // the shared rationale.
+  const wasSelected = next.has(key) || expandedKeys.value.includes(key);
+
+  if (wasSelected) {
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      for (const selKey of Array.from(next)) {
+        const bundle = cat.bundles[selKey];
+        if (bundle && bundle.members.includes(key)) {
+          next.delete(selKey);
+          bundle.members.forEach((m) => {
+            if (m !== key) next.add(m);
+          });
+          break;
+        }
+      }
+    }
   } else {
     // Selecting a bundle wipes the per-module keys it covers.
-    if (cat && key in cat.bundles) {
+    if (key in cat.bundles) {
       const members = cat.bundles[key].members;
       members.forEach((m) => next.delete(m));
     }
