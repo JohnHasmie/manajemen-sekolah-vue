@@ -2281,6 +2281,8 @@
         "item_teacher_attendance_desc": "Attendance method, geofence, and check-out rules settings",
         "item_attendance_methods_label": "Attendance methods & QR",
         "item_attendance_methods_desc": "Selfie, location, gate QR, QR cards, rotation",
+        "item_attendance_config_label": "Attendance settings",
+        "item_attendance_config_desc": "Selfie, location, gate QR, cards, check-in & check-out rules",
         "group_access": "Access & Subscription",
         "item_roles_label": "Roles & permissions",
         "item_roles_desc": "Roles, access rights, and members per role",

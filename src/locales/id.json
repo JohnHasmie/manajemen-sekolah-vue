@@ -2278,6 +2278,8 @@
         "item_teacher_attendance_desc": "Pengaturan metode presensi, geofence, dan aturan jam pulang",
         "item_attendance_methods_label": "Metode & QR kehadiran",
         "item_attendance_methods_desc": "Selfie, lokasi, QR gerbang, kartu QR, rotasi",
+        "item_attendance_config_label": "Pengaturan Kehadiran",
+        "item_attendance_config_desc": "Selfie, lokasi, QR gerbang, kartu, aturan jam datang & pulang",
         "group_access": "Akses & Langganan",
         "item_roles_label": "Role & Permission",
         "item_roles_desc": "Peran, hak akses, dan anggota per peran",

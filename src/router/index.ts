@@ -134,12 +134,15 @@ const ParentRecommendationView = () =>
   import('@/views/parent/ParentRecommendationView.vue');
 const AdminTeacherAttendanceView = () =>
   import('@/views/admin/AdminTeacherAttendanceView.vue');
+// Unified "Pengaturan Kehadiran" (Wave 2 IA refactor) — merges the old
+// teacher-attendance settings tabs + the QR methods form into one
+// 3-tab screen, mirroring mobile's AdminTeacherAttendanceSettingsScreen.
+const AdminAttendanceConfigView = () =>
+  import('@/views/admin/AdminAttendanceConfigView.vue');
 // Gate QR + personnel cards (MR !226). Lazy so the qrcode.vue payload
 // stays out of the main admin chunk.
 const GateQrDisplayView = () =>
   import('@/views/admin/attendance/GateQrDisplayView.vue');
-const AttendanceSettingsView = () =>
-  import('@/views/admin/attendance/AttendanceSettingsView.vue');
 const PersonnelCardManagerView = () =>
   import('@/views/admin/attendance/PersonnelCardManagerView.vue');
 // ── Super-admin (KamilEdu-team) area ──────────────────────────────────
@@ -615,11 +618,20 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role, ability: 'attendance.staff.report.view' },
       },
       {
-        // PRESENSI GURU — admin settings for teacher daily attendance
-        path: 'admin/teacher-attendance/settings',
-        name: 'admin.teacher-attendance.settings',
-        component: AdminTeacherAttendanceView,
+        // Unified "Pengaturan Kehadiran" — Wave 2 IA refactor. ONE
+        // screen for everything that PUTs /teacher-attendance/settings
+        // (selfie/GPS/QR methods, geofence, rotation, time rules).
+        path: 'admin/settings/attendance',
+        name: 'admin.settings.attendance',
+        component: AdminAttendanceConfigView,
         meta: { role: 'admin' satisfies Role, ability: 'attendance.staff.settings.manage' },
+      },
+      {
+        // LEGACY redirect — the settings mode of the old teacher-
+        // attendance screen moved into the unified attendance config.
+        // Keep for old bookmarks.
+        path: 'admin/teacher-attendance/settings',
+        redirect: { name: 'admin.settings.attendance' },
       },
 
       // ── Gate QR + personnel cards (MR !226) ───────────────────────
@@ -638,10 +650,10 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        // LEGACY redirect — the QR methods form merged into the unified
+        // attendance config (Wave 2). Keep for old bookmarks.
         path: 'admin/attendance/settings',
-        name: 'admin.attendance.settings',
-        component: AttendanceSettingsView,
-        meta: { role: 'admin' satisfies Role, ability: 'attendance.staff.settings.manage' },
+        redirect: { name: 'admin.settings.attendance' },
       },
       {
         path: 'admin/attendance/cards',

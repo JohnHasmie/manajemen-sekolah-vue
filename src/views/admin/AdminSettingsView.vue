@@ -135,24 +135,16 @@ const groups = computed<SettingsGroup[]>(() => {
       title: t('admin.sekolah.settings.group_operational'),
       items: [
         { icon: 'calendar', label: t('admin.sekolah.settings.item_lesson_hours_label'), desc: t('admin.sekolah.settings.item_lesson_hours_desc'), to: '/admin/schedule/lesson-hours' },
+        // Pengaturan Kehadiran — Wave 2 merged the two former tiles
+        // (Presensi Guru settings + Metode & QR) into ONE unified
+        // 3-tab screen; both wrote to the same
+        // PUT /teacher-attendance/settings endpoint all along — the
+        // split was historical, not semantic.
         {
           icon: 'camera',
-          label: t('admin.sekolah.settings.item_teacher_attendance_label'),
-          desc: t('admin.sekolah.settings.item_teacher_attendance_desc'),
-          to: '/admin/teacher-attendance/settings',
-          ability: 'attendance.staff.settings.manage',
-        },
-        // Metode & QR — absorbed from the sidebar (was "Pengaturan
-        // Presensi" pointing at /admin/attendance/settings). TEMPORARY
-        // as a separate tile: Wave 2 merges this screen + the tile
-        // above into one unified 3-tab "Pengaturan Kehadiran" view
-        // (both already PUT to the same /teacher-attendance/settings
-        // endpoint — the split is historical, not semantic).
-        {
-          icon: 'qr-code',
-          label: t('admin.sekolah.settings.item_attendance_methods_label'),
-          desc: t('admin.sekolah.settings.item_attendance_methods_desc'),
-          to: '/admin/attendance/settings',
+          label: t('admin.sekolah.settings.item_attendance_config_label'),
+          desc: t('admin.sekolah.settings.item_attendance_config_desc'),
+          to: '/admin/settings/attendance',
           ability: 'attendance.staff.settings.manage',
         },
         { icon: 'wallet', label: t('admin.sekolah.settings.item_billing_label'), desc: t('admin.sekolah.settings.item_billing_desc'), to: '/admin/finance/types', ability: 'finance.bill_type.manage' },
