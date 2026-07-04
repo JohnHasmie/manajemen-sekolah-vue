@@ -54,22 +54,34 @@ export interface NavSection {
   items: NavItem[];
 }
 
+/**
+ * ADMIN_NAV — domain-first grouping (Refactor Map Wave 1).
+ *
+ * Sections mirror the sellable MODULE GROUPS, so `applyGates` (which
+ * drops empty sections) makes a whole section disappear when the
+ * tenant doesn't own any module in that domain. That turns "1 item
+ * silently missing from a pile of 8" into "the KEUANGAN section is
+ * gone" — a legible signal that pairs naturally with the Langganan &
+ * Modul upsell.
+ *
+ * The former PENGATURAN section (6 entries) collapsed to a single
+ * "Pengaturan" item: /admin/settings is already a tile hub, and the
+ * Role & Permission / Langganan & Modul / attendance-method entries
+ * moved into it (AdminSettingsView). QR Gerbang + Kartu QR are
+ * OPERATIONAL screens (display + card CRUD), not settings — they live
+ * in the Kehadiran section where the daily work happens.
+ */
 const ADMIN_NAV: NavSection[] = [
   {
     titleKey: '',
     items: [
       // Dashboard is always available — every role home.
       { to: '/admin', labelKey: 'nav.dashboard', icon: 'home' },
-      {
-        to: '/admin/announcements',
-        labelKey: 'nav.announcements',
-        icon: 'megaphone',
-        ability: 'communication.announcement.view',
-      },
     ],
   },
   {
-    titleKey: 'nav.dataManagement',
+    // ── DATA SEKOLAH — core rosters ─────────────────────────────────
+    titleKey: 'nav.sectionSchoolData',
     items: [
       // Siswa/Kelas/Mapel are backed by CORE `school.*` permissions
       // that every tenant holds, so the ability gate alone leaves them
@@ -98,16 +110,14 @@ const ADMIN_NAV: NavSection[] = [
         icon: 'book',
         needs: 'academic-context',
       },
-      {
-        to: '/admin/schedule',
-        labelKey: 'nav.schedule',
-        icon: 'calendar',
-        ability: 'academic.schedule.view',
-      },
     ],
   },
   {
-    titleKey: 'nav.reports',
+    // ── KEHADIRAN — modules: attendance_class · attendance_gate ·
+    //    attendance_staff. Operational QR screens live here (poster
+    //    display + card CRUD); their CONFIG lives in the Pengaturan
+    //    hub (unified attendance settings, Wave 2). ────────────────
+    titleKey: 'nav.sectionAttendance',
     items: [
       // Absensi (student) — attendance_class owners get view+submit;
       // attendance_gate-only owners get view_own+export. Either is
@@ -125,10 +135,31 @@ const ADMIN_NAV: NavSection[] = [
         ability: 'attendance.staff.report.view',
       },
       {
-        to: '/admin/class-activity',
-        labelKey: 'nav.classActivity',
-        icon: 'activity',
-        ability: 'activity.view',
+        to: '/admin/attendance/gate-qr',
+        labelKey: 'nav.attendanceQrGate',
+        icon: 'qr-code',
+        ability: 'attendance.gate_qr.manage',
+      },
+      {
+        to: '/admin/attendance/cards',
+        labelKey: 'nav.attendanceQrCards',
+        icon: 'id-card',
+        ability: 'attendance.cards.issue',
+      },
+    ],
+  },
+  {
+    // ── AKADEMIK — modules: schedule · grades · report_cards · lms ·
+    //    class_activity. Nilai & Rekap Nilai stay as SEPARATE entries
+    //    on purpose: formative vs summative are distinct data models
+    //    (consolidation audit verdict) — adjacency is enough. ──────
+    titleKey: 'nav.sectionAcademic',
+    items: [
+      {
+        to: '/admin/schedule',
+        labelKey: 'nav.schedule',
+        icon: 'calendar',
+        ability: 'academic.schedule.view',
       },
       {
         to: '/admin/grades',
@@ -143,76 +174,58 @@ const ADMIN_NAV: NavSection[] = [
         ability: 'academic.grade.recap.view',
       },
       {
-        to: '/admin/lesson-plans',
-        labelKey: 'nav.lessonPlans',
-        icon: 'file-text',
-        ability: 'academic.lesson_plan.view',
-      },
-      {
         to: '/admin/report-cards',
         labelKey: 'nav.reportCards',
         icon: 'clipboard',
         ability: 'academic.report_card.view',
       },
       {
+        to: '/admin/lesson-plans',
+        labelKey: 'nav.lessonPlans',
+        icon: 'file-text',
+        ability: 'academic.lesson_plan.view',
+      },
+      {
+        to: '/admin/class-activity',
+        labelKey: 'nav.classActivity',
+        icon: 'activity',
+        ability: 'activity.view',
+      },
+    ],
+  },
+  {
+    // ── KEUANGAN — module: finance ──────────────────────────────────
+    titleKey: 'nav.sectionFinance',
+    items: [
+      {
         to: '/admin/finance',
-        labelKey: 'nav.finance',
+        labelKey: 'nav.financeBilling',
         icon: 'wallet',
         ability: 'finance.bill.view',
       },
     ],
   },
   {
-    // ── PENGATURAN — school settings + attendance-QR configuration ──
-    // Merged the former standalone "PRESENSI QR" section in here so the
-    // three attendance-QR tiles (settings, gate display, personnel
-    // cards) live alongside general school settings instead of getting
-    // their own heading. Order: schoolSettings → attendance settings →
-    // gate QR → personnel cards → roles. Each item keeps its RBAC
-    // ability gate (settings + schoolSettings + roles have none — any
-    // admin can read them).
-    titleKey: 'nav.settings',
+    // ── KOMUNIKASI — module: communication ──────────────────────────
+    titleKey: 'nav.sectionCommunication',
     items: [
-      { to: '/admin/settings', labelKey: 'nav.schoolSettings', icon: 'settings' },
       {
-        to: '/admin/attendance/settings',
-        labelKey: 'nav.attendanceQrSettings',
-        icon: 'sliders',
-        ability: 'attendance.staff.settings.manage',
+        to: '/admin/announcements',
+        labelKey: 'nav.announcements',
+        icon: 'megaphone',
+        ability: 'communication.announcement.view',
       },
-      {
-        to: '/admin/attendance/gate-qr',
-        labelKey: 'nav.attendanceQrGate',
-        icon: 'qr-code',
-        ability: 'attendance.gate_qr.manage',
-      },
-      {
-        to: '/admin/attendance/cards',
-        labelKey: 'nav.attendanceQrCards',
-        icon: 'id-card',
-        ability: 'attendance.cards.issue',
-      },
-      // Phase E (RBAC): role & permission management. Gated by Phase D's
-      // /me consumption — a Bendahara / TU with a stripped-down custom
-      // role no longer sees this entry.
-      {
-        to: '/admin/roles',
-        labelKey: 'nav.rolesAndPermissions',
-        icon: 'shield',
-        ability: 'rbac.role.view',
-      },
-      // Kelola Modul & Paket — self-service admin entry point to the
-      // ManageModulesView (add mid-cycle prorata, cancel-at-period-end,
-      // resume, plus the top-level plan swap). Route already existed
-      // at `/subscribe/manage-modules` but had no sidebar entry, so the
-      // only way in was the topbar Berlangganan chip — which hides
-      // once the tenant IS on a paid subscription, leaving admin with
-      // no persistent way to add modules mid-period.
-      {
-        to: '/subscribe/manage-modules',
-        labelKey: 'nav.manageModules',
-        icon: 'package',
-      },
+    ],
+  },
+  {
+    // ── PENGATURAN — single entry into the settings hub. Everything
+    //    config-shaped (profil, tahun ajaran, jam pelajaran, metode
+    //    kehadiran, jenis tagihan, role & permission, langganan &
+    //    modul, data, reset demo) lives INSIDE /admin/settings as
+    //    tiles — one door, no more six-entry sprawl. ───────────────
+    titleKey: '',
+    items: [
+      { to: '/admin/settings', labelKey: 'nav.settings', icon: 'settings' },
     ],
   },
 ];

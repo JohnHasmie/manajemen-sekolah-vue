@@ -14,9 +14,11 @@ import DemoResetForm from '@/components/demo/DemoResetForm.vue';
 import DemoResetProgress from '@/components/demo/DemoResetProgress.vue';
 import { DemoService } from '@/services/demo.service';
 import { useAuthStore } from '@/stores/auth';
+import { useMeStore } from '@/stores/me';
 
 const router = useRouter();
 const { t } = useI18n();
+const me = useMeStore();
 
 const showResetModal = ref(false);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
@@ -107,41 +109,103 @@ async function onResetCompleted() {
 
 interface SettingsGroup {
   title: string;
-  items: { icon: string; label: string; desc: string; to?: string; action?: () => void; danger?: boolean }[];
+  items: {
+    icon: string; label: string; desc: string; to?: string;
+    action?: () => void; danger?: boolean;
+    /**
+     * RBAC/module gate — the tile hides when the active user doesn't
+     * hold the ability. Mirrors the sidebar's `ability` field so a
+     * tile absorbed FROM the sidebar (Wave 1 hub consolidation) keeps
+     * the same visibility rule it had there.
+     */
+    ability?: string;
+  }[];
 }
 
-const groups = computed<SettingsGroup[]>(() => [
-  {
-    title: t('admin.sekolah.settings.group_school_profile'),
-    items: [
-      { icon: 'home', label: t('admin.sekolah.settings.item_school_profile_label'), desc: t('admin.sekolah.settings.item_school_profile_desc'), to: '/admin/settings/school' },
-      { icon: 'calendar', label: t('admin.sekolah.settings.item_academic_year_label'), desc: t('admin.sekolah.settings.item_academic_year_desc'), to: '/admin/settings/manage-academic-years' },
-    ],
-  },
-  {
-    title: t('admin.sekolah.settings.group_operational'),
-    items: [
-      { icon: 'calendar', label: t('admin.sekolah.settings.item_lesson_hours_label'), desc: t('admin.sekolah.settings.item_lesson_hours_desc'), to: '/admin/schedule/lesson-hours' },
-      { icon: 'camera', label: t('admin.sekolah.settings.item_teacher_attendance_label'), desc: t('admin.sekolah.settings.item_teacher_attendance_desc'), to: '/admin/teacher-attendance/settings' },
-      { icon: 'wallet', label: t('admin.sekolah.settings.item_billing_label'), desc: t('admin.sekolah.settings.item_billing_desc'), to: '/admin/finance/types' },
-    ],
-  },
-  {
-    title: t('admin.sekolah.settings.group_data'),
-    items: [
-      { icon: 'layers', label: t('admin.sekolah.settings.item_data_management_label'), desc: t('admin.sekolah.settings.item_data_management_desc'), to: '/admin/settings/data' },
-      { icon: 'file-text', label: t('admin.sekolah.settings.item_backup_label'), desc: t('admin.sekolah.settings.item_backup_desc') },
-      { icon: 'edit', label: t('admin.sekolah.settings.item_reset_demo_label'), desc: t('admin.sekolah.settings.item_reset_demo_desc'), danger: true },
-    ],
-  },
-  {
-    title: t('admin.sekolah.settings.group_system'),
-    items: [
-      { icon: 'bell', label: t('admin.sekolah.settings.item_notifications_label'), desc: t('admin.sekolah.settings.item_notifications_desc') },
-      { icon: 'sparkles', label: t('admin.sekolah.settings.item_ai_label'), desc: t('admin.sekolah.settings.item_ai_desc') },
-    ],
-  },
-]);
+const groups = computed<SettingsGroup[]>(() => {
+  const raw: SettingsGroup[] = [
+    {
+      title: t('admin.sekolah.settings.group_school_profile'),
+      items: [
+        { icon: 'home', label: t('admin.sekolah.settings.item_school_profile_label'), desc: t('admin.sekolah.settings.item_school_profile_desc'), to: '/admin/settings/school' },
+        { icon: 'calendar', label: t('admin.sekolah.settings.item_academic_year_label'), desc: t('admin.sekolah.settings.item_academic_year_desc'), to: '/admin/settings/manage-academic-years' },
+      ],
+    },
+    {
+      title: t('admin.sekolah.settings.group_operational'),
+      items: [
+        { icon: 'calendar', label: t('admin.sekolah.settings.item_lesson_hours_label'), desc: t('admin.sekolah.settings.item_lesson_hours_desc'), to: '/admin/schedule/lesson-hours' },
+        {
+          icon: 'camera',
+          label: t('admin.sekolah.settings.item_teacher_attendance_label'),
+          desc: t('admin.sekolah.settings.item_teacher_attendance_desc'),
+          to: '/admin/teacher-attendance/settings',
+          ability: 'attendance.staff.settings.manage',
+        },
+        // Metode & QR — absorbed from the sidebar (was "Pengaturan
+        // Presensi" pointing at /admin/attendance/settings). TEMPORARY
+        // as a separate tile: Wave 2 merges this screen + the tile
+        // above into one unified 3-tab "Pengaturan Kehadiran" view
+        // (both already PUT to the same /teacher-attendance/settings
+        // endpoint — the split is historical, not semantic).
+        {
+          icon: 'qr-code',
+          label: t('admin.sekolah.settings.item_attendance_methods_label'),
+          desc: t('admin.sekolah.settings.item_attendance_methods_desc'),
+          to: '/admin/attendance/settings',
+          ability: 'attendance.staff.settings.manage',
+        },
+        { icon: 'wallet', label: t('admin.sekolah.settings.item_billing_label'), desc: t('admin.sekolah.settings.item_billing_desc'), to: '/admin/finance/types', ability: 'finance.bill_type.manage' },
+      ],
+    },
+    {
+      // Akses & Langganan — absorbed from the sidebar's former
+      // PENGATURAN section (Wave 1). Roles keeps its RBAC gate;
+      // Langganan & Modul is ungated (every admin has standing to
+      // manage their tenant's plan).
+      title: t('admin.sekolah.settings.group_access'),
+      items: [
+        {
+          icon: 'shield',
+          label: t('admin.sekolah.settings.item_roles_label'),
+          desc: t('admin.sekolah.settings.item_roles_desc'),
+          to: '/admin/roles',
+          ability: 'rbac.role.view',
+        },
+        {
+          icon: 'package',
+          label: t('admin.sekolah.settings.item_modules_label'),
+          desc: t('admin.sekolah.settings.item_modules_desc'),
+          to: '/subscribe/manage-modules',
+        },
+      ],
+    },
+    {
+      title: t('admin.sekolah.settings.group_data'),
+      items: [
+        { icon: 'layers', label: t('admin.sekolah.settings.item_data_management_label'), desc: t('admin.sekolah.settings.item_data_management_desc'), to: '/admin/settings/data' },
+        { icon: 'file-text', label: t('admin.sekolah.settings.item_backup_label'), desc: t('admin.sekolah.settings.item_backup_desc') },
+        { icon: 'edit', label: t('admin.sekolah.settings.item_reset_demo_label'), desc: t('admin.sekolah.settings.item_reset_demo_desc'), danger: true },
+      ],
+    },
+    {
+      title: t('admin.sekolah.settings.group_system'),
+      items: [
+        { icon: 'bell', label: t('admin.sekolah.settings.item_notifications_label'), desc: t('admin.sekolah.settings.item_notifications_desc') },
+        { icon: 'sparkles', label: t('admin.sekolah.settings.item_ai_label'), desc: t('admin.sekolah.settings.item_ai_desc') },
+      ],
+    },
+  ];
+  // Same filter contract as the sidebar's applyGates: drop tiles the
+  // user can't act on, then drop groups that emptied out so the hub
+  // never renders a bare section heading.
+  return raw
+    .map((g) => ({
+      ...g,
+      items: g.items.filter((it) => !it.ability || me.can(it.ability)),
+    }))
+    .filter((g) => g.items.length > 0);
+});
 
 function open(it: SettingsGroup['items'][number]) {
   if (it.to) router.push(it.to);
