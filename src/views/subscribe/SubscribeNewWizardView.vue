@@ -54,6 +54,18 @@ const STEPS = [
 
 const stepIndex = ref(0);
 
+/**
+ * Visible steps for the wizard chrome. When only one payment method
+ * is available (`!midtransAvailable`), we skip the "Bayar" picker
+ * step entirely — the calculator's CTA on step 4 goes straight to
+ * order creation. Hiding "Bayar" from the progress indicator too
+ * keeps the top strip honest about how many real steps remain.
+ */
+const visibleSteps = computed(() => {
+  if (midtransAvailable.value) return [...STEPS];
+  return STEPS.filter((s) => s.key !== 'bayar');
+});
+
 const form = reactive({
   tenant_type: 'sekolah' as TenantType,
   tenant_name: '',
@@ -548,6 +560,15 @@ const canGoNext = computed(() => {
 });
 function next() {
   if (!canGoNext.value) return;
+  // Short-circuit: when there's only one payment method, going "next"
+  // from Step 4 (modul) doesn't need to stop on Step 5 (payment picker)
+  // — the picker would show a single card that self-selects. Fire
+  // onSubmit() directly and the OrderTransferCard renders when the API
+  // responds. Everything else keeps advancing normally.
+  if (activeStep.value === 'modul' && !midtransAvailable.value) {
+    void onSubmit();
+    return;
+  }
   stepIndex.value = Math.min(STEPS.length - 1, stepIndex.value + 1);
 }
 function back() {
@@ -800,7 +821,7 @@ function flagSubscribeIntent(): void {
 <template>
   <div class="sn-page">
     <WizardChrome
-      :steps="[...STEPS]"
+      :steps="visibleSteps"
       :active-index="stepIndex"
       help-url="https://wa.me/6285179819002"
     />
@@ -1012,7 +1033,8 @@ function flagSubscribeIntent(): void {
             :tenant-type="form.tenant_type"
             :yearly-discount-pct="plan?.yearly_discount_pct"
             :bundle-benchmark="bundleBenchmark"
-            submit-label="Lanjut ke pembayaran"
+            :submit-label="midtransAvailable ? 'Lanjut ke pembayaran' : 'Buat pesanan'"
+            :submitting="!midtransAvailable && submitting"
             @submit="next"
             @switch-to-bundle="switchToBundle"
           />
