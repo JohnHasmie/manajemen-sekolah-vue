@@ -24,6 +24,7 @@ import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
 import PriorityInbox from '@/components/feature/PriorityInbox.vue';
 import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
+import SubscriptionSummaryCard from '@/components/feature/SubscriptionSummaryCard.vue';
 import AdminTutoringDashboardView from '@/views/admin/tutoring/AdminTutoringDashboardView.vue';
 import { useTenant } from '@/composables/useTenant';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
@@ -348,6 +349,14 @@ const financePct = computed(() =>
               @click="router.push('/admin/lesson-plans')"
             />
           </section>
+
+          <!-- 2b. Subscription summary — compact 1-row card that puts
+               "modul aktif · tagihan bulan ini · perpanjangan" one
+               scroll away from the KPI strip. Full detail + add/cancel
+               actions live at /subscribe/manage-modules; this card
+               is the sidebar-independent entry point so admin doesn't
+               have to hunt for it. -->
+          <SubscriptionSummaryCard />
 
           <!-- 3. Heatmap + Finance. Whole cards hide when the tenant
                doesn't own the module — a staff-only tenant sees zero
