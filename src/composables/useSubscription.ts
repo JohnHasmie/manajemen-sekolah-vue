@@ -50,12 +50,18 @@ export function useSubscription() {
 
   /**
    * True when the topbar chip should be visible — the user is signed
-   * in AND their active tenant has no active paid subscription. Super
-   * admins never see the chip (they don't have a tenant subscription).
+   * in as a tenant ADMIN AND their tenant has no active paid
+   * subscription. Wali/guru/staf never see it: only the school admin
+   * (kepala sekolah / owner) has the standing to activate a paid
+   * subscription; a parent seeing a "Berlangganan" CTA on a school
+   * they don't own is confusing UX and offers them nothing they can
+   * act on. Super admins never see it either (they operate on the
+   * platform, not a tenant subscription).
    */
   const shouldPromptSubscribe = computed<boolean>(() => {
     if (!auth.isAuthenticated) return false;
     if (auth.isSuperAdmin) return false;
+    if (auth.activeRole !== 'admin') return false;
     const sub = subscription.value;
     // Before the fetch resolves, keep the chip hidden — we don't want
     // to flash it on for authenticated-and-already-paying users. It
@@ -64,15 +70,28 @@ export function useSubscription() {
     return !sub.is_active;
   });
 
+  /**
+   * No-op the fetch entirely when the caller isn't a tenant admin.
+   * Wali/guru/staf sessions never render the chip, so hitting
+   * `/me/subscription` for them is pure waste. Super admins likewise
+   * don't have a tenant subscription to fetch.
+   */
+  async function ensureLoaded(): Promise<void> {
+    if (!auth.isAuthenticated) return;
+    if (auth.isSuperAdmin) return;
+    if (auth.activeRole !== 'admin') return;
+    await fetchOnce();
+  }
+
   return {
     subscription,
     loading,
     shouldPromptSubscribe,
-    ensureLoaded: fetchOnce,
+    ensureLoaded,
     refresh: () => {
       inflight = null;
       subscription.value = null;
-      return fetchOnce();
+      return ensureLoaded();
     },
   };
 }
