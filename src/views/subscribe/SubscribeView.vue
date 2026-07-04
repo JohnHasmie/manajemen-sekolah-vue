@@ -16,11 +16,13 @@
   works from a fresh browser session.
 -->
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useGoogleSignIn } from '@/composables/useGoogleSignIn';
+import { useModuleSelection } from '@/composables/useModuleSelection';
+import { ensureMidtransSnap } from '@/lib/midtrans';
 import {
   SubscriptionBillingService,
   markTransferredByToken,
@@ -29,7 +31,6 @@ import {
 import type {
   ManualTransferInfo,
   ModuleCatalog,
-  ModularQuote,
   PricingPlan,
   SubscribeResult,
   SubscriptionTenant,
@@ -59,11 +60,9 @@ const selectedTenant = ref<SubscriptionTenant | null>(null);
 const loadingTenants = ref(false);
 const loadingCatalog = ref(false);
 
-const selectedKeys = ref<Set<string>>(new Set());
 const period = ref<BillingPeriod>('monthly');
 const wipeDemoData = ref(true);
 const gateway = ref<'bank_transfer_manual' | 'midtrans'>('bank_transfer_manual');
-const quote = ref<ModularQuote | null>(null);
 const submitting = ref(false);
 const errorMessage = ref<string | null>(null);
 const loggingOut = ref(false);
@@ -86,6 +85,30 @@ const notifyingTransfer = ref(false);
 const transferNotified = ref(false);
 
 const googleContainer = ref<HTMLElement | null>(null);
+
+// ── Module selection engine (shared with the wizard) ───────────────
+// All picker math (bundle explode on partial uncheck, expanded keys,
+// bundle benchmark, debounced backend quote) lives in the composable.
+// `quoteDeps: [selectedTenant]` keeps the old behavior of re-quoting on
+// tenant switch even when the new tenant has identical seat counts.
+const {
+  selectedKeys,
+  quote,
+  expandedKeys,
+  bundleBenchmark,
+  toggleModule,
+  switchToBundle,
+  buildPlanLabel,
+} = useModuleSelection({
+  catalog,
+  plan,
+  studentCount: () => selectedTenant.value?.student_count ?? 0,
+  staffCount: () => selectedTenant.value?.staff_count ?? 0,
+  period,
+  enabled: () => !!selectedTenant.value && !!catalog.value,
+  quoteDeps: [selectedTenant],
+  logTag: 'SubscribeView',
+});
 
 // ── Derived ────────────────────────────────────────────────────────
 const state = computed<'landing' | 'convert' | 'order' | 'thanks'>(() => {
@@ -117,42 +140,6 @@ const bankHolder = computed(
 );
 const bankAccount = computed(() => plan.value?.bank_transfer?.account_number ?? '');
 
-const expandedKeys = computed<string[]>(() => {
-  const cat = catalog.value;
-  if (!cat) return [...selectedKeys.value];
-  const bundleKeys = Object.keys(cat.bundles);
-  const out = new Set<string>();
-  selectedKeys.value.forEach((k) => {
-    if (bundleKeys.includes(k)) {
-      cat.bundles[k].members.forEach((m) => out.add(m));
-    } else {
-      out.add(k);
-      const requires = cat.optional[k]?.requires ?? [];
-      requires.forEach((r) => out.add(r));
-    }
-  });
-  return Array.from(out);
-});
-
-const autoIncluded = computed(() => {
-  const map = new Map<string, string[]>();
-  const cat = catalog.value;
-  if (!cat) return map;
-  selectedKeys.value.forEach((k) => {
-    if (k in cat.bundles) return;
-    const requires = cat.optional[k]?.requires ?? [];
-    if (requires.length) {
-      map.set(
-        k,
-        requires
-          .map((r) => cat.optional[r]?.label)
-          .filter(Boolean) as string[],
-      );
-    }
-  });
-  return map;
-});
-
 /**
  * Optional-module keys visible to the current tenant. Delegates the
  * sekolah↔bimbel visibility rules to `isModuleHiddenFor` so all three
@@ -167,23 +154,6 @@ const visibleModuleKeys = computed<string[]>(() => {
     const item = cat.optional[key];
     return item ? !isModuleHiddenFor(key, item.group, tt) : true;
   });
-});
-
-const bundleBenchmark = computed(() => {
-  const cat = catalog.value;
-  if (!cat || !selectedTenant.value) return null;
-  const complete = cat.bundles['bundle_complete'];
-  if (!complete) return null;
-  const stu = selectedTenant.value.student_count;
-  const sta = selectedTenant.value.staff_count;
-  const total = complete.price_per_student * stu + complete.price_per_staff * sta;
-  const bonus = complete.members.filter((m) => !expandedKeys.value.includes(m)).length;
-  return {
-    key: 'bundle_complete',
-    label: complete.label,
-    monthlyTotal: total,
-    bonusModuleCount: bonus,
-  };
 });
 
 // ── Effects ────────────────────────────────────────────────────────
@@ -252,34 +222,6 @@ function applyDefaultSelection() {
   ]);
 }
 
-async function refreshQuote() {
-  if (!selectedTenant.value || !catalog.value) return;
-  if (selectedKeys.value.size === 0) {
-    quote.value = null;
-    return;
-  }
-  try {
-    quote.value = await SubscriptionBillingService.quoteModular({
-      student_count: selectedTenant.value.student_count,
-      staff_count: selectedTenant.value.staff_count,
-      plan: period.value,
-      modules: Array.from(selectedKeys.value),
-    });
-  } catch (e) {
-    console.warn('[SubscribeView.refreshQuote]', (e as Error).message);
-  }
-}
-
-let quoteDebounce: number | null = null;
-watch(
-  [selectedKeys, period, selectedTenant],
-  () => {
-    if (quoteDebounce !== null) window.clearTimeout(quoteDebounce);
-    quoteDebounce = window.setTimeout(refreshQuote, 250) as unknown as number;
-  },
-  { deep: true },
-);
-
 onMounted(async () => {
   await Promise.all([loadPlan(), loadCatalog(), loadTenants()]);
   if (!auth.isAuthenticated) {
@@ -297,69 +239,6 @@ function switchTenant() {
   selectedTenant.value = null;
   order.value = null;
   quote.value = null;
-}
-
-function toggleModule(key: string) {
-  const next = new Set(selectedKeys.value);
-  const cat = catalog.value;
-  if (!cat) return;
-
-  // Unchecking a module currently shown via bundle expansion "explodes"
-  // the bundle: bundle drops from selectedKeys, its OTHER members
-  // promote to individual selections, the just-unchecked module is
-  // dropped. Result — bundle chip deselects, sidebar re-prices as à
-  // la carte on remaining modules. See the wizard toggleModule for
-  // the shared rationale.
-  const wasSelected = next.has(key) || expandedKeys.value.includes(key);
-
-  if (wasSelected) {
-    if (next.has(key)) {
-      next.delete(key);
-    } else {
-      for (const selKey of Array.from(next)) {
-        const bundle = cat.bundles[selKey];
-        if (bundle && bundle.members.includes(key)) {
-          next.delete(selKey);
-          bundle.members.forEach((m) => {
-            if (m !== key) next.add(m);
-          });
-          break;
-        }
-      }
-    }
-  } else {
-    // Selecting a bundle wipes the per-module keys it covers.
-    if (key in cat.bundles) {
-      const members = cat.bundles[key].members;
-      members.forEach((m) => next.delete(m));
-    }
-    next.add(key);
-  }
-  selectedKeys.value = next;
-}
-
-function switchToBundle(key: string) {
-  const next = new Set<string>([key]);
-  selectedKeys.value = next;
-}
-
-/**
- * "Bulanan · N modul" is wrong when a bundle is picked — user only has
- * one key selected but the bundle covers multiple modules. Show the
- * bundle label instead; if only bare modules are picked, count expanded
- * keys (bundle members counted individually).
- */
-function buildPlanLabel(): string {
-  const periodLbl = period.value === 'yearly' ? 'Tahunan' : 'Bulanan';
-  const cat = catalog.value;
-  if (cat) {
-    const bundleKeys = [...selectedKeys.value].filter((k) => k in cat.bundles);
-    if (bundleKeys.length) {
-      return `${periodLbl} · ${bundleKeys.map((k) => cat.bundles[k].label).join(' + ')}`;
-    }
-  }
-  const n = expandedKeys.value.length || selectedKeys.value.size;
-  return `${periodLbl} · ${n} modul`;
 }
 
 function goToNewTenant() {
@@ -463,51 +342,6 @@ function goHome() {
 
 function downloadInvoice() {
   window.open(`/subscribe/receipt/${order.value?.referenceCode}`, '_blank');
-}
-
-// ── Midtrans Snap loader (unchanged) ───────────────────────────────
-declare global {
-  interface Window {
-    snap?: {
-      pay: (
-        token: string,
-        cb?: {
-          onSuccess?: (r: unknown) => void;
-          onPending?: (r: unknown) => void;
-          onError?: (r: unknown) => void;
-          onClose?: () => void;
-        },
-      ) => void;
-    };
-  }
-}
-const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
-const MIDTRANS_SNAP_SRC = 'https://app.sandbox.midtrans.com/snap/snap.js';
-let snapLoadPromise: Promise<void> | null = null;
-function ensureMidtransSnap(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.resolve();
-  if (window.snap) return Promise.resolve();
-  if (snapLoadPromise) return snapLoadPromise;
-  if (!MIDTRANS_CLIENT_KEY) return Promise.resolve();
-  snapLoadPromise = new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(
-      `script[src="${MIDTRANS_SNAP_SRC}"]`,
-    );
-    if (existing) {
-      existing.addEventListener('load', () => resolve());
-      existing.addEventListener('error', () => reject(new Error('SNAP_LOAD_FAILED')));
-      return;
-    }
-    const tag = document.createElement('script');
-    tag.src = MIDTRANS_SNAP_SRC;
-    tag.async = true;
-    tag.defer = true;
-    tag.setAttribute('data-client-key', MIDTRANS_CLIENT_KEY);
-    tag.onload = () => resolve();
-    tag.onerror = () => reject(new Error('SNAP_LOAD_FAILED'));
-    document.head.appendChild(tag);
-  });
-  return snapLoadPromise;
 }
 
 // ── Google sign-in for anonymous visitors ──────────────────────────

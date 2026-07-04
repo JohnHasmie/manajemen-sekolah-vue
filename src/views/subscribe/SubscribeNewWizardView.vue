@@ -15,6 +15,8 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useGoogleSignIn } from '@/composables/useGoogleSignIn';
+import { useModuleSelection, aiQuotaCfg } from '@/composables/useModuleSelection';
+import { ensureMidtransSnap } from '@/lib/midtrans';
 import {
   SubscriptionBillingService,
   markTransferredByToken,
@@ -23,7 +25,6 @@ import {
 import type {
   ManualTransferInfo,
   ModuleCatalog,
-  ModularQuote,
   PricingPlan,
   SubscribeResult,
   BillingPeriod,
@@ -85,20 +86,49 @@ const plan = ref<PricingPlan | null>(null);
 const catalog = ref<ModuleCatalog | null>(null);
 const period = ref<BillingPeriod>('monthly');
 const gateway = ref<'bank_transfer_manual' | 'midtrans'>('bank_transfer_manual');
-const selectedKeys = ref<Set<string>>(new Set([
+
+// ── Module selection engine (shared with SubscribeView) ────────────
+// All picker math (bundle explode on partial uncheck + AI-quota
+// cleanup, expanded keys, bundle benchmark, debounced backend quote
+// with local fallback for anonymous visitors) lives in the composable.
+// Registered BEFORE the draft-restore IIFE below so watcher ordering
+// matches the pre-extraction file. The returned refs are writable —
+// the draft restore + tenant-type purge watcher assign to them.
+const {
+  selectedKeys,
+  aiQuota,
+  quote,
+  expandedKeys,
+  autoIncluded,
+  bundleBenchmark,
+  selectedAiKeys,
+  toggleModule,
+  switchToBundle,
+  onAiQuotaUpdate,
+  refreshQuote,
+  buildPlanLabel,
+} = useModuleSelection({
+  catalog,
+  plan,
+  studentCount: () => form.student_count,
+  staffCount: () => form.staff_count,
+  period,
   // Post-split (Jul 2026): the old `attendance_student` default now
   // materialises as both `attendance_class` (per-session teacher flow)
   // and `attendance_gate` (student QR at gerbang). Preselecting both
   // matches what the old single-module default gave the user.
-  'attendance_class',
-  'attendance_gate',
-  'attendance_staff',
-  'grades',
-  'report_cards',
-  'finance',
-]));
-const aiQuota = ref<Record<string, number>>({});
-const quote = ref<ModularQuote | null>(null);
+  initialKeys: [
+    'attendance_class',
+    'attendance_gate',
+    'attendance_staff',
+    'grades',
+    'report_cards',
+    'finance',
+  ],
+  withAiQuota: true,
+  localQuoteFallback: true,
+  logTag: 'SubscribeNewWizard',
+});
 
 const submitting = ref(false);
 const errorMessage = ref<string | null>(null);
@@ -133,70 +163,6 @@ const bankHolder = computed(
 );
 const bankAccount = computed(() => plan.value?.bank_transfer?.account_number ?? '');
 
-const expandedKeys = computed<string[]>(() => {
-  const cat = catalog.value;
-  if (!cat) return [...selectedKeys.value];
-  const out = new Set<string>();
-  selectedKeys.value.forEach((k) => {
-    if (k in cat.bundles) {
-      cat.bundles[k].members.forEach((m) => out.add(m));
-    } else {
-      out.add(k);
-      const requires = cat.optional[k]?.requires ?? [];
-      requires.forEach((r) => out.add(r));
-    }
-  });
-  return Array.from(out);
-});
-
-const autoIncluded = computed(() => {
-  const map = new Map<string, string[]>();
-  const cat = catalog.value;
-  if (!cat) return map;
-  selectedKeys.value.forEach((k) => {
-    if (k in cat.bundles) return;
-    const requires = cat.optional[k]?.requires ?? [];
-    if (requires.length) {
-      map.set(
-        k,
-        requires
-          .map((r) => cat.optional[r]?.label)
-          .filter(Boolean) as string[],
-      );
-    }
-  });
-  return map;
-});
-
-const bundleBenchmark = computed(() => {
-  const cat = catalog.value;
-  if (!cat) return null;
-  const complete = cat.bundles['bundle_complete'];
-  if (!complete) return null;
-  const total =
-    complete.price_per_student * form.student_count +
-    complete.price_per_staff * form.staff_count;
-  const bonus = complete.members.filter(
-    (m) => !expandedKeys.value.includes(m),
-  ).length;
-  return {
-    key: 'bundle_complete',
-    label: complete.label,
-    monthlyTotal: total,
-    bonusModuleCount: bonus,
-  };
-});
-
-const selectedAiKeys = computed(() =>
-  [...selectedKeys.value].filter((k) => catalog.value?.optional[k]?.is_ai),
-);
-
-const aiQuotaCfg = {
-  ai_recommendation: { base: 20, stepPrice: 1000, topupPrice: 120 },
-  ai_material_quiz: { base: 20, stepPrice: 1000, topupPrice: 150 },
-  ai_rpp: { base: 15, stepPrice: 1500, topupPrice: 200 },
-} as const;
-
 // ── Effects ────────────────────────────────────────────────────────
 async function loadPlan() {
   try { plan.value = await SubscriptionBillingService.getPlans(); } catch { /* fail-soft */ }
@@ -204,132 +170,6 @@ async function loadPlan() {
 async function loadCatalog() {
   try { catalog.value = await SubscriptionBillingService.getModuleCatalog(); } catch { /* fail-soft */ }
 }
-
-/**
- * Refresh the quote for the current form state. Prefers the backend
- * (authoritative — it also applies the yearly discount + any config
- * overrides), but falls back to a local compute when the caller is
- * anonymous (POST /billing/quote requires auth). Without the fallback,
- * the sidebar reads "Belum ada modul dipilih · Rp 0" while modules are
- * visibly ticked, which reads as a bug.
- */
-async function refreshQuote() {
-  if (!catalog.value || selectedKeys.value.size === 0) {
-    quote.value = null;
-    return;
-  }
-  try {
-    quote.value = await SubscriptionBillingService.quoteModular({
-      student_count: form.student_count,
-      staff_count: form.staff_count,
-      plan: period.value,
-      modules: Array.from(selectedKeys.value),
-      ai_quota: aiQuota.value,
-    });
-  } catch (e) {
-    // Backend refused (usually 401 while browsing anonymously) — compute
-    // locally from the catalog so the sidebar still reflects the user's
-    // selection. Backend re-verifies the exact number at subscribe time.
-    console.warn('[SubscribeNewWizard.refreshQuote] falling back to local compute:', (e as Error).message);
-    quote.value = computeLocalQuote();
-  }
-}
-
-/**
- * Client-side mirror of ComputeSubscriptionQuoteAction::executeWithModules().
- * Uses the module catalog prices we already loaded from GET /billing/plans
- * + /modules/catalog. Yearly discount comes from `plan.yearly_discount_pct`.
- */
-function computeLocalQuote(): ModularQuote | null {
-  const cat = catalog.value;
-  if (!cat) return null;
-  const selected = Array.from(selectedKeys.value);
-  const bundleKeys = selected.filter((k) => k in cat.bundles);
-  const bundleMemberCoverage = new Set<string>();
-  bundleKeys.forEach((bk) => cat.bundles[bk]?.members.forEach((m) => bundleMemberCoverage.add(m)));
-  const optionalKeys = selected.filter(
-    (k) => !(k in cat.bundles) && k in cat.optional && !bundleMemberCoverage.has(k),
-  );
-
-  // Also pull in required deps (report_cards → grades) so the calc
-  // matches backend when a require is auto-included.
-  const withRequires = new Set(optionalKeys);
-  optionalKeys.forEach((k) => cat.optional[k]?.requires.forEach((r) => withRequires.add(r)));
-
-  const perModule: { key: string; price_per_student: number; price_per_staff: number; monthly_line: number }[] = [];
-  let monthly = 0;
-
-  for (const bk of bundleKeys) {
-    const b = cat.bundles[bk];
-    if (!b) continue;
-    const line = b.price_per_student * form.student_count + b.price_per_staff * form.staff_count;
-    perModule.push({
-      key: bk,
-      price_per_student: b.price_per_student,
-      price_per_staff: b.price_per_staff,
-      monthly_line: line,
-    });
-    monthly += line;
-  }
-  for (const k of withRequires) {
-    const it = cat.optional[k];
-    if (!it) continue;
-    const line = it.price_per_student * form.student_count + it.price_per_staff * form.staff_count;
-    perModule.push({
-      key: k,
-      price_per_student: it.price_per_student,
-      price_per_staff: it.price_per_staff,
-      monthly_line: line,
-    });
-    monthly += line;
-  }
-
-  // AI quota extras — must mirror what backend adds in
-  // ComputeSubscriptionQuoteAction so the local preview matches
-  // when the user bumps a stepper.
-  const aiLines: { key: string; extra_generates: number; monthly_line: number }[] = [];
-  for (const [k, extra] of Object.entries(aiQuota.value)) {
-    if (!extra) continue;
-    const cfg = aiQuotaCfg[k as keyof typeof aiQuotaCfg];
-    if (!cfg) continue;
-    const steps = Math.ceil(extra / 10);
-    const line = steps * cfg.stepPrice * form.staff_count;
-    aiLines.push({ key: k, extra_generates: extra, monthly_line: line });
-    monthly += line;
-  }
-
-  const discountPct = plan.value?.yearly_discount_pct ?? 20;
-  const yearlyGross = monthly * 12;
-  const yearlySavings = Math.round((yearlyGross * discountPct) / 100);
-  const yearlyAmount = yearlyGross - yearlySavings;
-  const chosen = period.value === 'yearly' ? yearlyAmount : monthly;
-
-  return {
-    selected_keys: selected,
-    expanded_modules: [...bundleMemberCoverage, ...withRequires],
-    student_count: form.student_count,
-    staff_count: form.staff_count,
-    per_module: perModule,
-    ai_quota_lines: aiLines,
-    monthly_amount: monthly,
-    yearly_gross: yearlyGross,
-    yearly_amount: yearlyAmount,
-    yearly_savings: yearlySavings,
-    chosen_amount: chosen,
-    chosen_plan: period.value,
-    currency: plan.value?.currency ?? 'IDR',
-  };
-}
-
-let quoteDebounce: number | null = null;
-watch(
-  [selectedKeys, aiQuota, period, () => form.student_count, () => form.staff_count],
-  () => {
-    if (quoteDebounce !== null) window.clearTimeout(quoteDebounce);
-    quoteDebounce = window.setTimeout(refreshQuote, 250) as unknown as number;
-  },
-  { deep: true },
-);
 
 // ── Draft persistence (localStorage) ────────────────────────────────
 // The wizard has a few steps and users bail + resume all the time — a
@@ -603,56 +443,6 @@ function back() {
   stepIndex.value = Math.max(0, stepIndex.value - 1);
 }
 
-function toggleModule(key: string) {
-  const next = new Set(selectedKeys.value);
-  const cat = catalog.value;
-  if (!cat) return;
-
-  // The picker checkbox reads from `expandedKeys`, which merges bundle
-  // members into the visible-selected set. So a click on a module
-  // whose only source of selection is a bundle expansion needs to
-  // "explode" the bundle: drop the bundle from selectedKeys, promote
-  // its OTHER members to individual selections, and skip the
-  // just-unchecked module. Result — the bundle chip auto-deselects,
-  // sidebar switches from bundle pricing to à la carte pricing on the
-  // remaining modules, and the module the user just tapped is dropped.
-  const wasSelected = next.has(key) || expandedKeys.value.includes(key);
-
-  if (wasSelected) {
-    if (next.has(key)) {
-      // Directly-selected module (à la carte, or a bundle key itself).
-      next.delete(key);
-      if (cat.optional[key]?.is_ai) delete aiQuota.value[key];
-    } else {
-      // Bundle-expanded selection — find the owning bundle + explode.
-      for (const selKey of Array.from(next)) {
-        const bundle = cat.bundles[selKey];
-        if (bundle && bundle.members.includes(key)) {
-          next.delete(selKey);
-          bundle.members.forEach((m) => {
-            if (m !== key) next.add(m);
-          });
-          break;
-        }
-      }
-    }
-  } else {
-    // Adding a bundle wipes the à la carte members it covers so the
-    // sidebar doesn't double-count them.
-    if (key in cat.bundles) {
-      cat.bundles[key].members.forEach((m) => next.delete(m));
-    }
-    next.add(key);
-  }
-  selectedKeys.value = next;
-}
-function switchToBundle(key: string) {
-  selectedKeys.value = new Set<string>([key]);
-}
-function onAiQuotaUpdate(key: string, extra: number) {
-  aiQuota.value = { ...aiQuota.value, [key]: extra };
-}
-
 /**
  * When the tenant type flips (sekolah ↔ bimbel), purge any picked
  * modules that are hidden for the new type. Without this, a user who
@@ -696,26 +486,6 @@ watch(() => form.tenant_type, (newType, oldType) => {
   });
   aiQuota.value = nextAi;
 });
-
-/**
- * "Bulanan · N modul" is wrong when the user picked a bundle — the
- * user sees `selectedKeys.size === 1` and thinks they only bought one
- * module. Render the bundle label when a bundle is present, otherwise
- * count expanded keys (bundle members counted individually so 9-member
- * bundles read as 9 modules, not 1).
- */
-function buildPlanLabel(): string {
-  const periodLbl = period.value === 'yearly' ? 'Tahunan' : 'Bulanan';
-  const cat = catalog.value;
-  if (cat) {
-    const bundleKeys = [...selectedKeys.value].filter((k) => k in cat.bundles);
-    if (bundleKeys.length) {
-      return `${periodLbl} · ${bundleKeys.map((k) => cat.bundles[k].label).join(' + ')}`;
-    }
-  }
-  const n = expandedKeys.value.length || selectedKeys.value.size;
-  return `${periodLbl} · ${n} modul`;
-}
 
 // ── Submit ─────────────────────────────────────────────────────────
 async function onSubmit() {
@@ -823,51 +593,6 @@ async function shareOrder() {
 function goHome() { router.push('/'); }
 function downloadInvoice() {
   window.open(`/subscribe/receipt/${order.value?.referenceCode}`, '_blank');
-}
-
-// ── Midtrans Snap loader ───────────────────────────────────────────
-declare global {
-  interface Window {
-    snap?: {
-      pay: (
-        token: string,
-        cb?: {
-          onSuccess?: (r: unknown) => void;
-          onPending?: (r: unknown) => void;
-          onError?: (r: unknown) => void;
-          onClose?: () => void;
-        },
-      ) => void;
-    };
-  }
-}
-const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
-const MIDTRANS_SNAP_SRC = 'https://app.sandbox.midtrans.com/snap/snap.js';
-let snapLoadPromise: Promise<void> | null = null;
-function ensureMidtransSnap(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.resolve();
-  if (window.snap) return Promise.resolve();
-  if (snapLoadPromise) return snapLoadPromise;
-  if (!MIDTRANS_CLIENT_KEY) return Promise.resolve();
-  snapLoadPromise = new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(
-      `script[src="${MIDTRANS_SNAP_SRC}"]`,
-    );
-    if (existing) {
-      existing.addEventListener('load', () => resolve());
-      existing.addEventListener('error', () => reject(new Error('SNAP_LOAD_FAILED')));
-      return;
-    }
-    const tag = document.createElement('script');
-    tag.src = MIDTRANS_SNAP_SRC;
-    tag.async = true;
-    tag.defer = true;
-    tag.setAttribute('data-client-key', MIDTRANS_CLIENT_KEY);
-    tag.onload = () => resolve();
-    tag.onerror = () => reject(new Error('SNAP_LOAD_FAILED'));
-    document.head.appendChild(tag);
-  });
-  return snapLoadPromise;
 }
 
 // ── Google ────────────────────────────────────────────────────────
