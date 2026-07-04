@@ -8,6 +8,7 @@ import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useNotificationsStore } from '@/stores/notifications';
+import { useMeStore } from '@/stores/me';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import Card from '@/components/ui/Card.vue';
 import Pagination from '@/components/data/Pagination.vue';
@@ -15,14 +16,55 @@ import { formatRelative } from '@/lib/format';
 import type { AppNotification } from '@/types/notification';
 
 const store = useNotificationsStore();
+const me = useMeStore();
 const router = useRouter();
 const { t } = useI18n();
 
+/**
+ * Map notification category → module_key. Kept in lockstep with the
+ * backend `NotificationModuleGate::moduleForType()` map — the two
+ * gates need to agree on which category belongs to which module or a
+ * tenant can end up with the inbox filtering different from the tap
+ * behavior. `null` means "core / unknown" — always allow (system
+ * alerts, teaching reminders, etc.).
+ */
+const CATEGORY_MODULE: Record<string, string | null> = {
+  announcement: 'communication',
+  attendance: 'attendance_class',
+  grade: 'grades',
+  class_activity: 'class_activity',
+  lesson_plan: 'lms',
+  billing: 'finance',
+  system: null,
+  other: null,
+};
+
+function isEntitled(n: AppNotification): boolean {
+  const mod = CATEGORY_MODULE[n.category];
+  if (mod === null || mod === undefined) return true;
+  // Attendance is either class OR gate — a tenant that only owns
+  // gate should still see attendance notifs (e.g. gerbang scan alerts).
+  if (mod === 'attendance_class') {
+    return me.hasAnyModule(['attendance_class', 'attendance_gate']);
+  }
+  return me.hasModule(mod);
+}
+
+/**
+ * Filtered list — hide notifications whose category maps to a module
+ * the tenant no longer owns. Backend R4 also filters at the API
+ * boundary, but keeping this here means a mid-session module-loss
+ * doesn't stale-render before the next inbox refetch.
+ */
+const visibleItems = computed<AppNotification[]>(() =>
+  store.items.filter(isEntitled),
+);
+
 const state = computed<AsyncState<AppNotification[]>>(() => {
-  if (store.isLoading && store.items.length === 0) return { status: 'loading' };
+  if (store.isLoading && visibleItems.value.length === 0) return { status: 'loading' };
   if (store.error) return { status: 'error', error: store.error };
-  if (store.items.length === 0) return { status: 'empty' };
-  return { status: 'content', data: store.items };
+  if (visibleItems.value.length === 0) return { status: 'empty' };
+  return { status: 'content', data: visibleItems.value };
 });
 
 onMounted(() => {
@@ -35,6 +77,11 @@ async function open(n: AppNotification) {
   // rows with no deep-link target (e.g. bare test notifications) clear their
   // unread state on click. "Tandai semua dibaca" remains for bulk clearing.
   if (!n.read_at) await store.markRead(n.id);
+  // Belt-and-suspenders — the backend R4 inbox filter drops entries whose
+  // category maps to an unowned module, and the visible list here does
+  // the same client-side. This last check catches races where the store
+  // holds an unfiltered snapshot from before the module was cancelled.
+  if (!isEntitled(n)) return;
   if (n.href) {
     router.push(n.href).catch(() => {
       // Swallow redundant-navigation errors (already on the page).
