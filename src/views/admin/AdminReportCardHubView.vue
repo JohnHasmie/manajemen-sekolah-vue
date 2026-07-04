@@ -18,7 +18,7 @@
     POST /raports/publish           — bulk publish per class
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { ReportCardService } from '@/services/report-card.service';
@@ -36,15 +36,12 @@ import Button from '@/components/ui/Button.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useDataRefresh } from '@/composables/useDataRefresh';
 
 const router = useRouter();
 const { t } = useI18n();
 
 // ── Data state ──
-const pipeline = ref<AdminRaportPipeline | null>(null);
-const isLoading = ref(true);
-const loadError = ref<string | null>(null);
 const activeFilter = ref<PipelineKey | 'all'>('all');
 
 // UI Modals / Sheets state
@@ -61,27 +58,25 @@ const confirmBulkPublish = ref(false);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
 // ── Loader ──
-async function reload() {
-  isLoading.value = true;
-  loadError.value = null;
-  try {
-    pipeline.value = await ReportCardService.getAdminPipeline();
-    // Initialize first tingkat expanded on load
-    if (pipeline.value?.tingkats.length) {
-      const firstTingkat = String(pipeline.value.tingkats[0].tingkat);
+// Shared load lifecycle (mount + academic-year refetch). `watchLocale:
+// false` keeps the prior behaviour (this view only refetched on
+// academic-year change). The loader keeps its side-effect of expanding
+// the first tingkat on first load.
+const { state: loadState, reload } = useDataRefresh<AdminRaportPipeline>(
+  async () => {
+    const data = await ReportCardService.getAdminPipeline();
+    if (data?.tingkats.length) {
+      const firstTingkat = String(data.tingkats[0].tingkat);
       if (expandedTingkats.value[firstTingkat] === undefined) {
         expandedTingkats.value[firstTingkat] = true;
       }
     }
-  } catch (e) {
-    loadError.value = (e as Error).message;
-  } finally {
-    isLoading.value = false;
-  }
-}
+    return data;
+  },
+  { watchLocale: false },
+);
 
-onMounted(reload);
-useAcademicYearWatcher(reload);
+const pipeline = computed(() => loadState.value.data ?? null);
 
 // ── Derived ──
 const pipelineNodes = computed(() => pipeline.value?.pipeline ?? []);
@@ -105,8 +100,11 @@ const visibleTingkats = computed<TingkatGroup[]>(() => {
 });
 
 const listState = computed<AsyncState<TingkatGroup[]>>(() => {
-  if (isLoading.value && !pipeline.value) return { status: 'loading' };
-  if (loadError.value) return { status: 'error', error: loadError.value };
+  if (loadState.value.status === 'loading') return { status: 'loading' };
+  if (loadState.value.status === 'error') {
+    return { status: 'error', error: loadState.value.error };
+  }
+  // View-specific empty: no tingkats survive the active status filter.
   if (visibleTingkats.value.length === 0) return { status: 'empty' };
   return { status: 'content', data: visibleTingkats.value };
 });

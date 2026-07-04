@@ -14,7 +14,7 @@
     POST   /lesson-hour-settings/bulk-delete
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { LessonHourService } from '@/services/lesson-hour.service';
 import { ScheduleService } from '@/services/schedule.service';
@@ -23,21 +23,19 @@ import type {
   LessonHourPayload,
   ScheduleFilterOptions,
 } from '@/types/schedule';
-import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
+import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Toast from '@/components/ui/Toast.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useDataRefresh } from '@/composables/useDataRefresh';
 
 const { t } = useI18n();
 
 const hours = ref<LessonHour[]>([]);
 const filterOptions = ref<ScheduleFilterOptions | null>(null);
-const isLoading = ref(true);
-const error = ref<string | null>(null);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
 const showForm = ref(false);
@@ -60,25 +58,21 @@ const copyOverwrite = ref(false);
 const isCopying = ref(false);
 const copyErr = ref<string | null>(null);
 
-async function load() {
-  isLoading.value = true;
-  error.value = null;
-  try {
+// Shared load lifecycle (mount + academic-year refetch). The loader
+// populates both refs and returns the hours list as the state payload;
+// `watchLocale: false` keeps the prior academic-year-only behaviour.
+const { state: listState, reload: load } = useDataRefresh<LessonHour[]>(
+  async () => {
     const [list, opts] = await Promise.all([
       LessonHourService.list(),
       ScheduleService.getFilterOptions(),
     ]);
     hours.value = list;
     filterOptions.value = opts;
-  } catch (e) {
-    error.value = (e as Error).message;
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-onMounted(load);
-useAcademicYearWatcher(load);
+    return list;
+  },
+  { watchLocale: false },
+);
 
 const days = computed(() => filterOptions.value?.days ?? []);
 
@@ -95,12 +89,8 @@ const hoursByDay = computed<Record<string, LessonHour[]>>(() => {
   return out;
 });
 
-const listState = computed<AsyncState<LessonHour[]>>(() => {
-  if (isLoading.value && hours.value.length === 0) return { status: 'loading' };
-  if (error.value) return { status: 'error', error: error.value };
-  if (hours.value.length === 0) return { status: 'empty' };
-  return { status: 'content', data: hours.value };
-});
+// `listState` comes from useDataRefresh — its generic empty rule (empty
+// array → 'empty') matches this view's `hours.length === 0` exactly.
 
 function openAdd(dayId: string) {
   editingHour.value = null;

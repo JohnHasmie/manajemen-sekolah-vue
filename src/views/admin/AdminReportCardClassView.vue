@@ -20,6 +20,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+// (onMounted retained — still used to kick off the reference-data load.)
 import { useI18n } from 'vue-i18n';
 import { ReportCardService } from '@/services/report-card.service';
 import { ClassroomService } from '@/services/classrooms.service';
@@ -30,7 +31,7 @@ import {
   type ReportCardStatus,
 } from '@/types/report-card';
 import type { Classroom } from '@/types/entities';
-import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
+import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import KpiStripCards, {
   type KpiCard,
@@ -40,7 +41,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Toast from '@/components/ui/Toast.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useDataRefresh } from '@/composables/useDataRefresh';
 
 const route = useRoute();
 const router = useRouter();
@@ -49,9 +50,6 @@ const { t } = useI18n();
 const classId = computed(() => String(route.params.classId ?? ''));
 
 const cls = ref<Classroom | null>(null);
-const students = ref<RaportSummaryRow[]>([]);
-const isLoading = ref(true);
-const loadError = ref<string | null>(null);
 const isExporting = ref(false);
 const isPublishing = ref(false);
 const confirmPublish = ref(false);
@@ -66,29 +64,25 @@ async function loadClass() {
   }
 }
 
-async function loadRoster() {
-  if (!classId.value) {
-    isLoading.value = false;
-    return;
-  }
-  isLoading.value = true;
-  loadError.value = null;
-  try {
-    students.value = await ReportCardService.getClassRoster({
-      class_id: classId.value,
-    });
-  } catch (e) {
-    loadError.value = (e as Error).message;
-  } finally {
-    isLoading.value = false;
-  }
-}
+// Roster load lifecycle (mount + academic-year refetch) via the shared
+// composable. Returning [] when there's no classId yields the same
+// 'empty' state the old early-return produced. `watchLocale: false`
+// keeps the prior academic-year-only refetch behaviour.
+const { state: listState, reload: loadRoster } = useDataRefresh<
+  RaportSummaryRow[]
+>(
+  async () => {
+    if (!classId.value) return [];
+    return ReportCardService.getClassRoster({ class_id: classId.value });
+  },
+  { watchLocale: false },
+);
 
-onMounted(async () => {
-  await Promise.all([loadClass(), loadRoster()]);
-});
+const students = computed(() => listState.value.data ?? []);
 
-useAcademicYearWatcher(loadRoster);
+// Reference data (class meta) loads once on mount, independent of the
+// roster's AsyncState.
+onMounted(loadClass);
 
 const counts = computed(() => {
   const all = students.value;
@@ -125,12 +119,8 @@ const kpiCards = computed<KpiCard[]>(() => [
   },
 ]);
 
-const listState = computed<AsyncState<RaportSummaryRow[]>>(() => {
-  if (isLoading.value && students.value.length === 0) return { status: 'loading' };
-  if (loadError.value) return { status: 'error', error: loadError.value };
-  if (students.value.length === 0) return { status: 'empty' };
-  return { status: 'content', data: students.value };
-});
+// `listState` comes from useDataRefresh — its generic empty rule (empty
+// array → 'empty') matches this view's `students.length === 0` exactly.
 
 function statusPill(s: ReportCardStatus | null | undefined): {
   label: string;

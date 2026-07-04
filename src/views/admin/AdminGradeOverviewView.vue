@@ -20,7 +20,7 @@
   Refetches on AY change.
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { GradeService } from '@/services/grades.service';
@@ -29,9 +29,10 @@ import type {
   AdminOverviewTeacher,
 } from '@/types/grades';
 import { useAcademicYearStore } from '@/stores/academic-year';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useDataRefresh } from '@/composables/useDataRefresh';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import SectionHeader from '@/components/ui/SectionHeader.vue';
 import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
@@ -39,27 +40,20 @@ const router = useRouter();
 const ayStore = useAcademicYearStore();
 const { t } = useI18n();
 
-const overview = ref<AdminGradeOverview | null>(null);
-const isLoading = ref(true);
-const error = ref<string | null>(null);
 const searchQuery = ref('');
 
-async function load() {
-  isLoading.value = true;
-  error.value = null;
-  try {
-    overview.value = await GradeService.getAdminOverview({
+// Load lifecycle (mount + academic-year refetch) via the shared
+// composable. `watchLocale: false` preserves the prior behaviour — this
+// view only re-fetched on academic-year change, not on locale switch.
+const { state: loadState, reload: load } = useDataRefresh<AdminGradeOverview>(
+  () =>
+    GradeService.getAdminOverview({
       academic_year_id: ayStore.selectedYearId ?? undefined,
-    });
-  } catch (e) {
-    error.value = (e as Error).message;
-  } finally {
-    isLoading.value = false;
-  }
-}
+    }),
+  { watchLocale: false },
+);
 
-onMounted(load);
-useAcademicYearWatcher(load);
+const overview = computed(() => loadState.value.data ?? null);
 
 // ── Derived state ─────────────────────────────────────────────────
 const schoolStats = computed(() => overview.value?.school_stats);
@@ -85,9 +79,13 @@ function distPct(n: number): string {
 }
 
 // ── State for AsyncView ────────────────────────────────────────────
+// Derived from the shared loader's state, but with this view's own
+// "empty" rule (no teachers to show even if the overview object exists).
 const state = computed<AsyncState<AdminGradeOverview>>(() => {
-  if (isLoading.value && !overview.value) return { status: 'loading' };
-  if (error.value) return { status: 'error', error: error.value };
+  if (loadState.value.status === 'loading') return { status: 'loading' };
+  if (loadState.value.status === 'error') {
+    return { status: 'error', error: loadState.value.error };
+  }
   if (!overview.value || teachers.value.length === 0) return { status: 'empty' };
   return { status: 'content', data: overview.value };
 });
@@ -222,14 +220,13 @@ const headerMeta = computed(() =>
 
         <!-- 3. Sebaran Grade card -->
         <section class="bg-white border border-slate-200 rounded-2xl p-3.5">
-          <header class="flex items-center justify-between mb-3">
-            <h3 class="text-[13px] font-black text-slate-700 tracking-tight">
-              {{ t('admin.sekolah.grade_overview.distribution_title') }}
-            </h3>
-            <span class="text-[10px] font-bold text-slate-500 tracking-wider">
-              {{ t('admin.sekolah.grade_overview.distribution_meta', { count: schoolStats?.total_grades ?? 0 }) }}
-            </span>
-          </header>
+          <SectionHeader :title="t('admin.sekolah.grade_overview.distribution_title')">
+            <template #action>
+              <span class="text-[10px] font-bold text-slate-500 tracking-wider">
+                {{ t('admin.sekolah.grade_overview.distribution_meta', { count: schoolStats?.total_grades ?? 0 }) }}
+              </span>
+            </template>
+          </SectionHeader>
 
           <!-- Stacked distribution bar -->
           <div class="h-2.5 rounded-md overflow-hidden bg-slate-100 flex">

@@ -16,13 +16,13 @@
     GET /bills?class_id&academic_year_id      — every bill in the class
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { FinanceService } from '@/services/finance.service';
 import { StudentService } from '@/services/students.service';
 import { useAcademicYearStore } from '@/stores/academic-year';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useDataRefresh } from '@/composables/useDataRefresh';
 import type { Bill } from '@/types/billing';
 import type { Student } from '@/types/entities';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
@@ -43,19 +43,16 @@ const classNameQ = computed(() => String(route.query.className ?? '—'));
 // ── Data ──────────────────────────────────────────────────────────
 const students = ref<Student[]>([]);
 const bills = ref<Bill[]>([]);
-const isLoading = ref(true);
-const error = ref<string | null>(null);
 // Which student's per-bill detail is expanded inline (null = none).
 const expandedStudentId = ref<string | null>(null);
 
-async function reload() {
-  if (!classId.value) {
-    isLoading.value = false;
-    return;
-  }
-  isLoading.value = true;
-  error.value = null;
-  try {
+// Shared load lifecycle (mount + academic-year refetch). The loader
+// populates the two refs the aggregation reads and returns the roster as
+// the state payload. `watchLocale: false` keeps the prior academic-year-
+// only behaviour; the extra `watch(classId, …)` below stays.
+const { state: loadState, reload } = useDataRefresh<Student[]>(
+  async () => {
+    if (!classId.value) return [];
     const ayId = ayStore.selectedYearId ?? undefined;
     const [roster, billPage] = await Promise.all([
       StudentService.byClass(classId.value, { academic_year_id: ayId }),
@@ -67,16 +64,12 @@ async function reload() {
     ]);
     students.value = roster;
     bills.value = billPage.items;
-  } catch (e) {
-    error.value = (e as Error).message;
-  } finally {
-    isLoading.value = false;
-  }
-}
+    return roster;
+  },
+  { watchLocale: false },
+);
 
-onMounted(reload);
-useAcademicYearWatcher(reload);
-watch(classId, reload);
+watch(classId, () => reload());
 
 // ── Per-student aggregation ──────────────────────────────────────
 interface StudentBillSummary {
@@ -222,9 +215,13 @@ const kpiCards = computed<KpiCard[]>(() => [
 ]);
 
 // ── AsyncView state ──────────────────────────────────────────────
+// Derived from the shared loader's state, with this view's own "empty"
+// rule (no summaries survive the active filter).
 const listState = computed<AsyncState<StudentBillSummary[]>>(() => {
-  if (isLoading.value && students.value.length === 0) return { status: 'loading' };
-  if (error.value) return { status: 'error', error: error.value };
+  if (loadState.value.status === 'loading') return { status: 'loading' };
+  if (loadState.value.status === 'error') {
+    return { status: 'error', error: loadState.value.error };
+  }
   if (filtered.value.length === 0) return { status: 'empty' };
   return { status: 'content', data: filtered.value };
 });
