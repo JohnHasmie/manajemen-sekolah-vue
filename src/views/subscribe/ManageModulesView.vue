@@ -164,13 +164,27 @@ async function loadAll(): Promise<void> {
     mine.value = m;
     // Pick tenant type + display name from the tenant list — the modules
     // endpoint doesn't ship this, and it drives the sekolah/bimbel copy.
+    //
+    // Match on the CURRENTLY-ACTIVE tenant (auth.schoolId), not on
+    // `m.subscription?.id` (that's the subscription id — nothing on
+    // a tenant matches it, so this lookup used to always miss and
+    // fall through to the "first non-expired" or "any" fallback,
+    // which handed us the WRONG tenant when the user manages multiple.
+    // When the tenants endpoint fails (returns []) we fall back to
+    // the /me store's `activeTenantType` if available, then finally
+    // 'sekolah' — never null, since `isModuleHiddenFor` treats null
+    // as permissive and lets bimbel-only modules leak into the
+    // sekolah picker.
     const target =
-      tenants.find((t) => t.id === m.subscription?.id) ??
+      tenants.find((t) => t.id === auth.schoolId) ??
       tenants.find((t) => t.subscription_status !== 'expired') ??
       tenants[0];
     if (target) {
       tenantType.value = target.tenant_type;
       tenantName.value = target.name;
+    } else {
+      // Defensive default — see comment above.
+      tenantType.value = 'sekolah';
     }
   } catch (e) {
     errorMessage.value = (e as Error).message;

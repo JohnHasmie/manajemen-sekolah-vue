@@ -124,8 +124,15 @@ export function isModuleHiddenFor(
   group: string | undefined,
   tenantType: 'sekolah' | 'bimbel' | null | undefined,
 ): boolean {
-  if (tenantType === 'sekolah') {
-    return group === 'Operasional Bimbel' || group === 'Bimbel';
+  // Fail-CLOSED for bimbel-only modules — when the caller couldn't
+  // resolve the tenant type (async race, tenants API errored to []),
+  // still hide the bimbel-native groups so tutoring doesn't leak into
+  // a sekolah admin's "Tambah modul" list. The reverse (sekolah-only
+  // modules leaking into bimbel) stays permissive because the sekolah
+  // list is broad and losing a legitimate bimbel-relevant module would
+  // be worse than showing an extra picker card.
+  if (group === 'Operasional Bimbel' || group === 'Bimbel') {
+    return tenantType !== 'bimbel';
   }
   if (tenantType === 'bimbel') {
     return SEKOLAH_ONLY_MODULE_KEYS.includes(key);
