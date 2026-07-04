@@ -99,6 +99,49 @@ const perStudent = computed(() => {
   return Math.round(total / denom);
 });
 
+/**
+ * Honest per-unit breakdown for the little grey line under the big
+ * total. Previously "≈ Rp 7.600 per siswa / bln" (monthly / studentCount)
+ * — which hid the guru contribution AND misled anyone doing back-of-envelope
+ * arithmetic. Now we spell out both components when both contribute so
+ * the number can be verified by hand. Falls back to the old per-siswa
+ * shorthand when the quote has ONLY a student component (rare but
+ * possible for e.g. a students-only add-on).
+ */
+const perUnitBreakdown = computed<string>(() => {
+  const q = props.quote;
+  if (!q || !q.per_module?.length) return '';
+  let studentContrib = 0;
+  let staffContrib = 0;
+  for (const l of q.per_module) {
+    studentContrib += (l.price_per_student ?? 0) * props.studentCount;
+    staffContrib += (l.price_per_staff ?? 0) * props.staffCount;
+  }
+  const aiTotal = (q.ai_quota_lines ?? []).reduce(
+    (sum, ai) => sum + Number(ai.monthly_line ?? 0),
+    0,
+  );
+  const parts: string[] = [];
+  if (studentContrib > 0) {
+    parts.push(
+      `${props.studentCount} ${perUnitWord.value} × ${money(
+        Math.round(studentContrib / Math.max(1, props.studentCount)),
+      )}`,
+    );
+  }
+  if (staffContrib > 0) {
+    parts.push(
+      `${props.staffCount} ${staffWord.value} × ${money(
+        Math.round(staffContrib / Math.max(1, props.staffCount)),
+      )}`,
+    );
+  }
+  if (!parts.length) return '';
+  const base = `= ${parts.join(' + ')}`;
+  if (aiTotal > 0) return `${base} + AI ${money(aiTotal)}`;
+  return base;
+});
+
 const alreadyOnBundle = computed<boolean>(() => {
   const b = props.bundleBenchmark;
   if (!b || !props.quote) return false;
@@ -192,10 +235,27 @@ function onPlan(p: BillingPeriod) {
 
 <template>
   <div class="pc-calc">
+    <!-- Header now spells out capacity as pills instead of the cryptic
+         "10/4" shorthand. Two pills so the eye lands on siswa + guru
+         separately, and each carries its own icon so a screen-reader
+         (or user) never has to guess which side is which. -->
     <div class="pc-calc-head">
-      <div class="pc-calc-kicker">Ringkasan</div>
-      <div class="pc-calc-title">
-        {{ tenantName }} · {{ studentCount }}/{{ staffCount }}
+      <div class="pc-calc-kicker">Ringkasan Langganan</div>
+      <div class="pc-calc-title">{{ tenantName }}</div>
+      <div class="pc-calc-caps">
+        <span class="pc-cap-pill">
+          <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 4a3 3 0 100 6 3 3 0 000-6zM4 16c0-3 2.5-5 6-5s6 2 6 5v1H4v-1z" />
+          </svg>
+          <b>{{ studentCount }}</b> {{ perUnitWord }}
+        </span>
+        <span class="pc-cap-pill">
+          <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <rect x="4" y="6" width="12" height="10" rx="2" />
+            <path d="M8 4h4v2H8z" />
+          </svg>
+          <b>{{ staffCount }}</b> {{ staffWord }} &amp; staf
+        </span>
       </div>
     </div>
 
@@ -239,29 +299,37 @@ function onPlan(p: BillingPeriod) {
       Belum ada modul dipilih.
     </div>
 
-    <!-- Total + primary CTA sit BEFORE the bundle nudge so the user
-         never has to scroll the sidebar to see the amount they're
-         paying or the button that submits it. The nudge is
-         opportunistic — if they want the cheaper bundle, they can act
-         on it, but it's not allowed to hide the total. -->
-    <!-- Total block. Two rendering modes:
-         (a) Plain — no bundle selected. Just label + big number.
-         (b) Compare-anchored — a bundle is selected AND its members
-             would cost strictly more à la carte. Strikethrough shows
-             what the same setup would cost without the bundle, then
-             the bundle price wins as the final number with a check
-             icon, and a hemat pill anchors the delta. Familiar
-             e-commerce pattern so users read it in one glance. -->
+    <!-- Total block. Three states:
+         (a) Plain — no bundle selected, no bundle nudge fires. Label +
+             big number and per-year hint.
+         (b) On-bundle compare-anchored — a bundle IS selected AND its
+             members would cost strictly more à la carte. Show the
+             hypothetical à la carte row as a struck-through
+             comparison, then the bundle price wins as the emerald
+             final. Bottom-of-block emerald HEMAT strip surfaces the
+             per-year delta because that's the number that
+             actually moves the needle on cost decisions.
+         (c) Off-bundle nudge — user picked à la carte but their total
+             met/exceeded the bundle price. Big number stays at their
+             honest à la carte total, and a compact emerald swap
+             card appears BELOW it with an "Ambil" button to switch.
+             Same visual family as case (b) but semantics reversed:
+             here the bundle is the OPPORTUNITY, not the current state.
+    -->
     <div class="pc-total" :class="{ 'is-bundle': !!bundleSavings }">
       <div class="pc-total-lbl">
         Total per {{ plan === 'yearly' ? 'tahun' : 'bulan' }}
       </div>
 
+      <!-- Compare row: "Kalau beli terpisah" struck-through above the
+           final number. Only in on-bundle mode. -->
       <div v-if="bundleSavings" class="pc-total-strike-row">
         <span class="pc-total-strike-lbl">Kalau beli terpisah</span>
         <span class="pc-total-strike-val">{{ money(alaCarteEquivalent) }}</span>
       </div>
 
+      <!-- Big price row. Bundle label appears in emerald ink to the
+           left when on-bundle; otherwise the price stands alone. -->
       <div class="pc-total-final-row">
         <div v-if="bundleSavings" class="pc-total-final-lbl">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -272,29 +340,40 @@ function onPlan(p: BillingPeriod) {
         <div class="pc-total-val">{{ money(chosenAmount) }}</div>
       </div>
 
+      <!-- Honest per-unit breakdown replaces the misleading "per siswa"
+           divide that mixed guru + siswa costs into one number. This
+           says "your Rp 76.000 is Rp 6.000 × 10 siswa + Rp 4.000 × 4
+           guru", which the user can verify by hand. -->
+      <div v-if="perUnitBreakdown" class="pc-total-per">
+        {{ perUnitBreakdown }}
+      </div>
+
+      <!-- Emerald HEMAT strip. Ships whenever savings exist (on-bundle).
+           Amount rendered big + white on emerald so it reads as a
+           standalone signal, and the small line under it shows the
+           per-year projection which is what people compare against
+           other tools' pricing. -->
       <div v-if="bundleSavings" class="pc-total-hemat">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path d="M8 1v6M8 9v6M1 8h6M9 8h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3" fill="none" opacity="0.35"/>
-        </svg>
-        Hemat pakai bundle
-        <span class="pc-total-hemat-amt">
-          {{ money(savingsForPeriod) }}/{{ plan === 'yearly' ? 'thn' : 'bln' }}
-        </span>
+        <div class="pc-total-hemat-icon">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 1l2 5 5 .5-4 3.5 1 5.5-4-2.5-4 2.5 1-5.5-4-3.5 5-.5z" />
+          </svg>
+        </div>
+        <div class="pc-total-hemat-body">
+          <div class="pc-total-hemat-main">
+            Anda hemat
+            <b>{{ money(savingsForPeriod) }}/{{ plan === 'yearly' ? 'thn' : 'bln' }}</b>
+            pakai {{ bundleSavings.bundleLabel }}
+          </div>
+          <div v-if="plan !== 'yearly'" class="pc-total-hemat-sub">
+            Setara <b>{{ money(savingsForPeriod * 12) }}/tahun</b>
+          </div>
+        </div>
       </div>
 
-      <div v-if="studentCount > 0" class="pc-total-per">
-        ≈ {{ money(perStudent) }} per {{ perUnitWord }} / bln
-      </div>
-
-      <!-- Bundle-opportunity card. When the user is OFF the bundle but
-           their à la carte pick meets or exceeds the bundle price, we
-           surface the switch option INSIDE the Total block — the same
-           emerald language the on-bundle case uses, but the big number
-           above still shows THEIR actual à la carte total (staying
-           honest) and this card offers the swap explicitly. Anchoring
-           it above the CTA means the decision-point catches the eye
-           at the moment they'd otherwise click "Lanjut ke pembayaran". -->
+      <!-- Off-bundle swap card. When user's à la carte pick meets or
+           exceeds the bundle price, present the switch option here
+           (before CTA) instead of a separate below-CTA nudge card. -->
       <div v-if="showNudge && bundleBenchmark" class="pc-total-swap">
         <div class="pc-total-swap-body">
           <div class="pc-total-swap-top">
@@ -365,7 +444,24 @@ function onPlan(p: BillingPeriod) {
   letter-spacing: 0.8px; text-transform: uppercase;
   color: #64748B;
 }
-.pc-calc-title { font-size: 13.5px; font-weight: 500; margin-top: 3px; color: #0F172A; }
+.pc-calc-title {
+  font-size: 15px; font-weight: 700; margin-top: 3px; color: #0B1B2B;
+  letter-spacing: -0.2px;
+}
+.pc-calc-caps {
+  display: flex; gap: 6px; align-items: center;
+  margin-top: 6px; flex-wrap: wrap;
+}
+.pc-cap-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 8px; border-radius: 6px;
+  background: #F1F5F9;
+  color: #334155;
+  font-size: 11px; font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.pc-cap-pill svg { color: #64748B; }
+.pc-cap-pill b { font-weight: 700; color: #0B1B2B; }
 
 .pc-plan-toggle {
   display: flex; padding: 4px;
@@ -443,6 +539,8 @@ function onPlan(p: BillingPeriod) {
 .pc-total-per {
   font-size: 11px; color: #64748B;
   margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
 }
 
 /* Bundle-mode overrides. Emerald tint anchors the whole block as
@@ -494,31 +592,46 @@ function onPlan(p: BillingPeriod) {
 }
 .pc-total-final-lbl svg { color: #1D9E75; flex-shrink: 0; }
 
-/* Hemat pill — full-bleed row with amount in a white capsule on
-   the right. Anchored right below the final price so the eye
-   immediately connects "big number → why it's smaller than the
-   strike above". */
+/* Emerald HEMAT strip — Opsi A treatment. Solid emerald background
+   with amount as an eye-catching bold + a per-year projection
+   underneath. Sits BELOW the honest per-unit breakdown so the flow
+   reads: total → how it's computed → what you saved. */
 .pc-total-hemat {
-  margin-top: 8px;
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 9px;
-  border-radius: 8px;
-  background: #DCFCE7;
-  color: #0A5744;
-  font-size: 11px; font-weight: 600;
+  margin-top: 10px;
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 10px 11px;
+  border-radius: 10px;
+  background: #0F6E56;
+  color: #FFFFFF;
+  font-size: 12px;
   letter-spacing: -0.1px;
+  line-height: 1.35;
 }
-.pc-total-hemat svg { flex-shrink: 0; opacity: 0.85; }
-.pc-total-hemat-amt {
-  margin-left: auto;
-  background: #FFFFFF;
-  color: #0A5744;
-  border: 0.5px solid #A7E7CF;
-  padding: 1px 7px;
-  border-radius: 5px;
+.pc-total-hemat-icon {
+  width: 24px; height: 24px; border-radius: 7px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.pc-total-hemat-body { flex: 1; min-width: 0; }
+.pc-total-hemat-main {
+  font-weight: 500;
+}
+.pc-total-hemat-main b {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.pc-total-hemat-sub {
+  margin-top: 2px;
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 400;
+}
+.pc-total-hemat-sub b {
+  color: #FFFFFF;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
 
 /* Bundle-swap card for the OFF-bundle nudge case. Emerald tint,

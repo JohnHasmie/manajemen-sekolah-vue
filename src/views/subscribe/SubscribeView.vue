@@ -645,6 +645,9 @@ watch(() => auth.isAuthenticated, (v) => {
             label="Paket Lengkap · semua modul non-AI"
             description="9 modul: absensi, nilai, raport, jadwal, RPP, keuangan, komunikasi, aktivitas kelas."
             :price-per-student="catalog.bundles.bundle_complete.price_per_student"
+            :price-per-staff="catalog.bundles.bundle_complete.price_per_staff"
+            :student-count="selectedTenant.student_count"
+            :staff-count="selectedTenant.staff_count"
             :active="selectedKeys.has('bundle_complete')"
             @select="toggleModule('bundle_complete')"
           />
