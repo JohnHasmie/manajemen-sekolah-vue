@@ -358,6 +358,14 @@ interface WizardDraft {
   period: BillingPeriod;
   stepIndex: number;
   savedAt: string;
+  /**
+   * Order snapshot — persisted so a mid-transfer refresh drops the
+   * user back on the OrderTransferCard (with the same rekening +
+   * kode referensi + amount) instead of an empty Step 1. Cleared
+   * only when the user taps "Saya sudah transfer".
+   */
+  order?: OrderSnapshot | null;
+  transferNotified?: boolean;
 }
 
 function snapshotDraft(): WizardDraft {
@@ -368,6 +376,8 @@ function snapshotDraft(): WizardDraft {
     period: period.value,
     stepIndex: stepIndex.value,
     savedAt: new Date().toISOString(),
+    order: order.value ? { ...order.value } : null,
+    transferNotified: transferNotified.value,
   };
 }
 
@@ -419,6 +429,17 @@ function applyDraft(d: WizardDraft): void {
       // return should still show the intro step so they orient.
       if (d.stepIndex > 0) stepIndex.value = d.stepIndex;
     }
+    // Order state — mid-transfer refresh should land the user back on
+    // OrderTransferCard, not the empty Step 1. The `!order` guard on
+    // the Step 4 template + the OrderTransferCard's own `v-else-if`
+    // do the rest: as soon as `order.value` is truthy the template
+    // chain jumps straight to the transfer instructions.
+    if (d.order && typeof d.order === 'object') {
+      order.value = d.order as OrderSnapshot;
+    }
+    if (typeof d.transferNotified === 'boolean') {
+      transferNotified.value = d.transferNotified;
+    }
   } finally {
     // Flush the microtask queue before releasing the guard so the
     // reactivity system finishes propagating our writes to any
@@ -466,6 +487,13 @@ watch(
     aiQuota,
     period,
     stepIndex,
+    // Persist the mid-transfer state too: order arrives after submit,
+    // transferNotified flips when the user taps "Saya sudah transfer".
+    // Without these, `onSubmit()` sets `order.value` and the next
+    // debounced save skips it because none of the OLD watched refs
+    // changed.
+    order,
+    transferNotified,
   ],
   () => {
     // Silence writes we're triggering ourselves during a restore, so
@@ -739,11 +767,14 @@ async function handleSubscribeResult(result: SubscribeResult) {
     }
     return;
   }
-  // Draft served its purpose — the order is created, next visit to
-  // /subscribe/new should start clean (a returning customer likely
-  // wants a DIFFERENT tenant, not the one they just paid for).
-  clearDraft(auth.user?.email);
-  clearDraft(null);
+  // Order is created but the user hasn't confirmed transfer yet. We
+  // deliberately DO NOT clearDraft here — a refresh (or accidental
+  // tab close) mid-transfer used to dump them back on Step 1 with an
+  // empty form. Draft now persists through the "menunggu pembayaran"
+  // window and is cleared only when `onMarkTransferred` succeeds
+  // (user tapped "Saya sudah transfer" and the mark-paid call went
+  // through). The `order` snapshot is included in the draft so the
+  // OrderTransferCard state itself survives the reload.
   order.value = {
     planLabel: buildPlanLabel(),
     studentCount: form.student_count,
@@ -764,12 +795,19 @@ async function handleSubscribeResult(result: SubscribeResult) {
 async function onMarkTransferred() {
   if (!order.value?.shareToken) {
     transferNotified.value = true;
+    // No share token = no server-side mark-paid to fire, so we're done
+    // with the draft too. This is the terminal state — user has told
+    // us they transferred, next visit to /subscribe/new starts clean.
+    clearDraft(auth.user?.email);
+    clearDraft(null);
     return;
   }
   notifyingTransfer.value = true;
   try {
     await markTransferredByToken(order.value.shareToken);
     transferNotified.value = true;
+    clearDraft(auth.user?.email);
+    clearDraft(null);
   } catch (e) {
     errorMessage.value = (e as Error).message;
   } finally {
