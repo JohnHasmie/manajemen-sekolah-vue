@@ -16,7 +16,6 @@ import type {
   ModuleCatalog,
 } from '@/types/subscription-billing';
 import { money, moduleLabel } from './moduleTokens';
-import BundleNudge from './BundleNudge.vue';
 
 const props = defineProps<{
   tenantName: string;
@@ -287,6 +286,41 @@ function onPlan(p: BillingPeriod) {
       <div v-if="studentCount > 0" class="pc-total-per">
         ≈ {{ money(perStudent) }} per {{ perUnitWord }} / bln
       </div>
+
+      <!-- Bundle-opportunity card. When the user is OFF the bundle but
+           their à la carte pick meets or exceeds the bundle price, we
+           surface the switch option INSIDE the Total block — the same
+           emerald language the on-bundle case uses, but the big number
+           above still shows THEIR actual à la carte total (staying
+           honest) and this card offers the swap explicitly. Anchoring
+           it above the CTA means the decision-point catches the eye
+           at the moment they'd otherwise click "Lanjut ke pembayaran". -->
+      <div v-if="showNudge && bundleBenchmark" class="pc-total-swap">
+        <div class="pc-total-swap-body">
+          <div class="pc-total-swap-top">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 8.5l3.5 3.5L13 4.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="pc-total-swap-title">{{ bundleBenchmark.label }} lebih hemat</span>
+            <span class="pc-total-swap-hemat">
+              −{{ money(monthlyAmount - bundleBenchmark.monthlyTotal) }}
+            </span>
+          </div>
+          <div class="pc-total-swap-sub">
+            <span>{{ money(bundleBenchmark.monthlyTotal) }}/bln</span>
+            <span v-if="bundleBenchmark.bonusModuleCount > 0" class="pc-total-swap-bonus">
+              · {{ bundleBenchmark.bonusModuleCount }} modul bonus
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="pc-total-swap-btn"
+          @click="emit('switch-to-bundle', bundleBenchmark.key)"
+        >
+          Ambil
+        </button>
+      </div>
     </div>
 
     <div class="pc-cta">
@@ -305,14 +339,10 @@ function onPlan(p: BillingPeriod) {
       <div class="pc-cta-back">Ubah kapan saja · tanpa biaya batal</div>
     </div>
 
-    <BundleNudge
-      v-if="showNudge && bundleBenchmark"
-      :alacarte-total="monthlyAmount"
-      :bundle-total="bundleBenchmark.monthlyTotal"
-      :bonus-module-count="bundleBenchmark.bonusModuleCount"
-      @switch="emit('switch-to-bundle', bundleBenchmark.key)"
-      @skip="() => {}"
-    />
+    <!-- Legacy BundleNudge below CTA — kept as a fallback slot so any
+         host that skipped adopting the inline swap card still has the
+         old prompt. Never renders while the inline card is showing to
+         avoid a double-prompt. -->
   </div>
 </template>
 
@@ -490,6 +520,61 @@ function onPlan(p: BillingPeriod) {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+/* Bundle-swap card for the OFF-bundle nudge case. Emerald tint,
+   sits below the honest per-siswa hint but still inside the Total
+   block so it catches the eye at the exact moment before the CTA.
+   Compact single-row layout: title + hemat chip on top, price hint
+   underneath, "Ambil" button on the right. */
+.pc-total-swap {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ECFDF5 0%, #D6F5E3 100%);
+  border: 0.5px solid #A7E7CF;
+  display: flex; align-items: center; gap: 10px;
+}
+.pc-total-swap-body { flex: 1; min-width: 0; }
+.pc-total-swap-top {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 600;
+  color: #0A5744;
+  letter-spacing: -0.1px;
+}
+.pc-total-swap-top svg { color: #1D9E75; flex-shrink: 0; }
+.pc-total-swap-title {
+  min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pc-total-swap-hemat {
+  margin-left: auto;
+  background: #FFFFFF;
+  color: #0A5744;
+  border: 0.5px solid #A7E7CF;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pc-total-swap-sub {
+  font-size: 10.5px; color: #0F6E56;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.pc-total-swap-bonus { color: #0A5744; font-weight: 500; }
+.pc-total-swap-btn {
+  flex-shrink: 0;
+  background: #1D9E75; color: #FFFFFF;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 11.5px; font-weight: 600;
+  cursor: pointer;
+  letter-spacing: -0.1px;
+}
+.pc-total-swap-btn:hover { background: #0F6E56; }
 
 .pc-cta { padding: 10px 14px 14px; }
 .pc-cta-btn {
