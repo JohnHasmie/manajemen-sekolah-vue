@@ -21,6 +21,32 @@ import type { Child } from '@/types/parent';
 const children = ref<Child[]>([]);
 const activeChildId = ref<string>('');
 const loaded = ref(false);
+/**
+ * Overdue-billing signal for the sidebar badge (Wave 7). Set from the
+ * SAME `getStats('wali')` response `load()` already fetches for the
+ * child slices — no extra round-trip. True when any bill amount is
+ * outstanding/overdue. The parent stats expose a rupiah TOTAL
+ * (`outstanding_bills` / `overdue_total`), not a count, so this is a
+ * boolean "has overdue" flag rendered as a red dot, not a number.
+ */
+const hasOverdueBills = ref(false);
+
+function readOverdue(stats: Record<string, unknown> | null | undefined): boolean {
+  if (!stats || typeof stats !== 'object') return false;
+  const m = stats as Record<string, unknown>;
+  // Prefer a per-child sum across slices (multi-anak parents); fall
+  // back to the top-level total (single-anak synthesis). Either field
+  // name may be present depending on the backend stats shape.
+  const slices = Array.isArray(m.slices) ? (m.slices as Record<string, unknown>[]) : [];
+  const sliceOverdue = slices.some((s) => toNum(s.overdue_total) > 0 || toNum(s.outstanding_bills) > 0);
+  return sliceOverdue || toNum(m.outstanding_bills) > 0 || toNum(m.overdue_total) > 0;
+}
+
+function toNum(v: unknown): number {
+  if (typeof v === 'number') return v;
+  if (typeof v === 'string') return Number.parseFloat(v) || 0;
+  return 0;
+}
 
 function fromSlices(slices: unknown): Child[] {
   if (!Array.isArray(slices)) return [];
@@ -51,6 +77,7 @@ export function useChildPicker() {
     // Primary: dashboard slices (tenant-aware, includes bimbel parent).
     try {
       const stats = await DashboardService.getStats('wali');
+      hasOverdueBills.value = readOverdue(stats);
       const fromDash = fromSlices(stats?.slices);
       if (fromDash.length > 0) {
         children.value = fromDash;
@@ -89,6 +116,7 @@ export function useChildPicker() {
   return {
     children,
     activeChildId,
+    hasOverdueBills,
     activeChild,
     setActive(id: string) {
       activeChildId.value = id;

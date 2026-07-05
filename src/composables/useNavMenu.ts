@@ -23,6 +23,13 @@ export interface NavItem {
   icon: string;
   badge?: number;
   /**
+   * Boolean attention indicator, rendered by the shell as a small red
+   * dot (no number). Used when the signal is "something needs
+   * attention here" without a meaningful count — e.g. the parent has
+   * an outstanding/overdue bill total (a rupiah amount, not a count).
+   */
+  dot?: boolean;
+  /**
    * RBAC permission token (backend MR !225). When set, the item is
    * filtered out unless `auth.hasAbility(ability)` returns true. The
    * authoritative gate stays server-side — this only hides items the
@@ -112,28 +119,47 @@ const ADMIN_NAV: NavSection[] = [
       },
     ],
   },
+  // ── KEHADIRAN — modules: attendance_class · attendance_gate ·
+  //    attendance_staff. Wave 7 splits the former single "Kehadiran"
+  //    pile into three legible buckets so the daily student flow, the
+  //    staff/teacher report, and the QR gate/card OPS screens no longer
+  //    read as undifferentiated siblings. Same routes, same abilities,
+  //    same icons — pure regrouping. Each section gates independently
+  //    (applyGates drops any that empties out), so a tenant that only
+  //    owns attendance_staff sees just "Kehadiran Staff", etc. The QR
+  //    config still lives in the Pengaturan hub (Wave 2). ───────────
   {
-    // ── KEHADIRAN — modules: attendance_class · attendance_gate ·
-    //    attendance_staff. Operational QR screens live here (poster
-    //    display + card CRUD); their CONFIG lives in the Pengaturan
-    //    hub (unified attendance settings, Wave 2). ────────────────
-    titleKey: 'nav.sectionAttendance',
+    // Absensi Siswa — attendance_class owners get view+submit;
+    // attendance_gate-only owners get view_own+export. Either is
+    // enough to justify the menu entry.
+    titleKey: 'nav.sectionAttendanceStudent',
     items: [
-      // Absensi (student) — attendance_class owners get view+submit;
-      // attendance_gate-only owners get view_own+export. Either is
-      // enough to justify the menu entry.
       {
         to: '/admin/student-attendance',
         labelKey: 'nav.attendance',
         icon: 'check-square',
         abilityAny: ['attendance.student.view', 'attendance.student.export'],
       },
+    ],
+  },
+  {
+    // Kehadiran Staff — the personnel (teacher/staff) attendance report.
+    titleKey: 'nav.sectionAttendanceStaff',
+    items: [
       {
         to: '/admin/teacher-attendance/report',
         labelKey: 'nav.teacherAttendance',
         icon: 'camera',
         ability: 'attendance.staff.report.view',
       },
+    ],
+  },
+  {
+    // Gerbang & Kartu — the operational QR screens: gate poster display
+    // + personnel card CRUD. Grouped together as the "hardware-adjacent"
+    // ops surface, distinct from the two attendance-record views above.
+    titleKey: 'nav.sectionAttendanceGate',
+    items: [
       {
         to: '/admin/attendance/gate-qr',
         labelKey: 'nav.attendanceQrGate',
@@ -235,6 +261,10 @@ const TEACHER_NAV: NavSection[] = [
     titleKey: '',
     items: [
       { to: '/teacher', labelKey: 'nav.dashboard', icon: 'home' },
+      // Inbox (Prioritas / Perlu Perhatian). Route existed but was
+      // orphaned from the nav — re-added, Wave 7. Ungated: every
+      // teacher can see their own priority inbox.
+      { to: '/teacher/inbox', labelKey: 'nav.inbox', icon: 'inbox' },
       {
         to: '/teacher/my-attendance',
         labelKey: 'nav.myAttendance',
@@ -445,6 +475,10 @@ const PARENT_NAV: NavSection[] = [
     titleKey: '',
     items: [
       { to: '/parent', labelKey: 'nav.dashboard', icon: 'home' },
+      // Inbox (Perlu Perhatian). Route existed but was orphaned from
+      // the nav — re-added, Wave 7. Ungated: every parent can see
+      // their own priority inbox.
+      { to: '/parent/inbox', labelKey: 'nav.inbox', icon: 'inbox' },
       {
         to: '/parent/announcements',
         labelKey: 'nav.announcements',
@@ -544,6 +578,14 @@ const SUPER_ADMIN_NAV: NavSection[] = [
         icon: 'school',
       },
       {
+        // Modular-SaaS grant/revoke surface (route existed but was
+        // orphaned from the nav — re-added, Wave 7). Reuses the same
+        // "package" icon as the admin settings "Kelola Modul" tile.
+        to: '/super-admin/tenant-modules',
+        labelKey: 'superAdmin.nav.tenantModules',
+        icon: 'package',
+      },
+      {
         to: '/super-admin/subscription-approvals',
         labelKey: 'superAdmin.nav.subscriptionApprovals',
         icon: 'credit-card',
@@ -578,34 +620,60 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
       },
     ],
   },
+  // ── Wave 7 regroup ──────────────────────────────────────────────────
+  // The former single "Tutoring" catch-all (13 items) was an
+  // undifferentiated pile. It's split into coherent buckets purely by
+  // MOVING existing items between sections — every route, ability and
+  // icon is preserved; no routes added or removed. The buckets:
+  //   Manajemen        → the rosters + CRM (students/tutors/groups/leads)
+  //   Program & Sesi   → programs, sessions, reminders, group announcements
+  //   Pendapatan Tutor → tutor payouts (payouts/requests/settings)
+  //   Keuangan Anak    → student-facing money (bills, billing cfg, vouchers)
+  //   Lainnya          → leaderboard + activity/attendance reports
+  //   Akun             → notifications/profile/appearance (unchanged)
   {
     titleKey: 'tutoring.nav.manajemen',
     items: [
       { to: '/admin/tutoring/students', labelKey: 'tutoring.nav.students', icon: 'users' },
       { to: '/admin/tutoring/tutors', labelKey: 'tutoring.nav.tutors', icon: 'user-check' },
-      { to: '/admin/tutoring/groups', labelKey: 'tutoring.nav.classes', icon: 'layers' },
+      // "Groups" reused the school "Classes" label/icon confusingly —
+      // relabel to a bimbel-native "Kelompok Belajar" / "Study groups"
+      // and swap the `layers` (classes/stacks) icon for `users` (a group
+      // of learners). Label/icon change only — same /admin/tutoring/groups
+      // route.
+      { to: '/admin/tutoring/groups', labelKey: 'tutoring.nav.groups', icon: 'users' },
+      { to: '/admin/tutoring/leads', labelKey: 'tutoring.nav.leads', icon: 'users' },
     ],
   },
   {
-    titleKey: 'tutoring.tenant.center',
+    titleKey: 'tutoring.nav.sectionPrograms',
     items: [
       { to: '/admin/tutoring/programs', labelKey: 'tutoring.nav.programs', icon: 'layers' },
       { to: '/admin/tutoring/sessions', labelKey: 'tutoring.nav.sessions', icon: 'calendar' },
-      { to: '/admin/tutoring/bills', labelKey: 'tutoring.nav.bills', icon: 'wallet' },
-      { to: '/admin/tutoring/billing-settings', labelKey: 'tutoring.nav.billingSettings', icon: 'settings' },
       { to: '/admin/tutoring/session-reminders', labelKey: 'tutoring.nav.sessionReminders', icon: 'bell' },
+      { to: '/admin/tutoring/group-announcements', labelKey: 'tutoring.nav.groupAnnouncements', icon: 'megaphone' },
+    ],
+  },
+  {
+    titleKey: 'tutoring.nav.sectionTutorIncome',
+    items: [
       { to: '/admin/tutoring/payouts', labelKey: 'tutoring.nav.payouts', icon: 'wallet' },
       { to: '/admin/tutoring/payout-requests', labelKey: 'tutoring.nav.payoutRequests', icon: 'wallet' },
       { to: '/admin/tutoring/payout-settings', labelKey: 'tutoring.nav.payoutSettings', icon: 'settings' },
-      { to: '/admin/tutoring/leads', labelKey: 'tutoring.nav.leads', icon: 'users' },
+    ],
+  },
+  {
+    titleKey: 'tutoring.nav.sectionStudentFinance',
+    items: [
+      { to: '/admin/tutoring/bills', labelKey: 'tutoring.nav.bills', icon: 'wallet' },
+      { to: '/admin/tutoring/billing-settings', labelKey: 'tutoring.nav.billingSettings', icon: 'settings' },
       { to: '/admin/tutoring/vouchers', labelKey: 'tutoring.nav.vouchers', icon: 'wallet' },
-      { to: '/admin/tutoring/group-announcements', labelKey: 'tutoring.nav.groupAnnouncements', icon: 'megaphone' },
-      { to: '/admin/tutoring/leaderboard', labelKey: 'tutoring.nav.leaderboard', icon: 'bar-chart' },
     ],
   },
   {
     titleKey: 'tutoring.nav.sectionExtra',
     items: [
+      { to: '/admin/tutoring/leaderboard', labelKey: 'tutoring.nav.leaderboard', icon: 'bar-chart' },
       { to: '/admin/tutoring/reports/activity', labelKey: 'tutoring.nav.activities', icon: 'bar-chart' },
       { to: '/admin/tutoring/reports/attendance', labelKey: 'tutoring.nav.attendance', icon: 'check-square' },
     ],
@@ -783,7 +851,9 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
   const { isTutoringCenter } = useTenant();
   // useChildPicker exposes a module-singleton activeChildId that
   // updates reactively when the parent switches kid on the dashboard.
-  const { activeChildId } = useChildPicker();
+  // `hasOverdueBills` rides the SAME getStats('wali') fetch the picker
+  // already makes — used to red-dot the parent Billing nav item.
+  const { activeChildId, hasOverdueBills } = useChildPicker();
   return computed(() => {
     // Super-admins ALWAYS get the dedicated platform menu — never the
     // school-admin items. The getter also covers the case where the
@@ -821,6 +891,27 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
       role === 'guru' && auth.homeroomClasses.length > 0
         ? WALI_KELAS_NAV
         : MENUS[role] ?? [];
-    return applyGates(source, auth.hasAbility, studentCtx, academicCtx, tutoringCtx);
+    const gated = applyGates(source, auth.hasAbility, studentCtx, academicCtx, tutoringCtx);
+    // School parent: red-dot the Billing item when there's an
+    // outstanding/overdue total. Signal comes from the getStats('wali')
+    // response useChildPicker already loads — no extra fetch here.
+    if (role === 'wali' && hasOverdueBills.value) {
+      return decorateBillingDot(gated);
+    }
+    return gated;
   });
+}
+
+/**
+ * Return a copy of the nav with the `/parent/billing` item carrying a
+ * red-dot flag. Non-mutating so the static PARENT_NAV const is never
+ * touched (it's shared across renders / roles).
+ */
+function decorateBillingDot(sections: NavSection[]): NavSection[] {
+  return sections.map((sec) => ({
+    titleKey: sec.titleKey,
+    items: sec.items.map((it) =>
+      it.to === '/parent/billing' ? { ...it, dot: true } : it,
+    ),
+  }));
 }

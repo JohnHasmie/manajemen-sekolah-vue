@@ -383,6 +383,17 @@ const schoolInitial = computed(() => {
                   class="absolute top-1 right-1 w-2 h-2 rounded-full"
                   :style="{ background: color.hex }"
                 />
+                <!-- Attention dot (no count) — e.g. parent has an
+                     overdue/outstanding bill. Red, distinct from the
+                     role-colored count badge above. -->
+                <span
+                  v-if="item.dot && !item.badge && !isCollapsed"
+                  class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"
+                />
+                <span
+                  v-if="item.dot && !item.badge && isCollapsed"
+                  class="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500"
+                />
                 <span
                   v-if="isCollapsed"
                   class="pointer-events-none absolute left-[calc(100%+12px)] px-2.5 py-1.5 bg-tutoring-panel border border-tutoring-border-soft rounded-md text-[12px] font-semibold text-tutoring-text-hi opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition z-50 whitespace-nowrap shadow-xl"
@@ -501,6 +512,12 @@ const schoolInitial = computed(() => {
                     class="flex-shrink-0"
                   />
                   <span class="flex-1 truncate">{{ t(item.labelKey) }}</span>
+                  <!-- Attention dot (e.g. parent overdue bill) — mirrors
+                       the desktop sidebar indicator. -->
+                  <span
+                    v-if="item.dot"
+                    class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"
+                  />
                 </RouterLink>
               </li>
             </ul>
