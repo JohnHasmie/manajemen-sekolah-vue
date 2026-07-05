@@ -1556,7 +1556,7 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const auth = useAuthStore();
   // Rehydrate from storage on first navigation if needed.
   if (!auth.isAuthenticated) auth.restore();
@@ -1606,6 +1606,31 @@ router.beforeEach((to) => {
     return { path: roleHomePath[auth.activeRole ?? ''] ?? '/login' };
   }
 
+  // ── /me hydration before the ability / module gates ──────────────
+  // The checks below read the GET /me snapshot (via `auth.hasAbility` +
+  // the me store's context flags). On a HARD REFRESH that snapshot
+  // starts null — it is NOT persisted, it's fetched from /me after the
+  // app boots — so evaluating the gates against empty data would DENY
+  // every gated sub-route and bounce the user back to their role home.
+  // That's the "refresh always returns to /teacher" bug, and it hit
+  // every role (admin/parent/bimbel routes are gated the same way).
+  //
+  // Await one (coalesced) /me fetch here so the gates see real data.
+  // In-app navigations already have the snapshot loaded, so this is a
+  // no-op after the first load. If the fetch fails, we SKIP the
+  // client-side gates entirely and defer to the authoritative
+  // server-side gate rather than misrouting the user.
+  const me = useMeStore();
+  if (auth.step === 'done' && me.snapshot === null) {
+    try {
+      await me.refresh();
+    } catch {
+      /* network hiccup — fall through to the skip below */
+    }
+  }
+  // No snapshot (fetch failed / still booting) → don't gate client-side.
+  if (me.snapshot === null) return true;
+
   // Per-permission guard (RBAC Phase A — backend MR !225). Routes that
   // need a specific ability set `meta.ability = 'attendance.gate_qr.manage'`
   // (or similar). The authoritative gate stays server-side; this just
@@ -1635,7 +1660,6 @@ router.beforeEach((to) => {
     | 'tutoring-module'
     | undefined;
   if (needs) {
-    const me = useMeStore();
     if (needs === 'student-context' && !me.hasStudentContext) {
       return { path: roleHomePath[auth.activeRole ?? ''] ?? '/login' };
     }
