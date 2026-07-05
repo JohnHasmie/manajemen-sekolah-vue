@@ -313,6 +313,133 @@ const TEACHER_NAV: NavSection[] = [
   },
 ];
 
+/**
+ * WALI_KELAS_NAV — homeroom-teacher (wali kelas) identity.
+ *
+ * ── Why this exists ──────────────────────────────────────────────────
+ * A `wali_kelas` is a `guru` who ALSO owns a homeroom class. On web they
+ * previously reused `TEACHER_NAV` verbatim, so their homeroom identity
+ * was invisible: the class-scoped work (kehadiran, nilai, kegiatan,
+ * pengumuman, rapor for THEIR kelas) sat mixed in with subject-teaching
+ * items, undifferentiated. This nav FOREGROUNDS that homeroom work in a
+ * "Kelas Saya" (`nav.sectionHomeroom`) section at the top, then keeps
+ * every teacher-shared item below.
+ *
+ * ── HONEST scope: invents NOTHING ────────────────────────────────────
+ * Every entry here is an EXISTING teacher route (see router/index.ts
+ * `/teacher/*`) with its EXISTING label/icon/ability. No new screen,
+ * endpoint, path, or ability is introduced. The homeroom section just
+ * RE-GROUPS routes the teacher nav already exposed. The class-scoped
+ * views (TeacherAttendanceView / TeacherGradeBookView /
+ * TeacherGradeRecapView / TeacherScheduleView / TeacherRecommendationView
+ * / TeacherAnnouncementView / report-card views) already read
+ * `auth.homeroomClasses` to offer a "Wali {kelas}" filter mode, so these
+ * are the genuinely homeroom-relevant surfaces — nothing fabricated.
+ *
+ * ── Runtime-role caveat (important) ──────────────────────────────────
+ * `auth.activeRole` is NEVER the literal `'wali_kelas'` at runtime:
+ * `normalizeRole()` in stores/auth.ts collapses `'wali_kelas'` → `'guru'`
+ * on every authenticated path. The homeroom identity is carried by
+ * `auth.homeroomClasses` (populated from the teacher_profile). So this
+ * nav is selected by `useNavMenu` on the `homeroomClasses.length > 0`
+ * signal — NOT on the role string. The `MENUS.wali_kelas` mapping below
+ * is kept for exhaustiveness/type-safety but is not the live selector.
+ */
+const WALI_KELAS_NAV: NavSection[] = [
+  {
+    titleKey: '',
+    items: [
+      { to: '/teacher', labelKey: 'nav.dashboard', icon: 'home' },
+      {
+        to: '/teacher/my-attendance',
+        labelKey: 'nav.myAttendance',
+        icon: 'camera',
+        ability: 'attendance.self.view_own',
+      },
+    ],
+  },
+  {
+    // ── KELAS SAYA — the homeroom teacher's class-scoped work. Same
+    //    routes/abilities as the teacher nav, just promoted to the top
+    //    so the wali kelas lands on THEIR class work first. ─────────
+    titleKey: 'nav.sectionHomeroom',
+    items: [
+      {
+        to: '/teacher/attendance',
+        labelKey: 'nav.attendance',
+        icon: 'check-square',
+        abilityAny: ['attendance.student.submit', 'attendance.student.view'],
+      },
+      {
+        to: '/teacher/grades',
+        labelKey: 'nav.grades',
+        icon: 'edit',
+        ability: 'academic.grade.input',
+      },
+      {
+        to: '/teacher/grade-recap',
+        labelKey: 'nav.gradeRecap',
+        icon: 'bar-chart',
+        ability: 'academic.grade.recap.view',
+      },
+      {
+        to: '/teacher/class-activity',
+        labelKey: 'nav.classActivity',
+        icon: 'activity',
+        ability: 'activity.view',
+      },
+      {
+        to: '/teacher/announcements',
+        labelKey: 'nav.announcements',
+        icon: 'megaphone',
+        ability: 'communication.announcement.view',
+      },
+      {
+        to: '/teacher/recommendations',
+        labelKey: 'nav.recommendations',
+        icon: 'sparkles',
+        abilityAny: [
+          'communication.recommendation.view',
+          'communication.recommendation.create',
+        ],
+      },
+      {
+        to: '/teacher/report-cards',
+        labelKey: 'nav.reportCards',
+        icon: 'clipboard',
+        ability: 'academic.report_card.view',
+      },
+    ],
+  },
+  {
+    // ── MENGAJAR — teacher-shared items (subject teaching), kept below
+    //    the homeroom section. These are the TEACHER_NAV items NOT
+    //    promoted above; schedule/materials/lesson-plans are general
+    //    teaching tools, not homeroom-specific. ─────────────────────
+    titleKey: 'role.guru',
+    items: [
+      {
+        to: '/teacher/schedule',
+        labelKey: 'nav.schedule',
+        icon: 'calendar',
+        ability: 'academic.schedule.view',
+      },
+      {
+        to: '/teacher/materials',
+        labelKey: 'nav.materials',
+        icon: 'book',
+        ability: 'academic.material.view',
+      },
+      {
+        to: '/teacher/lesson-plans',
+        labelKey: 'nav.lessonPlans',
+        icon: 'file-text',
+        ability: 'academic.lesson_plan.view',
+      },
+    ],
+  },
+];
+
 const PARENT_NAV: NavSection[] = [
   {
     titleKey: '',
@@ -369,6 +496,22 @@ const PARENT_NAV: NavSection[] = [
   },
 ];
 
+/**
+ * STAFF_NAV — deliberately minimal (Dashboard only).
+ *
+ * HONEST SCOPE / OPEN PRODUCT DECISION: the `staff` role has NO real web
+ * self-service screen today. The only route carrying `meta.role:'staff'`
+ * is `/staff` → RoleHomeStub (which now renders an honest "no self-service
+ * yet" empty state for staff). There is no staff self check-in view, and
+ * the entire `attendance_staff` module is ADMIN-side only (teacher-
+ * attendance report, attendance config, QR gate display, personnel cards).
+ *
+ * So we do NOT fabricate a staff dashboard or invent staff-only menu
+ * items. When/if product decides staff should get a first-class web
+ * surface (e.g. a staff self check-in mirroring `/teacher/my-attendance`),
+ * add the REAL routes here. Until then this stays a single Dashboard
+ * entry — see RoleHomeStub.vue for the matching honest empty state.
+ */
 const STAFF_NAV: NavSection[] = [
   {
     titleKey: '',
@@ -571,13 +714,24 @@ function parentTutoringNav(activeChildId: string): NavSection[] {
 const TUTORING_MENUS: Partial<Record<Role, NavSection[]>> = {
   admin: ADMIN_TUTORING_NAV,
   guru: TEACHER_TUTORING_NAV,
+  // A tutoring center (bimbel) has NO homeroom concept — tutors teach
+  // session groups, not homeroom classes, and none of the bimbel views
+  // read `homeroomClasses`. So a wali_kelas on the bimbel surface is just
+  // a tutor; the homeroom "Kelas Saya" regrouping would surface nothing
+  // meaningful. Keep the shared tutor nav here on purpose.
   wali_kelas: TEACHER_TUTORING_NAV,
 };
 
 const MENUS: Record<Role, NavSection[]> = {
   admin: ADMIN_NAV,
   guru: TEACHER_NAV,
-  wali_kelas: TEACHER_NAV,
+  // NOTE: `activeRole` is never literally 'wali_kelas' at runtime
+  // (normalizeRole collapses it to 'guru'), so this map entry is not the
+  // live selector. `useNavMenu` picks WALI_KELAS_NAV off the real
+  // homeroom signal (`auth.homeroomClasses.length > 0`). Kept mapped for
+  // Role-union exhaustiveness and so a future un-collapsed role still
+  // gets the homeroom-first nav rather than the plain teacher nav.
+  wali_kelas: WALI_KELAS_NAV,
   wali: PARENT_NAV,
   staff: STAFF_NAV,
   // Super-admins get their OWN dedicated menu (handled in useNavMenu via
@@ -654,6 +808,19 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
         return applyGates(TUTORING_MENUS[role]!, auth.hasAbility, studentCtx, academicCtx, tutoringCtx);
       }
     }
-    return applyGates(MENUS[role] ?? [], auth.hasAbility, studentCtx, academicCtx, tutoringCtx);
+    // Homeroom-teacher (wali kelas) identity on the SCHOOL surface.
+    // `role` here is 'guru' even for a wali kelas — normalizeRole
+    // collapses 'wali_kelas' → 'guru' on every auth path, so the ONLY
+    // reliable runtime signal for "this teacher owns a homeroom" is
+    // `auth.homeroomClasses` (populated from the teacher_profile). When
+    // present, swap the plain teacher nav for the homeroom-first
+    // WALI_KELAS_NAV so their "Kelas Saya" work leads. Same routes,
+    // different ordering — a pure subject teacher (no homeroom) keeps
+    // TEACHER_NAV untouched.
+    const source =
+      role === 'guru' && auth.homeroomClasses.length > 0
+        ? WALI_KELAS_NAV
+        : MENUS[role] ?? [];
+    return applyGates(source, auth.hasAbility, studentCtx, academicCtx, tutoringCtx);
   });
 }

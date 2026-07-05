@@ -316,6 +316,7 @@
     "sectionAcademic": "Academic",
     "sectionFinance": "Finance",
     "sectionCommunication": "Communication",
+    "sectionHomeroom": "My Class",
     "billing": "Billing",
     "recommendations": "AI recommendations",
     "reports": "Reports",
@@ -333,6 +334,11 @@
     "attendanceQrGate": "Gate QR",
     "attendanceQrCards": "Personnel QR cards",
     "attendanceQrSettings": "Attendance settings"
+  },
+  "staffHome": {
+    "title": "No self-service menu for staff yet",
+    "body": "The staff role has no self-service pages on the web yet. Staff attendance and records are managed by the school admin. Contact your school admin if you need access to specific data.",
+    "contactAdmin": "Contact school admin"
   },
   "profile": {
     "title": "Profile",

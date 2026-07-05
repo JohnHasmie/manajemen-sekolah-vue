@@ -3,6 +3,20 @@
   Replaced by the real role dashboards as tasks #18 (admin), #32 (teacher),
   #43 (parent) land. Kept intentionally minimal: just enough to confirm
   the routing pipeline end-to-end and demo the layout primitives.
+
+  STAFF is the exception, on purpose. Unlike admin/teacher/parent, the
+  `staff` role has NO real web self-service screen today — no route
+  besides this stub (only `/staff` → this view carries `meta.role:'staff'`),
+  no self check-in view, and the whole `attendance_staff` module is
+  admin-side only (report + config + QR gate + personnel cards). See
+  the wave5a investigation notes. Rather than fake a dashboard with
+  invented numbers, staff get an HONEST empty state below.
+
+  OPEN PRODUCT DECISION: whether staff should get any first-class web
+  self-service surface (e.g. a staff self check-in / "my attendance"
+  screen mirroring the teacher one) is unresolved. Until product
+  decides, keep `STAFF_NAV` minimal (Dashboard only) and show the honest
+  state here — do NOT scaffold fake staff features.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
@@ -20,10 +34,30 @@ const roleLabel = computed(() => {
   const r = auth.activeRole as Role | null;
   return r ? t(`role.${r}`) : '';
 });
+
+// Staff have no real self-service surface — render the honest empty
+// state instead of the generic "dashboard coming soon" placeholder.
+const isStaff = computed(() => auth.activeRole === 'staff');
 </script>
 
 <template>
-  <div class="space-y-md">
+  <!-- Honest staff empty state — no fabricated dashboard/numbers. -->
+  <div v-if="isStaff" class="space-y-md">
+    <header>
+      <h1 class="text-2xl font-bold text-slate-900">
+        Selamat datang, {{ auth.user?.name }}
+      </h1>
+      <p class="text-sm text-slate-500">Masuk sebagai {{ roleLabel }}</p>
+    </header>
+
+    <Card :title="t('staffHome.title')">
+      <p class="text-sm text-slate-600 leading-relaxed">
+        {{ t('staffHome.body') }}
+      </p>
+    </Card>
+  </div>
+
+  <div v-else class="space-y-md">
     <header>
       <h1 class="text-2xl font-bold text-slate-900">
         Selamat datang, {{ auth.user?.name }}

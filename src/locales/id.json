@@ -313,6 +313,7 @@
     "sectionAcademic": "Akademik",
     "sectionFinance": "Keuangan",
     "sectionCommunication": "Komunikasi",
+    "sectionHomeroom": "Kelas Saya",
     "billing": "Tagihan",
     "recommendations": "Rekomendasi AI",
     "reports": "Laporan",
@@ -330,6 +331,11 @@
     "attendanceQrGate": "QR Gerbang",
     "attendanceQrCards": "Kartu QR Personel",
     "attendanceQrSettings": "Pengaturan Presensi"
+  },
+  "staffHome": {
+    "title": "Belum ada menu mandiri untuk staf",
+    "body": "Peran staf belum memiliki halaman layanan mandiri di web. Fitur presensi dan data staf dikelola oleh admin sekolah. Hubungi admin sekolah Anda bila memerlukan akses ke data tertentu.",
+    "contactAdmin": "Hubungi admin sekolah"
   },
   "profile": {
     "title": "Profil",
