@@ -1,13 +1,15 @@
 <!--
   StudentEditSheet.vue — port of `student_add_edit_dialog.dart`.
   Modal for adding or editing a student. Owns its own form state, calls
-  the parent's `save` event with the raw API payload.
+  the parent's `save` event with the raw API payload. Uses the shared
+  FormSheet + FormField primitives; every field, validation message and
+  payload key is unchanged.
 -->
 <script setup lang="ts">
 import { reactive, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import Modal from '@/components/ui/Modal.vue';
-import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
+import FormSheet from '@/components/ui/FormSheet.vue';
+import FormField, { type FormFieldOption } from '@/components/ui/FormField.vue';
 import type { Student, Classroom } from '@/types/entities';
 
 const { t } = useI18n();
@@ -44,6 +46,14 @@ const subtitle = computed(() =>
     : t('admin.student.addSubtitle'),
 );
 
+const classOptions = computed<FormFieldOption[]>(() =>
+  props.classes.map((c) => ({ value: c.id, label: c.name })),
+);
+const genderOptions = computed<FormFieldOption[]>(() => [
+  { value: 'L', label: t('admin.gender.male') },
+  { value: 'P', label: t('admin.gender.female') },
+]);
+
 const errors = reactive<Record<string, string>>({});
 
 function validate(): boolean {
@@ -74,127 +84,90 @@ function submit() {
 </script>
 
 <template>
-  <Modal :title="title" :subtitle="subtitle" @close="emit('close')">
-    <form class="space-y-md" @submit.prevent="submit">
-      <!-- Nama -->
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.fullName') }}</label>
+  <FormSheet
+    :title="title"
+    :subtitle="subtitle"
+    :saving="isSaving"
+    :save-label="isEdit ? t('common.saveChanges') : t('admin.student.addButton')"
+    @save="submit"
+    @cancel="emit('close')"
+  >
+    <FormField
+      v-model="form.name"
+      :label="t('common.fullName')"
+      :disabled="isSaving"
+      :error="errors.name"
+    />
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+      <FormField
+        v-model="form.student_number"
+        :label="t('admin.student.nisLabel')"
+        :disabled="isSaving"
+        :error="errors.student_number"
+      />
+      <FormField
+        v-model="form.class_id"
+        type="select"
+        :label="t('common.class')"
+        :select-placeholder="t('admin.student.selectClassPlaceholder')"
+        :options="classOptions"
+        :disabled="isSaving"
+        :error="errors.class_id"
+      />
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+      <FormField
+        v-model="form.gender"
+        type="select"
+        :label="t('common.gender')"
+        :select-placeholder="t('common.selectPlaceholder')"
+        :options="genderOptions"
+        :disabled="isSaving"
+      />
+      <FormField v-model="form.date_of_birth" :label="t('common.dateOfBirth')">
         <input
-          v-model="form.name"
-          type="text"
+          v-model="form.date_of_birth"
+          type="date"
           class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
           :disabled="isSaving"
         />
-        <p v-if="errors.name" class="text-xs text-status-danger mt-1">{{ errors.name }}</p>
-      </div>
+      </FormField>
+    </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('admin.student.nisLabel') }}</label>
-          <input
-            v-model="form.student_number"
-            type="text"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-            :disabled="isSaving"
-          />
-          <p v-if="errors.student_number" class="text-xs text-status-danger mt-1">
-            {{ errors.student_number }}
-          </p>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.class') }}</label>
-          <select
-            v-model="form.class_id"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
-            :disabled="isSaving"
-          >
-            <option value="">{{ t('admin.student.selectClassPlaceholder') }}</option>
-            <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
-          </select>
-          <p v-if="errors.class_id" class="text-xs text-status-danger mt-1">
-            {{ errors.class_id }}
-          </p>
-        </div>
-      </div>
+    <FormField
+      v-model="form.address"
+      type="textarea"
+      :label="t('common.address')"
+      :rows="2"
+      :disabled="isSaving"
+    />
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.gender') }}</label>
-          <select
-            v-model="form.gender"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
-            :disabled="isSaving"
-          >
-            <option value="">{{ t('common.selectPlaceholder') }}</option>
-            <option value="L">{{ t('admin.gender.male') }}</option>
-            <option value="P">{{ t('admin.gender.female') }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.dateOfBirth') }}</label>
-          <input
-            v-model="form.date_of_birth"
-            type="date"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-            :disabled="isSaving"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.address') }}</label>
-        <textarea
-          v-model="form.address"
-          rows="2"
-          class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none resize-none"
-          :disabled="isSaving"
-        ></textarea>
-      </div>
-
-      <div class="border-t border-slate-100 pt-md space-y-md">
-        <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">
-          {{ t('admin.student.guardianDataSection') }}
-        </p>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('admin.student.guardianName') }}</label>
-          <input
-            v-model="form.guardian_name"
-            type="text"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-            :disabled="isSaving"
-          />
-          <p v-if="errors.guardian_name" class="text-xs text-status-danger mt-1">
-            {{ errors.guardian_name }}
-          </p>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('admin.student.guardianEmail') }}</label>
-            <input
-              v-model="form.guardian_email"
-              type="email"
-              class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-              :disabled="isSaving"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.phoneNumber') }}</label>
-            <input
-              v-model="form.phone_number"
-              type="tel"
-              class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-              :disabled="isSaving"
-            />
-          </div>
-        </div>
-      </div>
-
-      <BottomSheetFooter
-        :primary-label="isEdit ? t('common.saveChanges') : t('admin.student.addButton')"
-        :primary-loading="isSaving"
-        @primary="submit"
-        @secondary="emit('close')"
+    <div class="border-t border-slate-100 pt-md space-y-md">
+      <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">
+        {{ t('admin.student.guardianDataSection') }}
+      </p>
+      <FormField
+        v-model="form.guardian_name"
+        :label="t('admin.student.guardianName')"
+        :disabled="isSaving"
+        :error="errors.guardian_name"
       />
-    </form>
-  </Modal>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+        <FormField
+          v-model="form.guardian_email"
+          type="email"
+          :label="t('admin.student.guardianEmail')"
+          :disabled="isSaving"
+        />
+        <FormField
+          v-model="form.phone_number"
+          type="tel"
+          :label="t('common.phoneNumber')"
+          :disabled="isSaving"
+        />
+      </div>
+    </div>
+  </FormSheet>
 </template>

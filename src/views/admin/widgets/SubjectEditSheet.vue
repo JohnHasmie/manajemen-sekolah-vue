@@ -6,8 +6,8 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
-import Modal from '@/components/ui/Modal.vue';
-import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
+import FormSheet from '@/components/ui/FormSheet.vue';
+import FormField from '@/components/ui/FormField.vue';
 import { SubjectService, type MasterSubject } from '@/services/subjects.service';
 import type { Subject } from '@/types/entities';
 
@@ -119,13 +119,15 @@ function submit() {
 </script>
 
 <template>
-  <Modal
+  <FormSheet
     :title="isEdit ? 'Ubah Mata Pelajaran' : 'Tambah Mata Pelajaran'"
     :subtitle="isEdit ? 'Perbarui data mata pelajaran.' : 'Tambah mata pelajaran baru di sekolah ini.'"
-    @close="emit('close')"
+    :saving="isSaving"
+    :save-label="isEdit ? 'Simpan perubahan' : 'Tambah mata pelajaran'"
+    @save="submit"
+    @cancel="emit('close')"
   >
-    <form class="space-y-md" @submit.prevent="submit">
-      <!-- Master subject autocomplete -->
+      <!-- Master subject autocomplete — bespoke type-ahead, kept inline. -->
       <div>
         <label class="block text-sm font-medium text-slate-700 mb-1">
           Mata Pelajaran Master <span class="text-slate-400 font-normal">(opsional)</span>
@@ -173,56 +175,46 @@ function submit() {
         </p>
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Nama mata pelajaran</label>
-        <input
-          v-model="form.name"
-          type="text"
-          placeholder="Contoh: Matematika"
-          class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-          :disabled="isSaving"
-        />
-        <p v-if="errors.name" class="text-xs text-status-danger mt-1">{{ errors.name }}</p>
-      </div>
+      <FormField
+        v-model="form.name"
+        label="Nama mata pelajaran"
+        placeholder="Contoh: Matematika"
+        :disabled="isSaving"
+        :error="errors.name"
+      />
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">
+        <FormField
+          v-model="form.code"
+          placeholder="MAT"
+          :disabled="isSaving"
+        >
+          <template #label>
             Kode <span class="text-slate-400 font-normal">(opsional)</span>
-          </label>
-          <input
-            v-model="form.code"
-            type="text"
-            placeholder="MAT"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-            :disabled="isSaving"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">KKM (nilai ambang)</label>
-          <input
-            v-model.number="form.kkm"
-            type="number"
-            min="0"
-            max="100"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-            :disabled="isSaving"
-          />
-          <p v-if="errors.kkm" class="text-xs text-status-danger mt-1">{{ errors.kkm }}</p>
-        </div>
+          </template>
+        </FormField>
+        <FormField
+          v-model="form.kkm"
+          type="number"
+          number-model
+          label="KKM (nilai ambang)"
+          :min="0"
+          :max="100"
+          :disabled="isSaving"
+          :error="errors.kkm"
+        />
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">
+      <FormField
+        v-model="form.description"
+        type="textarea"
+        :rows="3"
+        :disabled="isSaving"
+      >
+        <template #label>
           Deskripsi <span class="text-slate-400 font-normal">(opsional)</span>
-        </label>
-        <textarea
-          v-model="form.description"
-          rows="3"
-          class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none resize-none"
-          :disabled="isSaving"
-        ></textarea>
-      </div>
+        </template>
+      </FormField>
 
       <label class="flex items-center justify-between gap-3 bg-slate-50 rounded-xl px-3 py-2.5 cursor-pointer">
         <div>
@@ -237,13 +229,5 @@ function submit() {
           class="w-5 h-5 accent-role-admin"
         />
       </label>
-
-      <BottomSheetFooter
-        :primary-label="isEdit ? 'Simpan perubahan' : 'Tambah mata pelajaran'"
-        :primary-loading="isSaving"
-        @primary="submit"
-        @secondary="emit('close')"
-      />
-    </form>
-  </Modal>
+  </FormSheet>
 </template>

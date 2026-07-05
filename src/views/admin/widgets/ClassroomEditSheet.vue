@@ -1,10 +1,12 @@
 <!--
   ClassroomEditSheet.vue — port of `classroom_form_dialog.dart`.
+  Uses the shared FormSheet + FormField primitives; behaviour, fields,
+  validation messages and submit payload are unchanged.
 -->
 <script setup lang="ts">
 import { computed, reactive } from 'vue';
-import Modal from '@/components/ui/Modal.vue';
-import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
+import FormSheet from '@/components/ui/FormSheet.vue';
+import FormField, { type FormFieldOption } from '@/components/ui/FormField.vue';
 import { generateGradeLevels } from '@/services/classrooms.service';
 import type { Classroom, Teacher } from '@/types/entities';
 
@@ -21,7 +23,17 @@ const props = defineProps<{
 }>();
 
 /** Tingkat options matched to the active school's jenjang. */
-const gradeOptions = computed(() => generateGradeLevels(props.educationLevel));
+const gradeOptions = computed<FormFieldOption[]>(() =>
+  generateGradeLevels(props.educationLevel).map((g) => ({
+    value: g,
+    label: `Kelas ${g}`,
+  })),
+);
+
+/** Wali kelas dropdown options (optional field). */
+const teacherOptions = computed<FormFieldOption[]>(() =>
+  props.teachers.map((t) => ({ value: t.id, label: t.name })),
+);
 
 const emit = defineEmits<{
   close: [];
@@ -55,62 +67,43 @@ function submit() {
 </script>
 
 <template>
-  <Modal
+  <FormSheet
     :title="isEdit ? 'Ubah Kelas' : 'Tambah Kelas'"
     :subtitle="isEdit ? 'Perbarui data kelas.' : 'Buat kelas baru di sekolah ini.'"
-    @close="emit('close')"
+    :saving="isSaving"
+    :save-label="isEdit ? 'Simpan perubahan' : 'Tambah kelas'"
+    @save="submit"
+    @cancel="emit('close')"
   >
-    <form class="space-y-md" @submit.prevent="submit">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Nama kelas</label>
-          <input
-            v-model="form.name"
-            type="text"
-            placeholder="Contoh: 7A"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-            :disabled="isSaving"
-          />
-          <p v-if="errors.name" class="text-xs text-status-danger mt-1">{{ errors.name }}</p>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Tingkat</label>
-          <select
-            v-model="form.grade_level"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
-            :disabled="isSaving"
-          >
-            <option value="">— Pilih tingkat —</option>
-            <option v-for="g in gradeOptions" :key="g" :value="g">
-              Kelas {{ g }}
-            </option>
-          </select>
-          <p v-if="errors.grade_level" class="text-xs text-status-danger mt-1">
-            {{ errors.grade_level }}
-          </p>
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">
-          Wali Kelas <span class="text-slate-400 font-normal">(opsional)</span>
-        </label>
-        <select
-          v-model="form.homeroom_teacher_id"
-          class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
-          :disabled="isSaving"
-        >
-          <option value="">— Belum ada wali kelas —</option>
-          <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.name }}</option>
-        </select>
-      </div>
-
-      <BottomSheetFooter
-        :primary-label="isEdit ? 'Simpan perubahan' : 'Tambah kelas'"
-        :primary-loading="isSaving"
-        @primary="submit"
-        @secondary="emit('close')"
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+      <FormField
+        v-model="form.name"
+        label="Nama kelas"
+        placeholder="Contoh: 7A"
+        :disabled="isSaving"
+        :error="errors.name"
       />
-    </form>
-  </Modal>
+      <FormField
+        v-model="form.grade_level"
+        type="select"
+        label="Tingkat"
+        select-placeholder="— Pilih tingkat —"
+        :options="gradeOptions"
+        :disabled="isSaving"
+        :error="errors.grade_level"
+      />
+    </div>
+
+    <FormField
+      v-model="form.homeroom_teacher_id"
+      type="select"
+      select-placeholder="— Belum ada wali kelas —"
+      :options="teacherOptions"
+      :disabled="isSaving"
+    >
+      <template #label>
+        Wali Kelas <span class="text-slate-400 font-normal">(opsional)</span>
+      </template>
+    </FormField>
+  </FormSheet>
 </template>

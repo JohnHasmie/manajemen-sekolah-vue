@@ -11,8 +11,8 @@
 -->
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
-import Modal from '@/components/ui/Modal.vue';
-import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
+import FormSheet from '@/components/ui/FormSheet.vue';
+import FormField, { type FormFieldOption } from '@/components/ui/FormField.vue';
 import type { Teacher, Classroom, Subject } from '@/types/entities';
 
 const props = defineProps<{
@@ -74,6 +74,25 @@ const form = reactive({
 const isEdit = computed(() => Boolean(props.teacher?.id));
 const errors = reactive<Record<string, string>>({});
 
+// ── Dropdown option lists ────────────────────────────────────────────
+const roleOptions: FormFieldOption[] = [
+  { value: 'guru', label: 'Guru' },
+  { value: 'wali_kelas', label: 'Wali Kelas' },
+];
+const genderOptions: FormFieldOption[] = [
+  { value: 'L', label: 'Laki-laki' },
+  { value: 'P', label: 'Perempuan' },
+];
+const employmentOptions: FormFieldOption[] = [
+  { value: 'tetap', label: 'Tetap' },
+  { value: 'tidak_tetap', label: 'Tidak Tetap' },
+  { value: 'kontrak', label: 'Kontrak' },
+  { value: 'honorer', label: 'Honorer' },
+];
+const homeroomOptions = computed<FormFieldOption[]>(() =>
+  props.classes.map((c) => ({ value: c.id, label: c.name })),
+);
+
 /**
  * "Ganti akun terkait" — only meaningful in edit mode. When ON, the
  * submit handler sends `use_another_user: true` which triggers the
@@ -131,24 +150,22 @@ function submit() {
 </script>
 
 <template>
-  <Modal
+  <FormSheet
     :title="isEdit ? 'Ubah Guru' : 'Tambah Guru'"
     :subtitle="
       isEdit ? 'Perbarui data guru di bawah ini.' : 'Lengkapi data guru baru.'
     "
-    @close="emit('close')"
+    :saving="isSaving"
+    :save-label="isEdit ? 'Simpan perubahan' : 'Tambah guru'"
+    @save="submit"
+    @cancel="emit('close')"
   >
-    <form class="space-y-md" @submit.prevent="submit">
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Nama lengkap</label>
-        <input
-          v-model="form.name"
-          type="text"
-          class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-          :disabled="isSaving"
-        />
-        <p v-if="errors.name" class="text-xs text-status-danger mt-1">{{ errors.name }}</p>
-      </div>
+      <FormField
+        v-model="form.name"
+        label="Nama lengkap"
+        :disabled="isSaving"
+        :error="errors.name"
+      />
 
       <!-- "Ganti akun terkait" toggle — only in edit mode. -->
       <div
@@ -195,92 +212,66 @@ function submit() {
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-          <input
-            v-model="form.email"
-            type="email"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-            :disabled="isSaving"
-          />
-          <p v-if="errors.email" class="text-xs text-status-danger mt-1">{{ errors.email }}</p>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">NIP / No. Pegawai</label>
-          <input
-            v-model="form.employee_number"
-            type="text"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-            :disabled="isSaving"
-          />
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Peran</label>
-          <select
-            v-model="form.role"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
-            :disabled="isSaving"
-          >
-            <option value="guru">Guru</option>
-            <option value="wali_kelas">Wali Kelas</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">No. HP</label>
-          <input
-            v-model="form.phone_number"
-            type="tel"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-            :disabled="isSaving"
-          />
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Jenis kelamin</label>
-          <select
-            v-model="form.gender"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
-            :disabled="isSaving"
-          >
-            <option value="">— Pilih —</option>
-            <option value="L">Laki-laki</option>
-            <option value="P">Perempuan</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Status kepegawaian</label>
-          <select
-            v-model="form.employment_status"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
-            :disabled="isSaving"
-          >
-            <option value="">— Pilih —</option>
-            <option value="tetap">Tetap</option>
-            <option value="tidak_tetap">Tidak Tetap</option>
-            <option value="kontrak">Kontrak</option>
-            <option value="honorer">Honorer</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">
-          Kelas Wali <span class="text-slate-400 font-normal">(opsional)</span>
-        </label>
-        <select
-          v-model="form.homeroom_class_id"
-          class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
+        <FormField
+          v-model="form.email"
+          type="email"
+          label="Email"
           :disabled="isSaving"
-        >
-          <option value="">— Tidak menjabat wali kelas —</option>
-          <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
-        </select>
+          :error="errors.email"
+        />
+        <FormField
+          v-model="form.employee_number"
+          label="NIP / No. Pegawai"
+          :disabled="isSaving"
+        />
       </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+        <FormField
+          v-model="form.role"
+          type="select"
+          label="Peran"
+          :options="roleOptions"
+          :disabled="isSaving"
+        />
+        <FormField
+          v-model="form.phone_number"
+          type="tel"
+          label="No. HP"
+          :disabled="isSaving"
+        />
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+        <FormField
+          v-model="form.gender"
+          type="select"
+          label="Jenis kelamin"
+          select-placeholder="— Pilih —"
+          :options="genderOptions"
+          :disabled="isSaving"
+        />
+        <FormField
+          v-model="form.employment_status"
+          type="select"
+          label="Status kepegawaian"
+          select-placeholder="— Pilih —"
+          :options="employmentOptions"
+          :disabled="isSaving"
+        />
+      </div>
+
+      <FormField
+        v-model="form.homeroom_class_id"
+        type="select"
+        select-placeholder="— Tidak menjabat wali kelas —"
+        :options="homeroomOptions"
+        :disabled="isSaving"
+      >
+        <template #label>
+          Kelas Wali <span class="text-slate-400 font-normal">(opsional)</span>
+        </template>
+      </FormField>
 
       <div>
         <label class="block text-sm font-medium text-slate-700 mb-2">
@@ -304,22 +295,12 @@ function submit() {
         </div>
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Alamat</label>
-        <textarea
-          v-model="form.address"
-          rows="2"
-          class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none resize-none"
-          :disabled="isSaving"
-        ></textarea>
-      </div>
-
-      <BottomSheetFooter
-        :primary-label="isEdit ? 'Simpan perubahan' : 'Tambah guru'"
-        :primary-loading="isSaving"
-        @primary="submit"
-        @secondary="emit('close')"
+      <FormField
+        v-model="form.address"
+        type="textarea"
+        label="Alamat"
+        :rows="2"
+        :disabled="isSaving"
       />
-    </form>
-  </Modal>
+  </FormSheet>
 </template>
