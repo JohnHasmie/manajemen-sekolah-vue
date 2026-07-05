@@ -879,22 +879,15 @@ function pickSubject(id: string) {
       </template>
     </PageFilterToolbar>
 
-    <!-- TYPE TABS -->
-    <div class="flex items-center gap-1.5 flex-wrap">
-      <button
-        v-for="tab in typeTabs"
-        :key="tab.key"
-        type="button"
-        class="px-3 py-1.5 rounded-full text-2xs font-bold transition border"
-        :class="
-          typeFilter === tab.key
-            ? 'bg-brand-cobalt text-white border-brand-cobalt shadow-sm'
-            : 'bg-white text-slate-600 border-slate-200 hover:border-brand-cobalt/40'
-        "
-        @click="typeFilter = tab.key"
-      >
-        {{ tab.label }}
-      </button>
+    <!-- TYPE TABS — segmented control (consistent with the range picker
+         above; replaces the old pill-chip row for a uniform filter look). -->
+    <div class="overflow-x-auto">
+      <SegmentedControl
+        :model-value="typeFilter"
+        :options="typeTabs"
+        size="sm"
+        @update:model-value="typeFilter = $event as ActivityType | 'all'"
+      />
     </div>
 
     <!-- TIMELINE -->

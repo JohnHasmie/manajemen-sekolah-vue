@@ -30,11 +30,11 @@ import type {
   AdminActivityKpi,
   ClassActivity,
 } from '@/types/class-activity';
-import { ACTIVITY_PERIOD_LABELS } from '@/types/class-activity';
 import type { Classroom, Subject, Teacher } from '@/types/entities';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import KpiStripCards, {
   type KpiCard,
@@ -391,43 +391,29 @@ function exportCsv() {
       </template>
     </PageFilterToolbar>
 
-    <!-- TYPE TABS -->
-    <div class="flex items-center gap-1.5 flex-wrap">
-      <button
-        v-for="tab in typeTabs"
-        :key="tab.key"
-        type="button"
-        class="px-3 py-1.5 rounded-full text-2xs font-bold transition border"
-        :class="
-          typeFilter === tab.key
-            ? 'bg-role-admin text-white border-role-admin shadow-sm'
-            : 'bg-white text-slate-600 border-slate-200 hover:border-role-admin/40'
-        "
-        @click="typeFilter = tab.key"
-      >
-        {{ tab.label }}
-      </button>
+    <!-- TYPE TABS — segmented control (replaces the old pill-chip row for
+         a uniform filter look across the app). -->
+    <div class="overflow-x-auto">
+      <SegmentedControl
+        :model-value="typeFilter"
+        :options="typeTabs"
+        size="sm"
+        @update:model-value="typeFilter = $event as ActivityType | 'all'"
+      />
     </div>
 
-    <!-- PERIOD TABS -->
-    <div class="flex items-center gap-1.5 flex-wrap">
+    <!-- PERIOD TABS — labelled segmented control (the "RENTANG · 7/30/90"
+         idiom used elsewhere), replacing the old pill row. -->
+    <div class="flex items-center gap-2 flex-wrap">
       <span class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
         {{ $t('admin.classActivity.periodLabel') }}
       </span>
-      <button
-        v-for="p in periodTabs"
-        :key="p.key"
-        type="button"
-        class="px-2.5 py-1 rounded-full text-2xs font-bold transition border"
-        :class="
-          periodFilter === p.key
-            ? 'bg-slate-900 text-white border-slate-900'
-            : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'
-        "
-        @click="periodFilter = p.key"
-      >
-        {{ p.label }}
-      </button>
+      <SegmentedControl
+        :model-value="periodFilter"
+        :options="periodTabs"
+        size="sm"
+        @update:model-value="periodFilter = $event as ActivityPeriod"
+      />
     </div>
 
     <!-- LIST -->
