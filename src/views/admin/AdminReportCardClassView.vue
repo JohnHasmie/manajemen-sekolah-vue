@@ -41,6 +41,10 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Toast from '@/components/ui/Toast.vue';
+import StatusBadge from '@/components/ui/StatusBadge.vue';
+import StickyActionBar from '@/components/ui/StickyActionBar.vue';
+import BackButton from '@/components/ui/BackButton.vue';
+import type { StatusBadgeTone } from '@/types/report-card';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 
 const route = useRoute();
@@ -124,11 +128,10 @@ const kpiCards = computed<KpiCard[]>(() => [
 
 function statusPill(s: ReportCardStatus | null | undefined): {
   label: string;
-  class: string;
+  tone: StatusBadgeTone;
 } {
-  if (!s) return { label: t('admin.sekolah.report_card_class.status_not_filled'), class: 'bg-slate-100 text-slate-500' };
-  const tone = STATUS_TONES[s];
-  return { label: STATUS_LABELS[s], class: `${tone.bg} ${tone.text}` };
+  if (!s) return { label: t('admin.sekolah.report_card_class.status_not_filled'), tone: 'neutral' };
+  return { label: STATUS_LABELS[s], tone: STATUS_TONES[s].tone };
 }
 
 const hasFinalToPublish = computed(() => counts.value.final > 0);
@@ -208,14 +211,7 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
   <div class="space-y-4 pb-12">
     <!-- BACK -->
     <div class="flex items-center gap-2">
-      <button
-        type="button"
-        class="inline-flex items-center gap-1.5 text-[12px] font-bold text-slate-600 hover:text-role-admin"
-        @click="goBack"
-      >
-        <NavIcon name="chevron-left" :size="14" />
-        {{ t('admin.sekolah.report_card_class.back_to_hub') }}
-      </button>
+      <BackButton :label="t('admin.sekolah.report_card_class.back_to_hub')" @click="goBack" />
     </div>
 
     <!-- HEADER -->
@@ -274,12 +270,11 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
             <NavIcon name="download" :size="15" />
           </button>
 
-          <span
-            class="text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider flex-shrink-0"
-            :class="statusPill(s.raport_status).class"
-          >
-            {{ statusPill(s.raport_status).label }}
-          </span>
+          <StatusBadge
+            :label="statusPill(s.raport_status).label"
+            :tone="statusPill(s.raport_status).tone"
+            uppercase
+          />
           
           <NavIcon name="chevron-right" :size="16" class="text-slate-300 flex-shrink-0" />
         </div>
@@ -287,7 +282,7 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
     </AsyncView>
 
     <!-- STICKY BOTTOM BAR -->
-    <section class="sticky bottom-4 z-30 grid grid-cols-2 gap-2 px-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-lg">
+    <StickyActionBar :cols="2">
       <Button
         variant="secondary"
         block
@@ -308,7 +303,7 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
         <NavIcon name="send" :size="13" />
         {{ t('admin.sekolah.report_card_class.send_to_parents', { count: counts.final }) }}
       </Button>
-    </section>
+    </StickyActionBar>
 
     <!-- CONFIRM PUBLISH -->
     <ConfirmationDialog

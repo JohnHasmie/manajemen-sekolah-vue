@@ -15,6 +15,8 @@
  * `LearningRecommendation` directly.
  */
 
+import type { StatusBadgeTone } from './status-badge';
+
 export type RecommendationScope = 'class' | 'student';
 
 /** Operational status of an individual rec (Flutter parity). */
@@ -264,31 +266,35 @@ export const STATUS_LABELS: Record<RecStatus, string> = {
 
 export const STATUS_TONES: Record<
   RecStatus,
-  { bg: string; text: string; border: string; dot: string }
+  { bg: string; text: string; border: string; dot: string; tone: StatusBadgeTone }
 > = {
   pending: {
     bg: 'bg-amber-50',
     text: 'text-amber-800',
     border: 'border-amber-200',
     dot: 'bg-amber-500',
+    tone: 'warning',
   },
   in_progress: {
     bg: 'bg-blue-50',
     text: 'text-blue-800',
     border: 'border-blue-200',
     dot: 'bg-blue-500',
+    tone: 'info',
   },
   completed: {
     bg: 'bg-emerald-50',
     text: 'text-emerald-800',
     border: 'border-emerald-200',
     dot: 'bg-emerald-500',
+    tone: 'success',
   },
   dismissed: {
     bg: 'bg-slate-50',
     text: 'text-slate-600',
     border: 'border-slate-200',
     dot: 'bg-slate-400',
+    tone: 'neutral',
   },
 };
 

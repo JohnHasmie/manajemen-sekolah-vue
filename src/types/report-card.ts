@@ -32,33 +32,47 @@ export const STATUS_LABELS: Record<ReportCardStatus, string> = {
   distributed: 'Dibagikan',
 };
 
+/**
+ * `tone` maps each status onto the shared `StatusBadge` semantic tone,
+ * so any view can render the canonical pill with
+ * `<StatusBadge :tone="STATUS_TONES[s].tone" />` instead of hand-rolling
+ * the chrome. `bg`/`text`/`border`/`dot` remain for the few places that
+ * tint larger surfaces (cards, headers) with the status colour.
+ */
+export type { StatusBadgeTone } from './status-badge';
+import type { StatusBadgeTone } from './status-badge';
+
 export const STATUS_TONES: Record<
   ReportCardStatus,
-  { bg: string; text: string; border: string; dot: string }
+  { bg: string; text: string; border: string; dot: string; tone: StatusBadgeTone }
 > = {
   draft: {
     bg: 'bg-slate-50',
     text: 'text-slate-700',
     border: 'border-slate-200',
     dot: 'bg-slate-400',
+    tone: 'neutral',
   },
   final: {
     bg: 'bg-amber-50',
     text: 'text-amber-800',
     border: 'border-amber-200',
     dot: 'bg-amber-500',
+    tone: 'warning',
   },
   published: {
     bg: 'bg-emerald-50',
     text: 'text-emerald-800',
     border: 'border-emerald-200',
     dot: 'bg-emerald-500',
+    tone: 'success',
   },
   distributed: {
     bg: 'bg-brand-cobalt/10',
     text: 'text-brand-cobalt',
     border: 'border-brand-cobalt/30',
     dot: 'bg-brand-cobalt',
+    tone: 'info',
   },
 };
 

@@ -23,6 +23,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
+import BackButton from '@/components/ui/BackButton.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -225,14 +226,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
   <div class="space-y-4 pb-12">
     <!-- BACK -->
     <div class="flex items-center gap-2">
-      <button
-        type="button"
-        class="inline-flex items-center gap-1.5 text-[12px] font-bold text-slate-600 hover:text-role-admin"
-        @click="goBack"
-      >
-        <NavIcon name="chevron-left" :size="14" />
-        {{ t('admin.sekolah.report_card_detail.back_to_list') }}
-      </button>
+      <BackButton :label="t('admin.sekolah.report_card_detail.back_to_list')" @click="goBack" />
     </div>
 
     <AsyncView :state="state" :empty-title="t('admin.sekolah.report_card_detail.empty_title')" @retry="load">

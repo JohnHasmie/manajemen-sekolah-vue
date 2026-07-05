@@ -9,6 +9,8 @@
  * endpoint exposes Draft + SentBack so we model both.
  */
 
+import type { StatusBadgeTone } from './status-badge';
+
 // ── Status ──
 
 export type LessonPlanStatus =
@@ -28,37 +30,42 @@ export const STATUS_LABELS: Record<LessonPlanStatus, string> = {
 
 export const STATUS_TONES: Record<
   LessonPlanStatus,
-  { bg: string; text: string; border: string; dot: string }
+  { bg: string; text: string; border: string; dot: string; tone: StatusBadgeTone }
 > = {
   Draft: {
     bg: 'bg-slate-50',
     text: 'text-slate-700',
     border: 'border-slate-200',
     dot: 'bg-slate-400',
+    tone: 'neutral',
   },
   Pending: {
     bg: 'bg-amber-50',
     text: 'text-amber-800',
     border: 'border-amber-200',
     dot: 'bg-amber-500',
+    tone: 'warning',
   },
   Approved: {
     bg: 'bg-emerald-50',
     text: 'text-emerald-800',
     border: 'border-emerald-200',
     dot: 'bg-emerald-500',
+    tone: 'success',
   },
   Rejected: {
     bg: 'bg-red-50',
     text: 'text-red-800',
     border: 'border-red-200',
     dot: 'bg-red-500',
+    tone: 'danger',
   },
   SentBack: {
     bg: 'bg-violet-50',
     text: 'text-violet-800',
     border: 'border-violet-200',
     dot: 'bg-violet-500',
+    tone: 'info',
   },
 };
 
