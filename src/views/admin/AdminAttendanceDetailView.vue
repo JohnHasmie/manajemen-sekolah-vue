@@ -29,7 +29,7 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
-import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
+import EntityRow from '@/components/feature/EntityRow.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Toast from '@/components/ui/Toast.vue';
@@ -382,25 +382,25 @@ const headerMeta = computed(() => {
       @retry="load"
     >
       <template #default>
-        <ul class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-          <li
+        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+          <!--
+            editMode gates interactivity: only in edit mode is the row a
+            tappable button with hover chrome. Out of edit mode we omit the
+            @click entirely so EntityRow renders a plain, hover-less <div>
+            — matching the original conditional `hover:bg-slate-50` class.
+          -->
+          <EntityRow
             v-for="(r, idx) in rows"
             :key="r.student_id"
-            class="px-4 py-3 flex items-center gap-3 transition-colors"
-            :class="[
-              idx > 0 ? 'border-t border-slate-100' : '',
-              editMode ? 'hover:bg-slate-50 cursor-pointer' : '',
-              dirty.has(r.student_id) ? 'bg-role-admin/5' : '',
-            ]"
-            @click="onRowClick(r)"
+            :avatar="{
+              name: r.student_name || '?',
+              color: r.alert_tone === 'danger' ? '#DC2626' : r.alert_tone === 'warning' ? '#F59E0B' : '#143068',
+            }"
+            :divided="idx > 0"
+            :highlighted="dirty.has(r.student_id) ? 'bg-role-admin/5' : false"
+            v-on="editMode ? { click: () => onRowClick(r) } : {}"
           >
-            <InitialsAvatar
-              :name="r.student_name || '?'"
-              :size="40"
-              :color="r.alert_tone === 'danger' ? '#DC2626' : r.alert_tone === 'warning' ? '#F59E0B' : '#143068'"
-              :border-radius="12"
-            />
-            <div class="flex-1 min-w-0">
+            <template #body>
               <p class="text-[13px] font-bold text-slate-900 truncate">{{ r.student_name }}</p>
               <p class="text-3xs text-slate-500 truncate">
                 <template v-if="r.student_number">{{ t('admin.sekolah.attendance_detail.nis_label', { nis: r.student_number }) }}</template>
@@ -413,21 +413,23 @@ const headerMeta = computed(() => {
               <p v-if="r.notes" class="text-3xs text-slate-500 mt-0.5 italic">
                 "{{ r.notes }}"
               </p>
-            </div>
-            <span
-              class="text-3xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full flex-shrink-0"
-              :class="statusToneClass(r.status)"
-            >
-              {{ statusLabel(r.status) }}
-            </span>
-            <NavIcon
-              v-if="editMode"
-              name="edit"
-              :size="13"
-              class="text-slate-300"
-            />
-          </li>
-        </ul>
+            </template>
+            <template #trailing>
+              <span
+                class="text-3xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full flex-shrink-0"
+                :class="statusToneClass(r.status)"
+              >
+                {{ statusLabel(r.status) }}
+              </span>
+              <NavIcon
+                v-if="editMode"
+                name="edit"
+                :size="13"
+                class="text-slate-300 flex-shrink-0"
+              />
+            </template>
+          </EntityRow>
+        </div>
 
         <!-- Footer actions -->
         <section class="grid grid-cols-2 gap-2">

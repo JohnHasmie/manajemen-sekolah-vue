@@ -39,6 +39,7 @@ import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import Toast from '@/components/ui/Toast.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import EntityRow from '@/components/feature/EntityRow.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
 import { formatDateShort } from '@/lib/format';
@@ -531,19 +532,21 @@ async function processExport() {
     >
       <template #default>
         <!-- LIST view -->
-        <ul v-if="viewMode === 'list'" class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-          <li
+        <div v-if="viewMode === 'list'" class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+          <EntityRow
             v-for="(r, idx) in rows"
             :key="r.id"
-            class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors cursor-pointer"
-            :class="idx > 0 ? 'border-t border-slate-100' : ''"
+            :divided="idx > 0"
+            chevron
             @click="openDetail(r)"
           >
-            <div class="w-12 text-center flex-shrink-0">
-              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">JP</p>
-              <p class="text-[14px] font-black text-role-admin">{{ r.hour_number ?? r.jam_ke ?? '?' }}</p>
-            </div>
-            <div class="flex-1 min-w-0">
+            <template #leading>
+              <div class="w-12 text-center flex-shrink-0">
+                <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">JP</p>
+                <p class="text-[14px] font-black text-role-admin">{{ r.hour_number ?? r.jam_ke ?? '?' }}</p>
+              </div>
+            </template>
+            <template #body>
               <p class="text-[13px] font-bold text-slate-900 truncate">
                 {{ r.subject_name }}
                 <span class="text-slate-500 font-normal">· {{ r.class_name }}</span>
@@ -553,25 +556,26 @@ async function processExport() {
                 <span v-if="r.teacher_name"> · {{ r.teacher_name }}</span>
                 <span v-if="r.lesson_hour_name"> · {{ r.lesson_hour_name }}</span>
               </p>
-            </div>
-            <div class="text-right flex-shrink-0">
-              <p
-                class="text-[14px] font-black tabular-nums"
-                :class="{
-                  'text-emerald-700': (r.percentage ?? 0) >= 80,
-                  'text-amber-700': (r.percentage ?? 0) >= 60 && (r.percentage ?? 0) < 80,
-                  'text-red-700': (r.percentage ?? 0) < 60,
-                }"
-              >
-                {{ formatPct(r.percentage) }}
-              </p>
-              <p class="text-3xs text-slate-500 tabular-nums">
-                {{ r.present }}/{{ r.total_students }}
-              </p>
-            </div>
-            <NavIcon name="chevron-right" :size="14" class="text-slate-300 ml-1" />
-          </li>
-        </ul>
+            </template>
+            <template #trailing>
+              <div class="text-right flex-shrink-0">
+                <p
+                  class="text-[14px] font-black tabular-nums"
+                  :class="{
+                    'text-emerald-700': (r.percentage ?? 0) >= 80,
+                    'text-amber-700': (r.percentage ?? 0) >= 60 && (r.percentage ?? 0) < 80,
+                    'text-red-700': (r.percentage ?? 0) < 60,
+                  }"
+                >
+                  {{ formatPct(r.percentage) }}
+                </p>
+                <p class="text-3xs text-slate-500 tabular-nums">
+                  {{ r.present }}/{{ r.total_students }}
+                </p>
+              </div>
+            </template>
+          </EntityRow>
+        </div>
 
         <!-- TABLE view -->
         <section

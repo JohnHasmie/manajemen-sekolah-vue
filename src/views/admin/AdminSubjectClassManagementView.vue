@@ -21,6 +21,7 @@ import KpiStripCards, { type KpiCard } from '@/components/feature/KpiStripCards.
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import EntityRow from '@/components/feature/EntityRow.vue';
 import Toast from '@/components/ui/Toast.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
@@ -279,40 +280,41 @@ const bulkAttachSubtitle = computed(() =>
           </div>
         </div>
 
-        <ul class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-          <li
+        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+          <EntityRow
             v-for="(c, idx) in attached"
             :key="c.id"
-            class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors cursor-pointer"
-            :class="[
-              idx > 0 ? 'border-t border-slate-100' : '',
-              selectedIds.has(c.id) ? 'bg-role-admin/5' : '',
-            ]"
+            :divided="idx > 0"
+            :highlighted="selectedIds.has(c.id) ? 'bg-role-admin/5' : false"
             @click="toggleSelect(c.id)"
           >
-            <input
-              type="checkbox"
-              class="w-4 h-4 accent-role-admin flex-shrink-0"
-              :checked="selectedIds.has(c.id)"
-              @click.stop="toggleSelect(c.id)"
-            />
-            <div class="flex-1 min-w-0">
+            <template #leading>
+              <input
+                type="checkbox"
+                class="w-4 h-4 accent-role-admin flex-shrink-0"
+                :checked="selectedIds.has(c.id)"
+                @click.stop="toggleSelect(c.id)"
+              />
+            </template>
+            <template #body>
               <p class="text-[13px] font-bold text-slate-900 truncate">{{ c.name }}</p>
               <p class="text-2xs text-slate-500 truncate">
                 <span v-if="c.grade_level">{{ t('admin.sekolah.subject_class.tingkat_label', { level: c.grade_level }) }} · </span>
                 <span>{{ t('admin.sekolah.subject_class.student_count', { count: c.student_count ?? 0 }) }}</span>
                 <span v-if="c.homeroom_teacher_name"> · {{ t('admin.sekolah.subject_class.homeroom_label', { name: c.homeroom_teacher_name }) }}</span>
               </p>
-            </div>
-            <button
-              type="button"
-              class="text-2xs font-bold text-status-danger hover:underline px-2 py-1"
-              @click.stop="detachConfirmId = c.id"
-            >
-              {{ t('admin.sekolah.subject_class.detach') }}
-            </button>
-          </li>
-        </ul>
+            </template>
+            <template #trailing>
+              <button
+                type="button"
+                class="text-2xs font-bold text-status-danger hover:underline px-2 py-1"
+                @click.stop="detachConfirmId = c.id"
+              >
+                {{ t('admin.sekolah.subject_class.detach') }}
+              </button>
+            </template>
+          </EntityRow>
+        </div>
       </template>
     </AsyncView>
 

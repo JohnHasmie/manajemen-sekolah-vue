@@ -36,7 +36,7 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
-import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
+import EntityRow from '@/components/feature/EntityRow.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
@@ -235,20 +235,18 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
       @retry="loadRoster"
     >
       <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-        <div
+        <EntityRow
           v-for="(s, idx) in students"
           :key="s.student_class_id"
-          class="px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors"
-          :class="idx > 0 ? 'border-t border-slate-100' : ''"
+          :avatar="{
+            name: s.student_name || '?',
+            color: s.raport_status ? '#143068' : '#DC2626',
+          }"
+          :divided="idx > 0"
+          chevron
           @click="viewStudentDetail(s)"
         >
-          <InitialsAvatar
-            :name="s.student_name || '?'"
-            :size="40"
-            :border-radius="12"
-            :color="s.raport_status ? '#143068' : '#DC2626'"
-          />
-          <div class="flex-1 min-w-0">
+          <template #body>
             <p class="text-[13px] font-bold text-slate-900 truncate">
               {{ s.student_name }}
             </p>
@@ -259,25 +257,25 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
               <template v-else>{{ t('admin.sekolah.report_card_class.no_nis') }}</template>
               {{ t('admin.sekolah.report_card_class.row_number', { index: idx + 1 }) }}
             </p>
-          </div>
-          
-          <button
-            v-if="s.raport_status && s.raport_status !== 'draft'"
-            type="button"
-            class="w-9 h-9 rounded-full bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-600 flex-shrink-0 transition-colors"
-            @click.stop="downloadStudentPdf(s)"
-          >
-            <NavIcon name="download" :size="15" />
-          </button>
+          </template>
 
-          <StatusBadge
-            :label="statusPill(s.raport_status).label"
-            :tone="statusPill(s.raport_status).tone"
-            uppercase
-          />
-          
-          <NavIcon name="chevron-right" :size="16" class="text-slate-300 flex-shrink-0" />
-        </div>
+          <template #trailing>
+            <button
+              v-if="s.raport_status && s.raport_status !== 'draft'"
+              type="button"
+              class="w-9 h-9 rounded-full bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-600 flex-shrink-0 transition-colors"
+              @click.stop="downloadStudentPdf(s)"
+            >
+              <NavIcon name="download" :size="15" />
+            </button>
+
+            <StatusBadge
+              :label="statusPill(s.raport_status).label"
+              :tone="statusPill(s.raport_status).tone"
+              uppercase
+            />
+          </template>
+        </EntityRow>
       </div>
     </AsyncView>
 

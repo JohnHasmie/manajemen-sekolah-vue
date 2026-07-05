@@ -36,7 +36,7 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
-import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
+import EntityRow from '@/components/feature/EntityRow.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Toast from '@/components/ui/Toast.vue';
@@ -310,21 +310,18 @@ function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
       @retry="loadRoster"
     >
       <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-        <button
+        <EntityRow
           v-for="(s, idx) in visibleStudents"
           :key="s.student_class_id"
-          type="button"
-          class="w-full text-left px-4 py-3 flex items-center gap-3 transition hover:bg-slate-50"
-          :class="idx > 0 ? 'border-t border-slate-100' : ''"
+          :avatar="{
+            name: s.student_name || '?',
+            color: s.raport_status ? '#1B6FB8' : '#DC2626',
+          }"
+          :divided="idx > 0"
+          chevron
           @click="openStudent(s)"
         >
-          <InitialsAvatar
-            :name="s.student_name || '?'"
-            :size="40"
-            :border-radius="12"
-            :color="s.raport_status ? '#1B6FB8' : '#DC2626'"
-          />
-          <div class="flex-1 min-w-0">
+          <template #body>
             <p class="text-[13px] font-bold text-slate-900 truncate">
               {{ s.student_name }}
             </p>
@@ -335,19 +332,17 @@ function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
               <template v-else>{{ t('tutor.sekolah.reportCardClass.noNis') }}</template>
               · {{ t('tutor.sekolah.reportCardClass.rowNumber', { n: idx + 1 }) }}
             </p>
-          </div>
-          <span
-            class="text-3xs font-bold px-2 py-1 rounded-full uppercase tracking-wider flex-shrink-0"
-            :class="statusPillFor(s).class"
-          >
-            {{ statusPillFor(s).label }}
-          </span>
-          <NavIcon
-            name="chevron-right"
-            :size="13"
-            class="text-slate-400 flex-shrink-0"
-          />
-        </button>
+          </template>
+
+          <template #trailing>
+            <span
+              class="text-3xs font-bold px-2 py-1 rounded-full uppercase tracking-wider flex-shrink-0"
+              :class="statusPillFor(s).class"
+            >
+              {{ statusPillFor(s).label }}
+            </span>
+          </template>
+        </EntityRow>
       </div>
     </AsyncView>
 
