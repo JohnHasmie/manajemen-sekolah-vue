@@ -46,6 +46,12 @@ const Endpoints = {
   config: '/teacher-attendance/config',
   checkIn: '/teacher-attendance/check-in',
   checkOut: '/teacher-attendance/check-out',
+  // Caller-aware GATE-QR self check-in (backend QrCheckInController@store).
+  // The SAME route the mobile app posts to — resolves teacher/staff/student
+  // server-side, gated by `attendance.self.checkin` + `module:attendance_gate`.
+  // Sits on the shared `api` instance whose baseURL already ends in `/api`,
+  // exactly like every other endpoint here.
+  checkInQr: '/attendance/check-in/qr',
   history: '/teacher-attendance/history',
   historySummary: '/teacher-attendance/history/summary',
   settings: '/teacher-attendance/settings',
@@ -317,6 +323,39 @@ export const TeacherAttendanceService = {
       return (res.data?.data ?? res.data) as TeacherAttendanceRecord;
     } catch (e) {
       throw new Error(humanError(e, 'Gagal melakukan presensi pulang.'));
+    }
+  },
+
+  /**
+   * POST /attendance/check-in/qr — self check-in via the school's rotating
+   * GATE QR. Body is a SHORT JSON `{ token, latitude?, longitude? }` (NOT
+   * multipart — there's no photo). The route is caller-aware: the server
+   * resolves the authenticated user as teacher OR staff and writes the
+   * correct personnel row, returning the SAME TeacherAttendanceRecord shape
+   * the selfie check-in returns — so we reuse the identical `data` unwrap +
+   * humanError mapping. present/late + geofence are computed server-side.
+   *
+   * GPS is only attached when the caller passes it (the view supplies it
+   * when the school sets `geofence_required_for_qr`); the server enforces
+   * the geofence rule regardless.
+   */
+  async checkInWithQr(payload: {
+    token: string;
+    latitude?: number | null;
+    longitude?: number | null;
+  }): Promise<TeacherAttendanceRecord> {
+    try {
+      const body: Record<string, unknown> = { token: payload.token };
+      if (payload.latitude !== undefined && payload.latitude !== null) {
+        body.latitude = payload.latitude;
+      }
+      if (payload.longitude !== undefined && payload.longitude !== null) {
+        body.longitude = payload.longitude;
+      }
+      const res = await api.post(Endpoints.checkInQr, body);
+      return (res.data?.data ?? res.data) as TeacherAttendanceRecord;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal melakukan presensi via QR.'));
     }
   },
 

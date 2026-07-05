@@ -41,6 +41,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import { useWebcamCapture } from '@/composables/useWebcamCapture';
+import { useQrScanner } from '@/composables/useQrScanner';
 import { useGeolocation } from '@/composables/useGeolocation';
 import { useToast } from '@/composables/useToast';
 import type {
@@ -48,10 +49,12 @@ import type {
   TeacherAttendanceRecord,
 } from '@/types/teacher-attendance';
 import { teacherAttendanceStatusLabel } from '@/types/teacher-attendance';
+import type { CheckInMethod } from '@/types/attendance-qr';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Spinner from '@/components/ui/Spinner.vue';
+import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -75,8 +78,62 @@ const historyRouteName = computed(() =>
     : 'teacher.my-attendance.history',
 );
 const cam = useWebcamCapture();
+const qr = useQrScanner();
 const geo = useGeolocation();
 const { t } = useI18n();
+
+// ── Check-in method (SELFIE vs QR_GATE) ─────────────────────────
+// Mirrors the mobile SegmentedButton: the school's admin picks which
+// methods are allowed (`settings.allowed_methods`); the teacher toggles
+// between them here. SELFIE is the existing selfie+GPS flow; QR_GATE
+// renders a live webcam scanner that decodes the school's rotating gate
+// QR and posts the token. QR_CARD is OUT OF SCOPE for this self-service
+// screen (it's an admin-scans-the-card flow), so it's never offered as a
+// selectable segment here.
+const method = ref<CheckInMethod>('SELFIE');
+
+/** The methods the school allows, defaulting to SELFIE-only. */
+const allowedMethods = computed<CheckInMethod[]>(
+  () => settings.value?.allowed_methods ?? ['SELFIE'],
+);
+const qrGateAllowed = computed(() => allowedMethods.value.includes('QR_GATE'));
+
+/**
+ * Show the Selfie/QR toggle only when the school allows BOTH selfie AND
+ * gate-QR. A SELFIE-only school (the default, and every existing school)
+ * sees exactly today's UI — zero regression. QR_CARD alone never triggers
+ * the toggle since it isn't a self-service method.
+ */
+const showMethodToggle = computed(
+  () => allowedMethods.value.includes('SELFIE') && qrGateAllowed.value,
+);
+
+/** Segments for the toggle — Selfie + Scan QR Gerbang (i18n). */
+const methodSegments = computed(() => [
+  { key: 'SELFIE', label: t('tutor.sekolah.presensiTeacher.methodSelfie') },
+  { key: 'QR_GATE', label: t('tutor.sekolah.presensiTeacher.methodQrGate') },
+]);
+
+/** True while the QR mode is the active method AND the form is shown. */
+const isQrMode = computed(
+  () => method.value === 'QR_GATE' && showCaptureForm.value,
+);
+
+/** True while a QR-token POST is in flight — guards against double-submit. */
+const qrSubmitting = ref(false);
+
+/**
+ * SegmentedControl emits a plain string; narrow it back to an allowed
+ * CheckInMethod before assigning. Ignores anything not currently allowed.
+ */
+function onMethodChange(key: string) {
+  if (
+    (key === 'SELFIE' || key === 'QR_GATE') &&
+    allowedMethods.value.includes(key)
+  ) {
+    method.value = key;
+  }
+}
 
 // ── Bootstrap state ─────────────────────────────────────────────
 const config = ref<TeacherAttendanceConfig | null>(null);
@@ -86,6 +143,8 @@ const loadError = ref<string | null>(null);
 // ── Capture state ───────────────────────────────────────────────
 type Mode = 'check-in' | 'check-out';
 const videoRef = ref<HTMLVideoElement | null>(null);
+/** Separate <video> element for the QR scanner (rear camera, no mirror). */
+const qrVideoRef = ref<HTMLVideoElement | null>(null);
 const notes = ref('');
 const submitting = ref(false);
 /** True once the parallel auto camera+location kick-off has run. */
@@ -200,6 +259,24 @@ const locationGuidance = computed(() => {
   }
 });
 
+/** Contextual guidance shown when the QR scanner can't start. */
+const qrGuidance = computed(() => {
+  switch (qr.errorKind.value) {
+    case 'denied':
+      return t('tutor.sekolah.presensiTeacher.camGuidanceDenied');
+    case 'insecure':
+      return t('tutor.sekolah.presensiTeacher.camGuidanceInsecure');
+    case 'not-found':
+      return t('tutor.sekolah.presensiTeacher.qrGuidanceNoCamera');
+    case 'in-use':
+      return t('tutor.sekolah.presensiTeacher.camGuidanceInUse');
+    case 'unsupported':
+      return t('tutor.sekolah.presensiTeacher.qrGuidanceUnsupported');
+    default:
+      return t('tutor.sekolah.presensiTeacher.qrGuidanceDefault');
+  }
+});
+
 // ── Validation: can we submit? ──────────────────────────────────
 /**
  * Photo is satisfied either by a live camera ready to snapshot OR by a
@@ -241,6 +318,9 @@ const photoUrl = ref<string | null>(null);
 async function autoStartCapture() {
   if (autoStarted.value) return;
   if (!showCaptureForm.value) return;
+  // In QR mode the selfie camera must stay off — the scanner owns the
+  // camera. The mode watcher below drives the QR scanner separately.
+  if (method.value === 'QR_GATE') return;
   autoStarted.value = true;
 
   const jobs: Promise<unknown>[] = [];
@@ -257,6 +337,91 @@ async function autoStartCapture() {
   await Promise.allSettled(jobs);
 }
 
+// ── QR scanner lifecycle ────────────────────────────────────────
+/**
+ * Start the live QR scanner: releases the selfie camera first (they can't
+ * share the device), waits for the <video> to mount, then begins scanning.
+ * On a decoded token it submits via [onQrToken]. Best-effort — degrades
+ * gracefully via qr.errorKind/qr.error.
+ */
+async function startQrScanner() {
+  cam.stop(); // free the selfie camera so the scanner can grab the device
+  await nextTick();
+  if (qrVideoRef.value) {
+    await qr.start(qrVideoRef.value, onQrToken);
+  }
+}
+
+/**
+ * Handle a decoded gate-QR token. Same submit pipeline as the mobile app:
+ * attach GPS only when the school requires it on QR (`geofence_required_for_qr`
+ * → surfaced here via location_required for the self flow), POST, show the
+ * verdict like the selfie flow, then reload. Guarded against double-submit
+ * while a POST is in flight.
+ */
+async function onQrToken(token: string) {
+  if (qrSubmitting.value || submitting.value) return;
+  qrSubmitting.value = true;
+  try {
+    // Attach GPS when the school requires location; the server enforces the
+    // geofence either way. locate() is best-effort — if it fails we still
+    // POST and let the server decide (it may reject with a clear message).
+    let lat: number | null = null;
+    let lng: number | null = null;
+    if (locationRequired.value) {
+      await geo.locate();
+      lat = geo.position.value?.latitude ?? null;
+      lng = geo.position.value?.longitude ?? null;
+    }
+    const result = await TeacherAttendanceService.checkInWithQr({
+      token,
+      latitude: lat,
+      longitude: lng,
+    });
+    toast.success(
+      result.status === 'late'
+        ? t('tutor.sekolah.presensiTeacher.checkInSuccessLate')
+        : t('tutor.sekolah.presensiTeacher.checkInSuccess'),
+    );
+    resetForm();
+    await reload();
+  } catch (e) {
+    toast.error((e as Error).message);
+    // Keep scanning — re-arm the one-shot guard after a brief cool-down so
+    // the same frame doesn't instantly re-fire.
+    setTimeout(() => qr.resume(), 1500);
+  } finally {
+    qrSubmitting.value = false;
+  }
+}
+
+/**
+ * Drive the camera/scanner as the active method flips. Entering QR mode
+ * tears down the selfie camera and starts the scanner; leaving it stops
+ * the scanner and re-arms the selfie auto-capture.
+ */
+watch(isQrMode, (inQr) => {
+  if (inQr) {
+    void startQrScanner();
+  } else {
+    qr.stop();
+    // Re-arm the selfie flow for the (now-active) selfie method.
+    autoStarted.value = false;
+    void autoStartCapture();
+  }
+});
+
+/**
+ * When the school removes a method the teacher had selected (admin flips
+ * config, or QR_GATE was picked but is no longer allowed), fall back to the
+ * first allowed method so the form never renders an unusable mode.
+ */
+watch(allowedMethods, (methods) => {
+  if (methods.length > 0 && !methods.includes(method.value)) {
+    method.value = methods[0];
+  }
+});
+
 // ── Bootstrap ───────────────────────────────────────────────────
 async function reload() {
   isLoading.value = true;
@@ -264,7 +429,20 @@ async function reload() {
   autoStarted.value = false;
   try {
     config.value = await TeacherAttendanceService.config();
-    await autoStartCapture();
+    // Preselect the first allowed method (mirrors mobile). If the current
+    // selection is no longer allowed after a config change, fall back to
+    // the first allowed one so the form is always usable.
+    const allowed = config.value.settings.allowed_methods ?? ['SELFIE'];
+    if (allowed.length > 0 && !allowed.includes(method.value)) {
+      method.value = allowed[0];
+    }
+    // Only auto-start the selfie camera when SELFIE is the active method;
+    // the isQrMode watcher owns the QR scanner otherwise.
+    if (method.value !== 'QR_GATE') {
+      await autoStartCapture();
+    } else {
+      await startQrScanner();
+    }
   } catch (e) {
     loadError.value = (e as Error).message;
   } finally {
@@ -286,6 +464,7 @@ onMounted(() => {
 onUnmounted(() => {
   if (tickTimer) clearInterval(tickTimer);
   cam.stop();
+  qr.stop();
   if (photoUrl.value) URL.revokeObjectURL(photoUrl.value);
 });
 
@@ -367,6 +546,7 @@ function resetForm() {
   notes.value = '';
   geo.clear();
   cam.stop();
+  qr.stop();
 }
 
 function gotoHistory() {
@@ -594,7 +774,24 @@ function gotoHistory() {
           </span>
         </div>
 
-        <div class="p-4 sm:p-5 space-y-md">
+        <!-- ── Method toggle (Selfie / Scan QR Gerbang) ──────────── -->
+        <!-- Only shown when the school allows BOTH selfie AND gate-QR. A
+             SELFIE-only school never renders this and sees the exact
+             original UI (zero regression). -->
+        <div
+          v-if="showMethodToggle"
+          class="px-4 sm:px-5 pt-3 pb-1 flex items-center justify-center"
+        >
+          <SegmentedControl
+            :model-value="method"
+            :options="methodSegments"
+            size="md"
+            @update:model-value="onMethodChange"
+          />
+        </div>
+
+        <!-- ── SELFIE mode body (existing flow, unchanged) ───────── -->
+        <div v-if="method !== 'QR_GATE'" class="p-4 sm:p-5 space-y-md">
           <!-- ── Camera capture ── -->
           <div v-if="cameraRequired">
             <div class="flex items-center justify-between mb-2">
@@ -912,6 +1109,147 @@ function gotoHistory() {
           <p v-else class="text-[10.5px] text-slate-400 text-center -mt-1">
             {{ t('tutor.sekolah.presensiTeacher.autoPhotoHint') }}
           </p>
+        </div>
+
+        <!-- ── QR_GATE mode body (live scanner) ──────────────────── -->
+        <!-- Mirrors the mobile scanner: point the REAR camera at the
+             school's gate-QR poster; a successful decode auto-submits the
+             token. No manual submit button — the scan IS the action. -->
+        <div v-else class="p-4 sm:p-5 space-y-md">
+          <div>
+            <p
+              class="text-2xs font-bold text-slate-600 mb-2 flex items-center gap-1.5"
+            >
+              <NavIcon name="camera" :size="13" class="text-brand-cobalt" />
+              {{ t('tutor.sekolah.presensiTeacher.qrScanTitle') }}
+            </p>
+
+            <!-- Scanner viewport -->
+            <div
+              class="relative rounded-xl overflow-hidden bg-slate-900 aspect-video grid place-items-center"
+            >
+              <video
+                ref="qrVideoRef"
+                class="w-full h-full object-cover"
+                playsinline
+                muted
+              ></video>
+
+              <!-- Framing reticle (only while live) -->
+              <div
+                v-if="qr.isActive.value"
+                class="absolute inset-0 grid place-items-center pointer-events-none"
+              >
+                <div
+                  class="w-2/5 aspect-square rounded-2xl border-2 border-white/80"
+                ></div>
+              </div>
+
+              <!-- Starting overlay -->
+              <div
+                v-if="qr.isStarting.value"
+                class="absolute inset-0 grid place-items-center bg-slate-900/40"
+              >
+                <div class="text-center">
+                  <Spinner size="md" />
+                  <p class="text-2xs text-white/80 font-medium mt-2">
+                    {{ t('tutor.sekolah.presensiTeacher.qrPreparing') }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Scanner not live (denied/unsupported/etc.) -->
+              <div
+                v-else-if="!qr.isActive.value"
+                class="absolute inset-0 grid place-items-center text-center px-4 bg-slate-900/30"
+              >
+                <div>
+                  <NavIcon
+                    :name="
+                      qr.errorKind.value === 'insecure' ? 'shield' : 'camera'
+                    "
+                    :size="28"
+                    class="text-white/70 mx-auto mb-2"
+                  />
+                  <p class="text-[12px] text-white/90 font-bold">
+                    {{ qr.error.value ?? t('tutor.sekolah.presensiTeacher.qrNotActive') }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Submitting overlay (a token was decoded, POST in flight) -->
+              <div
+                v-if="qrSubmitting"
+                class="absolute inset-0 grid place-items-center bg-slate-900/60"
+              >
+                <div class="text-center">
+                  <Spinner size="md" />
+                  <p class="text-2xs text-white/90 font-bold mt-2">
+                    {{ t('tutor.sekolah.presensiTeacher.qrSubmitting') }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Live scanning hint -->
+              <div
+                v-if="qr.isActive.value && !qrSubmitting"
+                class="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 text-white text-3xs font-bold"
+              >
+                {{ t('tutor.sekolah.presensiTeacher.qrScanning') }}
+              </div>
+            </div>
+
+            <!-- Tap-to-enable when the scanner failed to auto-start -->
+            <Button
+              v-if="!qr.isActive.value && !qr.isStarting.value"
+              variant="primary"
+              size="sm"
+              block
+              class="mt-2"
+              :disabled="
+                qr.errorKind.value === 'insecure' ||
+                qr.errorKind.value === 'unsupported' ||
+                qr.errorKind.value === 'not-found'
+              "
+              @click="startQrScanner"
+            >
+              <NavIcon name="camera" :size="13" />{{ t('tutor.sekolah.presensiTeacher.qrEnableCamera') }}
+            </Button>
+
+            <!-- Targeted guidance on failure -->
+            <div
+              v-if="qr.error.value && !qr.isActive.value"
+              class="rounded-xl border p-3 mt-2"
+              :class="
+                qr.errorKind.value === 'insecure'
+                  ? 'border-amber-200 bg-amber-50'
+                  : 'border-red-200 bg-red-50'
+              "
+            >
+              <p
+                class="text-2xs font-bold flex items-start gap-1.5"
+                :class="
+                  qr.errorKind.value === 'insecure'
+                    ? 'text-amber-800'
+                    : 'text-red-700'
+                "
+              >
+                <NavIcon
+                  :name="
+                    qr.errorKind.value === 'insecure' ? 'shield' : 'alert-circle'
+                  "
+                  :size="13"
+                  class="flex-shrink-0 mt-px"
+                />
+                <span>{{ qrGuidance }}</span>
+              </p>
+            </div>
+
+            <!-- Always-visible instruction line -->
+            <p class="text-[10.5px] text-slate-400 text-center mt-2">
+              {{ t('tutor.sekolah.presensiTeacher.qrHint') }}
+            </p>
+          </div>
         </div>
       </section>
 
