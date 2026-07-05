@@ -34,6 +34,7 @@ import type {
 import WizardChrome from '@/components/subscribe/WizardChrome.vue';
 import BundleStrip from '@/components/subscribe/BundleStrip.vue';
 import { isModuleHiddenFor } from '@/components/subscribe/moduleTokens';
+import { tenantLabel, tenantVariantLabel } from '@/lib/tenantTokens';
 import ModuleCatalogGrid from '@/components/subscribe/ModuleCatalogGrid.vue';
 import AiQuotaStepper from '@/components/subscribe/AiQuotaStepper.vue';
 import PricingCalculatorV2 from '@/components/subscribe/PricingCalculatorV2.vue';
@@ -642,7 +643,7 @@ function flagSubscribeIntent(): void {
         <h1 class="sn-h1">Ceritakan lembaga Anda</h1>
         <p class="sn-sub">
           Info dasar ini kami pakai untuk membuat akun lembaga baru dan
-          mencetak dokumen resmi ({{ form.tenant_type === 'bimbel' ? 'laporan progres, sertifikat' : 'raport, sertifikat' }}).
+          mencetak dokumen resmi ({{ tenantVariantLabel('documentTypes', form.tenant_type) }}).
         </p>
       </div>
       <div class="sn-form">
@@ -734,7 +735,7 @@ function flagSubscribeIntent(): void {
     <div v-else-if="activeStep === 'kapasitas'" class="sn-step">
       <div class="sn-h">
         <h1 class="sn-h1">
-          Berapa besar {{ form.tenant_type === 'bimbel' ? 'bimbel' : 'sekolah' }} Anda?
+          Berapa besar {{ tenantVariantLabel('tenantTypeLower', form.tenant_type) }} Anda?
         </h1>
         <p class="sn-sub">
           Perkiraan cukup — Anda bisa naikkan atau turunkan kapan saja
@@ -745,13 +746,13 @@ function flagSubscribeIntent(): void {
         <div class="sn-field-row">
           <label class="sn-field">
             <span class="sn-lbl">
-              Jumlah {{ form.tenant_type === 'bimbel' ? 'peserta' : 'siswa' }}
+              Jumlah {{ tenantLabel('student', form.tenant_type) }}
             </span>
             <input v-model.number="form.student_count" type="number" min="0" />
           </label>
           <label class="sn-field">
             <span class="sn-lbl">
-              Jumlah {{ form.tenant_type === 'bimbel' ? 'tutor / staf' : 'guru / staf' }}
+              Jumlah {{ tenantVariantLabel('teacherStaff', form.tenant_type) }}
             </span>
             <input v-model.number="form.staff_count" type="number" min="0" />
           </label>
@@ -822,7 +823,7 @@ function flagSubscribeIntent(): void {
 
         <div class="sn-side">
           <PricingCalculatorV2
-            :tenant-name="form.tenant_name || (form.tenant_type === 'bimbel' ? 'Bimbel Anda' : 'Sekolah Anda')"
+            :tenant-name="form.tenant_name || tenantVariantLabel('tenantSelfName', form.tenant_type)"
             :student-count="form.student_count"
             :staff-count="form.staff_count"
             v-model:plan="period"

@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { SubscriptionTenant } from '@/types/subscription-billing';
+import { tenantLabel, tenantVariantLabel } from '@/lib/tenantTokens';
 
 const props = defineProps<{
   userName: string;
@@ -112,10 +113,10 @@ const cards = computed<CardModel[]>(() =>
       ctaClass: status === 'warn' ? 'warn' : status === 'expired' ? 'danger' : 'primary',
       avatarClass: status === 'expired' ? 'exp' : isBimbel ? 'tut' : 'sch',
       avatarInitials: initials(t.name),
-      subtypeLabel: isBimbel ? 'Bimbel' : 'Sekolah',
+      subtypeLabel: tenantLabel('tenantType', t.tenant_type),
       subtypeIcon: isBimbel ? 'books' : 'school',
       seatUnit: 'siswa',
-      staffUnit: isBimbel ? 'tutor' : 'guru/staf',
+      staffUnit: tenantVariantLabel('teacherSeatCaption', t.tenant_type),
     };
   }),
 );

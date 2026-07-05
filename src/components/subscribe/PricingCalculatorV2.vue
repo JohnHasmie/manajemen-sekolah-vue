@@ -16,6 +16,7 @@ import type {
   ModuleCatalog,
 } from '@/types/subscription-billing';
 import { money, moduleLabel } from './moduleTokens';
+import { tenantLabel } from '@/lib/tenantTokens';
 
 const props = defineProps<{
   tenantName: string;
@@ -59,12 +60,8 @@ function labelFor(key: string): string {
   return props.catalog?.bundles[key]?.label ?? key;
 }
 
-const perUnitWord = computed(() =>
-  props.tenantType === 'bimbel' ? 'peserta' : 'siswa',
-);
-const staffWord = computed(() =>
-  props.tenantType === 'bimbel' ? 'tutor' : 'guru',
-);
+const perUnitWord = computed(() => tenantLabel('student', props.tenantType));
+const staffWord = computed(() => tenantLabel('teacher', props.tenantType));
 
 /**
  * Human-readable "how did we get this number" breakdown for a per-module

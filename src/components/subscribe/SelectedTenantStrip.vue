@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { SubscriptionTenant } from '@/types/subscription-billing';
+import { tenantLabel, tenantVariantLabel } from '@/lib/tenantTokens';
 
 const props = defineProps<{
   tenant: SubscriptionTenant;
@@ -34,12 +35,12 @@ const initials = computed(() => {
             style="font-size:11px"
             aria-hidden="true"
           />
-          {{ isBimbel ? 'Bimbel' : 'Sekolah' }}
+          {{ tenantLabel('tenantType', tenant.tenant_type) }}
         </span>
         <span>
           <i class="ti ti-users" style="font-size:11px" aria-hidden="true" />
           {{ tenant.student_count }} siswa · {{ tenant.staff_count }}
-          {{ isBimbel ? 'tutor' : 'guru/staf' }}
+          {{ tenantVariantLabel('teacherSeatCaption', tenant.tenant_type) }}
         </span>
         <span class="ss-highlight">
           <i class="ti ti-check" style="font-size:11px" aria-hidden="true" />

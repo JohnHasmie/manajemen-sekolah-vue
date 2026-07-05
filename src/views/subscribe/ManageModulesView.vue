@@ -36,6 +36,7 @@ import {
   moduleTagline,
   money,
 } from '@/components/subscribe/moduleTokens';
+import { tenantLabel, tenantVariantLabel } from '@/lib/tenantTokens';
 import ModuleTile from '@/components/subscribe/ModuleTile.vue';
 
 /**
@@ -132,7 +133,7 @@ const initials = computed<string>(() =>
 );
 
 const perUnitWord = computed<string>(() =>
-  tenantType.value === 'bimbel' ? 'peserta' : 'siswa',
+  tenantLabel('student', tenantType.value),
 );
 
 // The row targeted by whichever modal is open.
@@ -346,7 +347,7 @@ function seatBreakdown(row: MyModuleRow): string {
     );
   }
   if (row.price_per_staff_snapshot > 0) {
-    const staffWord = tenantType.value === 'bimbel' ? 'tutor' : 'guru';
+    const staffWord = tenantLabel('teacher', tenantType.value);
     parts.push(`${sub.value.staff_count} ${staffWord} × ${money(row.price_per_staff_snapshot)}`);
   }
   return parts.join(' + ');
@@ -367,7 +368,7 @@ function availSeatBreakdown(item: ModuleCatalog['optional'][string]): string {
     );
   }
   if (item.price_per_staff > 0) {
-    const staffWord = tenantType.value === 'bimbel' ? 'tutor' : 'guru';
+    const staffWord = tenantLabel('teacher', tenantType.value);
     parts.push(`${sub.value.staff_count} ${staffWord} × ${money(item.price_per_staff)}`);
   }
   return parts.join(' + ');
@@ -438,13 +439,13 @@ function formatDate(iso: string | null | undefined): string {
         <div class="mm-hero-body">
           <div class="mm-hero-kicker">
             {{ tenantName || 'Langganan Anda' }} ·
-            {{ tenantType === 'bimbel' ? 'Bimbel / kursus' : 'Sekolah formal' }}
+            {{ tenantVariantLabel('tenantTypeFormal', tenantType) }}
           </div>
           <h1 class="mm-hero-h1">Kelola modul langganan Anda</h1>
           <div class="mm-hero-meta">
             <span>Periode berjalan {{ startsDate }} – {{ expiresDate }}</span>
             <span>{{ sub.student_count }} {{ perUnitWord }} · {{ sub.staff_count }}
-              {{ tenantType === 'bimbel' ? 'tutor' : 'guru' }}</span>
+              {{ tenantLabel('teacher', tenantType) }}</span>
             <span>Sisa {{ daysRemaining }} hari</span>
           </div>
         </div>

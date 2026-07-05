@@ -28,6 +28,7 @@ import {
 } from '@/lib/gibberish';
 import { questionsFor, type Question } from './questions';
 import type { DemoWizardPayload } from '@/types/demo';
+import { tenantLabel } from '@/lib/tenantTokens';
 
 const router = useRouter();
 const wizard = useDemoWizardStore();
@@ -310,7 +311,7 @@ watch(
           <div class="text-sm font-bold text-slate-900">
             Daftar demo
             <span class="ml-1 text-xs font-medium text-slate-500">
-              · {{ tenant === 'tutoring' ? 'Bimbel' : 'Sekolah' }}
+              · {{ tenantLabel('tenantType', tenant) }}
             </span>
           </div>
         </div>

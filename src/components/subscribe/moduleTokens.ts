@@ -6,6 +6,7 @@
  */
 
 import type { ModuleCatalogItem } from '@/types/subscription-billing';
+import { tenantLabel } from '@/lib/tenantTokens';
 
 /** Category-level tints — bg + fg for the small module-icon chips. */
 export const CATEGORY_TINTS: Record<string, { bg: string; fg: string }> = {
@@ -277,11 +278,12 @@ export function seatUnit(
   item: ModuleCatalogItem,
   tenantType?: 'sekolah' | 'bimbel' | null,
 ): string {
-  const isStaff = item.pricing_seat === 'staff';
-  if (tenantType === 'bimbel') {
-    return isStaff ? '/ tutor' : '/ peserta';
-  }
-  return isStaff ? '/ guru' : '/ siswa';
+  // Seat words come from the shared TenantTokens source of truth so the
+  // calculator's "/ siswa" ↔ "/ peserta" and "/ guru" ↔ "/ tutor" stay
+  // in lockstep with the rest of the UI. Same exact strings as before —
+  // just centrally defined now.
+  const concept = item.pricing_seat === 'staff' ? 'teacher' : 'student';
+  return `/ ${tenantLabel(concept, tenantType)}`;
 }
 
 /** Format an IDR integer as "Rp 1.234.000". */

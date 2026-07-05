@@ -20,6 +20,7 @@ import { SuperAdminTenantService } from '@/services/super-admin-tenant.service';
 import { SuperAdminBillingService } from '@/services/super-admin-billing.service';
 import type { PlatformTenant } from '@/types/super-admin-tenant';
 import type { AdminTenantModuleRow } from '@/types/super-admin-billing';
+import { tenantLabel } from '@/lib/tenantTokens';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 
 // ── Tenant picker state ─────────────────────────────────────────────
@@ -196,7 +197,7 @@ async function revokeNow(row: AdminTenantModuleRow): Promise<void> {
 
 // ── Helpers ────────────────────────────────────────────────────────
 function tenantTypeLabel(t: PlatformTenant): string {
-  return t.tenant_type === 'tutoring' ? 'Bimbel' : 'Sekolah';
+  return tenantLabel('tenantType', t.tenant_type);
 }
 
 function formatMoney(n: number): string {

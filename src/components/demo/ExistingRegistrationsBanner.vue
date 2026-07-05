@@ -14,6 +14,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 // tri-form normalisation to `normalizeTenantType` so this view never
 // has to know the transition is in flight.
 import { normalizeTenantType } from '@/lib/labels';
+import { tenantLabel } from '@/lib/tenantTokens';
 
 function isTutoring(tt: string | null | undefined): boolean {
   return normalizeTenantType(tt) === 'tutoring';
@@ -79,7 +80,7 @@ function formatDate(dateStr: string | null) {
                 </h4>
                 <div class="flex items-center gap-2 mt-1">
                   <span class="text-3xs uppercase tracking-wider font-extrabold text-slate-400">
-                    {{ isTutoring(school.tenant_type) ? 'Bimbel' : 'Sekolah' }}
+                    {{ tenantLabel('tenantType', school.tenant_type) }}
                   </span>
                   <span class="w-1 h-1 rounded-full bg-slate-300"></span>
                   <span class="text-3xs px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold uppercase tracking-wider">
@@ -111,7 +112,7 @@ function formatDate(dateStr: string | null) {
                 </h4>
                 <div class="flex items-center gap-2 mt-1">
                   <span class="text-3xs uppercase tracking-wider font-bold text-slate-400">
-                    {{ isTutoring(req.tenant_type) ? 'Bimbel' : 'Sekolah' }}
+                    {{ tenantLabel('tenantType', req.tenant_type) }}
                   </span>
                   <span class="w-1 h-1 rounded-full bg-slate-300"></span>
                   <span v-if="req.status === 'pending'" class="text-3xs px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold uppercase tracking-wider">
