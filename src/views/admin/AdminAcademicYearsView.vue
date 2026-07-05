@@ -32,9 +32,9 @@ import {
 import type {
   AcademicYear,
   AcademicYearSemester,
-  AcademicYearStatus,
 } from '@/types/academic-year';
 import { useAcademicYearStore } from '@/stores/academic-year';
+import { formatDateShort } from '@/lib/format';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import KpiStripCards, {
@@ -76,17 +76,27 @@ async function load() {
 
 onMounted(load);
 
-// ── Grouping ──────────────────────────────────────────────────────
+// ── Ordering ──────────────────────────────────────────────────────
+// ONE chronological list (newest year first) instead of the old
+// "active-on-top" split. That way the active/current year sits in its
+// natural position among the others — for e.g. 2024/2025 · 2025/2026
+// (active) · 2026/2027 the active year lands in the middle — rather than
+// being hoisted above older years. Archived years sink to the bottom
+// (they're soft-hidden, not part of the live cycle). Each row still
+// carries its own status badge + the emerald highlight on the active one.
 const groups = computed(() => {
-  const current = items.value.filter((y) => y.current);
-  const active = items.value.filter((y) => !y.current && y.status === 'active');
-  const inactive = items.value.filter((y) => !y.current && y.status === 'inactive');
-  const archived = items.value.filter((y) => y.status === 'archived');
+  const sorted = [...items.value].sort((a, b) => {
+    const aArch = a.status === 'archived' ? 1 : 0;
+    const bArch = b.status === 'archived' ? 1 : 0;
+    if (aArch !== bArch) return aArch - bArch;
+    return b.year.localeCompare(a.year, undefined, { numeric: true });
+  });
   return [
-    { title: t('admin.sekolah.academic_year.group_current'), tone: 'emerald' as const, rows: current },
-    { title: t('admin.sekolah.academic_year.group_active'), tone: 'blue' as const, rows: active },
-    { title: t('admin.sekolah.academic_year.group_inactive'), tone: 'slate' as const, rows: inactive },
-    { title: t('admin.sekolah.academic_year.group_archived'), tone: 'amber' as const, rows: archived },
+    {
+      title: t('admin.sekolah.academic_year.group_all'),
+      tone: 'slate' as 'emerald' | 'blue' | 'amber' | 'slate',
+      rows: sorted,
+    },
   ].filter((g) => g.rows.length > 0);
 });
 
@@ -358,7 +368,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
                 <p class="text-2xs text-slate-500 mt-0.5">
                   {{ t('admin.sekolah.academic_year.semester_label', { label: semesterLabel(y.semester) }) }}
                   <span v-if="y.start_date || y.end_date">
-                    · {{ y.start_date || '?' }} → {{ y.end_date || '?' }}
+                    · {{ formatDateShort(y.start_date) || '—' }} → {{ formatDateShort(y.end_date) || '—' }}
                   </span>
                 </p>
               </div>

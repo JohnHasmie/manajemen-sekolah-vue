@@ -1657,6 +1657,7 @@
         "empty_title": "No academic years yet",
         "empty_description": "Tap 'Add' to create the first academic year.",
         "group_current": "Current Academic Year",
+        "group_all": "Academic Years",
         "group_active": "Active",
         "group_inactive": "Inactive",
         "group_archived": "Archived",

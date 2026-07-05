@@ -1654,6 +1654,7 @@
         "empty_title": "Belum ada tahun ajaran",
         "empty_description": "Tap 'Tambah' untuk membuat tahun ajaran pertama.",
         "group_current": "Tahun Ajaran Aktif",
+        "group_all": "Tahun Ajaran",
         "group_active": "Aktif",
         "group_inactive": "Tidak Aktif",
         "group_archived": "Arsip",
