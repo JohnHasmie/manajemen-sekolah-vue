@@ -80,7 +80,7 @@ function statusLabel(s: TutoringSession): string {
 }
 
 function statusPillCls(s: TutoringSession): string {
-  const base = 'flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide';
+  const base = 'flex-shrink-0 rounded-full px-2 py-0.5 text-3xs font-bold uppercase tracking-wide';
   const at = s.scheduled_at ? new Date(s.scheduled_at).valueOf() : 0;
   const isPast = at && at < Date.now();
   const attended = (s as WithMeta).attended;
@@ -221,7 +221,7 @@ const grouped = computed(() => {
       >{{ t('wali.bimbel.sessions.empty') }}</div>
 
       <template v-for="g in grouped" :key="g.label">
-        <p class="text-[10px] tracking-[0.1em] text-tutoring-text-lo font-bold uppercase pt-2.5 pb-1">
+        <p class="text-3xs tracking-[0.1em] text-tutoring-text-lo font-bold uppercase pt-2.5 pb-1">
           {{ g.label }}
         </p>
         <div

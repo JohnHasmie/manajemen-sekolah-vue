@@ -89,7 +89,7 @@ async function upload() {
   >
     <div class="space-y-3">
       <section class="bg-slate-50 rounded-xl p-3 space-y-2">
-        <p class="text-[11px] text-slate-600 leading-relaxed">
+        <p class="text-2xs text-slate-600 leading-relaxed">
           Pastikan struktur kolom sesuai template. Kolom dengan ID akan
           divalidasi terhadap data yang ada di sistem.
         </p>
@@ -125,14 +125,14 @@ async function upload() {
             <p class="text-[13px] font-bold text-slate-900 truncate">
               {{ file ? file.name : 'Pilih file Excel' }}
             </p>
-            <p class="text-[11px] text-slate-500 mt-0.5">
+            <p class="text-2xs text-slate-500 mt-0.5">
               XLSX / XLS / CSV · maks 10 MB
             </p>
           </div>
         </div>
       </label>
 
-      <p v-if="err" class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+      <p v-if="err" class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
         {{ err }}
       </p>
 

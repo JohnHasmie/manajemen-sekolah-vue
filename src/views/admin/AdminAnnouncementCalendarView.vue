@@ -273,7 +273,7 @@ function goBack() {
         <p
           v-for="d in DOW_LABELS"
           :key="d"
-          class="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest py-1"
+          class="text-center text-3xs font-bold text-slate-400 uppercase tracking-widest py-1"
         >
           {{ d }}
         </p>
@@ -311,7 +311,7 @@ function goBack() {
     <!-- Selected-day list -->
     <section class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-md">
       <header class="border-b border-slate-100 pb-2">
-        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+        <p class="text-3xs font-black text-slate-400 uppercase tracking-widest">
           {{ t('admin.sekolah.announcement_calendar.events_count', { count: selectedDayItems.length }) }}
         </p>
         <p class="text-[14px] font-extrabold text-slate-900 mt-0.5">
@@ -342,12 +342,12 @@ function goBack() {
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
                 <span
-                  class="px-2 py-0.5 rounded-md text-[9px] font-black tracking-widest"
+                  class="px-2 py-0.5 rounded-md text-4xs font-black tracking-widest"
                   :class="categoryChipCls(it)"
                 >
                   {{ eventCategoryLabel(it) }}
                 </span>
-                <span class="text-[10px] font-bold text-slate-500 tabular-nums">
+                <span class="text-3xs font-bold text-slate-500 tabular-nums">
                   {{ eventTimeLabel(it.event_at) }}
                 </span>
               </div>
@@ -356,7 +356,7 @@ function goBack() {
               </p>
               <p
                 v-if="it.body"
-                class="text-[11px] text-slate-600 mt-0.5 leading-snug line-clamp-2"
+                class="text-2xs text-slate-600 mt-0.5 leading-snug line-clamp-2"
               >
                 {{ String(it.body ?? '') }}
               </p>

@@ -74,7 +74,7 @@ function onPick(e: Event) {
       class="flex flex-col items-center justify-center px-4 py-1 hover:bg-slate-50 transition-colors relative min-w-[130px]"
       @click="openPicker"
     >
-      <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">{{ label }}</span>
+      <span class="text-4xs font-bold text-slate-400 uppercase tracking-widest leading-none">{{ label }}</span>
       <span class="text-[13px] font-bold text-slate-900 mt-0.5">{{ display }}</span>
       <input
         ref="datePicker"

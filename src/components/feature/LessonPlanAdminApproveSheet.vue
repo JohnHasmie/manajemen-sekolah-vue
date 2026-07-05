@@ -77,7 +77,7 @@ const bulkCount = props.bulkIds?.length ?? 0;
           <p class="text-[12.5px] font-bold text-slate-900 truncate">
             {{ plan.title || 'Tanpa judul' }}
           </p>
-          <p class="text-[11px] text-slate-600 truncate">
+          <p class="text-2xs text-slate-600 truncate">
             {{ plan.subject_name }} · {{ plan.class_name }} · {{ plan.teacher_name }}
           </p>
         </div>
@@ -85,7 +85,7 @@ const bulkCount = props.bulkIds?.length ?? 0;
 
       <!-- Optional note -->
       <div v-if="plan">
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
           Catatan untuk guru (opsional)
         </label>
         <textarea

@@ -63,7 +63,7 @@ watch(
 
 <template>
   <div>
-    <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
+    <p class="text-2xs font-bold tracking-widest text-slate-500 uppercase mb-2">
       {{ t('registerDemo.stepCounter', { current: wizard.stepNumber, total: wizard.stepTotal }) }} · {{ t('registerDemo.step5Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
@@ -99,7 +99,7 @@ watch(
       >
         <NavIcon name="zap" :size="20" :class="fillMode === 'random' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
         <div class="text-[13px] font-bold">{{ t('registerDemo.step5RandomMode') }}</div>
-        <div class="text-[11px]" :class="fillMode === 'random' ? 'text-role-admin' : 'text-slate-500'">
+        <div class="text-2xs" :class="fillMode === 'random' ? 'text-role-admin' : 'text-slate-500'">
           {{ t('registerDemo.step5RandomHint') }}
         </div>
       </button>
@@ -115,7 +115,7 @@ watch(
       >
         <NavIcon name="edit" :size="20" :class="fillMode === 'manual' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
         <div class="text-[13px] font-bold">{{ t('registerDemo.step5ManualMode') }}</div>
-        <div class="text-[11px]" :class="fillMode === 'manual' ? 'text-role-admin' : 'text-slate-500'">
+        <div class="text-2xs" :class="fillMode === 'manual' ? 'text-role-admin' : 'text-slate-500'">
           {{ t('registerDemo.step5ManualHint') }}
         </div>
       </button>
@@ -149,7 +149,7 @@ watch(
           :key="idx"
           class="flex items-center gap-2"
         >
-          <span class="w-6 text-[11px] text-slate-400 text-right">{{ idx + 1 }}.</span>
+          <span class="w-6 text-2xs text-slate-400 text-right">{{ idx + 1 }}.</span>
           <input
             :value="teacher.name"
             type="text"
@@ -171,7 +171,7 @@ watch(
         </div>
       </div>
 
-      <p class="text-[11px] text-slate-500 mt-2">
+      <p class="text-2xs text-slate-500 mt-2">
         {{ t('registerDemo.step5TipPrefix') }}
         <code class="bg-slate-100 px-1.5 py-0.5 rounded text-[10.5px]">{{ t('registerDemo.step5RandomOption') }}</code>
         {{ t('registerDemo.step5TipSuffix') }}

@@ -520,9 +520,9 @@ function pickAudience(k: AudienceFilter) {
           <section v-if="grouped.pinned.length > 0" class="space-y-2.5">
             <header class="flex items-center gap-2 px-1">
               <NavIcon name="star" :size="13" class="text-amber-600" />
-              <span class="text-[11px] font-bold uppercase tracking-widest text-amber-700">{{ t('admin.announcement.pinned') }}</span>
+              <span class="text-2xs font-bold uppercase tracking-widest text-amber-700">{{ t('admin.announcement.pinned') }}</span>
               <div class="flex-1 h-px bg-amber-200/60"></div>
-              <span class="text-[10px] font-bold text-amber-700">{{ grouped.pinned.length }}</span>
+              <span class="text-3xs font-bold text-amber-700">{{ grouped.pinned.length }}</span>
             </header>
             <AnnouncementCard
               v-for="a in grouped.pinned"
@@ -539,9 +539,9 @@ function pickAudience(k: AudienceFilter) {
           <section v-if="grouped.scheduled.length > 0" class="space-y-2.5">
             <header class="flex items-center gap-2 px-1">
               <NavIcon name="calendar" :size="13" class="text-amber-600" />
-              <span class="text-[11px] font-bold uppercase tracking-widest text-tutoring-text-mid">{{ t('admin.announcement.scheduled') }}</span>
+              <span class="text-2xs font-bold uppercase tracking-widest text-tutoring-text-mid">{{ t('admin.announcement.scheduled') }}</span>
               <div class="flex-1 h-px bg-tutoring-border"></div>
-              <span class="text-[10px] font-bold text-tutoring-text-mid">{{ grouped.scheduled.length }}</span>
+              <span class="text-3xs font-bold text-tutoring-text-mid">{{ grouped.scheduled.length }}</span>
             </header>
             <AnnouncementCard
               v-for="a in grouped.scheduled"
@@ -558,9 +558,9 @@ function pickAudience(k: AudienceFilter) {
           <section v-if="grouped.published.length > 0" class="space-y-2.5">
             <header class="flex items-center gap-2 px-1">
               <NavIcon name="check-circle" :size="13" class="text-emerald-600" />
-              <span class="text-[11px] font-bold uppercase tracking-widest text-tutoring-text-mid">{{ t('admin.announcement.sent') }}</span>
+              <span class="text-2xs font-bold uppercase tracking-widest text-tutoring-text-mid">{{ t('admin.announcement.sent') }}</span>
               <div class="flex-1 h-px bg-tutoring-border"></div>
-              <span class="text-[10px] font-bold text-tutoring-text-mid">{{ grouped.published.length }}</span>
+              <span class="text-3xs font-bold text-tutoring-text-mid">{{ grouped.published.length }}</span>
             </header>
             <AnnouncementCard
               v-for="a in grouped.published"
@@ -577,9 +577,9 @@ function pickAudience(k: AudienceFilter) {
           <section v-if="grouped.draft.length > 0" class="space-y-2.5">
             <header class="flex items-center gap-2 px-1">
               <NavIcon name="file-text" :size="13" class="text-tutoring-text-mid" />
-              <span class="text-[11px] font-bold uppercase tracking-widest text-tutoring-text-mid">{{ t('status.Draft') }}</span>
+              <span class="text-2xs font-bold uppercase tracking-widest text-tutoring-text-mid">{{ t('status.Draft') }}</span>
               <div class="flex-1 h-px bg-tutoring-border"></div>
-              <span class="text-[10px] font-bold text-tutoring-text-mid">{{ grouped.draft.length }}</span>
+              <span class="text-3xs font-bold text-tutoring-text-mid">{{ grouped.draft.length }}</span>
             </header>
             <AnnouncementCard
               v-for="a in grouped.draft"
@@ -692,7 +692,7 @@ function pickAudience(k: AudienceFilter) {
 
         <div>
           <label class="block text-sm font-medium text-tutoring-text-hi mb-1">{{ t('common.audience') }}</label>
-          <p class="text-[11px] text-tutoring-text-mid mb-2">
+          <p class="text-2xs text-tutoring-text-mid mb-2">
             {{ t('admin.announcement.audienceHelp') }}
           </p>
           <div class="space-y-3 border border-tutoring-border-soft rounded-xl p-3">
@@ -705,7 +705,7 @@ function pickAudience(k: AudienceFilter) {
                 <span class="text-sm font-semibold text-tutoring-text-hi">{{ role.label }}</span>
                 <button
                   type="button"
-                  class="text-[11px] font-bold px-2.5 py-1 rounded-full border"
+                  class="text-2xs font-bold px-2.5 py-1 rounded-full border"
                   :class="
                     cellHasAll(role.key)
                       ? 'bg-role-admin text-white border-role-admin'
@@ -724,7 +724,7 @@ function pickAudience(k: AudienceFilter) {
                   v-for="c in classes"
                   :key="c.id"
                   type="button"
-                  class="text-[11px] font-bold px-2.5 py-1 rounded-full border"
+                  class="text-2xs font-bold px-2.5 py-1 rounded-full border"
                   :class="
                     cellHasClass(role.key, c.id)
                       ? 'bg-role-admin text-white border-role-admin'
@@ -734,7 +734,7 @@ function pickAudience(k: AudienceFilter) {
                 >
                   {{ c.name }}
                 </button>
-                <span v-if="classes.length === 0" class="text-[11px] text-tutoring-text-lo">
+                <span v-if="classes.length === 0" class="text-2xs text-tutoring-text-lo">
                   {{ t('admin.announcement.noClassesYet') }}
                 </span>
               </div>
@@ -742,7 +742,7 @@ function pickAudience(k: AudienceFilter) {
           </div>
           <p
             v-if="previewReach !== null"
-            class="text-[11px] text-tutoring-text-mid mt-2 inline-flex items-center gap-1.5"
+            class="text-2xs text-tutoring-text-mid mt-2 inline-flex items-center gap-1.5"
           >
             <NavIcon name="users" :size="12" />
             {{ t('admin.announcement.estimatedReach') }} <b class="text-tutoring-text-hi">{{ previewReach }}</b> {{ t('admin.announcement.recipients') }}

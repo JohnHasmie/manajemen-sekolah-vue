@@ -300,7 +300,7 @@ function resetFilter() {
           <button
             v-if="hasActiveFilter"
             type="button"
-            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:bg-slate-50"
+            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 text-3xs font-bold uppercase tracking-widest text-slate-500 hover:bg-slate-50"
             @click="resetFilter"
           >
             <NavIcon name="x" :size="10" />

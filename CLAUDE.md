@@ -7,6 +7,7 @@ syntax.
 Companion docs:
 - `README.md` — tech stack, getting started, directory layout.
 - `../CLAUDE.md` — the Flutter source-of-truth conventions.
+- `TERMINOLOGY.md` — canonical Indonesian wording (Kehadiran vs Absensi Sesi, siswa/peserta, guru/tutor).
 
 ## The one rule
 

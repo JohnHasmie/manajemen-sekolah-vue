@@ -98,7 +98,7 @@ const PERIOD_OPTIONS = computed<{ value: ParentRecPeriod; label: string }[]>(() 
     <div class="space-y-5">
       <!-- Status -->
       <section>
-        <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">
+        <p class="text-2xs font-bold uppercase tracking-widest text-slate-500 mb-2">
           {{ t('parent.recommendations.sectionStatus') }}
         </p>
         <div class="flex flex-wrap gap-2">
@@ -106,7 +106,7 @@ const PERIOD_OPTIONS = computed<{ value: ParentRecPeriod; label: string }[]>(() 
             v-for="opt in STATUS_OPTIONS"
             :key="opt.value"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold transition border"
             :class="
               status === opt.value
                 ? 'bg-role-wali text-white border-role-wali'
@@ -121,7 +121,7 @@ const PERIOD_OPTIONS = computed<{ value: ParentRecPeriod; label: string }[]>(() 
 
       <!-- Prioritas -->
       <section>
-        <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">
+        <p class="text-2xs font-bold uppercase tracking-widest text-slate-500 mb-2">
           {{ t('parent.recommendations.sectionPriority') }}
         </p>
         <div class="flex flex-wrap gap-2">
@@ -129,7 +129,7 @@ const PERIOD_OPTIONS = computed<{ value: ParentRecPeriod; label: string }[]>(() 
             v-for="opt in PRIORITY_OPTIONS"
             :key="opt.value"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold transition border"
             :class="
               priority === opt.value
                 ? 'bg-role-wali text-white border-role-wali'
@@ -144,7 +144,7 @@ const PERIOD_OPTIONS = computed<{ value: ParentRecPeriod; label: string }[]>(() 
 
       <!-- Mata Pelajaran (multi-select) -->
       <section v-if="availableSubjects.length > 0">
-        <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">
+        <p class="text-2xs font-bold uppercase tracking-widest text-slate-500 mb-2">
           {{ t('parent.recommendations.sectionSubjects') }}
           <span class="text-slate-400 normal-case font-medium tracking-normal">
             {{ t('parent.recommendations.sectionSubjectsHint') }}
@@ -155,7 +155,7 @@ const PERIOD_OPTIONS = computed<{ value: ParentRecPeriod; label: string }[]>(() 
             v-for="name in availableSubjects"
             :key="name"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold transition border"
             :class="
               subjects.includes(name)
                 ? 'bg-role-wali text-white border-role-wali'
@@ -170,7 +170,7 @@ const PERIOD_OPTIONS = computed<{ value: ParentRecPeriod; label: string }[]>(() 
 
       <!-- Periode -->
       <section>
-        <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">
+        <p class="text-2xs font-bold uppercase tracking-widest text-slate-500 mb-2">
           {{ t('parent.recommendations.sectionPeriod') }}
         </p>
         <div class="flex flex-wrap gap-2">
@@ -178,7 +178,7 @@ const PERIOD_OPTIONS = computed<{ value: ParentRecPeriod; label: string }[]>(() 
             v-for="opt in PERIOD_OPTIONS"
             :key="opt.value"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold transition border"
             :class="
               period === opt.value
                 ? 'bg-role-wali text-white border-role-wali'

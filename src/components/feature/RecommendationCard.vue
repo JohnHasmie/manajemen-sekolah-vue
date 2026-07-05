@@ -233,7 +233,7 @@ const dueRelative = computed(() => {
 
         <!-- MATERIALS -->
         <div v-if="rec.materials && rec.materials.length > 0">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 inline-flex items-center gap-1.5">
+          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 inline-flex items-center gap-1.5">
             <NavIcon name="book" :size="11" />
             Materi Terkait
           </p>
@@ -248,7 +248,7 @@ const dueRelative = computed(() => {
                 <p class="font-semibold text-slate-900">{{ m.title }}</p>
                 <p
                   v-if="m.description"
-                  class="text-[11px] text-slate-500 mt-0.5"
+                  class="text-2xs text-slate-500 mt-0.5"
                 >
                   {{ m.description }}
                 </p>
@@ -272,7 +272,7 @@ const dueRelative = computed(() => {
           v-if="rec.teacher_notes"
           class="bg-slate-50 rounded-lg px-3 py-2"
         >
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
+          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">
             Catatan Wali Kelas
           </p>
           <p class="text-[12px] text-slate-700 leading-relaxed whitespace-pre-wrap">
@@ -283,7 +283,7 @@ const dueRelative = computed(() => {
         <!-- PARENT RECEIPT STRIP (when shared) -->
         <div
           v-if="hasBeenShared"
-          class="flex items-center gap-2 text-[11px] text-slate-600 px-2.5 py-2 rounded-lg"
+          class="flex items-center gap-2 text-2xs text-slate-600 px-2.5 py-2 rounded-lg"
           :class="
             sharePillKind === 'read'
               ? 'bg-emerald-50 text-emerald-800'
@@ -309,7 +309,7 @@ const dueRelative = computed(() => {
         <!-- DUE DATE STRIP -->
         <div
           v-if="dueRelative"
-          class="flex items-center gap-2 text-[11px] text-slate-600 border-t border-dashed border-slate-200 pt-2"
+          class="flex items-center gap-2 text-2xs text-slate-600 border-t border-dashed border-slate-200 pt-2"
         >
           <NavIcon name="bell" :size="12" class="text-slate-400" />
           <span>

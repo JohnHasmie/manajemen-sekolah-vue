@@ -253,11 +253,11 @@ const ringDashOffset = computed(
             <p id="demo-reset-progress-title" class="text-[12.5px] font-bold text-slate-900 leading-tight">
               KamilEdu · Reset Data Demo
             </p>
-            <p class="text-[11px] text-slate-500 truncate">
+            <p class="text-2xs text-slate-500 truncate">
               {{ schoolName || 'Sekolah demo' }}
             </p>
           </div>
-          <span class="text-[11px] text-slate-400 inline-flex items-center gap-1">
+          <span class="text-2xs text-slate-400 inline-flex items-center gap-1">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
             Sesi terkunci
           </span>
@@ -286,7 +286,7 @@ const ringDashOffset = computed(
             </svg>
             <div class="absolute inset-0 flex flex-col items-center justify-center">
               <span class="text-[22px] font-black text-slate-900 leading-none tabular-nums">{{ percent }}%</span>
-              <span class="text-[10px] text-slate-400 mt-0.5">{{ doneCount }} dari {{ PHASES.length }}</span>
+              <span class="text-3xs text-slate-400 mt-0.5">{{ doneCount }} dari {{ PHASES.length }}</span>
             </div>
           </div>
 
@@ -346,7 +346,7 @@ const ringDashOffset = computed(
                   <circle cx="12" cy="12" r="9" stroke="white" stroke-width="3" stroke-opacity="0.35"/>
                   <path d="M21 12a9 9 0 0 1-9 9" stroke="white" stroke-width="3" stroke-linecap="round"/>
                 </svg>
-                <span v-else class="text-[10px] font-bold">{{ i + 1 }}</span>
+                <span v-else class="text-3xs font-bold">{{ i + 1 }}</span>
               </span>
               <span
                 class="flex-1 text-[12.5px] leading-snug"
@@ -358,11 +358,11 @@ const ringDashOffset = computed(
               >{{ p.title }}</span>
               <span
                 v-if="p.state === 'done'"
-                class="text-[11px] text-slate-400 tabular-nums"
+                class="text-2xs text-slate-400 tabular-nums"
               >{{ p.elapsedAtEnd }}s</span>
               <span
                 v-else-if="p.state === 'active'"
-                class="text-[11px] text-blue-700"
+                class="text-2xs text-blue-700"
               >berjalan…</span>
             </li>
           </ul>

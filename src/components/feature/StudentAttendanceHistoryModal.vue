@@ -162,14 +162,14 @@ function formatLongDate(d: string): string {
       />
       <div class="flex-1 min-w-0">
         <p
-          class="text-[10px] font-bold text-brand-cobalt uppercase tracking-widest"
+          class="text-3xs font-bold text-brand-cobalt uppercase tracking-widest"
         >
           Riwayat Kehadiran{{ className ? ` · ${className}` : '' }}
         </p>
         <h2 class="text-base font-black text-slate-900 leading-tight mt-0.5">
           {{ student.student_name || 'Tanpa nama' }}
         </h2>
-        <p class="text-[11px] text-slate-500 mt-0.5">
+        <p class="text-2xs text-slate-500 mt-0.5">
           NIS {{ student.student_number || '—' }}
         </p>
       </div>
@@ -178,7 +178,7 @@ function formatLongDate(d: string): string {
     <!-- ── KPI strip ─────────────────────────────────────── -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
       <div class="bg-emerald-50 rounded-xl p-3 text-center">
-        <p class="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">
+        <p class="text-4xs font-bold text-emerald-700 uppercase tracking-widest">
           Hadir
         </p>
         <p class="text-lg font-black text-emerald-700 mt-1">
@@ -186,7 +186,7 @@ function formatLongDate(d: string): string {
         </p>
       </div>
       <div class="bg-amber-50 rounded-xl p-3 text-center">
-        <p class="text-[9px] font-bold text-amber-700 uppercase tracking-widest">
+        <p class="text-4xs font-bold text-amber-700 uppercase tracking-widest">
           Sakit
         </p>
         <p class="text-lg font-black text-amber-700 mt-1">
@@ -194,13 +194,13 @@ function formatLongDate(d: string): string {
         </p>
       </div>
       <div class="bg-sky-50 rounded-xl p-3 text-center">
-        <p class="text-[9px] font-bold text-sky-700 uppercase tracking-widest">
+        <p class="text-4xs font-bold text-sky-700 uppercase tracking-widest">
           Izin
         </p>
         <p class="text-lg font-black text-sky-700 mt-1">{{ summary.izin }}</p>
       </div>
       <div class="bg-red-50 rounded-xl p-3 text-center">
-        <p class="text-[9px] font-bold text-red-700 uppercase tracking-widest">
+        <p class="text-4xs font-bold text-red-700 uppercase tracking-widest">
           Alpa
         </p>
         <p class="text-lg font-black text-red-700 mt-1">{{ summary.alpa }}</p>
@@ -208,7 +208,7 @@ function formatLongDate(d: string): string {
     </div>
 
     <div
-      class="flex items-center gap-4 flex-wrap px-3 py-2 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-[11px] mb-4"
+      class="flex items-center gap-4 flex-wrap px-3 py-2 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-2xs mb-4"
     >
       <span class="inline-flex items-center gap-1.5">
         <NavIcon name="bar-chart" :size="11" class="text-emerald-700" />
@@ -241,7 +241,7 @@ function formatLongDate(d: string): string {
         v-for="opt in (['all', 'hadir', 'sakit', 'izin', 'alpa'] as const)"
         :key="opt"
         type="button"
-        class="px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors"
+        class="px-2.5 py-1 rounded-full text-3xs font-bold border transition-colors"
         :class="
           statusFilter === opt
             ? opt === 'all'
@@ -288,7 +288,7 @@ function formatLongDate(d: string): string {
             <p class="text-[18px] font-black text-slate-900 leading-none">
               {{ new Date(h.date).getDate() }}
             </p>
-            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+            <p class="text-4xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">
               {{ new Date(h.date).toLocaleDateString('id-ID', { month: 'short' }) }}
             </p>
           </div>
@@ -308,7 +308,7 @@ function formatLongDate(d: string): string {
             </p>
           </div>
           <span
-            class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0"
+            class="inline-flex items-center gap-1 text-3xs font-bold px-2 py-1 rounded-full flex-shrink-0"
             :class="[
               statusStyle(h.status).bg,
               statusStyle(h.status).text,

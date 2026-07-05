@@ -214,7 +214,7 @@ const adminFee = computed(() => {
       </button>
       <div
         v-if="remainingLabel"
-        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-3xs font-bold uppercase tracking-wider"
         :class="remaining === 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'"
       >
         <NavIcon name="clock" :size="11" />
@@ -238,7 +238,7 @@ const adminFee = computed(() => {
         >
           <div class="absolute -top-12 -right-12 w-44 h-44 bg-white/15 rounded-full blur-3xl"></div>
           <div class="relative z-10 space-y-2">
-            <p class="text-[10px] font-bold tracking-widest uppercase text-white/70">
+            <p class="text-3xs font-bold tracking-widest uppercase text-white/70">
               {{ t('wali.sekolah.billCheckout.totalPaid') }}
             </p>
             <p class="text-3xl sm:text-4xl font-black tracking-tight">{{ formatRupiah(totalToPay) }}</p>
@@ -246,7 +246,7 @@ const adminFee = computed(() => {
               {{ session!.bill_name ?? bill?.title ?? t('wali.sekolah.billCheckout.billFallback') }}
               <span v-if="session!.student_name">· {{ session!.student_name }}</span>
             </p>
-            <p v-if="adminFee > 0" class="text-[10px] text-white/70 mt-1">
+            <p v-if="adminFee > 0" class="text-3xs text-white/70 mt-1">
               {{ t('wali.sekolah.billCheckout.adminFee', { fee: formatRupiah(adminFee) }) }}
             </p>
           </div>
@@ -264,7 +264,7 @@ const adminFee = computed(() => {
           class="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 text-center"
         >
           <div class="w-44 h-44 mx-auto bg-slate-100 rounded-2xl grid place-items-center">
-            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+            <div class="text-3xs text-slate-400 font-bold uppercase tracking-widest">
               QRIS · placeholder
             </div>
           </div>
@@ -272,7 +272,7 @@ const adminFee = computed(() => {
             {{ t('wali.sekolah.billCheckout.qrInstruction') }}
           </p>
           <div class="bg-slate-50 rounded-xl p-3">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
               {{ t('wali.sekolah.billCheckout.qrCode') }}
             </p>
             <p class="font-mono text-[13px] font-bold text-slate-900 break-all mt-1">
@@ -294,13 +294,13 @@ const adminFee = computed(() => {
           class="bg-white border border-slate-200 rounded-2xl p-5 space-y-3"
         >
           <div class="flex items-center justify-between">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <span class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
               {{ t('wali.sekolah.billCheckout.bank') }}
             </span>
             <span class="text-[14px] font-bold text-slate-900">{{ session!.va_bank }}</span>
           </div>
           <div class="border-t border-slate-100 pt-3">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
               {{ t('wali.sekolah.billCheckout.vaNumber') }}
             </p>
             <div class="flex items-center gap-2 mt-1.5">
@@ -324,7 +324,7 @@ const adminFee = computed(() => {
         <!-- Manual tab -->
         <section v-else class="space-y-3">
           <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
               {{ t('wali.sekolah.billCheckout.schoolAccount') }}
             </p>
             <div v-if="session!.manual_bank_list.length === 0" class="text-[13px] text-slate-500">
@@ -354,7 +354,7 @@ const adminFee = computed(() => {
 
           <!-- Upload bukti -->
           <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
               {{ t('wali.sekolah.billCheckout.proofSection') }}
             </p>
 
@@ -388,7 +388,7 @@ const adminFee = computed(() => {
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
                   {{ t('wali.sekolah.billCheckout.transferDate') }}
                 </label>
                 <input
@@ -398,7 +398,7 @@ const adminFee = computed(() => {
                 />
               </div>
               <div>
-                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
                   {{ t('wali.sekolah.billCheckout.transferAmount') }}
                 </label>
                 <input

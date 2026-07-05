@@ -25,7 +25,7 @@ const studentCount = computed(() => {
 
 <template>
   <div>
-    <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
+    <p class="text-2xs font-bold tracking-widest text-slate-500 uppercase mb-2">
       {{ t('registerDemo.stepCounter', { current: wizard.stepNumber, total: wizard.stepTotal }) }} · {{ t('registerDemo.step8Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
@@ -48,7 +48,7 @@ const studentCount = computed(() => {
       >
         <NavIcon name="link" :size="22" :class="mode === 'auto_link' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
         <div class="text-[13px] font-bold">{{ t('registerDemo.step8AutoLink') }}</div>
-        <div class="text-[11px]" :class="mode === 'auto_link' ? 'text-role-admin' : 'text-slate-500'">
+        <div class="text-2xs" :class="mode === 'auto_link' ? 'text-role-admin' : 'text-slate-500'">
           {{ t('registerDemo.step8AutoLinkHint') }}
         </div>
       </button>
@@ -64,7 +64,7 @@ const studentCount = computed(() => {
       >
         <NavIcon name="clock" :size="22" :class="mode === 'skip' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
         <div class="text-[13px] font-bold">{{ t('registerDemo.step8SetLater') }}</div>
-        <div class="text-[11px]" :class="mode === 'skip' ? 'text-role-admin' : 'text-slate-500'">
+        <div class="text-2xs" :class="mode === 'skip' ? 'text-role-admin' : 'text-slate-500'">
           {{ t('registerDemo.step8SkipNow') }}
         </div>
       </button>

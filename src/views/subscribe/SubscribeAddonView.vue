@@ -106,7 +106,7 @@ function goHome() {
   <div class="min-h-screen bg-slate-50 py-8 px-4">
     <div class="max-w-lg mx-auto">
       <header class="mb-6 text-center">
-        <p class="text-[11px] font-black uppercase tracking-widest text-brand-cobalt">
+        <p class="text-2xs font-black uppercase tracking-widest text-brand-cobalt">
           {{ t('addon.kicker') }}
         </p>
         <h1 class="text-2xl font-bold text-slate-900 mt-1">
@@ -181,7 +181,7 @@ function goHome() {
       >
         <div class="space-y-4">
           <div>
-            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+            <label class="block text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
               {{ t('addon.form.studentLabel') }}
             </label>
             <input
@@ -192,7 +192,7 @@ function goHome() {
             />
           </div>
           <div>
-            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+            <label class="block text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
               {{ t('addon.form.staffLabel') }}
             </label>
             <input

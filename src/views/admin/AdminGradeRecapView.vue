@@ -381,7 +381,7 @@ function exportCsv() {
         <p class="text-[22px] font-black text-role-admin leading-none tracking-tight">
           {{ kpiCells.totalSlice }}
         </p>
-        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
+        <p class="text-3xs font-black text-slate-500 uppercase tracking-widest mt-1.5">
           {{ t('admin.sekolah.grade_recap.kpi_total') }}
         </p>
       </div>
@@ -389,7 +389,7 @@ function exportCsv() {
         <p class="text-[22px] font-black text-slate-800 leading-none tracking-tight">
           {{ Math.round(kpiCells.avgProgress) }}%
         </p>
-        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
+        <p class="text-3xs font-black text-slate-500 uppercase tracking-widest mt-1.5">
           {{ t('admin.sekolah.grade_recap.kpi_progress') }}
         </p>
       </div>
@@ -397,7 +397,7 @@ function exportCsv() {
         <p class="text-[22px] font-black text-emerald-600 leading-none tracking-tight">
           {{ kpiCells.completed }}
         </p>
-        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
+        <p class="text-3xs font-black text-slate-500 uppercase tracking-widest mt-1.5">
           {{ t('admin.sekolah.grade_recap.kpi_final') }}
         </p>
       </div>
@@ -408,7 +408,7 @@ function exportCsv() {
       <!-- "Belum lengkap" toggle (mobile parity) -->
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-2xs font-bold transition border"
         :class="
           onlyIncomplete
             ? 'bg-role-admin/10 text-role-admin border-role-admin/30'
@@ -451,14 +451,14 @@ function exportCsv() {
       <!-- Sort selector (replaces table column chevrons since cards
            have no column headers). -->
       <div class="inline-flex items-center gap-1 bg-white border border-slate-200 rounded-full p-0.5">
-        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+        <span class="text-3xs font-black text-slate-400 uppercase tracking-widest px-2">
           {{ t('admin.sekolah.grade_recap.sort_label') }}
         </span>
         <button
           v-for="opt in SORT_OPTIONS"
           :key="opt.key"
           type="button"
-          class="px-2.5 py-1 rounded-full text-[11px] font-bold transition inline-flex items-center gap-0.5"
+          class="px-2.5 py-1 rounded-full text-2xs font-bold transition inline-flex items-center gap-0.5"
           :class="
             sortKey === opt.key
               ? 'bg-role-admin text-white'
@@ -480,7 +480,7 @@ function exportCsv() {
 
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 text-slate-700 text-[11px] font-bold hover:bg-slate-50"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 text-slate-700 text-2xs font-bold hover:bg-slate-50"
         :disabled="filteredRows.length === 0"
         @click="exportCsv"
       >
@@ -489,7 +489,7 @@ function exportCsv() {
       </button>
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 text-slate-700 text-[11px] font-bold hover:bg-slate-50"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 text-slate-700 text-2xs font-bold hover:bg-slate-50"
         @click="load"
       >
         <NavIcon name="refresh-cw" :size="12" />
@@ -531,7 +531,7 @@ function exportCsv() {
           <!-- Title row: class pill + subject name + chevron -->
           <div class="flex items-center gap-2.5">
             <span
-              class="px-2.5 py-1 rounded-full text-[11px] font-black tracking-wider flex-shrink-0"
+              class="px-2.5 py-1 rounded-full text-2xs font-black tracking-wider flex-shrink-0"
               :class="[
                 bucketColorCls(r.progress_pct).pillBg,
                 bucketColorCls(r.progress_pct).pillText,
@@ -551,7 +551,7 @@ function exportCsv() {
             class="flex items-center gap-1.5 pl-1 -mt-1"
           >
             <NavIcon name="user" :size="11" class="text-slate-500" />
-            <span class="text-[11px] font-bold text-slate-600 truncate">
+            <span class="text-2xs font-bold text-slate-600 truncate">
               {{ r.teacher_name }}
             </span>
           </div>
@@ -559,7 +559,7 @@ function exportCsv() {
           <!-- 3-stat row: PROGRESS / RATA-RATA / LULUS (mobile parity) -->
           <div class="flex items-stretch border-y border-slate-100 py-2.5">
             <div class="flex-1 pr-2">
-              <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+              <p class="text-4xs font-black text-slate-500 uppercase tracking-widest">
                 Progress
               </p>
               <p
@@ -571,7 +571,7 @@ function exportCsv() {
             </div>
             <div class="w-px bg-slate-100 mx-2" />
             <div class="flex-1 px-2">
-              <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+              <p class="text-4xs font-black text-slate-500 uppercase tracking-widest">
                 Rata-rata
               </p>
               <p
@@ -587,7 +587,7 @@ function exportCsv() {
             </div>
             <div class="w-px bg-slate-100 mx-2" />
             <div class="flex-1 pl-2">
-              <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+              <p class="text-4xs font-black text-slate-500 uppercase tracking-widest">
                 Lulus
               </p>
               <p
@@ -653,7 +653,7 @@ function exportCsv() {
           </div>
 
           <!-- Roster fill — N student punya rekap dari M total -->
-          <p class="text-[10px] text-slate-500 pt-0.5">
+          <p class="text-3xs text-slate-500 pt-0.5">
             {{ t('admin.sekolah.grade_recap.roster_label', { withRecap: r.students_with_recap, total: r.students_total }) }}
           </p>
         </article>

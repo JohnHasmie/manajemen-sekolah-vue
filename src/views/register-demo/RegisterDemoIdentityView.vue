@@ -387,7 +387,7 @@ const sendLabel = computed(() =>
 
           <!-- IDENTITY FORM — the separate "Data Diri" screen body. -->
           <div v-else>
-            <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
+            <p class="text-2xs font-bold tracking-widest text-slate-500 uppercase mb-2">
               {{ t('registerDemo.identityScreenLabel') }}
             </p>
             <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
@@ -524,7 +524,7 @@ const sendLabel = computed(() =>
                 <p v-if="showError('whatsapp')" class="mt-1 text-[11.5px] text-red-600">
                   {{ errorText('whatsapp') }}
                 </p>
-                <p v-else class="mt-1 text-[11px] text-slate-400">
+                <p v-else class="mt-1 text-2xs text-slate-400">
                   {{ t('registerDemo.requesterWhatsappHint') }}
                 </p>
               </div>

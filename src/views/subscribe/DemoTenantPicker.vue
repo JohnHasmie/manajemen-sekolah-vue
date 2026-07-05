@@ -104,14 +104,14 @@ function clearPick() {
                   {{ tenant.name }}
                 </h3>
                 <span
-                  class="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                  class="text-3xs font-semibold px-1.5 py-0.5 rounded"
                   :class="typeBadge(tenant.tenant_type).cls"
                 >
                   {{ typeBadge(tenant.tenant_type).label }}
                 </span>
                 <span
                   v-if="tenant.is_demo"
-                  class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600"
+                  class="text-3xs font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600"
                 >
                   Demo
                 </span>
@@ -130,7 +130,7 @@ function clearPick() {
               </div>
             </div>
             <span
-              class="flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded"
+              class="flex-shrink-0 text-3xs font-semibold px-1.5 py-0.5 rounded"
               :class="statusPill(tenant.subscription_status).cls"
             >
               {{ statusPill(tenant.subscription_status).label }}

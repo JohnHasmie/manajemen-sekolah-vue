@@ -93,7 +93,7 @@ async function confirm() {
           <p class="text-[12.5px] font-bold text-slate-900 truncate">
             {{ plan.title || 'Tanpa judul' }}
           </p>
-          <p class="text-[11px] text-slate-600 truncate">
+          <p class="text-2xs text-slate-600 truncate">
             {{ plan.subject_name }} · {{ plan.class_name }} · {{ plan.teacher_name }}
           </p>
         </div>
@@ -102,13 +102,13 @@ async function confirm() {
       <!-- Revision areas (multi-select) -->
       <div v-if="sectionKeys.length > 0">
         <div class="flex items-center gap-2 mb-1.5">
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest">
             Bagian yang perlu diperbaiki
           </label>
           <span class="flex-1"></span>
           <button
             type="button"
-            class="text-[10px] font-bold text-violet-700 hover:text-violet-900"
+            class="text-3xs font-bold text-violet-700 hover:text-violet-900"
             :disabled="isSaving"
             @click="selectAll"
           >
@@ -117,7 +117,7 @@ async function confirm() {
           <button
             v-if="selectedAreas.size > 0"
             type="button"
-            class="text-[10px] font-bold text-slate-500 hover:text-slate-900"
+            class="text-3xs font-bold text-slate-500 hover:text-slate-900"
             :disabled="isSaving"
             @click="clearAreas"
           >
@@ -129,7 +129,7 @@ async function confirm() {
             v-for="key in sectionKeys"
             :key="key"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border inline-flex items-center gap-1.5"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold transition border inline-flex items-center gap-1.5"
             :class="
               selectedAreas.has(key)
                 ? 'bg-violet-600 text-white border-violet-600'
@@ -146,14 +146,14 @@ async function confirm() {
             {{ sectionLabel(key) }}
           </button>
         </div>
-        <p class="text-[10px] text-slate-400 mt-1.5">
+        <p class="text-3xs text-slate-400 mt-1.5">
           Opsional — kosongkan untuk minta revisi tanpa menandai bagian tertentu.
         </p>
       </div>
 
       <!-- Note (required) -->
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
           Catatan revisi <span class="text-violet-700">*</span>
         </label>
         <textarea

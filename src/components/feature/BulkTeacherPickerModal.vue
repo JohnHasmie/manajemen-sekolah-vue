@@ -80,14 +80,14 @@ async function send(force = false) {
   >
     <div class="space-y-3">
       <div class="bg-slate-50 rounded-xl p-3">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           Jadwal terpilih
         </p>
         <p class="text-[13px] font-bold text-slate-900 mt-1">{{ rows.length }} sesi</p>
       </div>
 
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Guru baru</label>
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Guru baru</label>
         <select
           v-model="teacherId"
           class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
@@ -101,11 +101,11 @@ async function send(force = false) {
         v-if="lastResult && lastResult.skipped.length > 0"
         class="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2"
       >
-        <p class="text-[11px] font-bold text-amber-700 uppercase tracking-widest flex items-center gap-1.5">
+        <p class="text-2xs font-bold text-amber-700 uppercase tracking-widest flex items-center gap-1.5">
           <NavIcon name="alert-triangle" :size="12" />
           {{ lastResult.skipped.length }} sesi dilewati
         </p>
-        <ul class="text-[11px] text-amber-800 space-y-1 max-h-32 overflow-y-auto">
+        <ul class="text-2xs text-amber-800 space-y-1 max-h-32 overflow-y-auto">
           <li v-for="s in lastResult.skipped" :key="s.id">{{ s.reason }}</li>
         </ul>
         <Button variant="danger" block :loading="isForcing" @click="send(true)">
@@ -113,7 +113,7 @@ async function send(force = false) {
         </Button>
       </section>
 
-      <p v-if="err" class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+      <p v-if="err" class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
         {{ err }}
       </p>
 

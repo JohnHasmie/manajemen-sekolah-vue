@@ -131,20 +131,20 @@ function isNext(i: number) {
             </div>
             <span
               v-if="y.current"
-              class="text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 inline-flex items-center gap-1"
+              class="text-3xs font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 inline-flex items-center gap-1"
             >
               <NavIcon name="check-circle" :size="11" />
               Current
             </span>
             <span
               v-else-if="y.status === 'archived'"
-              class="text-[10px] font-bold px-2 py-1 rounded-full bg-slate-200 text-slate-600"
+              class="text-3xs font-bold px-2 py-1 rounded-full bg-slate-200 text-slate-600"
             >
               Arsip
             </span>
             <span
               v-else-if="y.status === 'inactive'"
-              class="text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700"
+              class="text-3xs font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700"
             >
               Read-only
             </span>
@@ -153,7 +153,7 @@ function isNext(i: number) {
           <!-- Semester chips -->
           <div class="flex items-center gap-2 mt-3">
             <span
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
               :class="
                 y.semester === 'ganjil'
                   ? `${roleColorClass.chipActiveBg} ${roleColorClass.chipActiveText} border-transparent`
@@ -168,7 +168,7 @@ function isNext(i: number) {
               Sem. Ganjil
             </span>
             <span
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
               :class="
                 y.semester === 'genap'
                   ? `${roleColorClass.chipActiveBg} ${roleColorClass.chipActiveText} border-transparent`

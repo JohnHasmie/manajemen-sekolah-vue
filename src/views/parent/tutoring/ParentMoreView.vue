@@ -109,7 +109,7 @@ function go(name: string) {
           </div>
           <span
             v-if="c.student_id === activeChildId"
-            class="text-[10px] font-bold uppercase tracking-wider text-tutoring-hero flex-shrink-0"
+            class="text-3xs font-bold uppercase tracking-wider text-tutoring-hero flex-shrink-0"
           >{{ t('wali.bimbel.more.active_badge') }}</span>
           <NavIcon v-else name="chevron-right" :size="14" class="text-tutoring-text-mid flex-shrink-0" />
         </button>
@@ -131,7 +131,7 @@ function go(name: string) {
           <NavIcon :name="tile.icon" :size="18" />
         </div>
         <p class="text-[13px] font-bold text-tutoring-text-hi">{{ tile.label }}</p>
-        <p class="text-[10px] text-tutoring-text-mid mt-0.5">{{ tile.sub }}</p>
+        <p class="text-3xs text-tutoring-text-mid mt-0.5">{{ tile.sub }}</p>
       </button>
     </div>
 
@@ -150,7 +150,7 @@ function go(name: string) {
           <NavIcon :name="tile.icon" :size="18" />
         </div>
         <p class="text-[13px] font-bold text-tutoring-text-hi">{{ tile.label }}</p>
-        <p class="text-[10px] text-tutoring-text-mid mt-0.5">{{ tile.sub }}</p>
+        <p class="text-3xs text-tutoring-text-mid mt-0.5">{{ tile.sub }}</p>
       </button>
     </div>
 
@@ -169,7 +169,7 @@ function go(name: string) {
           <NavIcon :name="tile.icon" :size="18" />
         </div>
         <p class="text-[13px] font-bold text-tutoring-text-hi">{{ tile.label }}</p>
-        <p class="text-[10px] text-tutoring-text-mid mt-0.5">{{ tile.sub }}</p>
+        <p class="text-3xs text-tutoring-text-mid mt-0.5">{{ tile.sub }}</p>
       </button>
     </div>
   </div>

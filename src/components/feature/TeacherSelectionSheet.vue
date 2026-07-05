@@ -97,7 +97,7 @@ const filtered = computed(() => {
             />
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">{{ t.name }}</p>
-              <p class="text-[10px] text-slate-500 truncate">
+              <p class="text-3xs text-slate-500 truncate">
                 <template v-if="t.employee_number">NIP {{ t.employee_number }}</template>
                 <template v-else>Tanpa NIP</template>
                 <span v-if="t.subject_names?.length"> · {{ t.subject_names.join(', ') }}</span>

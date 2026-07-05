@@ -252,7 +252,7 @@ const hasAnyRecipient = computed(() => recipients.value.length > 0);
       <!-- LOADING -->
       <div v-if="isLoading" class="py-8 text-center">
         <div class="inline-block w-6 h-6 rounded-full border-2 border-slate-200 border-t-brand-cobalt animate-spin" />
-        <p class="text-[11px] text-slate-500 mt-3">Memuat riwayat…</p>
+        <p class="text-2xs text-slate-500 mt-3">Memuat riwayat…</p>
       </div>
 
       <!-- ERROR -->
@@ -264,7 +264,7 @@ const hasAnyRecipient = computed(() => recipients.value.length > 0);
         <p>{{ loadError }}</p>
         <button
           type="button"
-          class="mt-2 text-[11px] font-bold text-red-700 underline"
+          class="mt-2 text-2xs font-bold text-red-700 underline"
           @click="load"
         >
           Coba lagi
@@ -277,7 +277,7 @@ const hasAnyRecipient = computed(() => recipients.value.length > 0);
           <NavIcon name="send" :size="20" />
         </span>
         <p class="text-[13px] font-bold text-slate-700 mt-3">Belum ada pengiriman</p>
-        <p class="text-[11px] text-slate-500 mt-1">
+        <p class="text-2xs text-slate-500 mt-1">
           Tap "Bagikan Lagi" di bawah untuk mulai mengirim ke wali.
         </p>
       </div>

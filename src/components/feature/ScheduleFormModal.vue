@@ -376,7 +376,7 @@ function isHourOccupied(hour: LessonHour): boolean {
     <div class="space-y-3">
       <!-- Teacher -->
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Guru</label>
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Guru</label>
         <select
           v-model="teacherId"
           class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
@@ -388,7 +388,7 @@ function isHourOccupied(hour: LessonHour): boolean {
 
       <!-- Subject (filtered by teacher) -->
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           Mata Pelajaran
           <span v-if="isLoadingSubjects" class="text-slate-400 normal-case font-normal ml-1">memuat...</span>
         </label>
@@ -400,7 +400,7 @@ function isHourOccupied(hour: LessonHour): boolean {
           <option value="">— pilih mapel —</option>
           <option v-for="s in subjectOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
-        <p v-if="teacherId && teacherSubjects.length === 0 && !subjectsLoadFailed && !isLoadingSubjects" class="text-[10px] text-amber-700 mt-1">
+        <p v-if="teacherId && teacherSubjects.length === 0 && !subjectsLoadFailed && !isLoadingSubjects" class="text-3xs text-amber-700 mt-1">
           Guru ini belum punya mapel terdaftar. Tambahkan mapel ke guru terlebih dahulu.
         </p>
       </div>
@@ -408,7 +408,7 @@ function isHourOccupied(hour: LessonHour): boolean {
       <!-- Class + Semester -->
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kelas</label>
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Kelas</label>
           <select
             v-model="classId"
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
@@ -418,7 +418,7 @@ function isHourOccupied(hour: LessonHour): boolean {
           </select>
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Semester</label>
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Semester</label>
           <select
             v-model="semesterId"
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
@@ -431,7 +431,7 @@ function isHourOccupied(hour: LessonHour): boolean {
 
       <!-- Days (multi for create, single for edit) -->
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           Hari {{ isEdit ? '(pilih satu)' : '(boleh banyak)' }}
         </label>
         <div class="mt-1 flex flex-wrap gap-1.5">
@@ -439,7 +439,7 @@ function isHourOccupied(hour: LessonHour): boolean {
             v-for="d in days"
             :key="d.id"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               selectedDayIds.includes(d.id)
                 ? 'bg-role-admin text-white border-role-admin'
@@ -454,7 +454,7 @@ function isHourOccupied(hour: LessonHour): boolean {
 
       <!-- Lesson hour -->
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           Jam Pelajaran (referensi)
         </label>
         <select
@@ -472,14 +472,14 @@ function isHourOccupied(hour: LessonHour): boolean {
             {{ t('common.lessonHour', { n: h.hour_number }) }} · {{ h.start_time }}–{{ h.end_time }}{{ isHourOccupied(h) ? ` (${t('common.occupied')})` : '' }}
           </option>
         </select>
-        <p v-if="!isEdit && selectedDayIds.length > 1" class="text-[10px] text-slate-500 mt-1">
+        <p v-if="!isEdit && selectedDayIds.length > 1" class="text-3xs text-slate-500 mt-1">
           Setiap hari akan dibuat di jam ke-{{ filteredHours.find((h) => h.id === lessonHourId)?.hour_number ?? '?' }}.
         </p>
       </div>
 
       <!-- Room (optional) -->
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ruangan (opsional)</label>
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Ruangan (opsional)</label>
         <input
           v-model="room"
           type="text"
@@ -491,7 +491,7 @@ function isHourOccupied(hour: LessonHour): boolean {
       <!-- Conflict preview -->
       <div
         v-if="isProbingConflicts"
-        class="text-[11px] text-slate-500 bg-slate-50 rounded-xl p-3"
+        class="text-2xs text-slate-500 bg-slate-50 rounded-xl p-3"
       >
         Memeriksa bentrok...
       </div>
@@ -499,11 +499,11 @@ function isHourOccupied(hour: LessonHour): boolean {
         v-else-if="hasConflict"
         class="bg-red-50 border border-red-200 rounded-xl p-3 space-y-2"
       >
-        <p class="text-[11px] font-bold text-red-700 uppercase tracking-widest flex items-center gap-1.5">
+        <p class="text-2xs font-bold text-red-700 uppercase tracking-widest flex items-center gap-1.5">
           <NavIcon name="alert-triangle" :size="12" />
           {{ conflicts.length }} bentrok terdeteksi
         </p>
-        <ul class="text-[11px] text-red-700 space-y-1">
+        <ul class="text-2xs text-red-700 space-y-1">
           <li v-for="c in conflicts" :key="c.id" class="leading-relaxed">
             <strong>{{ c.day_name }} · {{ c.start_time }}–{{ c.end_time }}</strong>:
             {{ c.subject_name ?? 'Mapel' }}
@@ -511,13 +511,13 @@ function isHourOccupied(hour: LessonHour): boolean {
             <span v-if="c.class_name"> · {{ c.class_name }}</span>
           </li>
         </ul>
-        <label class="flex items-center gap-2 text-[11px] text-red-800 font-bold mt-2 cursor-pointer">
+        <label class="flex items-center gap-2 text-2xs text-red-800 font-bold mt-2 cursor-pointer">
           <input v-model="forceSave" type="checkbox" class="accent-red-600" />
           Paksa simpan meski bentrok
         </label>
       </div>
 
-      <p v-if="err" class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+      <p v-if="err" class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
         {{ err }}
       </p>
 

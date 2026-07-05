@@ -165,14 +165,14 @@ const canSubmit = computed(() => {
         class="w-full flex justify-center min-h-[42px]"
         @pointerdown="flagSubscribeIntent"
       />
-      <p v-if="google.error.value" class="mt-2 text-[11px] text-rose-600 text-center">
+      <p v-if="google.error.value" class="mt-2 text-2xs text-rose-600 text-center">
         {{ google.error.value === 'IN_APP_BROWSER'
             ? t('subscribe.form.googleInAppBrowser')
             : t('subscribe.form.googleError') }}
       </p>
       <div class="mt-4 flex items-center gap-3">
         <div class="flex-1 h-px bg-slate-200" />
-        <span class="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+        <span class="text-2xs font-semibold uppercase tracking-widest text-slate-400">
           {{ t('subscribe.form.divider') }}
         </span>
         <div class="flex-1 h-px bg-slate-200" />
@@ -191,7 +191,7 @@ const canSubmit = computed(() => {
         <p class="text-[13px] font-semibold text-slate-900 truncate">
           {{ auth.user?.name || t('subscribe.form.signedInFallback') }}
         </p>
-        <p class="text-[11px] text-slate-500 truncate">
+        <p class="text-2xs text-slate-500 truncate">
           {{ auth.user?.email }}
         </p>
       </div>
@@ -199,7 +199,7 @@ const canSubmit = computed(() => {
 
     <!-- Tenant-type radio (only for the fresh-signup path). -->
     <div v-if="showTenantRadio" class="mb-4">
-      <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
+      <p class="text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
         {{ t('subscribe.form.tenantTypeLabel') }}
       </p>
       <div class="grid grid-cols-2 gap-2">
@@ -221,7 +221,7 @@ const canSubmit = computed(() => {
             <span class="block text-[13px] font-semibold text-slate-900">
               {{ t('subscribe.form.tenantTypeSekolah') }}
             </span>
-            <span class="block text-[11px] text-slate-500 mt-0.5">
+            <span class="block text-2xs text-slate-500 mt-0.5">
               {{ t('subscribe.form.tenantTypeSekolahHint') }}
             </span>
           </span>
@@ -244,7 +244,7 @@ const canSubmit = computed(() => {
             <span class="block text-[13px] font-semibold text-slate-900">
               {{ t('subscribe.form.tenantTypeBimbel') }}
             </span>
-            <span class="block text-[11px] text-slate-500 mt-0.5">
+            <span class="block text-2xs text-slate-500 mt-0.5">
               {{ t('subscribe.form.tenantTypeBimbelHint') }}
             </span>
           </span>
@@ -255,7 +255,7 @@ const canSubmit = computed(() => {
     <!-- Identity fields — only for fresh signup. -->
     <div v-if="showIdentityFields" class="space-y-3 mb-4">
       <div>
-        <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+        <label class="block text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
           {{ tenantType === 'bimbel'
               ? t('subscribe.form.tenantNameLabelBimbel')
               : t('subscribe.form.tenantNameLabelSekolah') }}
@@ -272,7 +272,7 @@ const canSubmit = computed(() => {
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+          <label class="block text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
             {{ t('subscribe.form.whatsappLabel') }}
           </label>
           <input
@@ -285,7 +285,7 @@ const canSubmit = computed(() => {
           />
         </div>
         <div>
-          <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+          <label class="block text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
             {{ t('subscribe.form.emailLabel') }}
           </label>
           <input
@@ -316,7 +316,7 @@ const canSubmit = computed(() => {
       {{ t('subscribe.form.submit') }}
     </Button>
 
-    <p class="mt-3 text-[11px] text-slate-400 text-center">
+    <p class="mt-3 text-2xs text-slate-400 text-center">
       {{ t('subscribe.form.footNote') }}
     </p>
   </section>

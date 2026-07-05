@@ -324,7 +324,7 @@ watch(
       </div>
       <!-- Progress -->
       <div class="max-w-3xl mx-auto px-6 pb-3 pt-1">
-        <div class="flex items-center justify-between text-[11px] tracking-wider text-slate-400 mb-1.5">
+        <div class="flex items-center justify-between text-2xs tracking-wider text-slate-400 mb-1.5">
           <span>{{ subtleProgressLabel }}</span>
           <span class="font-semibold">{{ progressPercent }}%</span>
         </div>
@@ -358,7 +358,7 @@ watch(
         <div class="w-14 h-14 rounded-2xl bg-brand-cobalt/10 text-brand-cobalt mx-auto mb-4 grid place-items-center">
           <NavIcon name="lock" :size="24" />
         </div>
-        <p class="text-[10px] font-black tracking-[0.3em] uppercase text-brand-cobalt mb-2">
+        <p class="text-3xs font-black tracking-[0.3em] uppercase text-brand-cobalt mb-2">
           Wajib login dulu
         </p>
         <h1 class="text-2xl sm:text-[26px] font-bold text-slate-900 tracking-tight leading-tight mb-2">
@@ -392,19 +392,19 @@ watch(
             class="w-full rounded-lg border-2 border-brand-dark-blue/30 bg-white/60 py-2.5 flex items-center justify-center gap-3 animate-pulse"
           >
             <div class="w-3.5 h-3.5 rounded-full bg-brand-dark-blue/20"></div>
-            <span class="text-[11px] font-extrabold text-brand-dark-blue/50 uppercase tracking-widest">
+            <span class="text-2xs font-extrabold text-brand-dark-blue/50 uppercase tracking-widest">
               Menyiapkan Google…
             </span>
           </div>
         </div>
         <div
           v-else
-          class="rounded-lg border-2 border-dashed border-slate-300 bg-white/60 py-2.5 px-3 text-center text-[11px] font-bold text-slate-500"
+          class="rounded-lg border-2 border-dashed border-slate-300 bg-white/60 py-2.5 px-3 text-center text-2xs font-bold text-slate-500"
         >
           Login Google belum dikonfigurasi di server ini. Hubungi admin.
         </div>
 
-        <p class="mt-4 text-[11px] text-slate-400 leading-relaxed">
+        <p class="mt-4 text-2xs text-slate-400 leading-relaxed">
           Kami cuma pakai email dan nama dari Google — tidak ada yang lain.
         </p>
       </section>
@@ -443,7 +443,7 @@ watch(
               </div>
             </div>
           </div>
-          <p class="text-[10px] font-black tracking-[0.3em] uppercase text-brand-cobalt mb-3">
+          <p class="text-3xs font-black tracking-[0.3em] uppercase text-brand-cobalt mb-3">
             {{ chapterLabel }}
           </p>
           <h1 class="text-2xl sm:text-[26px] font-bold text-slate-900 tracking-tight leading-tight mb-2">
@@ -503,7 +503,7 @@ watch(
           </div>
           <button
             type="button"
-            class="text-[11px] font-semibold text-rose-700 hover:text-rose-900 flex-shrink-0"
+            class="text-2xs font-semibold text-rose-700 hover:text-rose-900 flex-shrink-0"
             @click="dismissSubmitError"
           >
             Tutup
@@ -535,7 +535,7 @@ watch(
           <NavIcon name="arrow-left" :size="14" />
           Kembali
         </button>
-        <p class="hidden sm:block text-[11px] text-slate-400">
+        <p class="hidden sm:block text-2xs text-slate-400">
           Tekan Enter untuk lanjut
         </p>
         <button

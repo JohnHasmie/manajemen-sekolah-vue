@@ -131,9 +131,9 @@ const xLabels = ref(['Mar', 'Mei', 'Jul', 'Sep']);
           :key="k.label"
           class="rounded-lg bg-tutoring-bg p-2.5"
         >
-          <p class="text-[10px] text-tutoring-text-mid">{{ k.label }}</p>
+          <p class="text-3xs text-tutoring-text-mid">{{ k.label }}</p>
           <p class="text-[16px] font-extrabold text-tutoring-text-hi leading-none mt-0.5">{{ k.value }}</p>
-          <p class="text-[10px] mt-0.5" :class="k.deltaCls">{{ k.delta || ' ' }}</p>
+          <p class="text-3xs mt-0.5" :class="k.deltaCls">{{ k.delta || ' ' }}</p>
         </div>
       </div>
 
@@ -183,7 +183,7 @@ const xLabels = ref(['Mar', 'Mei', 'Jul', 'Sep']);
         </svg>
       </div>
 
-      <div class="flex justify-between text-[10px] text-tutoring-text-lo">
+      <div class="flex justify-between text-3xs text-tutoring-text-lo">
         <span>
           <span class="inline-block w-2 h-0.5 bg-[#185FA5] align-middle mr-1"></span>
           {{ t('wali.bimbel.progress.chart_legend_child', { name: childFirstName }) }}

@@ -35,7 +35,7 @@ const ROLE_LABELS: Record<DemoRole, string> = {
 
 <template>
   <div>
-    <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
+    <p class="text-2xs font-bold tracking-widest text-slate-500 uppercase mb-2">
       {{ t('registerDemo.stepCounter', { current: wizard.stepNumber, total: wizard.stepTotal }) }} · {{ t('registerDemo.step3Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
@@ -63,7 +63,7 @@ const ROLE_LABELS: Record<DemoRole, string> = {
           class="mx-auto mb-1.5"
         />
         <div class="text-[13px] font-bold">{{ t('registerDemo.step3AllRoles') }}</div>
-        <div class="text-[11px]" :class="mode === 'all_roles' ? 'text-role-admin' : 'text-slate-500'">
+        <div class="text-2xs" :class="mode === 'all_roles' ? 'text-role-admin' : 'text-slate-500'">
           {{ t('registerDemo.step3AllRolesHint') }}
         </div>
       </button>
@@ -85,7 +85,7 @@ const ROLE_LABELS: Record<DemoRole, string> = {
           class="mx-auto mb-1.5"
         />
         <div class="text-[13px] font-bold">{{ t('registerDemo.step3SingleRole') }}</div>
-        <div class="text-[11px]" :class="mode === 'single_role' ? 'text-role-admin' : 'text-slate-500'">
+        <div class="text-2xs" :class="mode === 'single_role' ? 'text-role-admin' : 'text-slate-500'">
           {{ t('registerDemo.step3SingleRoleHint') }}
         </div>
       </button>
@@ -120,31 +120,31 @@ const ROLE_LABELS: Record<DemoRole, string> = {
       <div class="bg-slate-50 rounded-lg p-2.5 flex items-center gap-3">
         <div class="w-12 flex-shrink-0">
           <NavIcon name="shield" :size="18" class="text-role-admin" />
-          <div class="text-[9px] font-bold tracking-wider text-slate-500 uppercase mt-0.5">Admin</div>
+          <div class="text-4xs font-bold tracking-wider text-slate-500 uppercase mt-0.5">Admin</div>
         </div>
         <div class="flex-1 min-w-0">
-          <div class="font-mono text-[11px] text-slate-900 truncate">{{ userEmail }}</div>
-          <div class="font-mono text-[11px] text-slate-500">{{ t('registerDemo.step3AdminNote') }}</div>
+          <div class="font-mono text-2xs text-slate-900 truncate">{{ userEmail }}</div>
+          <div class="font-mono text-2xs text-slate-500">{{ t('registerDemo.step3AdminNote') }}</div>
         </div>
       </div>
       <div class="bg-slate-50 rounded-lg p-2.5 flex items-center gap-3">
         <div class="w-12 flex-shrink-0">
           <NavIcon name="user-check" :size="18" class="text-role-admin" />
-          <div class="text-[9px] font-bold tracking-wider text-slate-500 uppercase mt-0.5">Guru</div>
+          <div class="text-4xs font-bold tracking-wider text-slate-500 uppercase mt-0.5">Guru</div>
         </div>
         <div class="flex-1 min-w-0">
-          <div class="font-mono text-[11px] text-slate-900">guru.demo@kamiledu.id</div>
-          <div class="font-mono text-[11px] text-slate-500">{{ t('registerDemo.step3PasswordNote') }}</div>
+          <div class="font-mono text-2xs text-slate-900">guru.demo@kamiledu.id</div>
+          <div class="font-mono text-2xs text-slate-500">{{ t('registerDemo.step3PasswordNote') }}</div>
         </div>
       </div>
       <div class="bg-slate-50 rounded-lg p-2.5 flex items-center gap-3">
         <div class="w-12 flex-shrink-0">
           <NavIcon name="heart" :size="18" class="text-role-admin" />
-          <div class="text-[9px] font-bold tracking-wider text-slate-500 uppercase mt-0.5">Wali</div>
+          <div class="text-4xs font-bold tracking-wider text-slate-500 uppercase mt-0.5">Wali</div>
         </div>
         <div class="flex-1 min-w-0">
-          <div class="font-mono text-[11px] text-slate-900">wali.demo@kamiledu.id</div>
-          <div class="font-mono text-[11px] text-slate-500">{{ t('registerDemo.step3PasswordNote') }}</div>
+          <div class="font-mono text-2xs text-slate-900">wali.demo@kamiledu.id</div>
+          <div class="font-mono text-2xs text-slate-500">{{ t('registerDemo.step3PasswordNote') }}</div>
         </div>
       </div>
     </div>

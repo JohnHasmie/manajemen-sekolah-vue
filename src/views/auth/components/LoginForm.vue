@@ -121,7 +121,7 @@ async function handleSubmit() {
       <div class="space-y-1.5">
         <label
           for="email"
-          class="block text-[11px] font-extrabold text-slate-700 tracking-[0.4px]"
+          class="block text-2xs font-extrabold text-slate-700 tracking-[0.4px]"
         >EMAIL <span class="text-red-500">*</span></label>
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
@@ -144,7 +144,7 @@ async function handleSubmit() {
       <div class="space-y-1.5">
         <label
           for="password"
-          class="block text-[11px] font-extrabold text-slate-700 tracking-[0.4px]"
+          class="block text-2xs font-extrabold text-slate-700 tracking-[0.4px]"
         >KATA SANDI <span class="text-red-500">*</span></label>
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
@@ -210,7 +210,7 @@ async function handleSubmit() {
     <div class="space-y-4">
       <div class="relative flex items-center">
         <div class="flex-grow border-t border-slate-200"></div>
-        <span class="flex-shrink mx-2.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{{ t('auth.or') }}</span>
+        <span class="flex-shrink mx-2.5 text-3xs font-extrabold text-slate-400 uppercase tracking-widest">{{ t('auth.or') }}</span>
         <div class="flex-grow border-t border-slate-200"></div>
       </div>
 
@@ -228,7 +228,7 @@ async function handleSubmit() {
         <button
           v-if="google.isInAppBrowser.value"
           type="button"
-          class="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-white border border-amber-300 px-2.5 py-1.5 text-[11px] font-extrabold text-amber-900 hover:bg-amber-100 transition-colors"
+          class="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-white border border-amber-300 px-2.5 py-1.5 text-2xs font-extrabold text-amber-900 hover:bg-amber-100 transition-colors"
           @click="copyCurrentLink"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>

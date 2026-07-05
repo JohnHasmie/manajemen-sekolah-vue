@@ -265,12 +265,12 @@ const bulkAttachSubtitle = computed(() =>
         <div v-if="selectedIds.size > 0" class="flex items-center justify-between gap-2 bg-role-admin/5 border border-role-admin/20 rounded-2xl px-3 py-2">
           <button
             type="button"
-            class="text-[11px] font-bold text-role-admin hover:underline"
+            class="text-2xs font-bold text-role-admin hover:underline"
             @click="selectAll"
           >
             {{ selectedIds.size === attached.length ? t('admin.sekolah.subject_class.unselect_all') : t('admin.sekolah.subject_class.select_all') }}
           </button>
-          <span class="text-[11px] font-bold text-slate-700">{{ t('admin.sekolah.subject_class.selected_count', { count: selectedIds.size }) }}</span>
+          <span class="text-2xs font-bold text-slate-700">{{ t('admin.sekolah.subject_class.selected_count', { count: selectedIds.size }) }}</span>
           <div class="flex items-center gap-1">
             <Button variant="secondary" size="sm" @click="clearSelection">{{ t('admin.sekolah.subject_class.cancel') }}</Button>
             <Button variant="danger" size="sm" :loading="isDetaching" @click="detachSelected">
@@ -298,7 +298,7 @@ const bulkAttachSubtitle = computed(() =>
             />
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">{{ c.name }}</p>
-              <p class="text-[11px] text-slate-500 truncate">
+              <p class="text-2xs text-slate-500 truncate">
                 <span v-if="c.grade_level">{{ t('admin.sekolah.subject_class.tingkat_label', { level: c.grade_level }) }} · </span>
                 <span>{{ t('admin.sekolah.subject_class.student_count', { count: c.student_count ?? 0 }) }}</span>
                 <span v-if="c.homeroom_teacher_name"> · {{ t('admin.sekolah.subject_class.homeroom_label', { name: c.homeroom_teacher_name }) }}</span>
@@ -306,7 +306,7 @@ const bulkAttachSubtitle = computed(() =>
             </div>
             <button
               type="button"
-              class="text-[11px] font-bold text-status-danger hover:underline px-2 py-1"
+              class="text-2xs font-bold text-status-danger hover:underline px-2 py-1"
               @click.stop="detachConfirmId = c.id"
             >
               {{ t('admin.sekolah.subject_class.detach') }}
@@ -332,7 +332,7 @@ const bulkAttachSubtitle = computed(() =>
           class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
         />
 
-        <p class="text-[11px] font-bold text-slate-500">
+        <p class="text-2xs font-bold text-slate-500">
           {{ t('admin.sekolah.subject_class.bulk_selected_label', { selected: bulkAttachIds.size, total: unattached.length }) }}
         </p>
 
@@ -359,7 +359,7 @@ const bulkAttachSubtitle = computed(() =>
             />
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">{{ c.name }}</p>
-              <p v-if="c.grade_level" class="text-[10px] text-slate-500">
+              <p v-if="c.grade_level" class="text-3xs text-slate-500">
                 {{ t('admin.sekolah.subject_class.tingkat_with_count', { level: c.grade_level, count: c.student_count }) }}
               </p>
             </div>

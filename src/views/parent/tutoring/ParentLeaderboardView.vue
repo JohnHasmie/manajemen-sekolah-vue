@@ -217,7 +217,7 @@ function deltaLabel(d: number): string {
         class="rounded-lg bg-tutoring-accent-dim p-3 flex gap-3.5 items-center"
       >
         <div class="flex-1 min-w-0">
-          <p class="text-[10px] text-tutoring-hero tracking-wider font-bold uppercase">
+          <p class="text-3xs text-tutoring-hero tracking-wider font-bold uppercase">
             {{ t('wali.bimbel.leaderboard.child_label', { name: myRow.name }) }}
           </p>
           <p class="text-[22px] font-extrabold text-tutoring-hero leading-tight">
@@ -251,7 +251,7 @@ function deltaLabel(d: number): string {
           >{{ rankPrefix(r.rank) }}{{ r.rank }}</span>
 
           <div
-            class="w-7 h-7 rounded-full grid place-items-center text-[10px] font-bold"
+            class="w-7 h-7 rounded-full grid place-items-center text-3xs font-bold"
             :style="avatarStyle(r)"
           >{{ initials(r.name) }}</div>
 
@@ -263,16 +263,16 @@ function deltaLabel(d: number): string {
               {{ r.name }}
               <span
                 v-if="r.isMe"
-                class="text-[9px] bg-tutoring-hero text-white px-1.5 py-px rounded-full ml-1 align-middle"
+                class="text-4xs bg-tutoring-hero text-white px-1.5 py-px rounded-full ml-1 align-middle"
               >{{ t('wali.bimbel.leaderboard.anak_badge') }}</span>
             </p>
             <p
-              class="text-[10px]"
+              class="text-3xs"
               :class="r.isMe ? 'text-tutoring-hero/80' : 'text-tutoring-text-lo'"
             >{{ r.attendedLine }}</p>
           </div>
 
-          <span class="text-[10px]" :class="deltaCls(r.delta)">{{ deltaLabel(r.delta) }}</span>
+          <span class="text-3xs" :class="deltaCls(r.delta)">{{ deltaLabel(r.delta) }}</span>
           <span class="font-bold" :class="r.isMe ? 'text-tutoring-hero' : 'text-tutoring-text-hi'">{{ r.score }}</span>
         </div>
 

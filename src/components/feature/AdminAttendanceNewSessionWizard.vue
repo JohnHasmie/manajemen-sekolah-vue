@@ -169,7 +169,7 @@ const stepSubtitle = computed(() => {
           class="flex-1 flex items-center gap-2"
         >
           <div
-            class="w-6 h-6 rounded-full grid place-items-center text-[10px] font-black flex-shrink-0"
+            class="w-6 h-6 rounded-full grid place-items-center text-3xs font-black flex-shrink-0"
             :class="
               (idx === 0 && selectedTeacher) ||
               (idx === 1 && (step === 'date_hour' || (classId && subjectId))) ||
@@ -183,7 +183,7 @@ const stepSubtitle = computed(() => {
             <span>{{ idx + 1 }}</span>
           </div>
           <span
-            class="text-[10px] font-bold uppercase tracking-widest"
+            class="text-3xs font-bold uppercase tracking-widest"
             :class="
               (idx === 0 && selectedTeacher) ||
               (idx === 1 && step !== 'teacher') ||
@@ -214,7 +214,7 @@ const stepSubtitle = computed(() => {
         </div>
         <template v-else>
           <div>
-            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
               Kelas
             </label>
             <select
@@ -228,7 +228,7 @@ const stepSubtitle = computed(() => {
             </select>
           </div>
           <div>
-            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
               Mata Pelajaran
               <span v-if="selectedTeacher?.subject_ids?.length" class="text-slate-400 normal-case font-normal ml-1">
                 (mapel yang diampu)
@@ -243,7 +243,7 @@ const stepSubtitle = computed(() => {
                 {{ s.name }}{{ s.code ? ` (${s.code})` : '' }}
               </option>
             </select>
-            <p v-if="subjects.length === 0 && !isLoading" class="text-[10px] text-amber-700 mt-1">
+            <p v-if="subjects.length === 0 && !isLoading" class="text-3xs text-amber-700 mt-1">
               Guru ini belum punya mapel terdaftar.
             </p>
           </div>
@@ -253,7 +253,7 @@ const stepSubtitle = computed(() => {
       <!-- Step 3: Date + Lesson Hour -->
       <section v-else-if="step === 'date_hour'" class="space-y-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Tanggal
           </label>
           <input
@@ -263,7 +263,7 @@ const stepSubtitle = computed(() => {
           />
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Jam Pelajaran (opsional)
           </label>
           <select

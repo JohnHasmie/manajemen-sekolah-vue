@@ -286,13 +286,13 @@ function activeUntil(row: PlatformTenant): string | null {
                 {{ row.name || t('superAdmin.schools.unnamed') }}
               </span>
               <span
-                class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded border"
+                class="text-3xs font-bold uppercase tracking-wide px-2 py-0.5 rounded border"
                 :class="tenantTypeClass(row)"
               >
                 {{ tenantTypeLabel(row) }}
               </span>
               <span
-                class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border inline-flex items-center gap-1"
+                class="text-3xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border inline-flex items-center gap-1"
                 :class="primaryState(row).cls"
               >
                 <NavIcon :name="primaryState(row).icon" :size="10" />
@@ -300,7 +300,7 @@ function activeUntil(row: PlatformTenant): string | null {
               </span>
               <span
                 v-if="demoExpirySoon(row)"
-                class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200"
+                class="text-3xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200"
               >
                 {{ t('superAdmin.schools.state.expiringSoon') }}
               </span>
@@ -324,7 +324,7 @@ function activeUntil(row: PlatformTenant): string | null {
             </p>
           </div>
           <div class="text-right flex-shrink-0 min-w-[110px]">
-            <p class="text-[10px] text-slate-400 uppercase tracking-wide">
+            <p class="text-3xs text-slate-400 uppercase tracking-wide">
               {{ row.is_demo && !row.subscription_expires_at
                   ? t('superAdmin.schools.demoExpiresAt')
                   : t('superAdmin.schools.subExpiresAt') }}
@@ -332,7 +332,7 @@ function activeUntil(row: PlatformTenant): string | null {
             <p class="text-xs font-bold text-slate-700 tabular-nums mt-0.5">
               {{ activeUntil(row) ?? '—' }}
             </p>
-            <p v-if="row.subscription_plan" class="text-[10px] text-slate-400 mt-0.5">
+            <p v-if="row.subscription_plan" class="text-3xs text-slate-400 mt-0.5">
               {{ row.subscription_plan === 'yearly'
                   ? t('subscribe.calc.yearly')
                   : t('subscribe.calc.monthly') }}

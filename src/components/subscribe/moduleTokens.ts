@@ -176,7 +176,10 @@ export const BIMBEL_LABEL_OVERRIDES: Record<string, { label?: string; tagline?: 
     tagline: 'Tutor tandai hadir/absen/izin per sesi, ekspor rekap.',
   },
   attendance_gate: {
-    label: 'Absensi Kehadiran Peserta',
+    // Was 'Absensi Kehadiran Peserta' — "Absensi Kehadiran" doubles the
+    // attendance word. Per TERMINOLOGY.md this is bimbel gate presence,
+    // so it reads as "Absensi Gerbang" (entry-gate attendance).
+    label: 'Absensi Gerbang Peserta',
     tagline: 'Peserta scan QR di pintu masuk, log kehadiran harian.',
   },
   attendance_staff: {

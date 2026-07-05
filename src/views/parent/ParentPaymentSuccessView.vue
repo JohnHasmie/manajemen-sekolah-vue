@@ -205,14 +205,14 @@ const timelineSteps = computed(() => {
           <div class="w-14 h-14 mx-auto rounded-full bg-white/20 grid place-items-center mb-2">
             <NavIcon :name="heroIcon" :size="28" />
           </div>
-          <p class="text-[10px] font-bold tracking-widest uppercase text-white/70">
+          <p class="text-3xs font-bold tracking-widest uppercase text-white/70">
             {{ t('wali.sekolah.paymentSuccess.heroLabel') }}
           </p>
           <p class="text-3xl font-black tracking-tight mt-1">
             {{ formatRupiah(payment!.amount) }}
           </p>
           <span
-            class="inline-block text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full mt-2"
+            class="inline-block text-3xs font-bold uppercase tracking-wider px-3 py-1 rounded-full mt-2"
             :class="`${PAYMENT_STATUS_TONES[payment!.status].bg} ${PAYMENT_STATUS_TONES[payment!.status].text}`"
           >
             {{ PAYMENT_STATUS_LABELS[payment!.status] }}
@@ -224,7 +224,7 @@ const timelineSteps = computed(() => {
 
         <!-- Bill detail -->
         <section v-if="bill" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             {{ t('wali.sekolah.paymentSuccess.billSection') }}
           </p>
           <dl class="text-[13px] space-y-1.5">
@@ -251,7 +251,7 @@ const timelineSteps = computed(() => {
 
         <!-- Payment detail -->
         <section class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             {{ t('wali.sekolah.paymentSuccess.paymentSection') }}
           </p>
           <dl class="text-[13px] space-y-1.5">
@@ -282,7 +282,7 @@ const timelineSteps = computed(() => {
 
         <!-- Timeline -->
         <section class="bg-white border border-slate-200 rounded-2xl p-4">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-3">
             {{ t('wali.sekolah.paymentSuccess.timelineSection') }}
           </p>
           <ol class="space-y-3">
@@ -315,7 +315,7 @@ const timelineSteps = computed(() => {
           v-if="buktiBlobUrl"
           class="bg-white border border-slate-200 rounded-2xl p-4"
         >
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-3">
             {{ t('wali.sekolah.paymentSuccess.proofSection') }}
           </p>
           <a

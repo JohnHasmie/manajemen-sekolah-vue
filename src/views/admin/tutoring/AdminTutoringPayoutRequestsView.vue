@@ -191,7 +191,7 @@ function onRejectDone(updated: TutorPayoutRequest) {
       >
         <span>{{ tabLabel(s) }}</span>
         <span
-          class="rounded-md px-1.5 py-0 text-[11px]"
+          class="rounded-md px-1.5 py-0 text-2xs"
           :class="
             activeTab === s
               ? 'bg-white/20 text-white'
@@ -236,7 +236,7 @@ function onRejectDone(updated: TutorPayoutRequest) {
             </div>
             <div class="text-right">
               <span
-                class="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide"
+                class="inline-flex items-center rounded-md px-2 py-0.5 text-2xs font-bold uppercase tracking-wide"
                 :class="STATUS_BADGE_CLASS[req.status]"
               >
                 {{ tabLabel(req.status) }}
@@ -246,7 +246,7 @@ function onRejectDone(updated: TutorPayoutRequest) {
               </p>
               <p
                 v-if="req.amount_computed && req.amount_computed !== req.amount_requested"
-                class="text-[11px] text-tutoring-text-mid"
+                class="text-2xs text-tutoring-text-mid"
               >
                 {{ t('admin.bimbel.payout_requests.eligible_inline', {
                   amount: formatRupiah(req.amount_computed),

@@ -248,7 +248,7 @@ function compactRupiah(v: number): string {
     <!-- Metric strip -->
     <section class="grid grid-cols-2 md:grid-cols-4 gap-2">
       <div class="rounded-xl bg-white border border-slate-200 p-3">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+        <p class="text-3xs font-semibold uppercase tracking-wider text-slate-500">
           Menunggu
         </p>
         <p class="mt-1 text-xl font-black text-slate-900 tabular-nums">
@@ -256,7 +256,7 @@ function compactRupiah(v: number): string {
         </p>
       </div>
       <div class="rounded-xl bg-white border border-slate-200 p-3">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+        <p class="text-3xs font-semibold uppercase tracking-wider text-slate-500">
           ≥ 12 jam
         </p>
         <p class="mt-1 text-xl font-black tabular-nums" :class="metrics.warn > 0 ? 'text-amber-700' : 'text-slate-400'">
@@ -264,7 +264,7 @@ function compactRupiah(v: number): string {
         </p>
       </div>
       <div class="rounded-xl bg-white border border-slate-200 p-3">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+        <p class="text-3xs font-semibold uppercase tracking-wider text-slate-500">
           ≥ 24 jam
         </p>
         <p class="mt-1 text-xl font-black tabular-nums" :class="metrics.crit > 0 ? 'text-rose-700' : 'text-slate-400'">
@@ -272,7 +272,7 @@ function compactRupiah(v: number): string {
         </p>
       </div>
       <div class="rounded-xl bg-white border border-slate-200 p-3">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+        <p class="text-3xs font-semibold uppercase tracking-wider text-slate-500">
           Nominal antrian
         </p>
         <p class="mt-1 text-xl font-black text-slate-900 tabular-nums">
@@ -310,11 +310,11 @@ function compactRupiah(v: number): string {
               <span class="font-bold text-slate-900 truncate">
                 {{ row.tenant_name }}
               </span>
-              <span class="text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+              <span class="text-3xs font-bold uppercase tracking-wide bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
                 {{ planLabel(row.plan) }}
               </span>
               <span
-                class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border inline-flex items-center gap-1"
+                class="text-3xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border inline-flex items-center gap-1"
                 :class="toneClass(waitingTone(row.waiting_hours))"
               >
                 <NavIcon :name="toneIcon(waitingTone(row.waiting_hours))" :size="10" />
@@ -324,7 +324,7 @@ function compactRupiah(v: number): string {
             <p class="text-xs text-slate-500 mt-0.5 truncate font-mono">
               {{ row.order_id }}
             </p>
-            <p v-if="row.admin_email || row.admin_whatsapp" class="text-[11px] text-slate-500 mt-1 truncate">
+            <p v-if="row.admin_email || row.admin_whatsapp" class="text-2xs text-slate-500 mt-1 truncate">
               <span v-if="row.admin_email">{{ row.admin_email }}</span>
               <span v-if="row.admin_email && row.admin_whatsapp"> · </span>
               <span v-if="row.admin_whatsapp" class="tabular-nums">{{ row.admin_whatsapp }}</span>
@@ -334,7 +334,7 @@ function compactRupiah(v: number): string {
             <p class="text-sm font-bold text-slate-900 tabular-nums">
               {{ formatRupiah(row.amount) }}
             </p>
-            <span class="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-brand-cobalt">
+            <span class="hidden sm:inline-flex items-center gap-1 text-2xs font-semibold text-brand-cobalt">
               Verifikasi
               <NavIcon name="chevron-right" :size="14" />
             </span>

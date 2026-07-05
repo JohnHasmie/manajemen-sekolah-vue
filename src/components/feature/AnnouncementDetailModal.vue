@@ -97,20 +97,20 @@ onMounted(() => {
     <header class="-mt-md">
       <div class="flex items-center gap-1.5 flex-wrap mb-2">
         <span
-          class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+          class="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
           :class="[categoryStyle.bg, categoryStyle.text]"
         >
           {{ categoryStyle.label }}
         </span>
         <span
           v-if="audienceLabel"
-          class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600"
+          class="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600"
         >
           → {{ audienceLabel }}
         </span>
         <span
           v-if="announcement.is_pinned"
-          class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 inline-flex items-center gap-1"
+          class="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 inline-flex items-center gap-1"
         >
           <NavIcon name="star" :size="11" /> Disematkan
         </span>
@@ -140,7 +140,7 @@ onMounted(() => {
         typeof announcement.total_recipients === 'number' &&
         announcement.total_recipients > 0
       "
-      class="mt-4 text-[11px] text-slate-500 inline-flex items-center gap-1.5"
+      class="mt-4 text-2xs text-slate-500 inline-flex items-center gap-1.5"
     >
       <NavIcon name="eye" :size="13" />
       Dibaca {{ announcement.read_count ?? 0 }} dari

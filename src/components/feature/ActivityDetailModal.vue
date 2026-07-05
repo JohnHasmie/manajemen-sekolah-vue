@@ -93,7 +93,7 @@ function statusLabel(s: ActivitySubmissionRow['status']) {
         class="grid grid-cols-3 gap-2 bg-slate-50 rounded-xl p-3"
       >
         <div class="text-center">
-          <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+          <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
             Siswa
           </p>
           <p class="text-lg font-black text-slate-900 tabular-nums">
@@ -101,7 +101,7 @@ function statusLabel(s: ActivitySubmissionRow['status']) {
           </p>
         </div>
         <div class="text-center">
-          <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+          <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
             Submit
           </p>
           <p class="text-lg font-black text-emerald-700 tabular-nums">
@@ -109,7 +109,7 @@ function statusLabel(s: ActivitySubmissionRow['status']) {
           </p>
         </div>
         <div class="text-center">
-          <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+          <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
             Belum
           </p>
           <p
@@ -125,18 +125,18 @@ function statusLabel(s: ActivitySubmissionRow['status']) {
       <section class="space-y-2.5">
         <div class="flex items-center gap-2 flex-wrap">
           <span
-            class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider"
+            class="text-3xs font-bold px-2 py-0.5 rounded uppercase tracking-wider"
             :style="{ backgroundColor: accent + '1a', color: accent }"
           >
             {{ typeLabel }}
           </span>
           <span
             v-if="activity.is_specific_target"
-            class="text-[10px] font-bold px-2 py-0.5 rounded bg-violet-100 text-violet-700 uppercase tracking-wider"
+            class="text-3xs font-bold px-2 py-0.5 rounded bg-violet-100 text-violet-700 uppercase tracking-wider"
           >
             Khusus
           </span>
-          <span v-if="activity.session" class="text-[10px] text-slate-500">
+          <span v-if="activity.session" class="text-3xs text-slate-500">
             · {{ activity.session }}
           </span>
         </div>
@@ -146,7 +146,7 @@ function statusLabel(s: ActivitySubmissionRow['status']) {
         </div>
 
         <div v-if="activity.description">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1">
             Deskripsi
           </p>
           <p class="text-[13px] text-slate-700 leading-relaxed whitespace-pre-line">
@@ -155,7 +155,7 @@ function statusLabel(s: ActivitySubmissionRow['status']) {
         </div>
 
         <div v-if="activity.material">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1">
             Materi Terkait
           </p>
           <div
@@ -167,7 +167,7 @@ function statusLabel(s: ActivitySubmissionRow['status']) {
         </div>
 
         <div v-if="activity.attachment_count > 0">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1">
             Lampiran
           </p>
           <p class="text-[12px] text-slate-600">
@@ -176,7 +176,7 @@ function statusLabel(s: ActivitySubmissionRow['status']) {
         </div>
 
         <div v-if="activity.reflection && role === 'teacher'">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1">
             Refleksi
           </p>
           <p class="text-[12px] text-slate-700 leading-relaxed italic whitespace-pre-line">
@@ -188,10 +188,10 @@ function statusLabel(s: ActivitySubmissionRow['status']) {
       <!-- List Student (when submissions roster loaded) -->
       <section v-if="role !== 'parent' && submissions.length > 0">
         <div class="flex items-center justify-between mb-2">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Daftar Siswa
           </p>
-          <span class="text-[10px] text-slate-500 tabular-nums">
+          <span class="text-3xs text-slate-500 tabular-nums">
             {{ submissions.length }} siswa
           </span>
         </div>
@@ -204,7 +204,7 @@ function statusLabel(s: ActivitySubmissionRow['status']) {
               :key="row.student_class_id"
               class="px-3 py-2 flex items-center gap-3 text-[12px]"
             >
-              <span class="text-[10px] text-slate-400 w-5 text-right tabular-nums">
+              <span class="text-3xs text-slate-400 w-5 text-right tabular-nums">
                 {{ idx + 1 }}
               </span>
               <span class="flex-1 truncate font-medium text-slate-900">
@@ -212,12 +212,12 @@ function statusLabel(s: ActivitySubmissionRow['status']) {
               </span>
               <span
                 v-if="row.score !== null && row.score !== undefined"
-                class="text-[11px] font-bold tabular-nums text-slate-700"
+                class="text-2xs font-bold tabular-nums text-slate-700"
               >
                 {{ row.score }}
               </span>
               <span
-                class="text-[10px] font-bold px-2 py-0.5 rounded-full border"
+                class="text-3xs font-bold px-2 py-0.5 rounded-full border"
                 :class="[statusTone(row.status).bg, statusTone(row.status).text, statusTone(row.status).border]"
               >
                 {{ statusLabel(row.status) }}

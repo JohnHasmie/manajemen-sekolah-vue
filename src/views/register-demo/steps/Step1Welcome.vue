@@ -138,7 +138,7 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
     <div class="w-16 h-16 rounded-2xl bg-role-admin/10 mx-auto mb-5 flex items-center justify-center">
       <NavIcon name="school" :size="32" class="text-role-admin" />
     </div>
-    <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
+    <p class="text-2xs font-bold tracking-widest text-slate-500 uppercase mb-2">
       {{ t('registerDemo.step1Label') }}
     </p>
     <h2 class="text-[22px] font-black text-slate-900 mb-2 leading-tight">
@@ -155,7 +155,7 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
       v-if="!auth.isAuthenticated"
       class="mt-6 max-w-sm mx-auto text-left rounded-xl border border-brand-cobalt/30 bg-white p-4 shadow-sm"
     >
-      <p class="text-[11px] font-black uppercase tracking-widest text-brand-cobalt">
+      <p class="text-2xs font-black uppercase tracking-widest text-brand-cobalt">
         {{ t('registerDemo.googleGateKicker') }}
       </p>
       <h3 class="mt-1 text-[15px] font-bold text-slate-900">
@@ -168,7 +168,7 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
       <!-- In-app browser (Threads/IG/…) can't run GIS. Point them out. -->
       <div
         v-if="google.isInAppBrowser.value || google.error.value === 'GIS_LOAD_FAILED'"
-        class="mt-3 rounded-lg border-2 border-dashed border-amber-300 bg-amber-50 py-2.5 px-3 text-center text-[11px] font-bold text-amber-800 leading-relaxed"
+        class="mt-3 rounded-lg border-2 border-dashed border-amber-300 bg-amber-50 py-2.5 px-3 text-center text-2xs font-bold text-amber-800 leading-relaxed"
       >
         {{ google.isInAppBrowser.value
             ? t('auth.demo.googleInAppBrowser')
@@ -190,19 +190,19 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
           class="w-full rounded-lg border-2 border-brand-dark-blue/30 bg-white/60 py-2.5 flex items-center justify-center gap-3 animate-pulse"
         >
           <div class="w-3.5 h-3.5 rounded-full bg-brand-dark-blue/20"></div>
-          <span class="text-[11px] font-extrabold text-brand-dark-blue/50 uppercase tracking-widest">
+          <span class="text-2xs font-extrabold text-brand-dark-blue/50 uppercase tracking-widest">
             {{ t('auth.loadingGoogle') }}
           </span>
         </div>
       </div>
       <div
         v-else
-        class="mt-3 rounded-lg border-2 border-dashed border-slate-300 bg-white/60 py-2.5 px-3 text-center text-[11px] font-bold text-slate-500"
+        class="mt-3 rounded-lg border-2 border-dashed border-slate-300 bg-white/60 py-2.5 px-3 text-center text-2xs font-bold text-slate-500"
       >
         {{ t('auth.demo.googleNotConfigured') }}
       </div>
 
-      <p class="mt-3 text-[11px] text-slate-400 text-center leading-relaxed">
+      <p class="mt-3 text-2xs text-slate-400 text-center leading-relaxed">
         {{ t('registerDemo.googleGateFootnote') }}
       </p>
     </section>
@@ -216,13 +216,13 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
           <NavIcon name="check" :size="16" />
         </div>
         <div class="min-w-0 flex-1 text-left">
-          <p class="text-[10px] font-black uppercase tracking-widest text-emerald-700">
+          <p class="text-3xs font-black uppercase tracking-widest text-emerald-700">
             {{ t('registerDemo.signedInKicker') }}
           </p>
           <p class="text-[12.5px] font-semibold text-emerald-900 truncate">
             {{ auth.user?.name || auth.user?.email || t('registerDemo.signedInAnon') }}
           </p>
-          <p v-if="auth.user?.email && auth.user?.name" class="text-[11px] text-emerald-700 truncate">
+          <p v-if="auth.user?.email && auth.user?.name" class="text-2xs text-emerald-700 truncate">
             {{ auth.user.email }}
           </p>
         </div>
@@ -269,7 +269,7 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
                   : t('registerDemo.existingTenantLineSchool', { name: tn.name, role: activeRoleLabel }) }}
               </li>
             </ul>
-            <p class="mt-2 text-[11px] text-amber-700 leading-snug">
+            <p class="mt-2 text-2xs text-amber-700 leading-snug">
               {{ t('registerDemo.existingTenantHint') }}
             </p>
           </div>

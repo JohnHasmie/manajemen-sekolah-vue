@@ -240,7 +240,7 @@ function open(it: SettingsGroup['items'][number]) {
     </header>
 
     <div v-for="g in groups" :key="g.title" class="space-y-2">
-      <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">{{ g.title }}</h3>
+      <h3 class="text-3xs font-bold text-slate-400 uppercase tracking-widest px-1">{{ g.title }}</h3>
       <section class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
         <button
           v-for="(it, idx) in g.items"
@@ -258,7 +258,7 @@ function open(it: SettingsGroup['items'][number]) {
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-[13px] font-bold" :class="it.danger ? 'text-red-700' : 'text-slate-900'">{{ it.label }}</p>
-            <p class="text-[11px] text-slate-500 truncate">{{ it.desc }}</p>
+            <p class="text-2xs text-slate-500 truncate">{{ it.desc }}</p>
           </div>
           <span class="text-slate-300">→</span>
         </button>
@@ -289,7 +289,7 @@ function open(it: SettingsGroup['items'][number]) {
         >
           {{ resetError }}
         </div>
-        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 leading-relaxed">
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-2xs text-amber-800 leading-relaxed">
           Setelah reset selesai Anda akan diminta login kembali, lalu masuk lagi ke demo baru.
         </div>
         <div class="grid grid-cols-2 gap-2">

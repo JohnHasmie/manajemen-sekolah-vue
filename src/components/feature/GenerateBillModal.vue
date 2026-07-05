@@ -127,7 +127,7 @@ const yearOptions = computed(() => {
   >
     <div class="space-y-3">
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           Jenis pembayaran
         </label>
         <select
@@ -142,7 +142,7 @@ const yearOptions = computed(() => {
       </div>
 
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           Tahun ajaran
         </label>
         <select
@@ -158,7 +158,7 @@ const yearOptions = computed(() => {
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Tahun
           </label>
           <select
@@ -169,7 +169,7 @@ const yearOptions = computed(() => {
           </select>
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Bulan
           </label>
           <select
@@ -183,7 +183,7 @@ const yearOptions = computed(() => {
 
       <!-- Calendar-style preview -->
       <div v-if="selectedTypeId" class="bg-slate-50 rounded-xl p-3">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+        <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-2">
           Status bulan ({{ selectedYear }})
         </p>
         <div class="grid grid-cols-6 gap-1.5">
@@ -192,7 +192,7 @@ const yearOptions = computed(() => {
             :key="m"
             type="button"
             :disabled="generatedSet.has(monthKey(selectedYear, idx + 1))"
-            class="rounded-lg py-2 text-[10px] font-bold transition-all"
+            class="rounded-lg py-2 text-3xs font-bold transition-all"
             :class="
               generatedSet.has(monthKey(selectedYear, idx + 1))
                 ? 'bg-emerald-100 text-emerald-700 cursor-not-allowed'
@@ -209,7 +209,7 @@ const yearOptions = computed(() => {
             >✓</span>
           </button>
         </div>
-        <p class="text-[10px] text-slate-500 mt-2 flex items-center gap-1.5">
+        <p class="text-3xs text-slate-500 mt-2 flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
           Sudah digenerate
           <span class="w-2 h-2 rounded-full bg-role-admin ml-2"></span>
@@ -219,16 +219,16 @@ const yearOptions = computed(() => {
 
       <p
         v-if="monthLocked"
-        class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3"
+        class="text-2xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3"
       >
         Tagihan {{ MONTHS[selectedMonth - 1] }} {{ selectedYear }} sudah pernah digenerate.
         Pilih bulan lain.
       </p>
-      <p v-if="err" class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+      <p v-if="err" class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
         {{ err }}
       </p>
 
-      <p v-if="selectedType" class="text-[11px] text-slate-500">
+      <p v-if="selectedType" class="text-2xs text-slate-500">
         <NavIcon name="info" :size="12" class="inline mr-1" />
         Nominal per siswa: <strong>{{ selectedType.amount }}</strong> · Periode {{ selectedType.period }}.
       </p>

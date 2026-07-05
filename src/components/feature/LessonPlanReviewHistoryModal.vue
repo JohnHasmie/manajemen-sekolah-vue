@@ -87,7 +87,7 @@ function fmtIso(iso: string): string {
       <!-- Loading -->
       <div v-if="isLoading" class="py-8 text-center">
         <div class="inline-block w-6 h-6 rounded-full border-2 border-slate-200 border-t-brand-cobalt animate-spin" />
-        <p class="text-[11px] text-slate-500 mt-3">Memuat riwayat…</p>
+        <p class="text-2xs text-slate-500 mt-3">Memuat riwayat…</p>
       </div>
 
       <!-- Error -->
@@ -99,7 +99,7 @@ function fmtIso(iso: string): string {
         <p>{{ error }}</p>
         <button
           type="button"
-          class="mt-2 text-[11px] font-bold text-red-700 underline"
+          class="mt-2 text-2xs font-bold text-red-700 underline"
           @click="load"
         >
           Coba lagi
@@ -115,7 +115,7 @@ function fmtIso(iso: string): string {
           <NavIcon name="list" :size="22" />
         </span>
         <p class="text-[13px] font-bold text-slate-700 mt-3">Belum ada riwayat</p>
-        <p class="text-[11px] text-slate-500 mt-1">
+        <p class="text-2xs text-slate-500 mt-1">
           Audit trail akan terisi setiap kali status RPP berubah.
         </p>
       </div>
@@ -152,7 +152,7 @@ function fmtIso(iso: string): string {
             </span>
             <span class="flex-1"></span>
             <span
-              class="text-[10px] text-slate-400 tabular-nums"
+              class="text-3xs text-slate-400 tabular-nums"
               :title="fmtIso(r.created_at)"
             >
               {{ formatRelative(r.created_at) }}
@@ -198,13 +198,13 @@ function fmtIso(iso: string): string {
             v-if="r.revision_areas && r.revision_areas.length > 0"
             class="mt-1.5 flex flex-wrap gap-1"
           >
-            <span class="text-[10px] text-slate-500 font-semibold mr-1">
+            <span class="text-3xs text-slate-500 font-semibold mr-1">
               Bagian:
             </span>
             <span
               v-for="key in r.revision_areas"
               :key="key"
-              class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700"
+              class="text-3xs font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700"
             >
               {{ sectionLabel(key) }}
             </span>

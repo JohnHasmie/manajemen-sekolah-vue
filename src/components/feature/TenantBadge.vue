@@ -27,7 +27,7 @@ const label = computed(() =>
 
 <template>
   <span
-    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold"
+    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-bold"
     :class="
       isTutoringCenter
         ? 'bg-amber-100 text-amber-800'

@@ -495,7 +495,7 @@ function studentStatusPills(
       :search-placeholder="t('tutor.sekolah.recommendationStudents.searchPlaceholder')"
     >
       <template #chips>
-        <span class="text-[11px] font-bold text-slate-500 px-1">
+        <span class="text-2xs font-bold text-slate-500 px-1">
           {{ t('tutor.sekolah.recommendationStudents.visibleCount', { count: visibleStudents.length }) }}
         </span>
       </template>
@@ -507,7 +507,7 @@ function studentStatusPills(
         v-for="opt in statusOptions"
         :key="opt.key"
         type="button"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+        class="px-3 py-1.5 rounded-full text-2xs font-bold transition border"
         :class="
           statusFilter === opt.key
             ? 'bg-brand-cobalt text-white border-brand-cobalt shadow-sm'
@@ -533,7 +533,7 @@ function studentStatusPills(
         <p class="text-[12.5px] font-black text-slate-900 leading-tight">
           {{ t('tutor.sekolah.recommendationStudents.unsharedCount', { count: unsharedCount }) }}
         </p>
-        <p class="text-[11px] text-slate-500 mt-0.5">
+        <p class="text-2xs text-slate-500 mt-0.5">
           {{ t('tutor.sekolah.recommendationStudents.bulkSubtitle') }}
         </p>
       </div>
@@ -583,7 +583,7 @@ function studentStatusPills(
             <p class="text-[13px] font-bold text-slate-900 truncate">
               {{ s.name }}
             </p>
-            <p class="text-[11px] text-slate-500 truncate">
+            <p class="text-2xs text-slate-500 truncate">
               <template v-if="s.student_number">
                 {{ s.student_number }}
               </template>
@@ -606,7 +606,7 @@ function studentStatusPills(
           <div class="flex flex-col items-end gap-1 flex-shrink-0">
             <span
               v-if="countsFor(s.id).total > 0"
-              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-black"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-2xs font-black"
               :class="
                 countsFor(s.id).pending >= 3
                   ? 'bg-red-100 text-red-700'
@@ -614,7 +614,7 @@ function studentStatusPills(
               "
             >
               {{ countsFor(s.id).total }}
-              <span class="text-[9px] uppercase tracking-wider opacity-80">
+              <span class="text-4xs uppercase tracking-wider opacity-80">
                 {{ t('tutor.sekolah.recommendationStudents.recBadge') }}
               </span>
             </span>
@@ -624,7 +624,7 @@ function studentStatusPills(
       </div>
       <p
         v-if="isLoadingCounts"
-        class="text-center text-[11px] text-slate-400 mt-3 italic"
+        class="text-center text-2xs text-slate-400 mt-3 italic"
       >
         {{ t('tutor.sekolah.recommendationStudents.loadingCounts') }}
       </p>
@@ -651,7 +651,7 @@ function studentStatusPills(
         <!-- NADA PESAN -->
         <div>
           <label
-            class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+            class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
             {{ t('tutor.sekolah.recommendationStudents.toneLabel') }}
           </label>
@@ -678,7 +678,7 @@ function studentStatusPills(
         <!-- CATATAN (cover message) -->
         <div>
           <label
-            class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+            class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
             {{ t('tutor.sekolah.recommendationStudents.coverMessageLabel') }}
             <span class="text-slate-400 normal-case font-normal"
@@ -693,7 +693,7 @@ function studentStatusPills(
             class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white resize-y"
             :disabled="isSharing"
           />
-          <p class="text-[10px] text-slate-400 mt-1 text-right tabular-nums">
+          <p class="text-3xs text-slate-400 mt-1 text-right tabular-nums">
             {{ bulkMessage.length }}/2000
           </p>
         </div>
@@ -701,7 +701,7 @@ function studentStatusPills(
         <!-- KANAL -->
         <div>
           <label
-            class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+            class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
             {{ t('tutor.sekolah.recommendationStudents.channelLabel') }}
           </label>
@@ -725,7 +725,7 @@ function studentStatusPills(
                 <p class="text-[12px] font-bold text-slate-900 leading-tight">
                   {{ t('tutor.sekolah.recommendationStudents.channelPushTitle') }}
                 </p>
-                <p class="text-[10px] text-slate-500 mt-0.5">{{ t('tutor.sekolah.recommendationStudents.channelPushSubtitle') }}</p>
+                <p class="text-3xs text-slate-500 mt-0.5">{{ t('tutor.sekolah.recommendationStudents.channelPushSubtitle') }}</p>
               </div>
             </label>
             <label
@@ -747,7 +747,7 @@ function studentStatusPills(
                 <p class="text-[12px] font-bold text-slate-900 leading-tight">
                   {{ t('tutor.sekolah.recommendationStudents.channelWhatsappTitle') }}
                 </p>
-                <p class="text-[10px] text-slate-500 mt-0.5">{{ t('tutor.sekolah.recommendationStudents.channelWhatsappSubtitle') }}</p>
+                <p class="text-3xs text-slate-500 mt-0.5">{{ t('tutor.sekolah.recommendationStudents.channelWhatsappSubtitle') }}</p>
               </div>
             </label>
           </div>
@@ -803,7 +803,7 @@ function studentStatusPills(
               {{ shareResult.sent }}
             </p>
             <p
-              class="text-[9px] font-bold uppercase tracking-widest mt-1 text-slate-500"
+              class="text-4xs font-bold uppercase tracking-widest mt-1 text-slate-500"
             >
               {{ t('tutor.sekolah.recommendationStudents.resultSent') }}
             </p>
@@ -815,7 +815,7 @@ function studentStatusPills(
               {{ shareResult.skipped_no_wali }}
             </p>
             <p
-              class="text-[9px] font-bold uppercase tracking-widest mt-1 text-slate-500"
+              class="text-4xs font-bold uppercase tracking-widest mt-1 text-slate-500"
             >
               {{ t('tutor.sekolah.recommendationStudents.resultSkipped') }}
             </p>
@@ -827,7 +827,7 @@ function studentStatusPills(
               {{ shareResult.failed }}
             </p>
             <p
-              class="text-[9px] font-bold uppercase tracking-widest mt-1 text-slate-500"
+              class="text-4xs font-bold uppercase tracking-widest mt-1 text-slate-500"
             >
               {{ t('tutor.sekolah.recommendationStudents.resultFailed') }}
             </p>
@@ -861,13 +861,13 @@ function studentStatusPills(
               </p>
               <p
                 v-if="row.error"
-                class="text-[11px] text-slate-500 mt-0.5 leading-snug"
+                class="text-2xs text-slate-500 mt-0.5 leading-snug"
               >
                 {{ row.error }}
               </p>
             </div>
             <span
-              class="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
+              class="text-4xs font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
               :class="resultRowTone(row.status).badge"
             >
               {{ resultRowTone(row.status).label }}

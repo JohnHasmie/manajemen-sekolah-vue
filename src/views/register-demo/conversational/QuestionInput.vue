@@ -435,7 +435,7 @@ function toggleScenario(key: TutoringScenarioKey) {
         <!-- has hits -->
         <template v-else-if="searchHits.length > 0">
           <div class="flex items-center gap-2 px-1 mb-1.5">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">
+            <span class="text-3xs font-black uppercase tracking-widest text-slate-400">
               {{ searchHits.length }} hasil ditemukan
             </span>
           </div>
@@ -452,7 +452,7 @@ function toggleScenario(key: TutoringScenarioKey) {
               </div>
               <div class="flex-1 min-w-0">
                 <div class="text-[13px] font-bold text-slate-900 truncate">{{ hit.name }}</div>
-                <div class="text-[11px] text-slate-500 truncate">
+                <div class="text-2xs text-slate-500 truncate">
                   {{
                     [
                       educationLevelDisplay(hitEducationLevel(hit)),
@@ -466,7 +466,7 @@ function toggleScenario(key: TutoringScenarioKey) {
                 </div>
               </div>
               <span
-                class="text-[10px] font-bold px-2 py-0.5 rounded-md border whitespace-nowrap flex-shrink-0"
+                class="text-3xs font-bold px-2 py-0.5 rounded-md border whitespace-nowrap flex-shrink-0"
                 :class="hitTierColor(hit)"
               >
                 {{ hitTierLabel(hit) }}
@@ -487,7 +487,7 @@ function toggleScenario(key: TutoringScenarioKey) {
             <NavIcon name="info" :size="13" />
             Tidak ada sekolah cocok di registri.
           </p>
-          <p class="text-[11px] text-slate-400">
+          <p class="text-2xs text-slate-400">
             Tidak masalah — lanjut dengan ketikan Anda untuk mendaftarkan sebagai sekolah baru.
           </p>
         </div>
@@ -548,7 +548,7 @@ function toggleScenario(key: TutoringScenarioKey) {
         <div>{{ o.label }}</div>
         <div
           v-if="o.hint"
-          class="text-[11px] font-medium mt-0.5"
+          class="text-2xs font-medium mt-0.5"
           :class="modelValue === o.value ? 'text-brand-cobalt/80' : 'text-slate-400'"
         >
           {{ o.hint }}
@@ -697,7 +697,7 @@ function toggleScenario(key: TutoringScenarioKey) {
           <NavIcon :name="socialLabels[c].icon" :size="16" />
         </div>
         <div class="flex-1 min-w-0 text-left">
-          <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
+          <div class="text-3xs font-bold uppercase tracking-widest text-slate-400 mb-0.5">
             {{ socialLabels[c].label }}
           </div>
           <input
@@ -717,7 +717,7 @@ function toggleScenario(key: TutoringScenarioKey) {
         />
       </div>
       <p
-        class="text-[11px] mt-2 text-center"
+        class="text-2xs mt-2 text-center"
         :class="hasAnySocial ? 'text-emerald-600' : 'text-amber-600'"
       >
         <NavIcon
@@ -775,7 +775,7 @@ function toggleScenario(key: TutoringScenarioKey) {
           />
           <div class="flex-1 min-w-0">
             <p
-              class="text-[10px] font-black uppercase tracking-widest mb-0.5"
+              class="text-3xs font-black uppercase tracking-widest mb-0.5"
               :class="currentLocation.has_office ? 'text-brand-cobalt' : 'text-amber-700'"
             >
               {{
@@ -794,7 +794,7 @@ function toggleScenario(key: TutoringScenarioKey) {
           </div>
           <button
             type="button"
-            class="text-[11px] font-semibold text-slate-500 hover:text-slate-900 flex-shrink-0"
+            class="text-2xs font-semibold text-slate-500 hover:text-slate-900 flex-shrink-0"
             @click="clearLocation"
           >
             Hapus
@@ -811,7 +811,7 @@ function toggleScenario(key: TutoringScenarioKey) {
           />
           <span class="leading-snug">
             <span class="font-semibold">Belum punya kantor fisik</span>
-            <span class="block text-[11px] text-slate-500 mt-0.5">
+            <span class="block text-2xs text-slate-500 mt-0.5">
               Centang kalau Anda bimbel online / mobile. Pin di atas
               dianggap sebagai lokasi operator, bukan alamat kantor —
               tim verifikasi akan menyesuaikan flow konfirmasi.
@@ -832,7 +832,7 @@ function toggleScenario(key: TutoringScenarioKey) {
         <p class="text-[12px] font-semibold text-slate-700">
           Lokasi wajib diisi.
         </p>
-        <p class="text-[11px] text-slate-500 mt-1 leading-snug">
+        <p class="text-2xs text-slate-500 mt-1 leading-snug">
           Klik <span class="font-semibold text-brand-cobalt">“Lokasi saya”</span>
           atau tap di peta untuk drop pin. Belum punya kantor fisik?
           Pakai lokasi sekarang saja — akan muncul toggle untuk menandai
@@ -862,7 +862,7 @@ function toggleScenario(key: TutoringScenarioKey) {
         </div>
         <div class="flex-1 min-w-0">
           <div class="text-sm font-bold text-slate-900">{{ s.label }}</div>
-          <div class="text-[11px] text-slate-500 leading-snug">{{ s.description }}</div>
+          <div class="text-2xs text-slate-500 leading-snug">{{ s.description }}</div>
         </div>
       </button>
     </div>

@@ -351,7 +351,7 @@ function onHistoryIntent() {
             <button
               v-if="canRegen"
               type="button"
-              class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold uppercase tracking-wider transition"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-2xs font-bold uppercase tracking-wider transition"
               @click="showRegen = true"
             >
               <NavIcon name="sparkles" :size="11" />
@@ -359,7 +359,7 @@ function onHistoryIntent() {
             </button>
             <span
               v-if="plan.ai_generated"
-              class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/15 text-white text-[10px] font-bold uppercase tracking-wider"
+              class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/15 text-white text-3xs font-bold uppercase tracking-wider"
             >
               <NavIcon name="sparkles" :size="10" />
               {{ t('tutor.sekolah.lessonPlanDetail.aiBadge') }}
@@ -371,7 +371,7 @@ function onHistoryIntent() {
             class="bg-white border border-slate-200 rounded-2xl shadow-sm grid grid-cols-3 divide-x divide-slate-100"
           >
             <div class="px-3 py-3 text-center">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
                 {{ t('tutor.sekolah.lessonPlanDetail.kpiSections') }}
               </p>
               <p
@@ -382,7 +382,7 @@ function onHistoryIntent() {
               </p>
             </div>
             <div class="px-3 py-3 text-center">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
                 {{ t('tutor.sekolah.lessonPlanDetail.kpiFormat') }}
               </p>
               <p
@@ -393,11 +393,11 @@ function onHistoryIntent() {
               </p>
             </div>
             <div class="px-3 py-3 text-center">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
                 {{ t('tutor.sekolah.lessonPlanDetail.kpiStatus') }}
               </p>
               <span
-                class="inline-flex items-center gap-1 mt-1 px-2 py-1 rounded-md border text-[11px] font-bold"
+                class="inline-flex items-center gap-1 mt-1 px-2 py-1 rounded-md border text-2xs font-bold"
                 :class="[tone.bg, tone.text, tone.border]"
               >
                 <span class="w-1.5 h-1.5 rounded-full" :class="tone.dot" />
@@ -405,7 +405,7 @@ function onHistoryIntent() {
               </span>
               <p
                 v-if="statusContext"
-                class="text-[10px] text-slate-500 mt-1.5 leading-snug px-1"
+                class="text-3xs text-slate-500 mt-1.5 leading-snug px-1"
               >
                 {{ statusContext }}
               </p>
@@ -426,7 +426,7 @@ function onHistoryIntent() {
             "
           >
             <p
-              class="text-[10px] font-bold uppercase tracking-widest mb-1.5 inline-flex items-center gap-1.5"
+              class="text-3xs font-bold uppercase tracking-widest mb-1.5 inline-flex items-center gap-1.5"
               :class="plan.status === 'Rejected' ? 'text-red-700' : 'text-violet-700'"
             >
               <NavIcon
@@ -447,7 +447,7 @@ function onHistoryIntent() {
             </p>
             <p
               v-if="plan.revision_areas && plan.revision_areas.length > 0"
-              class="mt-2 text-[10px] font-semibold inline-flex items-center gap-1.5 flex-wrap"
+              class="mt-2 text-3xs font-semibold inline-flex items-center gap-1.5 flex-wrap"
               :class="plan.status === 'Rejected' ? 'text-red-800' : 'text-violet-800'"
             >
               <span class="opacity-70">{{ t('tutor.sekolah.lessonPlanDetail.areasToFix') }}</span>
@@ -477,7 +477,7 @@ function onHistoryIntent() {
               <p class="text-[13px] font-bold text-slate-900 truncate">
                 {{ plan.file_name ?? t('tutor.sekolah.lessonPlanDetail.fileFallback') }}
               </p>
-              <p class="text-[11px] text-slate-500 mt-0.5">
+              <p class="text-2xs text-slate-500 mt-0.5">
                 {{ plan.file_mime ?? 'document' }}
                 <template v-if="plan.file_size_mb"> · {{ plan.file_size_mb }} MB</template>
               </p>
@@ -497,12 +497,12 @@ function onHistoryIntent() {
           <section v-if="isStructuredFormat(plan.format)" class="space-y-2.5">
             <header class="flex items-center gap-2 px-1">
               <span
-                class="text-[10px] font-bold uppercase tracking-widest"
+                class="text-3xs font-bold uppercase tracking-widest"
                 :style="{ color: accent }"
               >
                 {{ t('tutor.sekolah.lessonPlanDetail.sectionsHeader') }}
               </span>
-              <span class="text-[10px] text-slate-400 tabular-nums">
+              <span class="text-3xs text-slate-400 tabular-nums">
                 · {{ t('tutor.sekolah.lessonPlanDetail.sectionsFilled', { filled: filledSections, total: totalSections }) }}
               </span>
               <span class="flex-1 border-t border-dashed border-slate-200 ml-2"></span>
@@ -517,7 +517,7 @@ function onHistoryIntent() {
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
                   <p
-                    class="text-[10px] font-bold uppercase tracking-widest"
+                    class="text-3xs font-bold uppercase tracking-widest"
                     :style="{ color: accent }"
                   >
                     {{ String(idx + 1).padStart(2, '0') }} · {{ s.label }}
@@ -561,7 +561,7 @@ function onHistoryIntent() {
 
           <!-- NOTES PANEL -->
           <section v-if="plan.notes" class="bg-white border border-slate-200 rounded-2xl p-4">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+            <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
               {{ t('tutor.sekolah.lessonPlanDetail.notesHeader') }}
             </p>
             <p class="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-wrap">

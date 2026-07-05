@@ -26,7 +26,7 @@ defineEmits<{ 'update:modelValue': [AttendanceStatus] }>();
       role="radio"
       :aria-checked="modelValue === opt"
       :disabled="disabled"
-      class="rounded-lg border border-slate-200 bg-white text-slate-500 hover:border-slate-400 hover:text-slate-900 transition-all px-3 py-1.5 text-[11px] font-bold inline-flex items-center justify-center gap-1.5 min-w-[68px] sm:min-w-[76px] disabled:opacity-60 disabled:cursor-not-allowed"
+      class="rounded-lg border border-slate-200 bg-white text-slate-500 hover:border-slate-400 hover:text-slate-900 transition-all px-3 py-1.5 text-2xs font-bold inline-flex items-center justify-center gap-1.5 min-w-[68px] sm:min-w-[76px] disabled:opacity-60 disabled:cursor-not-allowed"
       :class="{
         'border-transparent text-white bg-emerald-700': modelValue === opt && opt === 'hadir',
         'border-transparent text-white bg-amber-700': modelValue === opt && opt === 'sakit',

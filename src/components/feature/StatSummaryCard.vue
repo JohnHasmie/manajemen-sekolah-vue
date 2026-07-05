@@ -95,14 +95,14 @@ withDefaults(
     <div class="space-y-1">
       <div class="flex items-center gap-2 flex-wrap">
         <p
-          class="text-[11px] font-black uppercase tracking-widest leading-none"
+          class="text-2xs font-black uppercase tracking-widest leading-none"
           :class="sliceLabelMuted ? 'text-slate-300' : 'text-slate-400'"
         >
           {{ label }}
         </p>
         <span
           v-if="sliceLabel"
-          class="text-[9px] font-black uppercase tracking-widest leading-none px-1.5 py-0.5 rounded-md"
+          class="text-4xs font-black uppercase tracking-widest leading-none px-1.5 py-0.5 rounded-md"
           :class="
             sliceLabelMuted
               ? 'bg-slate-50 text-slate-400'
@@ -119,7 +119,7 @@ withDefaults(
         </p>
         <span
           v-if="trend"
-          class="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md inline-flex items-center gap-0.5"
+          class="text-3xs font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md inline-flex items-center gap-0.5"
           :class="{
             'bg-emerald-50 text-emerald-700': trend.direction === 'up',
             'bg-red-50 text-red-700': trend.direction === 'down',
@@ -141,7 +141,7 @@ withDefaults(
 
       <p
         v-if="sublabel"
-        class="text-[11px] font-bold text-slate-400 mt-2 flex items-center gap-1 group-hover:text-brand-cobalt transition-colors"
+        class="text-2xs font-bold text-slate-400 mt-2 flex items-center gap-1 group-hover:text-brand-cobalt transition-colors"
       >
         {{ sublabel }}
         <NavIcon name="megaphone" :size="10" />

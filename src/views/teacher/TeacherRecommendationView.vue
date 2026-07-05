@@ -464,7 +464,7 @@ async function runGenerate(cfg: GenerateConfig) {
       :search-placeholder="t('tutor.sekolah.recommendationHub.searchPlaceholder')"
     >
       <template #chips>
-        <span class="text-[11px] font-bold text-slate-500 px-1">
+        <span class="text-2xs font-bold text-slate-500 px-1">
           {{ t('tutor.sekolah.recommendationHub.classCount', { count: visibleClasses.length }) }}
         </span>
       </template>

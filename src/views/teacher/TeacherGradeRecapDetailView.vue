@@ -785,14 +785,14 @@ function onPredikatBlur(rowId: string) {
                   "
                 >
                   <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-semibold text-slate-400 w-5 text-right tabular-nums">
+                    <span class="text-3xs font-semibold text-slate-400 w-5 text-right tabular-nums">
                       {{ idx + 1 }}
                     </span>
                     <div class="flex-1 min-w-0">
                       <p class="text-[12px] font-semibold text-slate-900 leading-tight truncate">
                         {{ r.student_name }}
                       </p>
-                      <p v-if="r.nis" class="text-[10px] text-slate-500 leading-tight">
+                      <p v-if="r.nis" class="text-3xs text-slate-500 leading-tight">
                         {{ r.nis }}
                       </p>
                     </div>
@@ -911,7 +911,7 @@ function onPredikatBlur(rowId: string) {
                 <td class="px-2 py-1">
                   <button
                     type="button"
-                    class="w-full text-left text-[11px] text-slate-700 hover:text-brand-cobalt rounded-md px-1 py-1 hover:bg-slate-50 transition truncate"
+                    class="w-full text-left text-2xs text-slate-700 hover:text-brand-cobalt rounded-md px-1 py-1 hover:bg-slate-50 transition truncate"
                     :class="{ italic: !r.description, 'text-slate-400': !r.description }"
                     @click="openDescEditor(r)"
                   >

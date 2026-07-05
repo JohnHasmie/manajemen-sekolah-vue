@@ -104,7 +104,7 @@ const kicker = computed(() => {
         <p class="text-[14px] font-black text-slate-900 mt-1 leading-tight truncate">
           Kelas {{ cls.class_name }}
         </p>
-        <p class="text-[11px] text-slate-500 mt-0.5">
+        <p class="text-2xs text-slate-500 mt-0.5">
           {{ cls.student_count }} siswa
         </p>
       </div>
@@ -197,7 +197,7 @@ const kicker = computed(() => {
       >
         {{ completionPct }}%
       </span>
-      <span class="text-[10px] text-slate-400 tabular-nums">
+      <span class="text-3xs text-slate-400 tabular-nums">
         ({{ cls.published_count }}/{{ cls.student_count }})
       </span>
     </div>

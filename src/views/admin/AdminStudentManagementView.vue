@@ -716,7 +716,7 @@ function topMeta(s: Student): string {
       <div class="flex items-center justify-between gap-3">
         <button
           type="button"
-          class="text-[11px] font-black uppercase tracking-wider text-slate-500 hover:text-slate-900"
+          class="text-2xs font-black uppercase tracking-wider text-slate-500 hover:text-slate-900"
           @click="clearGuardianFilter"
         >
           {{ t('common.clearFilter') }}

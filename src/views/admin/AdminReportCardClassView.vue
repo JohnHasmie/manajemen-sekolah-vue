@@ -252,7 +252,7 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
             <p class="text-[13px] font-bold text-slate-900 truncate">
               {{ s.student_name }}
             </p>
-            <p class="text-[11px] text-slate-500 truncate">
+            <p class="text-2xs text-slate-500 truncate">
               <template v-if="s.student_number">
                 {{ t('admin.sekolah.report_card_class.nis_label', { nis: s.student_number }) }}
               </template>

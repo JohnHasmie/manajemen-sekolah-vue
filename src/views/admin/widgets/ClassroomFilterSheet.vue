@@ -56,13 +56,13 @@ function apply() {
   >
     <div class="space-y-4">
       <div>
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+        <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
           Tingkat
         </p>
         <div class="flex flex-wrap gap-1.5">
           <button
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               form.grade_level === null
                 ? 'bg-role-admin text-white border-role-admin'
@@ -76,7 +76,7 @@ function apply() {
             v-for="g in gradeLevels"
             :key="g"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               form.grade_level === g
                 ? 'bg-role-admin text-white border-role-admin'
@@ -90,13 +90,13 @@ function apply() {
       </div>
 
       <div>
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+        <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
           Status Wali Kelas
         </p>
         <div class="flex gap-1.5">
           <button
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               form.has_homeroom === null
                 ? 'bg-role-admin text-white border-role-admin'
@@ -108,7 +108,7 @@ function apply() {
           </button>
           <button
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               form.has_homeroom === 'yes'
                 ? 'bg-role-admin text-white border-role-admin'
@@ -120,7 +120,7 @@ function apply() {
           </button>
           <button
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               form.has_homeroom === 'no'
                 ? 'bg-role-admin text-white border-role-admin'
@@ -136,7 +136,7 @@ function apply() {
       <div class="flex items-center justify-between gap-2 pt-1">
         <button
           type="button"
-          class="text-[11px] font-bold text-slate-500 hover:text-role-admin"
+          class="text-2xs font-bold text-slate-500 hover:text-role-admin"
           @click="reset"
         >
           Reset

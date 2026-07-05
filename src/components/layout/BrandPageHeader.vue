@@ -47,39 +47,49 @@ const activeRole = computed<Role | null>(
   () => props.role ?? (auth.activeRole as Role | null),
 );
 
-const palette = computed(() => {
-  const base = getRoleColor(activeRole.value);
-  // Dark-blue companion derived per role — used as the gradient
-  // start. Mirrors Flutter's brand-dark-blue × role-color mix.
-  let darkStop: string;
+// Role → gradient utility class. Each class resolves to a named
+// `backgroundImage` token in tailwind.config.ts whose stops are the
+// EXACT hexes this component used to compose inline, so the rendered
+// gradient is pixel-identical. The mapping reproduces every branch of
+// the previous `darkStop` switch:
+//   - admin              → role-admin-gradient    (#0A1F4D · #143068)
+//   - guru / wali_kelas  → role-teacher-gradient  (#0F2A45 · #1B6FB8)
+//   - wali (parent)      → role-parent-gradient   (#0B5677 · #21AFE6)
+//   - staff              → role-staff-gradient    (#5E2D04 · #B45309)
+//   - super_admin        → role-superadmin-gradient (#0F2A45 · #143068)
+//     (admin navy hex, but the *default* dark stop — a distinct gradient)
+//   - null / unknown     → role-teacher-gradient  (matches old default:
+//     dark #0F2A45 + fallback hex #1B6FB8 == teacher gradient)
+const gradientClass = computed(() => {
   switch (activeRole.value) {
     case 'admin':
-      darkStop = '#0A1F4D';
-      break;
+      return 'bg-role-admin-gradient';
     case 'wali':
-      darkStop = '#0B5677';
-      break;
+      return 'bg-role-parent-gradient';
     case 'staff':
-      darkStop = '#5E2D04';
-      break;
+      return 'bg-role-staff-gradient';
+    case 'super_admin':
+      return 'bg-role-superadmin-gradient';
     case 'guru':
     case 'wali_kelas':
     default:
-      darkStop = '#0F2A45';
+      return 'bg-role-teacher-gradient';
   }
-  return { hex: base.hex, dark: darkStop };
 });
 
-const gradientStyle = computed(() => ({
-  background: `linear-gradient(120deg, ${palette.value.dark} 0%, ${palette.value.hex} 60%, ${palette.value.hex} 100%)`,
-  boxShadow: `0 10px 28px ${palette.value.hex}26`,
+// The soft drop shadow still tints with the live role hex + `26` alpha,
+// which no static Tailwind class can express, so it stays an inline
+// style. Unchanged from before.
+const shadowStyle = computed(() => ({
+  boxShadow: `0 10px 28px ${getRoleColor(activeRole.value).hex}26`,
 }));
 </script>
 
 <template>
   <header
     class="rounded-2xl text-white p-4 sm:p-5"
-    :style="gradientStyle"
+    :class="gradientClass"
+    :style="shadowStyle"
   >
     <div class="flex items-start justify-between gap-4 flex-wrap">
       <div class="min-w-0">

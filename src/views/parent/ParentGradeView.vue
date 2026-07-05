@@ -346,18 +346,18 @@ const activeSemesterLabel = computed(
       class="bg-white border border-slate-200 rounded-2xl px-4 py-3 grid grid-cols-3 divide-x divide-slate-100"
     >
       <div class="pr-3">
-        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        <p class="text-3xs font-bold uppercase tracking-widest text-slate-400">
           {{ t('parent.grades.kpiAssessments') }}
         </p>
         <p class="text-xl font-black text-slate-900 mt-1">
           {{ aggregates.total }}
         </p>
-        <p class="text-[10px] font-bold text-slate-500 mt-0.5 truncate">
+        <p class="text-3xs font-bold text-slate-500 mt-0.5 truncate">
           {{ t('parent.grades.kpiDoneWaiting', { done: aggregates.scored, waiting: aggregates.pending }) }}
         </p>
       </div>
       <div class="px-3">
-        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        <p class="text-3xs font-bold uppercase tracking-widest text-slate-400">
           {{ t('parent.grades.kpiAverage') }}
         </p>
         <p class="text-xl font-black text-slate-900 mt-1">
@@ -365,14 +365,14 @@ const activeSemesterLabel = computed(
         </p>
         <span
           v-if="aggregates.scored > 0"
-          class="inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full mt-0.5"
+          class="inline-block text-4xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full mt-0.5"
           :class="avgTone(aggregates.avg)"
         >
           {{ avgLabel(aggregates.avg) }}
         </span>
       </div>
       <div class="pl-3">
-        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        <p class="text-3xs font-bold uppercase tracking-widest text-slate-400">
           {{ t('parent.grades.kpiRange') }}
         </p>
         <p class="text-xl font-black text-slate-900 mt-1">
@@ -380,7 +380,7 @@ const activeSemesterLabel = computed(
             ? `${fmtScore(aggregates.min)} — ${fmtScore(aggregates.max)}`
             : '—' }}
         </p>
-        <p class="text-[10px] font-bold text-slate-500 mt-0.5">
+        <p class="text-3xs font-bold text-slate-500 mt-0.5">
           {{ t('parent.grades.kpiRangeMinMax') }}
         </p>
       </div>
@@ -407,7 +407,7 @@ const activeSemesterLabel = computed(
           <button
             v-if="hasActiveFilter"
             type="button"
-            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:bg-slate-50"
+            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 text-3xs font-bold uppercase tracking-widest text-slate-500 hover:bg-slate-50"
             @click="resetFilter"
           >
             <NavIcon name="x" :size="10" />
@@ -487,7 +487,7 @@ const activeSemesterLabel = computed(
                   <p class="text-xl font-black text-slate-900 leading-none">
                     {{ row.score != null ? row.score.toFixed(0) : '—' }}
                   </p>
-                  <p class="text-[10px] font-medium text-slate-500 mt-1">
+                  <p class="text-3xs font-medium text-slate-500 mt-1">
                     {{ t('wali.sekolah.grade.kkmPrefix') }} {{ row.kkm }}
                   </p>
                 </div>

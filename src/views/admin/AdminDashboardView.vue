@@ -254,7 +254,7 @@ const financePct = computed(() =>
                 <NavIcon name="sparkles" :size="20" />
               </div>
               <div class="min-w-0">
-                <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">{{ greeting }}</p>
+                <p class="text-3xs font-bold text-slate-400 tracking-widest uppercase">{{ greeting }}</p>
                 <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                   {{ t('admin.sekolah.dashboard.greeting_prefix') }} <span class="text-role-admin">{{ auth.user?.name }}</span>
                 </h1>
@@ -272,7 +272,7 @@ const financePct = computed(() =>
                 :min-width="140"
                 @open="showYearPicker = true"
               />
-              <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-widest">
+              <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-3xs font-bold uppercase tracking-widest">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 {{ t('admin.sekolah.dashboard.realtime') }}
               </span>
@@ -391,12 +391,12 @@ const financePct = computed(() =>
                     <h3 class="text-sm font-black text-slate-900 leading-none">
                       {{ t('admin.dashboard.attendancePerDayClass') }}
                     </h3>
-                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">{{ t('admin.dashboard.last10Days') }}</p>
+                    <p class="text-3xs text-slate-400 font-bold mt-0.5">{{ t('admin.dashboard.last10Days') }}</p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  class="text-[11px] font-bold text-role-admin hover:underline"
+                  class="text-2xs font-bold text-role-admin hover:underline"
                   @click="router.push('/admin/student-attendance')"
                 >
                   {{ t('admin.dashboard.details') }}
@@ -404,7 +404,7 @@ const financePct = computed(() =>
               </header>
               <div class="grid gap-1.5" style="grid-template-columns: 60px repeat(10, 1fr);">
                 <template v-for="(row, ri) in heatmap" :key="`${row.class_name}-${ri}`">
-                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider self-center">{{ row.class_name }}</span>
+                  <span class="text-3xs font-bold text-slate-400 uppercase tracking-wider self-center">{{ row.class_name }}</span>
                   <span
                     v-for="(pct, ci) in row.cells"
                     :key="`${ri}-${ci}`"
@@ -414,7 +414,7 @@ const financePct = computed(() =>
                   ></span>
                 </template>
               </div>
-              <div class="flex items-center gap-3 mt-3 text-[10px] text-slate-500 flex-wrap">
+              <div class="flex items-center gap-3 mt-3 text-3xs text-slate-500 flex-wrap">
                 <span class="inline-flex items-center gap-1.5"><span class="w-3 h-2 rounded bg-emerald-100"></span>80%</span>
                 <span class="inline-flex items-center gap-1.5"><span class="w-3 h-2 rounded bg-emerald-500"></span>90%</span>
                 <span class="inline-flex items-center gap-1.5"><span class="w-3 h-2 rounded bg-emerald-700"></span>95%+</span>
@@ -433,12 +433,12 @@ const financePct = computed(() =>
                   </div>
                   <div>
                     <h3 class="text-sm font-black text-slate-900 leading-none">{{ t('admin.dashboard.financeThisMonth') }}</h3>
-                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">{{ t('admin.dashboard.receivedVsOutstanding') }}</p>
+                    <p class="text-3xs text-slate-400 font-bold mt-0.5">{{ t('admin.dashboard.receivedVsOutstanding') }}</p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  class="text-[11px] font-bold text-role-admin hover:underline"
+                  class="text-2xs font-bold text-role-admin hover:underline"
                   @click="router.push('/admin/finance')"
                 >
                   {{ t('admin.dashboard.details') }}
@@ -446,11 +446,11 @@ const financePct = computed(() =>
               </header>
               <div class="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.dashboard.received') }}</p>
+                  <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.dashboard.received') }}</p>
                   <p class="text-base font-black text-emerald-700">{{ formatRupiah(financeReceived) }}</p>
                 </div>
                 <div>
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.dashboard.outstanding') }}</p>
+                  <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.dashboard.outstanding') }}</p>
                   <p class="text-base font-black text-red-700">{{ formatRupiah(financeOutstanding) }}</p>
                 </div>
               </div>
@@ -460,7 +460,7 @@ const financePct = computed(() =>
                   :style="{ width: `${financePct}%` }"
                 ></div>
               </div>
-              <p class="text-[11px] text-slate-500 mt-2">
+              <p class="text-2xs text-slate-500 mt-2">
                 <b class="text-slate-900">{{ financePct }}%</b> {{ t('admin.dashboard.targetReached') }}
               </p>
             </div>
@@ -475,7 +475,7 @@ const financePct = computed(() =>
                 </h3>
                 <span
                   v-if="priorityItems.length > 0"
-                  class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-role-admin/10 text-role-admin"
+                  class="text-3xs font-bold px-2 py-0.5 rounded-full bg-role-admin/10 text-role-admin"
                 >
                   {{ priorityHeaderLabel }}
                 </span>
@@ -483,7 +483,7 @@ const financePct = computed(() =>
               <button
                 v-if="priorityItems.length > 0"
                 type="button"
-                class="text-[11px] font-bold text-role-admin hover:underline inline-flex items-center gap-1"
+                class="text-2xs font-bold text-role-admin hover:underline inline-flex items-center gap-1"
                 @click="gotoAdminInbox"
               >
                 {{ t('common.viewAll') }}

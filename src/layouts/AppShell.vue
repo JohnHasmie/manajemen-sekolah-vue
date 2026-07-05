@@ -316,7 +316,7 @@ const schoolInitial = computed(() => {
           </div>
           <div v-if="!isCollapsed" class="min-w-0">
             <p class="text-[13px] font-extrabold text-tutoring-text-hi leading-tight truncate">{{ t('superAdmin.platformName') }}</p>
-            <p class="text-[11px] text-tutoring-text-lo">{{ t('superAdmin.kicker') }}</p>
+            <p class="text-2xs text-tutoring-text-lo">{{ t('superAdmin.kicker') }}</p>
           </div>
         </template>
         <template v-else>
@@ -330,7 +330,7 @@ const schoolInitial = computed(() => {
           </div>
           <div v-if="!isCollapsed" class="min-w-0">
             <p class="text-[13px] font-extrabold text-tutoring-text-hi leading-tight truncate" :title="activeSchoolName">{{ activeSchoolName }}</p>
-            <p class="text-[11px] text-tutoring-text-lo capitalize">{{ auth.activeRole || 'role' }}</p>
+            <p class="text-2xs text-tutoring-text-lo capitalize">{{ auth.activeRole || 'role' }}</p>
           </div>
         </template>
       </div>
@@ -340,7 +340,7 @@ const schoolInitial = computed(() => {
         <div v-for="(section, idx) in menu" :key="idx" class="mb-4 last:mb-0">
           <p
             v-if="section.titleKey && !isCollapsed"
-            class="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-tutoring-text-lo"
+            class="px-3 mb-1.5 text-2xs font-bold uppercase tracking-[0.14em] text-tutoring-text-lo"
           >
             {{ t(section.titleKey) }}
           </p>
@@ -375,7 +375,7 @@ const schoolInitial = computed(() => {
                 <span v-if="!isCollapsed" class="flex-1 truncate">{{ t(item.labelKey) }}</span>
                 <span
                   v-if="item.badge && !isCollapsed"
-                  class="min-w-[18px] h-[18px] px-1 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
+                  class="min-w-[18px] h-[18px] px-1 rounded-full text-white text-3xs font-bold flex items-center justify-center"
                   :style="{ background: color.hex }"
                 >{{ item.badge }}</span>
                 <span
@@ -472,7 +472,7 @@ const schoolInitial = computed(() => {
               </div>
               <div class="min-w-0">
                 <p class="text-[13px] font-extrabold text-tutoring-text-hi leading-tight truncate" :title="activeSchoolName">{{ activeSchoolName }}</p>
-                <p class="text-[11px] text-tutoring-text-lo capitalize">{{ auth.activeRole || 'role' }}</p>
+                <p class="text-2xs text-tutoring-text-lo capitalize">{{ auth.activeRole || 'role' }}</p>
               </div>
             </template>
           </div>
@@ -489,7 +489,7 @@ const schoolInitial = computed(() => {
           <div v-for="(section, idx) in menu" :key="idx" class="mb-4 last:mb-0">
             <p
               v-if="section.titleKey"
-              class="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-tutoring-text-lo"
+              class="px-3 mb-1.5 text-2xs font-bold uppercase tracking-[0.14em] text-tutoring-text-lo"
             >{{ t(section.titleKey) }}</p>
             <ul class="space-y-0.5">
               <li v-for="item in section.items" :key="item.to">

@@ -501,11 +501,11 @@ function pickStatus(k: StatusFilter) {
           <div class="flex items-center justify-between mb-1.5">
             <label class="block text-sm font-medium text-slate-700">
               Kelas tujuan
-              <span class="text-[10px] font-bold text-slate-400 ml-1">
+              <span class="text-3xs font-bold text-slate-400 ml-1">
                 ({{ form.class_ids.length }}/{{ classes.length }})
               </span>
             </label>
-            <div class="flex items-center gap-2 text-[11px] font-bold">
+            <div class="flex items-center gap-2 text-2xs font-bold">
               <button
                 type="button"
                 class="text-role-teacher hover:underline"

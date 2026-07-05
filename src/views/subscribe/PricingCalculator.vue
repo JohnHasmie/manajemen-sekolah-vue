@@ -210,7 +210,7 @@ function setPeriod(p: BillingPeriod) {
         >
           {{ t('subscribe.calc.yearly') }}
           <span
-            class="ml-1.5 inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 px-1.5 py-0.5 text-[10px] font-bold"
+            class="ml-1.5 inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 px-1.5 py-0.5 text-3xs font-bold"
           >
             {{ t('subscribe.calc.savePctPill', { pct: plan.yearly_discount_pct }) }}
           </span>
@@ -219,7 +219,7 @@ function setPeriod(p: BillingPeriod) {
     </div>
 
     <header class="mb-4">
-      <p class="text-[11px] font-black tracking-[0.24em] uppercase text-brand-cobalt">
+      <p class="text-2xs font-black tracking-[0.24em] uppercase text-brand-cobalt">
         {{ t('subscribe.calc.kicker') }}
       </p>
       <h2 class="text-lg font-bold text-slate-900 mt-1">
@@ -262,7 +262,7 @@ function setPeriod(p: BillingPeriod) {
           class="w-full accent-brand-cobalt disabled:cursor-not-allowed"
           @input="onSliderInput('student', $event)"
         />
-        <div class="mt-1 flex justify-between text-[10px] text-slate-400">
+        <div class="mt-1 flex justify-between text-3xs text-slate-400">
           <span>0</span>
           <span>{{ studentSliderMaxLabel }}</span>
         </div>
@@ -301,21 +301,21 @@ function setPeriod(p: BillingPeriod) {
           class="w-full accent-brand-cobalt disabled:cursor-not-allowed"
           @input="onSliderInput('staff', $event)"
         />
-        <div class="mt-1 flex justify-between text-[10px] text-slate-400">
+        <div class="mt-1 flex justify-between text-3xs text-slate-400">
           <span>0</span>
           <span>{{ staffSliderMaxLabel }}</span>
         </div>
       </div>
     </div>
 
-    <p v-if="locked" class="mt-3 text-[11px] text-slate-500 leading-relaxed">
+    <p v-if="locked" class="mt-3 text-2xs text-slate-500 leading-relaxed">
       {{ t('subscribe.calc.lockedNotice') }}
     </p>
 
     <!-- Bottom split: TAGIHAN AKTIF · RINCIAN -->
     <div class="mt-6 grid grid-cols-1 md:grid-cols-2 rounded-xl border border-slate-200 overflow-hidden">
       <div class="p-4 sm:p-5 bg-gradient-to-br from-brand-cobalt to-brand-dark-blue text-white">
-        <p class="text-[10px] font-black tracking-[0.24em] uppercase text-white/70">
+        <p class="text-3xs font-black tracking-[0.24em] uppercase text-white/70">
           {{ t('subscribe.calc.activeTitle') }}
         </p>
         <p class="mt-1.5 text-2xl sm:text-3xl font-black leading-none tabular-nums">
@@ -326,13 +326,13 @@ function setPeriod(p: BillingPeriod) {
         </p>
         <p
           v-if="fromExistingTenant"
-          class="mt-3 text-[11px] leading-relaxed text-white/80"
+          class="mt-3 text-2xs leading-relaxed text-white/80"
         >
           {{ t('subscribe.calc.demoNote') }}
         </p>
       </div>
       <div class="p-4 sm:p-5 bg-slate-50">
-        <p class="text-[10px] font-black tracking-[0.24em] uppercase text-slate-500">
+        <p class="text-3xs font-black tracking-[0.24em] uppercase text-slate-500">
           {{ t('subscribe.calc.breakdownTitle') }}
         </p>
         <dl class="mt-2 space-y-1.5 text-[13px]">

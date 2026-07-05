@@ -225,7 +225,7 @@ function subtitle(r: Row): string {
   return parts.join(' · ');
 }
 
-const PILL_BASE = 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide';
+const PILL_BASE = 'rounded-full px-2 py-0.5 text-3xs font-bold uppercase tracking-wide';
 
 function pillCls(r: Row): string {
   const s = r.submission?.status;

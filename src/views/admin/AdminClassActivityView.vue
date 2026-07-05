@@ -382,7 +382,7 @@ function exportCsv() {
         <button
           v-if="hasAnyFilter"
           type="button"
-          class="text-[11px] font-bold text-slate-500 hover:text-slate-900 px-2 py-1 inline-flex items-center gap-1"
+          class="text-2xs font-bold text-slate-500 hover:text-slate-900 px-2 py-1 inline-flex items-center gap-1"
           @click="resetFilters"
         >
           <NavIcon name="x" :size="12" />
@@ -397,7 +397,7 @@ function exportCsv() {
         v-for="tab in typeTabs"
         :key="tab.key"
         type="button"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+        class="px-3 py-1.5 rounded-full text-2xs font-bold transition border"
         :class="
           typeFilter === tab.key
             ? 'bg-role-admin text-white border-role-admin shadow-sm'
@@ -411,14 +411,14 @@ function exportCsv() {
 
     <!-- PERIOD TABS -->
     <div class="flex items-center gap-1.5 flex-wrap">
-      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+      <span class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
         {{ $t('admin.classActivity.periodLabel') }}
       </span>
       <button
         v-for="p in periodTabs"
         :key="p.key"
         type="button"
-        class="px-2.5 py-1 rounded-full text-[11px] font-bold transition border"
+        class="px-2.5 py-1 rounded-full text-2xs font-bold transition border"
         :class="
           periodFilter === p.key
             ? 'bg-slate-900 text-white border-slate-900'
@@ -542,7 +542,7 @@ function exportCsv() {
           >
             <div class="flex flex-col">
               <span>{{ t.name }}</span>
-              <span v-if="t.employee_number" class="text-[10px] text-slate-400">
+              <span v-if="t.employee_number" class="text-3xs text-slate-400">
                 NIP {{ t.employee_number }}
               </span>
             </div>

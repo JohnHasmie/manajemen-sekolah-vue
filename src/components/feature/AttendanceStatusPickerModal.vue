@@ -126,7 +126,7 @@ function apply() {
         <p class="text-[14px] font-black text-slate-900 truncate">
           {{ student.student_name || 'Tanpa nama' }}
         </p>
-        <p class="text-[11px] text-slate-500">
+        <p class="text-2xs text-slate-500">
           NIS {{ student.student_number || '—' }}
           <span v-if="student.alert" class="ml-1.5 text-amber-700">· {{ student.alert }}</span>
         </p>
@@ -160,7 +160,7 @@ function apply() {
           </span>
           <span
             v-if="selected === s"
-            class="text-[10px] font-bold uppercase tracking-widest text-white/90"
+            class="text-3xs font-bold uppercase tracking-widest text-white/90"
             >Aktif</span
           >
         </div>

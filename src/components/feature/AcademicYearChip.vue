@@ -57,7 +57,7 @@ const semesterLabel = computed(() => store.semesterLabel);
     </span>
     <span class="flex flex-col min-w-0 leading-none flex-1">
       <span
-        class="text-[9px] font-bold uppercase tracking-widest"
+        class="text-4xs font-bold uppercase tracking-widest"
         :class="variant === 'dark' ? 'text-white/80' : 'text-slate-400'"
       >
         Tahun Ajaran
@@ -71,7 +71,7 @@ const semesterLabel = computed(() => store.semesterLabel);
         </span>
         <span
           v-if="semesterLabel"
-          class="text-[10px] font-bold truncate"
+          class="text-3xs font-bold truncate"
           :class="variant === 'dark' ? 'text-white/75' : 'text-slate-500'"
         >
           · {{ semesterLabel }}

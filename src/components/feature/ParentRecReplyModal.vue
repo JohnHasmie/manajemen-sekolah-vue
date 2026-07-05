@@ -55,17 +55,17 @@ function send() {
       <!-- Quick replies -->
       <section>
         <div class="flex items-baseline justify-between mb-2">
-          <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+          <p class="text-2xs font-bold uppercase tracking-widest text-slate-500">
             Balasan cepat
           </p>
-          <p class="text-[10px] text-slate-400">· tap untuk pakai</p>
+          <p class="text-3xs text-slate-400">· tap untuk pakai</p>
         </div>
         <div class="flex flex-wrap gap-1.5">
           <button
             v-for="snippet in QUICK_REPLIES"
             :key="snippet"
             type="button"
-            class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-[11px] font-bold text-slate-700 hover:border-role-wali/40 hover:bg-role-wali/5 transition"
+            class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-2xs font-bold text-slate-700 hover:border-role-wali/40 hover:bg-role-wali/5 transition"
             @click="applyQuick(snippet)"
           >
             {{ snippet }}
@@ -76,7 +76,7 @@ function send() {
       <!-- Pesan textarea -->
       <section>
         <label
-          class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5 block"
+          class="text-2xs font-bold uppercase tracking-widest text-slate-500 mb-1.5 block"
         >
           Pesan untuk wali kelas
         </label>
@@ -86,7 +86,7 @@ function send() {
           placeholder="Tulis balasan Anda di sini…"
           class="w-full text-[13px] text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 leading-relaxed focus:outline-none focus:ring-2 focus:ring-role-wali/30 focus:border-role-wali"
         ></textarea>
-        <p class="text-[10px] text-slate-400 mt-1">
+        <p class="text-3xs text-slate-400 mt-1">
           {{ text.trim().length }} karakter
         </p>
       </section>

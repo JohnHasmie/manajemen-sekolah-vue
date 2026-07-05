@@ -73,14 +73,14 @@ const getIconForType = (type: string) => {
     <div v-if="showHeader" class="flex items-center justify-between px-1">
       <div class="flex items-center gap-2">
         <h3 class="text-[15px] font-black text-slate-900 uppercase tracking-tight">{{ t('inbox.title') }}</h3>
-        <div v-if="items.length > 0" class="px-1.5 py-0.5 rounded-md bg-status-danger-soft text-status-danger text-[10px] font-black">
+        <div v-if="items.length > 0" class="px-1.5 py-0.5 rounded-md bg-status-danger-soft text-status-danger text-3xs font-black">
           {{ items.length }}
         </div>
       </div>
       <button 
         v-if="items.length > 0"
         type="button" 
-        class="text-[11px] font-black text-brand-cobalt uppercase tracking-wider hover:underline"
+        class="text-2xs font-black text-brand-cobalt uppercase tracking-wider hover:underline"
         @click="$emit('seeAll')"
       >
         {{ t('inbox.seeAll') }}
@@ -117,12 +117,12 @@ const getIconForType = (type: string) => {
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <h4 class="text-sm font-bold text-slate-900 truncate">{{ item.label }}</h4>
-            <div v-if="item.count > 1" class="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[9px] font-black">
+            <div v-if="item.count > 1" class="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 text-4xs font-black">
               ·{{ item.count }}
             </div>
           </div>
           <p class="text-[12px] text-slate-500 mt-0.5 line-clamp-1">{{ item.subtitle }}</p>
-          <p class="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-wide">
+          <p class="text-3xs font-bold text-slate-400 mt-2 uppercase tracking-wide">
             {{ formatRelativeTime(item.occurred_at) }}
           </p>
         </div>

@@ -194,7 +194,7 @@ function submit() {
     <div class="space-y-4">
       <!-- FORMAT CHOOSER -->
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-2">
           Format RPP
         </label>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -235,7 +235,7 @@ function submit() {
             </p>
           </button>
         </div>
-        <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">
+        <p class="text-3xs text-slate-400 mt-2 leading-relaxed">
           Format <strong>{{ FORMAT_LONG_LABELS[format] }}</strong> akan menentukan bagian yang dibuat AI.
         </p>
       </div>
@@ -243,7 +243,7 @@ function submit() {
       <!-- KELAS + MAPEL -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+          <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
             Kelas
           </label>
           <select
@@ -258,7 +258,7 @@ function submit() {
           </select>
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+          <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
             Mata Pelajaran
           </label>
           <select
@@ -277,7 +277,7 @@ function submit() {
       <!-- BAB (chapter dropdown) + optional SUB-BAB -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+          <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
             Bab
           </label>
           <select
@@ -302,14 +302,14 @@ function submit() {
           </select>
           <p
             v-if="subjectId && !chaptersLoading && chapters.length === 0"
-            class="text-[10px] text-amber-600 mt-1 leading-snug"
+            class="text-3xs text-amber-600 mt-1 leading-snug"
           >
             Mapel ini belum punya bab. Tambahkan materi di menu Materi
             terlebih dahulu, atau pilih mapel lain.
           </p>
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+          <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
             Sub-bab <span class="text-slate-400 normal-case font-medium">(opsional)</span>
           </label>
           <select
@@ -322,7 +322,7 @@ function submit() {
               {{ sub.name }}
             </option>
           </select>
-          <p class="text-[10px] text-slate-400 mt-1 leading-snug">
+          <p class="text-3xs text-slate-400 mt-1 leading-snug">
             Kosongkan untuk membuat RPP untuk seluruh bab.
           </p>
         </div>
@@ -331,7 +331,7 @@ function submit() {
       <!-- DURASI + PENDEKATAN -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+          <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
             Durasi (menit)
           </label>
           <input
@@ -345,7 +345,7 @@ function submit() {
           />
         </div>
         <div class="sm:col-span-2">
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+          <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
             Pendekatan / fokus
           </label>
           <input
@@ -361,7 +361,7 @@ function submit() {
       <!-- CONTEXT PREVIEW -->
       <div
         v-if="activeClass || activeSubject"
-        class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-[11px] text-slate-600 inline-flex items-center gap-2"
+        class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-2xs text-slate-600 inline-flex items-center gap-2"
       >
         <NavIcon name="info" :size="12" class="text-slate-400 flex-shrink-0" />
         <span class="truncate">

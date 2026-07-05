@@ -169,7 +169,7 @@ function categoryLabel(cat: AppNotification['category']) {
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-0.5">
                     <span
-                      class="text-[10px] font-semibold uppercase tracking-wider rounded-full px-2 py-0.5"
+                      class="text-3xs font-semibold uppercase tracking-wider rounded-full px-2 py-0.5"
                       :class="categoryColor(n.category)"
                     >
                       {{ categoryLabel(n.category) }}

@@ -367,7 +367,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
             :live-dot="false"
           >
             <span
-              class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider"
+              class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-3xs font-bold uppercase tracking-wider"
               :class="[statusTone.bg, statusTone.text, statusTone.border, 'border']"
             >
               <span class="w-1.5 h-1.5 rounded-full" :class="statusTone.dot" />
@@ -410,7 +410,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
             class="space-y-3"
           >
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
-              <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
                 {{ t('tutor.sekolah.reportCardDetail.attitudeSpiritual') }}
               </p>
               <div class="flex flex-wrap gap-1.5">
@@ -418,7 +418,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                   v-for="p in PREDICATE_OPTIONS"
                   :key="p"
                   type="button"
-                  class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+                  class="px-3 py-1.5 rounded-full text-2xs font-bold transition border"
                   :class="
                     form.spiritual_predicate === p
                       ? 'bg-brand-cobalt text-white border-brand-cobalt'
@@ -439,7 +439,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
               />
             </article>
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
-              <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
                 {{ t('tutor.sekolah.reportCardDetail.attitudeSocial') }}
               </p>
               <div class="flex flex-wrap gap-1.5">
@@ -447,7 +447,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                   v-for="p in PREDICATE_OPTIONS"
                   :key="p"
                   type="button"
-                  class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+                  class="px-3 py-1.5 rounded-full text-2xs font-bold transition border"
                   :class="
                     form.social_predicate === p
                       ? 'bg-brand-cobalt text-white border-brand-cobalt'
@@ -471,7 +471,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
 
           <!-- TAB BODY: NILAI -->
           <section v-if="activeTab === 'nilai'" class="space-y-2.5">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">
+            <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest px-1">
               {{ t('tutor.sekolah.reportCardDetail.subjectCount', { count: form.subjects.length }) }}
             </p>
             <article
@@ -485,13 +485,13 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                 </p>
                 <span
                   v-if="s.kkm"
-                  class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full"
+                  class="text-3xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full"
                 >
                   {{ t('tutor.sekolah.reportCardDetail.kkmLabel', { kkm: s.kkm }) }}
                 </span>
                 <span
                   v-if="s.teacher_name"
-                  class="text-[10px] text-slate-400"
+                  class="text-3xs text-slate-400"
                 >
                   · {{ s.teacher_name }}
                 </span>
@@ -547,7 +547,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
             <!-- Ekstrakurikuler -->
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
               <div class="flex items-center gap-2">
-                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex-1">
+                <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest flex-1">
                   {{ t('tutor.sekolah.reportCardDetail.extracurricular') }}
                 </p>
                 <Button
@@ -607,7 +607,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
             <!-- Prestasi -->
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
               <div class="flex items-center gap-2">
-                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex-1">
+                <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest flex-1">
                   {{ t('tutor.sekolah.reportCardDetail.achievements') }}
                 </p>
                 <Button
@@ -668,12 +668,12 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
           <!-- TAB BODY: INFO -->
           <section v-if="activeTab === 'info'" class="space-y-3">
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
-              <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
                 {{ t('tutor.sekolah.reportCardDetail.attendance') }}
               </p>
               <div class="grid grid-cols-3 gap-2">
                 <div>
-                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                  <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
                     {{ t('tutor.sekolah.reportCardDetail.attSick') }}
                   </label>
                   <input
@@ -685,7 +685,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                   />
                 </div>
                 <div>
-                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                  <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
                     {{ t('tutor.sekolah.reportCardDetail.attPermit') }}
                   </label>
                   <input
@@ -697,7 +697,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                   />
                 </div>
                 <div>
-                  <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                  <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
                     {{ t('tutor.sekolah.reportCardDetail.attAbsent') }}
                   </label>
                   <input
@@ -715,7 +715,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
             </article>
 
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
-              <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest">
                 {{ t('tutor.sekolah.reportCardDetail.homeroomNotes') }}
               </label>
               <textarea
@@ -728,7 +728,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
             </article>
 
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
-              <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest">
                 {{ t('tutor.sekolah.reportCardDetail.promotionDecision') }}
               </label>
               <div class="flex flex-wrap gap-1.5">
@@ -736,7 +736,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                   v-for="d in DECISION_OPTIONS"
                   :key="d"
                   type="button"
-                  class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+                  class="px-3 py-1.5 rounded-full text-2xs font-bold transition border"
                   :class="
                     form.promotion_decision === d
                       ? d === 'promoted' || d === 'graduated'

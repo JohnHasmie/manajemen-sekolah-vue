@@ -119,7 +119,7 @@ watch(searchValue, (v) => {
         <button
           v-if="activeFilterCount > 0"
           type="button"
-          class="text-[11px] font-bold text-slate-500 hover:text-role-admin px-2"
+          class="text-2xs font-bold text-slate-500 hover:text-role-admin px-2"
           @click="emit('clearAllFilters')"
         >
           {{ t('common.reset') }} ({{ activeFilterCount }})
@@ -145,7 +145,7 @@ watch(searchValue, (v) => {
       v-if="selectedCount > 0"
       class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-white border border-slate-200 rounded-2xl shadow-lg p-3 flex items-center gap-2 max-w-2xl w-[calc(100%-2rem)]"
     >
-      <p class="text-[11px] font-bold text-slate-700 flex-1">
+      <p class="text-2xs font-bold text-slate-700 flex-1">
         {{ t('common.selected', { count: selectedCount }) }}
       </p>
       <Button variant="secondary" size="sm" @click="emit('bulkClear')">

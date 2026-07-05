@@ -997,7 +997,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
 
     <!-- Progress legend (kept — quick at-a-glance under filters) -->
     <div
-      class="flex items-center gap-4 flex-wrap px-3 py-2 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-[11px] text-slate-600"
+      class="flex items-center gap-4 flex-wrap px-3 py-2 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-2xs text-slate-600"
     >
       <span class="inline-flex items-center gap-1.5">
         <span class="w-2 h-2 rounded-full bg-emerald-700"></span>
@@ -1088,12 +1088,12 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                 <p class="text-[13px] font-bold text-slate-900 truncate">
                   {{ c.label }}{{ c.name ? ` · ${c.name}` : '' }}
                 </p>
-                <p class="text-[11px] text-slate-400 truncate">
+                <p class="text-2xs text-slate-400 truncate">
                   {{ t('tutor.sekolah.material.chapterMetaSubCount', { count: c.total_count }) }}{{ c.meta ? ` · ${c.meta}` : '' }}
                 </p>
               </div>
               <div class="flex items-center gap-2 flex-shrink-0">
-                <span class="text-[11px] font-bold text-slate-600">
+                <span class="text-2xs font-bold text-slate-600">
                   {{ c.done_count }}/{{ c.total_count }}
                 </span>
                 <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -1182,11 +1182,11 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                 </span>
                 <span
                   v-if="s.ai_generated"
-                  class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 uppercase tracking-wider"
+                  class="text-4xs font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 uppercase tracking-wider"
                 >
                   AI
                 </span>
-                <span class="text-[10px] text-slate-400 min-w-[80px] text-right">
+                <span class="text-3xs text-slate-400 min-w-[80px] text-right">
                   {{
                     s.done && s.taught_at
                       ? t('tutor.sekolah.material.subRowTaughtAt', { date: formatDateShort(s.taught_at) })
@@ -1198,7 +1198,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
             </div>
             <div
               v-else-if="expanded.has(c.id) && c.sub_chapters.length === 0"
-              class="pl-12 pr-4 py-3 text-[11px] text-slate-400 italic"
+              class="pl-12 pr-4 py-3 text-2xs text-slate-400 italic"
             >
               {{ t('tutor.sekolah.material.subRowEmptyFilter') }}
             </div>
@@ -1279,7 +1279,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
             :disabled="isGenerating"
           ></textarea>
         </div>
-        <p class="text-[11px] text-slate-500 bg-slate-50 rounded-lg p-3 leading-relaxed">
+        <p class="text-2xs text-slate-500 bg-slate-50 rounded-lg p-3 leading-relaxed">
           {{ t('tutor.sekolah.material.aiSheetHint') }} <b class="text-slate-900">{{ t('tutor.sekolah.material.aiSheetHintEta') }}</b>{{ t('tutor.sekolah.material.aiSheetHintTail') }}
         </p>
         <!--
@@ -1326,12 +1326,12 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1">
-                <span class="text-[10px] font-bold text-violet-700 uppercase tracking-widest">
+                <span class="text-3xs font-bold text-violet-700 uppercase tracking-widest">
                   {{ detail.chapter.label }} · {{ detail.sub.number }}
                 </span>
                 <span
                   v-if="detail.sub.ai_generated || detailAi"
-                  class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 uppercase tracking-wider"
+                  class="text-4xs font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 uppercase tracking-wider"
                 >
                   {{ t('tutor.sekolah.material.detailAiReady') }}
                 </span>
@@ -1339,7 +1339,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
               <h2 class="text-base font-black text-slate-900 truncate">
                 {{ detail.sub.name }}
               </h2>
-              <p class="text-[11px] text-slate-400 truncate">
+              <p class="text-2xs text-slate-400 truncate">
                 {{ activeSubject?.name ?? '—' }} · {{ semester === 'ganjil' ? t('tutor.sekolah.material.semester1') : t('tutor.sekolah.material.semester2') }}
                 {{ detail.sub.done && detail.sub.taught_at ? t('tutor.sekolah.material.detailTaughtSuffix', { date: formatDateShort(detail.sub.taught_at) }) : '' }}
               </p>
@@ -1358,19 +1358,19 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
           <div class="px-5 pt-4">
             <div class="grid grid-cols-3 gap-2 bg-slate-50 rounded-xl p-3">
               <div class="text-center">
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.material.detailKpiMateri') }}</p>
+                <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.material.detailKpiMateri') }}</p>
                 <p class="text-lg font-black" :class="detailAi ? 'text-violet-700' : 'text-slate-400'">
                   {{ detailAi ? t('tutor.sekolah.material.detailKpiMateriReady') : '—' }}
                 </p>
               </div>
               <div class="text-center">
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.material.detailKpiKuis') }}</p>
+                <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.material.detailKpiKuis') }}</p>
                 <p class="text-lg font-black text-slate-900">
                   {{ detailAi?.quizzes.length ?? 0 }}
                 </p>
               </div>
               <div class="text-center">
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.material.detailKpiReferensi') }}</p>
+                <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.material.detailKpiReferensi') }}</p>
                 <p class="text-lg font-black text-slate-900">
                   {{ detailAi?.references.length ?? 0 }}
                 </p>
@@ -1452,7 +1452,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       :key="idx"
                       class="flex gap-2.5 text-[13px] text-slate-700 leading-relaxed"
                     >
-                      <span class="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 grid place-items-center text-[11px] font-bold flex-shrink-0">
+                      <span class="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 grid place-items-center text-2xs font-bold flex-shrink-0">
                         {{ idx + 1 }}
                       </span>
                       <span>{{ item }}</span>
@@ -1487,7 +1487,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       :key="idx"
                       class="flex gap-2.5 text-[13px] text-slate-700 leading-relaxed"
                     >
-                      <span class="w-6 h-6 rounded-md bg-amber-100 text-amber-700 grid place-items-center text-[11px] font-bold flex-shrink-0">
+                      <span class="w-6 h-6 rounded-md bg-amber-100 text-amber-700 grid place-items-center text-2xs font-bold flex-shrink-0">
                         {{ idx + 1 }}
                       </span>
                       <span>{{ item }}</span>
@@ -1575,7 +1575,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                     <NavIcon name="paperclip" :size="14" />
                   </span>
                   <h3 class="text-sm font-bold text-slate-900">Lampiran Manual</h3>
-                  <span class="text-[11px] text-slate-400">{{ detailContent.length }} item</span>
+                  <span class="text-2xs text-slate-400">{{ detailContent.length }} item</span>
                 </div>
                 <a
                   v-for="(item, idx) in detailContent"
@@ -1595,7 +1595,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       {{ item.description }}
                     </p>
                   </div>
-                  <span v-if="item.kind" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 uppercase tracking-wider">
+                  <span v-if="item.kind" class="text-4xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 uppercase tracking-wider">
                     {{ item.kind }}
                   </span>
                   <NavIcon name="chevron-right" :size="14" class="text-slate-300" />
@@ -1620,15 +1620,15 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                 <!-- Stats bar -->
                 <div class="grid grid-cols-3 gap-2 bg-slate-50 rounded-xl p-3 text-center">
                   <div>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total</p>
+                    <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">Total</p>
                     <p class="text-lg font-black text-slate-900">{{ detailAi.quizzes.length }}</p>
                   </div>
                   <div>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">PG</p>
+                    <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">PG</p>
                     <p class="text-lg font-black text-violet-700">{{ mcQuizzes.length }}</p>
                   </div>
                   <div>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Essay</p>
+                    <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">Essay</p>
                     <p class="text-lg font-black text-amber-700">{{ essayQuizzes.length }}</p>
                   </div>
                 </div>
@@ -1640,7 +1640,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       <NavIcon name="check-circle" :size="14" />
                     </span>
                     <h3 class="text-sm font-bold text-slate-900">Pilihan Ganda</h3>
-                    <span class="text-[10px] font-bold text-violet-700 bg-violet-100 px-1.5 py-0.5 rounded">{{ mcQuizzes.length }}</span>
+                    <span class="text-3xs font-bold text-violet-700 bg-violet-100 px-1.5 py-0.5 rounded">{{ mcQuizzes.length }}</span>
                   </div>
                   <article
                     v-for="(q, idx) in mcQuizzes"
@@ -1653,7 +1653,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       </span>
                       <p class="text-[12px] font-bold text-slate-600 flex-1">Pertanyaan {{ idx + 1 }}</p>
                       <span
-                        class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        class="text-3xs font-bold px-2 py-0.5 rounded-full"
                         :class="[difficultyConfig(q.difficulty).bg, difficultyConfig(q.difficulty).text]"
                       >
                         {{ difficultyConfig(q.difficulty).label }}
@@ -1674,7 +1674,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                               : 'bg-slate-50 border-slate-200 text-slate-700'
                           "
                         >
-                          <span class="w-5 h-5 rounded-full grid place-items-center text-[11px] font-bold flex-shrink-0"
+                          <span class="w-5 h-5 rounded-full grid place-items-center text-2xs font-bold flex-shrink-0"
                             :class="
                               isCorrectOption(q, oi, opt)
                                 ? 'bg-emerald-600 text-white'
@@ -1687,7 +1687,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                         </li>
                       </ul>
                       <div v-if="q.explanation" class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-3 text-[12px] text-amber-900 leading-relaxed">
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-amber-700 mb-1">Penjelasan</p>
+                        <p class="text-3xs font-bold uppercase tracking-widest text-amber-700 mb-1">Penjelasan</p>
                         {{ q.explanation }}
                       </div>
                     </div>
@@ -1701,7 +1701,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       <NavIcon name="edit-3" :size="14" />
                     </span>
                     <h3 class="text-sm font-bold text-slate-900">Essay</h3>
-                    <span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">{{ essayQuizzes.length }}</span>
+                    <span class="text-3xs font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">{{ essayQuizzes.length }}</span>
                   </div>
                   <article
                     v-for="(q, idx) in essayQuizzes"
@@ -1714,7 +1714,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       </span>
                       <p class="text-[12px] font-bold text-slate-600 flex-1">Essay {{ idx + 1 }}</p>
                       <span
-                        class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        class="text-3xs font-bold px-2 py-0.5 rounded-full"
                         :class="[difficultyConfig(q.difficulty).bg, difficultyConfig(q.difficulty).text]"
                       >
                         {{ difficultyConfig(q.difficulty).label }}
@@ -1725,7 +1725,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                         {{ q.question }}
                       </p>
                       <div v-if="q.answer_key" class="bg-emerald-50 border-l-4 border-emerald-400 rounded-r-lg p-3 text-[12px] text-emerald-900 leading-relaxed">
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-700 mb-1">Kunci Jawaban</p>
+                        <p class="text-3xs font-bold uppercase tracking-widest text-emerald-700 mb-1">Kunci Jawaban</p>
                         <span class="whitespace-pre-wrap">{{ q.answer_key }}</span>
                       </div>
                     </div>
@@ -1767,10 +1767,10 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                       {{ r.description }}
                     </p>
                     <div class="flex items-center gap-2 mt-1.5">
-                      <span v-if="r.kind" class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 uppercase tracking-wider">
+                      <span v-if="r.kind" class="text-4xs font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 uppercase tracking-wider">
                         {{ r.kind }}
                       </span>
-                      <span v-if="r.url" class="text-[11px] text-violet-700 truncate font-medium">
+                      <span v-if="r.url" class="text-2xs text-violet-700 truncate font-medium">
                         {{ r.url }}
                       </span>
                     </div>
@@ -1842,7 +1842,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
       <span class="text-[12px] font-bold">
         {{ selectedCount }} sub-bab dipilih
       </span>
-      <span class="text-[11px] text-slate-400">
+      <span class="text-2xs text-slate-400">
         · ~{{ selectedEstMinutes }} menit
       </span>
       <Button variant="ghost" size="sm" @click="clearSelection">
@@ -1893,14 +1893,14 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
               class="px-3 py-2 flex items-center gap-3 text-[12px]"
             >
               <span
-                class="w-6 h-6 rounded-lg bg-violet-100 text-violet-700 grid place-items-center flex-shrink-0 text-[10px] font-bold"
+                class="w-6 h-6 rounded-lg bg-violet-100 text-violet-700 grid place-items-center flex-shrink-0 text-3xs font-bold"
               >
                 {{ row.sub.number || '–' }}
               </span>
               <span class="flex-1 truncate font-medium text-slate-900">
                 {{ row.sub.name }}
               </span>
-              <span class="text-[10px] text-slate-400 truncate max-w-[120px]">
+              <span class="text-3xs text-slate-400 truncate max-w-[120px]">
                 {{ row.chapter.label }}
               </span>
               <button
@@ -1921,10 +1921,10 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
           class="rounded-xl border border-brand-cobalt/30 bg-brand-cobalt/5 p-3"
         >
           <div class="flex items-center justify-between mb-1.5">
-            <span class="text-[11px] font-bold text-slate-700">
+            <span class="text-2xs font-bold text-slate-700">
               {{ batchProgress.done }} / {{ batchProgress.total }} selesai
             </span>
-            <span class="text-[10px] text-slate-500 truncate max-w-[200px]">
+            <span class="text-3xs text-slate-500 truncate max-w-[200px]">
               {{ batchProgress.current }}
             </span>
           </div>

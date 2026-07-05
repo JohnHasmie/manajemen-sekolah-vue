@@ -207,12 +207,12 @@ const kicker = computed(() =>
           <!-- Belum lunas -->
           <section v-if="unpaid.length > 0" class="bg-white border border-slate-200 rounded-2xl p-2">
             <header class="flex items-center justify-between gap-2 px-3 pt-2 pb-1">
-              <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <h3 class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
                 {{ t('admin.sekolah.bill_group_detail.section_unpaid', { count: unpaid.length }) }}
               </h3>
               <button
                 type="button"
-                class="text-[11px] font-bold text-role-admin hover:underline"
+                class="text-2xs font-bold text-role-admin hover:underline"
                 @click="selectAllUnpaid"
               >
                 {{ selectedIds.size === unpaid.length ? t('admin.sekolah.bill_group_detail.unselect_all') : t('admin.sekolah.bill_group_detail.select_all') }}
@@ -239,7 +239,7 @@ const kicker = computed(() =>
 
           <!-- Lunas -->
           <section v-if="paid.length > 0" class="bg-white border border-slate-200 rounded-2xl p-2">
-            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 px-3 pt-2">
+            <h3 class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1 px-3 pt-2">
               {{ t('admin.sekolah.bill_group_detail.section_paid', { count: paid.length }) }}
             </h3>
             <div class="divide-y divide-slate-100">
@@ -262,10 +262,10 @@ const kicker = computed(() =>
       class="sticky bottom-4 z-30 bg-white border border-slate-200 rounded-2xl shadow-lg p-3 flex items-center gap-2"
     >
       <div class="flex-1 min-w-0">
-        <p class="text-[11px] font-bold text-slate-700">
+        <p class="text-2xs font-bold text-slate-700">
           {{ t('admin.sekolah.bill_group_detail.selected_count', { count: selectedIds.size }) }}
         </p>
-        <p class="text-[10px] text-slate-500">
+        <p class="text-3xs text-slate-500">
           {{ t('admin.sekolah.bill_group_detail.total_label') }}: {{ formatRupiah(selectedBills.reduce((s, b) => s + b.amount, 0)) }}
         </p>
       </div>

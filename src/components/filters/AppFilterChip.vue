@@ -49,7 +49,7 @@ defineEmits<{ click: [] }>();
       <NavIcon :name="iconName" :size="14" />
     </span>
     <span class="flex flex-col items-start min-w-0 leading-none">
-      <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ label }}</span>
+      <span class="text-4xs font-bold text-slate-400 uppercase tracking-widest">{{ label }}</span>
       <span class="text-[13px] font-bold text-slate-900 truncate mt-0.5">{{ value }}</span>
     </span>
     <svg

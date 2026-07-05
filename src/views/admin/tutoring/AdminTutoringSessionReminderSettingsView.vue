@@ -249,7 +249,7 @@ onMounted(() => {
         <section class="rounded-2xl bg-tutoring-panel border border-tutoring-border-soft p-4">
           <div class="flex items-center justify-between mb-3">
             <h3 class="text-[14px] font-bold text-tutoring-text-hi">{{ t('admin.bimbel.session_reminder_settings.session_active_title') }}</h3>
-            <span v-if="sessionIsDefault" class="text-[11px] font-bold uppercase tracking-wider bg-tutoring-amber-dim text-amber-700 px-2 py-0.5 rounded-full">{{ t('admin.bimbel.session_reminder_settings.default_pill') }}</span>
+            <span v-if="sessionIsDefault" class="text-2xs font-bold uppercase tracking-wider bg-tutoring-amber-dim text-amber-700 px-2 py-0.5 rounded-full">{{ t('admin.bimbel.session_reminder_settings.default_pill') }}</span>
           </div>
           <p class="text-[13px] text-tutoring-text-mid mb-3">
             {{ t('admin.bimbel.session_reminder_settings.session_active_hint', { count: sessionSorted.length }) }}
@@ -303,7 +303,7 @@ onMounted(() => {
         <section class="rounded-2xl bg-tutoring-panel border border-tutoring-border-soft p-4">
           <div class="flex items-center justify-between mb-3">
             <h3 class="text-[14px] font-bold text-tutoring-text-hi">{{ t('admin.bimbel.session_reminder_settings.bill_active_title') }}</h3>
-            <span v-if="billIsDefault" class="text-[11px] font-bold uppercase tracking-wider bg-tutoring-amber-dim text-amber-700 px-2 py-0.5 rounded-full">{{ t('admin.bimbel.session_reminder_settings.default_pill') }}</span>
+            <span v-if="billIsDefault" class="text-2xs font-bold uppercase tracking-wider bg-tutoring-amber-dim text-amber-700 px-2 py-0.5 rounded-full">{{ t('admin.bimbel.session_reminder_settings.default_pill') }}</span>
           </div>
           <p class="text-[13px] text-tutoring-text-mid mb-3">
             {{ t('admin.bimbel.session_reminder_settings.bill_active_hint') }}

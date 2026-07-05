@@ -515,7 +515,7 @@ async function processExport() {
         <button
           v-if="activeFilterCount > 0"
           type="button"
-          class="text-[11px] font-bold text-slate-500 hover:text-role-admin px-2"
+          class="text-2xs font-bold text-slate-500 hover:text-role-admin px-2"
           @click="clearAllFilters"
         >
           {{ $t('common.reset') }} ({{ activeFilterCount }})
@@ -540,7 +540,7 @@ async function processExport() {
             @click="openDetail(r)"
           >
             <div class="w-12 text-center flex-shrink-0">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">JP</p>
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">JP</p>
               <p class="text-[14px] font-black text-role-admin">{{ r.hour_number ?? r.jam_ke ?? '?' }}</p>
             </div>
             <div class="flex-1 min-w-0">
@@ -548,7 +548,7 @@ async function processExport() {
                 {{ r.subject_name }}
                 <span class="text-slate-500 font-normal">· {{ r.class_name }}</span>
               </p>
-              <p class="text-[11px] text-slate-500 truncate">
+              <p class="text-2xs text-slate-500 truncate">
                 {{ formatDateShort(r.date) }}
                 <span v-if="r.teacher_name"> · {{ r.teacher_name }}</span>
                 <span v-if="r.lesson_hour_name"> · {{ r.lesson_hour_name }}</span>
@@ -565,7 +565,7 @@ async function processExport() {
               >
                 {{ formatPct(r.percentage) }}
               </p>
-              <p class="text-[10px] text-slate-500 tabular-nums">
+              <p class="text-3xs text-slate-500 tabular-nums">
                 {{ r.present }}/{{ r.total_students }}
               </p>
             </div>
@@ -580,7 +580,7 @@ async function processExport() {
         >
           <table class="w-full text-[12px] border-collapse">
             <thead>
-              <tr class="bg-slate-50 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+              <tr class="bg-slate-50 text-4xs font-bold text-slate-500 uppercase tracking-widest">
                 <th class="px-3 py-2 text-left">Tanggal</th>
                 <th class="px-3 py-2 text-left">Mapel</th>
                 <th class="px-3 py-2 text-left">Kelas</th>
@@ -632,7 +632,7 @@ async function processExport() {
             <NavIcon name="chevron-left" :size="12" />
             Sebelumnya
           </Button>
-          <p class="text-[11px] font-bold text-slate-600">
+          <p class="text-2xs font-bold text-slate-600">
             Halaman {{ pagination.page }} dari {{ pagination.last_page }}
           </p>
           <Button
@@ -680,7 +680,7 @@ async function processExport() {
     >
       <div class="space-y-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mulai</label>
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Mulai</label>
           <input
             v-model="datePickerStart"
             type="date"
@@ -688,7 +688,7 @@ async function processExport() {
           />
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selesai</label>
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Selesai</label>
           <input
             v-model="datePickerEnd"
             type="date"
@@ -737,7 +737,7 @@ async function processExport() {
         </div>
         <p
           v-if="exportProcessing"
-          class="text-[11px] text-slate-500 italic"
+          class="text-2xs text-slate-500 italic"
         >
           Memproses export — jangan tutup tab ini…
         </p>

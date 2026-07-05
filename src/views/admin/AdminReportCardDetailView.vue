@@ -241,7 +241,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
             :live-dot="false"
           >
             <span
-              class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border"
+              class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-3xs font-bold uppercase tracking-wider border"
               :class="[
                 statusTone.bg,
                 statusTone.text,
@@ -265,7 +265,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
           <!-- HERO KPI OVERLAP -->
           <section class="bg-white border border-slate-200 rounded-2xl shadow-sm grid grid-cols-3 divide-x divide-slate-100">
             <div class="px-3 py-3 text-center">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
                 {{ t('admin.sekolah.report_card_detail.kpi_average') }}
               </p>
               <p class="text-lg font-black mt-1 text-[#143068] tabular-nums">
@@ -273,7 +273,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
               </p>
             </div>
             <div class="px-3 py-3 text-center">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
                 Peringkat
               </p>
               <p class="text-lg font-black mt-1 text-violet-700 tabular-nums">
@@ -284,7 +284,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
               </p>
             </div>
             <div class="px-3 py-3 text-center">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
                 Kehadiran
               </p>
               <p class="text-lg font-black mt-1 text-emerald-700 tabular-nums">
@@ -295,7 +295,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
 
           <!-- SIKAP -->
           <section class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
               Sikap
             </p>
             <div class="space-y-2">
@@ -306,7 +306,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
                   </span>
                   <span
                     v-if="detail.spiritual_predicate"
-                    class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#143068]/10 text-[#143068]"
+                    class="text-3xs font-bold px-2 py-0.5 rounded-full bg-[#143068]/10 text-[#143068]"
                   >
                     {{ detail.spiritual_predicate }}
                   </span>
@@ -322,7 +322,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
                   </span>
                   <span
                     v-if="detail.social_predicate"
-                    class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#143068]/10 text-[#143068]"
+                    class="text-3xs font-bold px-2 py-0.5 rounded-full bg-[#143068]/10 text-[#143068]"
                   >
                     {{ detail.social_predicate }}
                   </span>
@@ -336,7 +336,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
 
           <!-- PER-SUBJECT NILAI -->
           <section v-if="detail.subjects.length > 0" class="space-y-2">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">
+            <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest px-1">
               Nilai Per Mata Pelajaran
             </p>
             <article
@@ -358,7 +358,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
                 >
                   {{ s.knowledge_score ?? '—' }}
                 </span>
-                <span class="text-[10px] text-slate-400 tabular-nums">
+                <span class="text-3xs text-slate-400 tabular-nums">
                   / KKM {{ s.kkm ?? 75 }}
                 </span>
               </div>
@@ -371,19 +371,19 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
               <div class="mt-1.5 flex items-center gap-2 flex-wrap">
                 <span
                   v-if="s.knowledge_predicate"
-                  class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600"
+                  class="text-3xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600"
                 >
                   Predikat {{ s.knowledge_predicate }}
                 </span>
                 <span
                   v-if="Number(s.knowledge_score ?? 0) < (s.kkm ?? 75) && Number(s.knowledge_score ?? 0) > 0"
-                  class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700"
+                  class="text-3xs font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700"
                 >
                   Belum tuntas
                 </span>
                 <span
                   v-else-if="Number(s.knowledge_score ?? 0) >= (s.kkm ?? 75)"
-                  class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"
+                  class="text-3xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"
                 >
                   Tuntas
                 </span>
@@ -396,7 +396,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
             v-if="detail.extras.length > 0"
             class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2"
           >
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
               Ekstrakurikuler
             </p>
             <div
@@ -410,7 +410,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
               </span>
               <span
                 v-if="e.score"
-                class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#143068]/10 text-[#143068]"
+                class="text-3xs font-bold px-2 py-0.5 rounded-full bg-[#143068]/10 text-[#143068]"
               >
                 {{ e.score }}
               </span>
@@ -422,7 +422,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
             v-if="detail.achievements.length > 0"
             class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2"
           >
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
               Prestasi
             </p>
             <div
@@ -435,7 +435,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
                 <p class="font-semibold text-slate-900">{{ a.name }}</p>
                 <p
                   v-if="a.type || a.description"
-                  class="text-[11px] text-slate-500 mt-0.5"
+                  class="text-2xs text-slate-500 mt-0.5"
                 >
                   <template v-if="a.type">{{ a.type }}</template>
                   <template v-if="a.type && a.description"> · </template>
@@ -448,7 +448,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
           <!-- KEHADIRAN 4-cell -->
           <section class="grid grid-cols-4 gap-2">
             <div class="bg-white border border-slate-200 rounded-2xl p-3 text-center">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
                 Sakit
               </p>
               <p class="text-base font-black mt-1 tabular-nums text-slate-700">
@@ -456,7 +456,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
               </p>
             </div>
             <div class="bg-white border border-slate-200 rounded-2xl p-3 text-center">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
                 Izin
               </p>
               <p class="text-base font-black mt-1 tabular-nums text-slate-700">
@@ -464,7 +464,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
               </p>
             </div>
             <div class="bg-white border border-slate-200 rounded-2xl p-3 text-center">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
                 Alpa
               </p>
               <p class="text-base font-black mt-1 tabular-nums text-red-700">
@@ -472,7 +472,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
               </p>
             </div>
             <div class="bg-white border border-slate-200 rounded-2xl p-3 text-center">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
                 Total
               </p>
               <p class="text-base font-black mt-1 tabular-nums text-slate-900">
@@ -486,7 +486,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
             v-if="detail.homeroom_notes"
             class="bg-white border border-slate-200 rounded-2xl p-4 space-y-1.5"
           >
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
               Catatan Wali Kelas
             </p>
             <p class="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-wrap">
@@ -505,7 +505,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
             "
           >
             <p
-              class="text-[10px] font-bold uppercase tracking-widest mb-1"
+              class="text-3xs font-bold uppercase tracking-widest mb-1"
               :class="isNaikKelas ? 'text-emerald-700' : 'text-red-700'"
             >
               Keputusan Kenaikan Kelas
@@ -570,7 +570,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-[13.5px] font-black text-slate-900">{{ t('admin.sekolah.report_card_detail.format_teacher_title') }}</p>
-            <p class="text-[11px] text-slate-500 mt-1 leading-normal">
+            <p class="text-2xs text-slate-500 mt-1 leading-normal">
               {{ t('admin.sekolah.report_card_detail.format_teacher_desc') }}
             </p>
           </div>
@@ -588,7 +588,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-[13.5px] font-black text-slate-900">{{ t('admin.sekolah.report_card_detail.format_parent_title') }}</p>
-            <p class="text-[11px] text-slate-500 mt-1 leading-normal">
+            <p class="text-2xs text-slate-500 mt-1 leading-normal">
               {{ t('admin.sekolah.report_card_detail.format_parent_desc') }}
             </p>
           </div>

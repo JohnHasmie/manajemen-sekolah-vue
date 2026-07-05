@@ -64,10 +64,10 @@ const emit = defineEmits<{
         />
         <div class="flex-1 min-w-0">
           <p class="text-[14px] font-black text-slate-900 truncate">{{ title }}</p>
-          <p v-if="subtitle" class="text-[11px] text-slate-500 truncate mt-0.5">{{ subtitle }}</p>
+          <p v-if="subtitle" class="text-2xs text-slate-500 truncate mt-0.5">{{ subtitle }}</p>
           <span
             v-if="statusPill"
-            class="inline-block text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-2"
+            class="inline-block text-4xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-2"
             :class="{
               'bg-emerald-100 text-emerald-700': statusPill.tone === 'green',
               'bg-amber-100 text-amber-700': statusPill.tone === 'amber',
@@ -86,7 +86,7 @@ const emit = defineEmits<{
         :key="sIdx"
         class="space-y-2"
       >
-        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
+        <h3 class="text-3xs font-bold text-slate-400 uppercase tracking-widest px-1">
           {{ section.title }}
         </h3>
         <div class="bg-white border border-slate-200 rounded-2xl divide-y divide-slate-100">
@@ -100,7 +100,7 @@ const emit = defineEmits<{
               <p class="text-[12px] font-bold text-slate-900 break-words">
                 {{ row.value !== null && row.value !== undefined && row.value !== '' ? row.value : '—' }}
               </p>
-              <p v-if="row.hint" class="text-[10px] text-slate-400 mt-0.5">{{ row.hint }}</p>
+              <p v-if="row.hint" class="text-3xs text-slate-400 mt-0.5">{{ row.hint }}</p>
             </div>
           </div>
         </div>

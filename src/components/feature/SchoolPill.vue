@@ -160,7 +160,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
         v-if="open"
         class="absolute left-0 mt-2 w-80 form-card p-2 z-50 origin-top-left"
       >
-        <p class="px-md py-sm text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        <p class="px-md py-sm text-3xs font-bold uppercase tracking-widest text-slate-400">
           Pilih sekolah · {{ allSchools.length }}
         </p>
 
@@ -185,13 +185,13 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
                 <p class="text-[13px] font-bold text-slate-900 truncate">
                   {{ displayName(s) }}
                 </p>
-                <p v-if="s.city || s.address" class="text-[11px] text-slate-500 truncate">
+                <p v-if="s.city || s.address" class="text-2xs text-slate-500 truncate">
                   {{ s.city ?? s.address }}
                 </p>
               </div>
               <span
                 v-if="schoolKey(s) === auth.schoolId"
-                class="text-[9px] font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
+                class="text-4xs font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
               >
                 Aktif
               </span>

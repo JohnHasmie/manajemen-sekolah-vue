@@ -264,7 +264,7 @@ function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
         v-for="opt in statusOptions"
         :key="opt.key"
         type="button"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border inline-flex items-center gap-1.5"
+        class="px-3 py-1.5 rounded-full text-2xs font-bold transition border inline-flex items-center gap-1.5"
         :class="
           statusFilter === opt.key
             ? 'bg-brand-cobalt text-white border-brand-cobalt shadow-sm'
@@ -328,7 +328,7 @@ function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
             <p class="text-[13px] font-bold text-slate-900 truncate">
               {{ s.student_name }}
             </p>
-            <p class="text-[11px] text-slate-500 truncate">
+            <p class="text-2xs text-slate-500 truncate">
               <template v-if="s.student_number">
                 {{ t('tutor.sekolah.reportCardClass.nis', { nis: s.student_number }) }}
               </template>
@@ -337,7 +337,7 @@ function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
             </p>
           </div>
           <span
-            class="text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider flex-shrink-0"
+            class="text-3xs font-bold px-2 py-1 rounded-full uppercase tracking-wider flex-shrink-0"
             :class="statusPillFor(s).class"
           >
             {{ statusPillFor(s).label }}

@@ -287,7 +287,7 @@ const monthOptions = computed(() => {
       >
         <div class="flex justify-between items-baseline mb-3">
           <p class="text-[12px] font-bold uppercase tracking-widest text-tutoring-text-mid">{{ t('tutor.bimbel.earnings.ritme_heading') }}</p>
-          <p class="text-[11px] text-tutoring-text-lo">{{ t('tutor.bimbel.earnings.ritme_subheading') }}</p>
+          <p class="text-2xs text-tutoring-text-lo">{{ t('tutor.bimbel.earnings.ritme_subheading') }}</p>
         </div>
         <div class="flex items-end justify-between gap-2 h-24">
           <div
@@ -295,12 +295,12 @@ const monthOptions = computed(() => {
             :key="b.label"
             class="flex-1 flex flex-col items-center justify-end gap-1.5"
           >
-            <span class="text-[11px] font-bold text-tutoring-text-hi">{{ b.count }}</span>
+            <span class="text-2xs font-bold text-tutoring-text-hi">{{ b.count }}</span>
             <div
               class="w-full rounded-t-md bg-tutoring-accent transition-all"
               :style="{ height: `${(b.count / ritmeMax) * 70}px`, minHeight: b.count > 0 ? '4px' : '0' }"
             ></div>
-            <span class="text-[10px] text-tutoring-text-lo">{{ b.label }}</span>
+            <span class="text-3xs text-tutoring-text-lo">{{ b.label }}</span>
           </div>
         </div>
       </div>
@@ -362,7 +362,7 @@ const monthOptions = computed(() => {
           <p class="text-[12px] font-bold uppercase tracking-widest text-tutoring-text-mid">
             {{ t('tutor.bimbel.withdrawal.history_heading') }}
           </p>
-          <p class="text-[11px] text-tutoring-text-lo">
+          <p class="text-2xs text-tutoring-text-lo">
             {{ t('tutor.bimbel.withdrawal.history_subtitle') }}
           </p>
         </div>
@@ -394,13 +394,13 @@ const monthOptions = computed(() => {
               </p>
               <p
                 v-if="req.status === 'REJECTED' && req.reject_reason"
-                class="text-[11px] text-tutoring-red mt-0.5 line-clamp-2"
+                class="text-2xs text-tutoring-red mt-0.5 line-clamp-2"
               >
                 {{ t('tutor.bimbel.withdrawal.reject_reason_prefix') }} {{ req.reject_reason }}
               </p>
             </div>
             <span
-              class="shrink-0 inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide"
+              class="shrink-0 inline-flex items-center rounded-md px-2 py-0.5 text-2xs font-bold uppercase tracking-wide"
               :class="statusBadgeClass(req.status)"
             >
               {{ statusLabel(req.status) }}

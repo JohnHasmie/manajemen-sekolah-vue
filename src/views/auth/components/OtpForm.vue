@@ -97,7 +97,7 @@ async function handleResend() {
       </p>
       <div
         v-if="auth.otpDebug"
-        class="mt-2 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-100 rounded px-2 py-0.5 inline-block"
+        class="mt-2 text-3xs font-bold text-amber-700 bg-amber-50 border border-amber-100 rounded px-2 py-0.5 inline-block"
       >
         [DEBUG] OTP: {{ auth.otpDebug }}
       </div>
@@ -105,7 +105,7 @@ async function handleResend() {
 
     <form @submit.prevent="handleSubmit" class="space-y-6">
       <div class="space-y-2">
-        <label class="block text-[11px] font-extrabold text-slate-700 tracking-[0.4px] uppercase">
+        <label class="block text-2xs font-extrabold text-slate-700 tracking-[0.4px] uppercase">
           {{ t('auth.otp.label') }}
         </label>
         <div class="flex justify-between gap-2" @paste="onPaste">

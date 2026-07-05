@@ -112,7 +112,7 @@ const visibleBills = computed(() => {
 
 // ── Pill style + label per bill ────────────────────────────────
 function pillClass(b: TutoringBill): string {
-  const base = 'inline-flex flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide';
+  const base = 'inline-flex flex-shrink-0 rounded-full px-2 py-0.5 text-3xs font-bold uppercase tracking-wide';
   if (isPaid(b)) return `${base} bg-tutoring-green-dim text-green-700`;
   if (isPending(b)) return `${base} bg-tutoring-amber-dim text-amber-700`;
   if (isUnpaid(b)) {

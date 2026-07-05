@@ -30,7 +30,7 @@ defineProps<{
       <h3 class="text-[13px] font-black text-slate-700 tracking-tight truncate">
         {{ title }}
       </h3>
-      <p v-if="subtitle" class="text-[11px] font-medium text-slate-400 mt-0.5 truncate">
+      <p v-if="subtitle" class="text-2xs font-medium text-slate-400 mt-0.5 truncate">
         {{ subtitle }}
       </p>
     </div>

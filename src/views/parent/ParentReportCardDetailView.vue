@@ -277,7 +277,7 @@ const heroChipLabel = computed(() => {
           >
             <template #actions>
               <span
-                class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-white/15 text-white"
+                class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-3xs font-bold uppercase tracking-wider bg-white/15 text-white"
               >
                 <span
                   class="w-1.5 h-1.5 rounded-full"
@@ -340,7 +340,7 @@ const heroChipLabel = computed(() => {
           >
             <div class="px-3 py-3 text-center">
               <p
-                class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                class="text-4xs font-bold text-slate-400 uppercase tracking-widest"
               >
                 {{ t('wali.sekolah.reportCardDetail.kpiAverage') }}
               </p>
@@ -350,7 +350,7 @@ const heroChipLabel = computed(() => {
             </div>
             <div class="px-3 py-3 text-center">
               <p
-                class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                class="text-4xs font-bold text-slate-400 uppercase tracking-widest"
               >
                 {{ t('wali.sekolah.reportCardDetail.kpiRank') }}
               </p>
@@ -368,7 +368,7 @@ const heroChipLabel = computed(() => {
             </div>
             <div class="px-3 py-3 text-center">
               <p
-                class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                class="text-4xs font-bold text-slate-400 uppercase tracking-widest"
               >
                 {{ t('wali.sekolah.reportCardDetail.kpiAttendance') }}
               </p>
@@ -386,11 +386,11 @@ const heroChipLabel = computed(() => {
           <section>
             <header class="flex items-baseline justify-between mb-2 px-1">
               <p
-                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                class="text-3xs font-bold text-slate-500 uppercase tracking-widest"
               >
                 {{ t('wali.sekolah.reportCardDetail.sectionAttitude') }}
               </p>
-              <p class="text-[10px] font-bold text-slate-400">{{ t('wali.sekolah.reportCardDetail.homeroomTeacher') }}</p>
+              <p class="text-3xs font-bold text-slate-400">{{ t('wali.sekolah.reportCardDetail.homeroomTeacher') }}</p>
             </header>
             <div
               class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3"
@@ -402,7 +402,7 @@ const heroChipLabel = computed(() => {
                   </span>
                   <span
                     v-if="row.reportCard.spiritual_predicate"
-                    class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-role-wali/10 text-role-wali"
+                    class="text-3xs font-bold px-2 py-0.5 rounded-full bg-role-wali/10 text-role-wali"
                   >
                     {{ row.reportCard.spiritual_predicate }}
                   </span>
@@ -420,7 +420,7 @@ const heroChipLabel = computed(() => {
                   </span>
                   <span
                     v-if="row.reportCard.social_predicate"
-                    class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-role-wali/10 text-role-wali"
+                    class="text-3xs font-bold px-2 py-0.5 rounded-full bg-role-wali/10 text-role-wali"
                   >
                     {{ row.reportCard.social_predicate }}
                   </span>
@@ -438,11 +438,11 @@ const heroChipLabel = computed(() => {
           <section>
             <header class="flex items-baseline justify-between mb-2 px-1">
               <p
-                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                class="text-3xs font-bold text-slate-500 uppercase tracking-widest"
               >
                 {{ t('reportCard.gradesBySubject') }}
               </p>
-              <p class="text-[10px] font-bold text-slate-400">
+              <p class="text-3xs font-bold text-slate-400">
                 {{ row.reportCard.subjects.length }} {{ t('common.subjects') }}
               </p>
             </header>
@@ -466,11 +466,11 @@ const heroChipLabel = computed(() => {
           <section v-if="row.reportCard.extras.length > 0">
             <header class="flex items-baseline justify-between mb-2 px-1">
               <p
-                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                class="text-3xs font-bold text-slate-500 uppercase tracking-widest"
               >
                 {{ t('reportCard.extracurricular') }}
               </p>
-              <p class="text-[10px] font-bold text-slate-400">
+              <p class="text-3xs font-bold text-slate-400">
                 {{ row.reportCard.extras.length }} {{ t('common.activities') }}
               </p>
             </header>
@@ -488,7 +488,7 @@ const heroChipLabel = computed(() => {
                 </span>
                 <span
                   v-if="e.score"
-                  class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-role-wali/10 text-role-wali"
+                  class="text-3xs font-bold px-2 py-0.5 rounded-full bg-role-wali/10 text-role-wali"
                 >
                   {{ e.score }}
                 </span>
@@ -500,11 +500,11 @@ const heroChipLabel = computed(() => {
           <section v-if="row.reportCard.achievements.length > 0">
             <header class="flex items-baseline justify-between mb-2 px-1">
               <p
-                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                class="text-3xs font-bold text-slate-500 uppercase tracking-widest"
               >
                 {{ t('reportCard.achievements') }}
               </p>
-              <p class="text-[10px] font-bold text-slate-400">
+              <p class="text-3xs font-bold text-slate-400">
                 {{ row.reportCard.achievements.length }} {{ t('reportCard.achievementsPlural') }}
               </p>
             </header>
@@ -536,11 +536,11 @@ const heroChipLabel = computed(() => {
           <section>
             <header class="flex items-baseline justify-between mb-2 px-1">
               <p
-                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                class="text-3xs font-bold text-slate-500 uppercase tracking-widest"
               >
                 {{ t('nav.attendance') }}
               </p>
-              <p class="text-[10px] font-bold text-slate-400">
+              <p class="text-3xs font-bold text-slate-400">
                 {{ attendanceTotal > 0 ? `${attendanceTotal} ${t('attendance.effectiveDays')}` : t('common.notCalculated') }}
               </p>
             </header>
@@ -549,7 +549,7 @@ const heroChipLabel = computed(() => {
                 class="bg-white border border-slate-200 rounded-2xl p-3 text-center"
               >
                 <p
-                  class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                  class="text-4xs font-bold text-slate-400 uppercase tracking-widest"
                 >
                   {{ t('attendance.present') }}
                 </p>
@@ -561,7 +561,7 @@ const heroChipLabel = computed(() => {
                 class="bg-white border border-slate-200 rounded-2xl p-3 text-center"
               >
                 <p
-                  class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                  class="text-4xs font-bold text-slate-400 uppercase tracking-widest"
                 >
                   {{ t('attendance.sick') }}
                 </p>
@@ -573,7 +573,7 @@ const heroChipLabel = computed(() => {
                 class="bg-white border border-slate-200 rounded-2xl p-3 text-center"
               >
                 <p
-                  class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                  class="text-4xs font-bold text-slate-400 uppercase tracking-widest"
                 >
                   {{ t('attendance.permitted') }}
                 </p>
@@ -585,7 +585,7 @@ const heroChipLabel = computed(() => {
                 class="bg-white border border-slate-200 rounded-2xl p-3 text-center"
               >
                 <p
-                  class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                  class="text-4xs font-bold text-slate-400 uppercase tracking-widest"
                 >
                   {{ t('attendance.absent') }}
                 </p>
@@ -600,13 +600,13 @@ const heroChipLabel = computed(() => {
           <section v-if="row.reportCard.homeroom_notes">
             <header class="flex items-baseline justify-between mb-2 px-1">
               <p
-                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                class="text-3xs font-bold text-slate-500 uppercase tracking-widest"
               >
                 {{ t('reportCard.homeRoomNotes') }}
               </p>
               <p
                 v-if="row.reportCard.homeroom_teacher"
-                class="text-[10px] font-bold text-slate-400 truncate max-w-[50%]"
+                class="text-3xs font-bold text-slate-400 truncate max-w-[50%]"
               >
                 {{ row.reportCard.homeroom_teacher }}
               </p>
@@ -633,7 +633,7 @@ const heroChipLabel = computed(() => {
             "
           >
             <p
-              class="text-[10px] font-bold uppercase tracking-widest mb-1"
+              class="text-3xs font-bold uppercase tracking-widest mb-1"
               :class="isNaikKelas ? 'text-emerald-700' : 'text-red-700'"
             >
               {{ t('reportCard.promotionDecision') }}

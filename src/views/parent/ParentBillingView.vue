@@ -245,7 +245,7 @@ const headerMeta = computed(() => {
           class="bg-white border border-slate-200 rounded-2xl p-2"
         >
           <header class="flex items-center justify-between px-3 pt-2 pb-1">
-            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <h3 class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
               {{ t('parent.billing.sectionUnpaidHeader', { count: unpaidBills.length }) }}
             </h3>
             <span class="text-[12px] font-bold text-amber-700">
@@ -269,7 +269,7 @@ const headerMeta = computed(() => {
           class="bg-white border border-slate-200 rounded-2xl p-2"
         >
           <header class="flex items-center justify-between px-3 pt-2 pb-1">
-            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <h3 class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
               {{ t('parent.billing.sectionPaidHeader') }}
             </h3>
             <span class="text-[12px] font-bold text-emerald-700">

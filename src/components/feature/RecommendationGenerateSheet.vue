@@ -212,7 +212,7 @@ function submit() {
     <div class="space-y-4">
       <!-- 1. CAKUPAN SISWA -->
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-2">
           Cakupan Siswa
         </label>
         <div class="space-y-1.5">
@@ -252,19 +252,19 @@ function submit() {
             </div>
             <span
               v-if="opt.key === 'at_risk'"
-              class="text-[10px] font-black text-amber-700 bg-amber-100 px-2 py-1 rounded-lg tabular-nums flex-shrink-0"
+              class="text-3xs font-black text-amber-700 bg-amber-100 px-2 py-1 rounded-lg tabular-nums flex-shrink-0"
             >
               {{ atRiskCount }} siswa
             </span>
             <span
               v-else-if="opt.key === 'all'"
-              class="text-[10px] font-black text-brand-cobalt bg-brand-cobalt/10 px-2 py-1 rounded-lg tabular-nums flex-shrink-0"
+              class="text-3xs font-black text-brand-cobalt bg-brand-cobalt/10 px-2 py-1 rounded-lg tabular-nums flex-shrink-0"
             >
               {{ totalStudents }} siswa
             </span>
             <span
               v-else-if="opt.key === 'per_student'"
-              class="text-[10px] font-black text-violet-700 bg-violet-100 px-2 py-1 rounded-lg tabular-nums flex-shrink-0"
+              class="text-3xs font-black text-violet-700 bg-violet-100 px-2 py-1 rounded-lg tabular-nums flex-shrink-0"
             >
               {{ selectedStudents.size }} dipilih
             </span>
@@ -275,14 +275,14 @@ function submit() {
       <!-- Inline student picker (per_student only) -->
       <div v-if="scope === 'per_student'">
         <div class="flex items-center gap-2 mb-1.5">
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest">
             Pilih Siswa
           </label>
           <span class="flex-1"></span>
           <button
             v-if="students.some((s) => s.at_risk)"
             type="button"
-            class="text-[10px] font-bold text-amber-700 hover:text-amber-900"
+            class="text-3xs font-bold text-amber-700 hover:text-amber-900"
             :disabled="busy"
             @click="selectAtRiskStudents"
           >
@@ -290,7 +290,7 @@ function submit() {
           </button>
           <button
             type="button"
-            class="text-[10px] font-bold text-violet-700 hover:text-violet-900"
+            class="text-3xs font-bold text-violet-700 hover:text-violet-900"
             :disabled="busy"
             @click="selectAllStudents"
           >
@@ -299,7 +299,7 @@ function submit() {
           <button
             v-if="selectedStudents.size > 0"
             type="button"
-            class="text-[10px] font-bold text-slate-500 hover:text-slate-900"
+            class="text-3xs font-bold text-slate-500 hover:text-slate-900"
             :disabled="busy"
             @click="clearStudents"
           >
@@ -317,7 +317,7 @@ function submit() {
             v-for="s in students"
             :key="s.id"
             type="button"
-            class="px-2.5 py-1 rounded-full text-[11px] font-bold transition border inline-flex items-center gap-1"
+            class="px-2.5 py-1 rounded-full text-2xs font-bold transition border inline-flex items-center gap-1"
             :class="
               selectedStudents.has(s.id)
                 ? 'bg-violet-600 text-white border-violet-600'
@@ -345,16 +345,16 @@ function submit() {
       <!-- 2. MATA PELAJARAN -->
       <div>
         <div class="flex items-center gap-2 mb-1.5">
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest">
             Mata Pelajaran
           </label>
-          <span class="text-[10px] text-slate-400 tabular-nums">
+          <span class="text-3xs text-slate-400 tabular-nums">
             · {{ selectedSubjects.size }}/{{ subjects.length }} dipilih
           </span>
           <span class="flex-1"></span>
           <button
             type="button"
-            class="text-[10px] font-bold text-violet-700 hover:text-violet-900"
+            class="text-3xs font-bold text-violet-700 hover:text-violet-900"
             :disabled="busy || subjects.length === 0"
             @click="selectAllSubjects"
           >
@@ -372,7 +372,7 @@ function submit() {
             v-for="subj in subjects"
             :key="subj.id"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border inline-flex items-center gap-1.5"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold transition border inline-flex items-center gap-1.5"
             :class="
               selectedSubjects.has(subj.id)
                 ? 'bg-violet-600 text-white border-violet-600'
@@ -393,7 +393,7 @@ function submit() {
 
       <!-- 3. PERIODE -->
       <div v-if="periodeLabel">
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
           Periode
         </label>
         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-[11.5px] font-bold">
@@ -436,7 +436,7 @@ function submit() {
           </div>
           <span
             v-if="dailyLimit"
-            class="text-[10px] font-black tabular-nums"
+            class="text-3xs font-black tabular-nums"
             :class="quotaWillOverflow ? 'text-red-700' : 'text-violet-700'"
           >
             {{ quotaUsedPct }}%

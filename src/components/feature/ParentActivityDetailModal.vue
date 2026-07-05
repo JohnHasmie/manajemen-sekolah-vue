@@ -64,7 +64,7 @@ const hasDescription = computed(() => {
     <!-- Sub-header pill -->
     <div class="flex items-center gap-2 mb-4">
       <span
-        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide"
+        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-bold tracking-wide"
         :class="
           isAssignment
             ? 'bg-amber-100 text-amber-700'
@@ -76,14 +76,14 @@ const hasDescription = computed(() => {
       </span>
       <span
         v-if="activity.is_specific_target"
-        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-sky-100 text-sky-700"
+        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-bold bg-sky-100 text-sky-700"
       >
         <NavIcon name="shield" :size="12" />
         Khusus
       </span>
       <span
         v-if="activity.for_this_student"
-        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-700"
+        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-bold bg-blue-100 text-blue-700"
       >
         <NavIcon name="star" :size="12" />
         Untuk anak ini
@@ -95,7 +95,7 @@ const hasDescription = computed(() => {
       <div class="py-2.5 grid grid-cols-[28px_1fr] gap-3">
         <NavIcon name="user" :size="16" class="text-role-wali mt-0.5" />
         <div>
-          <dt class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+          <dt class="text-2xs font-bold text-slate-500 uppercase tracking-wide">
             Guru Pengajar
           </dt>
           <dd class="text-[13px] font-medium text-slate-800 mt-0.5">
@@ -107,7 +107,7 @@ const hasDescription = computed(() => {
       <div class="py-2.5 grid grid-cols-[28px_1fr] gap-3">
         <NavIcon name="book" :size="16" class="text-role-wali mt-0.5" />
         <div>
-          <dt class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+          <dt class="text-2xs font-bold text-slate-500 uppercase tracking-wide">
             Mata Pelajaran
           </dt>
           <dd class="text-[13px] font-medium text-slate-800 mt-0.5">
@@ -119,7 +119,7 @@ const hasDescription = computed(() => {
       <div class="py-2.5 grid grid-cols-[28px_1fr] gap-3">
         <NavIcon name="calendar" :size="16" class="text-role-wali mt-0.5" />
         <div>
-          <dt class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+          <dt class="text-2xs font-bold text-slate-500 uppercase tracking-wide">
             Tanggal
           </dt>
           <dd class="text-[13px] font-medium text-slate-800 mt-0.5">
@@ -134,7 +134,7 @@ const hasDescription = computed(() => {
       >
         <NavIcon name="clock" :size="16" class="text-red-600 mt-0.5" />
         <div>
-          <dt class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+          <dt class="text-2xs font-bold text-slate-500 uppercase tracking-wide">
             Batas Waktu
           </dt>
           <dd class="text-[13px] font-medium text-slate-800 mt-0.5">
@@ -149,7 +149,7 @@ const hasDescription = computed(() => {
       >
         <NavIcon name="file" :size="16" class="text-role-wali mt-0.5" />
         <div>
-          <dt class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+          <dt class="text-2xs font-bold text-slate-500 uppercase tracking-wide">
             Deskripsi
           </dt>
           <dd class="text-[13px] text-slate-700 mt-0.5 whitespace-pre-line">
@@ -164,7 +164,7 @@ const hasDescription = computed(() => {
       >
         <NavIcon name="book" :size="16" class="text-role-wali mt-0.5" />
         <div>
-          <dt class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+          <dt class="text-2xs font-bold text-slate-500 uppercase tracking-wide">
             Materi
           </dt>
           <dd class="text-[13px] font-medium text-slate-800 mt-0.5 whitespace-pre-line">
@@ -180,7 +180,7 @@ const hasDescription = computed(() => {
       >
         <NavIcon name="bookmark" :size="16" class="text-role-wali mt-0.5" />
         <div>
-          <dt class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+          <dt class="text-2xs font-bold text-slate-500 uppercase tracking-wide">
             Sub-Bab Tambahan
           </dt>
           <dd class="text-[13px] font-medium text-slate-800 mt-0.5">

@@ -169,7 +169,7 @@ void auth;
       :search-placeholder="t('tutor.sekolah.reportCardHub.searchPlaceholder')"
     >
       <template #chips>
-        <span class="text-[11px] font-bold text-slate-500 px-1">
+        <span class="text-2xs font-bold text-slate-500 px-1">
           {{ t('tutor.sekolah.reportCardHub.classCount', { count: visibleClasses.length }) }}
         </span>
       </template>

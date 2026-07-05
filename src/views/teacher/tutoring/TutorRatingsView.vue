@@ -122,7 +122,7 @@ function stars(rating: number): string {
           >
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-tutoring-text-hi truncate">{{ g.group_name }}</p>
-              <p class="text-[11px] text-tutoring-text-mid">{{ g.count }} {{ t('tutor.bimbel.ratings.reviews_suffix') }}</p>
+              <p class="text-2xs text-tutoring-text-mid">{{ g.count }} {{ t('tutor.bimbel.ratings.reviews_suffix') }}</p>
             </div>
             <div class="text-right flex-shrink-0">
               <p class="text-[16px] font-extrabold text-tutoring-text-hi">{{ g.avg?.toFixed(1) ?? '–' }}</p>

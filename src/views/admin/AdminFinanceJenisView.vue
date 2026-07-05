@@ -187,7 +187,7 @@ const deleteMessage = computed(() =>
     </PageFilterToolbar>
 
     <div class="flex items-center justify-between gap-2">
-      <p class="text-[11px] font-bold text-slate-500">
+      <p class="text-2xs font-bold text-slate-500">
         {{ t('admin.sekolah.finance_jenis.count_label', { count: paymentTypes.length }) }}
       </p>
       <div class="flex gap-2">
@@ -225,12 +225,12 @@ const deleteMessage = computed(() =>
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-[13px] font-bold text-slate-900 truncate">{{ pt.name }}</p>
-                <p class="text-[11px] text-slate-500 mt-0.5">
+                <p class="text-2xs text-slate-500 mt-0.5">
                   {{ periodLabel(pt.period) }} · {{ formatRupiah(pt.amount) }}
                 </p>
               </div>
               <span
-                class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                class="text-4xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
                 :class="
                   pt.status === 'active'
                     ? 'bg-emerald-100 text-emerald-700'
@@ -239,7 +239,7 @@ const deleteMessage = computed(() =>
               >{{ pt.status === 'active' ? t('admin.sekolah.finance_jenis.badge_active') : t('admin.sekolah.finance_jenis.badge_inactive') }}</span>
             </header>
 
-            <p v-if="pt.description" class="text-[11px] text-slate-500 line-clamp-2">
+            <p v-if="pt.description" class="text-2xs text-slate-500 line-clamp-2">
               {{ pt.description }}
             </p>
 

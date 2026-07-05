@@ -100,7 +100,7 @@ function predicateTone(score: number | null): string {
     <div class="grid grid-cols-2 gap-2 mt-2.5">
       <!-- KI 3 Pengetahuan -->
       <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-        <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+        <p class="text-4xs font-bold uppercase tracking-widest text-slate-500">
           KI 3 · Pengetahuan
         </p>
         <div class="flex items-baseline gap-1.5 mt-1">
@@ -118,7 +118,7 @@ function predicateTone(score: number | null): string {
           </span>
           <span
             v-if="subject.knowledge_predicate"
-            class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+            class="text-3xs font-bold px-1.5 py-0.5 rounded-full"
             :class="predicateTone(knowledgeNum)"
           >
             {{ subject.knowledge_predicate }}
@@ -128,7 +128,7 @@ function predicateTone(score: number | null): string {
 
       <!-- KI 4 Keterampilan -->
       <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-        <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+        <p class="text-4xs font-bold uppercase tracking-widest text-slate-500">
           KI 4 · Keterampilan
         </p>
         <div class="flex items-baseline gap-1.5 mt-1">
@@ -146,7 +146,7 @@ function predicateTone(score: number | null): string {
           </span>
           <span
             v-if="subject.skill_predicate"
-            class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+            class="text-3xs font-bold px-1.5 py-0.5 rounded-full"
             :class="predicateTone(skillNum)"
           >
             {{ subject.skill_predicate }}
@@ -165,7 +165,7 @@ function predicateTone(score: number | null): string {
         ></div>
       </div>
       <span
-        class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex-shrink-0"
+        class="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex-shrink-0"
         :class="
           allTuntas
             ? 'bg-emerald-100 text-emerald-700'
@@ -182,7 +182,7 @@ function predicateTone(score: number | null): string {
               : 'Belum dinilai'
         }}
       </span>
-      <span class="text-[10px] font-bold text-slate-400 tabular-nums">
+      <span class="text-3xs font-bold text-slate-400 tabular-nums">
         KKM {{ kkm }}
       </span>
     </div>

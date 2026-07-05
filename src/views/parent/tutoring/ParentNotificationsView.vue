@@ -151,7 +151,7 @@ const groupLabels = computed<Record<GroupKey, string>>(() => ({
     >
       <template v-for="key in groupOrder" :key="key">
         <template v-if="grouped[key].length">
-          <p class="text-[10px] tracking-[0.1em] text-tutoring-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+          <p class="text-3xs tracking-[0.1em] text-tutoring-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
             {{ groupLabels[key] }}
           </p>
           <div
@@ -175,7 +175,7 @@ const groupLabels = computed<Record<GroupKey, string>>(() => ({
             </div>
             <span
               v-if="!n.read_at"
-              class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-red-900 text-white flex-shrink-0"
+              class="rounded-full px-2 py-0.5 text-3xs font-bold uppercase tracking-wide bg-red-900 text-white flex-shrink-0"
             >{{ t('wali.bimbel.notifications.badge_new') }}</span>
             <span
               v-else

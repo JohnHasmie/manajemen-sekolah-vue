@@ -40,14 +40,14 @@ defineEmits<{ 'update:modelValue': [string] }>();
         modelValue === opt.key
           ? 'bg-white text-slate-900 shadow-sm'
           : 'text-slate-500 hover:text-slate-900',
-        size === 'sm' ? 'text-[10px] px-2.5 py-1' : 'text-[11px] px-3 py-1.5',
+        size === 'sm' ? 'text-3xs px-2.5 py-1' : 'text-2xs px-3 py-1.5',
       ]"
       @click="$emit('update:modelValue', opt.key)"
     >
       {{ opt.label }}<span
         v-if="opt.meta"
         class="ml-1 font-bold opacity-60"
-        :class="size === 'sm' ? 'text-[9px]' : 'text-[10px]'"
+        :class="size === 'sm' ? 'text-4xs' : 'text-3xs'"
       >· {{ opt.meta }}</span>
     </button>
   </div>

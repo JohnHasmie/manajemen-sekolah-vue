@@ -2,7 +2,7 @@
   StatusBadge — the single source of truth for the tone-coloured pill
   that labels a row/entity status ("Terbit", "Draft", "Lunas", "Belum
   verif", …). Before this component ~40 admin views hand-rolled the same
-  `text-[10px] font-bold px-2 py-1 rounded-full` chrome, each pairing it
+  `text-3xs font-bold px-2 py-1 rounded-full` chrome, each pairing it
   with its own status→colour lookup — so the styling drifted view to
   view.
 
@@ -42,7 +42,7 @@ const tone = computed(() => TONES[props.tone]);
 
 <template>
   <span
-    class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full tracking-wider flex-shrink-0"
+    class="inline-flex items-center gap-1 text-3xs font-bold px-2 py-1 rounded-full tracking-wider flex-shrink-0"
     :class="[tone.chip, uppercase ? 'uppercase' : '']"
   >
     <span

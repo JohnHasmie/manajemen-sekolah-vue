@@ -116,7 +116,7 @@ async function save() {
   >
     <div class="space-y-3">
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           Nama jenis
         </label>
         <input
@@ -128,7 +128,7 @@ async function save() {
       </div>
 
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           Deskripsi
         </label>
         <textarea
@@ -141,7 +141,7 @@ async function save() {
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Nominal
           </label>
           <div class="mt-1 relative">
@@ -158,7 +158,7 @@ async function save() {
           </div>
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Periode
           </label>
           <select
@@ -172,7 +172,7 @@ async function save() {
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Mulai berlaku
           </label>
           <input
@@ -182,7 +182,7 @@ async function save() {
           />
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Tanggal jatuh tempo bulanan
           </label>
           <input
@@ -197,26 +197,26 @@ async function save() {
       </div>
 
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           Status
         </label>
         <div class="mt-1 inline-flex gap-2 p-1 bg-slate-100 rounded-xl">
           <button
             type="button"
-            class="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
+            class="px-3 py-1.5 rounded-lg text-2xs font-bold transition-colors"
             :class="form.status === 'active' ? 'bg-emerald-500 text-white' : 'text-slate-500'"
             @click="form.status = 'active'"
           >Aktif</button>
           <button
             type="button"
-            class="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
+            class="px-3 py-1.5 rounded-lg text-2xs font-bold transition-colors"
             :class="form.status === 'inactive' ? 'bg-slate-500 text-white' : 'text-slate-500'"
             @click="form.status = 'inactive'"
           >Nonaktif</button>
         </div>
       </div>
 
-      <p v-if="err" class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+      <p v-if="err" class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
         {{ err }}
       </p>
 

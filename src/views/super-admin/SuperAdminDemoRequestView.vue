@@ -221,14 +221,14 @@ function goToDetail(row: DemoRequest) {
                 {{ row.school_summary.name ?? 'Lembaga tanpa nama' }}
               </span>
               <span
-                class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border"
+                class="text-3xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border"
                 :class="statusTone(row.status)"
               >
                 {{ statusLabel(row.status) }}
               </span>
               <span
                 v-if="row.other_requests_count"
-                class="text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1"
+                class="text-3xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1"
               >
                 🔗 +{{ row.other_requests_count }} lainnya
               </span>
@@ -242,12 +242,12 @@ function goToDetail(row: DemoRequest) {
                 · {{ row.school_summary.education_level }}
               </span>
             </p>
-            <p class="text-[11px] text-slate-400 mt-1 tabular-nums">
+            <p class="text-2xs text-slate-400 mt-1 tabular-nums">
               Diajukan {{ formatDateTime(row.created_at) || '—' }}
             </p>
           </div>
           <span
-            class="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-role-admin mt-2 flex-shrink-0"
+            class="hidden sm:inline-flex items-center gap-1 text-2xs font-bold text-role-admin mt-2 flex-shrink-0"
           >
             Lihat detail
             <NavIcon name="chevron-right" :size="16" />

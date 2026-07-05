@@ -437,7 +437,7 @@ function backToList() {
             v-for="f in STATUS_FILTERS"
             :key="f.key"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               statusFilter === f.key
                 ? f.key === 'all'
@@ -456,7 +456,7 @@ function backToList() {
             {{ f.label }}
             <span
               v-if="f.key !== 'all'"
-              class="ml-1 text-[10px] opacity-70"
+              class="ml-1 text-3xs opacity-70"
             >
               {{
                 f.key === 'hadir'
@@ -476,11 +476,11 @@ function backToList() {
     <!-- ── 4. Section head ───────────────────────────────────── -->
     <div class="flex items-center gap-2 px-1">
       <span
-        class="text-[11px] font-bold text-slate-500 uppercase tracking-widest"
+        class="text-2xs font-bold text-slate-500 uppercase tracking-widest"
         >{{ t('tutor.sekolah.attendanceDetail.studentListLabel') }}</span
       >
       <div class="flex-1 h-px bg-slate-200"></div>
-      <span class="text-[11px] font-bold text-slate-500">
+      <span class="text-2xs font-bold text-slate-500">
         {{ t('tutor.sekolah.attendanceDetail.studentCount', { shown: filteredRows.length, total: summary.total }) }}
       </span>
     </div>
@@ -501,7 +501,7 @@ function backToList() {
             :class="idx > 0 ? 'border-t border-slate-100' : ''"
           >
             <span
-              class="w-6 text-center text-[11px] font-bold text-slate-400 flex-shrink-0"
+              class="w-6 text-center text-2xs font-bold text-slate-400 flex-shrink-0"
             >
               {{ idx + 1 }}.
             </span>
@@ -530,11 +530,11 @@ function backToList() {
                 >
                   {{ r.student_name || t('tutor.sekolah.attendanceDetail.noName') }}
                 </p>
-                <p class="text-[11px] text-slate-400 truncate inline-flex items-center gap-1.5">
+                <p class="text-2xs text-slate-400 truncate inline-flex items-center gap-1.5">
                   <span>{{ className ? className + ' · ' : '' }}{{ t('tutor.sekolah.attendanceDetail.nisLabel') }} {{ r.student_number || '—' }}</span>
                   <span
                     v-if="r.alert"
-                    class="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                    class="text-4xs font-bold px-1.5 py-0.5 rounded-full"
                     :class="
                       r.alert_tone === 'danger'
                         ? 'bg-red-100 text-red-700'
@@ -545,7 +545,7 @@ function backToList() {
                   </span>
                   <span
                     v-if="r.notes"
-                    class="text-[10px] text-slate-500 italic truncate"
+                    class="text-3xs text-slate-500 italic truncate"
                   >
                     · "{{ r.notes }}"
                   </span>
@@ -583,7 +583,7 @@ function backToList() {
       v-if="!isReadOnly"
       class="sticky bottom-4 flex items-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-lg z-20"
     >
-      <div class="text-[11px] text-slate-600">
+      <div class="text-2xs text-slate-600">
         <p class="font-bold text-slate-900">
           {{ t('tutor.sekolah.attendanceDetail.markedSummary', { marked: summary.total - summary.unmarked, total: summary.total }) }}
         </p>
@@ -592,7 +592,7 @@ function backToList() {
         </p>
       </div>
       <span class="flex-1"></span>
-      <span class="hidden md:inline-flex items-center gap-1 text-[10px] font-bold text-slate-400 mr-2">
+      <span class="hidden md:inline-flex items-center gap-1 text-3xs font-bold text-slate-400 mr-2">
         <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600">Ctrl</kbd>
         <span>+</span>
         <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600">S</kbd>

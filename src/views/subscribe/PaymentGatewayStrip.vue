@@ -76,7 +76,7 @@ const chips = computed(() => {
           <span
             v-for="chip in chips"
             :key="chip.key"
-            class="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-700"
+            class="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-2xs font-semibold text-slate-700"
           >
             {{ chip.short }}
           </span>
@@ -94,7 +94,7 @@ const chips = computed(() => {
       <span class="text-xs text-slate-700 flex-1">
         {{ t('subscribe.gateway.manual') }}
       </span>
-      <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+      <span class="text-3xs font-semibold uppercase tracking-wider text-slate-400">
         {{ t('subscribe.gateway.manualHint') }}
       </span>
     </label>

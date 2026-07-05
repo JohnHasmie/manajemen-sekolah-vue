@@ -245,7 +245,7 @@ async function requestAccessForKamilEduMatch() {
 
 <template>
   <div>
-    <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
+    <p class="text-2xs font-bold tracking-widest text-slate-500 uppercase mb-2">
       {{ t('registerDemo.stepCounter', { current: wizard.stepNumber, total: wizard.stepTotal }) }} · {{ t('registerDemo.step2Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
@@ -327,7 +327,7 @@ async function requestAccessForKamilEduMatch() {
         autocomplete="off"
       />
       <Spinner v-if="isSearching" size="sm" />
-      <span v-else-if="results.length > 0" class="text-[10px] text-slate-400">
+      <span v-else-if="results.length > 0" class="text-3xs text-slate-400">
         {{ results.length }} {{ t('registerDemo.step2SearchResults') }}
       </span>
     </div>
@@ -352,7 +352,7 @@ async function requestAccessForKamilEduMatch() {
             <p class="text-[13.5px] font-extrabold text-slate-900 leading-tight truncate">
               {{ hit.name }}
             </p>
-            <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5 flex-wrap">
+            <div class="text-2xs text-slate-500 mt-1 flex items-center gap-1.5 flex-wrap">
               <template v-if="hit.city">
                 <NavIcon name="database" :size="10" class="text-slate-400" />
                 <span>{{ hit.city }}</span>
@@ -488,22 +488,22 @@ async function requestAccessForKamilEduMatch() {
           <p class="text-[13px] font-bold text-slate-900 leading-tight">{{ npsnHit.name }}</p>
           <p class="text-[10.5px] text-slate-600 mt-0.5">
             {{ [educationLevelDisplay(npsnHit.education_level), npsnHit.city, npsnHit.province].filter(Boolean).join(' · ') }}
-            <span v-if="npsnHit.akreditasi" class="ml-1 px-1.5 py-0.5 bg-emerald-200 text-emerald-800 rounded text-[9px] font-bold">
+            <span v-if="npsnHit.akreditasi" class="ml-1 px-1.5 py-0.5 bg-emerald-200 text-emerald-800 rounded text-4xs font-bold">
               Akreditasi {{ npsnHit.akreditasi }}
             </span>
           </p>
-          <p class="text-[10px] text-slate-500 mt-1">NPSN: {{ npsnHit.npsn }}</p>
+          <p class="text-3xs text-slate-500 mt-1">NPSN: {{ npsnHit.npsn }}</p>
 
           <template v-if="npsnHit.kamiledu_school">
             <div class="mt-2 p-2 bg-white rounded border border-amber-300">
-              <p class="text-[11px] text-amber-800 font-bold">
+              <p class="text-2xs text-amber-800 font-bold">
                 <NavIcon name="alert-circle" :size="11" class="inline-block -mt-0.5 mr-1" />
                 {{ t('registerDemo.step2NpsnExists') }}
                 <span v-if="npsnHit.kamiledu_school.is_demo">(sebagai demo)</span>.
               </p>
               <button
                 type="button"
-                class="mt-1.5 text-[11px] text-role-admin font-bold hover:underline disabled:opacity-50"
+                class="mt-1.5 text-2xs text-role-admin font-bold hover:underline disabled:opacity-50"
                 :disabled="requestInflight === npsnHit.kamiledu_school.id"
                 @click="requestAccessForKamilEduMatch"
               >

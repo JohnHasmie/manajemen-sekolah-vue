@@ -164,7 +164,7 @@ function displayName(row: IncompleteRegistration): string {
                 {{ displayName(row) }}
               </span>
               <span
-                class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200"
+                class="text-3xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200"
               >
                 {{
                   t('superAdmin.incomplete.stepBadge', {
@@ -201,7 +201,7 @@ function displayName(row: IncompleteRegistration): string {
                 ></div>
               </div>
               <span
-                class="text-[10px] font-bold text-slate-400 tabular-nums w-9 text-right"
+                class="text-3xs font-bold text-slate-400 tabular-nums w-9 text-right"
               >
                 {{ row.progress_percent }}%
               </span>
@@ -211,7 +211,7 @@ function displayName(row: IncompleteRegistration): string {
           <!-- Last active -->
           <div class="text-right flex-shrink-0">
             <p
-              class="text-[10px] text-slate-400 uppercase tracking-wide flex items-center justify-end gap-1"
+              class="text-3xs text-slate-400 uppercase tracking-wide flex items-center justify-end gap-1"
             >
               <NavIcon name="clock" :size="11" />
               {{ t('superAdmin.incomplete.lastActive') }}
@@ -219,7 +219,7 @@ function displayName(row: IncompleteRegistration): string {
             <p class="text-xs font-bold text-slate-700 mt-0.5">
               {{ formatRelative(row.last_active_at) || '—' }}
             </p>
-            <p class="text-[10px] text-slate-400 tabular-nums mt-0.5">
+            <p class="text-3xs text-slate-400 tabular-nums mt-0.5">
               {{ formatDateTime(row.last_active_at) }}
             </p>
           </div>

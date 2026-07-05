@@ -252,7 +252,7 @@ function onWizardDone(payload: {
         />
         <button
           type="button"
-          class="text-[11px] font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          class="text-2xs font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
           @click="openLaporan"
         >
           <NavIcon name="file-text" :size="11" class="inline" />
@@ -301,7 +301,7 @@ function onWizardDone(payload: {
               </svg>
               <div class="absolute inset-0 grid place-items-center text-center">
                 <div>
-                  <p class="text-[10px] font-bold text-white/70 uppercase tracking-widest">
+                  <p class="text-3xs font-bold text-white/70 uppercase tracking-widest">
                     {{ $t('admin.attendanceDashboard.todayHadirLabel') }}
                   </p>
                   <p class="text-2xl font-black">{{ presentPct.toFixed(1) }}%</p>
@@ -311,7 +311,7 @@ function onWizardDone(payload: {
 
             <!-- Right column — period + breakdown -->
             <div class="flex-1 min-w-[200px] space-y-2">
-              <p class="text-[10px] font-bold tracking-widest uppercase text-white/70">
+              <p class="text-3xs font-bold tracking-widest uppercase text-white/70">
                 {{ dashboard?.range_label ?? '—' }}
               </p>
               <p class="text-[12px] text-white/80">
@@ -320,19 +320,19 @@ function onWizardDone(payload: {
               </p>
               <div class="grid grid-cols-3 gap-2 mt-3">
                 <div class="bg-white/10 rounded-xl px-3 py-2">
-                  <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">
+                  <p class="text-4xs font-bold text-white/70 uppercase tracking-widest">
                     {{ $t('admin.attendanceDashboard.todayIzin') }}
                   </p>
                   <p class="text-[15px] font-black mt-0.5">{{ totals?.excused ?? 0 }}</p>
                 </div>
                 <div class="bg-white/10 rounded-xl px-3 py-2">
-                  <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">
+                  <p class="text-4xs font-bold text-white/70 uppercase tracking-widest">
                     {{ $t('admin.attendanceDashboard.todaySakit') }}
                   </p>
                   <p class="text-[15px] font-black mt-0.5">{{ totals?.sick ?? 0 }}</p>
                 </div>
                 <div class="bg-white/10 rounded-xl px-3 py-2">
-                  <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">
+                  <p class="text-4xs font-bold text-white/70 uppercase tracking-widest">
                     {{ $t('admin.attendanceDashboard.todayAlpa') }}
                   </p>
                   <p class="text-[15px] font-black mt-0.5">{{ totals?.alpha ?? 0 }}</p>
@@ -353,7 +353,7 @@ function onWizardDone(payload: {
                 <h3 class="text-sm font-black text-slate-900 leading-none">
                   {{ $t('admin.attendanceDashboard.trendTitle') }}
                 </h3>
-                <p class="text-[10px] text-slate-400 font-bold mt-0.5">
+                <p class="text-3xs text-slate-400 font-bold mt-0.5">
                   {{ trendWindowLabel }}
                 </p>
               </div>
@@ -386,7 +386,7 @@ function onWizardDone(payload: {
                   <p class="text-[13px] font-bold text-slate-900">{{ $t('admin.attendanceDashboard.trendGrade', { n: t.tingkat }) }}</p>
                   <p
                     v-if="t.alert_copy"
-                    class="text-[10px] font-bold mt-0.5 leading-tight"
+                    class="text-3xs font-bold mt-0.5 leading-tight"
                     :class="{
                       'text-red-700': t.current_pct < 80,
                       'text-amber-700': t.current_pct >= 80,
@@ -394,7 +394,7 @@ function onWizardDone(payload: {
                   >
                     {{ t.alert_copy }}
                   </p>
-                  <p v-else class="text-[10px] text-slate-500 mt-0.5">
+                  <p v-else class="text-3xs text-slate-500 mt-0.5">
                     {{ $t('admin.attendanceDashboard.trendStable') }}
                   </p>
                 </div>
@@ -426,7 +426,7 @@ function onWizardDone(payload: {
                     {{ t.current_pct.toFixed(1) }}%
                   </p>
                   <p
-                    class="text-[10px] font-bold tabular-nums"
+                    class="text-3xs font-bold tabular-nums"
                     :class="{
                       'text-emerald-700': t.delta_pct > 0,
                       'text-red-700': t.delta_pct < 0,

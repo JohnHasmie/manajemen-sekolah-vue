@@ -1257,7 +1257,7 @@ function typeLabel(type: AssessmentType): string {
                 </span>
                 <div class="flex-1 min-w-0">
                   <p
-                    class="text-[10px] font-bold text-brand-cobalt uppercase tracking-widest"
+                    class="text-3xs font-bold text-brand-cobalt uppercase tracking-widest"
                   >
                     {{ t('tutor.sekolah.gradebook.cardClassPrefix', { name: row.class_name }) }}
                   </p>
@@ -1274,7 +1274,7 @@ function typeLabel(type: AssessmentType): string {
                   </p>
                 </div>
                 <span
-                  class="text-[10px] font-bold text-brand-cobalt inline-flex items-center gap-0.5 flex-shrink-0"
+                  class="text-3xs font-bold text-brand-cobalt inline-flex items-center gap-0.5 flex-shrink-0"
                 >
                   {{ t('tutor.sekolah.gradebook.cardOpen') }}
                   <NavIcon name="chevron-right" :size="12" />
@@ -1323,7 +1323,7 @@ function typeLabel(type: AssessmentType): string {
                 <span
                   v-for="tc in typeCountsFor(row.subject)"
                   :key="tc.type"
-                  class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
+                  class="text-3xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
                   :class="typePillClass(tc.type)"
                 >
                   {{ typeLabel(tc.type) }} × {{ tc.count }}
@@ -1353,7 +1353,7 @@ function typeLabel(type: AssessmentType): string {
               <!-- Empty assessment hint -->
               <p
                 v-else
-                class="text-[11px] text-slate-400 mt-3 inline-flex items-center gap-1.5"
+                class="text-2xs text-slate-400 mt-3 inline-flex items-center gap-1.5"
               >
                 <NavIcon name="bell" :size="11" />
                 {{ t('tutor.sekolah.gradebook.cardEmptyAssessment') }}
@@ -1378,7 +1378,7 @@ function typeLabel(type: AssessmentType): string {
             class="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5"
           >
             <span
-              class="text-[9px] font-bold uppercase tracking-widest text-slate-400"
+              class="text-4xs font-bold uppercase tracking-widest text-slate-400"
               >{{ t('tutor.sekolah.gradebook.matrixChipClass') }}</span
             >
             <span class="text-[12px] font-bold text-slate-900">{{
@@ -1389,7 +1389,7 @@ function typeLabel(type: AssessmentType): string {
             class="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5"
           >
             <span
-              class="text-[9px] font-bold uppercase tracking-widest text-slate-400"
+              class="text-4xs font-bold uppercase tracking-widest text-slate-400"
               >{{ t('tutor.sekolah.gradebook.matrixChipSubject') }}</span
             >
             <span class="text-[12px] font-bold text-slate-900">{{
@@ -1402,7 +1402,7 @@ function typeLabel(type: AssessmentType): string {
       <section class="bg-white border border-slate-200 rounded-2xl p-3 space-y-2.5">
         <div class="flex items-center gap-3 flex-wrap">
           <span
-            class="text-[11px] font-bold text-slate-500 uppercase tracking-widest"
+            class="text-2xs font-bold text-slate-500 uppercase tracking-widest"
           >
             {{ t('tutor.sekolah.gradebook.matrixTypeLabel') }}
           </span>
@@ -1414,7 +1414,7 @@ function typeLabel(type: AssessmentType): string {
           />
         </div>
         <div
-          class="flex items-center gap-4 flex-wrap px-3 py-2 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-[11px] text-slate-600"
+          class="flex items-center gap-4 flex-wrap px-3 py-2 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-2xs text-slate-600"
         >
           <span class="inline-flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-700"></span>
@@ -1480,7 +1480,7 @@ function typeLabel(type: AssessmentType): string {
             <table class="w-full text-[12px] border-collapse">
               <thead>
                 <tr
-                  class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-widest"
+                  class="bg-slate-50 text-slate-500 text-3xs uppercase tracking-widest"
                 >
                   <th
                     class="text-left font-bold px-4 py-2.5 sticky left-0 bg-slate-50 z-10"
@@ -1499,7 +1499,7 @@ function typeLabel(type: AssessmentType): string {
                       @click="openColumnActions(a)"
                     >
                       <span>{{ assessmentDisplayNames[a.id] || a.name }}</span>
-                      <span class="text-[9px] font-medium text-slate-400">
+                      <span class="text-4xs font-medium text-slate-400">
                         {{ typeLabel(a.type) }}
                       </span>
                     </button>
@@ -1532,7 +1532,7 @@ function typeLabel(type: AssessmentType): string {
                         <p class="font-bold text-slate-900 text-[12px]">
                           {{ row.student_name }}
                         </p>
-                        <p class="text-[10px] text-slate-400">
+                        <p class="text-3xs text-slate-400">
                           {{ t('tutor.sekolah.gradebook.matrixStudentNumber', { number: row.student_number }) }}
                         </p>
                       </div>
@@ -1587,21 +1587,21 @@ function typeLabel(type: AssessmentType): string {
                   <td class="px-3 py-2.5 text-center">
                     <span
                       v-if="rowAverage(row.student_id) === null"
-                      class="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500"
+                      class="inline-flex items-center gap-1.5 text-3xs font-bold text-slate-500"
                     >
                       <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
                       {{ t('tutor.sekolah.gradebook.matrixStatusBelum') }}
                     </span>
                     <span
                       v-else-if="(rowAverage(row.student_id) as number) >= matrix.kkm"
-                      class="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700"
+                      class="inline-flex items-center gap-1.5 text-3xs font-bold text-emerald-700"
                     >
                       <span class="w-1.5 h-1.5 rounded-full bg-emerald-700"></span>
                       {{ t('tutor.sekolah.gradebook.matrixStatusTuntas') }}
                     </span>
                     <span
                       v-else
-                      class="inline-flex items-center gap-1.5 text-[10px] font-bold text-red-700"
+                      class="inline-flex items-center gap-1.5 text-3xs font-bold text-red-700"
                     >
                       <span class="w-1.5 h-1.5 rounded-full bg-red-700"></span>
                       {{ t('tutor.sekolah.gradebook.matrixStatusRemedial') }}
@@ -1619,7 +1619,7 @@ function typeLabel(type: AssessmentType): string {
         v-if="matrix.rows.length > 0"
         class="sticky bottom-4 flex items-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-lg z-20"
       >
-        <div class="text-[11px] text-slate-600">
+        <div class="text-2xs text-slate-600">
           <span
             v-if="dirtyCount === 0 && !isSaving"
             class="text-emerald-700 font-bold inline-flex items-center gap-1"
@@ -1687,7 +1687,7 @@ function typeLabel(type: AssessmentType): string {
             </span>
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900">{{ t('tutor.sekolah.gradebook.actionViewDetail') }}</p>
-              <p class="text-[11px] text-slate-500">{{ t('tutor.sekolah.gradebook.actionViewDetailDesc') }}</p>
+              <p class="text-2xs text-slate-500">{{ t('tutor.sekolah.gradebook.actionViewDetailDesc') }}</p>
             </div>
             <NavIcon name="chevron-right" :size="14" class="text-slate-300" />
           </button>
@@ -1703,7 +1703,7 @@ function typeLabel(type: AssessmentType): string {
             </span>
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900">{{ t('tutor.sekolah.gradebook.actionEdit') }}</p>
-              <p class="text-[11px] text-slate-500">{{ t('tutor.sekolah.gradebook.actionEditDesc') }}</p>
+              <p class="text-2xs text-slate-500">{{ t('tutor.sekolah.gradebook.actionEditDesc') }}</p>
             </div>
             <NavIcon name="chevron-right" :size="14" class="text-slate-300" />
           </button>
@@ -1719,13 +1719,13 @@ function typeLabel(type: AssessmentType): string {
             </span>
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-red-700">{{ t('tutor.sekolah.gradebook.actionDelete') }}</p>
-              <p class="text-[11px] text-slate-500">{{ t('tutor.sekolah.gradebook.actionDeleteDesc') }}</p>
+              <p class="text-2xs text-slate-500">{{ t('tutor.sekolah.gradebook.actionDeleteDesc') }}</p>
             </div>
             <NavIcon name="chevron-right" :size="14" class="text-slate-300" />
           </button>
         </li>
       </ul>
-      <p class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
+      <p class="mt-4 pt-3 border-t border-slate-100 text-2xs text-slate-400">
         {{ t('tutor.sekolah.gradebook.actionFooter') }}
       </p>
     </Modal>
@@ -1740,25 +1740,25 @@ function typeLabel(type: AssessmentType): string {
       <div class="space-y-3">
         <div class="grid grid-cols-2 gap-2">
           <div class="bg-slate-50 rounded-xl p-3">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailType') }}</p>
+            <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailType') }}</p>
             <p class="text-[14px] font-bold text-slate-900 mt-1">{{ typeLabel(columnDetail.type) }}</p>
           </div>
           <div class="bg-slate-50 rounded-xl p-3">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailDate') }}</p>
+            <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailDate') }}</p>
             <p class="text-[13px] font-bold text-slate-900 mt-1">{{ columnStats(columnDetail).dateLabel }}</p>
           </div>
         </div>
         <div class="grid grid-cols-3 gap-2">
           <div class="bg-brand-cobalt/5 rounded-xl p-3 text-center">
-            <p class="text-[10px] font-bold text-brand-cobalt uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailStudents') }}</p>
+            <p class="text-3xs font-bold text-brand-cobalt uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailStudents') }}</p>
             <p class="text-[18px] font-black text-brand-cobalt mt-0.5">{{ columnStats(columnDetail).total }}</p>
           </div>
           <div class="bg-emerald-50 rounded-xl p-3 text-center">
-            <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailGraded') }}</p>
+            <p class="text-3xs font-bold text-emerald-700 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailGraded') }}</p>
             <p class="text-[18px] font-black text-emerald-700 mt-0.5">{{ columnStats(columnDetail).graded }}</p>
           </div>
           <div class="bg-violet-50 rounded-xl p-3 text-center">
-            <p class="text-[10px] font-bold text-violet-700 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailAvg') }}</p>
+            <p class="text-3xs font-bold text-violet-700 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailAvg') }}</p>
             <p class="text-[18px] font-black text-violet-700 mt-0.5">{{ columnStats(columnDetail).avg ?? '—' }}</p>
           </div>
         </div>
@@ -1817,7 +1817,7 @@ function typeLabel(type: AssessmentType): string {
       <form class="space-y-md" @submit.prevent="applyAddAsesmen">
         <div>
           <label
-            class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+            class="block text-2xs font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
             {{ t('tutor.sekolah.gradebook.addFieldType') }}
           </label>
@@ -1836,7 +1836,7 @@ function typeLabel(type: AssessmentType): string {
         </div>
         <div>
           <label
-            class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+            class="block text-2xs font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
             {{ t('tutor.sekolah.gradebook.addFieldTitle') }}
           </label>
@@ -1852,7 +1852,7 @@ function typeLabel(type: AssessmentType): string {
         </div>
         <div>
           <label
-            class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+            class="block text-2xs font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
             {{ t('tutor.sekolah.gradebook.addFieldDate') }}
           </label>
@@ -1862,7 +1862,7 @@ function typeLabel(type: AssessmentType): string {
             class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
           />
         </div>
-        <div class="bg-slate-50 border border-dashed border-slate-200 rounded-lg px-3 py-2 text-[11px] text-slate-500">
+        <div class="bg-slate-50 border border-dashed border-slate-200 rounded-lg px-3 py-2 text-2xs text-slate-500">
           <NavIcon name="check-circle" :size="11" class="inline-block mr-1 -mt-0.5 text-brand-cobalt" />
           {{ t('tutor.sekolah.gradebook.addInfo') }}
         </div>
@@ -1891,7 +1891,7 @@ function typeLabel(type: AssessmentType): string {
       <form class="space-y-md" @submit.prevent="applyEditColumn">
         <div>
           <label
-            class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+            class="block text-2xs font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
             {{ t('tutor.sekolah.gradebook.addFieldType') }}
           </label>
@@ -1910,7 +1910,7 @@ function typeLabel(type: AssessmentType): string {
         </div>
         <div>
           <label
-            class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+            class="block text-2xs font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
             {{ t('tutor.sekolah.gradebook.addFieldTitle') }}
           </label>
@@ -1926,7 +1926,7 @@ function typeLabel(type: AssessmentType): string {
         </div>
         <div>
           <label
-            class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+            class="block text-2xs font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
             {{ t('tutor.sekolah.gradebook.addFieldDate') }}
           </label>
@@ -1936,7 +1936,7 @@ function typeLabel(type: AssessmentType): string {
             class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
           />
         </div>
-        <div class="bg-amber-50 border border-dashed border-amber-200 rounded-lg px-3 py-2 text-[11px] text-amber-700">
+        <div class="bg-amber-50 border border-dashed border-amber-200 rounded-lg px-3 py-2 text-2xs text-amber-700">
           <NavIcon name="edit-3" :size="11" class="inline-block mr-1 -mt-0.5" />
           {{ t('tutor.sekolah.gradebook.editInfo') }}
         </div>
@@ -1991,7 +1991,7 @@ function typeLabel(type: AssessmentType): string {
             @click="pickClass(c.id)"
           >
             <span>{{ c.name }}</span>
-            <span class="text-[10px] text-slate-400">
+            <span class="text-3xs text-slate-400">
               {{ t('tutor.sekolah.gradebook.pickClassStudents', { count: c.student_count }) }}
             </span>
           </button>
@@ -2028,7 +2028,7 @@ function typeLabel(type: AssessmentType): string {
             @click="pickSubject(s.id)"
           >
             <span>{{ s.name }}</span>
-            <span v-if="s.code" class="text-[10px] text-slate-400">{{
+            <span v-if="s.code" class="text-3xs text-slate-400">{{
               s.code
             }}</span>
           </button>

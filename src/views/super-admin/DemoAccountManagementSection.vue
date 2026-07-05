@@ -331,14 +331,14 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
   <section class="bg-white border border-slate-200 rounded-2xl p-4">
     <div class="flex items-center justify-between mb-3">
       <h2
-        class="text-[11px] font-black uppercase tracking-widest text-role-admin flex items-center gap-2"
+        class="text-2xs font-black uppercase tracking-widest text-role-admin flex items-center gap-2"
       >
         <NavIcon name="trash-2" :size="14" />
         {{ t('superAdmin.demoAccounts.title') }}
       </h2>
       <button
         type="button"
-        class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-slate-600 transition"
+        class="inline-flex items-center gap-1 text-2xs font-semibold text-slate-400 hover:text-slate-600 transition"
         :disabled="isLoading"
         @click="loadCounts"
       >
@@ -354,7 +354,7 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
       <span class="text-red-500 mt-0.5 flex-shrink-0">
         <NavIcon name="alert-triangle" :size="16" />
       </span>
-      <p class="text-[11px] text-red-700 leading-relaxed">
+      <p class="text-2xs text-red-700 leading-relaxed">
         {{ t('superAdmin.demoAccounts.warning') }}
       </p>
     </div>
@@ -399,13 +399,13 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
           >
             {{ row.count }}
           </p>
-          <p class="text-[10px] text-slate-400 mt-0.5">
+          <p class="text-3xs text-slate-400 mt-0.5">
             {{ modeLabel(row.mode) }}
           </p>
         </div>
       </div>
 
-      <p class="text-[11px] text-slate-400 mb-3">
+      <p class="text-2xs text-slate-400 mb-3">
         {{
           t('superAdmin.demoAccounts.totalAccounts', {
             count: counts.total_accounts,
@@ -467,12 +467,12 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
       class="mt-4 rounded-2xl border-2 border-amber-300 bg-amber-50/40 p-3.5"
     >
       <h3
-        class="text-[11px] font-black uppercase tracking-widest text-amber-700 flex items-center gap-2 mb-1.5"
+        class="text-2xs font-black uppercase tracking-widest text-amber-700 flex items-center gap-2 mb-1.5"
       >
         <NavIcon name="refresh-cw" :size="14" />
         Reset Sekolah Demo
       </h3>
-      <p class="text-[11px] text-amber-700/90 leading-relaxed mb-3">
+      <p class="text-2xs text-amber-700/90 leading-relaxed mb-3">
         Hapus seluruh data sekolah demo lalu seed ulang dari awal. Login pemilik demo dan masa aktif tidak berubah. Bisa langsung pakai konfigurasi awal atau ubah skenario/nama lebih dulu.
       </p>
       <Button variant="secondary" size="sm" block @click="startReset">
@@ -489,12 +489,12 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
       class="mt-4 rounded-2xl border-2 border-red-300 bg-red-50/40 p-3.5"
     >
       <h3
-        class="text-[11px] font-black uppercase tracking-widest text-red-600 flex items-center gap-2 mb-1.5"
+        class="text-2xs font-black uppercase tracking-widest text-red-600 flex items-center gap-2 mb-1.5"
       >
         <NavIcon name="alert-triangle" :size="14" />
         {{ t('superAdmin.demoAccounts.dangerZoneTitle') }}
       </h3>
-      <p class="text-[11px] text-red-700/90 leading-relaxed mb-3">
+      <p class="text-2xs text-red-700/90 leading-relaxed mb-3">
         {{ t('superAdmin.demoAccounts.deleteSchoolWarning') }}
       </p>
       <Button variant="danger" size="sm" block @click="startSchoolDelete">
@@ -528,7 +528,7 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
         </div>
 
         <div>
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">
+          <label class="block text-2xs font-semibold text-slate-500 mb-1">
             {{
               t('superAdmin.demoAccounts.confirmTypeLabel', {
                 word: CONFIRM_WORD,
@@ -593,7 +593,7 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
         </div>
 
         <div>
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">
+          <label class="block text-2xs font-semibold text-slate-500 mb-1">
             <template v-if="schoolNameTrimmed">
               {{
                 t('superAdmin.demoAccounts.deleteSchoolTypeLabel', {
@@ -669,7 +669,7 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
         />
 
         <div>
-          <label class="block text-[11px] font-semibold text-slate-500 mb-1">
+          <label class="block text-2xs font-semibold text-slate-500 mb-1">
             Ketik <span class="font-black tracking-widest">{{ RESET_CONFIRM_WORD }}</span> untuk mengonfirmasi.
           </label>
           <input

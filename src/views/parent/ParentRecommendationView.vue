@@ -414,7 +414,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
           {{ t('parent.recommendations.filterButton') }}
           <span
             v-if="activeFilterCount > 0"
-            class="ml-1 px-1.5 py-0.5 rounded-full bg-white text-role-wali text-[9px] font-black"
+            class="ml-1 px-1.5 py-0.5 rounded-full bg-white text-role-wali text-4xs font-black"
           >
             {{ activeFilterCount }}
           </span>
@@ -466,7 +466,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
       >
         {{ t('parent.recommendations.allChildren') }}
         <span
-          class="ml-1 px-1.5 py-0.5 rounded-full text-[9px] font-black"
+          class="ml-1 px-1.5 py-0.5 rounded-full text-4xs font-black"
           :class="
             selectedChildKey === ALL_KEY
               ? 'bg-white/25 text-white'
@@ -491,7 +491,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
         {{ c.student_name.split(' ')[0] }} · {{ c.class_name }}
         <span
           v-if="c.unread_count > 0"
-          class="ml-1 px-1.5 py-0.5 rounded-full text-[9px] font-black"
+          class="ml-1 px-1.5 py-0.5 rounded-full text-4xs font-black"
           :class="
             selectedChildKey === c.student_id
               ? 'bg-white text-role-wali'
@@ -531,7 +531,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
       <template #default>
         <!-- Frame A — multi-child hub -->
         <section v-if="isMultiChildHub" class="space-y-2.5">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 px-1">
+          <p class="text-3xs font-bold uppercase tracking-widest text-slate-500 px-1">
             {{ t('parent.recommendations.hubHeader', { count: summaryChildren.length }) }}
           </p>
           <button
@@ -564,7 +564,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
               </div>
               <span
                 v-if="c.unread_count > 0"
-                class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-role-wali text-white shadow shadow-role-wali/30"
+                class="px-2.5 py-1 rounded-full text-3xs font-black uppercase tracking-wider bg-role-wali text-white shadow shadow-role-wali/30"
               >
                 {{ c.unread_count }} {{ t('wali.sekolah.recommendation.badgeBaruSuffix') }}
               </span>
@@ -577,7 +577,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
                 <p class="text-[15px] font-black text-role-wali leading-none">
                   {{ c.total_count }}
                 </p>
-                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 mt-1.5">
+                <p class="text-4xs font-bold uppercase tracking-widest text-slate-500 mt-1.5">
                   {{ t('wali.sekolah.recommendation.statTotal') }}
                 </p>
               </div>
@@ -587,7 +587,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
                 <p class="text-[15px] font-black text-amber-600 leading-none">
                   {{ Math.max(c.total_count - c.completed_count, 0) }}
                 </p>
-                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 mt-1.5">
+                <p class="text-4xs font-bold uppercase tracking-widest text-slate-500 mt-1.5">
                   {{ t('wali.sekolah.recommendation.statActive') }}
                 </p>
               </div>
@@ -597,7 +597,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
                 <p class="text-[15px] font-black text-emerald-600 leading-none">
                   {{ c.completed_count }}
                 </p>
-                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 mt-1.5">
+                <p class="text-4xs font-bold uppercase tracking-widest text-slate-500 mt-1.5">
                   {{ t('wali.sekolah.recommendation.statCompleted') }}
                 </p>
               </div>
@@ -711,7 +711,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
             >
               {{ entry.label }}
               <span
-                class="ml-1 px-1.5 py-0.5 rounded-full text-[9px] font-black"
+                class="ml-1 px-1.5 py-0.5 rounded-full text-4xs font-black"
                 :class="
                   filter.status === entry.key
                     ? 'bg-white/25 text-white'

@@ -370,7 +370,7 @@ function gotoHistory() {
           {{ clockNow }}
         </p>
         <p
-          class="text-[10px] font-bold text-white/80 uppercase tracking-widest mt-1"
+          class="text-3xs font-bold text-white/80 uppercase tracking-widest mt-1"
         >
           {{ t('tutor.sekolah.presensiTeacher.serverTime') }}
         </p>
@@ -458,7 +458,7 @@ function gotoHistory() {
               · {{ t('tutor.sekolah.presensiTeacher.distanceMeters', { meters: record.check_in_distance_m }) }}
             </template>
           </p>
-          <p v-if="!checkoutEnabled" class="text-[11px] text-slate-400 mt-1">
+          <p v-if="!checkoutEnabled" class="text-2xs text-slate-400 mt-1">
             {{ t('tutor.sekolah.presensiTeacher.checkOutDisabled') }}
           </p>
         </div>
@@ -562,7 +562,7 @@ function gotoHistory() {
             </div>
           </div>
           <span
-            class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full flex-shrink-0"
+            class="text-3xs font-bold uppercase tracking-widest px-2 py-1 rounded-full flex-shrink-0"
             :class="
               mode === 'check-out'
                 ? 'bg-violet-100 text-violet-700'
@@ -578,14 +578,14 @@ function gotoHistory() {
           <div v-if="cameraRequired">
             <div class="flex items-center justify-between mb-2">
               <p
-                class="text-[11px] font-bold text-slate-600 flex items-center gap-1.5"
+                class="text-2xs font-bold text-slate-600 flex items-center gap-1.5"
               >
                 <NavIcon name="camera" :size="13" class="text-brand-cobalt" />
                 {{ t('tutor.sekolah.presensiTeacher.selfiePhoto') }}
               </p>
               <span
                 v-if="cam.isActive.value"
-                class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600"
+                class="inline-flex items-center gap-1 text-3xs font-bold text-emerald-600"
               >
                 <span
                   class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
@@ -594,13 +594,13 @@ function gotoHistory() {
               </span>
               <span
                 v-else-if="cam.isStarting.value"
-                class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400"
+                class="inline-flex items-center gap-1 text-3xs font-bold text-slate-400"
               >
                 {{ t('tutor.sekolah.presensiTeacher.camStarting') }}
               </span>
               <span
                 v-else-if="cam.error.value"
-                class="inline-flex items-center gap-1 text-[10px] font-bold text-red-500"
+                class="inline-flex items-center gap-1 text-3xs font-bold text-red-500"
               >
                 <NavIcon name="alert-circle" :size="11" />
                 {{ t('tutor.sekolah.presensiTeacher.camOff') }}
@@ -619,7 +619,7 @@ function gotoHistory() {
               />
               <button
                 type="button"
-                class="absolute bottom-2 right-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/90 text-slate-800 text-[11px] font-bold hover:bg-white"
+                class="absolute bottom-2 right-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/90 text-slate-800 text-2xs font-bold hover:bg-white"
                 @click="retakePhoto"
               >
                 <NavIcon name="refresh-cw" :size="12" />{{ t('tutor.sekolah.presensiTeacher.retake') }}
@@ -646,7 +646,7 @@ function gotoHistory() {
                 >
                   <div class="text-center">
                     <Spinner size="md" />
-                    <p class="text-[11px] text-white/80 font-medium mt-2">
+                    <p class="text-2xs text-white/80 font-medium mt-2">
                       {{ t('tutor.sekolah.presensiTeacher.preparingCamera') }}
                     </p>
                   </div>
@@ -674,7 +674,7 @@ function gotoHistory() {
                 <!-- Live framing hint -->
                 <div
                   v-if="cam.isActive.value"
-                  class="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 text-white text-[10px] font-bold"
+                  class="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 text-white text-3xs font-bold"
                 >
                   {{ t('tutor.sekolah.presensiTeacher.framingHint') }}
                 </div>
@@ -707,7 +707,7 @@ function gotoHistory() {
                 "
               >
                 <p
-                  class="text-[11px] font-bold flex items-start gap-1.5"
+                  class="text-2xs font-bold flex items-start gap-1.5"
                   :class="
                     cam.errorKind.value === 'insecure'
                       ? 'text-amber-800'
@@ -732,7 +732,7 @@ function gotoHistory() {
           <!-- ── Location capture (auto-started in parallel) ── -->
           <div v-if="locationRequired">
             <p
-              class="text-[11px] font-bold text-slate-600 mb-2 flex items-center gap-1.5"
+              class="text-2xs font-bold text-slate-600 mb-2 flex items-center gap-1.5"
             >
               <NavIcon name="map-pin" :size="13" class="text-brand-cobalt" />
               {{ t('tutor.sekolah.presensiTeacher.gpsLocation') }}
@@ -767,7 +767,7 @@ function gotoHistory() {
                   <p class="text-[12px] font-bold text-emerald-800">
                     {{ t('tutor.sekolah.presensiTeacher.locationDetected') }}
                   </p>
-                  <p class="text-[11px] text-emerald-700 tabular-nums">
+                  <p class="text-2xs text-emerald-700 tabular-nums">
                     {{ geo.position.value.latitude.toFixed(6) }},
                     {{ geo.position.value.longitude.toFixed(6) }}
                     <span
@@ -782,7 +782,7 @@ function gotoHistory() {
                   <p class="text-[12px] font-bold text-slate-600">
                     {{ t('tutor.sekolah.presensiTeacher.fetchingLocation') }}
                   </p>
-                  <p class="text-[11px] text-slate-400">
+                  <p class="text-2xs text-slate-400">
                     {{ t('tutor.sekolah.presensiTeacher.geofenceVerify') }}
                   </p>
                 </template>
@@ -790,7 +790,7 @@ function gotoHistory() {
                   <p class="text-[12px] font-bold text-slate-600">
                     {{ t('tutor.sekolah.presensiTeacher.locationNotYet') }}
                   </p>
-                  <p class="text-[11px] text-slate-400">
+                  <p class="text-2xs text-slate-400">
                     {{ t('tutor.sekolah.presensiTeacher.geofenceVerify') }}
                   </p>
                 </template>
@@ -833,7 +833,7 @@ function gotoHistory() {
               "
             >
               <p
-                class="text-[11px] font-bold flex items-start gap-1.5"
+                class="text-2xs font-bold flex items-start gap-1.5"
                 :class="
                   geo.errorKind.value === 'insecure'
                     ? 'text-amber-800'
@@ -856,7 +856,7 @@ function gotoHistory() {
 
           <!-- ── Notes ── -->
           <div>
-            <label class="text-[11px] font-bold text-slate-600 mb-1.5 block">
+            <label class="text-2xs font-bold text-slate-600 mb-1.5 block">
               {{ t('tutor.sekolah.presensiTeacher.notesLabel') }}
             </label>
             <textarea
@@ -907,7 +907,7 @@ function gotoHistory() {
         </div>
         <div class="flex-1 text-left">
           <p class="text-[13px] font-bold text-slate-900">{{ t('tutor.sekolah.presensiTeacher.historyTitle') }}</p>
-          <p class="text-[11px] text-slate-500">{{ t('tutor.sekolah.presensiTeacher.historySubtitle') }}</p>
+          <p class="text-2xs text-slate-500">{{ t('tutor.sekolah.presensiTeacher.historySubtitle') }}</p>
         </div>
         <NavIcon name="arrow-right" :size="16" class="text-slate-300" />
       </button>

@@ -253,7 +253,7 @@ function goBack() {
 
           <!-- JUDUL -->
           <section class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest">
               {{ t('tutor.sekolah.recommendationEdit.fieldTitle') }}
             </label>
             <input
@@ -267,7 +267,7 @@ function goBack() {
 
           <!-- PRIORITAS -->
           <section class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest">
               {{ t('tutor.sekolah.recommendationEdit.fieldPriority') }}
             </label>
             <div class="flex flex-wrap gap-1.5">
@@ -275,7 +275,7 @@ function goBack() {
                 v-for="p in PRIORITY_OPTIONS"
                 :key="p"
                 type="button"
-                class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border inline-flex items-center gap-1.5"
+                class="px-3 py-1.5 rounded-full text-2xs font-bold transition border inline-flex items-center gap-1.5"
                 :class="
                   priority === p
                     ? PRIORITY_TONES[p].pill + ' border-transparent ring-2 ring-current/30'
@@ -292,7 +292,7 @@ function goBack() {
 
           <!-- DESKRIPSI (Quill) -->
           <section class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest">
               {{ t('tutor.sekolah.recommendationEdit.fieldDescription') }}
             </label>
             <AppRichTextEditor
@@ -301,7 +301,7 @@ function goBack() {
               :readonly="isSaving"
               :min-height="220"
             />
-            <p class="text-[10px] text-slate-400">
+            <p class="text-3xs text-slate-400">
               {{ t('tutor.sekolah.recommendationEdit.formatHint') }}
             </p>
           </section>
@@ -309,10 +309,10 @@ function goBack() {
           <!-- MATERI TERKAIT -->
           <section class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
             <div class="flex items-center gap-2">
-              <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest">
                 {{ t('tutor.sekolah.recommendationEdit.fieldMaterials') }}
               </label>
-              <span class="text-[10px] text-slate-400 tabular-nums">
+              <span class="text-3xs text-slate-400 tabular-nums">
                 · {{ t('tutor.sekolah.recommendationEdit.materialCount', { count: materials.length }) }}
               </span>
             </div>
@@ -370,7 +370,7 @@ function goBack() {
 
           <!-- CATATAN -->
           <section class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest">
               {{ t('tutor.sekolah.recommendationEdit.fieldNotes') }}
             </label>
             <textarea

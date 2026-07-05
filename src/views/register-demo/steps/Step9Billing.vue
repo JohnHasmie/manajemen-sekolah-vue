@@ -51,7 +51,7 @@ const formattedNominal = computed(() =>
 
 <template>
   <div>
-    <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
+    <p class="text-2xs font-bold tracking-widest text-slate-500 uppercase mb-2">
       {{ t('registerDemo.stepCounter', { current: wizard.stepNumber, total: wizard.stepTotal }) }} · {{ t('registerDemo.step10Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
@@ -108,7 +108,7 @@ const formattedNominal = computed(() =>
       >
         <NavIcon name="rocket" :size="22" :class="mode === 'build_year' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
         <div class="text-[13px] font-bold">{{ t('registerDemo.step10BuildYear') }}</div>
-        <div class="text-[11px]" :class="mode === 'build_year' ? 'text-role-admin' : 'text-slate-500'">
+        <div class="text-2xs" :class="mode === 'build_year' ? 'text-role-admin' : 'text-slate-500'">
           {{ t('registerDemo.step10BuildYearHint') }}
         </div>
       </button>
@@ -120,7 +120,7 @@ const formattedNominal = computed(() =>
       >
         <NavIcon name="clock" :size="22" :class="mode === 'skip' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
         <div class="text-[13px] font-bold">Skip</div>
-        <div class="text-[11px]" :class="mode === 'skip' ? 'text-role-admin' : 'text-slate-500'">
+        <div class="text-2xs" :class="mode === 'skip' ? 'text-role-admin' : 'text-slate-500'">
           {{ t('registerDemo.step10SkipHint') }}
         </div>
       </button>

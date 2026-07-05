@@ -110,8 +110,8 @@ const tugas = computed<TugasRow[]>(() => {
       title: e.title,
       subtitle: e.subtitle ?? whenLabel(e.occurred_at),
       pillCls: isDone
-        ? 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-tutoring-green-dim text-green-700'
-        : 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-tutoring-amber-dim text-amber-700',
+        ? 'rounded-full px-2 py-0.5 text-3xs font-bold uppercase tracking-wide bg-tutoring-green-dim text-green-700'
+        : 'rounded-full px-2 py-0.5 text-3xs font-bold uppercase tracking-wide bg-tutoring-amber-dim text-amber-700',
       pillLabel: isDone ? t('wali.bimbel.class_detail.task_done_pill') : t('wali.bimbel.class_detail.task_pending_pill'),
     });
   }

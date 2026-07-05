@@ -70,7 +70,7 @@ function onConfirm() {
       <div>
         <label
           for="reject-reason"
-          class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5"
+          class="block text-2xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5"
         >
           Alasan penolakan · dibaca pelanggan
         </label>
@@ -84,7 +84,7 @@ function onConfirm() {
           :class="touched && !isValid ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200' : ''"
           @blur="touched = true"
         />
-        <div class="mt-1.5 flex items-center justify-between text-[11px]">
+        <div class="mt-1.5 flex items-center justify-between text-2xs">
           <p class="text-slate-400">
             Minimal {{ REASON_MIN }}, maksimal {{ REASON_MAX }} karakter.
           </p>
@@ -101,7 +101,7 @@ function onConfirm() {
         </div>
         <p
           v-if="touched && length > 0 && length < REASON_MIN"
-          class="mt-1 text-[11px] text-rose-600"
+          class="mt-1 text-2xs text-rose-600"
         >
           Alasan terlalu singkat. Tulis minimal {{ REASON_MIN }} karakter supaya pelanggan tahu langkah selanjutnya.
         </p>
@@ -109,7 +109,7 @@ function onConfirm() {
 
       <div class="rounded-lg bg-slate-50 border border-slate-200 p-3 text-[12px] text-slate-600 leading-relaxed">
         Setelah dikonfirmasi, pesanan langsung <span class="font-semibold text-slate-800">dibatalkan</span> dan status di sisi pelanggan berubah jadi
-        <span class="inline-flex items-center rounded bg-rose-100 text-rose-700 px-1.5 py-0.5 text-[10px] font-semibold ml-0.5">Ditolak</span>.
+        <span class="inline-flex items-center rounded bg-rose-100 text-rose-700 px-1.5 py-0.5 text-3xs font-semibold ml-0.5">Ditolak</span>.
         Aksi ini bersifat final — kalau ternyata salah tolak, minta pelanggan buat pesanan baru.
       </div>
 

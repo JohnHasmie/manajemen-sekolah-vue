@@ -440,7 +440,7 @@ function pickSubject(id: string) {
           class="inline-flex flex-col rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 leading-none"
         >
           <span
-            class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+            class="text-4xs font-bold text-slate-400 uppercase tracking-widest"
             >{{ t('tutor.sekolah.attendanceInput.dateLabel') }}</span
           >
           <input
@@ -469,21 +469,21 @@ function pickSubject(id: string) {
         <!-- Bulk actions -->
         <button
           type="button"
-          class="text-[11px] font-bold px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+          class="text-2xs font-bold px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
           @click="markAll('hadir')"
         >
           ✓ {{ t('tutor.sekolah.attendanceInput.allHadir') }}
         </button>
         <button
           type="button"
-          class="text-[11px] font-bold px-3 py-2 rounded-xl bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
+          class="text-2xs font-bold px-3 py-2 rounded-xl bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
           @click="clearAll"
         >
           ✕ {{ t('tutor.sekolah.attendanceInput.clearAll') }}
         </button>
         <button
           type="button"
-          class="text-[11px] font-bold px-3 py-2 rounded-xl bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
+          class="text-2xs font-bold px-3 py-2 rounded-xl bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
           @click="copyFromLast"
         >
           📋 {{ t('tutor.sekolah.attendanceInput.copyFromLast') }}
@@ -503,7 +503,7 @@ function pickSubject(id: string) {
       <template #chips>
         <button
           type="button"
-          class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+          class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
           :class="
             filterMode === 'all'
               ? 'bg-brand-cobalt text-white border-brand-cobalt'
@@ -515,7 +515,7 @@ function pickSubject(id: string) {
         </button>
         <button
           type="button"
-          class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+          class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
           :class="
             filterMode === 'unmarked'
               ? 'bg-amber-50 text-amber-700 border-amber-300'
@@ -524,7 +524,7 @@ function pickSubject(id: string) {
           @click="filterMode = 'unmarked'"
         >
           {{ t('tutor.sekolah.attendanceInput.filterUnmarked') }}
-          <span class="ml-1 text-[10px] opacity-70">{{ summary.unmarked }}</span>
+          <span class="ml-1 text-3xs opacity-70">{{ summary.unmarked }}</span>
         </button>
       </template>
     </PageFilterToolbar>
@@ -532,11 +532,11 @@ function pickSubject(id: string) {
     <!-- ── 5. Section head ───────────────────────────────────── -->
     <div class="flex items-center gap-2 px-1 flex-wrap">
       <span
-        class="text-[11px] font-bold text-slate-500 uppercase tracking-widest"
+        class="text-2xs font-bold text-slate-500 uppercase tracking-widest"
         >{{ t('tutor.sekolah.attendanceInput.studentListLabel') }}</span
       >
       <div class="flex-1 h-px bg-slate-200"></div>
-      <span class="text-[11px] font-bold text-slate-500">
+      <span class="text-2xs font-bold text-slate-500">
         {{ t('tutor.sekolah.attendanceInput.studentCount', { shown: filteredRows.length, total: summary.total }) }}
       </span>
     </div>
@@ -600,7 +600,7 @@ function pickSubject(id: string) {
             @click="focusRow(idx)"
           >
             <span
-              class="w-6 text-center text-[11px] font-bold text-slate-400 flex-shrink-0"
+              class="w-6 text-center text-2xs font-bold text-slate-400 flex-shrink-0"
             >
               {{ idx + 1 }}.
             </span>
@@ -614,7 +614,7 @@ function pickSubject(id: string) {
               <p class="text-[13px] font-bold text-slate-900 truncate">
                 {{ r.student_name || t('tutor.sekolah.attendanceInput.noName') }}
               </p>
-              <p class="text-[11px] text-slate-400 truncate">
+              <p class="text-2xs text-slate-400 truncate">
                 {{ activeClass?.name ? activeClass.name + ' · ' : '' }}{{ t('tutor.sekolah.attendanceInput.nisLabel') }}
                 {{ r.student_number || '—' }}
               </p>
@@ -643,7 +643,7 @@ function pickSubject(id: string) {
             }"
           ></div>
         </div>
-        <div class="text-[11px]">
+        <div class="text-2xs">
           <p class="font-bold text-slate-900">
             {{ t('tutor.sekolah.attendanceInput.readySummary', { marked: summary.total - summary.unmarked, total: summary.total }) }}
           </p>
@@ -689,7 +689,7 @@ function pickSubject(id: string) {
             @click="pickClass(c.id)"
           >
             <span>{{ c.name }}</span>
-            <span v-if="c.student_count" class="text-[10px] text-slate-400">
+            <span v-if="c.student_count" class="text-3xs text-slate-400">
               {{ t('tutor.sekolah.attendanceInput.studentCountSuffix', { count: c.student_count }) }}
             </span>
           </button>
@@ -715,7 +715,7 @@ function pickSubject(id: string) {
             @click="pickSubject(s.id)"
           >
             <span>{{ s.name }}</span>
-            <span v-if="s.code" class="text-[10px] text-slate-400">{{
+            <span v-if="s.code" class="text-3xs text-slate-400">{{
               s.code
             }}</span>
           </button>

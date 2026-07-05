@@ -216,7 +216,7 @@ const canSendBack = computed(
           >
             <span
               v-if="plan.ai_generated"
-              class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/15 text-white text-[10px] font-bold uppercase tracking-wider"
+              class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/15 text-white text-3xs font-bold uppercase tracking-wider"
             >
               <NavIcon name="sparkles" :size="10" />
               AI
@@ -228,7 +228,7 @@ const canSendBack = computed(
             class="bg-white border border-slate-200 rounded-2xl shadow-sm grid grid-cols-3 divide-x divide-slate-100"
           >
             <div class="px-3 py-3 text-center">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
                 {{ t('admin.sekolah.lesson_plan_detail.kpi_sections') }}
               </p>
               <p
@@ -239,7 +239,7 @@ const canSendBack = computed(
               </p>
             </div>
             <div class="px-3 py-3 text-center">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
                 {{ t('admin.sekolah.lesson_plan_detail.kpi_format') }}
               </p>
               <p
@@ -250,11 +250,11 @@ const canSendBack = computed(
               </p>
             </div>
             <div class="px-3 py-3 text-center">
-              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="text-4xs font-bold text-slate-400 uppercase tracking-widest">
                 {{ t('admin.sekolah.lesson_plan_detail.kpi_status') }}
               </p>
               <span
-                class="inline-flex items-center gap-1 mt-1 px-2 py-1 rounded-md border text-[11px] font-bold"
+                class="inline-flex items-center gap-1 mt-1 px-2 py-1 rounded-md border text-2xs font-bold"
                 :class="[tone.bg, tone.text, tone.border]"
               >
                 <span class="w-1.5 h-1.5 rounded-full" :class="tone.dot" />
@@ -278,7 +278,7 @@ const canSendBack = computed(
             "
           >
             <p
-              class="text-[10px] font-bold uppercase tracking-widest mb-1.5"
+              class="text-3xs font-bold uppercase tracking-widest mb-1.5"
               :class="plan.status === 'Rejected' ? 'text-red-700' : 'text-violet-700'"
             >
               {{ plan.status === 'Rejected' ? t('admin.sekolah.lesson_plan_detail.last_reject_note') : t('admin.sekolah.lesson_plan_detail.last_revision_note') }}
@@ -306,7 +306,7 @@ const canSendBack = computed(
               <p class="text-[13px] font-bold text-slate-900 truncate">
                 {{ plan.file_name ?? t('admin.sekolah.lesson_plan_detail.file_default') }}
               </p>
-              <p class="text-[11px] text-slate-500 mt-0.5">
+              <p class="text-2xs text-slate-500 mt-0.5">
                 {{ plan.file_mime ?? t('admin.sekolah.lesson_plan_detail.document') }}
                 <template v-if="plan.file_size_mb"> · {{ plan.file_size_mb }} MB</template>
               </p>
@@ -326,12 +326,12 @@ const canSendBack = computed(
           <section v-if="isStructuredFormat(plan.format)" class="space-y-2.5">
             <header class="flex items-center gap-2 px-1">
               <span
-                class="text-[10px] font-bold uppercase tracking-widest"
+                class="text-3xs font-bold uppercase tracking-widest"
                 :style="{ color: accent }"
               >
                 {{ t('admin.sekolah.lesson_plan_detail.sections_label') }}
               </span>
-              <span class="text-[10px] text-slate-400 tabular-nums">
+              <span class="text-3xs text-slate-400 tabular-nums">
                 {{ t('admin.sekolah.lesson_plan_detail.sections_filled', { filled: filledSections, total: totalSections }) }}
               </span>
               <span class="flex-1 border-t border-dashed border-slate-200 ml-2"></span>
@@ -343,7 +343,7 @@ const canSendBack = computed(
               class="bg-white border border-slate-200 rounded-2xl p-4"
             >
               <p
-                class="text-[10px] font-bold uppercase tracking-widest"
+                class="text-3xs font-bold uppercase tracking-widest"
                 :style="{ color: accent }"
               >
                 {{ String(idx + 1).padStart(2, '0') }} · {{ s.label }}
@@ -363,7 +363,7 @@ const canSendBack = computed(
 
           <!-- Notes -->
           <section v-if="plan.notes" class="bg-white border border-slate-200 rounded-2xl p-4">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+            <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
               {{ t('admin.sekolah.lesson_plan_detail.teacher_notes') }}
             </p>
             <p class="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-wrap">
@@ -396,7 +396,7 @@ const canSendBack = computed(
               v-else-if="canSendBack"
               class="text-center max-w-md mx-auto"
             >
-              <p class="text-[11px] text-slate-500 mb-2">
+              <p class="text-2xs text-slate-500 mb-2">
                 {{ t('admin.sekolah.lesson_plan_detail.current_status') }} <strong class="text-slate-900">{{ statusLabel }}</strong>
               </p>
               <Button variant="secondary" block @click="showSendBack = true">

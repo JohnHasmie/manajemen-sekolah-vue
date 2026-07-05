@@ -47,7 +47,7 @@ function confirm() {
             <NavIcon name="check-circle" :size="18" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[11px] font-bold uppercase tracking-widest text-emerald-700">
+            <p class="text-2xs font-bold uppercase tracking-widest text-emerald-700">
               Konfirmasi penerapan
             </p>
             <p class="text-[13px] font-bold text-slate-900 mt-0.5 leading-snug">
@@ -55,7 +55,7 @@ function confirm() {
             </p>
             <p
               v-if="dueLabel"
-              class="text-[11px] text-emerald-700/80 mt-1"
+              class="text-2xs text-emerald-700/80 mt-1"
             >
               {{ dueLabel }}
             </p>
@@ -66,7 +66,7 @@ function confirm() {
       <!-- Note textarea (optional) -->
       <section>
         <label
-          class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5 block"
+          class="text-2xs font-bold uppercase tracking-widest text-slate-500 mb-1.5 block"
         >
           Catatan untuk wali kelas
           <span class="normal-case font-medium tracking-normal text-slate-400">
@@ -94,7 +94,7 @@ function confirm() {
           <p class="text-[12.5px] font-bold text-slate-900">
             Beri tahu wali kelas
           </p>
-          <p class="text-[11px] text-slate-500 mt-0.5">
+          <p class="text-2xs text-slate-500 mt-0.5">
             Status rekomendasi juga akan ditandai selesai di sisi guru.
           </p>
         </div>

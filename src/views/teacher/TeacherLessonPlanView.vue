@@ -532,7 +532,7 @@ function onUploaded(plan: LessonPlan) {
         v-for="tab in tabOptions"
         :key="tab.key"
         type="button"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border inline-flex items-center gap-1.5"
+        class="px-3 py-1.5 rounded-full text-2xs font-bold transition border inline-flex items-center gap-1.5"
         :class="
           tabKey === tab.key
             ? 'bg-brand-cobalt text-white border-brand-cobalt shadow-sm'
@@ -575,10 +575,10 @@ function onUploaded(plan: LessonPlan) {
           class="space-y-2"
         >
           <div class="flex items-center gap-2 px-1">
-            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <span class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
               {{ group.label }}
             </span>
-            <span class="text-[10px] text-slate-400 tabular-nums">
+            <span class="text-3xs text-slate-400 tabular-nums">
               · {{ group.items.length }}
             </span>
             <span class="flex-1 border-t border-dashed border-slate-200 ml-2"></span>

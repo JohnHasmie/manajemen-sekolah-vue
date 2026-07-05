@@ -78,11 +78,11 @@ function formatDate(dateStr: string | null) {
                   {{ school.name }}
                 </h4>
                 <div class="flex items-center gap-2 mt-1">
-                  <span class="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+                  <span class="text-3xs uppercase tracking-wider font-extrabold text-slate-400">
                     {{ isTutoring(school.tenant_type) ? 'Bimbel' : 'Sekolah' }}
                   </span>
                   <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold uppercase tracking-wider">
+                  <span class="text-3xs px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold uppercase tracking-wider">
                     Aktif
                   </span>
                 </div>
@@ -110,27 +110,27 @@ function formatDate(dateStr: string | null) {
                   {{ req.school_name || 'Institusi Tanpa Nama' }}
                 </h4>
                 <div class="flex items-center gap-2 mt-1">
-                  <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                  <span class="text-3xs uppercase tracking-wider font-bold text-slate-400">
                     {{ isTutoring(req.tenant_type) ? 'Bimbel' : 'Sekolah' }}
                   </span>
                   <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                  <span v-if="req.status === 'pending'" class="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold uppercase tracking-wider">
+                  <span v-if="req.status === 'pending'" class="text-3xs px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold uppercase tracking-wider">
                     Menunggu Persetujuan
                   </span>
-                  <span v-else-if="req.status === 'rejected'" class="text-[10px] px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-semibold uppercase tracking-wider">
+                  <span v-else-if="req.status === 'rejected'" class="text-3xs px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-semibold uppercase tracking-wider">
                     Ditolak
                   </span>
-                  <span v-else-if="req.status === 'expired'" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold uppercase tracking-wider">
+                  <span v-else-if="req.status === 'expired'" class="text-3xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold uppercase tracking-wider">
                     Kedaluwarsa
                   </span>
-                  <span v-else class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold uppercase tracking-wider">
+                  <span v-else class="text-3xs px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold uppercase tracking-wider">
                     Disetujui
                   </span>
                 </div>
               </div>
             </div>
 
-            <span class="text-[11px] text-slate-400 font-medium">
+            <span class="text-2xs text-slate-400 font-medium">
               Terdaftar: {{ formatDate(req.created_at) }}
             </span>
           </div>

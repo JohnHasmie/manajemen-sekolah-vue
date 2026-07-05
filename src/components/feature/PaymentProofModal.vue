@@ -125,7 +125,7 @@ const isPending = computed(() => props.payment.status === 'pending');
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- Bukti preview -->
       <div class="space-y-2">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           Bukti transfer
         </p>
         <div class="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden min-h-48 grid place-items-center">
@@ -168,7 +168,7 @@ const isPending = computed(() => props.payment.status === 'pending');
               <dt class="text-slate-500">Status sekarang</dt>
               <dd>
                 <span
-                  class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                  class="inline-block text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
                   :class="`${tones.bg} ${tones.text}`"
                 >{{ statusLabel }}</span>
               </dd>
@@ -210,7 +210,7 @@ const isPending = computed(() => props.payment.status === 'pending');
 
         <!-- Reject form -->
         <div v-if="showRejectForm" class="space-y-2">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Alasan penolakan
           </p>
           <textarea
@@ -223,7 +223,7 @@ const isPending = computed(() => props.payment.status === 'pending');
 
         <p
           v-if="err"
-          class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3"
+          class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3"
         >
           {{ err }}
         </p>

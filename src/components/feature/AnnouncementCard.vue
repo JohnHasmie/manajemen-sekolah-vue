@@ -151,14 +151,14 @@ const isExpired = computed(() => {
         <!-- Meta strip -->
         <div class="flex items-center gap-1.5 flex-wrap mb-1.5">
           <span
-            class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+            class="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
             :class="[categoryStyle.bg, categoryStyle.text]"
           >
             {{ categoryStyle.label }}
           </span>
           <span
             v-if="audienceLabel"
-            class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600"
+            class="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600"
           >
             → {{ audienceLabel }}
           </span>
@@ -170,24 +170,24 @@ const isExpired = computed(() => {
           </span>
           <span
             v-if="isScheduled"
-            class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-700"
+            class="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-700"
           >
             Terjadwal
           </span>
           <span
             v-else-if="isExpired"
-            class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-500"
+            class="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-500"
           >
             Kedaluwarsa
           </span>
           <span
             v-else-if="announcement.status === 'draft'"
-            class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-500"
+            class="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-500"
           >
             Draft
           </span>
           <span class="flex-1"></span>
-          <span class="text-[11px] text-slate-400 flex-shrink-0">{{ timeLabel }}</span>
+          <span class="text-2xs text-slate-400 flex-shrink-0">{{ timeLabel }}</span>
         </div>
 
         <!-- Title -->

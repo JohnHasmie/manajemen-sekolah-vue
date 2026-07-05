@@ -95,7 +95,7 @@ function formatDateShort(iso: string): string {
         </p>
         <div
           v-if="showOpenCta"
-          class="text-brand-cobalt/70 font-bold text-[11px] flex-shrink-0 inline-flex items-center gap-0.5"
+          class="text-brand-cobalt/70 font-bold text-2xs flex-shrink-0 inline-flex items-center gap-0.5"
         >
           Buka
           <NavIcon name="chevron-right" :size="12" />
@@ -103,7 +103,7 @@ function formatDateShort(iso: string): string {
       </div>
 
       <!-- Meta row: format pill · status · AI -->
-      <div class="flex items-center gap-1.5 mt-1.5 flex-wrap text-[10px]">
+      <div class="flex items-center gap-1.5 mt-1.5 flex-wrap text-3xs">
         <span
           class="font-bold px-1.5 py-0.5 rounded uppercase tracking-wider"
           :style="{ backgroundColor: accent + '1a', color: accent }"
@@ -133,7 +133,7 @@ function formatDateShort(iso: string): string {
       </div>
 
       <!-- Sub-meta: class · subject · (teacher) · date -->
-      <p class="text-[11px] text-slate-500 mt-1.5 truncate">
+      <p class="text-2xs text-slate-500 mt-1.5 truncate">
         {{ plan.class_name || '—' }}
         <template v-if="plan.subject_name"> · {{ plan.subject_name }}</template>
         <template v-if="role === 'admin' && plan.teacher_name">
@@ -148,7 +148,7 @@ function formatDateShort(iso: string): string {
       <!-- Notes preview (optional) -->
       <p
         v-if="showNotes && plan.notes"
-        class="text-[11px] text-slate-600 leading-relaxed mt-1.5 line-clamp-2"
+        class="text-2xs text-slate-600 leading-relaxed mt-1.5 line-clamp-2"
       >
         {{ plan.notes }}
       </p>
@@ -156,14 +156,14 @@ function formatDateShort(iso: string): string {
       <!-- Admin revision note (when Rejected / SentBack) -->
       <div
         v-if="showAdminNote"
-        class="mt-2 px-2.5 py-1.5 rounded-lg border-l-2 text-[11px] leading-relaxed"
+        class="mt-2 px-2.5 py-1.5 rounded-lg border-l-2 text-2xs leading-relaxed"
         :class="
           plan.status === 'Rejected'
             ? 'bg-red-50 border-red-400 text-red-800'
             : 'bg-violet-50 border-violet-400 text-violet-800'
         "
       >
-        <p class="text-[9px] font-bold uppercase tracking-widest mb-0.5 opacity-70">
+        <p class="text-4xs font-bold uppercase tracking-widest mb-0.5 opacity-70">
           {{ plan.status === 'Rejected' ? 'Alasan Tolak' : 'Catatan Revisi' }}
         </p>
         <p class="line-clamp-2">{{ plan.admin_notes }}</p>
@@ -172,7 +172,7 @@ function formatDateShort(iso: string): string {
       <!-- File attachment chip -->
       <div
         v-if="plan.format === 'file' && plan.file_name"
-        class="mt-2 inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-100 text-[10px] text-slate-600 font-medium max-w-full"
+        class="mt-2 inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-100 text-3xs text-slate-600 font-medium max-w-full"
       >
         <NavIcon name="file-text" :size="11" />
         <span class="truncate max-w-[200px]">{{ plan.file_name }}</span>

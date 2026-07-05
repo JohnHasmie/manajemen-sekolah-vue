@@ -160,7 +160,7 @@ const hasActivity = computed(() => stats.value.total > 0);
         </p>
         <p
           v-if="cls.student_count !== undefined"
-          class="text-[11px] text-slate-500 mt-0.5"
+          class="text-2xs text-slate-500 mt-0.5"
         >
           {{ cls.student_count }} siswa
         </p>

@@ -221,7 +221,7 @@ function displayValue(card: OverviewCard): string {
           </p>
           <p
             v-if="card.hintKey"
-            class="text-[11px] text-slate-400 mt-1"
+            class="text-2xs text-slate-400 mt-1"
           >
             {{ t(card.hintKey) }}
           </p>
@@ -298,11 +298,11 @@ function displayValue(card: OverviewCard): string {
             <p class="text-sm font-bold text-slate-900 truncate">
               {{ row.school_summary.name ?? t('superAdmin.schools.unnamed') }}
             </p>
-            <p class="text-[11px] text-slate-400 truncate">
+            <p class="text-2xs text-slate-400 truncate">
               {{ row.full_name }}
             </p>
           </div>
-          <span class="text-[11px] font-bold text-rose-600 tabular-nums flex-shrink-0">
+          <span class="text-2xs font-bold text-rose-600 tabular-nums flex-shrink-0">
             {{ formatDateTime(row.demo_expires_at) || '—' }}
           </span>
         </li>

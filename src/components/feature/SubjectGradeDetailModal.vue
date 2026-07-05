@@ -87,7 +87,7 @@ const headerTone = computed(() => {
       </div>
       <div class="flex-1 min-w-0">
         <p
-          class="text-[10px] font-bold text-brand-cobalt uppercase tracking-widest"
+          class="text-3xs font-bold text-brand-cobalt uppercase tracking-widest"
         >
           Detail Nilai
           <span v-if="semesterLabel"> · {{ semesterLabel }}</span>
@@ -95,7 +95,7 @@ const headerTone = computed(() => {
         <h2 class="text-base font-black text-slate-900 leading-tight mt-0.5">
           {{ row.subject_name }}
         </h2>
-        <p class="text-[11px] text-slate-500 mt-0.5">
+        <p class="text-2xs text-slate-500 mt-0.5">
           {{ childLabel ? childLabel + ' · ' : '' }}KKM {{ row.kkm }} ·
           {{ entriesWithScore }} dari {{ totalEntries }} asesmen dinilai
         </p>
@@ -105,7 +105,7 @@ const headerTone = computed(() => {
     <!-- KPI strip -->
     <div class="grid grid-cols-3 gap-2 mb-3">
       <div class="bg-slate-50 rounded-xl p-3 text-center">
-        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+        <p class="text-4xs font-bold text-slate-500 uppercase tracking-widest">
           Rata-rata
         </p>
         <p
@@ -122,13 +122,13 @@ const headerTone = computed(() => {
         </p>
       </div>
       <div class="bg-emerald-50 rounded-xl p-3 text-center">
-        <p class="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">
+        <p class="text-4xs font-bold text-emerald-700 uppercase tracking-widest">
           Di atas KKM
         </p>
         <p class="text-lg font-black text-emerald-700 mt-1">{{ aboveKkm }}</p>
       </div>
       <div class="bg-red-50 rounded-xl p-3 text-center">
-        <p class="text-[9px] font-bold text-red-700 uppercase tracking-widest">
+        <p class="text-4xs font-bold text-red-700 uppercase tracking-widest">
           Di bawah KKM
         </p>
         <p class="text-lg font-black text-red-700 mt-1">{{ belowKkm }}</p>
@@ -137,7 +137,7 @@ const headerTone = computed(() => {
 
     <!-- Status banner -->
     <div
-      class="flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-bold mb-3"
+      class="flex items-center gap-2 px-3 py-2 rounded-lg text-2xs font-bold mb-3"
       :class="
         row.average === null
           ? 'bg-slate-50 text-slate-500 border border-dashed border-slate-200'
@@ -169,7 +169,7 @@ const headerTone = computed(() => {
     <!-- Assessment list -->
     <section>
       <p
-        class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2"
+        class="text-2xs font-bold text-slate-500 uppercase tracking-widest mb-2"
       >
         Daftar Asesmen
       </p>

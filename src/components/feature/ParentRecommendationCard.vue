@@ -159,7 +159,7 @@ const captionLine = computed(() => {
     <!-- Teacher row -->
     <div class="flex items-center gap-2.5">
       <div
-        class="w-9 h-9 rounded-full bg-role-wali/10 grid place-items-center text-role-wali text-[11px] font-bold flex-shrink-0"
+        class="w-9 h-9 rounded-full bg-role-wali/10 grid place-items-center text-role-wali text-2xs font-bold flex-shrink-0"
       >
         {{ initialsOf(teacherName) }}
       </div>
@@ -221,7 +221,7 @@ const captionLine = computed(() => {
     <!-- Due date chip -->
     <div
       v-if="dueDate && !isCompleted"
-      class="inline-flex items-center gap-1.5 mt-2.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200"
+      class="inline-flex items-center gap-1.5 mt-2.5 px-2.5 py-1 rounded-lg text-2xs font-bold bg-amber-50 text-amber-700 border border-amber-200"
     >
       <NavIcon name="clock" :size="12" />
       Tenggat {{ fmtDateShort(dueDate) }}

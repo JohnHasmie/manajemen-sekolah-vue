@@ -64,7 +64,7 @@ async function save() {
         Guru sekarang: <strong>{{ row.teacher_name ?? '—' }}</strong>
       </p>
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Guru baru</label>
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Guru baru</label>
         <select
           v-model="teacherId"
           class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
@@ -74,7 +74,7 @@ async function save() {
         </select>
       </div>
 
-      <p v-if="err" class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+      <p v-if="err" class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
         {{ err }}
       </p>
 

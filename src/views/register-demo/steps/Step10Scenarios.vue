@@ -57,7 +57,7 @@ const allOn = computed(
 
 <template>
   <div>
-    <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
+    <p class="text-2xs font-bold tracking-widest text-slate-500 uppercase mb-2">
       {{ t('registerDemo.stepCounter', { current: wizard.stepNumber, total: wizard.stepTotal }) }} · {{ t('registerDemo.step12Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
@@ -121,7 +121,7 @@ const allOn = computed(
             </span>
             <span
               v-if="isOn(s.key)"
-              class="text-[10px] font-bold uppercase tracking-wider text-role-admin bg-role-admin/10 px-1.5 py-0.5 rounded"
+              class="text-3xs font-bold uppercase tracking-wider text-role-admin bg-role-admin/10 px-1.5 py-0.5 rounded"
             >
               {{ t('registerDemo.step12ActiveBadge') }}
             </span>

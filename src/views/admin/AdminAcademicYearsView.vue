@@ -318,7 +318,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
       <template #default>
         <div v-for="g in groups" :key="g.title" class="space-y-2">
           <h3
-            class="text-[10px] font-bold uppercase tracking-widest px-1"
+            class="text-3xs font-bold uppercase tracking-widest px-1"
             :class="{
               'text-emerald-700': g.tone === 'emerald',
               'text-blue-700': g.tone === 'blue',
@@ -349,13 +349,13 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
                     {{ y.year }}
                   </p>
                   <span
-                    class="px-2 py-0.5 rounded-md text-[9px] font-bold tracking-widest"
+                    class="px-2 py-0.5 rounded-md text-4xs font-bold tracking-widest"
                     :class="statusBadge(y).class"
                   >
                     {{ statusBadge(y).label }}
                   </span>
                 </div>
-                <p class="text-[11px] text-slate-500 mt-0.5">
+                <p class="text-2xs text-slate-500 mt-0.5">
                   {{ t('admin.sekolah.academic_year.semester_label', { label: semesterLabel(y.semester) }) }}
                   <span v-if="y.start_date || y.end_date">
                     · {{ y.start_date || '?' }} → {{ y.end_date || '?' }}
@@ -432,7 +432,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
     >
       <div class="space-y-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             {{ t('admin.sekolah.academic_year.field_year') }}
           </label>
           <input
@@ -444,7 +444,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
           <p class="text-[10.5px] text-slate-400 mt-1">{{ t('admin.sekolah.academic_year.year_hint') }}</p>
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             {{ t('admin.sekolah.academic_year.field_semester') }}
           </label>
           <div class="mt-1 grid grid-cols-3 gap-2">
@@ -468,7 +468,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.academic_year.field_start') }}</label>
+            <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.academic_year.field_start') }}</label>
             <input
               v-model="formStart"
               type="date"
@@ -476,7 +476,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
             />
           </div>
           <div>
-            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.academic_year.field_end') }}</label>
+            <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.academic_year.field_end') }}</label>
             <input
               v-model="formEnd"
               type="date"

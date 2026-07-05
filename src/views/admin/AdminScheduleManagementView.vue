@@ -720,7 +720,7 @@ async function bulkDelete() {
         />
         <button
           type="button"
-          class="text-[11px] font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          class="text-2xs font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
           @click="showPrint = true"
         >
           <NavIcon name="download" :size="11" class="inline" />
@@ -728,7 +728,7 @@ async function bulkDelete() {
         </button>
         <button
           type="button"
-          class="text-[11px] font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          class="text-2xs font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
           @click="showImport = true"
         >
           <NavIcon name="upload" :size="11" class="inline" />
@@ -736,7 +736,7 @@ async function bulkDelete() {
         </button>
         <button
           type="button"
-          class="text-[11px] font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          class="text-2xs font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
           @click="router.push({ name: 'admin.schedule.lesson-hours' })"
         >
           <NavIcon name="clock" :size="11" class="inline" />
@@ -791,14 +791,14 @@ async function bulkDelete() {
         <button
           v-if="activeFilterCount > 0"
           type="button"
-          class="text-[11px] font-bold text-slate-500 hover:text-role-admin px-2"
+          class="text-2xs font-bold text-slate-500 hover:text-role-admin px-2"
           @click="clearFilters"
         >
           {{ $t('common.reset') }} ({{ activeFilterCount }})
         </button>
         <button
           type="button"
-          class="text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-colors"
+          class="text-2xs font-bold px-3 py-1.5 rounded-lg border transition-colors"
           :class="
             bulkMode
               ? 'bg-role-admin text-white border-role-admin'
@@ -829,10 +829,10 @@ async function bulkDelete() {
             class="space-y-2"
           >
             <header class="flex items-center justify-between sticky top-0 z-10 bg-slate-50 py-2 px-1 rounded-lg">
-              <h3 class="text-[11px] font-black text-slate-700 uppercase tracking-widest">
+              <h3 class="text-2xs font-black text-slate-700 uppercase tracking-widest">
                 {{ LOCALIZED_DAY_LABELS[d] }}
               </h3>
-              <span class="text-[10px] font-bold text-slate-400">
+              <span class="text-3xs font-bold text-slate-400">
                 {{ $t('admin.schedule.sessionsCount', { count: rowsByDay[d].length }) }}
               </span>
             </header>
@@ -856,7 +856,7 @@ async function bulkDelete() {
                   @click.stop="toggleSelect(r.id)"
                 />
                 <div class="w-12 text-center flex-shrink-0">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">JP</p>
+                  <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">JP</p>
                   <p class="text-[15px] font-black text-role-admin">{{ r.hour_number }}</p>
                 </div>
                 <div class="flex-1 min-w-0">
@@ -864,7 +864,7 @@ async function bulkDelete() {
                     {{ r.subject_name }}
                     <span v-if="r.conflict_with && r.conflict_with.length > 0" class="text-red-600 ml-1">⚠ {{ $t('admin.schedule.conflictBadge') }}</span>
                   </p>
-                  <p class="text-[11px] text-slate-500 truncate">
+                  <p class="text-2xs text-slate-500 truncate">
                     {{ r.class_name }} · {{ r.teacher_name ?? 'Tanpa guru' }}
                     <span v-if="r.room"> · {{ r.room }}</span>
                   </p>
@@ -885,7 +885,7 @@ async function bulkDelete() {
           <!-- Reschedule banner (loading/success/error) -->
           <div
             v-if="dragBanner"
-            class="rounded-xl px-3 py-2 text-[11px] font-bold flex items-center gap-2"
+            class="rounded-xl px-3 py-2 text-2xs font-bold flex items-center gap-2"
             :class="{
               'bg-slate-100 text-slate-700': dragBanner.kind === 'loading',
               'bg-emerald-100 text-emerald-800': dragBanner.kind === 'success',
@@ -905,21 +905,21 @@ async function bulkDelete() {
             {{ dragBanner.message }}
           </div>
           <!-- Hint -->
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
+          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest px-1">
             <NavIcon name="move" :size="10" class="inline" />
             Tarik & lepas sel untuk memindahkan slot
           </p>
           <div class="bg-white border border-slate-200 rounded-2xl overflow-x-auto">
-            <table class="w-full text-[11px] border-collapse">
+            <table class="w-full text-2xs border-collapse">
               <thead>
                 <tr class="bg-slate-50">
-                  <th class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 py-3 text-left min-w-[90px] sticky left-0 bg-slate-50 z-10">
+                  <th class="text-4xs font-bold text-slate-400 uppercase tracking-widest px-3 py-3 text-left min-w-[90px] sticky left-0 bg-slate-50 z-10">
                     Jam
                   </th>
                   <th
                     v-for="d in DAY_ORDER"
                     :key="d"
-                    class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 py-3 min-w-[140px]"
+                    class="text-4xs font-bold text-slate-500 uppercase tracking-widest px-2 py-3 min-w-[140px]"
                   >
                     {{ LOCALIZED_DAY_LABELS[d] }}
                   </th>
@@ -932,11 +932,11 @@ async function bulkDelete() {
                   class="border-t border-slate-100"
                 >
                   <td class="px-3 py-2 align-top sticky left-0 bg-white z-10 border-r border-slate-100">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
                       JP{{ slot.hour_number }}
                     </p>
-                    <p class="text-[11px] font-bold text-slate-900 tabular-nums">{{ slot.start }}</p>
-                    <p class="text-[9px] text-slate-400 tabular-nums">{{ slot.end }}</p>
+                    <p class="text-2xs font-bold text-slate-900 tabular-nums">{{ slot.start }}</p>
+                    <p class="text-4xs text-slate-400 tabular-nums">{{ slot.end }}</p>
                   </td>
                   <td
                     v-for="d in DAY_ORDER"
@@ -968,9 +968,9 @@ async function bulkDelete() {
                         @dragend="onDragEnd"
                         @click="onRowClick(cell)"
                       >
-                        <p class="text-[10px] font-bold text-slate-900 truncate">{{ cell.subject_name }}</p>
-                        <p class="text-[9px] text-slate-500 truncate">{{ cell.class_name }}</p>
-                        <p class="text-[9px] text-slate-400 truncate">{{ cell.teacher_name ?? '—' }}</p>
+                        <p class="text-3xs font-bold text-slate-900 truncate">{{ cell.subject_name }}</p>
+                        <p class="text-4xs text-slate-500 truncate">{{ cell.class_name }}</p>
+                        <p class="text-4xs text-slate-400 truncate">{{ cell.teacher_name ?? '—' }}</p>
                       </div>
                       <button
                         v-if="cellFor(d, slot.hour_number).length === 0"
@@ -1013,13 +1013,13 @@ async function bulkDelete() {
     >
       <button
         type="button"
-        class="text-[11px] font-bold text-slate-600 hover:text-role-admin px-2"
+        class="text-2xs font-bold text-slate-600 hover:text-role-admin px-2"
         @click="selectAllVisible"
       >
         {{ selectedIds.size === rows.length ? $t('admin.sekolah.schedule_management.unselect_all') : $t('admin.sekolah.schedule_management.select_all') }}
       </button>
-      <span class="text-[11px] text-slate-400">·</span>
-      <p class="text-[11px] font-bold text-slate-700 flex-1">
+      <span class="text-2xs text-slate-400">·</span>
+      <p class="text-2xs font-bold text-slate-700 flex-1">
         {{ $t('admin.sekolah.schedule_management.selected_count', { count: selectedIds.size }) }}
       </p>
       <Button variant="secondary" size="sm" :disabled="selectedIds.size === 0" @click="showBulkDay = true">
@@ -1089,7 +1089,7 @@ async function bulkDelete() {
           @click="filterClassId = c.id; showClassSheet = false"
         >
           {{ c.name }}
-          <span v-if="c.grade_level" class="text-[10px] text-slate-500 font-medium ml-2">{{ $t('admin.sekolah.schedule_management.tingkat', { grade: c.grade_level }) }}</span>
+          <span v-if="c.grade_level" class="text-3xs text-slate-500 font-medium ml-2">{{ $t('admin.sekolah.schedule_management.tingkat', { grade: c.grade_level }) }}</span>
         </button>
       </div>
     </Modal>
@@ -1278,7 +1278,7 @@ async function bulkDelete() {
           Slot tujuan punya {{ dragConflicts.length }} jadwal lain yang bentrok dengan guru
           atau kelas ini.
         </p>
-        <ul class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3 space-y-1 max-h-40 overflow-y-auto">
+        <ul class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3 space-y-1 max-h-40 overflow-y-auto">
           <li v-for="c in dragConflicts" :key="c.id">
             <strong>{{ c.day_name }} · {{ c.start_time }}–{{ c.end_time }}</strong>:
             {{ c.subject_name ?? 'Mapel' }}
@@ -1286,7 +1286,7 @@ async function bulkDelete() {
             <span v-if="c.class_name"> · {{ c.class_name }}</span>
           </li>
         </ul>
-        <label class="flex items-center gap-2 text-[11px] text-red-800 font-bold cursor-pointer">
+        <label class="flex items-center gap-2 text-2xs text-red-800 font-bold cursor-pointer">
           <input v-model="dragForceSave" type="checkbox" class="accent-red-600" />
           Paksa simpan meski bentrok
         </label>

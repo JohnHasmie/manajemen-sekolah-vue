@@ -190,7 +190,7 @@ const stepSubtitle = computed(() => {
           class="flex-1 flex items-center gap-2"
         >
           <div
-            class="w-6 h-6 rounded-full grid place-items-center text-[10px] font-black flex-shrink-0"
+            class="w-6 h-6 rounded-full grid place-items-center text-3xs font-black flex-shrink-0"
             :class="
               step > idx + 1
                 ? 'bg-emerald-500 text-white'
@@ -203,7 +203,7 @@ const stepSubtitle = computed(() => {
             <span v-else>{{ idx + 1 }}</span>
           </div>
           <span
-            class="text-[10px] font-bold uppercase tracking-widest"
+            class="text-3xs font-bold uppercase tracking-widest"
             :class="step >= idx + 1 ? 'text-role-admin' : 'text-slate-400'"
           >
             {{ label }}
@@ -219,7 +219,7 @@ const stepSubtitle = computed(() => {
       <!-- Step 1: source class -->
       <section v-if="step === 1" class="space-y-2">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Kelas sumber (asal siswa)
           </label>
           <select
@@ -232,7 +232,7 @@ const stepSubtitle = computed(() => {
             </option>
           </select>
         </div>
-        <p v-if="sourceClass" class="text-[11px] text-slate-500">
+        <p v-if="sourceClass" class="text-2xs text-slate-500">
           {{ sourceClass.student_count }} siswa terdaftar di kelas ini.
         </p>
       </section>
@@ -240,12 +240,12 @@ const stepSubtitle = computed(() => {
       <!-- Step 2: students -->
       <section v-else-if="step === 2" class="space-y-2">
         <header class="flex items-center justify-between">
-          <p class="text-[11px] font-bold text-slate-700">
+          <p class="text-2xs font-bold text-slate-700">
             {{ selectedStudentIds.size }} / {{ roster.length }} siswa dipilih
           </p>
           <button
             type="button"
-            class="text-[11px] font-bold text-role-admin hover:underline"
+            class="text-2xs font-bold text-role-admin hover:underline"
             @click="toggleAll"
           >
             {{
@@ -280,7 +280,7 @@ const stepSubtitle = computed(() => {
             />
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">{{ s.name }}</p>
-              <p v-if="s.student_number" class="text-[10px] text-slate-500">
+              <p v-if="s.student_number" class="text-3xs text-slate-500">
                 NIS {{ s.student_number }}
               </p>
             </div>
@@ -291,7 +291,7 @@ const stepSubtitle = computed(() => {
       <!-- Step 3: target -->
       <section v-else-if="step === 3" class="space-y-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Kelas tujuan
           </label>
           <select
@@ -305,7 +305,7 @@ const stepSubtitle = computed(() => {
           </select>
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Tahun ajaran tujuan
           </label>
           <select
@@ -346,14 +346,14 @@ const stepSubtitle = computed(() => {
             </span>
           </div>
         </div>
-        <p class="text-[11px] text-slate-500 leading-relaxed">
+        <p class="text-2xs text-slate-500 leading-relaxed">
           Setelah klik "Simpan promosi", siswa terpilih akan dipindahkan ke
           {{ targetClass?.name }} di tahun ajaran {{ targetYearLabel }}.
           Tindakan ini bisa dibatalkan dengan menghapus enrolment baru via menu kelas.
         </p>
         <p
           v-if="err"
-          class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3"
+          class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3"
         >
           {{ err }}
         </p>

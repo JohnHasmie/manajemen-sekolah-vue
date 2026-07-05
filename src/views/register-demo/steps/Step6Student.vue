@@ -32,7 +32,7 @@ const total = computed(() => perClass.value * totalClasses.value);
 
 <template>
   <div>
-    <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
+    <p class="text-2xs font-bold tracking-widest text-slate-500 uppercase mb-2">
       {{ t('registerDemo.stepCounter', { current: wizard.stepNumber, total: wizard.stepTotal }) }} · {{ t('registerDemo.step7Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
@@ -79,7 +79,7 @@ const total = computed(() => perClass.value * totalClasses.value);
           class="mx-auto mb-1"
         />
         <div class="text-[13px] font-bold">{{ opt.label }}</div>
-        <div class="text-[11px]" :class="fillMode === opt.v ? 'text-role-admin' : 'text-slate-500'">
+        <div class="text-2xs" :class="fillMode === opt.v ? 'text-role-admin' : 'text-slate-500'">
           {{ opt.hint }}
         </div>
       </button>

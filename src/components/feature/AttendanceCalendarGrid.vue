@@ -128,7 +128,7 @@ function cellBg(c: Cell): string {
       <div
         v-for="d in DAY_LABELS"
         :key="d"
-        class="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest py-1"
+        class="text-center text-4xs font-bold text-slate-400 uppercase tracking-widest py-1"
       >
         {{ d }}
       </div>
@@ -139,7 +139,7 @@ function cellBg(c: Cell): string {
         v-for="(c, idx) in cells"
         :key="idx"
         type="button"
-        class="aspect-square rounded-lg text-[11px] font-bold transition-all"
+        class="aspect-square rounded-lg text-2xs font-bold transition-all"
         :class="[
           cellBg(c),
           c.date == null ? 'cursor-default pointer-events-none' : 'hover:opacity-80',

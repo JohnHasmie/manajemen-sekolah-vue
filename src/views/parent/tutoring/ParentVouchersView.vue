@@ -170,7 +170,7 @@ const visible = computed<VoucherView[]>(() => {
           <p class="text-[24px] font-extrabold leading-none" :class="v.valueCls">{{ v.valueLabel }}</p>
           <p class="text-[12px] text-tutoring-text-mid my-1">{{ v.description }}</p>
           <span class="font-mono text-[12px] bg-tutoring-bg px-2 py-1 rounded inline-block tracking-wider mt-2">{{ v.code }}</span>
-          <p class="text-[10px] mt-1.5" :class="v.footerCls">
+          <p class="text-3xs mt-1.5" :class="v.footerCls">
             <NavIcon name="clock" :size="11" class="inline align-text-bottom" />{{ ' ' }}{{ v.footerText }}
           </p>
         </div>

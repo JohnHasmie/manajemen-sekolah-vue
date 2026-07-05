@@ -334,12 +334,12 @@ function openDetail(plan: LessonPlan) {
           <header class="flex items-center gap-2 px-1">
             <span class="w-1.5 h-1.5 rounded-full" :class="tierTone(tier).dot" />
             <span
-              class="text-[10px] font-bold uppercase tracking-widest"
+              class="text-3xs font-bold uppercase tracking-widest"
               :class="tierTone(tier).text"
             >
               {{ tier.label }}
             </span>
-            <span class="text-[10px] text-slate-400 tabular-nums">
+            <span class="text-3xs text-slate-400 tabular-nums">
               · {{ tier.count }}
             </span>
             <span class="flex-1 border-t border-dashed border-slate-200 ml-2"></span>
@@ -380,7 +380,7 @@ function openDetail(plan: LessonPlan) {
                 >
                   <button
                     type="button"
-                    class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition inline-flex items-center gap-1"
+                    class="text-2xs font-bold px-2.5 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition inline-flex items-center gap-1"
                     @click="approveTarget = plan"
                   >
                     <NavIcon name="check" :size="11" />
@@ -388,7 +388,7 @@ function openDetail(plan: LessonPlan) {
                   </button>
                   <button
                     type="button"
-                    class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white border border-violet-300 text-violet-700 hover:bg-violet-50 transition inline-flex items-center gap-1"
+                    class="text-2xs font-bold px-2.5 py-1 rounded-lg bg-white border border-violet-300 text-violet-700 hover:bg-violet-50 transition inline-flex items-center gap-1"
                     @click="sendBackTarget = plan"
                   >
                     <NavIcon name="edit" :size="11" />
@@ -396,7 +396,7 @@ function openDetail(plan: LessonPlan) {
                   </button>
                   <button
                     type="button"
-                    class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white border border-red-200 text-red-700 hover:bg-red-50 transition inline-flex items-center gap-1"
+                    class="text-2xs font-bold px-2.5 py-1 rounded-lg bg-white border border-red-200 text-red-700 hover:bg-red-50 transition inline-flex items-center gap-1"
                     @click="rejectTarget = plan"
                   >
                     <NavIcon name="x" :size="11" />
@@ -415,12 +415,12 @@ function openDetail(plan: LessonPlan) {
       v-if="selectedCount > 0"
       class="sticky bottom-4 z-30 flex items-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-lg"
     >
-      <span class="text-[11px] text-slate-600">
+      <span class="text-2xs text-slate-600">
         <strong class="text-slate-900">{{ selectedCount }}</strong> {{ t('admin.sekolah.lesson_plan_review.selected_suffix') }}
       </span>
       <button
         type="button"
-        class="text-[11px] font-bold text-slate-500 hover:text-slate-900"
+        class="text-2xs font-bold text-slate-500 hover:text-slate-900"
         @click="clearSelection"
       >
         {{ t('admin.sekolah.lesson_plan_review.cancel') }}

@@ -53,7 +53,7 @@ function choose(code: AppLocale) {
       v-for="opt in OPTIONS"
       :key="opt.code"
       type="button"
-      class="rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cobalt/60"
+      class="rounded-full px-2.5 py-1 text-2xs font-bold uppercase tracking-wide transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cobalt/60"
       :class="
         active === opt.code
           ? 'bg-brand-cobalt text-white shadow-sm'

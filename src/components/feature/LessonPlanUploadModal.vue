@@ -207,7 +207,7 @@ const canSubmit = computed(
     <div class="space-y-4">
       <!-- DROP ZONE / FILE STATE -->
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
           File RPP
         </label>
 
@@ -236,7 +236,7 @@ const canSubmit = computed(
           <p class="text-[13px] font-bold text-slate-900 mt-3">
             Klik atau seret file ke sini
           </p>
-          <p class="text-[11px] text-slate-500 mt-1">
+          <p class="text-2xs text-slate-500 mt-1">
             PDF · DOCX · PPTX · maks 10 MB
           </p>
         </label>
@@ -264,7 +264,7 @@ const canSubmit = computed(
               <p class="text-[12.5px] font-bold text-slate-900 truncate">
                 {{ pickedName }}
               </p>
-              <p class="text-[11px] text-slate-500 mt-0.5 tabular-nums">
+              <p class="text-2xs text-slate-500 mt-0.5 tabular-nums">
                 {{ sizeLabel }}
                 <template v-if="isUploading"> · Mengunggah {{ uploadProgress }}%</template>
                 <template v-else-if="uploaded"> · Berhasil diunggah</template>
@@ -272,7 +272,7 @@ const canSubmit = computed(
             </div>
             <button
               type="button"
-              class="text-[11px] font-bold text-slate-500 hover:text-red-600"
+              class="text-2xs font-bold text-slate-500 hover:text-red-600"
               :disabled="isUploading || isSubmitting"
               @click="clearFile"
             >
@@ -293,7 +293,7 @@ const canSubmit = computed(
 
       <!-- TITLE -->
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
           Judul RPP
         </label>
         <input
@@ -308,7 +308,7 @@ const canSubmit = computed(
       <!-- KELAS + MAPEL -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+          <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
             Kelas
           </label>
           <select
@@ -323,7 +323,7 @@ const canSubmit = computed(
           </select>
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+          <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
             Mata Pelajaran
           </label>
           <select
@@ -341,7 +341,7 @@ const canSubmit = computed(
 
       <!-- SEMESTER -->
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
           Semester
         </label>
         <div class="flex gap-1.5">
@@ -349,7 +349,7 @@ const canSubmit = computed(
             v-for="opt in [{ key: 'odd', label: 'Ganjil' }, { key: 'even', label: 'Genap' }]"
             :key="opt.key"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold transition border"
             :class="
               semester === opt.key
                 ? 'bg-brand-cobalt text-white border-brand-cobalt'
@@ -365,7 +365,7 @@ const canSubmit = computed(
 
       <!-- NOTES (optional) -->
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
           Catatan (opsional)
         </label>
         <textarea

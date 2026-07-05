@@ -146,7 +146,7 @@ async function submit() {
 
     <!-- Summary -->
     <div class="rounded-lg bg-tutoring-accent-dim p-3.5">
-      <p class="text-[10px] text-tutoring-hero tracking-wider font-bold uppercase">{{ t('wali.bimbel.pay_bill.summary_label') }}</p>
+      <p class="text-3xs text-tutoring-hero tracking-wider font-bold uppercase">{{ t('wali.bimbel.pay_bill.summary_label') }}</p>
       <p class="text-[22px] font-extrabold text-tutoring-hero leading-tight mt-0.5">
         {{ formatRupiah(billDisplay?.amount ?? 0) }}
       </p>

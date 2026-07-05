@@ -120,12 +120,12 @@ function handleSave() {
 
       <!-- Footer with dirty indicator + actions -->
       <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
-        <span class="text-[11px] text-slate-400 tabular-nums">
+        <span class="text-2xs text-slate-400 tabular-nums">
           {{ charCount }} karakter
         </span>
         <span
           v-if="isDirty"
-          class="text-[11px] font-bold text-amber-700 inline-flex items-center gap-1"
+          class="text-2xs font-bold text-amber-700 inline-flex items-center gap-1"
         >
           <NavIcon name="edit" :size="11" />
           Belum disimpan

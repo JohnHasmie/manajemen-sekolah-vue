@@ -27,6 +27,34 @@ const config: Config = {
       fontFamily: {
         sans: ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
+      // ADDITIVE sub-12px font-size scale.
+      //
+      // Placed under `theme.extend`, so these MERGE with Tailwind's
+      // default fontSize scale — `xs` (12px), `sm` (14px), `base` (16px),
+      // etc. are UNTOUCHED. Only the new, non-colliding keys below are
+      // added. The web has thousands of arbitrary `text-[Npx]` values
+      // below 12px with no scale; these name the most common exact sizes
+      // so they can be migrated 1:1 (identical rendering).
+      //
+      // Naming continues Tailwind's ordinal convention downward from
+      // `xs` (the smallest default, 12px):
+      //   2xs → 11px   (~620 arbitrary uses)
+      //   3xs → 10px   (~677 arbitrary uses)
+      //   4xs →  9px   (~126 arbitrary uses)
+      // The lineHeight is set to 1 (unitless) to match a bare
+      // `text-[Npx]` utility, which sets font-size only and leaves
+      // line-height inherited — Tailwind's arbitrary font-size values do
+      // NOT inject a line-height, so we must not either. (A tuple
+      // `[size, lineHeight]` would emit `line-height`, changing layout.)
+      //
+      // Fractional sizes still in the wild (10.5px ~147, 11.5px ~94,
+      // 9.5px ~60, 12.5px ~121) are intentionally NOT tokenized here —
+      // decimal Tailwind keys read poorly and those stay `text-[Npx]`.
+      fontSize: {
+        '2xs': '11px',
+        '3xs': '10px',
+        '4xs': '9px',
+      },
       colors: {
         brand: {
           DEFAULT: '#4F46E5', // indigo-600 — ColorUtils.primaryColor
@@ -119,6 +147,31 @@ const config: Config = {
       backgroundImage: {
         'brand-gradient':
           'linear-gradient(135deg, #143068 0%, #1B6FB8 60%, #21AFE6 110%)',
+        // Role hero gradients for BrandPageHeader (layout/BrandPageHeader.vue).
+        // Each stop is the EXACT literal previously hardcoded in that
+        // component's `palette`/`gradientStyle` computed props:
+        //   dark stop  ← per-role `darkStop` switch
+        //   mid/end    ← `getRoleColor(role).hex` (composables/useRoleColor.ts)
+        // Angle 120deg + stop positions 0%/60%/100% are unchanged, so the
+        // rendered gradient is pixel-identical to the old inline style.
+        //
+        //   role-admin-gradient   → admin              (dark #0A1F4D · navy   #143068)
+        //   role-teacher-gradient → guru / wali_kelas  (dark #0F2A45 · cobalt #1B6FB8)
+        //   role-parent-gradient  → wali (parent)      (dark #0B5677 · azure  #21AFE6)
+        //   role-staff-gradient   → staff              (dark #5E2D04 · amber  #B45309)
+        // NOTE: super_admin keeps the admin navy hex but the *default* dark
+        // stop (#0F2A45), so it uses `role-superadmin-gradient` below — it is
+        // NOT the same gradient as `role-admin-gradient`.
+        'role-admin-gradient':
+          'linear-gradient(120deg, #0A1F4D 0%, #143068 60%, #143068 100%)',
+        'role-teacher-gradient':
+          'linear-gradient(120deg, #0F2A45 0%, #1B6FB8 60%, #1B6FB8 100%)',
+        'role-parent-gradient':
+          'linear-gradient(120deg, #0B5677 0%, #21AFE6 60%, #21AFE6 100%)',
+        'role-staff-gradient':
+          'linear-gradient(120deg, #5E2D04 0%, #B45309 60%, #B45309 100%)',
+        'role-superadmin-gradient':
+          'linear-gradient(120deg, #0F2A45 0%, #143068 60%, #143068 100%)',
       },
     },
   },

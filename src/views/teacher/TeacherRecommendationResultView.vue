@@ -330,7 +330,7 @@ function goBack() {
         <p class="text-[14px] font-black text-slate-900 truncate">
           {{ student?.name || t('tutor.sekolah.recommendationResult.loadingStudent') }}
         </p>
-        <p class="text-[11px] text-slate-500 mt-0.5">
+        <p class="text-2xs text-slate-500 mt-0.5">
           <template v-if="student?.student_number">
             {{ t('tutor.sekolah.recommendationResult.nisLabel', { nis: student.student_number }) }}
           </template>
@@ -369,7 +369,7 @@ function goBack() {
         class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[12px] font-black bg-violet-100 text-violet-700 flex-shrink-0"
       >
         {{ counts.total }}
-        <span class="text-[9px] uppercase tracking-wider opacity-80">{{ t('tutor.sekolah.recommendationResult.recBadge') }}</span>
+        <span class="text-4xs uppercase tracking-wider opacity-80">{{ t('tutor.sekolah.recommendationResult.recBadge') }}</span>
       </span>
     </section>
 
@@ -379,7 +379,7 @@ function goBack() {
         v-for="opt in statusOptions"
         :key="opt.key"
         type="button"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border inline-flex items-center gap-1.5"
+        class="px-3 py-1.5 rounded-full text-2xs font-bold transition border inline-flex items-center gap-1.5"
         :class="
           statusFilter === opt.key
             ? 'bg-brand-cobalt text-white border-brand-cobalt shadow-sm'

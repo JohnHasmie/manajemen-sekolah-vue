@@ -272,7 +272,7 @@ function priceSnippet(row: AdminTenantModuleRow): string {
               </div>
               <div class="min-w-0 flex-1">
                 <div class="text-[13px] font-semibold text-slate-900 truncate">{{ t.name }}</div>
-                <div class="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1.5">
+                <div class="text-2xs text-slate-500 mt-0.5 flex items-center gap-1.5">
                   <span>{{ tenantTypeLabel(t) }}</span>
                   <span class="text-slate-300">·</span>
                   <span>{{ t.student_count }}/{{ t.staff_count }}</span>
@@ -385,25 +385,25 @@ function priceSnippet(row: AdminTenantModuleRow): string {
                       <!-- Status pill -->
                       <span
                         v-if="!row.entitled"
-                        class="text-[10px] font-semibold uppercase tracking-wide
+                        class="text-3xs font-semibold uppercase tracking-wide
                                px-2 py-0.5 rounded-full
                                bg-slate-100 text-slate-500"
                       >Belum aktif</span>
                       <span
                         v-else-if="row.cancel_at_period_end"
-                        class="text-[10px] font-semibold uppercase tracking-wide
+                        class="text-3xs font-semibold uppercase tracking-wide
                                px-2 py-0.5 rounded-full
                                bg-amber-100 text-amber-800"
                       >Akan berakhir</span>
                       <span
                         v-else-if="row.source === 'comp'"
-                        class="text-[10px] font-semibold uppercase tracking-wide
+                        class="text-3xs font-semibold uppercase tracking-wide
                                px-2 py-0.5 rounded-full
                                bg-violet-100 text-violet-800"
                       >Gratis · comp</span>
                       <span
                         v-else
-                        class="text-[10px] font-semibold uppercase tracking-wide
+                        class="text-3xs font-semibold uppercase tracking-wide
                                px-2 py-0.5 rounded-full
                                bg-emerald-100 text-emerald-800"
                       >Aktif · paid</span>

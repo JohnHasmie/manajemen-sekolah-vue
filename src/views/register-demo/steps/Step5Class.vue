@@ -84,7 +84,7 @@ const previewNames = computed(() => {
 
 <template>
   <div>
-    <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
+    <p class="text-2xs font-bold tracking-widest text-slate-500 uppercase mb-2">
       {{ t('registerDemo.stepCounter', { current: wizard.stepNumber, total: wizard.stepTotal }) }} · {{ t('registerDemo.step6Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
@@ -108,7 +108,7 @@ const previewNames = computed(() => {
         <div class="text-[13px] font-bold capitalize">
           {{ p === 'small' ? t('registerDemo.step6PatternSmall') : p === 'medium' ? t('registerDemo.step6PatternMedium') : t('registerDemo.step6PatternLarge') }}
         </div>
-        <div class="text-[11px] text-slate-500">
+        <div class="text-2xs text-slate-500">
           {{ PATTERN_DEFAULT[p] }} {{ t('registerDemo.step6PatternHint') }}
         </div>
       </button>

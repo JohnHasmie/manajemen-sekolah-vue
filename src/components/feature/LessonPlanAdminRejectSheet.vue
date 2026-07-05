@@ -81,7 +81,7 @@ const bulkCount = props.bulkIds?.length ?? 0;
           <p class="text-[12.5px] font-bold text-slate-900 truncate">
             {{ plan.title || 'Tanpa judul' }}
           </p>
-          <p class="text-[11px] text-slate-600 truncate">
+          <p class="text-2xs text-slate-600 truncate">
             {{ plan.subject_name }} · {{ plan.class_name }} · {{ plan.teacher_name }}
           </p>
         </div>
@@ -89,7 +89,7 @@ const bulkCount = props.bulkIds?.length ?? 0;
 
       <!-- Reject note (required) -->
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1">
           Alasan tolak <span class="text-red-600">*</span>
         </label>
         <textarea
@@ -99,7 +99,7 @@ const bulkCount = props.bulkIds?.length ?? 0;
           class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[12.5px] focus:border-red-500 focus:ring-2 focus:ring-red-500/15 focus:outline-none bg-white resize-none"
           :disabled="isSaving"
         />
-        <p class="text-[10px] text-slate-400 mt-1">
+        <p class="text-3xs text-slate-400 mt-1">
           Tip: tulis poin yang spesifik supaya guru tahu cara memperbaiki.
         </p>
       </div>

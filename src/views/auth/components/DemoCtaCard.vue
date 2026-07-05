@@ -25,7 +25,7 @@ function goToWizard() {
     class="relative rounded-xl border border-dashed border-brand-cobalt/40 bg-gradient-to-br from-blue-50 to-indigo-50 p-4"
   >
     <span
-      class="absolute -top-2 left-3 inline-flex items-center gap-1 bg-amber-300 text-amber-900 text-[9px] font-extrabold tracking-widest uppercase px-2 py-0.5 rounded-full"
+      class="absolute -top-2 left-3 inline-flex items-center gap-1 bg-amber-300 text-amber-900 text-4xs font-extrabold tracking-widest uppercase px-2 py-0.5 rounded-full"
     >
       {{ t('auth.demo.new') }}
     </span>
@@ -46,7 +46,7 @@ function goToWizard() {
       >
         <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z" />
       </svg>
-      <p class="text-[10px] font-extrabold text-brand-cobalt tracking-[0.08em] uppercase">
+      <p class="text-3xs font-extrabold text-brand-cobalt tracking-[0.08em] uppercase">
         {{ t('auth.demo.newToKamilEdu') }}
       </p>
     </div>
@@ -70,7 +70,7 @@ function goToWizard() {
       </svg>
     </button>
 
-    <div class="mt-2.5 flex items-center justify-center gap-2 flex-wrap text-[10px] text-slate-500">
+    <div class="mt-2.5 flex items-center justify-center gap-2 flex-wrap text-3xs text-slate-500">
       <span class="inline-flex items-center gap-1">
         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
         {{ t('auth.demo.twoMinSetup') }}

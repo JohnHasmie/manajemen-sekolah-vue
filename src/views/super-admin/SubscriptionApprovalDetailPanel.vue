@@ -107,19 +107,19 @@ const waLink = computed(() => {
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap">
             <span
-              class="text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full border"
+              class="text-3xs font-black tracking-widest uppercase px-2 py-0.5 rounded-full border"
               :class="toneClass"
             >
               Menunggu · {{ approval.waiting_hours }} jam
             </span>
-            <span class="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+            <span class="text-3xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
               {{ planLabel }}
             </span>
           </div>
           <h2 class="mt-1.5 text-base font-bold text-slate-900 truncate">
             {{ approval.tenant_name }}
           </h2>
-          <p class="mt-0.5 text-[11px] font-mono text-slate-500 truncate">
+          <p class="mt-0.5 text-2xs font-mono text-slate-500 truncate">
             {{ approval.order_id }}
           </p>
         </div>
@@ -187,7 +187,7 @@ const waLink = computed(() => {
                 :href="waLink"
                 target="_blank"
                 rel="noopener"
-                class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
+                class="inline-flex items-center gap-1 text-2xs font-semibold text-emerald-700 hover:text-emerald-800"
               >
                 <NavIcon name="message-circle" :size="12" />
                 Hubungi
@@ -214,7 +214,7 @@ const waLink = computed(() => {
           <h3 class="text-[13px] font-bold text-amber-900 mb-1">
             Cek mutasi rekening ini
           </h3>
-          <p class="text-[11px] text-amber-800/80 mb-3 leading-relaxed">
+          <p class="text-2xs text-amber-800/80 mb-3 leading-relaxed">
             Cocokkan nominal masuk dan berita transfer dengan mutasi BSI sebelum menyetujui.
           </p>
           <dl class="grid grid-cols-[minmax(120px,auto)_1fr] gap-y-2 gap-x-3 text-[13px]">

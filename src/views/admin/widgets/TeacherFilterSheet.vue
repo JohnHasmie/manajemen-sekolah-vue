@@ -73,13 +73,13 @@ function apply() {
     <div class="space-y-4">
       <!-- Role -->
       <div>
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+        <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
           Role
         </p>
         <div class="flex flex-wrap gap-1.5">
           <button
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               form.role === null
                 ? 'bg-role-admin text-white border-role-admin'
@@ -93,7 +93,7 @@ function apply() {
             v-for="r in options.roles"
             :key="r.key"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               form.role === r.key
                 ? 'bg-role-admin text-white border-role-admin'
@@ -108,7 +108,7 @@ function apply() {
 
       <!-- Class -->
       <div v-if="options.classes.length > 0">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+        <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
           Kelas Mengajar
         </p>
         <select
@@ -124,13 +124,13 @@ function apply() {
 
       <!-- Gender -->
       <div>
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+        <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
           Jenis Kelamin
         </p>
         <div class="flex gap-1.5">
           <button
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               form.gender === null
                 ? 'bg-role-admin text-white border-role-admin'
@@ -144,7 +144,7 @@ function apply() {
             v-for="g in options.genders"
             :key="g.key"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               form.gender === g.key
                 ? 'bg-role-admin text-white border-role-admin'
@@ -159,13 +159,13 @@ function apply() {
 
       <!-- Employment -->
       <div>
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+        <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
           Status Kepegawaian
         </p>
         <div class="flex flex-wrap gap-1.5">
           <button
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               form.employment_status === null
                 ? 'bg-role-admin text-white border-role-admin'
@@ -179,7 +179,7 @@ function apply() {
             v-for="es in options.employment_statuses"
             :key="es.key"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               form.employment_status === es.key
                 ? 'bg-role-admin text-white border-role-admin'
@@ -196,7 +196,7 @@ function apply() {
       <label class="flex items-center justify-between gap-3 bg-slate-50 rounded-xl px-3 py-2.5 cursor-pointer">
         <div>
           <p class="text-[12px] font-bold text-slate-900">Tampilkan semua guru</p>
-          <p class="text-[10px] text-slate-500">
+          <p class="text-3xs text-slate-500">
             Termasuk guru tidak aktif & arsip
           </p>
         </div>
@@ -210,7 +210,7 @@ function apply() {
       <div class="flex items-center justify-between gap-2 pt-1">
         <button
           type="button"
-          class="text-[11px] font-bold text-slate-500 hover:text-role-admin"
+          class="text-2xs font-bold text-slate-500 hover:text-role-admin"
           @click="reset"
         >
           Reset

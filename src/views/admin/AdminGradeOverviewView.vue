@@ -196,7 +196,7 @@ const headerMeta = computed(() =>
             <p class="text-[22px] font-black text-role-admin leading-none tracking-tight">
               {{ schoolStats?.total_grades ?? 0 }}
             </p>
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
+            <p class="text-3xs font-black text-slate-500 uppercase tracking-widest mt-1.5">
               {{ t('admin.sekolah.grade_overview.kpi_grades') }}
             </p>
           </div>
@@ -204,7 +204,7 @@ const headerMeta = computed(() =>
             <p class="text-[22px] font-black text-slate-800 leading-none tracking-tight">
               {{ (schoolStats?.avg_score ?? 0).toFixed(1) }}
             </p>
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
+            <p class="text-3xs font-black text-slate-500 uppercase tracking-widest mt-1.5">
               {{ t('admin.sekolah.grade_overview.kpi_average') }}
             </p>
           </div>
@@ -212,7 +212,7 @@ const headerMeta = computed(() =>
             <p class="text-[22px] font-black text-emerald-600 leading-none tracking-tight">
               {{ Math.round(schoolStats?.pass_rate ?? 0) }}%
             </p>
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
+            <p class="text-3xs font-black text-slate-500 uppercase tracking-widest mt-1.5">
               {{ t('admin.sekolah.grade_overview.kpi_pass_rate') }}
             </p>
           </div>
@@ -222,7 +222,7 @@ const headerMeta = computed(() =>
         <section class="bg-white border border-slate-200 rounded-2xl p-3.5">
           <SectionHeader :title="t('admin.sekolah.grade_overview.distribution_title')">
             <template #action>
-              <span class="text-[10px] font-bold text-slate-500 tracking-wider">
+              <span class="text-3xs font-bold text-slate-500 tracking-wider">
                 {{ t('admin.sekolah.grade_overview.distribution_meta', { count: schoolStats?.total_grades ?? 0 }) }}
               </span>
             </template>
@@ -254,11 +254,11 @@ const headerMeta = computed(() =>
             <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-2.5">
               <div class="flex items-center justify-between">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                <span class="text-[10px] font-bold text-slate-500">
+                <span class="text-3xs font-bold text-slate-500">
                   {{ distPct(schoolStats?.distribution.high ?? 0) }}
                 </span>
               </div>
-              <p class="text-[9px] font-bold text-slate-600 tracking-widest mt-1.5">
+              <p class="text-4xs font-bold text-slate-600 tracking-widest mt-1.5">
                 {{ t('admin.sekolah.grade_overview.dist_high') }}
               </p>
               <p class="text-[18px] font-black text-emerald-700 leading-none tracking-tight mt-1">
@@ -269,11 +269,11 @@ const headerMeta = computed(() =>
             <div class="rounded-xl bg-amber-50 border border-amber-200 p-2.5">
               <div class="flex items-center justify-between">
                 <span class="w-1.5 h-1.5 rounded-full bg-amber-600" />
-                <span class="text-[10px] font-bold text-slate-500">
+                <span class="text-3xs font-bold text-slate-500">
                   {{ distPct(schoolStats?.distribution.mid ?? 0) }}
                 </span>
               </div>
-              <p class="text-[9px] font-bold text-slate-600 tracking-widest mt-1.5">
+              <p class="text-4xs font-bold text-slate-600 tracking-widest mt-1.5">
                 {{ t('admin.sekolah.grade_overview.dist_mid') }}
               </p>
               <p class="text-[18px] font-black text-amber-700 leading-none tracking-tight mt-1">
@@ -284,11 +284,11 @@ const headerMeta = computed(() =>
             <div class="rounded-xl bg-red-50 border border-red-200 p-2.5">
               <div class="flex items-center justify-between">
                 <span class="w-1.5 h-1.5 rounded-full bg-red-600" />
-                <span class="text-[10px] font-bold text-slate-500">
+                <span class="text-3xs font-bold text-slate-500">
                   {{ distPct(schoolStats?.distribution.low ?? 0) }}
                 </span>
               </div>
-              <p class="text-[9px] font-bold text-slate-600 tracking-widest mt-1.5">
+              <p class="text-4xs font-bold text-slate-600 tracking-widest mt-1.5">
                 {{ t('admin.sekolah.grade_overview.dist_low') }}
               </p>
               <p class="text-[18px] font-black text-red-700 leading-none tracking-tight mt-1">
@@ -300,13 +300,13 @@ const headerMeta = computed(() =>
           <!-- Footer meta chips -->
           <div class="flex flex-wrap items-center gap-2 mt-3">
             <span
-              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-700"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-2xs font-bold text-slate-700"
             >
               <NavIcon name="user" :size="11" class="text-slate-500" />
               {{ t('admin.sekolah.grade_overview.teachers_count', { count: schoolStats?.total_teachers ?? 0 }) }}
             </span>
             <span
-              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-bold text-slate-700"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-2xs font-bold text-slate-700"
             >
               <NavIcon name="users" :size="11" class="text-slate-500" />
               {{ t('admin.sekolah.grade_overview.students_count', { count: schoolStats?.total_students ?? 0 }) }}

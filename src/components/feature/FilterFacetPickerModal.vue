@@ -138,14 +138,14 @@ function submitMulti() {
           {{ o.label }}
           <span
             v-if="o.meta"
-            class="block text-[10px] text-slate-500 font-medium mt-0.5"
+            class="block text-3xs text-slate-500 font-medium mt-0.5"
           >{{ o.meta }}</span>
         </button>
       </div>
 
       <!-- Multi-select list -->
       <template v-else>
-        <div class="flex items-center justify-between text-[11px] font-bold">
+        <div class="flex items-center justify-between text-2xs font-bold">
           <span class="text-slate-700">
             {{ draftMulti.size }} dipilih
           </span>
@@ -172,7 +172,7 @@ function submitMulti() {
             />
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">{{ o.label }}</p>
-              <p v-if="o.meta" class="text-[10px] text-slate-500">{{ o.meta }}</p>
+              <p v-if="o.meta" class="text-3xs text-slate-500">{{ o.meta }}</p>
             </div>
           </label>
         </div>

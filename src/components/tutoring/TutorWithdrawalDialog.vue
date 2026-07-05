@@ -381,7 +381,7 @@ const submitDisabled = computed(() => submitting.value || loading.value || amoun
         </div>
 
         <div class="flex justify-between items-baseline pt-1 border-t border-tutoring-border-soft">
-          <p class="text-[11px] font-bold uppercase tracking-widest text-tutoring-text-mid">
+          <p class="text-2xs font-bold uppercase tracking-widest text-tutoring-text-mid">
             {{ t('tutor.bimbel.withdrawal.eligible_label') }}
           </p>
           <p class="text-[15px] font-bold text-tutoring-text-hi">{{ eligibleLabel }}</p>

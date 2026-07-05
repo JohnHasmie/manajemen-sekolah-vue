@@ -51,7 +51,7 @@ const emit = defineEmits<{
             : 'linear-gradient(135deg, #0A1F4D 0%, #143068 100%)',
         }"
       >
-        <p class="text-[10px] font-bold tracking-widest uppercase text-white/70">
+        <p class="text-3xs font-bold tracking-widest uppercase text-white/70">
           {{ DAY_LABELS[row.day] }} · {{ t('common.lessonHour', { n: row.hour_number }) }}
         </p>
         <p class="text-2xl font-black tracking-tight mt-1">
@@ -63,7 +63,7 @@ const emit = defineEmits<{
         </p>
         <p
           v-if="row.conflict_with && row.conflict_with.length > 0"
-          class="text-[10px] mt-2 bg-white/15 inline-block px-2 py-1 rounded-full font-bold"
+          class="text-3xs mt-2 bg-white/15 inline-block px-2 py-1 rounded-full font-bold"
         >
           ⚠ Bentrok dengan {{ row.conflict_with.length }} jadwal lain
         </p>

@@ -213,7 +213,7 @@ const headerMeta = computed(
         v-for="f in FILTERS"
         :key="f.key"
         type="button"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border inline-flex items-center gap-1.5"
+        class="px-3 py-1.5 rounded-full text-2xs font-bold transition border inline-flex items-center gap-1.5"
         :class="
           activeFilter === f.key
             ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
@@ -267,7 +267,7 @@ const headerMeta = computed(
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
                   <span
-                    class="px-2 py-0.5 rounded-md text-[9px] font-black tracking-widest"
+                    class="px-2 py-0.5 rounded-md text-4xs font-black tracking-widest"
                     :class="severityChipCls(item.severity)"
                   >
                     <span
@@ -288,11 +288,11 @@ const headerMeta = computed(
                 </p>
                 <p
                   v-if="item.subtitle"
-                  class="text-[11px] text-slate-600 mt-0.5 leading-snug line-clamp-2"
+                  class="text-2xs text-slate-600 mt-0.5 leading-snug line-clamp-2"
                 >
                   {{ item.subtitle }}
                 </p>
-                <p class="text-[10px] text-slate-400 mt-1 tabular-nums">
+                <p class="text-3xs text-slate-400 mt-1 tabular-nums">
                   {{ formatRelative(item.occurred_at) }}
                 </p>
               </div>

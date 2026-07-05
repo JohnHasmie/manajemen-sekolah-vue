@@ -216,10 +216,10 @@ async function submit() {
       <!-- 1. PENERIMA -->
       <div>
         <div class="flex items-center gap-2 mb-1.5">
-          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest">
             Penerima
           </label>
-          <span class="text-[10px] text-slate-400 tabular-nums">
+          <span class="text-3xs text-slate-400 tabular-nums">
             · {{ selectedParents.length }}/{{ parentPool.length }} dipilih
           </span>
         </div>
@@ -280,7 +280,7 @@ async function submit() {
 
       <!-- 2. NADA PESAN -->
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
           Nada Pesan
         </label>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
@@ -305,7 +305,7 @@ async function submit() {
 
       <!-- 3. CATATAN -->
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
           Catatan Tambahan <span class="text-slate-400 normal-case font-normal">· opsional</span>
         </label>
         <textarea
@@ -319,7 +319,7 @@ async function submit() {
 
       <!-- 4. PRATINJAU -->
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
           Pratinjau Pesan
         </label>
         <div class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-[12.5px] text-slate-700 whitespace-pre-wrap leading-relaxed font-medium">
@@ -329,7 +329,7 @@ async function submit() {
 
       <!-- 5. KANAL -->
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
           Kanal Pengiriman
         </label>
         <div class="grid grid-cols-2 gap-2">
@@ -350,7 +350,7 @@ async function submit() {
             <span class="text-[14px]">📱</span>
             <div class="flex-1 min-w-0">
               <p class="text-[12px] font-bold text-slate-900 leading-tight">Push App</p>
-              <p class="text-[10px] text-slate-500 mt-0.5">Aplikasi wali</p>
+              <p class="text-3xs text-slate-500 mt-0.5">Aplikasi wali</p>
             </div>
           </label>
           <label
@@ -370,7 +370,7 @@ async function submit() {
             <span class="text-[14px]">💬</span>
             <div class="flex-1 min-w-0">
               <p class="text-[12px] font-bold text-slate-900 leading-tight">WhatsApp</p>
-              <p class="text-[10px] text-slate-500 mt-0.5">Pesan langsung</p>
+              <p class="text-3xs text-slate-500 mt-0.5">Pesan langsung</p>
             </div>
           </label>
         </div>

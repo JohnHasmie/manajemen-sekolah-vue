@@ -175,7 +175,7 @@ const headerTitle = computed(() =>
     </BrandPageHeader>
 
     <!-- Legend -->
-    <section class="bg-white border border-slate-200 rounded-2xl px-3 py-2 flex items-center gap-3 flex-wrap text-[11px]">
+    <section class="bg-white border border-slate-200 rounded-2xl px-3 py-2 flex items-center gap-3 flex-wrap text-2xs">
       <span
         v-for="(label, state_) in CELL_LABEL"
         :key="state_"
@@ -226,14 +226,14 @@ const headerTitle = computed(() =>
               />
               <div class="flex-1 min-w-0">
                 <p class="text-[13px] font-bold text-slate-900 truncate">{{ s.name }}</p>
-                <p class="text-[10px] text-slate-500 truncate">
+                <p class="text-3xs text-slate-500 truncate">
                   <template v-if="s.student_number">{{ t('admin.sekolah.attendance_tingkat_heatmap.nis_label', { nis: s.student_number }) }}</template>
                   <template v-else>{{ t('admin.sekolah.attendance_tingkat_heatmap.no_nis') }}</template>
                   {{ t('admin.sekolah.attendance_tingkat_heatmap.present_summary', { present: s.present_days, total: s.total_days }) }}
                 </p>
                 <p
                   v-if="s.alert_copy"
-                  class="text-[10px] font-bold text-amber-700 mt-0.5"
+                  class="text-3xs font-bold text-amber-700 mt-0.5"
                 >
                   {{ s.alert_copy }}
                 </p>
@@ -250,7 +250,7 @@ const headerTitle = computed(() =>
                 >
                   {{ s.monthly_pct.toFixed(0) }}%
                 </p>
-                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                <p class="text-4xs text-slate-400 font-bold uppercase tracking-widest">
                   {{ t('admin.sekolah.attendance_tingkat_heatmap.monthly') }}
                 </p>
               </div>

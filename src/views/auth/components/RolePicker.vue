@@ -116,7 +116,7 @@ async function handleConfirm() {
 <template>
   <div class="space-y-5">
     <header>
-      <div class="text-[10px] font-black text-slate-400 tracking-[1px] uppercase mb-1 truncate">
+      <div class="text-3xs font-black text-slate-400 tracking-[1px] uppercase mb-1 truncate">
         {{ schoolName.toUpperCase() }}
       </div>
       <h2 class="text-[17px] font-black text-slate-900 tracking-[-0.3px]">
@@ -164,7 +164,7 @@ async function handleConfirm() {
 
           <div class="flex-1 min-w-0">
             <h3 class="text-[14px] font-black text-slate-900 leading-tight">{{ labels[r] || r }}</h3>
-            <p class="text-[11px] font-semibold text-slate-500 mt-1 leading-relaxed">
+            <p class="text-2xs font-semibold text-slate-500 mt-1 leading-relaxed">
               {{ descriptions[r] || '' }}
             </p>
 
@@ -172,7 +172,7 @@ async function handleConfirm() {
             <div v-if="stats[r]" class="flex flex-wrap gap-x-3 gap-y-1 mt-2.5">
               <div v-for="s in stats[r]" :key="s" class="flex items-center gap-1">
                 <div class="w-1 h-1 rounded-full bg-slate-300"></div>
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{{ s }}</span>
+                <span class="text-3xs font-bold text-slate-400 uppercase tracking-tight">{{ s }}</span>
               </div>
             </div>
           </div>
@@ -183,7 +183,7 @@ async function handleConfirm() {
     <!-- Info Box -->
     <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-start gap-3">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 mt-0.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-      <p class="text-[11px] font-semibold text-slate-600 leading-relaxed">
+      <p class="text-2xs font-semibold text-slate-600 leading-relaxed">
         {{ t('auth.role.switchInfo') }}
       </p>
     </div>

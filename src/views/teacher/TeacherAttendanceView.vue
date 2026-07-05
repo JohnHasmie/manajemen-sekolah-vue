@@ -524,7 +524,7 @@ function pickSubject(id: string) {
           >
             <div class="flex items-center gap-2 px-1">
               <span
-                class="text-[11px] font-bold uppercase tracking-widest"
+                class="text-2xs font-bold uppercase tracking-widest"
                 :class="day.isToday ? 'text-brand-cobalt' : 'text-slate-500'"
               >
                 {{ day.isToday ? `${t('common.today')} · ${day.label}` : day.label }}
@@ -534,7 +534,7 @@ function pickSubject(id: string) {
                 :class="day.isToday ? 'bg-brand-cobalt/30' : 'bg-slate-200'"
               ></div>
               <span
-                class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                class="text-3xs font-bold px-2 py-0.5 rounded-full"
                 :class="
                   day.isToday
                     ? 'bg-brand-cobalt/10 text-brand-cobalt'
@@ -569,13 +569,13 @@ function pickSubject(id: string) {
                     </span>
                     <span class="text-slate-300 text-[12px]">·</span>
                     <span
-                      class="bg-brand-cobalt/10 text-brand-cobalt px-1.5 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0"
+                      class="bg-brand-cobalt/10 text-brand-cobalt px-1.5 py-0.5 rounded-full text-3xs font-bold flex-shrink-0"
                     >
                       {{ r.class_name }}
                     </span>
                   </div>
                   <div
-                    class="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 flex-wrap"
+                    class="flex items-center gap-1.5 mt-1 text-2xs text-slate-500 flex-wrap"
                   >
                     <template v-if="r.start_time">
                       <NavIcon name="calendar" :size="11" />
@@ -583,13 +583,13 @@ function pickSubject(id: string) {
                     </template>
                     <span
                       v-if="r.hour_number ?? r.jam_ke"
-                      class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                      class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full text-3xs font-bold"
                     >
                       {{ t('teacher.attendance.hour') }} ke-{{ r.hour_number ?? r.jam_ke }}
                     </span>
                     <span
                       v-if="r.total > 0"
-                      class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                      class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full text-3xs font-bold"
                     >
                       👥 {{ r.total }} {{ t('common.students') }}
                     </span>
@@ -607,22 +607,22 @@ function pickSubject(id: string) {
                     class="flex items-center gap-1.5 mt-2 flex-wrap"
                   >
                     <span
-                      class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                      class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-3xs font-bold"
                     >
                       H {{ r.hadir }}
                     </span>
                     <span
-                      class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                      class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-3xs font-bold"
                     >
                       S {{ r.sakit }}
                     </span>
                     <span
-                      class="inline-flex items-center gap-1 bg-sky-50 text-sky-700 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                      class="inline-flex items-center gap-1 bg-sky-50 text-sky-700 px-2 py-0.5 rounded-full text-3xs font-bold"
                     >
                       I {{ r.izin }}
                     </span>
                     <span
-                      class="inline-flex items-center gap-1 bg-red-50 text-red-700 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                      class="inline-flex items-center gap-1 bg-red-50 text-red-700 px-2 py-0.5 rounded-full text-3xs font-bold"
                     >
                       A {{ r.alpa }}
                     </span>
@@ -642,7 +642,7 @@ function pickSubject(id: string) {
                     <span>{{ pctTone(r).label }}</span>
                   </span>
                   <span
-                    class="text-[10px] font-bold uppercase tracking-widest"
+                    class="text-3xs font-bold uppercase tracking-widest"
                     :class="r.filled ? 'text-slate-500' : 'text-amber-700'"
                   >
                     {{ r.filled ? `${t('common.viewDetails')} ›` : `${t('teacher.attendance.enterNow')} →` }}
@@ -685,7 +685,7 @@ function pickSubject(id: string) {
             <span>{{ p.label }}</span>
             <span
               v-if="p.key === periodKey"
-              class="text-[10px] font-bold uppercase tracking-wider"
+              class="text-3xs font-bold uppercase tracking-wider"
               >{{ t('common.active') }}</span
             >
           </button>
@@ -722,7 +722,7 @@ function pickSubject(id: string) {
             @click="pickClass(c.id)"
           >
             <span>{{ c.name }}</span>
-            <span v-if="c.student_count" class="text-[10px] text-slate-400">
+            <span v-if="c.student_count" class="text-3xs text-slate-400">
               {{ c.student_count }} {{ t('common.students') }}
             </span>
           </button>
@@ -761,7 +761,7 @@ function pickSubject(id: string) {
             @click="pickSubject(s.id)"
           >
             <span>{{ s.name }}</span>
-            <span v-if="s.code" class="text-[10px] text-slate-400">{{
+            <span v-if="s.code" class="text-3xs text-slate-400">{{
               s.code
             }}</span>
           </button>

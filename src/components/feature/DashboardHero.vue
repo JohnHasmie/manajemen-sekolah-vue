@@ -79,11 +79,11 @@ const formatTime = (date: Date) => {
             class="w-1.5 h-1.5 rounded-full" 
             :class="isFresh ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'"
           ></div>
-          <span class="text-[10px] font-bold uppercase tracking-wider text-white/90">
+          <span class="text-3xs font-bold uppercase tracking-wider text-white/90">
             {{ isFresh ? 'Realtime' : 'Offline' }}
           </span>
         </div>
-        <span v-if="lastSync" class="text-[10px] font-medium text-white/60">
+        <span v-if="lastSync" class="text-3xs font-medium text-white/60">
           Sinkronisasi terakhir: {{ formatTime(lastSync) }}
         </span>
       </div>
@@ -98,12 +98,12 @@ const formatTime = (date: Date) => {
             <NavIcon name="home" :size="20" />
           </div>
           <div>
-            <p class="text-[11px] font-black text-white/60 uppercase tracking-widest">Sekolah Aktif</p>
+            <p class="text-2xs font-black text-white/60 uppercase tracking-widest">Sekolah Aktif</p>
             <p class="text-[15px] font-bold text-white leading-none mt-0.5">{{ schoolName }}</p>
-            <p v-if="subtitle" class="text-[11px] font-medium text-white/50 mt-1">{{ subtitle }}</p>
+            <p v-if="subtitle" class="text-2xs font-medium text-white/50 mt-1">{{ subtitle }}</p>
           </div>
         </div>
-        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/15 text-[11px] font-black uppercase tracking-wider group-hover:bg-white/25 transition-colors">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/15 text-2xs font-black uppercase tracking-wider group-hover:bg-white/25 transition-colors">
           Ganti
           <NavIcon name="layers" :size="12" />
         </div>

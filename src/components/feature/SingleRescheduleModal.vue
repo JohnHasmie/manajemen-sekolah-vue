@@ -133,7 +133,7 @@ const dayLabel = computed(() => {
     <div class="space-y-3">
       <!-- Current slot -->
       <section class="bg-slate-50 rounded-xl p-3">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Slot sekarang</p>
+        <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Slot sekarang</p>
         <p class="text-[13px] font-bold text-slate-900 mt-1">
           {{ DAY_LABELS[normalizeDayKey(row.day_name)] }} ·
           {{ t('common.lessonHour', { n: row.hour_number }) }} · {{ row.start_time }}–{{ row.end_time }}
@@ -142,13 +142,13 @@ const dayLabel = computed(() => {
 
       <!-- Day picker -->
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hari baru</label>
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Hari baru</label>
         <div class="mt-1 flex flex-wrap gap-1.5">
           <button
             v-for="d in days"
             :key="d.id"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               dayId === d.id
                 ? 'bg-role-admin text-white border-role-admin'
@@ -163,7 +163,7 @@ const dayLabel = computed(() => {
 
       <!-- Lesson hour picker -->
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           Jam pelajaran ({{ dayLabel }})
           <span v-if="isLoadingHours" class="text-slate-400 normal-case font-normal ml-1">memuat...</span>
         </label>
@@ -177,14 +177,14 @@ const dayLabel = computed(() => {
             {{ t('common.lessonHour', { n: h.hour_number }) }} · {{ h.start_time }}–{{ h.end_time }}
           </option>
         </select>
-        <p v-if="dayId && filteredHours.length === 0 && !isLoadingHours" class="text-[10px] text-amber-700 mt-1">
+        <p v-if="dayId && filteredHours.length === 0 && !isLoadingHours" class="text-3xs text-amber-700 mt-1">
           Hari ini belum punya jam pelajaran terdaftar.
         </p>
       </div>
 
       <!-- Preview new slot -->
       <section v-if="selectedHour" class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
-        <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Slot baru</p>
+        <p class="text-3xs font-bold text-emerald-700 uppercase tracking-widest">Slot baru</p>
         <p class="text-[13px] font-bold text-emerald-900 mt-1">
           {{ dayLabel }} · {{ t('common.lessonHour', { n: selectedHour.hour_number }) }} ·
           {{ selectedHour.start_time }}–{{ selectedHour.end_time }}
@@ -196,22 +196,22 @@ const dayLabel = computed(() => {
         v-if="conflicts.length > 0"
         class="bg-red-50 border border-red-200 rounded-xl p-3 space-y-2"
       >
-        <p class="text-[11px] font-bold text-red-700 uppercase tracking-widest flex items-center gap-1.5">
+        <p class="text-2xs font-bold text-red-700 uppercase tracking-widest flex items-center gap-1.5">
           <NavIcon name="alert-triangle" :size="12" />
           {{ conflicts.length }} bentrok terdeteksi
         </p>
-        <ul class="text-[11px] text-red-700 space-y-1">
+        <ul class="text-2xs text-red-700 space-y-1">
           <li v-for="c in conflicts" :key="c.id">
             {{ c.subject_name }} · {{ c.teacher_name ?? '—' }} · {{ c.class_name ?? '—' }}
           </li>
         </ul>
-        <label class="flex items-center gap-2 text-[11px] text-red-800 font-bold cursor-pointer">
+        <label class="flex items-center gap-2 text-2xs text-red-800 font-bold cursor-pointer">
           <input v-model="forceSave" type="checkbox" class="accent-red-600" />
           Paksa pindah meski bentrok
         </label>
       </section>
 
-      <p v-if="err && conflicts.length === 0" class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+      <p v-if="err && conflicts.length === 0" class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
         {{ err }}
       </p>
 

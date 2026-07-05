@@ -133,7 +133,7 @@ const subtitle = computed(() => {
     </div>
     <div class="flex-1 min-w-0">
       <p class="text-[13px] font-bold text-slate-900 truncate">{{ bill.title }}</p>
-      <p class="text-[11px] text-slate-500 truncate mt-0.5">{{ subtitle }}</p>
+      <p class="text-2xs text-slate-500 truncate mt-0.5">{{ subtitle }}</p>
     </div>
     <div class="text-right flex-shrink-0">
       <p
@@ -143,12 +143,12 @@ const subtitle = computed(() => {
         {{ formatRupiah(bill.amount) }}
       </p>
       <span
-        class="inline-block text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-1"
+        class="inline-block text-4xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-1"
         :class="`${tones.bg} ${tones.text}`"
       >{{ labels }}</span>
       <p
         v-if="bill.reminder_count > 0 && status !== 'paid'"
-        class="text-[9px] text-amber-700 font-bold mt-1 uppercase tracking-wider"
+        class="text-4xs text-amber-700 font-bold mt-1 uppercase tracking-wider"
       >
         {{ t('parent.billing.reminderNth', { n: bill.reminder_count }) }}
       </p>

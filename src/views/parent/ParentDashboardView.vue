@@ -303,7 +303,7 @@ watch(sliceKey, () => {
                 <NavIcon name="users" :size="20" />
               </div>
               <div class="min-w-0">
-                <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">{{ greeting }}</p>
+                <p class="text-3xs font-bold text-slate-400 tracking-widest uppercase">{{ greeting }}</p>
                 <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                   {{ t('parent.dashboard.helloPrefix') }}, <span class="text-role-parent">{{ auth.user?.name }}</span>
                 </h1>
@@ -311,7 +311,7 @@ watch(sliceKey, () => {
             </div>
             <div class="flex items-center gap-2 flex-wrap">
               <div v-if="sliceOptions.length > 1" class="flex items-center gap-2">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">{{ t('parent.dashboard.childLabel') }}:</span>
+                <span class="text-3xs font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">{{ t('parent.dashboard.childLabel') }}:</span>
                 <SegmentedControl v-model="sliceKey" :options="sliceOptions" size="sm" />
               </div>
               <AcademicYearChip
@@ -337,7 +337,7 @@ watch(sliceKey, () => {
             <div class="absolute -top-12 -right-12 w-44 h-44 bg-white/15 rounded-full blur-3xl"></div>
             <div class="relative z-10 flex items-center justify-between gap-4 flex-wrap">
               <div>
-                <p class="text-[10px] font-bold tracking-widest uppercase text-white/75">
+                <p class="text-3xs font-bold tracking-widest uppercase text-white/75">
                   {{ childName }} {{ childClass ? '· ' + childClass : '' }}{{ childSubject ? ' · ' + childSubject : '' }}
                 </p>
                 <h2 class="text-2xl sm:text-3xl font-black mt-1">
@@ -434,7 +434,7 @@ watch(sliceKey, () => {
                 </h3>
                 <span
                   v-if="priorityItems.length > 0"
-                  class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-role-parent/10 text-role-parent"
+                  class="text-3xs font-bold px-2 py-0.5 rounded-full bg-role-parent/10 text-role-parent"
                 >
                   {{ priorityHeaderLabel }}
                 </span>
@@ -458,7 +458,7 @@ watch(sliceKey, () => {
                   </div>
                   <div>
                     <h3 class="text-sm font-black text-slate-900 leading-none">{{ t('parent.dashboard.recentActivity') }}</h3>
-                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">{{ t('parent.dashboard.recentActivitySubtitle') }}</p>
+                    <p class="text-3xs text-slate-400 font-bold mt-0.5">{{ t('parent.dashboard.recentActivitySubtitle') }}</p>
                   </div>
                 </div>
                 <button
@@ -509,12 +509,12 @@ watch(sliceKey, () => {
                     </span>
                     <div class="flex-1 min-w-0">
                       <p class="text-[13px] font-bold text-slate-900 truncate">{{ item.title }}</p>
-                      <p v-if="item.source" class="text-[10px] text-slate-400 truncate">{{ item.source }}</p>
+                      <p v-if="item.source" class="text-3xs text-slate-400 truncate">{{ item.source }}</p>
                       <p v-if="item.extra" class="text-[12px] text-slate-500 mt-0.5 truncate">{{ item.extra }}</p>
                     </div>
                     <div class="text-right flex-shrink-0">
                       <p v-if="item.badge" class="text-[12px] font-bold text-role-parent">{{ item.badge }}</p>
-                      <p class="text-[10px] text-slate-400">
+                      <p class="text-3xs text-slate-400">
                         {{ item.time_ago || formatRelative(item.created_at) }}
                       </p>
                     </div>
@@ -545,7 +545,7 @@ watch(sliceKey, () => {
                     <NavIcon :name="a.icon" :size="16" />
                   </div>
                   <p class="text-[13px] font-black text-slate-900 leading-none">{{ a.label }}</p>
-                  <p class="text-[10px] font-bold text-slate-400 mt-1.5 truncate">{{ a.hint }}</p>
+                  <p class="text-3xs font-bold text-slate-400 mt-1.5 truncate">{{ a.hint }}</p>
                 </button>
               </div>
             </div>

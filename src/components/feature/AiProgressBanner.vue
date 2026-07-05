@@ -43,7 +43,7 @@ const progressPercentage = computed(() => {
             <p class="text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate leading-snug">
               {{ store.message }}
             </p>
-            <p v-if="store.totalJobs > 0" class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+            <p v-if="store.totalJobs > 0" class="text-2xs text-slate-500 dark:text-slate-400 font-medium">
               Sedang memproses ({{ store.completedJobs }}/{{ store.totalJobs }})
             </p>
           </div>

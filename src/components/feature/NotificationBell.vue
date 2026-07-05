@@ -52,7 +52,7 @@ const count = computed(() =>
     </svg>
     <span
       v-if="count > 0"
-      class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-status-danger text-white text-[10px] font-bold flex items-center justify-center"
+      class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-status-danger text-white text-3xs font-bold flex items-center justify-center"
     >
       {{ count > 99 ? '99+' : count }}
     </span>

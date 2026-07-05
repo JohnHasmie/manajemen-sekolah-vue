@@ -92,7 +92,7 @@ async function handleConfirm() {
 <template>
   <div class="space-y-5">
     <header>
-      <div class="text-[10px] font-black text-slate-400 tracking-[1px] uppercase mb-1">
+      <div class="text-3xs font-black text-slate-400 tracking-[1px] uppercase mb-1">
         HALO, {{ userName.toUpperCase() }}
       </div>
       <h2 class="text-[17px] font-black text-slate-900 tracking-[-0.3px]">
@@ -126,7 +126,7 @@ async function handleConfirm() {
     <div class="max-h-[320px] overflow-y-auto pr-1 -mr-1 space-y-4">
       <!-- Utama -->
       <div v-if="utama.length > 0">
-        <div class="text-[10px] font-extrabold text-slate-400 tracking-[0.8px] mb-2 uppercase">{{ t('auth.school.primary') }}</div>
+        <div class="text-3xs font-extrabold text-slate-400 tracking-[0.8px] mb-2 uppercase">{{ t('auth.school.primary') }}</div>
         <div v-for="s in utama" :key="s.id || s.school_id" class="space-y-2">
           <button
             type="button"
@@ -166,7 +166,7 @@ async function handleConfirm() {
 
       <!-- More -->
       <div v-if="lainnya.length > 0">
-        <div class="text-[10px] font-extrabold text-slate-400 tracking-[0.8px] mb-2 uppercase">
+        <div class="text-3xs font-extrabold text-slate-400 tracking-[0.8px] mb-2 uppercase">
           {{ utama.length === 0 ? t('auth.school.chooseLabel') : t('auth.school.othersLabel') }}
         </div>
         <div class="space-y-2">

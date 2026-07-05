@@ -185,12 +185,12 @@ function parentKind(a: ClassActivity): 'tugas' | 'materi' {
         <!-- Caption + time ago -->
         <div class="flex items-center gap-2">
           <p
-            class="text-[11px] font-medium text-slate-500 truncate flex-1 min-w-0"
+            class="text-2xs font-medium text-slate-500 truncate flex-1 min-w-0"
           >
             {{ caption }}
           </p>
           <span
-            class="text-[11px] font-medium text-slate-400 flex-shrink-0 pr-3"
+            class="text-2xs font-medium text-slate-400 flex-shrink-0 pr-3"
           >
             {{ timeAgo }}
           </span>
@@ -205,7 +205,7 @@ function parentKind(a: ClassActivity): 'tugas' | 'materi' {
 
         <!-- Jenis pill -->
         <span
-          class="inline-block mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide"
+          class="inline-block mt-1.5 px-2 py-0.5 rounded-md text-3xs font-bold tracking-wide"
           :class="`${palette.bg} ${palette.fg}`"
         >
           {{ isAssignment ? t('parent.activity.typeTask') : t('parent.activity.typeMaterial') }}
@@ -222,7 +222,7 @@ function parentKind(a: ClassActivity): 'tugas' | 'materi' {
         <!-- Chapter -->
         <div
           v-if="chapterLabel"
-          class="flex items-center gap-1.5 mt-1.5 text-[11px] text-slate-500 truncate"
+          class="flex items-center gap-1.5 mt-1.5 text-2xs text-slate-500 truncate"
         >
           <NavIcon name="book" :size="12" class="flex-shrink-0 text-slate-400" />
           <span class="truncate">{{ chapterLabel }}</span>
@@ -234,21 +234,21 @@ function parentKind(a: ClassActivity): 'tugas' | 'materi' {
           <div class="flex flex-wrap gap-1.5">
             <span
               v-if="activity.is_specific_target"
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-100 text-sky-700"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-bold bg-sky-100 text-sky-700"
             >
               <NavIcon name="shield" :size="11" />
               {{ t('parent.activity.badgeSpecial') }}
             </span>
             <span
               v-if="activity.is_specific_target && isForThisChild"
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-bold bg-blue-100 text-blue-700"
             >
               <NavIcon name="star" :size="11" />
               {{ t('parent.activity.badgeForThisChild') }}
             </span>
             <span
               v-if="isAssignment && activity.deadline"
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-700"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-bold bg-red-100 text-red-700"
             >
               <NavIcon name="clock" :size="11" />
               {{ t('parent.activity.deadline', { date: fmtDeadlineShort(activity.deadline) }) }}

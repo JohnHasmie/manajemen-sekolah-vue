@@ -109,7 +109,7 @@ async function submit() {
           :placeholder="t('admin.bimbel.payout_requests.reject_reason_ph')"
           class="mt-1.5 w-full rounded-lg border border-tutoring-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tutoring-red/20 focus:border-tutoring-red resize-none"
         />
-        <p class="text-[11px] text-tutoring-text-lo mt-1">
+        <p class="text-2xs text-tutoring-text-lo mt-1">
           {{ t('admin.bimbel.payout_requests.reject_reason_hint') }}
         </p>
       </label>

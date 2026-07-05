@@ -134,7 +134,7 @@ async function submit() {
           class="mt-1.5 block w-full text-xs file:mr-3 file:rounded-md file:border-0 file:bg-tutoring-accent/10 file:text-tutoring-accent file:px-3 file:py-2 file:font-bold file:text-[12px] file:cursor-pointer"
           @change="onFileChange"
         />
-        <p class="text-[11px] text-tutoring-text-lo mt-1">
+        <p class="text-2xs text-tutoring-text-lo mt-1">
           {{ t('admin.bimbel.payout_requests.mark_paid_proof_hint') }}
         </p>
       </label>
@@ -156,7 +156,7 @@ async function submit() {
           <p class="text-[13px] font-semibold text-tutoring-text-hi truncate">
             {{ proofFile.name }}
           </p>
-          <p class="text-[11px] text-tutoring-text-mid mt-0.5">{{ fileSizeLabel }}</p>
+          <p class="text-2xs text-tutoring-text-mid mt-0.5">{{ fileSizeLabel }}</p>
           <button
             type="button"
             class="text-[12px] font-bold text-tutoring-red hover:underline mt-1"

@@ -215,7 +215,7 @@ const subtitle = computed(() => {
       >
         <div class="flex justify-between items-start gap-2">
           <div class="min-w-0 flex-1">
-            <p class="text-[10px] text-tutoring-text-lo tracking-wider font-bold uppercase">
+            <p class="text-3xs text-tutoring-text-lo tracking-wider font-bold uppercase">
               {{ r.a.author_name }} · {{ r.a.group_name }}
               <span v-if="children.length > 1" class="text-tutoring-hero">· {{ r.child_name }}</span>
             </p>
@@ -223,7 +223,7 @@ const subtitle = computed(() => {
           </div>
           <span
             v-if="isNew(r.a)"
-            class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-red-900 text-white flex-shrink-0"
+            class="rounded-full px-2 py-0.5 text-3xs font-bold uppercase tracking-wide bg-red-900 text-white flex-shrink-0"
           >{{ t('wali.bimbel.announcements.badge_new') }}</span>
           <span
             v-else

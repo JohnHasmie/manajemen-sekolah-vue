@@ -415,7 +415,7 @@ function pickStatus(k: StatusFilter) {
         <div class="flex-1 min-w-0">
           <div class="flex items-center justify-between gap-2">
             <span
-              class="text-[10px] font-black uppercase tracking-wider"
+              class="text-3xs font-black uppercase tracking-wider"
               :class="getEventState(ev) === 'live' ? 'text-red-700' : 'text-amber-700'"
             >
               {{ getEventCountdownLabel(ev) }}
@@ -459,7 +459,7 @@ function pickStatus(k: StatusFilter) {
                 {{ g.label }}
               </span>
               <div class="flex-1 h-px bg-slate-100"></div>
-              <span class="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-slate-100 text-slate-500">
+              <span class="inline-flex items-center justify-center px-2 py-0.5 text-3xs font-extrabold rounded-full bg-slate-100 text-slate-500">
                 {{ g.count }}
               </span>
             </header>

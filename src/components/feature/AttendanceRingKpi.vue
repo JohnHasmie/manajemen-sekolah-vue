@@ -88,7 +88,7 @@ const deltaLabel = computed<string>(() => {
         </svg>
         <div class="absolute inset-0 grid place-items-center text-center">
           <div>
-            <p class="text-[10px] font-bold text-white/70 uppercase tracking-widest">
+            <p class="text-3xs font-bold text-white/70 uppercase tracking-widest">
               {{ t('parent.attendance.ringHadir') }}
             </p>
             <p class="text-2xl font-black">{{ rate.toFixed(1) }}%</p>
@@ -99,11 +99,11 @@ const deltaLabel = computed<string>(() => {
       <!-- Right column -->
       <div class="flex-1 min-w-[200px] space-y-2">
         <div class="flex items-center gap-2 flex-wrap">
-          <p class="text-[10px] font-bold tracking-widest uppercase text-white/70">
+          <p class="text-3xs font-bold tracking-widest uppercase text-white/70">
             {{ periodLabel }}
           </p>
           <span
-            class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+            class="inline-flex items-center gap-1 text-3xs font-bold px-2 py-0.5 rounded-full"
             :class="deltaTone"
           >
             <NavIcon
@@ -118,19 +118,19 @@ const deltaLabel = computed<string>(() => {
         </p>
         <div class="grid grid-cols-4 gap-2 mt-3">
           <div class="bg-white/10 rounded-xl px-2 py-2">
-            <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">{{ t('parent.attendance.ringHadir') }}</p>
+            <p class="text-4xs font-bold text-white/70 uppercase tracking-widest">{{ t('parent.attendance.ringHadir') }}</p>
             <p class="text-[14px] font-black mt-0.5">{{ present }}</p>
           </div>
           <div class="bg-white/10 rounded-xl px-2 py-2">
-            <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">{{ t('parent.attendance.ringIzin') }}</p>
+            <p class="text-4xs font-bold text-white/70 uppercase tracking-widest">{{ t('parent.attendance.ringIzin') }}</p>
             <p class="text-[14px] font-black mt-0.5">{{ izin }}</p>
           </div>
           <div class="bg-white/10 rounded-xl px-2 py-2">
-            <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">{{ t('parent.attendance.ringSakit') }}</p>
+            <p class="text-4xs font-bold text-white/70 uppercase tracking-widest">{{ t('parent.attendance.ringSakit') }}</p>
             <p class="text-[14px] font-black mt-0.5">{{ sakit }}</p>
           </div>
           <div class="bg-white/10 rounded-xl px-2 py-2">
-            <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">{{ t('parent.attendance.ringAlpa') }}</p>
+            <p class="text-4xs font-bold text-white/70 uppercase tracking-widest">{{ t('parent.attendance.ringAlpa') }}</p>
             <p class="text-[14px] font-black mt-0.5">{{ alpha }}</p>
           </div>
         </div>

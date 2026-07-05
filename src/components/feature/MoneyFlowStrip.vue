@@ -49,13 +49,13 @@ const flow = computed(() => props.summary.flow_bar);
             <NavIcon name="trending-up" :size="16" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[10px] font-bold tracking-widest uppercase text-white/70">
+            <p class="text-3xs font-bold tracking-widest uppercase text-white/70">
               Pendapatan bulan ini
             </p>
             <p class="text-xl font-black tracking-tight mt-0.5">
               {{ formatRupiah(summary.income.amount) }}
             </p>
-            <p class="text-[10px] mt-1" :class="deltaTone">
+            <p class="text-3xs mt-1" :class="deltaTone">
               {{ summary.income.transaction_count }} transaksi · {{ deltaLabel }}
             </p>
           </div>
@@ -69,13 +69,13 @@ const flow = computed(() => props.summary.flow_bar);
             <NavIcon name="credit-card" :size="16" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[10px] font-bold tracking-widest uppercase text-amber-700/80">
+            <p class="text-3xs font-bold tracking-widest uppercase text-amber-700/80">
               Belum lunas
             </p>
             <p class="text-xl font-black tracking-tight text-amber-900 mt-0.5">
               {{ formatRupiah(summary.outstanding.amount) }}
             </p>
-            <p class="text-[10px] text-amber-700 mt-1">
+            <p class="text-3xs text-amber-700 mt-1">
               {{ summary.outstanding.count }} tagihan menunggu
             </p>
           </div>
@@ -89,13 +89,13 @@ const flow = computed(() => props.summary.flow_bar);
             <NavIcon name="alert-triangle" :size="16" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[10px] font-bold tracking-widest uppercase text-red-700/80">
+            <p class="text-3xs font-bold tracking-widest uppercase text-red-700/80">
               Lewat jatuh tempo
             </p>
             <p class="text-xl font-black tracking-tight text-red-900 mt-0.5">
               {{ formatRupiah(summary.overdue.amount) }}
             </p>
-            <p class="text-[10px] text-red-700 mt-1">
+            <p class="text-3xs text-red-700 mt-1">
               {{ summary.overdue.count }} tagihan · {{ summary.overdue.guardians_count }} wali murid
             </p>
           </div>
@@ -106,10 +106,10 @@ const flow = computed(() => props.summary.flow_bar);
     <!-- FlowBar -->
     <div class="bg-white border border-slate-200 rounded-2xl p-4">
       <div class="flex items-center justify-between mb-2">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           Komposisi tagihan {{ summary.period.month }}
         </p>
-        <div class="flex items-center gap-3 text-[10px] font-bold">
+        <div class="flex items-center gap-3 text-3xs font-bold">
           <span class="inline-flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span class="text-slate-600">Lunas {{ flow.paid_pct.toFixed(1) }}%</span>

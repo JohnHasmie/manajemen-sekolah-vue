@@ -63,7 +63,7 @@ defineEmits<{
           <!-- Info List -->
           <div class="space-y-6">
             <div>
-              <h4 class="text-[11px] font-black uppercase tracking-widest text-tutoring-text-lo mb-3">Kontak</h4>
+              <h4 class="text-2xs font-black uppercase tracking-widest text-tutoring-text-lo mb-3">Kontak</h4>
               <div class="space-y-3">
                 <div class="flex items-center gap-3">
                   <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-tutoring-text-mid">
@@ -83,7 +83,7 @@ defineEmits<{
             <div class="h-px bg-tutoring-border/50"></div>
 
             <div>
-              <h4 class="text-[11px] font-black uppercase tracking-widest text-tutoring-text-lo mb-3">Program</h4>
+              <h4 class="text-2xs font-black uppercase tracking-widest text-tutoring-text-lo mb-3">Program</h4>
               <div class="bg-white/5 rounded-xl p-4 border border-tutoring-border/50">
                 <div class="text-sm font-bold text-tutoring-text-hi">{{ student.program }}</div>
                 <div class="text-xs text-tutoring-text-mid mt-1">Terdaftar sejak {{ student.enrollDate }}</div>

@@ -91,7 +91,7 @@ function pick(t: 'school' | 'tutoring') {
           </div>
           <div class="text-left">
             <div class="text-sm font-bold text-slate-900 leading-tight">KamilEdu</div>
-            <div class="text-[10px] text-slate-500 font-medium">Coba demo gratis 7 hari</div>
+            <div class="text-3xs text-slate-500 font-medium">Coba demo gratis 7 hari</div>
           </div>
         </button>
         <div class="flex items-center gap-4">
@@ -110,7 +110,7 @@ function pick(t: 'school' | 'tutoring') {
     <main class="flex-1 flex items-center justify-center px-6 py-10">
       <div class="w-full max-w-4xl">
         <div class="text-center mb-10">
-          <p class="text-[11px] font-black tracking-[0.3em] uppercase text-brand-cobalt mb-3">
+          <p class="text-2xs font-black tracking-[0.3em] uppercase text-brand-cobalt mb-3">
             Coba dulu · gratis 7 hari
           </p>
           <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-3">
@@ -144,7 +144,7 @@ function pick(t: 'school' | 'tutoring') {
               class="group bg-white border border-slate-200 hover:border-brand-cobalt hover:shadow-card rounded-2xl p-7 text-left transition relative"
               @click="pick('school')"
             >
-              <span class="absolute top-3 right-3 text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md">
+              <span class="absolute top-3 right-3 text-3xs font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md">
                 Gratis 7 hari
               </span>
               <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 grid place-items-center mb-4">
@@ -155,16 +155,16 @@ function pick(t: 'school' | 'tutoring') {
                 SD, SMP, SMA, atau SMK. Kelola siswa, guru, kelas, jadwal, raport, presensi.
               </p>
               <div class="flex flex-wrap gap-1.5 mb-5">
-                <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
+                <span class="text-2xs px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
                   Kelas & wali kelas
                 </span>
-                <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
+                <span class="text-2xs px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
                   Mapel & nilai
                 </span>
-                <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
+                <span class="text-2xs px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
                   Raport
                 </span>
-                <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
+                <span class="text-2xs px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
                   Presensi
                 </span>
               </div>
@@ -184,10 +184,10 @@ function pick(t: 'school' | 'tutoring') {
               @click="pick('tutoring')"
             >
               <span class="absolute top-3 right-3 flex items-center gap-1.5">
-                <span class="text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md">
+                <span class="text-3xs font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md">
                   Gratis 7 hari
                 </span>
-                <span class="text-[10px] font-black uppercase tracking-widest bg-brand-cobalt text-white px-2 py-0.5 rounded-md">
+                <span class="text-3xs font-black uppercase tracking-widest bg-brand-cobalt text-white px-2 py-0.5 rounded-md">
                   Baru
                 </span>
               </span>
@@ -199,16 +199,16 @@ function pick(t: 'school' | 'tutoring') {
                 Bimbel, kursus, atau private tutoring. Kelola tutor, program, sesi, honor, tagihan.
               </p>
               <div class="flex flex-wrap gap-1.5 mb-5">
-                <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
+                <span class="text-2xs px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
                   Program & paket
                 </span>
-                <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
+                <span class="text-2xs px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
                   Sesi & tutor
                 </span>
-                <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
+                <span class="text-2xs px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
                   Honor & tagihan
                 </span>
-                <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
+                <span class="text-2xs px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-medium">
                   Voucher & leads
                 </span>
               </div>
@@ -247,7 +247,7 @@ function pick(t: 'school' | 'tutoring') {
                 <NavIcon name="arrow-right" :size="13" />
               </router-link>
             </div>
-            <p class="mt-2 text-center text-[11px] text-slate-400">
+            <p class="mt-2 text-center text-2xs text-slate-400">
               Lewati demo — pilih paket + bayar langsung di halaman berlangganan.
             </p>
           </div>

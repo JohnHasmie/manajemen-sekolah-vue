@@ -201,11 +201,11 @@ function openGroup(g: BillGroup) {
             class="space-y-2"
           >
             <header class="flex items-center justify-between px-1">
-              <h3 class="text-[11px] font-black text-slate-700 uppercase tracking-widest">
+              <h3 class="text-2xs font-black text-slate-700 uppercase tracking-widest">
                 {{ bucket.label }}
                 <span class="ml-1 text-slate-400">{{ t('admin.sekolah.finance_tagihan.bucket_count', { count: bucket.groups.length }) }}</span>
               </h3>
-              <span class="text-[10px] font-bold text-amber-700">
+              <span class="text-3xs font-bold text-amber-700">
                 {{ t('admin.sekolah.finance_tagihan.remaining', { amount: formatRupiah(bucket.outstanding_amount) }) }}
               </span>
             </header>
@@ -225,14 +225,14 @@ function openGroup(g: BillGroup) {
               v-if="bucket.classes.length > 0"
               class="flex items-center gap-1.5 flex-wrap pt-1 px-1"
             >
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-1">
+              <span class="text-3xs font-bold text-slate-400 uppercase tracking-widest mr-1">
                 {{ t('admin.sekolah.finance_tagihan.per_class') }}
               </span>
               <button
                 v-for="c in bucket.classes"
                 :key="c.id"
                 type="button"
-                class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white border border-slate-200 text-slate-600 hover:border-role-admin hover:text-role-admin transition-colors inline-flex items-center gap-1"
+                class="px-2.5 py-1 rounded-lg text-2xs font-bold bg-white border border-slate-200 text-slate-600 hover:border-role-admin hover:text-role-admin transition-colors inline-flex items-center gap-1"
                 @click="$router.push({
                   name: 'admin.finance.class',
                   params: { classId: c.id },
@@ -315,7 +315,7 @@ function openGroup(g: BillGroup) {
           "
         >
           {{ pt.name }}
-          <span class="block text-[10px] text-slate-500 font-medium mt-0.5">
+          <span class="block text-3xs text-slate-500 font-medium mt-0.5">
             {{ pt.period }} · {{ formatRupiah(pt.amount) }}
           </span>
         </button>

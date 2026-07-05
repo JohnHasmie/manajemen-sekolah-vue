@@ -129,7 +129,7 @@ function handleUpgrade() {
   <button
     v-if="visible && data"
     type="button"
-    class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-shadow hover:shadow-md cursor-pointer"
+    class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-2xs font-bold border transition-shadow hover:shadow-md cursor-pointer"
     :class="skinClass"
     :title="data.expires_at ? `Berakhir ${new Date(data.expires_at).toLocaleString('id-ID')}` : ''"
     @click="showModal = true"
@@ -169,13 +169,13 @@ function handleUpgrade() {
         </div>
         <div class="flex-1 min-w-0">
           <h3 class="text-[15px] font-bold text-slate-900">Sekolah demo</h3>
-          <p class="text-[11px] text-slate-500 truncate">{{ data.name }}</p>
+          <p class="text-2xs text-slate-500 truncate">{{ data.name }}</p>
         </div>
       </div>
 
       <div class="border-y border-slate-100 py-3 my-3 text-center">
         <div class="text-[22px] font-black text-slate-900">{{ countdownLabel }}</div>
-        <p v-if="data.expires_at" class="text-[11px] text-slate-500 mt-1">
+        <p v-if="data.expires_at" class="text-2xs text-slate-500 mt-1">
           Berakhir {{ new Date(data.expires_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) }}
         </p>
       </div>

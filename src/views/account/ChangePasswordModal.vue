@@ -85,7 +85,7 @@ async function submit() {
   >
     <form class="space-y-3" @submit.prevent="submit">
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           {{ t('account.oldPassword') }}
         </label>
         <div class="mt-1 relative">
@@ -106,7 +106,7 @@ async function submit() {
       </div>
 
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           {{ t('account.newPassword') }}
         </label>
         <div class="mt-1 relative">
@@ -133,7 +133,7 @@ async function submit() {
       </div>
 
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           {{ t('account.confirmNewPassword') }}
         </label>
         <div class="mt-1 relative">

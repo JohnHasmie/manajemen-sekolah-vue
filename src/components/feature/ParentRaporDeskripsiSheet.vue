@@ -61,7 +61,7 @@ function chipTone(score: number | null): string {
         <header class="flex items-center justify-between gap-2 mb-2">
           <div>
             <p
-              class="text-[10px] font-bold uppercase tracking-widest text-slate-500"
+              class="text-3xs font-bold uppercase tracking-widest text-slate-500"
             >
               KI 3
             </p>
@@ -72,7 +72,7 @@ function chipTone(score: number | null): string {
           <div class="flex items-center gap-1.5">
             <span
               v-if="subject.knowledge_predicate"
-              class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+              class="text-3xs font-bold px-2 py-0.5 rounded-full"
               :class="chipTone(knowledgeNum)"
             >
               {{ subject.knowledge_predicate }}
@@ -101,7 +101,7 @@ function chipTone(score: number | null): string {
         <header class="flex items-center justify-between gap-2 mb-2">
           <div>
             <p
-              class="text-[10px] font-bold uppercase tracking-widest text-slate-500"
+              class="text-3xs font-bold uppercase tracking-widest text-slate-500"
             >
               KI 4
             </p>
@@ -112,7 +112,7 @@ function chipTone(score: number | null): string {
           <div class="flex items-center gap-1.5">
             <span
               v-if="subject.skill_predicate"
-              class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+              class="text-3xs font-bold px-2 py-0.5 rounded-full"
               :class="chipTone(skillNum)"
             >
               {{ subject.skill_predicate }}
@@ -137,7 +137,7 @@ function chipTone(score: number | null): string {
       </section>
 
       <p
-        class="text-[11px] text-slate-500 italic px-1 leading-relaxed"
+        class="text-2xs text-slate-500 italic px-1 leading-relaxed"
       >
         KKM {{ kkm }} · Deskripsi ini ditulis oleh wali kelas berdasarkan
         capaian harian.

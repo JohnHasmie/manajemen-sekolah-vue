@@ -211,7 +211,7 @@ const nextLabel = computed(() => {
             v-for="(key, idx) in DEMO_STEPS"
             :key="key"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition border"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold whitespace-nowrap transition border"
             :class="[
               idx === wizard.currentStep
                 ? 'bg-role-admin text-white border-role-admin'
@@ -349,7 +349,7 @@ const nextLabel = computed(() => {
         </main>
       </div>
 
-      <p class="text-center text-[11px] text-slate-400 mt-4">
+      <p class="text-center text-2xs text-slate-400 mt-4">
         {{ t('registerDemo.footerSavedNote') }}
         <span class="mx-2 text-slate-300">·</span>
         <button

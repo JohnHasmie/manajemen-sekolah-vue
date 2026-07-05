@@ -69,7 +69,7 @@ const displayTitle = computed(() => {
       <div class="flex-1 min-w-0">
         <p
           v-if="kicker"
-          class="text-[10px] font-bold tracking-widest uppercase text-white/80 mb-1.5"
+          class="text-3xs font-bold tracking-widest uppercase text-white/80 mb-1.5"
         >
           {{ kicker }}
         </p>
@@ -100,7 +100,7 @@ const displayTitle = computed(() => {
             type="button"
             role="tab"
             :aria-selected="activeChildId === c.student_id"
-            class="text-[11px] font-bold px-2.5 py-1 rounded-full transition-all whitespace-nowrap"
+            class="text-2xs font-bold px-2.5 py-1 rounded-full transition-all whitespace-nowrap"
             :class="
               activeChildId === c.student_id
                 ? 'bg-white text-slate-900 shadow-sm'

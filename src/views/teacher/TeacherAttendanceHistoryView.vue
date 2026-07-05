@@ -177,7 +177,7 @@ onMounted(reload);
     >
       <div>
         <label
-          class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+          class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
         >
           {{ t('tutor.sekolah.presenceHistory.fromDate') }}
         </label>
@@ -189,7 +189,7 @@ onMounted(reload);
       </div>
       <div>
         <label
-          class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+          class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
         >
           {{ t('tutor.sekolah.presenceHistory.toDate') }}
         </label>
@@ -221,7 +221,7 @@ onMounted(reload);
         class="flex items-center justify-between gap-3 flex-wrap mb-3"
       >
         <h3 class="text-[13px] font-black text-slate-900">{{ t('tutor.sekolah.presenceHistory.periodSummary') }}</h3>
-        <span v-if="summaryRangeLabel" class="text-[11px] text-slate-500">
+        <span v-if="summaryRangeLabel" class="text-2xs text-slate-500">
           {{ summaryRangeLabel }}
         </span>
       </div>
@@ -232,7 +232,7 @@ onMounted(reload);
           class="rounded-xl px-3 py-2.5"
           :class="chipClass(s)"
         >
-          <p class="text-[10px] font-bold uppercase tracking-widest opacity-80">
+          <p class="text-3xs font-bold uppercase tracking-widest opacity-80">
             {{ teacherAttendanceStatusColumnLabel(s) }}
           </p>
           <p class="text-[20px] font-black leading-tight tabular-nums">
@@ -240,13 +240,13 @@ onMounted(reload);
           </p>
         </div>
         <div class="rounded-xl px-3 py-2.5 bg-brand-cobalt/10 text-brand-cobalt">
-          <p class="text-[10px] font-bold uppercase tracking-widest opacity-80">
+          <p class="text-3xs font-bold uppercase tracking-widest opacity-80">
             {{ t('tutor.sekolah.presenceHistory.attendancePct') }}
           </p>
           <p class="text-[20px] font-black leading-tight tabular-nums">
             {{ summary.summary.present_pct }}%
           </p>
-          <p class="text-[10px] opacity-70 tabular-nums">
+          <p class="text-3xs opacity-70 tabular-nums">
             {{ t('tutor.sekolah.presenceHistory.daysRecorded', { count: summary.summary.total }) }}
           </p>
         </div>
@@ -286,7 +286,7 @@ onMounted(reload);
                   {{ fmtDate(r.date) }}
                 </p>
                 <span
-                  class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                  class="text-3xs font-bold px-1.5 py-0.5 rounded-full"
                   :class="
                     r.status === 'late'
                       ? 'bg-amber-100 text-amber-700'

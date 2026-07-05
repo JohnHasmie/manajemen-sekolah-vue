@@ -337,12 +337,12 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
           </p>
           <p class="text-xs text-slate-500 truncate">{{ auth.user?.email }}</p>
           <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full">
+            <span class="text-3xs font-bold uppercase tracking-wider text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full">
               {{ roleLabel }}
             </span>
             <span
               v-if="auth.schoolId"
-              class="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full truncate max-w-[10rem]"
+              class="text-3xs font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full truncate max-w-[10rem]"
               :title="activeSchoolName"
             >
               {{ activeSchoolName }}
@@ -375,7 +375,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
           <span class="flex-1">{{ t('profileMenu.switchSchool') }}</span>
-          <span class="text-[10px] font-bold text-slate-400 tabular-nums">{{ availableSchools.length }}</span>
+          <span class="text-3xs font-bold text-slate-400 tabular-nums">{{ availableSchools.length }}</span>
         </button>
 
         <!-- Switch role (only when user has multiple roles) -->
@@ -392,7 +392,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
           </svg>
           <span class="flex-1">{{ t('profileMenu.switchRole') }}</span>
-          <span class="text-[10px] font-bold text-slate-400 tabular-nums">{{ availableRoles.length }}</span>
+          <span class="text-3xs font-bold text-slate-400 tabular-nums">{{ availableRoles.length }}</span>
         </button>
 
         <!-- Language -->
@@ -439,7 +439,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
           </svg>
           <span class="flex-1">{{ t('profileMenu.appearance') }}</span>
-          <span class="text-[10px] font-bold text-slate-400 uppercase">{{ t(`profileMenu.appearance${tutoringTheme.mode.charAt(0).toUpperCase() + tutoringTheme.mode.slice(1)}`) }}</span>
+          <span class="text-3xs font-bold text-slate-400 uppercase">{{ t(`profileMenu.appearance${tutoringTheme.mode.charAt(0).toUpperCase() + tutoringTheme.mode.slice(1)}`) }}</span>
         </button>
 
         <!-- Logout -->
@@ -492,16 +492,16 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
               <p class="text-[13px] font-bold text-slate-900 truncate">
                 {{ schoolDisplayName(s) }}
               </p>
-              <p v-if="s.city || s.address" class="text-[11px] text-slate-500 truncate">
+              <p v-if="s.city || s.address" class="text-2xs text-slate-500 truncate">
                 {{ s.city ?? s.address }}
               </p>
-              <p v-if="s.roles && s.roles.length > 0" class="text-[10px] text-slate-400 mt-0.5">
+              <p v-if="s.roles && s.roles.length > 0" class="text-3xs text-slate-400 mt-0.5">
                 {{ s.roles.map((r) => roleDisplayLabel(r)).join(' · ') }}
               </p>
             </div>
             <span
               v-if="schoolKey(s) === auth.schoolId"
-              class="text-[10px] font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider"
+              class="text-3xs font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider"
             >
               {{ t('profileMenu.activeBadge') }}
             </span>
@@ -544,7 +544,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
               <p class="text-[13px] font-bold text-slate-900 truncate">
                 {{ roleDisplayLabel(role) }}
               </p>
-              <p class="text-[11px] text-slate-500">
+              <p class="text-2xs text-slate-500">
                 {{
                   role === 'admin'
                     ? t('profileMenu.roleDescAdmin')
@@ -562,7 +562,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
             </div>
             <span
               v-if="role === auth.activeRole"
-              class="text-[10px] font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider"
+              class="text-3xs font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider"
             >
               {{ t('profileMenu.activeBadge') }}
             </span>
@@ -632,11 +632,11 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
             </span>
             <span class="min-w-0 flex-1">
               <span class="block text-sm font-bold text-slate-900">{{ t(opt.titleKey) }}</span>
-              <span class="block text-[11px] text-slate-500">{{ t(opt.subKey) }}</span>
+              <span class="block text-2xs text-slate-500">{{ t(opt.subKey) }}</span>
             </span>
             <span
               v-if="tutoringTheme.mode === opt.mode"
-              class="text-[10px] font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider"
+              class="text-3xs font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider"
             >
               {{ t('profileMenu.activeBadge') }}
             </span>

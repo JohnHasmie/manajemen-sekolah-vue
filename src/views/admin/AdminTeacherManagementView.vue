@@ -568,7 +568,7 @@ function statusFor(t: Teacher) {
       />
       <button
         type="button"
-        class="text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-colors"
+        class="text-2xs font-bold px-3 py-1.5 rounded-lg border transition-colors"
         :class="
           filters.show_all
             ? 'bg-role-admin text-white border-role-admin'

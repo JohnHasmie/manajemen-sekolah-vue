@@ -344,7 +344,7 @@ const headerMeta = computed(() => {
         <button
           v-if="!editMode"
           type="button"
-          class="text-[11px] font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          class="text-2xs font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
           @click="editMode = true"
         >
           <NavIcon name="edit" :size="11" class="inline" />
@@ -353,7 +353,7 @@ const headerMeta = computed(() => {
         <template v-else>
           <button
             type="button"
-            class="text-[11px] font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+            class="text-2xs font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
             @click="discardChanges"
           >
             {{ t('admin.sekolah.attendance_detail.cancel') }}
@@ -402,20 +402,20 @@ const headerMeta = computed(() => {
             />
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">{{ r.student_name }}</p>
-              <p class="text-[10px] text-slate-500 truncate">
+              <p class="text-3xs text-slate-500 truncate">
                 <template v-if="r.student_number">{{ t('admin.sekolah.attendance_detail.nis_label', { nis: r.student_number }) }}</template>
                 <template v-else>{{ t('admin.sekolah.attendance_detail.no_nis') }}</template>
                 {{ t('admin.sekolah.attendance_detail.row_number', { index: idx + 1 }) }}
               </p>
-              <p v-if="r.alert" class="text-[10px] font-bold text-amber-700 mt-0.5">
+              <p v-if="r.alert" class="text-3xs font-bold text-amber-700 mt-0.5">
                 {{ r.alert }}
               </p>
-              <p v-if="r.notes" class="text-[10px] text-slate-500 mt-0.5 italic">
+              <p v-if="r.notes" class="text-3xs text-slate-500 mt-0.5 italic">
                 "{{ r.notes }}"
               </p>
             </div>
             <span
-              class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full flex-shrink-0"
+              class="text-3xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full flex-shrink-0"
               :class="statusToneClass(r.status)"
             >
               {{ statusLabel(r.status) }}

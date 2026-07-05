@@ -299,7 +299,7 @@ function goBack() {
         v-for="f in FILTERS"
         :key="f.key"
         type="button"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border inline-flex items-center gap-1.5"
+        class="px-3 py-1.5 rounded-full text-2xs font-bold transition border inline-flex items-center gap-1.5"
         :class="
           activeFilter === f.key
             ? 'bg-role-admin text-white border-role-admin shadow-sm'
@@ -348,13 +348,13 @@ function goBack() {
                     {{ s.student.name }}
                   </p>
                   <span
-                    class="px-2 py-0.5 rounded-md text-[9px] font-black tracking-widest"
+                    class="px-2 py-0.5 rounded-md text-4xs font-black tracking-widest"
                     :class="bucketBadgeCls(s.bucket)"
                   >
                     {{ bucketLabel(s.bucket) }}
                   </span>
                 </div>
-                <p class="text-[11px] text-slate-500 mt-0.5">
+                <p class="text-2xs text-slate-500 mt-0.5">
                   {{ s.student.student_number || '—' }}
                   {{ t('admin.sekolah.class_finance.paid_summary', { paid: s.paid_count, total: s.total_count }) }}
                 </p>
@@ -371,7 +371,7 @@ function goBack() {
                 <p class="text-[12.5px] font-black text-slate-900 tabular-nums">
                   {{ fmtIDR(s.outstanding_amount) }}
                 </p>
-                <p class="text-[10px] text-slate-500 tabular-nums">
+                <p class="text-3xs text-slate-500 tabular-nums">
                   {{ t('admin.sekolah.class_finance.outstanding_label') }}
                 </p>
               </div>
@@ -409,7 +409,7 @@ function goBack() {
                     </p>
                     <p
                       v-if="b.is_overdue"
-                      class="text-[10px] font-bold text-red-500"
+                      class="text-3xs font-bold text-red-500"
                     >
                       {{ t('admin.sekolah.class_finance.overdue_days', { days: b.overdue_days }) }}
                     </p>
@@ -419,7 +419,7 @@ function goBack() {
                       {{ fmtIDR(b.amount) }}
                     </p>
                     <span
-                      class="text-[9px] font-black tracking-widest"
+                      class="text-4xs font-black tracking-widest"
                       :class="billStatusChip(b).cls"
                     >{{ billStatusChip(b).label }}</span>
                   </div>

@@ -871,7 +871,7 @@ function pickSubject(id: string) {
       </template>
       <template #segmented>
         <div class="flex items-center gap-2">
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <span class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Rentang
           </span>
           <SegmentedControl v-model="rangeKey" :options="rangeOptions" size="sm" />
@@ -885,7 +885,7 @@ function pickSubject(id: string) {
         v-for="tab in typeTabs"
         :key="tab.key"
         type="button"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+        class="px-3 py-1.5 rounded-full text-2xs font-bold transition border"
         :class="
           typeFilter === tab.key
             ? 'bg-brand-cobalt text-white border-brand-cobalt shadow-sm'
@@ -912,10 +912,10 @@ function pickSubject(id: string) {
           class="space-y-2"
         >
           <div class="flex items-center gap-2 px-1">
-            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <span class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
               {{ group.label }}
             </span>
-            <span class="text-[10px] text-slate-400 tabular-nums">
+            <span class="text-3xs text-slate-400 tabular-nums">
               · {{ group.items.length }}
             </span>
             <span class="flex-1 border-t border-dashed border-slate-200 ml-2"></span>
@@ -983,7 +983,7 @@ function pickSubject(id: string) {
         <!-- KELAS + MAPEL (in-form; locked in edit mode) -->
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
               Kelas
             </label>
             <select
@@ -999,7 +999,7 @@ function pickSubject(id: string) {
             </select>
           </div>
           <div>
-            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
               Mapel
             </label>
             <select
@@ -1019,7 +1019,7 @@ function pickSubject(id: string) {
         </div>
 
         <div>
-          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
             Judul
           </label>
           <input
@@ -1033,7 +1033,7 @@ function pickSubject(id: string) {
         <!-- TANGGAL + JAM (session picker) -->
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
               Tanggal
             </label>
             <input
@@ -1043,7 +1043,7 @@ function pickSubject(id: string) {
             />
           </div>
           <div>
-            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
               Jam / Sesi
             </label>
             <select
@@ -1079,13 +1079,13 @@ function pickSubject(id: string) {
             />
             <p
               v-if="hasScheduleContext && form.classId && lessonHourOptions.length === 0"
-              class="mt-1 text-[10px] text-slate-400"
+              class="mt-1 text-3xs text-slate-400"
             >
               Tidak ada jadwal jam pelajaran di hari ini — isi waktu manual.
             </p>
             <p
               v-else-if="selectedLessonHourLabel && form.lessonHourId"
-              class="mt-1 text-[10px] text-emerald-600 font-semibold"
+              class="mt-1 text-3xs text-emerald-600 font-semibold"
             >
               {{ selectedLessonHourLabel }}
             </p>
@@ -1093,7 +1093,7 @@ function pickSubject(id: string) {
         </div>
 
         <div>
-          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
             Tipe
           </label>
           <!-- 4 mobile types (Tugas / Activity / Ujian / Catatan) with
@@ -1118,7 +1118,7 @@ function pickSubject(id: string) {
               >
                 {{ opt.label }}
               </span>
-              <span class="block text-[10px] text-slate-500 truncate">
+              <span class="block text-3xs text-slate-500 truncate">
                 {{ opt.desc }}
               </span>
             </button>
@@ -1130,7 +1130,7 @@ function pickSubject(id: string) {
              subject-scoped). Saving without a Bab still works. -->
         <div v-if="form.subjectId" class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
               Bab (opsional)
             </label>
             <select
@@ -1148,7 +1148,7 @@ function pickSubject(id: string) {
             </select>
           </div>
           <div>
-            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
               Sub-bab (opsional)
             </label>
             <select
@@ -1173,7 +1173,7 @@ function pickSubject(id: string) {
         </div>
 
         <div>
-          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
             Deskripsi
           </label>
           <textarea
@@ -1184,7 +1184,7 @@ function pickSubject(id: string) {
           />
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
             Refleksi (opsional)
           </label>
           <textarea

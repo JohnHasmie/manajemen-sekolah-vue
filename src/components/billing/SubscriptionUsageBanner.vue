@@ -181,7 +181,7 @@ function openTopUp() {
             {{ t('subscribe.usageBanner.topUpCta') }}
           </button>
         </div>
-        <p v-else-if="usage.is_demo" class="mt-2 text-[11px] text-amber-800">
+        <p v-else-if="usage.is_demo" class="mt-2 text-2xs text-amber-800">
           {{ t('subscribe.usageBanner.demoNotice') }}
         </p>
       </div>

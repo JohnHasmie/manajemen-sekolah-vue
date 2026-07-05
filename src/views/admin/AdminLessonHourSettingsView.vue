@@ -248,7 +248,7 @@ function dayName(id: string): string {
             <header class="flex items-center justify-between">
               <div>
                 <h3 class="text-[13px] font-black text-slate-900">{{ d.name }}</h3>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
                   {{ t('admin.sekolah.lesson_hours.hour_count', { count: hoursByDay[d.id]?.length ?? 0 }) }}
                 </p>
               </div>
@@ -258,7 +258,7 @@ function dayName(id: string): string {
               </Button>
             </header>
 
-            <div v-if="(hoursByDay[d.id]?.length ?? 0) === 0" class="text-[11px] text-slate-400 text-center py-4">
+            <div v-if="(hoursByDay[d.id]?.length ?? 0) === 0" class="text-2xs text-slate-400 text-center py-4">
               {{ t('admin.sekolah.lesson_hours.no_hours') }}
             </div>
             <div v-else class="divide-y divide-slate-100">
@@ -268,14 +268,14 @@ function dayName(id: string): string {
                 class="flex items-center gap-2 py-2"
               >
                 <div class="w-10 text-center flex-shrink-0">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.jp_short') }}</p>
+                  <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.jp_short') }}</p>
                   <p class="text-[14px] font-black text-role-admin">{{ h.hour_number }}</p>
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-[12px] font-bold text-slate-900 tabular-nums">
                     {{ h.start_time }}–{{ h.end_time }}
                   </p>
-                  <p v-if="h.room" class="text-[10px] text-slate-500">{{ h.room }}</p>
+                  <p v-if="h.room" class="text-3xs text-slate-500">{{ h.room }}</p>
                 </div>
                 <button
                   type="button"
@@ -308,7 +308,7 @@ function dayName(id: string): string {
     >
       <div class="space-y-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_hour_number') }}</label>
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_hour_number') }}</label>
           <input
             v-model.number="formHourNumber"
             type="number"
@@ -318,7 +318,7 @@ function dayName(id: string): string {
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_start') }}</label>
+            <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_start') }}</label>
             <input
               v-model="formStart"
               type="time"
@@ -326,7 +326,7 @@ function dayName(id: string): string {
             />
           </div>
           <div>
-            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_end') }}</label>
+            <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_end') }}</label>
             <input
               v-model="formEnd"
               type="time"
@@ -335,7 +335,7 @@ function dayName(id: string): string {
           </div>
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_room') }}</label>
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_room') }}</label>
           <input
             v-model="formRoom"
             type="text"
@@ -344,7 +344,7 @@ function dayName(id: string): string {
           />
         </div>
 
-        <p v-if="formErr" class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+        <p v-if="formErr" class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
           {{ formErr }}
         </p>
 
@@ -367,7 +367,7 @@ function dayName(id: string): string {
     >
       <div class="space-y-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.source') }}</label>
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.source') }}</label>
           <select
             v-model="copySourceDayId"
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
@@ -377,7 +377,7 @@ function dayName(id: string): string {
           </select>
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.target') }}</label>
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.target') }}</label>
           <select
             v-model="copyTargetDayId"
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
@@ -386,12 +386,12 @@ function dayName(id: string): string {
             <option v-for="d in days" :key="d.id" :value="d.id">{{ d.name }}</option>
           </select>
         </div>
-        <label class="flex items-center gap-2 text-[11px] font-bold text-slate-700 cursor-pointer">
+        <label class="flex items-center gap-2 text-2xs font-bold text-slate-700 cursor-pointer">
           <input v-model="copyOverwrite" type="checkbox" class="accent-role-admin" />
           {{ t('admin.sekolah.lesson_hours.overwrite') }}
         </label>
 
-        <p v-if="copyErr" class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+        <p v-if="copyErr" class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
           {{ copyErr }}
         </p>
 

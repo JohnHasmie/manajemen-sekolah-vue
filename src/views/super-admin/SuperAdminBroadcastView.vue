@@ -366,7 +366,7 @@ const progressPercent = computed(() => {
               <button
                 type="button"
                 @click="toggleAllSchools"
-                class="text-[10px] font-bold text-role-admin hover:underline whitespace-nowrap"
+                class="text-3xs font-bold text-role-admin hover:underline whitespace-nowrap"
               >
                 {{ allSchoolsSelected ? 'Kosongkan Semua' : 'Pilih Semua' }}
               </button>
@@ -390,7 +390,7 @@ const progressPercent = computed(() => {
                   class="text-xs text-slate-700 font-medium cursor-pointer select-none truncate flex-1"
                 >
                   {{ school.school_summary.name }}
-                  <span class="text-[10px] text-slate-400">({{ school.school_summary.city }})</span>
+                  <span class="text-3xs text-slate-400">({{ school.school_summary.city }})</span>
                 </label>
               </div>
               <div v-if="filteredSchools.length === 0" class="text-center py-6 text-slate-400 text-xs">
@@ -430,14 +430,14 @@ const progressPercent = computed(() => {
             <div class="flex gap-1.5">
               <button
                 type="button"
-                class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200 transition"
+                class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-3xs font-bold border border-slate-200 transition"
                 @click="insertPlaceholder('{name}')"
               >
                 + {Nama}
               </button>
               <button
                 type="button"
-                class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200 transition"
+                class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-3xs font-bold border border-slate-200 transition"
                 @click="insertPlaceholder('{school_name}')"
               >
                 + {Sekolah}
@@ -451,7 +451,7 @@ const progressPercent = computed(() => {
             rows="5"
             class="w-full text-xs border border-slate-200 rounded-xl px-3.5 py-3 focus:outline-none focus:ring-1 focus:ring-brand leading-relaxed"
           ></textarea>
-          <div class="flex justify-between items-center text-[10px] text-slate-400">
+          <div class="flex justify-between items-center text-3xs text-slate-400">
             <span>Dynamic replace placeholder: <code class="font-mono bg-slate-100 px-1 py-0.5 rounded">{name}</code>, <code class="font-mono bg-slate-100 px-1 py-0.5 rounded">{school_name}</code></span>
             <span>{{ messageTemplate.length }} karakter</span>
           </div>
@@ -471,7 +471,7 @@ const progressPercent = computed(() => {
             step="1"
             class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-brand"
           />
-          <p class="text-[10px] text-slate-400">
+          <p class="text-3xs text-slate-400">
             Jeda antarpengiriman pesan WhatsApp untuk menghindari deteksi spam dari gateway WhatsApp.
           </p>
         </div>
@@ -489,7 +489,7 @@ const progressPercent = computed(() => {
 
             <!-- State pill -->
             <span
-              class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full border"
+              class="text-3xs font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full border"
               :class="
                 status === 'sending'
                   ? 'bg-blue-50 text-blue-700 border-blue-200'
@@ -529,7 +529,7 @@ const progressPercent = computed(() => {
           <!-- Metrics grid -->
           <div class="grid grid-cols-4 gap-2 text-center">
             <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
-              <span class="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">
+              <span class="text-3xs text-slate-400 block font-bold uppercase tracking-wider">
                 Total
               </span>
               <span class="text-lg font-bold text-slate-800 tabular-nums">
@@ -537,7 +537,7 @@ const progressPercent = computed(() => {
               </span>
             </div>
             <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
-              <span class="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">
+              <span class="text-3xs text-slate-400 block font-bold uppercase tracking-wider">
                 Proses
               </span>
               <span class="text-lg font-bold text-slate-800 tabular-nums">
@@ -545,7 +545,7 @@ const progressPercent = computed(() => {
               </span>
             </div>
             <div class="bg-emerald-50/50 rounded-xl p-2.5 border border-emerald-100/50">
-              <span class="text-[10px] text-emerald-600/70 block font-bold uppercase tracking-wider">
+              <span class="text-3xs text-emerald-600/70 block font-bold uppercase tracking-wider">
                 Sukses
               </span>
               <span class="text-lg font-bold text-emerald-600 tabular-nums">
@@ -553,7 +553,7 @@ const progressPercent = computed(() => {
               </span>
             </div>
             <div class="bg-rose-50/50 rounded-xl p-2.5 border border-rose-100/50">
-              <span class="text-[10px] text-rose-600/70 block font-bold uppercase tracking-wider">
+              <span class="text-3xs text-rose-600/70 block font-bold uppercase tracking-wider">
                 Gagal
               </span>
               <span class="text-lg font-bold text-rose-600 tabular-nums">
@@ -604,12 +604,12 @@ const progressPercent = computed(() => {
               <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
               Terminal Output
             </span>
-            <span class="text-[10px] text-slate-500 font-mono">Live</span>
+            <span class="text-3xs text-slate-500 font-mono">Live</span>
           </div>
 
           <div
             ref="consoleRef"
-            class="flex-1 overflow-y-auto font-mono text-[10px] leading-relaxed space-y-1.5 select-text h-64 pr-2 custom-scrollbar bg-slate-950/80 p-3 rounded-lg border border-slate-800/80"
+            class="flex-1 overflow-y-auto font-mono text-3xs leading-relaxed space-y-1.5 select-text h-64 pr-2 custom-scrollbar bg-slate-950/80 p-3 rounded-lg border border-slate-800/80"
           >
             <div v-for="(log, idx) in logs" :key="idx" :class="getLogClass(log)" class="break-words">
               {{ log }}

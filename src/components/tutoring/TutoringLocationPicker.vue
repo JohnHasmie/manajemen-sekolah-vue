@@ -325,7 +325,7 @@ onBeforeUnmount(() => {
       style="height: 320px"
     ></div>
 
-    <p class="text-[11px] text-slate-400 leading-relaxed text-center">
+    <p class="text-2xs text-slate-400 leading-relaxed text-center">
       Tap di peta untuk pindahkan pin, atau seret pin ke lokasi tepat
       lembaga Anda. Data peta dari OpenStreetMap.
     </p>

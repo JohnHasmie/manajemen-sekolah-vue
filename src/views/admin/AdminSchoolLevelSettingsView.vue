@@ -190,7 +190,7 @@ function goBack() {
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-[13px] font-black text-slate-900">{{ t('admin.sekolah.school_level_settings.section_info_title') }}</p>
-          <p class="text-[11px] text-slate-500">{{ t('admin.sekolah.school_level_settings.section_info_desc') }}</p>
+          <p class="text-2xs text-slate-500">{{ t('admin.sekolah.school_level_settings.section_info_desc') }}</p>
         </div>
         <button
           type="button"
@@ -212,7 +212,7 @@ function goBack() {
             <NavIcon name="home" :size="16" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_name') }}</p>
+            <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_name') }}</p>
             <p class="text-[13.5px] font-bold text-slate-900 truncate">
               {{ settings.name || '—' }}
             </p>
@@ -229,7 +229,7 @@ function goBack() {
             <NavIcon name="flag" :size="16" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_address') }}</p>
+            <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_address') }}</p>
             <p class="text-[13.5px] font-bold text-slate-900 leading-snug">
               {{ settings.address || '—' }}
             </p>
@@ -246,7 +246,7 @@ function goBack() {
             <NavIcon name="layers" :size="16" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_jenjang') }}</p>
+            <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_jenjang') }}</p>
             <p class="text-[13.5px] font-bold text-slate-900 truncate">
               {{ jenjangFullLabel(settings.education_level) }}
             </p>
@@ -262,7 +262,7 @@ function goBack() {
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-[13px] font-black text-slate-900">{{ t('admin.sekolah.school_level_settings.section_ay_title') }}</p>
-          <p class="text-[11px] text-slate-500">{{ t('admin.sekolah.school_level_settings.section_ay_desc') }}</p>
+          <p class="text-2xs text-slate-500">{{ t('admin.sekolah.school_level_settings.section_ay_desc') }}</p>
         </div>
         <button
           type="button"
@@ -281,14 +281,14 @@ function goBack() {
         class="w-full text-left rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-700 text-white p-4 shadow-lg hover:shadow-xl transition-shadow"
         @click="openKelolaTahunAjaran"
       >
-        <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-100">
+        <p class="text-3xs font-bold uppercase tracking-widest text-emerald-100">
           {{ t('admin.sekolah.school_level_settings.active_ay_label') }}
         </p>
         <p class="text-2xl font-black mt-1 tracking-tight">
           {{ activeYear.year }}
         </p>
         <div class="mt-3 flex items-center gap-2">
-          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/20 text-[11px] font-bold">
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/20 text-2xs font-bold">
             <NavIcon name="check-circle" :size="11" />
             {{ semesterLabel }}
           </span>
@@ -301,7 +301,7 @@ function goBack() {
         class="w-full text-left rounded-2xl border border-dashed border-amber-300 bg-amber-50 p-4 hover:bg-amber-100 transition-colors"
         @click="openKelolaTahunAjaran"
       >
-        <p class="text-[10px] font-bold uppercase tracking-widest text-amber-700">
+        <p class="text-3xs font-bold uppercase tracking-widest text-amber-700">
           {{ t('admin.sekolah.school_level_settings.no_active_ay') }}
         </p>
         <p class="text-[13px] font-bold text-amber-900 mt-1">
@@ -319,7 +319,7 @@ function goBack() {
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-[13.5px] font-bold text-slate-900">{{ t('admin.sekolah.school_level_settings.archive_title') }}</p>
-          <p class="text-[11px] text-slate-500">{{ t('admin.sekolah.school_level_settings.archive_desc') }}</p>
+          <p class="text-2xs text-slate-500">{{ t('admin.sekolah.school_level_settings.archive_desc') }}</p>
         </div>
         <NavIcon name="chevron-right" :size="14" class="text-slate-300" />
       </button>
@@ -335,7 +335,7 @@ function goBack() {
     >
       <div class="space-y-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_name') }}</label>
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_name') }}</label>
           <input
             v-model="formName"
             type="text"
@@ -344,7 +344,7 @@ function goBack() {
           />
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_address_label') }}</label>
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_address_label') }}</label>
           <textarea
             v-model="formAddress"
             rows="2"
@@ -353,7 +353,7 @@ function goBack() {
           />
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_jenjang_short') }}</label>
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_jenjang_short') }}</label>
           <div class="mt-1 grid grid-cols-4 gap-2">
             <button
               v-for="opt in JENJANG_OPTIONS"

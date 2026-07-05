@@ -14,7 +14,7 @@ defineProps<{
 <template>
   <div class="bg-tutoring-panel border border-tutoring-border rounded-2xl p-5 flex flex-col justify-between">
     <div class="flex justify-between items-start">
-      <div class="text-[11px] font-bold text-tutoring-text-mid uppercase tracking-widest">{{ title }}</div>
+      <div class="text-2xs font-bold text-tutoring-text-mid uppercase tracking-widest">{{ title }}</div>
       <div class="p-2 rounded-lg bg-white/5">
         <NavIcon :name="icon" :size="18" :class="iconColorClass || 'text-tutoring-text-mid'" />
       </div>

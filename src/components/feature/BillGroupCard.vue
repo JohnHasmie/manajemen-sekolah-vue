@@ -45,7 +45,7 @@ const barColor = computed(() => {
       </div>
       <div class="flex-1 min-w-0">
         <p class="text-[13px] font-bold text-slate-900 truncate">{{ title }}</p>
-        <p class="text-[11px] text-slate-500 mt-0.5">
+        <p class="text-2xs text-slate-500 mt-0.5">
           {{ group.total_count }} tagihan ·
           <span class="font-bold text-slate-700">{{ formatRupiah(group.total_amount) }}</span>
         </p>
@@ -53,23 +53,23 @@ const barColor = computed(() => {
       <NavIcon name="chevron-right" :size="14" class="text-slate-300 mt-2" />
     </header>
 
-    <div class="grid grid-cols-3 gap-2 text-center text-[11px]">
+    <div class="grid grid-cols-3 gap-2 text-center text-2xs">
       <div class="bg-emerald-50 rounded-lg py-1.5">
         <p class="text-emerald-700 font-bold">{{ group.paid_count }}</p>
-        <p class="text-emerald-700/80 text-[9px] uppercase tracking-widest">Lunas</p>
+        <p class="text-emerald-700/80 text-4xs uppercase tracking-widest">Lunas</p>
       </div>
       <div class="bg-amber-50 rounded-lg py-1.5">
         <p class="text-amber-700 font-bold">{{ group.unpaid_count }}</p>
-        <p class="text-amber-700/80 text-[9px] uppercase tracking-widest">Berjalan</p>
+        <p class="text-amber-700/80 text-4xs uppercase tracking-widest">Berjalan</p>
       </div>
       <div class="bg-red-50 rounded-lg py-1.5">
         <p class="text-red-700 font-bold">{{ group.overdue_count }}</p>
-        <p class="text-red-700/80 text-[9px] uppercase tracking-widest">Telat</p>
+        <p class="text-red-700/80 text-4xs uppercase tracking-widest">Telat</p>
       </div>
     </div>
 
     <div>
-      <div class="flex items-center justify-between text-[10px] mb-1">
+      <div class="flex items-center justify-between text-3xs mb-1">
         <span class="font-bold text-slate-500 uppercase tracking-widest">
           {{ pct.toFixed(1) }}% terbayar
         </span>

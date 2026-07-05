@@ -149,7 +149,7 @@ void gridClass; // placeholder if we want it later
         {{ c.value }}
         <span
           v-if="c.suffix"
-          class="text-[11px] font-normal text-slate-500"
+          class="text-2xs font-normal text-slate-500"
         >{{ c.suffix }}</span>
       </p>
     </div>

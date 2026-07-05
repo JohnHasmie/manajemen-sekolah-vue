@@ -119,7 +119,7 @@ const secondary = computed(() => {
     >
       <div>
         <p class="text-[15px] font-black leading-none">{{ dayOfMonth }}</p>
-        <p class="text-[9px] font-bold uppercase tracking-widest mt-0.5 opacity-80">
+        <p class="text-4xs font-bold uppercase tracking-widest mt-0.5 opacity-80">
           {{ shortDay }}
         </p>
       </div>
@@ -128,10 +128,10 @@ const secondary = computed(() => {
     <!-- Headline + secondary -->
     <div class="flex-1 min-w-0">
       <p class="text-[13px] font-bold text-slate-900 truncate">{{ headline }}</p>
-      <p class="text-[11px] text-slate-500 truncate mt-0.5">{{ secondary }}</p>
+      <p class="text-2xs text-slate-500 truncate mt-0.5">{{ secondary }}</p>
       <p
         v-if="entry.notes"
-        class="text-[10px] text-slate-500 italic mt-0.5 truncate"
+        class="text-3xs text-slate-500 italic mt-0.5 truncate"
       >
         "{{ entry.notes }}"
       </p>
@@ -139,7 +139,7 @@ const secondary = computed(() => {
 
     <!-- Status pill -->
     <span
-      class="text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full flex-shrink-0"
+      class="text-4xs font-bold uppercase tracking-widest px-2 py-1 rounded-full flex-shrink-0"
       :class="`${tone.bg} ${tone.text}`"
     >
       {{ statusLabel }}

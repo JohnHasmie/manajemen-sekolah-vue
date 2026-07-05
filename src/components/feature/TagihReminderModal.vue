@@ -66,14 +66,14 @@ const totalOutstanding = props.bills.reduce((s, b) => s + b.amount, 0);
         </div>
         <div class="flex-1">
           <p class="text-[12px] font-bold text-slate-900">{{ bills.length }} tagihan</p>
-          <p class="text-[11px] text-slate-500">
+          <p class="text-2xs text-slate-500">
             Total: {{ formatRupiah(totalOutstanding) }}
           </p>
         </div>
       </div>
 
       <div>
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+        <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-2">
           Kanal pengingat
         </p>
         <div class="grid grid-cols-2 gap-2">
@@ -91,7 +91,7 @@ const totalOutstanding = props.bills.reduce((s, b) => s + b.amount, 0);
               <NavIcon name="message-circle" :size="16" class="text-emerald-700" />
               <span class="text-[13px] font-bold text-slate-900">WhatsApp</span>
             </div>
-            <p class="text-[11px] text-slate-500 mt-1">Kirim via WA Business</p>
+            <p class="text-2xs text-slate-500 mt-1">Kirim via WA Business</p>
           </button>
           <button
             type="button"
@@ -107,12 +107,12 @@ const totalOutstanding = props.bills.reduce((s, b) => s + b.amount, 0);
               <NavIcon name="mail" :size="16" class="text-brand-cobalt" />
               <span class="text-[13px] font-bold text-slate-900">Email</span>
             </div>
-            <p class="text-[11px] text-slate-500 mt-1">Kirim via email wali</p>
+            <p class="text-2xs text-slate-500 mt-1">Kirim via email wali</p>
           </button>
         </div>
       </div>
 
-      <p v-if="error" class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+      <p v-if="error" class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
         {{ error }}
       </p>
 

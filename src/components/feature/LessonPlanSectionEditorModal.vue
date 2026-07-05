@@ -81,7 +81,7 @@ function regen() {
     <div class="space-y-3">
       <!-- Editor — Quill rich text (parity with Flutter flutter_quill). -->
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+        <label class="block text-3xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
           Isi {{ fieldLabel }}
         </label>
         <AppRichTextEditor
@@ -90,7 +90,7 @@ function regen() {
           :readonly="isSaving"
           :min-height="440"
         />
-        <p class="text-[10px] text-slate-400 mt-1.5">
+        <p class="text-3xs text-slate-400 mt-1.5">
           Gunakan toolbar di atas untuk heading, list, dan penekanan. Format tersimpan persis seperti di mobile.
         </p>
       </div>
@@ -108,7 +108,7 @@ function regen() {
         <button
           v-if="canRegenerate"
           type="button"
-          class="inline-flex items-center gap-1.5 text-[11px] font-bold text-violet-700 hover:text-violet-900"
+          class="inline-flex items-center gap-1.5 text-2xs font-bold text-violet-700 hover:text-violet-900"
           :disabled="isSaving"
           @click="regen"
         >

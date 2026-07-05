@@ -356,7 +356,7 @@ function progressBarTone(pct: number) {
             </div>
             <div class="flex-1 min-w-0">
               <p
-                class="text-[10px] font-bold uppercase tracking-widest text-brand-cobalt/80"
+                class="text-3xs font-bold uppercase tracking-widest text-brand-cobalt/80"
               >
                 {{ t('tutor.sekolah.gradeRecap.classLabel', { name: row.class_name }) }}
               </p>
@@ -365,7 +365,7 @@ function progressBarTone(pct: number) {
               </h3>
               <p
                 v-if="row.subject.code || row.subject.teacher_name"
-                class="text-[11px] text-slate-500 mt-0.5 truncate"
+                class="text-2xs text-slate-500 mt-0.5 truncate"
               >
                 <template v-if="row.subject.code">{{ row.subject.code }}</template>
                 <template v-if="row.subject.code && row.subject.teacher_name"> · </template>
@@ -384,7 +384,7 @@ function progressBarTone(pct: number) {
           <div class="grid grid-cols-3 gap-2 mt-3">
             <div class="bg-slate-50 rounded-lg px-2 py-1.5 text-center">
               <p
-                class="text-[9px] font-bold uppercase tracking-widest text-slate-500"
+                class="text-4xs font-bold uppercase tracking-widest text-slate-500"
               >
                 {{ t('tutor.sekolah.gradeRecap.cellStudents') }}
               </p>
@@ -394,7 +394,7 @@ function progressBarTone(pct: number) {
             </div>
             <div class="bg-slate-50 rounded-lg px-2 py-1.5 text-center">
               <p
-                class="text-[9px] font-bold uppercase tracking-widest text-slate-500"
+                class="text-4xs font-bold uppercase tracking-widest text-slate-500"
               >
                 {{ t('tutor.sekolah.gradeRecap.cellChapters') }}
               </p>
@@ -404,7 +404,7 @@ function progressBarTone(pct: number) {
             </div>
             <div class="bg-slate-50 rounded-lg px-2 py-1.5 text-center">
               <p
-                class="text-[9px] font-bold uppercase tracking-widest text-slate-500"
+                class="text-4xs font-bold uppercase tracking-widest text-slate-500"
               >
                 {{ t('tutor.sekolah.gradeRecap.cellAverage') }}
               </p>
@@ -420,11 +420,11 @@ function progressBarTone(pct: number) {
           <div class="mt-3">
             <div class="flex items-center justify-between mb-1">
               <span
-                class="text-[10px] font-bold uppercase tracking-widest text-slate-500"
+                class="text-3xs font-bold uppercase tracking-widest text-slate-500"
               >
                 {{ t('tutor.sekolah.gradeRecap.completeness') }}
               </span>
-              <span class="text-[11px] font-extrabold text-slate-700">
+              <span class="text-2xs font-extrabold text-slate-700">
                 {{ row.subject.completion_pct }}%
               </span>
             </div>

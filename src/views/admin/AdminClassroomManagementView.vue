@@ -505,7 +505,7 @@ function statusFor(c: Classroom) {
       <div v-if="showFab" class="flex flex-col gap-2 mb-1">
         <button
           type="button"
-          class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white border border-slate-200 shadow-md text-[11px] font-bold text-slate-700 hover:border-role-admin/40"
+          class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white border border-slate-200 shadow-md text-2xs font-bold text-slate-700 hover:border-role-admin/40"
           @click="showWizard = true; showFab = false"
         >
           <NavIcon name="users" :size="12" class="text-role-admin" />
@@ -513,7 +513,7 @@ function statusFor(c: Classroom) {
         </button>
         <button
           type="button"
-          class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white border border-slate-200 shadow-md text-[11px] font-bold text-slate-700 hover:border-role-admin/40"
+          class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white border border-slate-200 shadow-md text-2xs font-bold text-slate-700 hover:border-role-admin/40"
           @click="editTarget = null; showFab = false"
         >
           <NavIcon name="plus" :size="12" class="text-role-admin" />

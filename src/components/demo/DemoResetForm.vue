@@ -348,7 +348,7 @@ const hasBase = computed(() => baseWizard.value != null);
     <div v-else class="space-y-3 max-h-[60vh] overflow-y-auto pr-1 -mr-1">
       <!-- School name -->
       <div>
-        <label class="block text-[11px] font-bold text-slate-500 mb-1">
+        <label class="block text-2xs font-bold text-slate-500 mb-1">
           Nama sekolah
         </label>
         <input
@@ -362,7 +362,7 @@ const hasBase = computed(() => baseWizard.value != null);
 
       <!-- Jenjang -->
       <div>
-        <label class="block text-[11px] font-bold text-slate-500 mb-1">
+        <label class="block text-2xs font-bold text-slate-500 mb-1">
           Jenjang
         </label>
         <div class="grid grid-cols-4 gap-1.5">
@@ -385,7 +385,7 @@ const hasBase = computed(() => baseWizard.value != null);
 
       <!-- Classes pattern -->
       <div>
-        <label class="block text-[11px] font-bold text-slate-500 mb-1">
+        <label class="block text-2xs font-bold text-slate-500 mb-1">
           Jumlah kelas
         </label>
         <div class="grid grid-cols-3 gap-1.5">
@@ -402,7 +402,7 @@ const hasBase = computed(() => baseWizard.value != null);
             @click="classesPattern = c.value"
           >
             <span class="block text-[12px] font-bold">{{ c.label }}</span>
-            <span class="block text-[10px] text-slate-400">{{ c.hint }}</span>
+            <span class="block text-3xs text-slate-400">{{ c.hint }}</span>
           </button>
         </div>
       </div>
@@ -410,7 +410,7 @@ const hasBase = computed(() => baseWizard.value != null);
       <!-- Teachers -->
       <div class="rounded-xl border border-slate-100 p-3 space-y-2">
         <div class="flex items-center justify-between">
-          <label class="text-[11px] font-bold text-slate-500">Guru</label>
+          <label class="text-2xs font-bold text-slate-500">Guru</label>
           <div class="inline-flex rounded-lg bg-slate-100 p-0.5">
             <button
               type="button"
@@ -473,7 +473,7 @@ const hasBase = computed(() => baseWizard.value != null);
       <!-- Students -->
       <div class="rounded-xl border border-slate-100 p-3 space-y-2">
         <div class="flex items-center justify-between">
-          <label class="text-[11px] font-bold text-slate-500">Siswa per kelas</label>
+          <label class="text-2xs font-bold text-slate-500">Siswa per kelas</label>
           <div class="inline-flex rounded-lg bg-slate-100 p-0.5">
             <button
               type="button"
@@ -528,13 +528,13 @@ const hasBase = computed(() => baseWizard.value != null);
 
       <!-- Subjects -->
       <div class="rounded-xl border border-slate-100 p-3 space-y-2">
-        <label class="block text-[11px] font-bold text-slate-500">Mata pelajaran</label>
+        <label class="block text-2xs font-bold text-slate-500">Mata pelajaran</label>
         <div class="flex flex-wrap gap-1.5">
           <button
             v-for="s in SUBJECT_PRESETS"
             :key="s"
             type="button"
-            class="rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition"
+            class="rounded-full border px-2.5 py-0.5 text-2xs font-semibold transition"
             :class="
               subjectsSelected.includes(s)
                 ? 'bg-role-admin/10 border-role-admin text-role-admin'
@@ -549,7 +549,7 @@ const hasBase = computed(() => baseWizard.value != null);
               (x) => !(SUBJECT_PRESETS as readonly string[]).includes(x),
             )"
             :key="`custom-${s}`"
-            class="inline-flex items-center gap-1 rounded-full border border-role-admin bg-role-admin/10 text-role-admin px-2.5 py-0.5 text-[11px] font-semibold"
+            class="inline-flex items-center gap-1 rounded-full border border-role-admin bg-role-admin/10 text-role-admin px-2.5 py-0.5 text-2xs font-semibold"
           >
             {{ s }}
             <button
@@ -581,7 +581,7 @@ const hasBase = computed(() => baseWizard.value != null);
 
       <!-- Scenarios -->
       <div class="rounded-xl border border-slate-100 p-3 space-y-1.5">
-        <label class="block text-[11px] font-bold text-slate-500">
+        <label class="block text-2xs font-bold text-slate-500">
           Skenario yang diisi ulang
         </label>
         <div class="max-h-56 overflow-y-auto pr-1 space-y-1.5">

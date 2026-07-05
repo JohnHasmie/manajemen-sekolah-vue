@@ -250,7 +250,7 @@ function typeLabel(t: AssessmentType): string {
             >
               Input Manual
             </span>
-            <span class="block text-[11px] text-slate-600 leading-tight">
+            <span class="block text-2xs text-slate-600 leading-tight">
               Kosongkan kolom; isi nilai per siswa di tabel.
             </span>
           </span>
@@ -275,7 +275,7 @@ function typeLabel(t: AssessmentType): string {
         <!-- ASSESSMENT GROUPS -->
         <div v-else class="space-y-3">
           <p
-            class="text-[10px] font-bold uppercase tracking-wide text-slate-500"
+            class="text-3xs font-bold uppercase tracking-wide text-slate-500"
           >
             Ambil dari nilai yang sudah ada
           </p>
@@ -284,7 +284,7 @@ function typeLabel(t: AssessmentType): string {
             :key="group.type"
             class="space-y-1.5"
           >
-            <p class="text-[11px] font-bold text-slate-600">
+            <p class="text-2xs font-bold text-slate-600">
               {{ typeLabel(group.type) }}
             </p>
             <button
@@ -312,7 +312,7 @@ function typeLabel(t: AssessmentType): string {
                 </span>
                 <span
                   v-if="a.date"
-                  class="block text-[11px] text-slate-500 leading-tight"
+                  class="block text-2xs text-slate-500 leading-tight"
                 >
                   {{ a.date }}
                 </span>

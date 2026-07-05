@@ -90,7 +90,7 @@ function select(id: string) {
       @click="select(role.id)"
     >
       <span
-        class="w-6 h-6 rounded-full grid place-items-center text-[10px] font-bold leading-none flex-shrink-0"
+        class="w-6 h-6 rounded-full grid place-items-center text-3xs font-bold leading-none flex-shrink-0"
         :style="
           role.id === selectedRoleId
             ? { background: accentColor, color: '#fff' }
@@ -101,7 +101,7 @@ function select(id: string) {
       </span>
       <span class="flex flex-col items-start leading-none flex-1 min-w-0 text-left">
         <span
-          class="text-[11px] font-bold truncate w-full"
+          class="text-2xs font-bold truncate w-full"
           :class="role.id === selectedRoleId ? 'text-slate-900' : 'text-white'"
         >
           {{ role.shortName }}

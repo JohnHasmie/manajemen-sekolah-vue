@@ -167,10 +167,10 @@ function submit() {
           </div>
           <div
             v-if="isLoadingMasters && showMasterDropdown"
-            class="absolute left-0 right-0 top-full mt-1 z-10 bg-white border border-slate-200 rounded-xl shadow-lg p-2 text-[11px] text-slate-500 text-center"
+            class="absolute left-0 right-0 top-full mt-1 z-10 bg-white border border-slate-200 rounded-xl shadow-lg p-2 text-2xs text-slate-500 text-center"
           >Memuat...</div>
         </div>
-        <p class="text-[10px] text-slate-500 mt-1">
+        <p class="text-3xs text-slate-500 mt-1">
           Menautkan ke mapel master memudahkan agregasi nilai antar kelas.
         </p>
       </div>
@@ -219,7 +219,7 @@ function submit() {
       <label class="flex items-center justify-between gap-3 bg-slate-50 rounded-xl px-3 py-2.5 cursor-pointer">
         <div>
           <p class="text-[12px] font-bold text-slate-900">Status aktif</p>
-          <p class="text-[10px] text-slate-500">
+          <p class="text-3xs text-slate-500">
             Mata pelajaran nonaktif tidak muncul di form jadwal & nilai
           </p>
         </div>

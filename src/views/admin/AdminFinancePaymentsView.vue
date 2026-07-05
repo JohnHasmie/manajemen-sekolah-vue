@@ -159,7 +159,7 @@ function onVerified(updated: Payment) {
               <p class="text-[13px] font-bold text-slate-900 truncate">
                 {{ p.bill?.student?.name ?? t('admin.sekolah.payments.fallback_student') }}
               </p>
-              <p class="text-[11px] text-slate-500 truncate">
+              <p class="text-2xs text-slate-500 truncate">
                 {{ p.bill?.title ?? t('admin.sekolah.payments.fallback_bill') }}
                 <span v-if="p.payment_method"> · {{ p.payment_method }}</span>
                 <span v-if="p.payment_date"> · {{ formatDateLong(p.payment_date) }}</span>
@@ -168,7 +168,7 @@ function onVerified(updated: Payment) {
             <div class="text-right flex-shrink-0">
               <p class="text-[13px] font-bold text-slate-900">{{ formatRupiah(p.amount) }}</p>
               <span
-                class="inline-block text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-1"
+                class="inline-block text-4xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-1"
                 :class="statusPill(p).cls"
               >{{ statusPill(p).label }}</span>
             </div>

@@ -132,7 +132,7 @@ function formatDateShort(iso: string): string {
         </p>
         <div
           v-if="showOpenCta && !isUnread"
-          class="text-brand-cobalt/70 font-bold text-[11px] flex-shrink-0 inline-flex items-center gap-0.5"
+          class="text-brand-cobalt/70 font-bold text-2xs flex-shrink-0 inline-flex items-center gap-0.5"
         >
           Buka
           <NavIcon name="chevron-right" :size="12" />
@@ -140,7 +140,7 @@ function formatDateShort(iso: string): string {
       </div>
 
       <!-- Meta row -->
-      <div class="flex items-center gap-2 mt-1.5 flex-wrap text-[11px] text-slate-500">
+      <div class="flex items-center gap-2 mt-1.5 flex-wrap text-2xs text-slate-500">
         <span class="inline-flex items-center gap-1">
           <NavIcon name="calendar" :size="11" />
           <span class="tabular-nums">{{ formatDateShort(activity.date) }}</span>
@@ -151,7 +151,7 @@ function formatDateShort(iso: string): string {
 
         <!-- Type pill -->
         <span
-          class="text-[10px] font-bold px-1.5 py-0.5 rounded ml-1"
+          class="text-3xs font-bold px-1.5 py-0.5 rounded ml-1"
           :style="{
             backgroundColor: accent + '1a',
             color: accent,
@@ -163,12 +163,12 @@ function formatDateShort(iso: string): string {
         <!-- "Khusus" pill -->
         <span
           v-if="activity.is_specific_target"
-          class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-violet-100 text-violet-700"
+          class="text-3xs font-bold px-1.5 py-0.5 rounded bg-violet-100 text-violet-700"
         >
           Khusus
         </span>
 
-        <span class="ml-auto text-[10px] text-slate-400 truncate max-w-[180px]">
+        <span class="ml-auto text-3xs text-slate-400 truncate max-w-[180px]">
           {{ activity.class_name }}
           <template v-if="activity.subject_name"> · {{ activity.subject_name }}</template>
         </span>
@@ -177,7 +177,7 @@ function formatDateShort(iso: string): string {
       <!-- Description preview (admin/optional) -->
       <p
         v-if="showDescription && activity.description"
-        class="text-[11px] text-slate-600 leading-relaxed mt-1.5 line-clamp-2"
+        class="text-2xs text-slate-600 leading-relaxed mt-1.5 line-clamp-2"
       >
         {{ activity.description }}
       </p>
@@ -185,14 +185,14 @@ function formatDateShort(iso: string): string {
       <!-- Teacher chip (admin + parent — teacher name yang punya activity) -->
       <p
         v-if="role !== 'teacher' && activity.teacher_name"
-        class="text-[10px] text-slate-500 mt-1 truncate"
+        class="text-3xs text-slate-500 mt-1 truncate"
       >
         Oleh <span class="font-semibold">{{ activity.teacher_name }}</span>
       </p>
 
       <!-- Submission progress (teacher + admin only — parent doesn't track) -->
       <div v-if="role !== 'parent' && hasTracking" class="mt-2.5">
-        <div class="flex items-center justify-between mb-1 text-[10px] font-bold text-slate-500">
+        <div class="flex items-center justify-between mb-1 text-3xs font-bold text-slate-500">
           <span>
             <span class="text-slate-900 font-extrabold tabular-nums">{{ activity.submissions.submitted + activity.submissions.late }}</span>
             <span class="text-slate-400 tabular-nums"> / {{ activity.submissions.total_students }}</span>
@@ -225,13 +225,13 @@ function formatDateShort(iso: string): string {
       >
         <span
           v-if="activity.has_reflection"
-          class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase tracking-wider"
+          class="text-4xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase tracking-wider"
         >
           Refleksi
         </span>
         <span
           v-if="activity.attachment_count > 0"
-          class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 uppercase tracking-wider"
+          class="text-4xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 uppercase tracking-wider"
         >
           {{ activity.attachment_count }} lampiran
         </span>

@@ -116,10 +116,10 @@ const canSubmit = computed(
 
       <!-- Selection toolbar -->
       <div v-if="sectionKeys.length > 0" class="flex items-center gap-2">
-        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+        <span class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
           Pilih bagian
         </span>
-        <span class="text-[10px] text-slate-400 tabular-nums">
+        <span class="text-3xs text-slate-400 tabular-nums">
           · {{ selectedKeys.size }}/{{ sectionKeys.length }} dipilih
         </span>
         <span class="flex-1"></span>
@@ -148,7 +148,7 @@ const canSubmit = computed(
           v-for="key in sectionKeys"
           :key="key"
           type="button"
-          class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border inline-flex items-center gap-1.5"
+          class="px-3 py-1.5 rounded-full text-2xs font-bold transition border inline-flex items-center gap-1.5"
           :class="
             selectedKeys.has(key)
               ? 'bg-violet-600 text-white border-violet-600'

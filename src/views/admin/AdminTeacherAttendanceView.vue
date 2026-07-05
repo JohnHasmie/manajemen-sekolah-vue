@@ -465,7 +465,7 @@ function fmtTime(iso?: string | null): string {
       >
         <div>
           <label
-            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+            class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
           >
             Dari (periode)
           </label>
@@ -477,7 +477,7 @@ function fmtTime(iso?: string | null): string {
         </div>
         <div>
           <label
-            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+            class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
           >
             Sampai (periode)
           </label>
@@ -489,7 +489,7 @@ function fmtTime(iso?: string | null): string {
         </div>
         <div>
           <label
-            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+            class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
           >
             ID Guru
           </label>
@@ -528,7 +528,7 @@ function fmtTime(iso?: string | null): string {
             <h3 class="text-[13px] font-black text-slate-900">
               Rekap Kehadiran per Guru
             </h3>
-            <p class="text-[11px] text-slate-500 mt-0.5">
+            <p class="text-2xs text-slate-500 mt-0.5">
               <template v-if="summaryRangeLabel"
                 >Periode {{ summaryRangeLabel }} ·
               </template>
@@ -571,7 +571,7 @@ function fmtTime(iso?: string | null): string {
               <table class="w-full min-w-[640px] text-left">
                 <thead>
                   <tr
-                    class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                    class="bg-slate-50 text-3xs font-bold text-slate-400 uppercase tracking-widest"
                   >
                     <th class="px-4 py-2.5">Nama</th>
                     <th
@@ -618,7 +618,7 @@ function fmtTime(iso?: string | null): string {
                     </td>
                     <td class="px-4 py-2.5 text-right">
                       <span
-                        class="text-[11px] font-bold px-1.5 py-0.5 rounded-full tabular-nums"
+                        class="text-2xs font-bold px-1.5 py-0.5 rounded-full tabular-nums"
                         :class="
                           row.present_pct >= 90
                             ? 'bg-emerald-100 text-emerald-700'
@@ -671,7 +671,7 @@ function fmtTime(iso?: string | null): string {
             <h3 class="text-[13px] font-black text-slate-900">
               Detail per Baris
             </h3>
-            <p class="text-[11px] text-slate-500 mt-0.5">
+            <p class="text-2xs text-slate-500 mt-0.5">
               Catatan presensi harian guru (masuk/pulang, lokasi, foto).
             </p>
           </div>
@@ -690,7 +690,7 @@ function fmtTime(iso?: string | null): string {
         >
           <div>
             <label
-              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+              class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
             >
               Tanggal (1 hari)
             </label>
@@ -702,7 +702,7 @@ function fmtTime(iso?: string | null): string {
           </div>
           <div>
             <label
-              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+              class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
             >
               Status
             </label>
@@ -726,17 +726,17 @@ function fmtTime(iso?: string | null): string {
         class="flex items-center gap-2 flex-wrap"
       >
         <span
-          class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600"
+          class="text-2xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600"
         >
           {{ reportMeta?.total ?? reportRows.length }} catatan
         </span>
         <span
-          class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700"
+          class="text-2xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700"
         >
           {{ presentCount }} tepat waktu (hal. ini)
         </span>
         <span
-          class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700"
+          class="text-2xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700"
         >
           {{ lateCount }} terlambat (hal. ini)
         </span>
@@ -757,7 +757,7 @@ function fmtTime(iso?: string | null): string {
               <table class="w-full min-w-[720px] text-left">
                 <thead>
                   <tr
-                    class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                    class="bg-slate-50 text-3xs font-bold text-slate-400 uppercase tracking-widest"
                   >
                     <th class="px-4 py-2.5">Guru</th>
                     <th class="px-4 py-2.5">Tanggal</th>
@@ -790,7 +790,7 @@ function fmtTime(iso?: string | null): string {
                     </td>
                     <td class="px-4 py-2.5">
                       <span
-                        class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                        class="text-3xs font-bold px-1.5 py-0.5 rounded-full"
                         :class="
                           r.status === 'late'
                             ? 'bg-amber-100 text-amber-700'
@@ -813,17 +813,17 @@ function fmtTime(iso?: string | null): string {
                     <td class="px-4 py-2.5">
                       <span
                         v-if="r.check_in_outside_geofence"
-                        class="text-[11px] font-bold text-red-600"
+                        class="text-2xs font-bold text-red-600"
                       >
                         Luar area
                       </span>
                       <span
                         v-else-if="r.check_in_distance_m != null"
-                        class="text-[11px] text-slate-500"
+                        class="text-2xs text-slate-500"
                       >
                         {{ r.check_in_distance_m }} m
                       </span>
-                      <span v-else class="text-[11px] text-slate-300">-</span>
+                      <span v-else class="text-2xs text-slate-300">-</span>
                     </td>
                     <td class="px-4 py-2.5">
                       <div class="flex flex-col gap-1">
@@ -833,11 +833,11 @@ function fmtTime(iso?: string | null): string {
                           :href="r.check_in_photo_url"
                           target="_blank"
                           rel="noopener"
-                          class="inline-flex items-center gap-1 text-role-admin text-[11px] font-bold hover:underline"
+                          class="inline-flex items-center gap-1 text-role-admin text-2xs font-bold hover:underline"
                         >
                           <NavIcon name="camera" :size="12" />Masuk
                         </a>
-                        <span v-else class="text-[11px] text-slate-300">
+                        <span v-else class="text-2xs text-slate-300">
                           Masuk -
                         </span>
                         <!-- Foto Pulang (check-out selfie) -->
@@ -846,13 +846,13 @@ function fmtTime(iso?: string | null): string {
                           :href="r.check_out_photo_url"
                           target="_blank"
                           rel="noopener"
-                          class="inline-flex items-center gap-1 text-role-admin text-[11px] font-bold hover:underline"
+                          class="inline-flex items-center gap-1 text-role-admin text-2xs font-bold hover:underline"
                         >
                           <NavIcon name="camera" :size="12" />Pulang
                         </a>
                         <span
                           v-else
-                          class="inline-flex items-center text-[11px] text-slate-300"
+                          class="inline-flex items-center text-2xs text-slate-300"
                         >
                           Pulang -
                         </span>

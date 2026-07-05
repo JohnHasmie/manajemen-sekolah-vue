@@ -336,7 +336,7 @@ function dotCls(s: ParentAttendanceStatus): string {
       class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-md"
     >
       <header class="border-b border-slate-100 pb-2">
-        <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+        <p class="text-3xs font-black text-slate-400 uppercase tracking-wider">
           {{ t('wali.sekolah.attendanceCalendar.detail') }}
         </p>
         <p class="text-sm font-extrabold text-slate-900 mt-0.5">
@@ -360,7 +360,7 @@ function dotCls(s: ParentAttendanceStatus): string {
           :class="{ 'pt-4 border-t border-slate-100': rIdx > 0 }"
         >
           <div
-            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-3xs font-bold uppercase tracking-wider"
             :class="pillCls(record.status)"
           >
             <span class="w-1.5 h-1.5 rounded-full" :class="dotCls(record.status)"></span>

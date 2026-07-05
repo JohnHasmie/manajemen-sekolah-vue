@@ -167,7 +167,7 @@ const progressPct = computed(() => {
             />
             <NavIcon name="sparkles" :size="28" class="relative z-10" />
           </div>
-          <p class="text-center text-[10px] uppercase tracking-widest font-bold mt-3 text-white/70">
+          <p class="text-center text-3xs uppercase tracking-widest font-bold mt-3 text-white/70">
             AI Bekerja
           </p>
           <h2 class="text-center text-lg font-black mt-1">
@@ -189,7 +189,7 @@ const progressPct = computed(() => {
               <p class="text-[14px] font-semibold text-slate-900 transition-opacity duration-300">
                 {{ status }}
               </p>
-              <p class="text-[11px] text-slate-400 mt-1 tabular-nums">
+              <p class="text-2xs text-slate-400 mt-1 tabular-nums">
                 {{ elapsedLabel }} dari estimasi {{ etaLabel }}
               </p>
             </div>
@@ -203,7 +203,7 @@ const progressPct = computed(() => {
             </div>
 
             <!-- Reassurance / step list -->
-            <ul class="space-y-1.5 text-[11px] text-slate-600">
+            <ul class="space-y-1.5 text-2xs text-slate-600">
               <li class="flex items-center gap-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
                 Hasil tersimpan otomatis saat selesai
@@ -247,7 +247,7 @@ const progressPct = computed(() => {
                 lagi atau tutup dan periksa hasil di tab materi nanti.
               </p>
             </div>
-            <ul class="space-y-1.5 text-[11px] text-slate-600 mt-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <ul class="space-y-1.5 text-2xs text-slate-600 mt-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
               <li class="flex items-center gap-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
                 Hasil yang sebelumnya tersimpan tidak hilang

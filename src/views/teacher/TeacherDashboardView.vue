@@ -380,7 +380,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
                 <NavIcon name="sparkles" :size="22" />
               </div>
               <div class="min-w-0">
-                <p class="text-[11px] font-bold text-slate-400 tracking-widest uppercase leading-none">
+                <p class="text-2xs font-bold text-slate-400 tracking-widest uppercase leading-none">
                   {{ greeting }}
                 </p>
                 <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight mt-1 truncate">
@@ -390,7 +390,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
             </div>
 
             <div class="flex items-center gap-2 flex-shrink-0">
-              <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest">
+              <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-3xs font-black uppercase tracking-widest">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 Realtime · {{ formatTime(lastSync) }}
               </span>
@@ -440,7 +440,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
                   v-for="(s, idx) in slices"
                   :key="(s.key ?? idx) + ''"
                   type="button"
-                  class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
+                  class="px-3 py-1.5 rounded-lg text-3xs font-black uppercase tracking-widest transition-all"
                   :class="
                     idx === activeSlice
                       ? 'bg-brand-cobalt text-white shadow-sm'
@@ -457,7 +457,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
                 :aria-label="isPaused ? 'Lanjutkan otomatis' : 'Jeda otomatis'"
                 @click="togglePause"
               >
-                <span class="text-[10px]">{{ isPaused ? '▶' : '▮▮' }}</span>
+                <span class="text-3xs">{{ isPaused ? '▶' : '▮▮' }}</span>
               </button>
             </div>
 
@@ -538,14 +538,14 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
                   <h3 class="text-sm font-black text-slate-900 tracking-tight leading-none">
                     {{ t('teacher.dashboard.todaysSchedule') }}
                   </h3>
-                  <p class="text-[11px] text-slate-400 font-bold mt-0.5">
+                  <p class="text-2xs text-slate-400 font-bold mt-0.5">
                     {{ today }} · {{ todaysSchedule.length }} {{ t('common.sessions') }}
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                class="text-[11px] font-black text-brand-cobalt hover:text-brand-azure uppercase tracking-widest"
+                class="text-2xs font-black text-brand-cobalt hover:text-brand-azure uppercase tracking-widest"
                 @click="router.push('/teacher/schedule')"
               >
                 {{ t('common.viewAll') }} →
@@ -573,7 +573,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
                 @click="router.push('/teacher/schedule')"
               >
                 <p
-                  class="text-[10px] font-black uppercase tracking-widest"
+                  class="text-3xs font-black uppercase tracking-widest"
                   :class="s.is_active ? 'text-brand-cobalt' : 'text-slate-400'"
                 >
                   {{ fmtTime(s.start_time) }} <span v-if="s.end_time">– {{ fmtTime(s.end_time) }}</span>
@@ -581,12 +581,12 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
                 <p class="text-sm font-black text-slate-900 truncate mt-1">
                   {{ s.subject_name ?? t('common.subject') }}
                 </p>
-                <p class="text-[11px] font-bold text-slate-500 truncate mt-0.5">
+                <p class="text-2xs font-bold text-slate-500 truncate mt-0.5">
                   {{ s.class_name ?? '' }}<span v-if="s.room"> · {{ s.room }}</span>
                 </p>
                 <span
                   v-if="s.is_active"
-                  class="mt-2 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md bg-brand-cobalt text-white"
+                  class="mt-2 inline-flex items-center gap-1 text-4xs font-black uppercase tracking-widest px-2 py-0.5 rounded-md bg-brand-cobalt text-white"
                 >
                   <span class="w-1 h-1 rounded-full bg-white animate-pulse"></span>
                   {{ t('teacher.dashboard.inProgress') }}
@@ -612,7 +612,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
                       </h3>
                       <span
                         v-if="priorityItems.length > 0"
-                        class="px-2 py-0.5 rounded-full bg-brand-cobalt text-white text-[10px] font-black"
+                        class="px-2 py-0.5 rounded-full bg-brand-cobalt text-white text-3xs font-black"
                       >
                         {{ priorityHeaderLabel }}
                       </span>
@@ -621,7 +621,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
                   <button
                     v-if="priorityItems.length > 0"
                     type="button"
-                    class="text-[11px] font-black text-brand-cobalt hover:text-brand-azure uppercase tracking-widest"
+                    class="text-2xs font-black text-brand-cobalt hover:text-brand-azure uppercase tracking-widest"
                     @click="router.push({ name: 'teacher.inbox' })"
                   >
                     {{ t('common.viewAll') }} →
@@ -662,7 +662,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
                     <p class="text-sm font-black text-slate-900 tracking-tight leading-none">
                       {{ a.label }}
                     </p>
-                    <p v-if="a.hint" class="text-[10px] font-bold text-slate-400 mt-1.5 truncate">
+                    <p v-if="a.hint" class="text-3xs font-bold text-slate-400 mt-1.5 truncate">
                       {{ a.hint }}
                     </p>
                   </button>
@@ -679,7 +679,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
                     <h3 class="text-sm font-black text-slate-900 tracking-tight leading-none">
                       {{ t('teacher.dashboard.otherModules') }}
                     </h3>
-                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">
+                    <p class="text-3xs text-slate-400 font-bold mt-0.5">
                       {{ t('teacher.dashboard.accessReportsAndTools') }}
                     </p>
                   </div>

@@ -283,7 +283,7 @@ async function onComplete(payload: { note: string; notifyTeacher: boolean }) {
         <h3 class="text-[17px] font-black text-slate-900 leading-snug mt-2.5">
           {{ title }}
         </h3>
-        <p class="text-[11px] font-bold text-slate-500 mt-1">
+        <p class="text-2xs font-bold text-slate-500 mt-1">
           {{ heroMeta }}
         </p>
       </section>
@@ -347,7 +347,7 @@ async function onComplete(payload: { note: string; notifyTeacher: boolean }) {
           <span
             v-for="(chip, idx) in materiChips"
             :key="idx"
-            class="text-[11px] font-bold px-2.5 py-1 rounded-lg"
+            class="text-2xs font-bold px-2.5 py-1 rounded-lg"
             :class="`${chip.tone.bg} ${chip.tone.fg}`"
           >
             {{ chip.label }}

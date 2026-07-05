@@ -682,7 +682,7 @@ onMounted(() => {
         <NavIcon name="calendar" :size="26" />
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-[10px] font-bold tracking-widest text-white/80 uppercase">
+        <p class="text-3xs font-bold tracking-widest text-white/80 uppercase">
           {{ t('common.today') }} · {{ todayLong }}
         </p>
         <p class="text-base sm:text-lg font-black mt-1 leading-tight">
@@ -775,7 +775,7 @@ onMounted(() => {
               </span>
               <span
                 v-if="d === todayDay"
-                class="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                class="text-3xs font-bold px-1.5 py-0.5 rounded"
                 :style="{ background: `${dayColor(d)}22`, color: dayColor(d) }"
               >
                 {{ t('common.today') }}
@@ -785,7 +785,7 @@ onMounted(() => {
                 :style="{ background: `${dayColor(d)}40` }"
               ></div>
               <span
-                class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                class="text-3xs font-bold px-2 py-0.5 rounded-full"
                 :style="{ background: `${dayColor(d)}1a`, color: dayColor(d) }"
               >
                 {{ grouped[d]?.length ?? 0 }} {{ t('common.sessions') }}
@@ -828,11 +828,11 @@ onMounted(() => {
                     >
                       {{ s.subject_name }}
                     </span>
-                    <span class="bg-brand-cobalt/10 text-brand-cobalt px-1.5 py-0.5 rounded-full text-[10px] font-bold">
+                    <span class="bg-brand-cobalt/10 text-brand-cobalt px-1.5 py-0.5 rounded-full text-3xs font-bold">
                       {{ s.class_name }}
                     </span>
                   </div>
-                  <div class="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500">
+                  <div class="flex items-center gap-1.5 mt-1 text-2xs text-slate-500">
                     <NavIcon name="calendar" :size="11" />
                     <span>{{ s.start_time }} – {{ s.end_time }}</span>
                     <template v-if="s.room">
@@ -869,7 +869,7 @@ onMounted(() => {
               >
                 <button
                   type="button"
-                  class="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
+                  class="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-2xs font-bold transition-colors"
                   :class="
                     summaryFor(s)?.attendance?.filled
                       ? 'border border-emerald-500 bg-emerald-50 text-emerald-700'
@@ -881,7 +881,7 @@ onMounted(() => {
                 </button>
                 <button
                   type="button"
-                  class="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
+                  class="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-2xs font-bold transition-colors"
                   :class="
                     (summaryFor(s)?.class_activity?.count ?? 0) > 0
                       ? 'border border-amber-500 bg-amber-50 text-amber-700'
@@ -893,7 +893,7 @@ onMounted(() => {
                 </button>
                 <button
                   type="button"
-                  class="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-bold transition-colors border border-slate-200 bg-white text-slate-600 hover:border-brand-cobalt"
+                  class="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-2xs font-bold transition-colors border border-slate-200 bg-white text-slate-600 hover:border-brand-cobalt"
                   @click.stop="gotoMaterial(s)"
                 >
                   <NavIcon name="book" :size="12" />{{ t('common.materials') }}
@@ -915,7 +915,7 @@ onMounted(() => {
             >
               <!-- Header row -->
               <div class="bg-slate-50 py-3 grid place-items-center">
-                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ t('teacher.schedule.hour') }}</span>
+                <span class="text-4xs font-bold text-slate-400 uppercase tracking-widest">{{ t('teacher.schedule.hour') }}</span>
               </div>
               <div
                 v-for="d in DAY_ORDER"
@@ -930,12 +930,12 @@ onMounted(() => {
                 </p>
                 <p
                   v-if="d === todayDay"
-                  class="text-[10px] font-bold mt-0.5"
+                  class="text-3xs font-bold mt-0.5"
                   :style="{ color: dayColor(d) }"
                 >
                   {{ t('common.today') }}
                 </p>
-                <p v-else class="text-[10px] text-slate-400 mt-0.5">
+                <p v-else class="text-3xs text-slate-400 mt-0.5">
                   {{ grouped[d]?.length ?? 0 }} {{ t('common.sessions') }}
                 </p>
               </div>
@@ -945,7 +945,7 @@ onMounted(() => {
                 <div class="bg-slate-50 py-2.5 grid place-items-center">
                   <div class="text-center leading-tight">
                     <p class="text-[14px] font-black text-slate-900">{{ slot.hour ?? idx + 1 }}</p>
-                    <p class="text-[9px] text-slate-400 mt-0.5">{{ slot.start }}</p>
+                    <p class="text-4xs text-slate-400 mt-0.5">{{ slot.start }}</p>
                   </div>
                 </div>
                 <template v-for="d in DAY_ORDER" :key="`cell-${d}-${idx}`">
@@ -975,7 +975,7 @@ onMounted(() => {
                       v-else-if="nextSession?.id === findCell(d, slot.start)?.id"
                       class="inline-block bg-brand-cobalt text-white px-1.5 py-0.5 rounded text-[8.5px] font-bold tracking-wider mb-1"
                     >{{ t('common.nextBadge') }}</span>
-                    <p class="text-[11px] font-bold text-slate-900 leading-tight truncate">
+                    <p class="text-2xs font-bold text-slate-900 leading-tight truncate">
                       {{ findCell(d, slot.start)!.subject_name }}
                     </p>
                     <div class="flex items-center gap-1.5 mt-1">
@@ -996,7 +996,7 @@ onMounted(() => {
               </template>
             </div>
 
-            <div class="flex items-center gap-4 px-2 pt-3 text-[11px] text-slate-500 flex-wrap">
+            <div class="flex items-center gap-4 px-2 pt-3 text-2xs text-slate-500 flex-wrap">
               <span class="inline-flex items-center gap-1.5">
                 <span class="w-2.5 h-2.5 rounded-sm bg-red-50 border-[1.5px] border-red-500"></span>
                 {{ t('common.inProgress') }}
@@ -1028,7 +1028,7 @@ onMounted(() => {
             @click="pickHari(h.key)"
           >
             <span>{{ h.label }}</span>
-            <span v-if="h.key === dayFilter" class="text-[10px] font-bold uppercase tracking-wider">{{ t('common.active') }}</span>
+            <span v-if="h.key === dayFilter" class="text-3xs font-bold uppercase tracking-wider">{{ t('common.active') }}</span>
           </button>
         </li>
       </ul>
@@ -1055,7 +1055,7 @@ onMounted(() => {
             @click="pickKelas(c.id)"
           >
             <span>{{ c.name }}</span>
-            <span v-if="c.student_count" class="text-[10px] text-slate-400">{{ c.student_count }} {{ t('common.students') }}</span>
+            <span v-if="c.student_count" class="text-3xs text-slate-400">{{ c.student_count }} {{ t('common.students') }}</span>
           </button>
         </li>
       </ul>
@@ -1081,13 +1081,13 @@ onMounted(() => {
               <p class="text-[8px] font-bold tracking-widest mt-0.5 opacity-90">{{ t('teacher.schedule.hour') }}</p>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-[10px] font-bold text-brand-cobalt uppercase tracking-widest mb-0.5">
+              <p class="text-3xs font-bold text-brand-cobalt uppercase tracking-widest mb-0.5">
                 {{ t('teacher.schedule.sessionDetails') }} · {{ formatDay(detail.day_name ?? detail.day) }}
               </p>
               <h2 class="text-base font-black text-slate-900 leading-tight">
                 {{ detail.subject_name }}
               </h2>
-              <p class="text-[11px] text-slate-500 mt-0.5">
+              <p class="text-2xs text-slate-500 mt-0.5">
                 <span class="font-bold text-brand-cobalt">{{ detail.class_name }}</span>
                 <span> · {{ detail.start_time }} – {{ detail.end_time }}</span>
                 <span v-if="detail.room"> · {{ detail.room }}</span>
@@ -1128,7 +1128,7 @@ onMounted(() => {
             </template>
 
             <section>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ t('teacher.schedule.quickActions') }}</p>
+              <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-2">{{ t('teacher.schedule.quickActions') }}</p>
               <div class="grid grid-cols-2 gap-2">
                 <button type="button" class="text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm transition-all" @click="gotoAttendance()">
                   <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 grid place-items-center mb-2">
@@ -1167,7 +1167,7 @@ onMounted(() => {
             </section>
 
             <section>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ t('teacher.schedule.sessionDetails') }}</p>
+              <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-2">{{ t('teacher.schedule.sessionDetails') }}</p>
               <div class="space-y-2">
                 <div class="flex items-center gap-3 bg-white border border-slate-200 rounded-xl p-3">
                   <span class="w-9 h-9 rounded-lg bg-brand-cobalt/8 text-brand-cobalt grid place-items-center flex-shrink-0">

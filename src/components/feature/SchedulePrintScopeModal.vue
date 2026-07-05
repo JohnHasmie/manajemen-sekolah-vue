@@ -88,7 +88,7 @@ async function print() {
   >
     <div class="space-y-3">
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cakupan</label>
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Cakupan</label>
         <div class="grid grid-cols-2 gap-2 mt-1">
           <button
             v-for="o in SCOPE_OPTS"
@@ -111,7 +111,7 @@ async function print() {
       </div>
 
       <div v-if="scope === 'class'">
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kelas</label>
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Kelas</label>
         <select
           v-model="classId"
           class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
@@ -122,7 +122,7 @@ async function print() {
       </div>
 
       <div v-if="scope === 'teacher'">
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Guru</label>
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Guru</label>
         <select
           v-model="teacherId"
           class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
@@ -133,13 +133,13 @@ async function print() {
       </div>
 
       <div v-if="scope === 'day'">
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hari</label>
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Hari</label>
         <div class="mt-1 flex flex-wrap gap-1.5">
           <button
             v-for="d in filterOptions?.days ?? []"
             :key="d.id"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors"
+            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
             :class="
               dayId === d.id
                 ? 'bg-role-admin text-white border-role-admin'
@@ -153,7 +153,7 @@ async function print() {
       </div>
 
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Semester (opsional)</label>
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Semester (opsional)</label>
         <select
           v-model="semesterId"
           class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
@@ -164,24 +164,24 @@ async function print() {
       </div>
 
       <div>
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Orientasi</label>
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Orientasi</label>
         <div class="mt-1 inline-flex gap-2 p-1 bg-slate-100 rounded-xl">
           <button
             type="button"
-            class="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
+            class="px-3 py-1.5 rounded-lg text-2xs font-bold transition-colors"
             :class="orientation === 'landscape' ? 'bg-role-admin text-white' : 'text-slate-500'"
             @click="orientation = 'landscape'"
           >Landscape</button>
           <button
             type="button"
-            class="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
+            class="px-3 py-1.5 rounded-lg text-2xs font-bold transition-colors"
             :class="orientation === 'portrait' ? 'bg-role-admin text-white' : 'text-slate-500'"
             @click="orientation = 'portrait'"
           >Portrait</button>
         </div>
       </div>
 
-      <p v-if="err" class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+      <p v-if="err" class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
         {{ err }}
       </p>
 

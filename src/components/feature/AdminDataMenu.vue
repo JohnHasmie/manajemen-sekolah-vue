@@ -44,7 +44,7 @@ function trigger(action: 'refresh' | 'exportExcel' | 'importExcel' | 'downloadTe
   <div class="relative inline-block">
     <button
       type="button"
-      class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-700 hover:text-role-admin px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-role-admin/40 transition-colors"
+      class="inline-flex items-center gap-1.5 text-2xs font-bold text-slate-700 hover:text-role-admin px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-role-admin/40 transition-colors"
       @click="open = !open"
     >
       <NavIcon name="more-vertical" :size="12" />

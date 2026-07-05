@@ -402,7 +402,7 @@ function chipBadgeClass(tone: string | undefined): string {
       </div>
       <p
         v-if="activeFilter !== 'all'"
-        class="text-[10px] text-slate-400 mt-2 text-center"
+        class="text-3xs text-slate-400 mt-2 text-center"
       >
         {{ t('admin.sekolah.report_card_hub.active_filter_label') }} <strong>{{
           pipelineNodes.find((n) => n.key === activeFilter)?.label
@@ -432,22 +432,22 @@ function chipBadgeClass(tone: string | undefined): string {
             class="flex items-center gap-2 mb-3 cursor-pointer select-none"
             @click="toggleTingkat(tg.tingkat)"
           >
-            <span class="text-[11px] font-black text-slate-900 uppercase tracking-widest">
+            <span class="text-2xs font-black text-slate-900 uppercase tracking-widest">
               Tingkat {{ tg.tingkat }}
             </span>
-            <span class="text-[10px] text-slate-400 tabular-nums">
+            <span class="text-3xs text-slate-400 tabular-nums">
               · {{ tg.class_count }} kelas · {{ tg.student_count }} siswa
             </span>
             <span class="flex-1"></span>
             <span
               v-if="tg.reviewed_pct !== undefined"
-              class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 tabular-nums"
+              class="text-3xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 tabular-nums"
             >
               {{ Math.round(tg.reviewed_pct) }}% diperiksa
             </span>
             <span
               v-if="tg.alert"
-              class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 inline-flex items-center gap-1"
+              class="text-3xs font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 inline-flex items-center gap-1"
             >
               <NavIcon name="bell" :size="10" />
               Perlu perhatian
@@ -525,7 +525,7 @@ function chipBadgeClass(tone: string | undefined): string {
         <NavIcon name="x" :size="13" />
       </button>
       <div class="flex flex-col min-w-0 leading-none">
-        <span class="text-[11px] font-black text-white">{{ selectedCount }} kelas dipilih</span>
+        <span class="text-2xs font-black text-white">{{ selectedCount }} kelas dipilih</span>
         <span class="text-[9.5px] text-white/70 truncate mt-1 max-w-[200px] sm:max-w-xs md:max-w-md">
           {{ selectedClassesInfo.formattedLabels }}
         </span>
@@ -533,7 +533,7 @@ function chipBadgeClass(tone: string | undefined): string {
       <span class="flex-1"></span>
       <button
         type="button"
-        class="text-[11px] font-bold text-white/80 hover:text-white border border-white/30 hover:border-white px-3 py-2 rounded-xl transition"
+        class="text-2xs font-bold text-white/80 hover:text-white border border-white/30 hover:border-white px-3 py-2 rounded-xl transition"
         :disabled="isPublishing"
         @click="bulkPrint"
       >
@@ -541,7 +541,7 @@ function chipBadgeClass(tone: string | undefined): string {
       </button>
       <button
         type="button"
-        class="text-[11px] font-black text-[#0A1F4D] bg-white hover:bg-white/95 px-3 py-2 rounded-xl transition disabled:opacity-50"
+        class="text-2xs font-black text-[#0A1F4D] bg-white hover:bg-white/95 px-3 py-2 rounded-xl transition disabled:opacity-50"
         :disabled="isPublishing"
         @click="confirmBulkPublish = true"
       >
@@ -561,7 +561,7 @@ function chipBadgeClass(tone: string | undefined): string {
       <div class="space-y-4">
         <!-- Overview info -->
         <div class="bg-[#0A1F4D] text-white rounded-2xl p-4">
-          <p class="text-[10px] font-bold text-white/60 uppercase tracking-widest">{{ t('admin.sekolah.report_card_hub.selected_classes') }}</p>
+          <p class="text-3xs font-bold text-white/60 uppercase tracking-widest">{{ t('admin.sekolah.report_card_hub.selected_classes') }}</p>
           <p class="text-[12.5px] font-medium leading-relaxed mt-1">
             {{ selectedClassesInfo.tingkatLabels }} · {{ selectedClassesInfo.names }} · {{ t('admin.sekolah.report_card_hub.student_count', { count: selectedClassesInfo.studentCount }) }}
           </p>
@@ -591,7 +591,7 @@ function chipBadgeClass(tone: string | undefined): string {
         <div class="border border-slate-200 rounded-xl p-3 flex items-center justify-between">
           <div class="flex flex-col">
             <span class="text-[11.5px] font-bold text-slate-800">{{ t('admin.sekolah.report_card_hub.notify_title') }}</span>
-            <span class="text-[10px] text-slate-500">{{ t('admin.sekolah.report_card_hub.notify_desc') }}</span>
+            <span class="text-3xs text-slate-500">{{ t('admin.sekolah.report_card_hub.notify_desc') }}</span>
           </div>
           <!-- Simple Toggle Switch -->
           <button
@@ -698,7 +698,7 @@ function chipBadgeClass(tone: string | undefined): string {
           </span>
           <div class="flex flex-col leading-none">
             <span class="text-[13px] font-bold text-slate-800">Cetak rapor</span>
-            <span class="text-[10px] text-slate-400 mt-1">Buka alur cetak per kelas</span>
+            <span class="text-3xs text-slate-400 mt-1">Buka alur cetak per kelas</span>
           </div>
         </button>
 
@@ -715,7 +715,7 @@ function chipBadgeClass(tone: string | undefined): string {
           </span>
           <div class="flex flex-col leading-none">
             <span class="text-[13px] font-bold text-slate-800">Muat ulang data</span>
-            <span class="text-[10px] text-slate-400 mt-1">Ambil pipeline + kelas terbaru dari server</span>
+            <span class="text-3xs text-slate-400 mt-1">Ambil pipeline + kelas terbaru dari server</span>
           </div>
         </button>
 
@@ -733,7 +733,7 @@ function chipBadgeClass(tone: string | undefined): string {
           </span>
           <div class="flex flex-col leading-none">
             <span class="text-[13px] font-bold text-slate-800">Bersihkan filter</span>
-            <span class="text-[10px] text-slate-400 mt-1">Tampilkan semua status</span>
+            <span class="text-3xs text-slate-400 mt-1">Tampilkan semua status</span>
           </div>
         </button>
       </div>

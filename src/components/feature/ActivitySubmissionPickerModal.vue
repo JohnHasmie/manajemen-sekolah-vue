@@ -187,7 +187,7 @@ function handleSave() {
           @click="bulkApply(s)"
         >
           <p
-            class="text-[9px] font-bold uppercase tracking-widest"
+            class="text-4xs font-bold uppercase tracking-widest"
             :class="tone(s).text"
           >
             {{ label(s) }}
@@ -198,7 +198,7 @@ function handleSave() {
         </button>
       </div>
 
-      <p class="text-[10px] text-slate-400 italic">
+      <p class="text-3xs text-slate-400 italic">
         Klik chip di atas untuk terapkan ke siswa yang masih
         <strong>Belum</strong> · Klik pill di tiap baris untuk siklus status
       </p>
@@ -238,7 +238,7 @@ function handleSave() {
 
             <button
               type="button"
-              class="text-[10px] font-bold px-2.5 py-1 rounded-full border min-w-[64px] transition"
+              class="text-3xs font-bold px-2.5 py-1 rounded-full border min-w-[64px] transition"
               :class="[tone(row.status).bg, tone(row.status).text, tone(row.status).border]"
               @click="cycleStatus(draft.indexOf(row))"
             >
@@ -250,7 +250,7 @@ function handleSave() {
 
       <!-- Footer -->
       <footer class="flex items-center gap-2 pt-2 border-t border-slate-100">
-        <p class="text-[11px] text-slate-500 flex-1">
+        <p class="text-2xs text-slate-500 flex-1">
           <template v-if="dirtyCount > 0">
             <span class="font-bold text-amber-700">{{ dirtyCount }}</span>
             perubahan

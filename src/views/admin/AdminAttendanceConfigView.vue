@@ -537,7 +537,7 @@ onMounted(loadSettings);
             <h3 class="text-[13px] font-black text-slate-900">
               Metode Presensi
             </h3>
-            <p class="text-[11px] text-slate-500 mt-0.5">
+            <p class="text-2xs text-slate-500 mt-0.5">
               Tentukan syarat dan metode yang tersedia saat presensi.
             </p>
           </div>
@@ -554,7 +554,7 @@ onMounted(loadSettings);
               <p class="text-[13px] font-bold text-slate-900">
                 Wajib Selfie / Kamera
               </p>
-              <p class="text-[11px] text-slate-500">
+              <p class="text-2xs text-slate-500">
                 Guru harus mengambil foto kamera langsung.
               </p>
             </div>
@@ -577,7 +577,7 @@ onMounted(loadSettings);
               <p class="text-[13px] font-bold text-slate-900">
                 Wajib Lokasi / GPS
               </p>
-              <p class="text-[11px] text-slate-500">
+              <p class="text-2xs text-slate-500">
                 Verifikasi jarak ke sekolah (geofence).
               </p>
             </div>
@@ -600,7 +600,7 @@ onMounted(loadSettings);
               <p class="text-[13px] font-bold text-slate-900">
                 Aktifkan QR Gerbang
               </p>
-              <p class="text-[11px] text-slate-500">
+              <p class="text-2xs text-slate-500">
                 Pindai QR berputar di gerbang sekolah.
               </p>
             </div>
@@ -623,7 +623,7 @@ onMounted(loadSettings);
               <p class="text-[13px] font-bold text-slate-900">
                 Aktifkan Kartu QR Pegawai
               </p>
-              <p class="text-[11px] text-slate-500">
+              <p class="text-2xs text-slate-500">
                 Pindai QR pada kartu cetak pribadi.
               </p>
             </div>
@@ -646,7 +646,7 @@ onMounted(loadSettings);
               <p class="text-[13px] font-bold text-slate-900">
                 Terbitkan Kartu QR Siswa
               </p>
-              <p class="text-[11px] text-slate-500">
+              <p class="text-2xs text-slate-500">
                 Aktifkan untuk mencetak kartu QR siswa (default: hanya
                 guru/staf).
               </p>
@@ -667,7 +667,7 @@ onMounted(loadSettings);
             <h3 class="text-[13px] font-black text-slate-900">
               Geofence Sekolah
             </h3>
-            <p class="text-[11px] text-slate-500 mt-0.5">
+            <p class="text-2xs text-slate-500 mt-0.5">
               Titik pusat &amp; radius area presensi. Kosongkan koordinat untuk
               memakai pin sekolah ({{ schoolPinLabel }}).
             </p>
@@ -676,7 +676,7 @@ onMounted(loadSettings);
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label
-                class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+                class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
               >
                 Latitude
               </label>
@@ -690,7 +690,7 @@ onMounted(loadSettings);
             </div>
             <div>
               <label
-                class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+                class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
               >
                 Longitude
               </label>
@@ -715,14 +715,14 @@ onMounted(loadSettings);
             :fallback-lng="form.school_longitude ?? null"
             @pick="onMapPick"
           />
-          <p class="text-[10px] text-slate-400 -mt-1">
+          <p class="text-3xs text-slate-400 -mt-1">
             Geser atau ketuk pin di peta untuk memilih titik pusat geofence.
           </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label
-                class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+                class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
               >
                 Radius (meter)
               </label>
@@ -733,7 +733,7 @@ onMounted(loadSettings);
                 max="5000"
                 class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30"
               />
-              <p class="text-[10px] text-slate-400 mt-1">
+              <p class="text-3xs text-slate-400 mt-1">
                 Rentang 10 – 5000 m.
               </p>
             </div>
@@ -761,7 +761,7 @@ onMounted(loadSettings);
             <h3 class="text-[13px] font-black text-slate-900">
               {{ t('admin.attendance.settings.rotation.section') }}
             </h3>
-            <p class="text-[11px] text-slate-500 mt-0.5">
+            <p class="text-2xs text-slate-500 mt-0.5">
               {{ t('admin.attendance.settings.rotation.sectionHint') }}
             </p>
           </div>
@@ -790,7 +790,7 @@ onMounted(loadSettings);
               }}</span>
             </span>
           </div>
-          <p class="text-[10px] text-slate-400 -mt-1">
+          <p class="text-3xs text-slate-400 -mt-1">
             Rentang 1 – 60 menit. Rekomendasi: 15 menit.
           </p>
 
@@ -815,7 +815,7 @@ onMounted(loadSettings);
         >
           <div class="px-4 py-3 border-b border-slate-100">
             <h3 class="text-[13px] font-black text-slate-900">Waktu</h3>
-            <p class="text-[11px] text-slate-500 mt-0.5">
+            <p class="text-2xs text-slate-500 mt-0.5">
               Presensi pulang dan toleransi keterlambatan.
             </p>
           </div>
@@ -832,7 +832,7 @@ onMounted(loadSettings);
               <p class="text-[13px] font-bold text-slate-900">
                 Aktifkan presensi pulang
               </p>
-              <p class="text-[11px] text-slate-500">
+              <p class="text-2xs text-slate-500">
                 Guru juga melakukan check-out di akhir hari.
               </p>
             </div>
@@ -845,7 +845,7 @@ onMounted(loadSettings);
 
           <div class="px-4 py-3 border-t border-slate-100">
             <label
-              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+              class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
             >
               Toleransi terlambat (menit)
             </label>
@@ -856,7 +856,7 @@ onMounted(loadSettings);
               max="600"
               class="w-full sm:w-64 rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30"
             />
-            <p class="text-[10px] text-slate-400 mt-1">
+            <p class="text-3xs text-slate-400 mt-1">
               Terlambat dihitung setelah jam mengajar pertama + toleransi.
             </p>
           </div>
@@ -891,7 +891,7 @@ onMounted(loadSettings);
           <!-- Scope Selection -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Cakupan (Scope)</label>
+              <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Cakupan (Scope)</label>
               <select v-model="checkinRuleForm.scope_type" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30">
                 <option value="global">Semua Guru (Global)</option>
                 <option value="grade_level">Per Tingkat Kelas</option>
@@ -900,7 +900,7 @@ onMounted(loadSettings);
             </div>
 
             <div v-if="checkinRuleForm.scope_type === 'grade_level'">
-              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Tingkat Kelas</label>
+              <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Tingkat Kelas</label>
               <select v-model="checkinRuleForm.scope_value" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30">
                 <option value="">Pilih Tingkat</option>
                 <option v-for="level in gradeLevelsList" :key="level" :value="level">Tingkat {{ level }}</option>
@@ -908,7 +908,7 @@ onMounted(loadSettings);
             </div>
 
             <div v-if="checkinRuleForm.scope_type === 'teacher'">
-              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Guru</label>
+              <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Guru</label>
               <select v-model="checkinRuleForm.scope_value" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30">
                 <option value="">Pilih Guru</option>
                 <option v-for="teacher in teachersList" :key="teacher.id" :value="teacher.id">
@@ -926,7 +926,7 @@ onMounted(loadSettings);
 
             <div v-if="checkinRuleForm.checkin_time_validation_enabled" class="space-y-md bg-slate-50 rounded-xl p-4 border border-slate-200">
               <div>
-                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Tipe Aturan Waktu</label>
+                <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Tipe Aturan Waktu</label>
                 <div class="flex gap-2">
                   <button type="button" @click="checkinRuleForm.checkin_time_rule_type = 'all_days'" class="px-4 py-2 rounded-lg text-xs font-bold transition-all border" :class="checkinRuleForm.checkin_time_rule_type === 'all_days' ? 'bg-role-admin text-white border-role-admin shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'">
                     Sama untuk Semua Hari
@@ -939,13 +939,13 @@ onMounted(loadSettings);
 
               <!-- Time Inputs -->
               <div v-if="checkinRuleForm.checkin_time_rule_type === 'all_days'" class="w-48">
-                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Jam Datang Maksimal</label>
+                <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Jam Datang Maksimal</label>
                 <input type="time" v-model="checkinRuleForm.checkin_time_all_days" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30" />
               </div>
 
               <div v-else class="grid grid-cols-2 sm:grid-cols-7 gap-3">
                 <div v-for="day in ['1', '2', '3', '4', '5', '6', '7']" :key="day">
-                  <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
+                  <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1">
                     {{ getDayName(day) }}
                   </label>
                   <input type="time" v-model="checkinRuleForm.checkin_times_custom_days[day]" class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30" />
@@ -965,7 +965,7 @@ onMounted(loadSettings);
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-sm font-bold text-slate-800">Daftar Aturan Jam Datang</h3>
-              <p class="text-[11px] text-slate-400">Atur batasan jam datang khusus untuk jenjang kelas atau guru tertentu.</p>
+              <p class="text-2xs text-slate-400">Atur batasan jam datang khusus untuk jenjang kelas atau guru tertentu.</p>
             </div>
             <Button variant="primary" @click="showAddCheckinRuleForm = true">
               <NavIcon name="plus" :size="13" />Tambah Aturan
@@ -975,13 +975,13 @@ onMounted(loadSettings);
           <div v-if="checkinRules.length === 0" class="flex flex-col items-center justify-center py-10 text-slate-400 border border-dashed border-slate-200 rounded-xl">
             <NavIcon name="info-circle" :size="24" class="mb-2" />
             <p class="text-xs">Belum ada aturan jam datang khusus yang dibuat.</p>
-            <p class="text-[10px]">Semua guru akan mengikuti aturan jam datang default sekolah.</p>
+            <p class="text-3xs">Semua guru akan mengikuti aturan jam datang default sekolah.</p>
           </div>
 
           <div v-else class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="border-b border-slate-100 text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                <tr class="border-b border-slate-100 text-3xs uppercase font-bold tracking-wider text-slate-400">
                   <th class="py-3 px-4">Cakupan Aturan</th>
                   <th class="py-3 px-4">Validasi Jam Datang</th>
                   <th class="py-3 px-4">Tipe Aturan</th>
@@ -993,7 +993,7 @@ onMounted(loadSettings);
                 <tr v-for="rule in checkinRules" :key="rule.id" class="hover:bg-slate-50/50">
                   <td class="py-3 px-4 font-bold text-slate-900">{{ getRuleScopeLabel(rule) }}</td>
                   <td class="py-3 px-4">
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" :class="rule.checkin_time_validation_enabled ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'">
+                    <span class="px-2 py-0.5 rounded-full text-3xs font-bold" :class="rule.checkin_time_validation_enabled ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'">
                       {{ rule.checkin_time_validation_enabled ? 'Aktif' : 'Non-aktif' }}
                     </span>
                   </td>
@@ -1004,7 +1004,7 @@ onMounted(loadSettings);
                     <div v-if="rule.checkin_time_rule_type === 'all_days'">
                       {{ rule.checkin_time_all_days ? rule.checkin_time_all_days.substring(0, 5) : '-' }}
                     </div>
-                    <div v-else class="text-[10px] text-slate-500">
+                    <div v-else class="text-3xs text-slate-500">
                       <span v-for="(time, day) in rule.checkin_times_custom_days" :key="day" class="mr-2 inline-block">
                         <span class="font-bold text-slate-700">{{ getDayName(day).substring(0, 3) }}:</span> {{ time.substring(0, 5) }}
                       </span>
@@ -1042,7 +1042,7 @@ onMounted(loadSettings);
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Cakupan (Scope)</label>
+              <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Cakupan (Scope)</label>
               <select v-model="ruleForm.scope_type" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30">
                 <option value="global">Semua Guru (Global)</option>
                 <option value="grade_level">Per Tingkat Kelas</option>
@@ -1051,7 +1051,7 @@ onMounted(loadSettings);
             </div>
 
             <div v-if="ruleForm.scope_type === 'grade_level'">
-              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Tingkat Kelas</label>
+              <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Tingkat Kelas</label>
               <select v-model="ruleForm.scope_value" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30">
                 <option value="">Pilih Tingkat</option>
                 <option v-for="level in gradeLevelsList" :key="level" :value="level">Tingkat {{ level }}</option>
@@ -1059,7 +1059,7 @@ onMounted(loadSettings);
             </div>
 
             <div v-if="ruleForm.scope_type === 'teacher'">
-              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Guru</label>
+              <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Guru</label>
               <select v-model="ruleForm.scope_value" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30">
                 <option value="">Pilih Guru</option>
                 <option v-for="teacher in teachersList" :key="teacher.id" :value="teacher.id">
@@ -1077,7 +1077,7 @@ onMounted(loadSettings);
 
             <div v-if="ruleForm.checkout_time_validation_enabled" class="space-y-md bg-slate-50 rounded-xl p-4 border border-slate-200">
               <div>
-                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Tipe Aturan Waktu</label>
+                <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Tipe Aturan Waktu</label>
                 <div class="flex gap-2">
                   <button type="button" @click="ruleForm.checkout_time_rule_type = 'all_days'" class="px-4 py-2 rounded-lg text-xs font-bold transition-all border" :class="ruleForm.checkout_time_rule_type === 'all_days' ? 'bg-role-admin text-white border-role-admin shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'">
                     Sama untuk Semua Hari
@@ -1090,13 +1090,13 @@ onMounted(loadSettings);
 
               <!-- Time Inputs -->
               <div v-if="ruleForm.checkout_time_rule_type === 'all_days'" class="w-48">
-                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Jam Pulang Minimal</label>
+                <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1">Jam Pulang Minimal</label>
                 <input type="time" v-model="ruleForm.checkout_time_all_days" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30" />
               </div>
 
               <div v-else class="grid grid-cols-2 sm:grid-cols-7 gap-3">
                 <div v-for="day in ['1', '2', '3', '4', '5', '6', '7']" :key="day">
-                  <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
+                  <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1">
                     {{ getDayName(day) }}
                   </label>
                   <input type="time" v-model="ruleForm.checkout_times_custom_days[day]" class="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30" />
@@ -1116,7 +1116,7 @@ onMounted(loadSettings);
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-sm font-bold text-slate-800">Daftar Aturan Presensi Guru</h3>
-              <p class="text-[11px] text-slate-400">Atur batasan jam pulang khusus untuk jenjang kelas atau guru tertentu.</p>
+              <p class="text-2xs text-slate-400">Atur batasan jam pulang khusus untuk jenjang kelas atau guru tertentu.</p>
             </div>
             <Button variant="primary" @click="showAddRuleForm = true">
               <NavIcon name="plus" :size="13" />Tambah Aturan
@@ -1126,13 +1126,13 @@ onMounted(loadSettings);
           <div v-if="checkoutRules.length === 0" class="flex flex-col items-center justify-center py-10 text-slate-400 border border-dashed border-slate-200 rounded-xl">
             <NavIcon name="info-circle" :size="24" class="mb-2" />
             <p class="text-xs">Belum ada aturan presensi khusus yang dibuat.</p>
-            <p class="text-[10px]">Semua guru akan mengikuti aturan presensi default sekolah.</p>
+            <p class="text-3xs">Semua guru akan mengikuti aturan presensi default sekolah.</p>
           </div>
 
           <div v-else class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="border-b border-slate-100 text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                <tr class="border-b border-slate-100 text-3xs uppercase font-bold tracking-wider text-slate-400">
                   <th class="py-3 px-4">Cakupan Aturan</th>
                   <th class="py-3 px-4">Validasi Jam Pulang</th>
                   <th class="py-3 px-4">Tipe Aturan</th>
@@ -1144,7 +1144,7 @@ onMounted(loadSettings);
                 <tr v-for="rule in checkoutRules" :key="rule.id" class="hover:bg-slate-50/50">
                   <td class="py-3 px-4 font-bold text-slate-900">{{ getRuleScopeLabel(rule) }}</td>
                   <td class="py-3 px-4">
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" :class="rule.checkout_time_validation_enabled ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'">
+                    <span class="px-2 py-0.5 rounded-full text-3xs font-bold" :class="rule.checkout_time_validation_enabled ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'">
                       {{ rule.checkout_time_validation_enabled ? 'Aktif' : 'Non-aktif' }}
                     </span>
                   </td>
@@ -1155,7 +1155,7 @@ onMounted(loadSettings);
                     <div v-if="rule.checkout_time_rule_type === 'all_days'">
                       {{ rule.checkout_time_all_days ? rule.checkout_time_all_days.substring(0, 5) : '-' }}
                     </div>
-                    <div v-else class="text-[10px] text-slate-500">
+                    <div v-else class="text-3xs text-slate-500">
                       <span v-for="(time, day) in rule.checkout_times_custom_days" :key="day" class="mr-2 inline-block">
                         <span class="font-bold text-slate-700">{{ getDayName(day).substring(0, 3) }}:</span> {{ time.substring(0, 5) }}
                       </span>
