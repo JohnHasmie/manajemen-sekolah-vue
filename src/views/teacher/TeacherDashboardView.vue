@@ -25,6 +25,7 @@ import { useMeStore } from '@/stores/me';
 import { DashboardService, type InboxResponse } from '@/services/dashboard.service';
 import { formatNumber, formatTime } from '@/lib/format';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
+import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import StatSummaryCard, { type StatTrend } from '@/components/feature/StatSummaryCard.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import PriorityInbox, { type PriorityItem } from '@/components/feature/PriorityInbox.vue';
@@ -363,9 +364,16 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
   <div class="space-y-6 pb-12">
     <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
       <template #default>
-        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 space-y-6">
+        <!-- Shared scaffold: fixed vertical rhythm + slot order across
+             every role dashboard. Slots: greeting → kpis → hero → main →
+             quickActions. `padded` keeps this view's own page padding
+             (admin/parent are rendered inside a shell that already pads).
+             Content below is unchanged; only the outer wrapper + section
+             grouping moved into named slots. -->
+        <DashboardLayout padded>
 
-          <!-- 1. Compact greeting row -->
+          <!-- #greeting: compact greeting row + bimbel entry banner. -->
+          <template #greeting>
           <section class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-4 min-w-0">
               <div class="w-11 h-11 rounded-2xl bg-brand-cobalt/10 grid place-items-center text-brand-cobalt flex-shrink-0">
@@ -399,8 +407,28 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
             :subtitle="t('tutoring.entry.tutorSub')"
             @click="router.push({ name: 'teacher.tutoring.sessions' })"
           />
+          </template>
 
-          <!-- 2. KPI strip (inline, no hero) with slice carousel -->
+          <!-- #kpis: KPI strip (inline, no hero) with slice carousel.
+               These four cards are ALL backed by real data the teacher
+               dashboard already loads via DashboardService.getStats(role)
+               → stats.slices[] (or the synthesized aggregate slice):
+                 • Sessions today   ← slice.sessions_today
+                                       (falls back to stats.classes_today /
+                                        stats.sessions_today)
+                 • Attendance %     ← slice.attendance_rate_window
+                                       (+ slice.attendance_delta trend)
+                 • Lesson plans     ← slice.lesson_plans_approved /_pending
+                                       /_revision (fallback stats.rpp_*)
+                 • Grades pending   ← slice.grades_pending_sessions
+               No fabricated metrics are added. Additional real signals the
+               view already holds (today's schedule count, priority-inbox
+               count) are surfaced in the #main sections below, not as fake
+               KPI cards.
+               TODO: if the stats endpoint later exposes e.g. an unread-
+               announcement or assigned-subject count for teachers, add a
+               5th real card here — do NOT synthesize one until then. -->
+          <template #kpis>
           <section
             class="space-y-3"
             @mouseenter="isPaused = true"
@@ -489,6 +517,15 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
               />
             </div>
           </section>
+          </template>
+
+          <!-- #main: today's schedule strip, then the two-column body
+               (Perlu Perhatian inbox + Aksi Cepat / Modul). The teacher's
+               quick actions live inside this two-column grid's right rail,
+               so they stay here rather than in #quickActions. Internal
+               24px rhythm preserved via space-y-6. -->
+          <template #main>
+          <div class="space-y-6">
 
           <!-- 3. Schedule hari ini (real schedule strip) -->
           <section class="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
@@ -668,7 +705,10 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
             </section>
           </div>
 
-        </div>
+          </div>
+          </template>
+
+        </DashboardLayout>
       </template>
     </AsyncView>
 

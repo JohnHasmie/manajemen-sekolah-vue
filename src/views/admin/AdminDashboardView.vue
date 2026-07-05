@@ -17,6 +17,7 @@ import { useMeStore } from '@/stores/me';
 import { DashboardService } from '@/services/dashboard.service';
 import { formatNumber, formatRupiah } from '@/lib/format';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
+import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import StatSummaryCard from '@/components/feature/StatSummaryCard.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
@@ -237,9 +238,16 @@ const financePct = computed(() =>
   <div v-else class="space-y-md">
     <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
       <template #default>
-        <div class="max-w-[1600px] mx-auto space-y-md">
+        <!-- Shared scaffold: fixed vertical rhythm + slot order across
+             every role dashboard. Slots: greeting → kpis → hero → main →
+             quickActions. Content below is unchanged; only the outer
+             wrapper + section grouping moved into named slots. -->
+        <DashboardLayout>
 
-          <!-- 1. Compact greeting + slice tabs -->
+          <!-- #greeting: compact greeting + slice tabs, then the bimbel
+               entry banner (kept directly under the greeting row exactly
+               as before, so nothing re-orders). -->
+          <template #greeting>
           <section class="flex items-center justify-between gap-4 flex-wrap">
             <div class="flex items-center gap-3 min-w-0">
               <div class="w-10 h-10 rounded-2xl bg-role-admin/10 grid place-items-center text-role-admin flex-shrink-0">
@@ -276,14 +284,15 @@ const financePct = computed(() =>
             :subtitle="t('admin.sekolah.dashboard.tutoring_banner_subtitle')"
             @click="router.push({ name: 'admin.tutoring.programs' })"
           />
+          </template>
 
-          <!-- 2. KPI strip (inline, no floating) -->
-          <!-- KPI strip. Each card only renders when its destination
-               route is entitled — Students hides when the tenant has
-               no student-touching module, Attendance hides without
-               any attendance.student.* ability, Pending Lesson Plans
-               hides without academic.lesson_plan.view. Guru card is
-               unconditional (roster always available). -->
+          <!-- #kpis: KPI strip (inline, no floating). Each card only
+               renders when its destination route is entitled — Students
+               hides when the tenant has no student-touching module,
+               Attendance hides without any attendance.student.* ability,
+               Pending Lesson Plans hides without academic.lesson_plan.view.
+               Guru card is unconditional (roster always available). -->
+          <template #kpis>
           <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <StatSummaryCard
               v-if="me.hasStudentContext"
@@ -349,19 +358,25 @@ const financePct = computed(() =>
               @click="router.push('/admin/lesson-plans')"
             />
           </section>
+          </template>
 
-          <!-- 2b. Subscription summary — compact 1-row card that puts
+          <!-- #hero: Subscription summary — compact 1-row card that puts
                "modul aktif · tagihan bulan ini · perpanjangan" one
                scroll away from the KPI strip. Full detail + add/cancel
                actions live at /subscribe/manage-modules; this card
                is the sidebar-independent entry point so admin doesn't
                have to hunt for it. -->
-          <SubscriptionSummaryCard />
+          <template #hero>
+            <SubscriptionSummaryCard />
+          </template>
 
-          <!-- 3. Heatmap + Finance. Whole cards hide when the tenant
-               doesn't own the module — a staff-only tenant sees zero
-               empty cards instead of Attendance/Finance panels with
-               placeholder digits + dead "Details" buttons. -->
+          <!-- #main: heatmap + finance, then the priority inbox. Whole
+               cards hide when the tenant doesn't own the module — a
+               staff-only tenant sees zero empty cards instead of
+               Attendance/Finance panels with placeholder digits + dead
+               "Details" buttons. -->
+          <template #main>
+          <div class="space-y-md">
           <section class="grid grid-cols-1 lg:grid-cols-3 gap-md">
             <div
               v-if="me.canAny(['attendance.student.view', 'attendance.student.export'])"
@@ -482,8 +497,11 @@ const financePct = computed(() =>
               @see-all="gotoAdminInbox"
             />
           </section>
+          </div>
+          </template>
 
-          <!-- 4. Quick actions -->
+          <!-- #quickActions: school-management action grid. -->
+          <template #quickActions>
           <section>
             <h3 class="text-[12px] font-black text-slate-500 uppercase tracking-widest mb-3 px-1">
               {{ t('admin.dashboard.schoolManagement') }}
@@ -503,8 +521,9 @@ const financePct = computed(() =>
               </button>
             </div>
           </section>
+          </template>
 
-        </div>
+        </DashboardLayout>
       </template>
     </AsyncView>
 

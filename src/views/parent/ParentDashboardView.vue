@@ -17,6 +17,7 @@ import { useMeStore } from '@/stores/me';
 import { DashboardService } from '@/services/dashboard.service';
 import { formatNumber, formatRelative, formatRupiah } from '@/lib/format';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
+import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import StatSummaryCard from '@/components/feature/StatSummaryCard.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
@@ -280,9 +281,22 @@ watch(sliceKey, () => {
   <div class="space-y-md">
     <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
       <template #default>
-        <div class="max-w-[1600px] mx-auto space-y-md">
+        <!-- Shared scaffold: fixed vertical rhythm + slot order across
+             every role dashboard. Slots: greeting → kpis → hero → main →
+             quickActions. Content below is unchanged; only the outer
+             wrapper + section grouping moved into named slots.
 
-          <!-- 1. Compact greeting + child switcher -->
+             NOTE on order: this view's attendance gradient card sits ABOVE
+             the KPI strip in the approved parent design, so it is grouped
+             into #greeting (the "top region") rather than #hero — moving it
+             below the KPIs would be a re-order, which this structural-only
+             migration must not do. #hero is left unused here. -->
+        <DashboardLayout>
+
+          <!-- #greeting: compact greeting + child switcher, bimbel entry
+               banner, then the attendance hero gradient — the whole top
+               region, preserved in its original order. -->
+          <template #greeting>
           <section class="flex items-center justify-between gap-4 flex-wrap">
             <div class="flex items-center gap-3 min-w-0">
               <div class="w-10 h-10 rounded-2xl bg-role-parent/10 grid place-items-center text-role-parent flex-shrink-0">
@@ -348,10 +362,12 @@ watch(sliceKey, () => {
               </button>
             </div>
           </section>
+          </template>
 
-          <!-- 3. KPI strip per anak. Each card hides when its module
+          <!-- #kpis: KPI strip per anak. Each card hides when its module
                is missing so a wali whose school didn't buy grades/
                finance/comm sees the module dropped, not a blank card. -->
+          <template #kpis>
           <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <StatSummaryCard
               v-if="me.can('academic.grade.view')"
@@ -402,6 +418,12 @@ watch(sliceKey, () => {
               @click="router.push('/parent/announcements')"
             />
           </section>
+          </template>
+
+          <!-- #main: priority inbox, then the recent-activity feed +
+               shortcuts grid. Order preserved from the original view. -->
+          <template #main>
+          <div class="space-y-md">
 
           <!-- 3b. Perlu Perhatian — parent priority inbox -->
           <section>
@@ -529,7 +551,10 @@ watch(sliceKey, () => {
             </div>
           </section>
 
-        </div>
+          </div>
+          </template>
+
+        </DashboardLayout>
       </template>
     </AsyncView>
 
