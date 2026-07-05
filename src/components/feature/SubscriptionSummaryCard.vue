@@ -77,7 +77,9 @@ const hasSubscription = computed<boolean>(
 );
 
 function open(): void {
-  router.push('/subscribe/manage-modules');
+  // Embedded route — stays inside the admin shell (sidebar + header)
+  // rather than teleporting to the standalone /subscribe surface.
+  router.push('/admin/settings/modules');
 }
 
 function subscribe(): void {

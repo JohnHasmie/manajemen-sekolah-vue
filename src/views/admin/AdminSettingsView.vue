@@ -168,7 +168,9 @@ const groups = computed<SettingsGroup[]>(() => {
           icon: 'package',
           label: t('admin.sekolah.settings.item_modules_label'),
           desc: t('admin.sekolah.settings.item_modules_desc'),
-          to: '/subscribe/manage-modules',
+          // Embedded route — keeps the admin shell chrome instead of
+          // teleporting to the standalone /subscribe surface.
+          to: '/admin/settings/modules',
         },
       ],
     },

@@ -38,6 +38,22 @@ import {
 } from '@/components/subscribe/moduleTokens';
 import ModuleTile from '@/components/subscribe/ModuleTile.vue';
 
+/**
+ * `embedded` = rendered INSIDE the admin shell (AppShell) at
+ * /admin/settings/modules, reached from the Pengaturan hub. In that
+ * mode the standalone subscribe chrome (KamilEdu logo bar + "Kembali
+ * ke dashboard") is suppressed — the admin sidebar + shell header
+ * already frame the page, so the extra top bar would double-chrome
+ * and make the module page feel like it teleported out of the admin
+ * area (which was the whole IA complaint).
+ *
+ * The default (false) keeps the full standalone surface for the three
+ * out-of-shell entry points that still hit /subscribe/manage-modules:
+ * the topbar Berlangganan chip, the mobile url_launcher deep-link, and
+ * the kamiledu-ai 402 upgrade_url.
+ */
+withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false });
+
 const router = useRouter();
 const auth = useAuthStore();
 
@@ -367,9 +383,10 @@ function formatDate(iso: string | null | undefined): string {
 </script>
 
 <template>
-  <div class="mm-page">
-    <!-- Nav (same chrome as /subscribe) -->
-    <div class="mm-nav">
+  <div class="mm-page" :class="{ 'is-embedded': embedded }">
+    <!-- Standalone subscribe chrome. Hidden when embedded in the admin
+         shell — the shell's own sidebar + header already frame it. -->
+    <div v-if="!embedded" class="mm-nav">
       <div class="mm-logo">K</div>
       <div class="mm-brand">
         <div class="mm-brand-name">KamilEdu</div>
@@ -718,6 +735,13 @@ function formatDate(iso: string | null | undefined): string {
   color: #0F172A;
   font-family: var(--font-sans);
   display: flex; flex-direction: column;
+}
+/* Embedded in the admin shell: the shell owns the viewport height +
+   background, so drop the full-height + surface here to sit naturally
+   in the content column. */
+.mm-page.is-embedded {
+  min-height: 0;
+  background: transparent;
 }
 
 /* Nav */

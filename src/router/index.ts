@@ -629,6 +629,19 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
+        // Kelola Modul & Paket — embedded IN the admin shell so the
+        // Pengaturan hub tile keeps the sidebar + shell chrome instead
+        // of teleporting to the standalone /subscribe surface. Same
+        // component, `embedded` prop suppresses its own top bar.
+        // /subscribe/manage-modules stays as the out-of-shell entry
+        // (topbar chip, mobile deep-link, AI 402 upgrade_url).
+        path: 'admin/settings/modules',
+        name: 'admin.settings.modules',
+        component: ManageModulesView,
+        props: { embedded: true },
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
         path: 'admin/settings/data',
         name: 'admin.settings.data',
         component: AdminDataManagementView,
