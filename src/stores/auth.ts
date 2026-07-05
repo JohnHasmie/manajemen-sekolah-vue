@@ -509,6 +509,21 @@ export const useAuthStore = defineStore('auth', {
         this.role = role ?? user.role;
         this.step = 'done';
 
+        // Restore the cached teacher profile (id + homeroom classes) so
+        // the sidebar renders the correct nav (wali-kelas vs plain guru)
+        // on the FIRST paint. hydrateSchoolsRoles() still re-fetches and
+        // overwrites it right after, so a changed homeroom self-corrects.
+        const cachedProfile = storage.get<{
+          id: string;
+          homeroomClasses: { id: string; name: string }[];
+        }>(StorageKeys.teacherProfile);
+        if (cachedProfile) {
+          this.teacherProfileId = cachedProfile.id ?? null;
+          this.homeroomClasses = Array.isArray(cachedProfile.homeroomClasses)
+            ? cachedProfile.homeroomClasses
+            : [];
+        }
+
         // Re-apply the persisted server-side language preference on
         // reload, same hydration path as `_completeLogin`. The login
         // payload had it; we cached the whole user object in
@@ -710,6 +725,13 @@ export const useAuthStore = defineStore('auth', {
         if (teacherProfile) {
           this.teacherProfileId = teacherProfile.id;
           this.homeroomClasses = teacherProfile.homeroomClasses;
+          // Cache for the next hard refresh so the nav (wali-kelas vs
+          // plain guru) renders correctly on the first paint — see
+          // StorageKeys.teacherProfile + restore().
+          storage.set(StorageKeys.teacherProfile, {
+            id: teacherProfile.id,
+            homeroomClasses: teacherProfile.homeroomClasses,
+          });
         }
 
         let dirty = false;
@@ -1105,6 +1127,7 @@ export const useAuthStore = defineStore('auth', {
         storage.remove(StorageKeys.user);
         storage.remove(StorageKeys.schoolId);
         storage.remove(StorageKeys.role);
+        storage.remove(StorageKeys.teacherProfile);
         // Tear down the realtime notifications socket so a logged-out
         // browser holds no Reverb connection. Lazy-imported to avoid a
         // load-time dependency on the Echo client (which is inert unless

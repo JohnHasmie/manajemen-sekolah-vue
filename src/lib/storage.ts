@@ -42,4 +42,10 @@ export const StorageKeys = {
   schoolId: 'kamiledu.school_id',
   role: 'kamiledu.role',
   language: 'kamiledu.lang',
+  // Teacher profile (id + homeroom classes) for the active school.
+  // Persisted so a hard refresh can render the correct nav (wali-kelas
+  // vs plain guru) on the FIRST paint instead of flickering while
+  // hydrateSchoolsRoles() re-fetches it. Re-fetched + overwritten on
+  // every login / school switch, so it never drifts for long.
+  teacherProfile: 'kamiledu.teacher_profile',
 } as const;
