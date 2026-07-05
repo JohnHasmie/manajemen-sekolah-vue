@@ -239,34 +239,48 @@ function closeModal(): void {
 
 async function doCancel(): Promise<void> {
   if (!sub.value || !confirmKey.value) return;
+  const key = confirmKey.value;
   confirmBusy.value = true;
   try {
     await SubscriptionBillingService.cancelModule({
       subscription_id: sub.value.id,
-      module_key: confirmKey.value,
+      module_key: key,
     });
-    await loadAll();
+    // Reflect the change immediately — move the row into the "tidak
+    // diperpanjang" section without waiting on the reload — then close
+    // the modal. `confirmBusy` MUST be cleared BEFORE closeModal():
+    // closeModal()'s guard (`if (confirmBusy) return`) would otherwise
+    // swallow the close and leave the dialog stuck open over a
+    // still-active-looking list (the reported bug).
+    const row = mine.value.modules.find((r) => r.module_key === key);
+    if (row) row.cancel_at_period_end = true;
+    confirmBusy.value = false;
     closeModal();
+    // Resync with the server (source of truth) in the background.
+    void loadAll();
   } catch (e) {
     errorMessage.value = (e as Error).message;
-    confirmBusy.value = false;
-  } finally {
     confirmBusy.value = false;
   }
 }
 async function doResume(): Promise<void> {
   if (!sub.value || !confirmKey.value) return;
+  const key = confirmKey.value;
   confirmBusy.value = true;
   try {
     await SubscriptionBillingService.resumeModule({
       subscription_id: sub.value.id,
-      module_key: confirmKey.value,
+      module_key: key,
     });
-    await loadAll();
+    // Optimistic move back to the active section + close the modal.
+    // Clear confirmBusy before closeModal() (see doCancel note).
+    const row = mine.value.modules.find((r) => r.module_key === key);
+    if (row) row.cancel_at_period_end = false;
+    confirmBusy.value = false;
     closeModal();
+    void loadAll();
   } catch (e) {
     errorMessage.value = (e as Error).message;
-  } finally {
     confirmBusy.value = false;
   }
 }
@@ -287,9 +301,11 @@ async function doAdd(): Promise<void> {
       return;
     }
     // Fallback: reload the module list; the pending addon shows up in
-    // ManageModulesView after admin approval anyway.
-    await loadAll();
+    // ManageModulesView after admin approval anyway. Clear confirmBusy
+    // before closeModal() (its guard blocks the close otherwise).
+    confirmBusy.value = false;
     closeModal();
+    void loadAll();
   } catch (e) {
     errorMessage.value = (e as Error).message;
     confirmBusy.value = false;
