@@ -315,6 +315,12 @@ export interface MySubscription {
   period?: BillingPeriod | null;
   expires_at?: string | null;
   tenant_id?: string | null;
+  /**
+   * True while the active tenant is still a demo school. Drives
+   * demo-only surfaces (e.g. the "Reset data demo" settings tile) so
+   * they never render for a real, paying tenant.
+   */
+  is_demo: boolean;
 }
 
 /**

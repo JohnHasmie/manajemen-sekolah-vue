@@ -36,6 +36,7 @@ async function fetchOnce(): Promise<void> {
         period: null,
         expires_at: null,
         tenant_id: null,
+        is_demo: false,
       };
     } finally {
       loading.value = false;
@@ -71,6 +72,15 @@ export function useSubscription() {
   });
 
   /**
+   * True when the active tenant is a demo school. Demo-only surfaces
+   * (e.g. the "Reset data demo" settings tile) gate on this so they
+   * never render for a real, paying tenant. Stays false until the
+   * fetch resolves, so we never flash a demo-only control onto a real
+   * tenant during load.
+   */
+  const isDemo = computed<boolean>(() => subscription.value?.is_demo === true);
+
+  /**
    * No-op the fetch entirely when the caller isn't a tenant admin.
    * Wali/guru/staf sessions never render the chip, so hitting
    * `/me/subscription` for them is pure waste. Super admins likewise
@@ -87,6 +97,7 @@ export function useSubscription() {
     subscription,
     loading,
     shouldPromptSubscribe,
+    isDemo,
     ensureLoaded,
     refresh: () => {
       inflight = null;

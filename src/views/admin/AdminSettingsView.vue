@@ -15,10 +15,17 @@ import DemoResetProgress from '@/components/demo/DemoResetProgress.vue';
 import { DemoService } from '@/services/demo.service';
 import { useAuthStore } from '@/stores/auth';
 import { useMeStore } from '@/stores/me';
+import { useSubscription } from '@/composables/useSubscription';
 
 const router = useRouter();
 const { t } = useI18n();
 const me = useMeStore();
+
+// Demo-tenant flag drives the "Reset data demo" tile (below). Shared
+// module-level state — reuses the same fetch the topbar chip already
+// makes, so gating the tile costs no extra round-trip.
+const { isDemo, ensureLoaded: ensureSubscriptionLoaded } = useSubscription();
+ensureSubscriptionLoaded();
 
 const showResetModal = ref(false);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
@@ -119,6 +126,13 @@ interface SettingsGroup {
      * the same visibility rule it had there.
      */
     ability?: string;
+    /**
+     * Demo-only gate — the tile renders ONLY while the active tenant is
+     * still a demo school. Keeps "Reset data demo" out of a real,
+     * paying tenant's settings hub (a real tenant has no demo data to
+     * reset, and the action would re-provision their school).
+     */
+    demoOnly?: boolean;
   }[];
 }
 
@@ -179,7 +193,7 @@ const groups = computed<SettingsGroup[]>(() => {
       items: [
         { icon: 'layers', label: t('admin.sekolah.settings.item_data_management_label'), desc: t('admin.sekolah.settings.item_data_management_desc'), to: '/admin/settings/data' },
         { icon: 'file-text', label: t('admin.sekolah.settings.item_backup_label'), desc: t('admin.sekolah.settings.item_backup_desc') },
-        { icon: 'edit', label: t('admin.sekolah.settings.item_reset_demo_label'), desc: t('admin.sekolah.settings.item_reset_demo_desc'), danger: true },
+        { icon: 'edit', label: t('admin.sekolah.settings.item_reset_demo_label'), desc: t('admin.sekolah.settings.item_reset_demo_desc'), danger: true, demoOnly: true },
       ],
     },
     {
@@ -192,11 +206,16 @@ const groups = computed<SettingsGroup[]>(() => {
   ];
   // Same filter contract as the sidebar's applyGates: drop tiles the
   // user can't act on, then drop groups that emptied out so the hub
-  // never renders a bare section heading.
+  // never renders a bare section heading. Demo-only tiles additionally
+  // require the tenant to still be a demo school.
   return raw
     .map((g) => ({
       ...g,
-      items: g.items.filter((it) => !it.ability || me.can(it.ability)),
+      items: g.items.filter(
+        (it) =>
+          (!it.ability || me.can(it.ability)) &&
+          (!it.demoOnly || isDemo.value),
+      ),
     }))
     .filter((g) => g.items.length > 0);
 });

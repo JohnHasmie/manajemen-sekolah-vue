@@ -586,6 +586,7 @@ function parseMySubscription(raw: any): MySubscription {
         : null,
     expires_at: raw?.expires_at ?? null,
     tenant_id: raw?.tenant_id ?? null,
+    is_demo: Boolean(raw?.is_demo),
   };
 }
 
@@ -724,6 +725,7 @@ export const SubscriptionBillingService = {
           period: null,
           expires_at: null,
           tenant_id: null,
+          is_demo: false,
         };
       }
       throw new Error(humanError(e, 'Gagal memuat status langganan.'));
