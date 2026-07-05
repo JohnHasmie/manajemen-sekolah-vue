@@ -37,7 +37,7 @@
 -->
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import { useWebcamCapture } from '@/composables/useWebcamCapture';
@@ -54,7 +54,26 @@ import Button from '@/components/ui/Button.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 
 const router = useRouter();
+const route = useRoute();
 const toast = useToast();
+
+// This exact check-in view is mounted under BOTH the teacher subtree
+// (`teacher.my-attendance`) and the staff subtree (`staff.my-attendance`).
+// The check-in service is staff-aware server-side (Phase C: the
+// /teacher-attendance/config + /check-in endpoints resolve the caller as
+// teacher OR staff and write the correct personnel_type row), so the whole
+// selfie + GPS + notes + submit flow is identical for both. The only
+// role-specific concern is which "Riwayat" route to navigate to — derive it
+// from the current route name so the same component serves both. The header
+// gradient auto-tints per active role via BrandPageHeader's default.
+const isStaffContext = computed(() =>
+  String(route.name ?? '').startsWith('staff'),
+);
+const historyRouteName = computed(() =>
+  isStaffContext.value
+    ? 'staff.my-attendance.history'
+    : 'teacher.my-attendance.history',
+);
 const cam = useWebcamCapture();
 const geo = useGeolocation();
 const { t } = useI18n();
@@ -351,15 +370,17 @@ function resetForm() {
 }
 
 function gotoHistory() {
-  router.push('/teacher/my-attendance/history');
+  router.push({ name: historyRouteName.value });
 }
 </script>
 
 <template>
   <div class="space-y-md">
     <!-- ── Header ─────────────────────────────────────────────── -->
+    <!-- No explicit `role` — BrandPageHeader defaults to the active role,
+         so this same view tints teal for a teacher and amber for a staff
+         user (mirrors the mobile app flipping personnel labels). -->
     <BrandPageHeader
-      role="guru"
       :kicker="t('tutor.sekolah.presensiTeacher.kicker')"
       :title="t('tutor.sekolah.presensiTeacher.title')"
       :meta="serverDate"

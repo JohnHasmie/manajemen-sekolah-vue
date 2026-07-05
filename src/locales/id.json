@@ -300,6 +300,8 @@
     "attendance": "Kehadiran Siswa",
     "teacherAttendance": "Kehadiran Guru",
     "myAttendance": "Presensi Saya",
+    "attendanceHistory": "Riwayat Presensi",
+    "account": "Akun",
     "grades": "Nilai",
     "gradeRecap": "Rekap Nilai",
     "lessonPlans": "RPP",
@@ -339,7 +341,16 @@
   "staffHome": {
     "title": "Belum ada menu mandiri untuk staf",
     "body": "Peran staf belum memiliki halaman layanan mandiri di web. Fitur presensi dan data staf dikelola oleh admin sekolah. Hubungi admin sekolah Anda bila memerlukan akses ke data tertentu.",
-    "contactAdmin": "Hubungi admin sekolah"
+    "contactAdmin": "Hubungi admin sekolah",
+    "kicker": "Beranda Staf",
+    "greeting": "Selamat datang, {name}",
+    "roleMeta": "Masuk sebagai {role}",
+    "tileCheckInLabel": "Presensi Saya",
+    "tileCheckInHint": "Presensi masuk dengan swafoto & lokasi",
+    "tileHistoryLabel": "Riwayat Presensi",
+    "tileHistoryHint": "Lihat catatan presensi harian Anda",
+    "tileAccountLabel": "Akun",
+    "tileAccountHint": "Profil dan pengaturan akun"
   },
   "profile": {
     "title": "Profil",

@@ -225,7 +225,10 @@ const TeacherReportCardDetailView = () =>
   import('@/views/teacher/TeacherReportCardDetailView.vue');
 const ParentDashboardView = () =>
   import('@/views/parent/ParentDashboardView.vue');
-const StaffStubView = () => import('@/views/RoleHomeStub.vue');
+// Staff role home — a REAL self-attendance surface (F3), not a stub. The
+// staff self check-in reuses the teacher check-in stack (staff-aware
+// server-side, Phase C) under a staff-role route subtree.
+const StaffHomeView = () => import('@/views/staff/StaffHomeView.vue');
 const ProfileView = () => import('@/views/account/ProfileView.vue');
 const NotificationListView = () => import('@/views/common/NotificationListView.vue');
 
@@ -1490,13 +1493,41 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'guru' satisfies Role, needs: 'tutoring-module' },
       },
 
-      // Staff subtree (placeholder until staff feature surfaces are
-      // confirmed — see task #51).
+      // Staff subtree (F3). The `staff` role now has a REAL web
+      // self-service surface: self-attendance check-in. The check-in +
+      // history views are the SAME components teachers use — the
+      // /teacher-attendance endpoints are staff-aware server-side
+      // (Phase C: the backend resolves the caller as teacher OR staff
+      // and writes the correct personnel_type row), so no separate
+      // endpoint or duplicate view is invented. Route NAME `staff.home`
+      // is preserved for bookmarks.
       {
         path: 'staff',
         name: 'staff.home',
-        component: StaffStubView,
+        component: StaffHomeView,
         meta: { role: 'staff' satisfies Role },
+      },
+      {
+        // Staff · Presensi Saya — mirrors teacher/my-attendance but under
+        // the staff role guard. Same hub + check-in + history components,
+        // same `attendance.self.view_own` ability gate.
+        path: 'staff/my-attendance',
+        component: TeacherMyAttendanceHub,
+        meta: { role: 'staff' satisfies Role, ability: 'attendance.self.view_own' },
+        children: [
+          {
+            path: '',
+            name: 'staff.my-attendance',
+            component: TeacherCheckInView,
+            meta: { role: 'staff' satisfies Role, ability: 'attendance.self.view_own' },
+          },
+          {
+            path: 'history',
+            name: 'staff.my-attendance.history',
+            component: TeacherAttendanceHistoryView,
+            meta: { role: 'staff' satisfies Role, ability: 'attendance.self.view_own' },
+          },
+        ],
       },
 
       // Cross-role: profile + notifications

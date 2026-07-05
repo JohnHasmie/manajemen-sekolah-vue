@@ -13,7 +13,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import type {
@@ -31,7 +31,17 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 
 const router = useRouter();
+const route = useRoute();
 const { t } = useI18n();
+
+// Mounted under both the teacher and staff my-attendance subtrees (the
+// history endpoint is staff-aware server-side). Derive the "back to check-in"
+// target from the current route name so the same component serves both.
+const checkInRouteName = computed(() =>
+  String(route.name ?? '').startsWith('staff')
+    ? 'staff.my-attendance'
+    : 'teacher.my-attendance',
+);
 
 const startDate = ref('');
 const endDate = ref('');
@@ -156,8 +166,8 @@ onMounted(reload);
 
 <template>
   <div class="space-y-md">
+    <!-- No explicit `role` — header tints per active role (teacher/staff). -->
     <BrandPageHeader
-      role="guru"
       :kicker="t('tutor.sekolah.presenceHistory.kicker')"
       :title="t('tutor.sekolah.presenceHistory.title')"
       :meta="meta ? t('tutor.sekolah.presenceHistory.metaCount', { count: meta.total }) : t('tutor.sekolah.presenceHistory.metaDefault')"
@@ -165,7 +175,7 @@ onMounted(reload);
       <Button
         variant="secondary"
         size="sm"
-        @click="router.push('/teacher/my-attendance')"
+        @click="router.push({ name: checkInRouteName })"
       >
         <NavIcon name="arrow-left" :size="13" />{{ t('tutor.sekolah.presenceHistory.back') }}
       </Button>

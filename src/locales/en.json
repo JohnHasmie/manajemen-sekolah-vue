@@ -303,6 +303,8 @@
     "attendance": "Student Attendance",
     "teacherAttendance": "Teacher Attendance",
     "myAttendance": "My attendance",
+    "attendanceHistory": "Attendance history",
+    "account": "Account",
     "grades": "Grades",
     "gradeRecap": "Grade recap",
     "lessonPlans": "Lesson plans",
@@ -342,7 +344,16 @@
   "staffHome": {
     "title": "No self-service menu for staff yet",
     "body": "The staff role has no self-service pages on the web yet. Staff attendance and records are managed by the school admin. Contact your school admin if you need access to specific data.",
-    "contactAdmin": "Contact school admin"
+    "contactAdmin": "Contact school admin",
+    "kicker": "Staff home",
+    "greeting": "Welcome, {name}",
+    "roleMeta": "Signed in as {role}",
+    "tileCheckInLabel": "My attendance",
+    "tileCheckInHint": "Check in with a selfie & location",
+    "tileHistoryLabel": "Attendance history",
+    "tileHistoryHint": "View your daily attendance log",
+    "tileAccountLabel": "Account",
+    "tileAccountHint": "Profile and account settings"
   },
   "profile": {
     "title": "Profile",

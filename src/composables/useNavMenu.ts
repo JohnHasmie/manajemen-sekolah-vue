@@ -531,26 +531,41 @@ const PARENT_NAV: NavSection[] = [
 ];
 
 /**
- * STAFF_NAV — deliberately minimal (Dashboard only).
+ * STAFF_NAV — Dashboard + the staff self-attendance surface (F3).
  *
- * HONEST SCOPE / OPEN PRODUCT DECISION: the `staff` role has NO real web
- * self-service screen today. The only route carrying `meta.role:'staff'`
- * is `/staff` → RoleHomeStub (which now renders an honest "no self-service
- * yet" empty state for staff). There is no staff self check-in view, and
- * the entire `attendance_staff` module is ADMIN-side only (teacher-
- * attendance report, attendance config, QR gate display, personnel cards).
+ * The `staff` role now HAS a real web self-service capability: self
+ * check-in. The check-in + history screens are the SAME ones teachers
+ * use, mounted under `/staff/my-attendance` — the /teacher-attendance
+ * endpoints are staff-aware server-side (Phase C: the backend resolves
+ * the caller as teacher OR staff and writes the correct personnel_type
+ * row), so nothing is fabricated or duplicated.
  *
- * So we do NOT fabricate a staff dashboard or invent staff-only menu
- * items. When/if product decides staff should get a first-class web
- * surface (e.g. a staff self check-in mirroring `/teacher/my-attendance`),
- * add the REAL routes here. Until then this stays a single Dashboard
- * entry — see RoleHomeStub.vue for the matching honest empty state.
+ * The Presensi/Riwayat items are gated on `attendance.self.view_own` —
+ * the exact same ability the teacher my-attendance nav + route gate on.
+ * A staff user who lacks it (e.g. no `staff` roster row at this school)
+ * sees only Dashboard + Akun, and the Dashboard renders the honest
+ * empty state (see StaffHomeView.vue). We still surface NO fabricated
+ * KPIs and NO admin-management tiles — the `attendance_staff` module
+ * stays ADMIN-side only.
  */
 const STAFF_NAV: NavSection[] = [
   {
     titleKey: '',
     items: [
       { to: '/staff', labelKey: 'nav.dashboard', icon: 'home' },
+      {
+        to: '/staff/my-attendance',
+        labelKey: 'nav.myAttendance',
+        icon: 'camera',
+        ability: 'attendance.self.view_own',
+      },
+      {
+        to: '/staff/my-attendance/history',
+        labelKey: 'nav.attendanceHistory',
+        icon: 'clipboard-list',
+        ability: 'attendance.self.view_own',
+      },
+      { to: '/profile', labelKey: 'nav.account', icon: 'user' },
     ],
   },
 ];
