@@ -25,6 +25,7 @@ import type { Bill, CheckoutSession, ManualBankAccount } from '@/types/billing';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import StickyActionBar from '@/components/ui/StickyActionBar.vue';
 import Toast from '@/components/ui/Toast.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import { formatRupiah, localISODate } from '@/lib/format';
@@ -570,12 +571,9 @@ const adminFee = computed(() => {
               </div>
             </div>
 
-            <!-- Soft amount-mismatch warning — the pre-filled uploadAmount
-                 matches the session amount, but the parent can edit it.
-                 A mid-tap on the number field slipping through as an
-                 accidental Rp 0 or one-off-by-thousand is a common
-                 verification-loop cause; a warning is friendlier than
-                 hard-blocking the field. -->
+            <!-- Soft amount-mismatch warning stays in-context with the
+                 amount field so a wali fixing it sees the warning
+                 without scrolling. Sticky submit + SLA live below. -->
             <p
               v-if="amountMismatch"
               class="text-[11.5px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-snug"
@@ -587,26 +585,33 @@ const adminFee = computed(() => {
                 entered: formatRupiah(uploadAmount ?? 0),
               }) }}
             </p>
-
-            <Button
-              variant="primary"
-              block
-              :loading="isUploading"
-              :disabled="!file || isUploading"
-              @click="submitProof"
-            >
-              <NavIcon name="check-circle" :size="13" />
-              {{ t('wali.sekolah.billCheckout.submitProof') }}
-            </Button>
-
-            <!-- SLA banner — what happens after the parent hits Kirim.
-                 Sets expectations so a wali doesn't refresh the app
-                 every 5 minutes waiting for the status to flip. -->
-            <p class="text-[11.5px] text-slate-500 leading-snug flex items-start gap-1.5 pt-1">
-              <NavIcon name="clock" :size="11" class="flex-shrink-0 mt-0.5" />
-              <span>{{ t('wali.sekolah.billCheckout.sla') }}</span>
-            </p>
           </div>
+
+          <!-- STICKY SUBMIT — keeps the primary action thumb-reachable
+               on phones while the wali scrolls the form. Wrapping only
+               the submit + SLA in the sticky bar (guide + bank list +
+               upload + fields stay inline in their card) so the wali
+               sees "how to pay" and "what happens after" together. -->
+          <StickyActionBar :cols="1">
+            <div class="space-y-1.5">
+              <Button
+                variant="primary"
+                block
+                :loading="isUploading"
+                :disabled="!file || isUploading"
+                @click="submitProof"
+              >
+                <NavIcon name="check-circle" :size="13" />
+                {{ t('wali.sekolah.billCheckout.submitProof') }}
+              </Button>
+              <p
+                class="text-[10.5px] text-slate-500 leading-snug flex items-start gap-1.5"
+              >
+                <NavIcon name="clock" :size="10" class="flex-shrink-0 mt-0.5" />
+                <span>{{ t('wali.sekolah.billCheckout.sla') }}</span>
+              </p>
+            </div>
+          </StickyActionBar>
         </section>
       </template>
     </AsyncView>
