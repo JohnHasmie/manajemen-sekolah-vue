@@ -22,6 +22,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { LessonPlanService } from '@/services/lesson-plans.service';
+import { sanitizeRichHtml } from '@/lib/sanitize-html';
 import {
   FORMAT_COLORS,
   FORMAT_LABELS,

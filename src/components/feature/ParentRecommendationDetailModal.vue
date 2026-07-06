@@ -27,6 +27,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import ParentRecReplyModal from '@/components/feature/ParentRecReplyModal.vue';
 import ParentRecCompleteModal from '@/components/feature/ParentRecCompleteModal.vue';
 import { RecommendationService } from '@/services/recommendations.service';
+import { sanitizeRichHtml } from '@/lib/sanitize-html';
 import { useAuthStore } from '@/stores/auth';
 import type { ParentInboxRow } from '@/types/recommendations';
 
@@ -71,7 +72,7 @@ const subjectName = computed(
     readStr('subject_name'),
 );
 const title = computed(() => readStr('title') ?? 'Rekomendasi');
-const descriptionHtml = computed(() => sanitizeHtml(readStr('description') ?? ''));
+const descriptionHtml = computed(() => sanitizeRichHtml(readStr('description')));
 const sharedMessage = computed(() => readStr('shared_message')?.trim() || null);
 const aiReasoning = computed(() => readStr('ai_reasoning')?.trim() || null);
 const dueDate = computed(() => readStr('due_date'));
@@ -175,19 +176,6 @@ const materiChips = computed<MateriChip[]>(() => {
 
 const repliedAt = computed(() => localRow.value.replied_at);
 const replyText = computed(() => localRow.value.reply_text);
-
-function sanitizeHtml(html: string): string {
-  // Strip <script>/<style>, allow a small set of tags, drop event
-  // handlers + javascript: URLs. Lightweight allowlist — for richer
-  // sanitising the host should use DOMPurify, but the AI backend
-  // already constrains the markup it produces.
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/\son\w+="[^"]*"/gi, '')
-    .replace(/\son\w+='[^']*'/gi, '')
-    .replace(/javascript:/gi, '');
-}
 
 async function onReply(replyTextValue: string) {
   if (!recId.value) return;

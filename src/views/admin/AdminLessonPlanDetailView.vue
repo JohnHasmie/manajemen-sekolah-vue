@@ -18,6 +18,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { LessonPlanService } from '@/services/lesson-plans.service';
+import { sanitizeRichHtml } from '@/lib/sanitize-html';
 import {
   FORMAT_COLORS,
   FORMAT_LABELS,
@@ -349,11 +350,17 @@ const canSendBack = computed(
                 {{ String(idx + 1).padStart(2, '0') }} · {{ s.label }}
               </p>
               <!-- Stored Quill HTML — render via v-html with rpp-prose
-                   so tables/lists/headings come out styled. -->
+                   so tables/lists/headings come out styled. Sanitized
+                   through DOMPurify because the backend does NOT
+                   strip_tags on the write path (LMS/UpdateLessonPlanAction
+                   passes format_data JSONB through verbatim). Without
+                   this a teacher could author a section with
+                   `<img src=x onerror=exfiltrate>` and any admin
+                   opening the RPP would run it in an admin session. -->
               <div
                 v-if="s.value"
                 class="rpp-prose mt-2"
-                v-html="s.value"
+                v-html="sanitizeRichHtml(s.value)"
               />
               <p v-else class="text-[11.5px] text-slate-400 italic mt-2">
                 {{ t('admin.sekolah.lesson_plan_detail.section_empty') }}
