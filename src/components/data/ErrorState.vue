@@ -9,11 +9,18 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import type { ErrorHint } from '@/lib/errorHints';
 
 const props = defineProps<{
   title?: string;
   message?: string;
   retryLabel?: string;
+  /**
+   * Warm cause hint. Rendered as a short second line under the message
+   * with a matching icon — turns "Terjadi kesalahan" into an actionable
+   * "Sepertinya koneksi internet Anda terputus."
+   */
+  hint?: ErrorHint | null;
 }>();
 
 defineEmits<{ retry: [] }>();
@@ -23,6 +30,19 @@ const { t } = useI18n();
 const titleText = computed(() => props.title ?? t('common.errorTitle'));
 const messageText = computed(() => props.message ?? t('common.errorMessage'));
 const retryText = computed(() => props.retryLabel ?? t('common.tryAgain'));
+
+const HINT_KEYS: Record<ErrorHint, string> = {
+  network: 'common.errorHintNetwork',
+  timeout: 'common.errorHintTimeout',
+  session: 'common.errorHintSession',
+  permission: 'common.errorHintPermission',
+  notFound: 'common.errorHintNotFound',
+  server: 'common.errorHintServer',
+};
+
+const hintText = computed(() =>
+  props.hint ? t(HINT_KEYS[props.hint]) : '',
+);
 </script>
 
 <template>
@@ -50,6 +70,12 @@ const retryText = computed(() => props.retryLabel ?? t('common.tryAgain'));
 
     <h3 class="text-base font-semibold text-slate-900 mb-1">{{ titleText }}</h3>
     <p class="text-sm text-slate-500 max-w-sm">{{ messageText }}</p>
+    <p
+      v-if="hintText"
+      class="mt-1 text-xs text-slate-400 max-w-sm italic"
+    >
+      {{ hintText }}
+    </p>
 
     <button
       type="button"

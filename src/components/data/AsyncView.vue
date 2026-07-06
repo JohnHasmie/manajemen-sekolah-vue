@@ -18,6 +18,7 @@ import { useI18n } from 'vue-i18n';
 import Spinner from '../ui/Spinner.vue';
 import EmptyState from './EmptyState.vue';
 import ErrorState from './ErrorState.vue';
+import { classifyError, type ErrorHint } from '@/lib/errorHints';
 
 export interface AsyncState<T> {
   status: 'loading' | 'error' | 'empty' | 'content';
@@ -34,6 +35,12 @@ const props = withDefaults(
     emptyIcon?: string;
     emptyActionLabel?: string;
     errorTitle?: string;
+    /**
+     * Override the auto-classified error hint. Leave undefined to let
+     * AsyncView infer from the raw error string ("Network Error" →
+     * network, "status code 403" → permission, etc.).
+     */
+    errorHint?: ErrorHint | null;
     minHeight?: string;
   }>(),
   {
@@ -62,6 +69,13 @@ const errorTitleText = computed(() =>
 const errorMessageText = computed(() =>
   props.state.error ?? t('common.errorMessage'),
 );
+// Explicit prop wins; otherwise best-effort classification from the
+// raw error string. `undefined` means "no explicit override" — we
+// still auto-classify; `null` means "no hint at all", suppressing it.
+const errorHintText = computed<ErrorHint | null>(() => {
+  if (props.errorHint !== undefined) return props.errorHint;
+  return classifyError(props.state.error);
+});
 </script>
 
 <template>
@@ -78,6 +92,7 @@ const errorMessageText = computed(() =>
       v-else-if="state.status === 'error'"
       :title="errorTitleText"
       :message="errorMessageText"
+      :hint="errorHintText"
       @retry="$emit('retry')"
     />
 
