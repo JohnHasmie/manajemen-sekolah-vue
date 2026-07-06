@@ -508,6 +508,8 @@
       "updated": "Pengumuman diperbarui.",
       "published": "Pengumuman terbit.",
       "deleted": "Pengumuman dihapus.",
+      "restored": "Pengumuman dikembalikan.",
+      "restoreFailed": "Gagal mengembalikan pengumuman",
       "schoolAnnouncements": "Pengumuman Sekolah",
       "meta": "pengumuman · terjadwal · draft",
       "create": "Buat pengumuman",

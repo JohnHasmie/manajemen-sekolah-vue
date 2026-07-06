@@ -42,8 +42,10 @@ import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useToast } from '@/composables/useToast';
 
 const { t } = useI18n();
+const appToast = useToast();
 
 const items = ref<Announcement[]>([]);
 const classes = ref<Classroom[]>([]);
@@ -412,12 +414,47 @@ async function publish() {
 
 async function confirmDelete() {
   if (!deleteTarget.value) return;
+  // Snapshot the announcement BEFORE deleting so undo can re-post the
+  // same fields as a fresh row. Announcement restore is safe because
+  // there's no cascade — read-state per-recipient regenerates on
+  // create, and the row that comes back has a new id that no other
+  // resource references yet.
+  const snapshot = { ...deleteTarget.value };
   isSaving.value = true;
   try {
-    await AnnouncementService.remove(deleteTarget.value.id);
+    await AnnouncementService.remove(snapshot.id);
     deleteTarget.value = null;
-    toast.value = { message: t('admin.announcement.deleted'), tone: 'success' };
     await reload();
+    appToast.undoable(t('admin.announcement.deleted'), async () => {
+      try {
+        await AnnouncementService.create({
+          title: snapshot.title,
+          body: snapshot.body,
+          type: snapshot.type,
+          priority: snapshot.priority,
+          status: snapshot.status,
+          audience: snapshot.audience,
+          role_target: snapshot.role_target,
+          target_ids: snapshot.target_ids,
+          audience_matrix: snapshot.audience_matrix,
+          is_pinned: snapshot.is_pinned,
+          scheduled_at: snapshot.scheduled_at ?? null,
+          event_at: snapshot.event_at ?? null,
+          event_location: snapshot.event_location ?? null,
+          expires_at: snapshot.expires_at ?? null,
+        });
+        await reload();
+        toast.value = {
+          message: t('admin.announcement.restored'),
+          tone: 'success',
+        };
+      } catch (e) {
+        toast.value = {
+          message: `${t('admin.announcement.restoreFailed')}: ${(e as Error).message}`,
+          tone: 'error',
+        };
+      }
+    });
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {

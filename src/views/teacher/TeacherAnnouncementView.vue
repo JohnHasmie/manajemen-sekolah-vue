@@ -37,8 +37,10 @@ import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useToast } from '@/composables/useToast';
 
 const { t } = useI18n();
+const appToast = useToast();
 
 const items = ref<Announcement[]>([]);
 const classes = ref<Classroom[]>([]);
@@ -333,12 +335,41 @@ function openEdit(a: Announcement) {
 
 async function confirmDelete() {
   if (!deleteTarget.value) return;
+  // Snapshot BEFORE deleting so undo can re-post the same fields as
+  // a fresh row. No cascade — announcement restore is safe.
+  const snapshot = { ...deleteTarget.value };
   isSaving.value = true;
   try {
-    await AnnouncementService.remove(deleteTarget.value.id);
+    await AnnouncementService.remove(snapshot.id);
     deleteTarget.value = null;
-    toast.value = { message: 'Pengumuman dihapus.', tone: 'success' };
     await reload();
+    appToast.undoable('Pengumuman dihapus.', async () => {
+      try {
+        await AnnouncementService.create({
+          title: snapshot.title,
+          body: snapshot.body,
+          type: snapshot.type,
+          priority: snapshot.priority,
+          status: snapshot.status,
+          audience: snapshot.audience,
+          role_target: snapshot.role_target,
+          target_ids: snapshot.target_ids,
+          audience_matrix: snapshot.audience_matrix,
+          is_pinned: snapshot.is_pinned,
+          scheduled_at: snapshot.scheduled_at ?? null,
+          event_at: snapshot.event_at ?? null,
+          event_location: snapshot.event_location ?? null,
+          expires_at: snapshot.expires_at ?? null,
+        });
+        await reload();
+        toast.value = { message: 'Pengumuman dikembalikan.', tone: 'success' };
+      } catch (e) {
+        toast.value = {
+          message: `Gagal mengembalikan pengumuman: ${(e as Error).message}`,
+          tone: 'error',
+        };
+      }
+    });
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {

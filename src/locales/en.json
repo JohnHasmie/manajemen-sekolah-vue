@@ -511,6 +511,8 @@
       "updated": "Announcement updated.",
       "published": "Announcement published.",
       "deleted": "Announcement deleted.",
+      "restored": "Announcement restored.",
+      "restoreFailed": "Failed to restore announcement",
       "schoolAnnouncements": "School announcements",
       "meta": "announcements · scheduled · drafts",
       "create": "Create announcement",
