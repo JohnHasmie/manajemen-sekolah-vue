@@ -73,6 +73,45 @@ const totalCatalogCount = computed(
     ),
 );
 
+// Permission-picker search — the full catalog runs 60+ permission keys
+// across 8+ modules; scrolling all of them to find one takes real
+// time. Match against label / description / key so both plain-language
+// searches ("kelola tagihan") and system-key searches ("finance.bill")
+// land the same result.
+const permissionSearch = ref('');
+const permissionSearchTrimmed = computed(() =>
+  permissionSearch.value.trim().toLowerCase(),
+);
+const filteredCatalogByModule = computed(() => {
+  const q = permissionSearchTrimmed.value;
+  if (!q) return catalogByModule.value;
+  const out: Record<string, typeof catalogByModule.value[string]> = {};
+  for (const [mod, perms] of Object.entries(catalogByModule.value)) {
+    const hits = perms.filter((p) => {
+      const label = (p.label ?? '').toLowerCase();
+      const desc = (p.description ?? '').toLowerCase();
+      const key = (p.key ?? '').toLowerCase();
+      return label.includes(q) || desc.includes(q) || key.includes(q);
+    });
+    if (hits.length) out[mod] = hits;
+  }
+  return out;
+});
+const filteredModulesInOrder = computed(() =>
+  Object.keys(filteredCatalogByModule.value),
+);
+const hasNoMatches = computed(
+  () =>
+    permissionSearchTrimmed.value !== '' &&
+    filteredModulesInOrder.value.length === 0,
+);
+const filteredHitCount = computed(() =>
+  Object.values(filteredCatalogByModule.value).reduce(
+    (sum, list) => sum + list.length,
+    0,
+  ),
+);
+
 const memberCount = computed(() => members.value.length);
 
 const systemRoleCopySources = computed(() =>
@@ -195,13 +234,44 @@ function backToList() {
         </button>
       </div>
 
+      <!-- SEARCH — filter the 60+ permission keys down to matching rows. -->
+      <div class="rd__perm-search">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle
+            cx="6" cy="6" r="4" fill="none"
+            stroke="#94a3b8" stroke-width="1.4"
+          />
+          <path
+            d="M9 9 L12 12" stroke="#94a3b8" stroke-width="1.4"
+            stroke-linecap="round"
+          />
+        </svg>
+        <input
+          v-model="permissionSearch"
+          type="search"
+          placeholder="Cari izin (mis. 'tagihan' atau 'finance.bill')…"
+          aria-label="Cari izin"
+        />
+        <span v-if="permissionSearchTrimmed" class="rd__perm-search-count">
+          {{ filteredHitCount }} dari {{ totalCatalogCount }}
+        </span>
+      </div>
+
+      <p v-if="hasNoMatches" class="rd__perm-empty">
+        Tidak ada izin yang cocok dengan "<em>{{ permissionSearchTrimmed }}</em>".
+      </p>
+
       <PermissionModuleAccordion
-        v-for="module in modulesInOrder"
+        v-for="module in filteredModulesInOrder"
         :key="module"
         :module="module"
-        :permissions="catalogByModule[module]"
+        :permissions="filteredCatalogByModule[module]"
         :selected-keys="stagedPermissionKeys"
-        :is-open="expandedModules.has(module) || module === modulesInOrder[0]"
+        :is-open="
+          permissionSearchTrimmed !== '' ||
+          expandedModules.has(module) ||
+          module === filteredModulesInOrder[0]
+        "
         @toggle-open="toggleModule(module)"
         @toggle-permission="(k) => rbac.togglePermission(k)"
       />
@@ -478,6 +548,46 @@ function backToList() {
   border-radius: 10px;
   font-size: 12px;
 }
+.rd__perm-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+.rd__perm-search input {
+  border: 0;
+  background: transparent;
+  outline: none;
+  flex: 1;
+  font-size: 13px;
+  color: #0f172a;
+  min-width: 0;
+}
+.rd__perm-search input::placeholder {
+  color: #94a3b8;
+}
+.rd__perm-search-count {
+  font-size: 11px;
+  color: #64748b;
+  white-space: nowrap;
+}
+.rd__perm-empty {
+  padding: 14px 16px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  color: #64748b;
+  font-size: 12.5px;
+}
+.rd__perm-empty em {
+  font-style: normal;
+  font-weight: 700;
+  color: #0f172a;
+}
 .rd__members-head {
   display: flex;
   align-items: center;
@@ -665,9 +775,25 @@ function backToList() {
   color: #21afe6;
 }
 :global(.rbac-shell--tutoring) .rd__members-search,
+:global(.rbac-shell--tutoring) .rd__perm-search,
 :global(.rbac-shell--tutoring) .rd__member {
   background: #10162a;
   border-color: #1b2235;
+}
+:global(.rbac-shell--tutoring) .rd__perm-search input,
+:global(.rbac-shell--tutoring) .rd__perm-search-count {
+  color: #94a3b8;
+}
+:global(.rbac-shell--tutoring) .rd__perm-search input::placeholder {
+  color: #64748b;
+}
+:global(.rbac-shell--tutoring) .rd__perm-empty {
+  background: #10162a;
+  border-color: #1b2235;
+  color: #94a3b8;
+}
+:global(.rbac-shell--tutoring) .rd__perm-empty em {
+  color: #f1f5f9;
 }
 :global(.rbac-shell--tutoring) .rd__member-name {
   color: #f1f5f9;
