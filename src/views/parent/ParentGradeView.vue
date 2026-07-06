@@ -24,6 +24,9 @@ import type { ParentGradeEntry } from '@/types/parent';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import SegmentedControl, {
+  type SegmentOption,
+} from '@/components/filters/SegmentedControl.vue';
 import ParentPageHeader from '@/components/layout/ParentPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Modal from '@/components/ui/Modal.vue';
@@ -142,11 +145,33 @@ const groups = computed<SubjectGroup[]>(() => {
       .filter((n): n is number => typeof n === 'number');
     g.average = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
   }
-  // Sort alphabetically.
-  return Array.from(map.values()).sort((a, b) =>
-    a.subject_name.localeCompare(b.subject_name),
-  );
+  const list = Array.from(map.values());
+  if (sortMode.value === 'weakest') {
+    // Weak-first: surface subjects that need help at the top so a
+    // parent scanning the page sees where to focus. Ties broken by
+    // name so ordering stays stable across refreshes. Subjects with
+    // no scored assessments yet (average === 0) sink to the bottom —
+    // they'd otherwise dominate as spurious zeros.
+    return list.sort((a, b) => {
+      const aScored = a.rows.some((r) => typeof r.score === 'number');
+      const bScored = b.rows.some((r) => typeof r.score === 'number');
+      if (aScored !== bScored) return aScored ? -1 : 1;
+      if (a.average !== b.average) return a.average - b.average;
+      return a.subject_name.localeCompare(b.subject_name);
+    });
+  }
+  return list.sort((a, b) => a.subject_name.localeCompare(b.subject_name));
 });
+
+// Sort mode — default to weakest-first so weak subjects don't hide
+// at the bottom of an A–Z list. Parents who prefer the roll-call order
+// can flip to alphabetical.
+type SortMode = 'weakest' | 'alphabetical';
+const sortMode = ref<SortMode>('weakest');
+const sortOptions = computed<SegmentOption[]>(() => [
+  { key: 'weakest', label: t('parent.grades.sortWeakest') },
+  { key: 'alphabetical', label: t('parent.grades.sortAlphabetical') },
+]);
 
 // ── KPI aggregates (matches mobile _gradeAggregates) ──
 const aggregates = computed(() => {
@@ -413,6 +438,12 @@ const activeSemesterLabel = computed(
             <NavIcon name="x" :size="10" />
             {{ t('wali.sekolah.grade.btnReset') }}
           </button>
+          <SegmentedControl
+            v-model="sortMode"
+            :options="sortOptions"
+            size="sm"
+            :aria-label="t('parent.grades.sortAria')"
+          />
         </div>
       </template>
     </PageFilterToolbar>
