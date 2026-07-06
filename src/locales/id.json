@@ -2619,6 +2619,15 @@
       "feedBilling": "Tagihan",
       "feedOther": "Lain"
     },
+    "reportCard": {
+      "decisionKicker": "Keputusan Kenaikan",
+      "decisionPromoted": "Naik Kelas 🎉",
+      "decisionNotPromoted": "Tinggal di Kelas",
+      "decisionGraduated": "Lulus 🎉",
+      "decisionNotGraduated": "Tidak Lulus",
+      "decisionPending": "Belum diumumkan oleh sekolah",
+      "decisionOddSemester": "Akan diumumkan setelah Semester Genap"
+    },
     "announcements": {
       "kicker": "Komunikasi · Pengumuman Sekolah",
       "title": "Pengumuman",

@@ -39,6 +39,7 @@ import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
 import ParentRaporSubjectCard from '@/components/feature/ParentRaporSubjectCard.vue';
 import ParentRaporDeskripsiSheet from '@/components/feature/ParentRaporDeskripsiSheet.vue';
+import ParentReportCardDecisionBanner from '@/components/feature/ParentReportCardDecisionBanner.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -113,12 +114,6 @@ const isGenap = computed(() => {
   const raw = (row.value?.reportCard.semester ?? '').toLowerCase();
   return raw === 'even' || raw === '2' || raw.includes('genap');
 });
-
-const isNaikKelas = computed(() =>
-  (row.value?.reportCard.promotion_decision ?? '')
-    .toLowerCase()
-    .includes('naik'),
-);
 
 const className = computed(() => row.value?.student.class_name ?? '');
 const semesterLabel = computed(() => {
@@ -297,6 +292,12 @@ const heroChipLabel = computed(() => {
               </button>
             </template>
           </ParentPageHeader>
+
+          <!-- DECISION HERO — the single question the parent came to answer, above the fold. -->
+          <ParentReportCardDecisionBanner
+            :decision="row.reportCard.promotion_decision"
+            :is-odd-semester="!isGenap"
+          />
 
           <!-- HERO CHIP ROW (Kelas · Sem + UTS/UAS toggles) -->
           <div class="flex items-center gap-2">
@@ -622,38 +623,9 @@ const heroChipLabel = computed(() => {
             </div>
           </section>
 
-          <!-- PROMOTION BANNER (Genap only) -->
-          <section
-            v-if="isGenap && row.reportCard.promotion_decision"
-            class="rounded-2xl p-4 border-l-4"
-            :class="
-              isNaikKelas
-                ? 'bg-emerald-50 border-emerald-500'
-                : 'bg-red-50 border-red-500'
-            "
-          >
-            <p
-              class="text-3xs font-bold uppercase tracking-widest mb-1"
-              :class="isNaikKelas ? 'text-emerald-700' : 'text-red-700'"
-            >
-              {{ t('reportCard.promotionDecision') }}
-            </p>
-            <p
-              class="text-[14px] font-black"
-              :class="isNaikKelas ? 'text-emerald-900' : 'text-red-900'"
-            >
-              {{ row.reportCard.promotion_decision }}
-            </p>
-          </section>
-          <section
-            v-else-if="!isGenap"
-            class="rounded-2xl p-4 bg-slate-50 border border-slate-200"
-          >
-            <p class="text-[11.5px] text-slate-600 leading-relaxed">
-              {{ t('reportCard.promotionAnnouncementLater') }}
-              <strong>{{ t('common.semesterGenap') }}</strong>.
-            </p>
-          </section>
+          <!-- (Legacy bottom-of-page promotion banner removed — it now
+               sits at the very top of the detail as a hero, see
+               ParentReportCardDecisionBanner above.) -->
 
           <!-- EXPORT NOTE -->
           <p class="text-[10.5px] text-slate-400 italic px-1 leading-relaxed">

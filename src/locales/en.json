@@ -2623,6 +2623,15 @@
       "feedBilling": "Bill",
       "feedOther": "Other"
     },
+    "reportCard": {
+      "decisionKicker": "Promotion Decision",
+      "decisionPromoted": "Promoted 🎉",
+      "decisionNotPromoted": "Held back",
+      "decisionGraduated": "Graduated 🎉",
+      "decisionNotGraduated": "Did not graduate",
+      "decisionPending": "Not yet announced by the school",
+      "decisionOddSemester": "Will be announced after Semester 2"
+    },
     "announcements": {
       "kicker": "Communication · School Announcements",
       "title": "Announcements",
