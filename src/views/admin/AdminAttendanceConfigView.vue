@@ -36,10 +36,12 @@ import Button from '@/components/ui/Button.vue';
 import StickyActionBar from '@/components/ui/StickyActionBar.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import AttendanceConfigWizard from '@/components/feature/AttendanceConfigWizard.vue';
+import { useMeStore } from '@/stores/me';
 
 const toast = useToast();
 const { t } = useI18n();
 const { confirm } = useConfirm();
+const me = useMeStore();
 
 type Tab = 'general' | 'checkin_rules' | 'checkout_rules';
 const tab = ref<Tab>('general');
@@ -1142,8 +1144,8 @@ function jumpToSection(id: string): void {
                     </div>
                   </td>
                   <td class="py-3 px-4 text-right space-x-2">
-                    <button @click="editCheckinRule(rule)" class="text-role-admin hover:underline font-bold">Edit</button>
-                    <button @click="deleteCheckinRule(rule.id)" class="text-red-500 hover:underline font-bold">Hapus</button>
+                    <button v-if="me.can('attendance.staff.settings.manage')" @click="editCheckinRule(rule)" class="text-role-admin hover:underline font-bold">Edit</button>
+                    <button v-if="me.can('attendance.staff.settings.manage')" @click="deleteCheckinRule(rule.id)" class="text-red-500 hover:underline font-bold">Hapus</button>
                   </td>
                 </tr>
               </tbody>
@@ -1293,8 +1295,8 @@ function jumpToSection(id: string): void {
                     </div>
                   </td>
                   <td class="py-3 px-4 text-right space-x-2">
-                    <button @click="editRule(rule)" class="text-role-admin hover:underline font-bold">Edit</button>
-                    <button @click="deleteRule(rule.id)" class="text-red-500 hover:underline font-bold">Hapus</button>
+                    <button v-if="me.can('attendance.staff.settings.manage')" @click="editRule(rule)" class="text-role-admin hover:underline font-bold">Edit</button>
+                    <button v-if="me.can('attendance.staff.settings.manage')" @click="deleteRule(rule.id)" class="text-red-500 hover:underline font-bold">Hapus</button>
                   </td>
                 </tr>
               </tbody>

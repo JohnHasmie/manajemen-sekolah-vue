@@ -622,14 +622,25 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/roles',
         name: 'admin-roles',
         component: AdminRolesView,
-        meta: { role: 'admin' satisfies Role },
+        // Route ability gate — RBAC is a paid/optional module. Without
+        // this, any admin whose tenant hasn't entitled RBAC could
+        // navigate to the roles list; backend rejects mutations via
+        // Gate::before but the UI leaked the list. Aligned with the
+        // nav menu, which already filters this entry by the same key.
+        meta: {
+          role: 'admin' satisfies Role,
+          ability: 'rbac.role.view',
+        },
       },
       {
         path: 'admin/roles/:roleId',
         name: 'admin-role-detail',
         component: AdminRoleDetailView,
         props: true,
-        meta: { role: 'admin' satisfies Role },
+        meta: {
+          role: 'admin' satisfies Role,
+          ability: 'rbac.role.view',
+        },
       },
       {
         // Kelola Modul & Paket — embedded IN the admin shell so the

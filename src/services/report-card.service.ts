@@ -568,6 +568,37 @@ export interface SaveReportCardPayload {
  */
 let currentSemesterIdPromise: Promise<string | null> | null = null;
 
+/**
+ * Invalidate the cached "current semester" so the next
+ * {@link fetchCurrentSemesterId} call re-fetches from `/semesters`.
+ * Called on:
+ *   1. `document.visibilitychange` when the tab returns to visible —
+ *      catches the "admin changed semester while parent had the app
+ *      in a background tab" case
+ *   2. Explicit callers via {@link invalidateCurrentSemesterId} —
+ *      the semester-admin surface uses this after a successful
+ *      PATCH so the same tab re-fetches immediately without a page
+ *      reload
+ *
+ * Before this, the cache lived for the entire session — a parent
+ * viewing Rapor would show the OLD semester's grades until they
+ * F5-refreshed, even after admin flipped Ganjil → Genap upstream.
+ */
+export function invalidateCurrentSemesterId(): void {
+  currentSemesterIdPromise = null;
+}
+
+// One-shot visibility hook — fires the first time this module loads
+// in a browser context and stays wired for the session. SSR-safe
+// (`typeof document` guards the reference).
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      invalidateCurrentSemesterId();
+    }
+  });
+}
+
 function fetchCurrentSemesterId(): Promise<string | null> {
   if (currentSemesterIdPromise) return currentSemesterIdPromise;
   currentSemesterIdPromise = (async () => {
