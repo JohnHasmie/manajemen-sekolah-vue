@@ -394,6 +394,90 @@ async function performBulkDelete() {
   }
 }
 
+// ── Bulk edit — move to class & change status ──────────────────────
+// Two-and-only-two bulk-edit ops on students: bulk move-to-kelas
+// (heavy time-saver at year start / promotion) and bulk activate/
+// deactivate. Other fields are per-student truth (name / NIS /
+// gender / wali) and are intentionally OUT of scope for bulk —
+// applying the same wali email to 30 siswa would be silently wrong.
+const bulkMoveOpen = ref(false);
+const bulkStatusOpen = ref(false);
+const bulkTargetClassId = ref<string>('');
+const bulkTargetStatus = ref<'active' | 'inactive' | ''>('');
+
+function openBulkMove(): void {
+  bulkTargetClassId.value = '';
+  bulkMoveOpen.value = true;
+}
+function openBulkStatus(): void {
+  bulkTargetStatus.value = '';
+  bulkStatusOpen.value = true;
+}
+const bulkTargetClassName = computed(() => {
+  if (!bulkTargetClassId.value) return '';
+  return classes.value.find((c) => c.id === bulkTargetClassId.value)?.name ?? '';
+});
+
+async function performBulkMove(): Promise<void> {
+  if (!bulkTargetClassId.value) return;
+  try {
+    isSaving.value = true;
+    const ids = Array.from(selectedIds.value);
+    const res = await StudentService.bulkUpdate(ids, {
+      class_id: bulkTargetClassId.value,
+    });
+    const targetName = bulkTargetClassName.value;
+    clearSelection();
+    bulkMoveOpen.value = false;
+    await reload(pagination.value?.current_page ?? 1);
+    if (res.failed > 0) {
+      toast.value = {
+        message: `${res.updated} siswa dipindah ke ${targetName} · ${res.failed} gagal.`,
+        tone: 'error',
+      };
+    } else {
+      toast.value = {
+        message: `${res.updated} siswa dipindah ke ${targetName}.`,
+        tone: 'success',
+      };
+    }
+  } catch (e) {
+    error.value = (e as Error).message;
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+async function performBulkStatus(): Promise<void> {
+  if (!bulkTargetStatus.value) return;
+  try {
+    isSaving.value = true;
+    const ids = Array.from(selectedIds.value);
+    const target = bulkTargetStatus.value;
+    const res = await StudentService.bulkUpdate(ids, { status: target });
+    const targetLabel =
+      target === 'active' ? t('status.Active') : t('status.Inactive');
+    clearSelection();
+    bulkStatusOpen.value = false;
+    await reload(pagination.value?.current_page ?? 1);
+    if (res.failed > 0) {
+      toast.value = {
+        message: `${res.updated} siswa diubah ke ${targetLabel} · ${res.failed} gagal.`,
+        tone: 'error',
+      };
+    } else {
+      toast.value = {
+        message: `${res.updated} siswa diubah ke ${targetLabel}.`,
+        tone: 'success',
+      };
+    }
+  } catch (e) {
+    error.value = (e as Error).message;
+  } finally {
+    isSaving.value = false;
+  }
+}
+
 // ── Detail sheet ──
 async function openDetail(s: Student) {
   detailTarget.value = s;
@@ -634,6 +718,17 @@ function topMeta(s: Student): string {
     />
 
     <template #bulk-actions>
+      <!-- Bulk-safe edits: pindah kelas + ubah status. Per-student
+           truth fields (name/NIS/gender/wali) are intentionally NOT
+           bulk-editable because forcing the same value on N siswa is
+           either silently wrong or has to be applied one row at a
+           time anyway. -->
+      <Button variant="secondary" size="sm" @click="openBulkMove">
+        {{ t('admin.student.bulkMoveAction') }}
+      </Button>
+      <Button variant="secondary" size="sm" @click="openBulkStatus">
+        {{ t('admin.student.bulkStatusAction') }}
+      </Button>
       <Button variant="danger" size="sm" @click="bulkDeleteOpen = true">
         {{ t('admin.student.bulkDeleteAction', { count: selectedIds.size }) }}
       </Button>
@@ -783,6 +878,106 @@ function topMeta(s: Student): string {
     @confirm="performBulkDelete"
     @close="bulkDeleteOpen = false"
   />
+
+  <!-- Bulk-move-to-class modal — single dropdown + summary. -->
+  <Modal
+    v-if="bulkMoveOpen"
+    :title="t('admin.student.bulkMoveTitle', { count: selectedIds.size })"
+    :subtitle="t('admin.student.bulkMoveSubtitle')"
+    @close="bulkMoveOpen = false"
+  >
+    <div class="space-y-3">
+      <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
+        {{ t('admin.student.bulkMoveTargetLabel') }}
+      </label>
+      <select
+        v-model="bulkTargetClassId"
+        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
+      >
+        <option value="" disabled>{{ t('admin.student.bulkMovePickPlaceholder') }}</option>
+        <option v-for="c in classes" :key="c.id" :value="c.id">
+          {{ c.name }}{{ c.grade_level ? ` · Tingkat ${c.grade_level}` : '' }}
+        </option>
+      </select>
+      <p
+        v-if="bulkTargetClassId"
+        class="text-2xs text-slate-500 leading-relaxed"
+      >
+        {{ t('admin.student.bulkMoveHint', { count: selectedIds.size, name: bulkTargetClassName }) }}
+      </p>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <Button variant="secondary" block @click="bulkMoveOpen = false">
+          {{ t('common.cancel') }}
+        </Button>
+        <Button
+          variant="primary"
+          block
+          :loading="isSaving"
+          :disabled="!bulkTargetClassId"
+          @click="performBulkMove"
+        >
+          {{ t('admin.student.bulkMoveConfirm') }}
+        </Button>
+      </div>
+    </div>
+  </Modal>
+
+  <!-- Bulk-status modal — two radios (active/inactive). -->
+  <Modal
+    v-if="bulkStatusOpen"
+    :title="t('admin.student.bulkStatusTitle', { count: selectedIds.size })"
+    :subtitle="t('admin.student.bulkStatusSubtitle')"
+    @close="bulkStatusOpen = false"
+  >
+    <div class="space-y-3">
+      <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+        <input
+          v-model="bulkTargetStatus"
+          type="radio"
+          value="active"
+          class="mt-1 accent-role-admin"
+        />
+        <div>
+          <p class="text-[13px] font-black text-slate-900">
+            {{ t('status.Active') }}
+          </p>
+          <p class="text-[11.5px] text-slate-500 mt-0.5">
+            {{ t('admin.student.bulkStatusActiveHint') }}
+          </p>
+        </div>
+      </label>
+      <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+        <input
+          v-model="bulkTargetStatus"
+          type="radio"
+          value="inactive"
+          class="mt-1 accent-role-admin"
+        />
+        <div>
+          <p class="text-[13px] font-black text-slate-900">
+            {{ t('status.Inactive') }}
+          </p>
+          <p class="text-[11.5px] text-slate-500 mt-0.5">
+            {{ t('admin.student.bulkStatusInactiveHint') }}
+          </p>
+        </div>
+      </label>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <Button variant="secondary" block @click="bulkStatusOpen = false">
+          {{ t('common.cancel') }}
+        </Button>
+        <Button
+          variant="primary"
+          block
+          :loading="isSaving"
+          :disabled="!bulkTargetStatus"
+          @click="performBulkStatus"
+        >
+          {{ t('admin.student.bulkStatusConfirm') }}
+        </Button>
+      </div>
+    </div>
+  </Modal>
 
   <AdminEntityDetailSheet
     v-if="detailTarget"

@@ -155,6 +155,35 @@ export const StudentService = {
   },
 
   /**
+   * Apply the same partial update to N students. Backend has no
+   * `POST /student/bulk-update` (mirrors the missing bulk-delete
+   * endpoint), so we loop per-id via PUT and roll up the counts —
+   * matches the `bulkRemove` pattern.
+   *
+   * The `payload` is a shallow subset of the update-student shape:
+   * pass ONE or two fields per call (e.g. `{ class_id }` for a
+   * bulk-move-to-class, `{ status }` for bulk-activate/deactivate).
+   * Sending the full student row would risk clobbering per-row
+   * data with the payload defaults.
+   */
+  async bulkUpdate(
+    ids: string[],
+    payload: Record<string, unknown>,
+  ): Promise<{ updated: number; failed: number }> {
+    let updated = 0;
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await api.put(`/student/${id}`, payload);
+        updated++;
+      } catch {
+        failed++;
+      }
+    }
+    return { updated, failed };
+  },
+
+  /**
    * Fetch the roster for one class.
    *
    * Hits `/student/class/{classId}` — the canonical Flutter endpoint
