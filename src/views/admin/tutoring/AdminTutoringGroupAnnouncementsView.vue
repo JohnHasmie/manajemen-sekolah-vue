@@ -9,6 +9,7 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
+import { useConfirm } from '@/composables/useConfirm';
 import { formatDateShort } from '@/lib/format';
 import type {
   TutoringGroup,
@@ -20,6 +21,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 
 const route = useRoute();
 const toast = useToast();
+const { confirm } = useConfirm();
 const { t } = useI18n();
 
 const groupId = ref(String(route.query.groupId ?? ''));
@@ -87,7 +89,16 @@ async function submitCompose() {
 }
 
 async function remove(a: TutoringGroupAnnouncement) {
-  if (!window.confirm(t('admin.bimbel.group_announcements.delete_confirm', { title: a.title }))) return;
+  if (
+    !(await confirm({
+      message: t('admin.bimbel.group_announcements.delete_confirm', {
+        title: a.title,
+      }),
+      danger: true,
+      confirmLabel: t('common.delete'),
+    }))
+  )
+    return;
   try { await TutoringService.deleteGroupAnnouncement(a.id); await load(); }
   catch (e) { toast.error(e instanceof Error ? e.message : t('admin.bimbel.group_announcements.delete_fail')); }
 }

@@ -26,6 +26,7 @@ import { useI18n } from 'vue-i18n';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import GeofenceMapPicker from '@/components/feature/GeofenceMapPicker.vue';
 import { useToast } from '@/composables/useToast';
+import { useConfirm } from '@/composables/useConfirm';
 import type { TeacherAttendanceSettings } from '@/types/teacher-attendance';
 import { DEFAULT_TEACHER_ATTENDANCE_SETTINGS } from '@/types/teacher-attendance';
 import type { CheckInMethod } from '@/types/attendance-qr';
@@ -36,6 +37,7 @@ import Spinner from '@/components/ui/Spinner.vue';
 
 const toast = useToast();
 const { t } = useI18n();
+const { confirm } = useConfirm();
 
 type Tab = 'general' | 'checkin_rules' | 'checkout_rules';
 const tab = ref<Tab>('general');
@@ -336,7 +338,15 @@ async function saveRule() {
 }
 
 async function deleteRule(id: string) {
-  if (!confirm('Apakah Anda yakin ingin menghapus aturan presensi ini?')) return;
+  if (
+    !(await confirm({
+      title: 'Hapus aturan presensi?',
+      message: 'Aturan presensi ini akan dihapus permanen.',
+      danger: true,
+      confirmLabel: t('common.delete'),
+    }))
+  )
+    return;
   try {
     await TeacherAttendanceService.deleteRule(id);
     toast.success('Aturan presensi berhasil dihapus.');
@@ -418,7 +428,15 @@ async function saveCheckinRule() {
 }
 
 async function deleteCheckinRule(id: string) {
-  if (!confirm('Apakah Anda yakin ingin menghapus aturan ini?')) return;
+  if (
+    !(await confirm({
+      title: 'Hapus aturan?',
+      message: 'Aturan ini akan dihapus permanen.',
+      danger: true,
+      confirmLabel: t('common.delete'),
+    }))
+  )
+    return;
   try {
     await TeacherAttendanceService.deleteRule(id);
     toast.success('Aturan jam datang berhasil dihapus.');

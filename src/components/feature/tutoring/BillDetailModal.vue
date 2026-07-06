@@ -17,6 +17,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
+import { useConfirm } from '@/composables/useConfirm';
 import { formatRupiah, formatDateShort } from '@/lib/format';
 import type { TutoringBillDetail } from '@/types/tutoring';
 
@@ -32,6 +33,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const toast = useToast();
+const { confirm } = useConfirm();
 const loading = ref(true);
 const detail = ref<TutoringBillDetail | null>(null);
 
@@ -64,9 +66,12 @@ async function downloadInvoice() {
 
 async function resendInvoice() {
   if (resending.value) return;
-  // Lightweight confirm via window.confirm — keeps the modal simple and
-  // matches the destructive-action pattern used elsewhere in admin views.
-  if (!window.confirm(t('tutoring.billDetail.resendConfirm'))) return;
+  if (
+    !(await confirm({
+      message: t('tutoring.billDetail.resendConfirm'),
+    }))
+  )
+    return;
   resending.value = true;
   try {
     await TutoringService.resendInvoice(props.billId);

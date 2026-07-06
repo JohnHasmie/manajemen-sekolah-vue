@@ -22,6 +22,9 @@ import type { PlatformTenant } from '@/types/super-admin-tenant';
 import type { AdminTenantModuleRow } from '@/types/super-admin-billing';
 import { tenantLabel } from '@/lib/tenantTokens';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import { useConfirm } from '@/composables/useConfirm';
+
+const { confirm } = useConfirm();
 
 // ── Tenant picker state ─────────────────────────────────────────────
 const tenantSearch = ref('');
@@ -176,9 +179,15 @@ async function revokeAtPeriodEnd(row: AdminTenantModuleRow): Promise<void> {
 
 async function revokeNow(row: AdminTenantModuleRow): Promise<void> {
   if (!selectedTenant.value) return;
-  if (!window.confirm(
-    `Cabut ${row.label} SEKARANG? Akses hilang seketika. Untuk soft-revoke (akhir periode), gunakan tombol "Cabut · akhir periode".`,
-  )) return;
+  if (
+    !(await confirm({
+      title: 'Cabut modul sekarang?',
+      message: `Akses ${row.label} akan hilang seketika. Untuk pencabutan di akhir periode, gunakan tombol "Cabut · akhir periode".`,
+      danger: true,
+      confirmLabel: 'Cabut sekarang',
+    }))
+  )
+    return;
   rowBusyKey.value = row.module_key;
   try {
     await SuperAdminBillingService.revokeModule({

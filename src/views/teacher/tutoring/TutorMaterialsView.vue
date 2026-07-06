@@ -10,6 +10,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
+import { useConfirm } from '@/composables/useConfirm';
 import { formatDateShort } from '@/lib/format';
 import type { TutoringGroup, TutoringMaterial } from '@/types/tutoring';
 
@@ -24,6 +25,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
 const toast = useToast();
+const { confirm } = useConfirm();
 
 const loading = ref(true);
 const rows = ref<TutoringMaterial[]>([]);
@@ -96,7 +98,14 @@ async function submit() {
 }
 
 async function remove(m: TutoringMaterial) {
-  if (!window.confirm(t('tutor.bimbel.materials.delete_confirm', { title: m.title }))) return;
+  if (
+    !(await confirm({
+      message: t('tutor.bimbel.materials.delete_confirm', { title: m.title }),
+      danger: true,
+      confirmLabel: t('common.delete'),
+    }))
+  )
+    return;
   try {
     await TutoringService.deleteMaterial(m.id);
     await load();

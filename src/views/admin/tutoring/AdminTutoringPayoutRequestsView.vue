@@ -18,6 +18,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
+import { useConfirm } from '@/composables/useConfirm';
 import { formatRupiah } from '@/lib/format';
 import type {
   TutorPayoutRequest,
@@ -32,6 +33,7 @@ import AdminRejectDialog from '@/components/tutoring/AdminRejectDialog.vue';
 
 const { t } = useI18n();
 const toast = useToast();
+const { confirm } = useConfirm();
 
 const STATUSES: TutorPayoutRequestStatus[] = ['PENDING', 'APPROVED', 'PAID', 'REJECTED'];
 
@@ -134,7 +136,13 @@ async function onApprove(req: TutorPayoutRequest) {
 }
 
 async function onRollback(req: TutorPayoutRequest) {
-  if (!confirm(t('admin.bimbel.payout_requests.rollback_confirm'))) return;
+  if (
+    !(await confirm({
+      message: t('admin.bimbel.payout_requests.rollback_confirm'),
+      danger: true,
+    }))
+  )
+    return;
   busyRowId.value = req.id;
   try {
     const updated = await TutoringService.rollbackPayoutRequest(req.id);

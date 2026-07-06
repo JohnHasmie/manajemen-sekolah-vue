@@ -9,6 +9,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
+import { useConfirm } from '@/composables/useConfirm';
 import type { TutoringProgram } from '@/types/tutoring';
 
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
@@ -26,6 +27,7 @@ type Filter = 'all' | 'active' | 'empty';
 
 const { t } = useI18n();
 const toast = useToast();
+const { confirm } = useConfirm();
 const router = useRouter();
 
 const loading = ref(true);
@@ -100,7 +102,13 @@ async function create() {
 }
 
 async function remove(p: TutoringProgram) {
-  if (!window.confirm(t('tutoring.programs.confirmDelete', { name: p.name })))
+  if (
+    !(await confirm({
+      message: t('tutoring.programs.confirmDelete', { name: p.name }),
+      danger: true,
+      confirmLabel: t('common.delete'),
+    }))
+  )
     return;
   try {
     await TutoringService.deleteProgram(p.id);

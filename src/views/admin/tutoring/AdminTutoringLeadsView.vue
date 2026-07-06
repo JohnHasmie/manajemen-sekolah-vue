@@ -15,6 +15,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
+import { useConfirm } from '@/composables/useConfirm';
 import { formatDateShort } from '@/lib/format';
 import type { TutoringLead, TutoringProgram } from '@/types/tutoring';
 
@@ -35,6 +36,7 @@ type Filter = 'all' | 'TRIAL' | 'CONVERTED' | 'DROPPED';
 const { t } = useI18n();
 const router = useRouter();
 const toast = useToast();
+const { confirm } = useConfirm();
 
 const loading = ref(true);
 const rows = ref<TutoringLead[]>([]);
@@ -193,7 +195,14 @@ async function submitDrop() {
 }
 
 async function remove(lead: TutoringLead) {
-  if (!window.confirm(t('admin.bimbel.leads.delete_confirm', { name: lead.name }))) return;
+  if (
+    !(await confirm({
+      message: t('admin.bimbel.leads.delete_confirm', { name: lead.name }),
+      danger: true,
+      confirmLabel: t('common.delete'),
+    }))
+  )
+    return;
   try {
     await TutoringService.deleteLead(lead.id);
     await load();

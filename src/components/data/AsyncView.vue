@@ -28,25 +28,31 @@ export interface AsyncState<T> {
 const props = withDefaults(
   defineProps<{
     state: AsyncState<T>;
+    loadingLabel?: string;
     emptyTitle?: string;
     emptyDescription?: string;
     emptyIcon?: string;
+    emptyActionLabel?: string;
     errorTitle?: string;
     minHeight?: string;
   }>(),
   {
     emptyDescription: '',
     emptyIcon: 'inbox',
+    emptyActionLabel: '',
     minHeight: '12rem',
   },
 );
 
-defineEmits<{ retry: [] }>();
+defineEmits<{ retry: []; 'empty-action': [] }>();
 
 const { t } = useI18n();
 
 // Defaults resolve through i18n so every page using AsyncView gets
-// localised error/empty labels for free unless it passes its own copy.
+// localised loading/error/empty labels for free unless it passes its own copy.
+const loadingLabelText = computed(() =>
+  props.loadingLabel?.trim() ? props.loadingLabel : t('common.loading'),
+);
 const emptyTitleText = computed(() =>
   props.emptyTitle?.trim() ? props.emptyTitle : t('common.emptyTitle'),
 );
@@ -62,9 +68,10 @@ const errorMessageText = computed(() =>
   <div :style="{ minHeight }" class="w-full">
     <div
       v-if="state.status === 'loading'"
-      class="flex items-center justify-center py-xl text-slate-400"
+      class="flex flex-col items-center justify-center py-xl text-slate-400"
     >
       <Spinner size="md" />
+      <p class="mt-sm text-sm">{{ loadingLabelText }}</p>
     </div>
 
     <ErrorState
@@ -79,6 +86,8 @@ const errorMessageText = computed(() =>
       :title="emptyTitleText"
       :description="emptyDescription"
       :icon="emptyIcon"
+      :action-label="emptyActionLabel"
+      @action="$emit('empty-action')"
     />
 
     <slot v-else :data="state.data" />

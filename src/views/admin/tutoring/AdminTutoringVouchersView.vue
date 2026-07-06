@@ -12,6 +12,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
+import { useConfirm } from '@/composables/useConfirm';
 import { formatDateShort, formatRupiah } from '@/lib/format';
 import type { TutoringVoucher } from '@/types/tutoring';
 
@@ -27,6 +28,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
 const toast = useToast();
+const { confirm } = useConfirm();
 
 const loading = ref(true);
 const rows = ref<TutoringVoucher[]>([]);
@@ -108,7 +110,14 @@ async function toggleActive(v: TutoringVoucher) {
 }
 
 async function remove(v: TutoringVoucher) {
-  if (!window.confirm(t('admin.bimbel.vouchers.delete_confirm', { code: v.code }))) return;
+  if (
+    !(await confirm({
+      message: t('admin.bimbel.vouchers.delete_confirm', { code: v.code }),
+      danger: true,
+      confirmLabel: t('common.delete'),
+    }))
+  )
+    return;
   try {
     await TutoringService.deleteVoucher(v.id);
     await load();
