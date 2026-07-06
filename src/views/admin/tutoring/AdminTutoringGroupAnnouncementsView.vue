@@ -8,6 +8,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
+import { useMeStore } from '@/stores/me';
 import { useToast } from '@/composables/useToast';
 import { useConfirm } from '@/composables/useConfirm';
 import { formatDateShort } from '@/lib/format';
@@ -23,6 +24,7 @@ const route = useRoute();
 const toast = useToast();
 const { confirm } = useConfirm();
 const { t } = useI18n();
+const me = useMeStore();
 
 const groupId = ref(String(route.query.groupId ?? ''));
 const groups = ref<TutoringGroup[]>([]);
@@ -140,6 +142,7 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
     >
       <template #actions>
         <button
+          v-if="me.can('tutoring.announcement.create')"
           type="button"
           class="rounded-lg bg-white text-tutoring-accent px-3 py-1.5 text-[14px] font-bold"
           @click="openCompose"
@@ -181,6 +184,7 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
             </p>
           </div>
           <button
+            v-if="me.can('tutoring.announcement.create')"
             type="button"
             class="rounded-md border border-tutoring-border bg-tutoring-panel p-1.5 text-tutoring-text-lo hover:bg-tutoring-border-soft hover:text-rose-500"
             :title="t('admin.bimbel.group_announcements.delete_title')"

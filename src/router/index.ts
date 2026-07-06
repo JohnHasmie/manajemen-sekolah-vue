@@ -1320,7 +1320,11 @@ const routes: RouteRecordRaw[] = [
         name: 'admin.tutoring.group-announcements',
         component: () =>
           import('@/views/admin/tutoring/AdminTutoringGroupAnnouncementsView.vue'),
-        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+        meta: {
+          role: 'admin' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.announcement.view',
+        },
       },
       {
         path: 'admin/tutoring/leaderboard',

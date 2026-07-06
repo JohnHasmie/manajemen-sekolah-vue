@@ -156,6 +156,18 @@ export const useAcademicYearStore = defineStore('academicYear', () => {
     persistId(null);
   }
 
+  /**
+   * Invalidate the fetchAll TTL so the next call re-hits the network.
+   * Called by the visibilitychange listener below so a tab that sits
+   * idle > 10 min then regains focus doesn't render a stale year
+   * status/current flag (matches the pattern the semester cache in
+   * report-card.service uses — the two are usually flipped together
+   * by admin, so both need to re-resolve on the same trigger).
+   */
+  function invalidateCache(): void {
+    lastLoadedAt.value = null;
+  }
+
   return {
     // state
     years,
@@ -173,8 +185,24 @@ export const useAcademicYearStore = defineStore('academicYear', () => {
     setSelected,
     refreshActive,
     reset,
+    invalidateCache,
   };
 });
+
+// Re-fetch on tab regains focus. The pinia singleton isn't ready at
+// module-eval time (the store factory hasn't been called yet), so we
+// stash a lazy accessor and only touch it when the visibility event
+// fires — mirrors the visibilitychange handler in report-card.service.
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    try {
+      useAcademicYearStore().invalidateCache();
+    } catch {
+      // pinia not initialised yet — nothing to invalidate.
+    }
+  });
+}
 
 /**
  * Service-friendly helper. Services don't need a Vue setup context —
