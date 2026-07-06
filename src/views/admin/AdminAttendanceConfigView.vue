@@ -34,6 +34,7 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Spinner from '@/components/ui/Spinner.vue';
+import AttendanceConfigWizard from '@/components/feature/AttendanceConfigWizard.vue';
 
 const toast = useToast();
 const { t } = useI18n();
@@ -501,6 +502,18 @@ function getDayName(dayIndex: string): string {
 
 onMounted(loadSettings);
 
+// Panduan wizard — a 5-step guided overlay that walks admins through
+// the same fields the flat form exposes. Rendered lazily via v-if so
+// the map + leaflet chunks aren't loaded until the admin actually
+// clicks Panduan.
+const showWizard = ref(false);
+function onWizardSaved(saved: TeacherAttendanceSettings): void {
+  // Merge the freshly-saved settings back into the flat form's model
+  // so an admin closing the wizard sees their choices reflected there.
+  form.value = { ...form.value, ...saved };
+  syncFromSettings(form.value);
+}
+
 // Section-nav jump list — kept alongside the mount call so it's easy
 // to add/reorder entries when new sections land. The Umum tab is dense
 // (~30 controls across 4 groups); this lets an admin skip straight to
@@ -621,6 +634,19 @@ function jumpToSection(id: string): void {
           >
             {{ jump.label }}
           </a>
+          <div class="flex-1"></div>
+          <!-- Guided path — for admins who want to be walked through
+               the settings step-by-step instead of scanning the flat
+               form. Fires the same updateSettings endpoint at the
+               end, so both surfaces stay contract-compatible. -->
+          <button
+            type="button"
+            class="text-2xs font-bold text-role-admin bg-role-admin/10 hover:bg-role-admin/20 border border-role-admin/25 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors inline-flex items-center gap-1.5 flex-shrink-0"
+            @click="showWizard = true"
+          >
+            <NavIcon name="sparkles" :size="11" />
+            Panduan
+          </button>
         </nav>
 
         <!-- Metode presensi -->
@@ -1270,5 +1296,15 @@ function jumpToSection(id: string): void {
         </section>
       </div>
     </template>
+
+    <!-- Panduan wizard — mounted at the view root so its z-index sits
+         above the sticky section-nav. v-if lazy-mounts the leaflet
+         map + step components only when the admin opens the wizard. -->
+    <AttendanceConfigWizard
+      v-if="showWizard"
+      :initial="form"
+      @close="showWizard = false"
+      @saved="onWizardSaved"
+    />
   </div>
 </template>
