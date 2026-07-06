@@ -470,6 +470,26 @@ function getDayName(dayIndex: string): string {
 }
 
 onMounted(loadSettings);
+
+// Section-nav jump list — kept alongside the mount call so it's easy
+// to add/reorder entries when new sections land. The Umum tab is dense
+// (~30 controls across 4 groups); this lets an admin skip straight to
+// the one they came for. The 4 ids match the section anchors above.
+const sectionJumps = computed<{ id: string; label: string }[]>(() => [
+  { id: 'section-metode', label: 'Metode' },
+  { id: 'section-geofence', label: 'Geofence' },
+  { id: 'section-qr', label: 'QR Gerbang' },
+  { id: 'section-waktu', label: 'Waktu' },
+]);
+
+function jumpToSection(id: string): void {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Update the URL fragment so the destination is bookmarkable and
+  // shareable ("open the presensi config, take me to Geofence").
+  history.replaceState(null, '', `#${id}`);
+}
 </script>
 
 <template>
@@ -547,9 +567,36 @@ onMounted(loadSettings);
       </div>
 
       <template v-else>
+        <!-- SECTION NAV — sticky orientation strip. The Umum tab holds
+             four dense sections; this chip row lets an admin jump
+             straight to the one they came for instead of scrolling
+             through 30+ controls. Sits under the fixed page header
+             (top offset via top-16) and uses scroll-mt-* on each
+             section so anchors don't slip under the sticky strip. -->
+        <nav
+          class="sticky top-16 z-10 -mx-md sm:mx-0 bg-slate-50/95 backdrop-blur border-b border-slate-200 px-md py-2 flex items-center gap-1.5 overflow-x-auto"
+          aria-label="Bagian pengaturan presensi"
+        >
+          <span
+            class="text-3xs font-bold text-slate-400 uppercase tracking-widest flex-shrink-0 mr-1"
+          >
+            Loncat ke
+          </span>
+          <a
+            v-for="jump in sectionJumps"
+            :key="jump.id"
+            :href="`#${jump.id}`"
+            class="text-2xs font-bold text-slate-700 hover:text-role-admin bg-white border border-slate-200 hover:border-role-admin/40 rounded-lg px-2.5 py-1 whitespace-nowrap transition-colors"
+            @click.prevent="jumpToSection(jump.id)"
+          >
+            {{ jump.label }}
+          </a>
+        </nav>
+
         <!-- Metode presensi -->
         <section
-          class="bg-white border border-slate-200 rounded-2xl overflow-hidden"
+          id="section-metode"
+          class="bg-white border border-slate-200 rounded-2xl overflow-hidden scroll-mt-32"
         >
           <div class="px-4 py-3 border-b border-slate-100">
             <h3 class="text-[13px] font-black text-slate-900">
@@ -679,7 +726,8 @@ onMounted(loadSettings);
 
         <!-- Geofence -->
         <section
-          class="bg-white border border-slate-200 rounded-2xl p-4 space-y-md"
+          id="section-geofence"
+          class="bg-white border border-slate-200 rounded-2xl p-4 space-y-md scroll-mt-32"
         >
           <div>
             <h3 class="text-[13px] font-black text-slate-900">
@@ -773,7 +821,8 @@ onMounted(loadSettings);
 
         <!-- QR -->
         <section
-          class="bg-white border border-slate-200 rounded-2xl p-4 space-y-md"
+          id="section-qr"
+          class="bg-white border border-slate-200 rounded-2xl p-4 space-y-md scroll-mt-32"
         >
           <div>
             <h3 class="text-[13px] font-black text-slate-900">
@@ -829,7 +878,8 @@ onMounted(loadSettings);
 
         <!-- Waktu -->
         <section
-          class="bg-white border border-slate-200 rounded-2xl overflow-hidden"
+          id="section-waktu"
+          class="bg-white border border-slate-200 rounded-2xl overflow-hidden scroll-mt-32"
         >
           <div class="px-4 py-3 border-b border-slate-100">
             <h3 class="text-[13px] font-black text-slate-900">Waktu</h3>
