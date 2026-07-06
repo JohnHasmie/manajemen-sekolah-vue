@@ -82,11 +82,40 @@ const paymentDate = ref<string>(localISODate());
 const uploadAmount = ref<number | null>(null);
 const isUploading = ref(false);
 
+// Local preview URL for the picked bukti so the parent can eyeball
+// they've selected the right screenshot / struk BEFORE submitting.
+// Revoked on file change + unmount to avoid leaking blob URLs.
+const previewUrl = ref<string | null>(null);
+const isPreviewImage = computed(() => file.value?.type.startsWith('image/') ?? false);
+const isPreviewPdf = computed(() => file.value?.type === 'application/pdf');
+const fileSizeLabel = computed(() => {
+  if (!file.value) return '';
+  const kb = file.value.size / 1024;
+  if (kb < 1024) return `${kb.toFixed(0)} KB`;
+  return `${(kb / 1024).toFixed(1)} MB`;
+});
+
+// Amount-mismatch — the pre-filled uploadAmount defaults to the
+// session amount but the parent can edit it (e.g. they overpaid or
+// under-paid). Warn softly if the values diverge so a mid-tap on the
+// number field doesn't slip through as a phantom Rp 0 upload.
+const amountMismatch = computed(() => {
+  if (!session.value || uploadAmount.value == null) return false;
+  return uploadAmount.value !== session.value.amount;
+});
+
+function clearFile(): void {
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
+  previewUrl.value = null;
+  file.value = null;
+  if (fileInput.value) fileInput.value.value = '';
+}
+
 function onFileChange(e: Event) {
   const target = e.target as HTMLInputElement;
   const picked = target.files?.[0] ?? null;
   if (!picked) {
-    file.value = null;
+    clearFile();
     return;
   }
   if (picked.size > 5 * 1024 * 1024) {
@@ -94,8 +123,17 @@ function onFileChange(e: Event) {
     target.value = '';
     return;
   }
+  // Swap the preview URL — revoke the old one first so we don't leak.
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
   file.value = picked;
+  previewUrl.value = picked.type.startsWith('image/')
+    ? URL.createObjectURL(picked)
+    : null;
 }
+
+onBeforeUnmount(() => {
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
+});
 
 async function submitProof() {
   if (!file.value || !session.value) return;
@@ -323,6 +361,62 @@ const adminFee = computed(() => {
 
         <!-- Manual tab -->
         <section v-else class="space-y-3">
+          <!-- GUIDE — 3-step numbered walkthrough so a parent doing
+               this for the first time knows the flow before hunting
+               through the sections. Non-technical wali often skip
+               steps (upload before transferring, or forget the foto
+               entirely) — spelling the order out first prevents the
+               "why is my proof rejected?" round-trip. -->
+          <div class="bg-role-wali/5 border border-role-wali/25 rounded-2xl p-4">
+            <p class="text-3xs font-bold text-role-wali uppercase tracking-widest mb-3">
+              {{ t('wali.sekolah.billCheckout.guide.title') }}
+            </p>
+            <ol class="space-y-3">
+              <li class="flex items-start gap-3">
+                <span
+                  class="w-6 h-6 rounded-full bg-role-wali text-white grid place-items-center text-[11px] font-black flex-shrink-0"
+                  aria-hidden="true"
+                >1</span>
+                <div>
+                  <p class="text-[13px] font-black text-slate-900 leading-tight">
+                    {{ t('wali.sekolah.billCheckout.guide.step1Title') }}
+                  </p>
+                  <p class="text-[12px] text-slate-600 mt-0.5 leading-snug">
+                    {{ t('wali.sekolah.billCheckout.guide.step1Body') }}
+                  </p>
+                </div>
+              </li>
+              <li class="flex items-start gap-3">
+                <span
+                  class="w-6 h-6 rounded-full bg-role-wali text-white grid place-items-center text-[11px] font-black flex-shrink-0"
+                  aria-hidden="true"
+                >2</span>
+                <div>
+                  <p class="text-[13px] font-black text-slate-900 leading-tight">
+                    {{ t('wali.sekolah.billCheckout.guide.step2Title') }}
+                  </p>
+                  <p class="text-[12px] text-slate-600 mt-0.5 leading-snug">
+                    {{ t('wali.sekolah.billCheckout.guide.step2Body') }}
+                  </p>
+                </div>
+              </li>
+              <li class="flex items-start gap-3">
+                <span
+                  class="w-6 h-6 rounded-full bg-role-wali text-white grid place-items-center text-[11px] font-black flex-shrink-0"
+                  aria-hidden="true"
+                >3</span>
+                <div>
+                  <p class="text-[13px] font-black text-slate-900 leading-tight">
+                    {{ t('wali.sekolah.billCheckout.guide.step3Title') }}
+                  </p>
+                  <p class="text-[12px] text-slate-600 mt-0.5 leading-snug">
+                    {{ t('wali.sekolah.billCheckout.guide.step3Body') }}
+                  </p>
+                </div>
+              </li>
+            </ol>
+          </div>
+
           <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
             <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
               {{ t('wali.sekolah.billCheckout.schoolAccount') }}
@@ -358,9 +452,10 @@ const adminFee = computed(() => {
               {{ t('wali.sekolah.billCheckout.proofSection') }}
             </p>
 
+            <!-- Empty state — the drop target when nothing picked yet. -->
             <label
-              class="block border-2 border-dashed border-slate-300 hover:border-role-wali rounded-xl p-4 cursor-pointer transition-colors"
-              :class="file ? 'bg-role-wali/5 border-role-wali' : 'bg-slate-50'"
+              v-if="!file"
+              class="block border-2 border-dashed border-slate-300 hover:border-role-wali rounded-xl p-4 cursor-pointer transition-colors bg-slate-50"
             >
               <input
                 ref="fileInput"
@@ -370,14 +465,14 @@ const adminFee = computed(() => {
                 @change="onFileChange"
               />
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl grid place-items-center"
-                  :class="file ? 'bg-role-wali/15 text-role-wali' : 'bg-slate-200 text-slate-500'"
+                <div
+                  class="w-10 h-10 rounded-xl grid place-items-center bg-slate-200 text-slate-500"
                 >
                   <NavIcon name="upload" :size="18" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-[14px] font-bold text-slate-900 truncate">
-                    {{ file ? file.name : t('wali.sekolah.billCheckout.pickFile') }}
+                    {{ t('wali.sekolah.billCheckout.pickFile') }}
                   </p>
                   <p class="text-[12px] text-slate-500 mt-0.5">
                     {{ t('wali.sekolah.billCheckout.fileHint') }}
@@ -385,6 +480,72 @@ const adminFee = computed(() => {
                 </div>
               </div>
             </label>
+
+            <!-- Picked state — image thumbnail + filename + change/remove
+                 so the parent can eyeball they selected the right bukti
+                 before hitting Kirim. PDFs get a file icon (no image
+                 preview) with the filename + size. -->
+            <div
+              v-else
+              class="border border-role-wali/40 bg-role-wali/5 rounded-xl overflow-hidden"
+            >
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
+                class="sr-only"
+                @change="onFileChange"
+              />
+              <div v-if="isPreviewImage && previewUrl" class="bg-white">
+                <img
+                  :src="previewUrl"
+                  :alt="file.name"
+                  class="w-full max-h-64 object-contain block"
+                />
+              </div>
+              <div
+                v-else-if="isPreviewPdf"
+                class="bg-white p-6 flex items-center justify-center"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-12 h-12 rounded-xl bg-role-wali/15 text-role-wali grid place-items-center"
+                  >
+                    <NavIcon name="file-text" :size="22" />
+                  </div>
+                  <p class="text-[13px] font-black text-slate-900">
+                    {{ t('wali.sekolah.billCheckout.pdfPreview') }}
+                  </p>
+                </div>
+              </div>
+              <div
+                class="flex items-center gap-2 px-3 py-2.5 bg-white border-t border-role-wali/25"
+              >
+                <NavIcon name="check-circle" :size="14" class="text-role-wali" />
+                <div class="flex-1 min-w-0">
+                  <p class="text-[13px] font-black text-slate-900 truncate">
+                    {{ file.name }}
+                  </p>
+                  <p class="text-[11.5px] text-slate-500 mt-0.5">
+                    {{ fileSizeLabel }}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="text-[12px] font-bold text-role-wali hover:underline flex-shrink-0"
+                  @click="fileInput?.click()"
+                >
+                  {{ t('wali.sekolah.billCheckout.changeFile') }}
+                </button>
+                <button
+                  type="button"
+                  class="text-[12px] font-bold text-slate-500 hover:text-status-danger flex-shrink-0"
+                  @click="clearFile"
+                >
+                  {{ t('wali.sekolah.billCheckout.removeFile') }}
+                </button>
+              </div>
+            </div>
 
             <div class="grid grid-cols-2 gap-3">
               <div>
@@ -409,6 +570,24 @@ const adminFee = computed(() => {
               </div>
             </div>
 
+            <!-- Soft amount-mismatch warning — the pre-filled uploadAmount
+                 matches the session amount, but the parent can edit it.
+                 A mid-tap on the number field slipping through as an
+                 accidental Rp 0 or one-off-by-thousand is a common
+                 verification-loop cause; a warning is friendlier than
+                 hard-blocking the field. -->
+            <p
+              v-if="amountMismatch"
+              class="text-[11.5px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-snug"
+              role="status"
+            >
+              <NavIcon name="alert-triangle" :size="11" class="inline mr-1" />
+              {{ t('wali.sekolah.billCheckout.amountMismatchWarn', {
+                billed: formatRupiah(session!.amount),
+                entered: formatRupiah(uploadAmount ?? 0),
+              }) }}
+            </p>
+
             <Button
               variant="primary"
               block
@@ -419,6 +598,14 @@ const adminFee = computed(() => {
               <NavIcon name="check-circle" :size="13" />
               {{ t('wali.sekolah.billCheckout.submitProof') }}
             </Button>
+
+            <!-- SLA banner — what happens after the parent hits Kirim.
+                 Sets expectations so a wali doesn't refresh the app
+                 every 5 minutes waiting for the status to flip. -->
+            <p class="text-[11.5px] text-slate-500 leading-snug flex items-start gap-1.5 pt-1">
+              <NavIcon name="clock" :size="11" class="flex-shrink-0 mt-0.5" />
+              <span>{{ t('wali.sekolah.billCheckout.sla') }}</span>
+            </p>
           </div>
         </section>
       </template>
