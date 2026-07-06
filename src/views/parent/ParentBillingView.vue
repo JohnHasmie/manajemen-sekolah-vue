@@ -125,6 +125,17 @@ const outstanding = computed(() =>
 const paidThisYear = computed(() =>
   paidBills.value.reduce((sum, b) => sum + b.amount, 0),
 );
+const overdueTotal = computed(() =>
+  overdueBills.value.reduce((sum, b) => sum + b.amount, 0),
+);
+
+// Scroll the parent to the "Belum lunas" section on demand. Used from
+// the overdue alert chip so a tap lands the parent right on the bills
+// that need action instead of leaving them to hunt.
+const unpaidSectionRef = ref<HTMLElement | null>(null);
+function jumpToUnpaid(): void {
+  unpaidSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 const kpiCards = computed<KpiCard[]>(() => [
   {
@@ -206,6 +217,54 @@ const headerMeta = computed(() => {
       :meta="headerMeta"
     />
 
+    <!-- OVERDUE ALERT — pinned above the KPI so a parent who only glances at the
+         header still sees a bright, actionable warning about bills past due. -->
+    <button
+      v-if="overdueBills.length > 0"
+      type="button"
+      class="w-full flex items-start gap-3 text-left rounded-2xl border border-red-200 bg-red-50 p-3 hover:bg-red-100/70 transition-colors"
+      @click="jumpToUnpaid"
+    >
+      <span
+        class="w-8 h-8 rounded-full bg-white flex items-center justify-center border-2 border-red-600 text-red-700 flex-shrink-0"
+        aria-hidden="true"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.25"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="w-4 h-4"
+        >
+          <path d="M12 9v4" />
+          <path d="M12 17h.01" />
+          <path
+            d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"
+          />
+        </svg>
+      </span>
+      <span class="flex-1 min-w-0">
+        <span class="block text-[13px] font-black text-red-900 leading-tight">
+          {{ t('parent.billing.overdueAlertTitle', { count: overdueBills.length }) }}
+        </span>
+        <span class="block mt-0.5 text-[11.5px] text-red-800 leading-snug">
+          {{
+            t('parent.billing.overdueAlertBody', {
+              amount: formatRupiah(overdueTotal),
+            })
+          }}
+        </span>
+      </span>
+      <span
+        class="text-3xs font-bold uppercase tracking-wider text-red-700 flex-shrink-0 pt-1"
+      >
+        {{ t('parent.billing.overdueAlertCta') }} →
+      </span>
+    </button>
+
     <KpiStripCards :cards="kpiCards" />
 
     <PageFilterToolbar
@@ -242,7 +301,8 @@ const headerMeta = computed(() => {
         <!-- Belum lunas -->
         <section
           v-if="unpaidBills.length > 0"
-          class="bg-white border border-slate-200 rounded-2xl p-2"
+          ref="unpaidSectionRef"
+          class="bg-white border border-slate-200 rounded-2xl p-2 scroll-mt-4"
         >
           <header class="flex items-center justify-between px-3 pt-2 pb-1">
             <h3 class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
