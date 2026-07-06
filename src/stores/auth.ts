@@ -1128,6 +1128,7 @@ export const useAuthStore = defineStore('auth', {
         storage.remove(StorageKeys.schoolId);
         storage.remove(StorageKeys.role);
         storage.remove(StorageKeys.teacherProfile);
+        storage.remove(StorageKeys.parentActiveChild);
         // Tear down the realtime notifications socket so a logged-out
         // browser holds no Reverb connection. Lazy-imported to avoid a
         // load-time dependency on the Echo client (which is inert unless

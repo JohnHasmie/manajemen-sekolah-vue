@@ -16,10 +16,16 @@ import { onMounted, ref } from 'vue';
 import { ParentService } from '@/services/parent.service';
 import { DashboardService } from '@/services/dashboard.service';
 import { useAuthStore } from '@/stores/auth';
+import { storage, StorageKeys } from '@/lib/storage';
 import type { Child } from '@/types/parent';
 
 const children = ref<Child[]>([]);
-const activeChildId = ref<string>('');
+// Hydrate the last-viewed child from storage at module init so the
+// FIRST paint after a hard refresh already shows the right rapor /
+// bill / grade — no flash of "child A" before we swap to "child B".
+const activeChildId = ref<string>(
+  storage.get<string>(StorageKeys.parentActiveChild) ?? '',
+);
 const loaded = ref(false);
 /**
  * Overdue-billing signal for the sidebar badge (Wave 7). Set from the
@@ -46,6 +52,11 @@ function toNum(v: unknown): number {
   if (typeof v === 'number') return v;
   if (typeof v === 'string') return Number.parseFloat(v) || 0;
   return 0;
+}
+
+function persistActive(id: string): void {
+  if (id) storage.set(StorageKeys.parentActiveChild, id);
+  else storage.remove(StorageKeys.parentActiveChild);
 }
 
 function fromSlices(slices: unknown): Child[] {
@@ -102,8 +113,16 @@ export function useChildPicker() {
       });
     }
 
-    if (!activeChildId.value && children.value[0]) {
-      activeChildId.value = children.value[0].student_id;
+    // Reconcile the hydrated selection with what actually came back
+    // from the server. If the stored ID is stale (child removed, or a
+    // different parent signed in), fall back to the first available
+    // child rather than leaving the picker pointing at nothing.
+    const stored = activeChildId.value;
+    const stillExists =
+      stored && children.value.some((c) => c.student_id === stored);
+    if (!stillExists) {
+      activeChildId.value = children.value[0]?.student_id ?? '';
+      persistActive(activeChildId.value);
     }
   }
 
@@ -120,6 +139,7 @@ export function useChildPicker() {
     activeChild,
     setActive(id: string) {
       activeChildId.value = id;
+      persistActive(id);
     },
     refresh: async () => {
       loaded.value = false;

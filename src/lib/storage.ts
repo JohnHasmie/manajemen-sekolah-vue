@@ -48,4 +48,9 @@ export const StorageKeys = {
   // hydrateSchoolsRoles() re-fetches it. Re-fetched + overwritten on
   // every login / school switch, so it never drifts for long.
   teacherProfile: 'kamiledu.teacher_profile',
+  // Which child a multi-child parent is currently viewing. Persisted so
+  // a hard refresh (or reopening the app tomorrow) doesn't yank the
+  // parent back to child A after they'd been reading child B's rapor.
+  // Cleared on logout, so user A's choice can't leak to user B.
+  parentActiveChild: 'kamiledu.parent_active_child',
 } as const;
