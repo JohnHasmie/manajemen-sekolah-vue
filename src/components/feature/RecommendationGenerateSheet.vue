@@ -186,6 +186,26 @@ const error = computed<string | null>(() => {
   return null;
 });
 
+// Backend `App\Enums\TriggerSource` accepts a fixed set: uts / uas /
+// weekly / monthly / on_demand / ai_button_at_risk / ai_button_on_track.
+// The old template-literal `ai_button_${scope.value}` only landed on a
+// valid value for scope='at_risk'; scope='all' emitted `ai_button_all`
+// and scope='per_student' emitted `ai_button_per_student`, both of which
+// tripped the enum validator with "The selected trigger source is
+// invalid" and killed the generate call before it reached the AI worker
+// (Yahya reported 2026-07-06 on yahyahasymi@gmail.com guru role).
+//
+// Map each sheet-scope to the closest enum member instead:
+//   at_risk    → ai_button_at_risk   (existing behavior — untouched)
+//   all        → ai_button_on_track  (already emits include_on_track=true)
+//   per_student→ on_demand           (individual manual pick is
+//                                     conceptually a one-off request)
+const SCOPE_TO_TRIGGER_SOURCE: Record<GenerateScope, string> = {
+  at_risk: 'ai_button_at_risk',
+  all: 'ai_button_on_track',
+  per_student: 'on_demand',
+};
+
 function submit() {
   if (!canGenerate.value) return;
   const cfg: GenerateConfig = {
@@ -195,7 +215,7 @@ function submit() {
       scope.value === 'per_student'
         ? Array.from(selectedStudents.value)
         : undefined,
-    trigger_source: `ai_button_${scope.value}`,
+    trigger_source: SCOPE_TO_TRIGGER_SOURCE[scope.value],
     include_on_track: scope.value === 'all' ? true : false,
   };
   emit('generate', cfg);
