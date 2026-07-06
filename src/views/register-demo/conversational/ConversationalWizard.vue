@@ -12,7 +12,7 @@
   adds an extra `tenant_type` + `bimbel` slice to the request body.
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { useAuthStore } from '@/stores/auth';
@@ -287,6 +287,14 @@ onMounted(async () => {
   await wizard.hydrate();
   document.addEventListener('keydown', onGlobalEnter);
   void mountGoogleButton();
+});
+
+// Match the addEventListener above — without this the handler stays
+// bound to `document` after the wizard unmounts. A user who bounces
+// through the register-demo route N times accumulates N concurrent
+// keydown handlers, each holding the wizard's captured closure alive.
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onGlobalEnter);
 });
 
 watch(
