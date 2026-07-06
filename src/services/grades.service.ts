@@ -581,10 +581,35 @@ export const GradeService = {
       jenis: args.type,
       tanggal: args.date,
     };
-    if (args.title !== null && args.title !== undefined && args.title !== '') {
+    // Distinguish "match NULL" from "any title". Passing an empty
+    // string tells the backend's ApplyTitleFilter to treat the filter
+    // as `WHERE title IS NULL`; omitting the param altogether means
+    // "no title filter", which then matches every same-day column
+    // regardless of title — dangerous when a null-titled column is
+    // being reshuffled and a differently-titled column already sits
+    // in the same (subject, type, date) slot.
+    if (args.title !== null && args.title !== undefined) {
       params.title = args.title;
     }
     await api.delete('/grades/batch', { params });
+  },
+
+  /**
+   * Delete a single assessment by its DB id — precise and immune to
+   * the (subject, type, date, title) collision that
+   * [deleteAssessmentBatch] can hit when a null-titled column is
+   * being reshuffled. Used by [renameAssessment]'s second phase so
+   * the freshly-created new-title assessment can't be swept up as
+   * collateral.
+   *
+   * Sends the assessment_id via query param so the backend
+   * BatchDestroyGradesAction routes into its `byAssessment` branch,
+   * which deletes exactly that assessment + its grades.
+   */
+  async deleteAssessmentById(assessmentId: string): Promise<void> {
+    await api.delete('/grades/batch', {
+      params: { assessment_id: assessmentId },
+    });
   },
 
   /**
@@ -658,12 +683,11 @@ export const GradeService = {
     }
     await Promise.all(tasks);
 
-    // 2. Delete the old column (grades + implicit assessment row).
-    await GradeService.deleteAssessmentBatch({
-      subject_id: payload.subject_id,
-      type: payload.old.type,
-      date: payload.old.date,
-      title: payload.old.title,
-    });
+    // 2. Delete the old column by its DB id — bypasses the
+    //    (subject, type, date, title) filter path entirely so the
+    //    just-created NEW assessment can't be swept up as a false
+    //    match (which would happen for a null-titled OLD column,
+    //    where the batch filter couldn't distinguish old from new).
+    await GradeService.deleteAssessmentById(payload.assessmentId);
   },
 };
