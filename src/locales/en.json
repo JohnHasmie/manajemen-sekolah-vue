@@ -1904,6 +1904,14 @@
         "delete_one_message": "Make sure this class has no active students or schedules. This cannot be undone.",
         "delete_bulk_title": "Delete {count} classes?",
         "delete_bulk_message": "This cannot be undone. Make sure no students/schedules are active.",
+        "impact": {
+          "studentsUnassigned": "Students in this class become \"unassigned\" — they need to be moved to another class.",
+          "schedule": "All schedule slots for this class will be removed.",
+          "homeroomLink": "The homeroom teacher assignment is released (that teacher can be assigned to another class).",
+          "classActivity": "Class-activity notes (activities + reflections) will be lost.",
+          "studentHistoryKept": "Per-student grades + attendance are KEPT (they're attached to the student, not the class).",
+          "bulkPrefix": "{count} classes will be deleted at once."
+        },
         "import_title": "Import Classes from Excel"
       },
       "dashboard": {
@@ -2435,6 +2443,14 @@
         "delete_one_message": "This will deactivate the subject. Make sure no schedules or grades still reference it.",
         "delete_bulk_title": "Delete {count} subjects?",
         "delete_bulk_message": "This will deactivate the selected subjects. Cannot be undone.",
+        "impact": {
+          "grades": "Assessment columns + student grades for this subject will be permanently lost.",
+          "schedule": "Schedule slots that reference this subject will be deleted.",
+          "teacherAssign": "Teacher assignments to this subject are released (teacher accounts stay).",
+          "materials": "RPP + teaching materials for this subject become orphaned but stay on file.",
+          "reportCardKept": "Past-semester report cards are NOT changed — the subject's grades remain on old raport.",
+          "bulkPrefix": "{count} subjects will be deleted at once."
+        },
         "import_title": "Import Subjects from Excel"
       },
       "teacher_attendance": {
@@ -2484,6 +2500,14 @@
         "delete_one_message": "This cannot be undone. The teacher's account will be disabled and can no longer sign in.",
         "delete_bulk_title": "Delete {count} teachers?",
         "delete_bulk_message": "This cannot be undone. Selected teacher accounts will be disabled.",
+        "impact": {
+          "homeroom": "If assigned as homeroom, that class becomes without a homeroom (needs reassignment).",
+          "schedule": "Schedule + teaching assignments are released; slots are marked \"unassigned\".",
+          "selfAttendance": "The teacher's personal QR card + self-attendance history will be lost.",
+          "authoredRowsKept": "RPP + class activities they created REMAIN on file as school history.",
+          "userAccountKept": "The user account is NOT deleted (may carry other roles / other schools).",
+          "bulkPrefix": "{count} teachers will be deleted at once."
+        },
         "import_title": "Import Teachers from Excel"
       }
     }

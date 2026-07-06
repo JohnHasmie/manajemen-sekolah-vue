@@ -1901,6 +1901,14 @@
         "delete_one_message": "Pastikan kelas ini tidak memiliki siswa atau jadwal aktif. Tindakan ini tidak dapat dibatalkan.",
         "delete_bulk_title": "Hapus {count} kelas?",
         "delete_bulk_message": "Tindakan ini tidak dapat dibatalkan. Pastikan tidak ada siswa/jadwal aktif.",
+        "impact": {
+          "studentsUnassigned": "Siswa di kelas ini jadi \"tanpa kelas\" — perlu ditugaskan ulang.",
+          "schedule": "Semua jadwal pelajaran kelas ini akan dihapus.",
+          "homeroomLink": "Guru wali kelas dilepas dari peran wali (bisa ditugaskan ulang ke kelas lain).",
+          "classActivity": "Catatan kegiatan kelas (aktivitas + refleksi) akan hilang.",
+          "studentHistoryKept": "Nilai + riwayat presensi per siswa TETAP tersimpan (melekat pada siswa, bukan kelas).",
+          "bulkPrefix": "{count} kelas akan dihapus sekaligus."
+        },
         "import_title": "Import Kelas dari Excel"
       },
       "dashboard": {
@@ -2432,6 +2440,14 @@
         "delete_one_message": "Tindakan ini akan menonaktifkan mata pelajaran. Pastikan tidak ada jadwal atau nilai yang masih merujuk ke mata pelajaran ini.",
         "delete_bulk_title": "Hapus {count} mata pelajaran?",
         "delete_bulk_message": "Tindakan ini akan menonaktifkan mapel terpilih. Tidak dapat dibatalkan.",
+        "impact": {
+          "grades": "Kolom penilaian + nilai siswa untuk mapel ini akan hilang permanen.",
+          "schedule": "Slot jadwal yang pakai mapel ini akan dihapus.",
+          "teacherAssign": "Penugasan guru ke mapel ini akan dilepas (akun guru tetap ada).",
+          "materials": "RPP + materi ajar mapel ini akan jadi tak terkait (orphan), tapi tetap tersimpan.",
+          "reportCardKept": "Rapor semester lampau TIDAK berubah — nilai mapel ini tetap tercatat di raport lama.",
+          "bulkPrefix": "{count} mata pelajaran akan dihapus sekaligus."
+        },
         "import_title": "Import Mata Pelajaran dari Excel"
       },
       "teacher_attendance": {
@@ -2481,6 +2497,14 @@
         "delete_one_message": "Tindakan ini tidak dapat dibatalkan. Akun guru akan dinonaktifkan dan tidak bisa masuk lagi.",
         "delete_bulk_title": "Hapus {count} guru?",
         "delete_bulk_message": "Tindakan ini tidak dapat dibatalkan. Akun guru terpilih akan dinonaktifkan.",
+        "impact": {
+          "homeroom": "Kalau ditugaskan sebagai wali kelas, kelasnya jadi tanpa wali (harus ditugaskan ulang).",
+          "schedule": "Jadwal + tugas mengajar guru dilepas; slotnya ditandai \"belum ditugaskan\".",
+          "selfAttendance": "Kartu QR pribadi + riwayat presensi diri guru akan hilang.",
+          "authoredRowsKept": "RPP + kegiatan kelas yang mereka input TETAP tersimpan sebagai riwayat sekolah.",
+          "userAccountKept": "Akun user TIDAK dihapus (bisa dipakai untuk role lain / sekolah lain).",
+          "bulkPrefix": "{count} guru akan dihapus sekaligus."
+        },
         "import_title": "Import Guru dari Excel"
       }
     }

@@ -233,6 +233,27 @@ const headerMeta = computed(() =>
   }),
 );
 
+// ── Delete impact preview — concrete cascade consequences ──
+// A classroom is a container, not a leaf record. Students survive
+// as "tanpa kelas" (needs reassignment); their nilai + presensi
+// stay attributed to them directly, not to the removed kelas row.
+// Schedule slots + kegiatan kelas + wali-kelas link are the actual
+// cascade losses.
+const CLASSROOM_DELETE_IMPACT = computed<string[]>(() => [
+  $t('admin.sekolah.classroom_management.impact.studentsUnassigned'),
+  $t('admin.sekolah.classroom_management.impact.schedule'),
+  $t('admin.sekolah.classroom_management.impact.homeroomLink'),
+  $t('admin.sekolah.classroom_management.impact.classActivity'),
+  $t('admin.sekolah.classroom_management.impact.studentHistoryKept'),
+]);
+const classroomDeleteImpact = CLASSROOM_DELETE_IMPACT;
+const classroomBulkDeleteImpact = computed<string[]>(() => [
+  $t('admin.sekolah.classroom_management.impact.bulkPrefix', {
+    count: selectedIds.value.size,
+  }),
+  ...CLASSROOM_DELETE_IMPACT.value,
+]);
+
 // ── Bulk select ──
 function toggleSelect(id: string) {
   const set = new Set(selectedIds.value);
@@ -588,6 +609,7 @@ function statusFor(c: Classroom) {
     :title="$t('admin.sekolah.classroom_management.delete_one_title', { name: deleteTarget.name })"
     :message="$t('admin.sekolah.classroom_management.delete_one_message')"
     :confirm-label="$t('admin.sekolah.classroom_management.delete')"
+    :impact="classroomDeleteImpact"
     danger
     :loading="isSaving"
     @confirm="confirmDelete"
@@ -599,6 +621,7 @@ function statusFor(c: Classroom) {
     :title="$t('admin.sekolah.classroom_management.delete_bulk_title', { count: selectedIds.size })"
     :message="$t('admin.sekolah.classroom_management.delete_bulk_message')"
     :confirm-label="$t('admin.sekolah.classroom_management.delete_all')"
+    :impact="classroomBulkDeleteImpact"
     danger
     :loading="isSaving"
     @confirm="performBulkDelete"

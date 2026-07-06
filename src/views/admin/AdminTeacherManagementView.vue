@@ -283,6 +283,26 @@ const headerMeta = computed(() =>
   }),
 );
 
+// ── Delete impact preview — concrete cascade consequences ──
+// Hand-written honest warnings for the teacher delete cascade. RPP +
+// kegiatan kelas rows attribute to the teacher but stay on file so
+// historical records aren't lost; the user account itself survives
+// because it may already carry other roles at a different school.
+const TEACHER_DELETE_IMPACT = computed<string[]>(() => [
+  $t('admin.sekolah.teacher_management.impact.homeroom'),
+  $t('admin.sekolah.teacher_management.impact.schedule'),
+  $t('admin.sekolah.teacher_management.impact.selfAttendance'),
+  $t('admin.sekolah.teacher_management.impact.authoredRowsKept'),
+  $t('admin.sekolah.teacher_management.impact.userAccountKept'),
+]);
+const teacherDeleteImpact = TEACHER_DELETE_IMPACT;
+const teacherBulkDeleteImpact = computed<string[]>(() => [
+  $t('admin.sekolah.teacher_management.impact.bulkPrefix', {
+    count: selectedIds.value.size,
+  }),
+  ...TEACHER_DELETE_IMPACT.value,
+]);
+
 // ── Bulk select ──
 function toggleSelect(id: string) {
   const set = new Set(selectedIds.value);
@@ -697,6 +717,7 @@ function statusFor(t: Teacher) {
     :title="$t('admin.sekolah.teacher_management.delete_one_title', { name: deleteTarget.name })"
     :message="$t('admin.sekolah.teacher_management.delete_one_message')"
     :confirm-label="$t('admin.sekolah.teacher_management.delete')"
+    :impact="teacherDeleteImpact"
     danger
     :loading="isSaving"
     @confirm="confirmDelete"
@@ -708,6 +729,7 @@ function statusFor(t: Teacher) {
     :title="$t('admin.sekolah.teacher_management.delete_bulk_title', { count: selectedIds.size })"
     :message="$t('admin.sekolah.teacher_management.delete_bulk_message')"
     :confirm-label="$t('admin.sekolah.teacher_management.delete_all')"
+    :impact="teacherBulkDeleteImpact"
     danger
     :loading="isSaving"
     @confirm="performBulkDelete"

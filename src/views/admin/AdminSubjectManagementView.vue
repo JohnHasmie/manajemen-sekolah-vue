@@ -209,6 +209,25 @@ const headerMeta = computed(() =>
   }),
 );
 
+// ── Delete impact preview — concrete cascade consequences ──
+// Subjects (mata pelajaran) are the axis for grades + schedule + RPP
+// + materi — so their cascade is heavier than kelas. Assessment
+// columns / nilai per this mapel are unrecoverable once dropped.
+const SUBJECT_DELETE_IMPACT = computed<string[]>(() => [
+  $t('admin.sekolah.subject_management.impact.grades'),
+  $t('admin.sekolah.subject_management.impact.schedule'),
+  $t('admin.sekolah.subject_management.impact.teacherAssign'),
+  $t('admin.sekolah.subject_management.impact.materials'),
+  $t('admin.sekolah.subject_management.impact.reportCardKept'),
+]);
+const subjectDeleteImpact = SUBJECT_DELETE_IMPACT;
+const subjectBulkDeleteImpact = computed<string[]>(() => [
+  $t('admin.sekolah.subject_management.impact.bulkPrefix', {
+    count: selectedIds.value.size,
+  }),
+  ...SUBJECT_DELETE_IMPACT.value,
+]);
+
 // ── Bulk ──
 function toggleSelect(id: string) {
   const set = new Set(selectedIds.value);
@@ -479,6 +498,7 @@ function topMeta(s: Subject): string {
     :title="$t('admin.sekolah.subject_management.delete_one_title', { name: deleteTarget.name })"
     :message="$t('admin.sekolah.subject_management.delete_one_message')"
     :confirm-label="$t('admin.sekolah.subject_management.delete')"
+    :impact="subjectDeleteImpact"
     danger
     :loading="isSaving"
     @confirm="confirmDelete"
@@ -490,6 +510,7 @@ function topMeta(s: Subject): string {
     :title="$t('admin.sekolah.subject_management.delete_bulk_title', { count: selectedIds.size })"
     :message="$t('admin.sekolah.subject_management.delete_bulk_message')"
     :confirm-label="$t('admin.sekolah.subject_management.delete_all')"
+    :impact="subjectBulkDeleteImpact"
     danger
     :loading="isSaving"
     @confirm="performBulkDelete"
