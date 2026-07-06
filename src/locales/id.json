@@ -2461,6 +2461,18 @@
           "reportCardKept": "Rapor semester lampau TIDAK berubah — nilai mapel ini tetap tercatat di raport lama.",
           "bulkPrefix": "{count} mata pelajaran akan dihapus sekaligus."
         },
+        "bulk_status_action": "Ubah status",
+        "bulk_status_title": "Ubah status {count} mata pelajaran",
+        "bulk_status_subtitle": "Semua mapel terpilih akan diubah ke status berikut.",
+        "bulk_status_active_hint": "Mapel muncul di daftar aktif + bisa dipakai di jadwal / nilai.",
+        "bulk_status_inactive_hint": "Mapel disembunyikan dari daftar aktif (data tetap tersimpan, tidak muncul di picker baru).",
+        "bulk_status_confirm": "Terapkan",
+        "bulk_kkm_action": "Ubah KKM",
+        "bulk_kkm_title": "Ubah KKM {count} mata pelajaran",
+        "bulk_kkm_subtitle": "Terapkan nilai KKM sama untuk semua mapel terpilih. Berlaku untuk penilaian ke depan; rapor semester lampau tidak berubah.",
+        "bulk_kkm_label": "KKM baru (0–100)",
+        "bulk_kkm_hint": "{count} mapel akan pakai KKM {kkm} untuk penilaian ke depan.",
+        "bulk_kkm_confirm": "Terapkan KKM",
         "import_title": "Import Mata Pelajaran dari Excel"
       },
       "teacher_attendance": {
@@ -2518,6 +2530,11 @@
           "userAccountKept": "Akun user TIDAK dihapus (bisa dipakai untuk role lain / sekolah lain).",
           "bulkPrefix": "{count} guru akan dihapus sekaligus."
         },
+        "bulk_status_action": "Ubah kepegawaian",
+        "bulk_status_title": "Ubah status kepegawaian {count} guru",
+        "bulk_status_subtitle": "Semua guru terpilih akan diubah ke status berikut.",
+        "bulk_status_hint": "{count} guru akan diubah ke status \"{name}\".",
+        "bulk_status_confirm": "Terapkan",
         "import_title": "Import Guru dari Excel"
       }
     }

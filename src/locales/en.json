@@ -2464,6 +2464,18 @@
           "reportCardKept": "Past-semester report cards are NOT changed — the subject's grades remain on old raport.",
           "bulkPrefix": "{count} subjects will be deleted at once."
         },
+        "bulk_status_action": "Change status",
+        "bulk_status_title": "Change status for {count} subjects",
+        "bulk_status_subtitle": "All selected subjects will be set to the status below.",
+        "bulk_status_active_hint": "Subjects appear in the active list and can be used in schedule / grades.",
+        "bulk_status_inactive_hint": "Subjects are hidden from the active list (data stays; won't appear in new pickers).",
+        "bulk_status_confirm": "Apply",
+        "bulk_kkm_action": "Change KKM",
+        "bulk_kkm_title": "Change KKM for {count} subjects",
+        "bulk_kkm_subtitle": "Apply the same KKM to all selected subjects. Takes effect for future grading; past report cards are unchanged.",
+        "bulk_kkm_label": "New KKM (0–100)",
+        "bulk_kkm_hint": "{count} subjects will use KKM {kkm} for future grading.",
+        "bulk_kkm_confirm": "Apply KKM",
         "import_title": "Import Subjects from Excel"
       },
       "teacher_attendance": {
@@ -2521,6 +2533,11 @@
           "userAccountKept": "The user account is NOT deleted (may carry other roles / other schools).",
           "bulkPrefix": "{count} teachers will be deleted at once."
         },
+        "bulk_status_action": "Change employment",
+        "bulk_status_title": "Change employment status for {count} teachers",
+        "bulk_status_subtitle": "All selected teachers will be set to the status below.",
+        "bulk_status_hint": "{count} teachers will be set to \"{name}\".",
+        "bulk_status_confirm": "Apply",
         "import_title": "Import Teachers from Excel"
       }
     }

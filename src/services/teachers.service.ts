@@ -90,6 +90,29 @@ export const TeacherService = {
   },
 
   /**
+   * Apply the same partial update to N teachers. Loops per-id via PUT
+   * because the backend has no dedicated bulk-update endpoint — mirrors
+   * the bulkRemove shape. Payload is a shallow subset of the update
+   * shape; typical bulk-safe field is `employment_status`.
+   */
+  async bulkUpdate(
+    ids: string[],
+    payload: Record<string, unknown>,
+  ): Promise<{ updated: number; failed: number }> {
+    let updated = 0;
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await api.put(`/teacher/${id}`, payload);
+        updated++;
+      } catch {
+        failed++;
+      }
+    }
+    return { updated, failed };
+  },
+
+  /**
    * Sequential per-id bulk delete. Backend does not expose a bulk
    * endpoint for teachers — Flutter loops the same way.
    */

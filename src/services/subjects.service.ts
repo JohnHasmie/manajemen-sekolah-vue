@@ -109,6 +109,31 @@ export const SubjectService = {
     await api.delete(`/subject/${id}`);
   },
 
+  /**
+   * Apply the same partial update to N subjects. Loops per-id via PUT
+   * (no bulk-update endpoint). Bulk-safe payloads: `{ kkm }` for a
+   * school-wide passing-score change, or `{ status, is_active }` for
+   * bulk activate/deactivate. Send both status keys together because
+   * the edit-sheet does (belt-and-suspenders vs a backend that has
+   * historically accepted either).
+   */
+  async bulkUpdate(
+    ids: string[],
+    payload: Record<string, unknown>,
+  ): Promise<{ updated: number; failed: number }> {
+    let updated = 0;
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await api.put(`/subject/${id}`, payload);
+        updated++;
+      } catch {
+        failed++;
+      }
+    }
+    return { updated, failed };
+  },
+
   /** Sequential per-id bulk delete (no /subject/bulk-delete endpoint). */
   async bulkRemove(ids: string[]): Promise<{ deleted: number; failed: number }> {
     let deleted = 0;

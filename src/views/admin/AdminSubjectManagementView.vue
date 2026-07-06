@@ -28,6 +28,7 @@ import FilterFacetPickerModal, {
 } from '@/components/feature/FilterFacetPickerModal.vue';
 import AdminDataMenu from '@/components/feature/AdminDataMenu.vue';
 import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vue';
+import Modal from '@/components/ui/Modal.vue';
 import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
 
@@ -262,6 +263,92 @@ async function performBulkDelete() {
   }
 }
 
+// ── Bulk edit — status (active/inactive) + KKM ─────────────────────
+// Two operations shipped: bulk activate/deactivate + school-wide KKM
+// change. Other fields (name / code / description / master_subject_id
+// / grade_level) are per-mapel truth and stay OUT of the bulk surface.
+// KKM is a real workflow — schools often align KKM across a batch of
+// mapel (e.g. all tingkat-7 exact sciences → KKM 75). Send both
+// `status` + `is_active` on the status flip to match the edit sheet
+// (belt-and-suspenders for legacy backends).
+const bulkStatusOpen = ref(false);
+const bulkKkmOpen = ref(false);
+const bulkTargetStatus = ref<'active' | 'inactive' | ''>('');
+const bulkTargetKkm = ref<number>(75);
+
+function openBulkStatus(): void {
+  bulkTargetStatus.value = '';
+  bulkStatusOpen.value = true;
+}
+function openBulkKkm(): void {
+  bulkTargetKkm.value = 75;
+  bulkKkmOpen.value = true;
+}
+
+async function performBulkStatus(): Promise<void> {
+  if (!bulkTargetStatus.value) return;
+  try {
+    isSaving.value = true;
+    const ids = Array.from(selectedIds.value);
+    const target = bulkTargetStatus.value;
+    const isActive = target === 'active';
+    const res = await SubjectService.bulkUpdate(ids, {
+      status: target,
+      is_active: isActive,
+    });
+    const targetLabel = isActive ? $t('status.Active') : $t('status.Inactive');
+    clearSelection();
+    bulkStatusOpen.value = false;
+    await reload(pagination.value?.current_page ?? 1);
+    if (res.failed > 0) {
+      toast.value = {
+        message: `${res.updated} mapel diubah ke ${targetLabel} · ${res.failed} gagal.`,
+        tone: 'error',
+      };
+    } else {
+      toast.value = {
+        message: `${res.updated} mapel diubah ke ${targetLabel}.`,
+        tone: 'success',
+      };
+    }
+  } catch (e) {
+    error.value = (e as Error).message;
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+async function performBulkKkm(): Promise<void> {
+  const val = Number(bulkTargetKkm.value);
+  if (!Number.isFinite(val) || val < 0 || val > 100) {
+    toast.value = { message: 'KKM harus antara 0–100.', tone: 'error' };
+    return;
+  }
+  try {
+    isSaving.value = true;
+    const ids = Array.from(selectedIds.value);
+    const res = await SubjectService.bulkUpdate(ids, { kkm: val });
+    clearSelection();
+    bulkKkmOpen.value = false;
+    await reload(pagination.value?.current_page ?? 1);
+    if (res.failed > 0) {
+      toast.value = {
+        message: `KKM ${val} diterapkan ke ${res.updated} mapel · ${res.failed} gagal.`,
+        tone: 'error',
+      };
+    } else {
+      toast.value = {
+        message: `KKM ${val} diterapkan ke ${res.updated} mapel.`,
+        tone: 'success',
+      };
+    }
+  } catch (e) {
+    error.value = (e as Error).message;
+  } finally {
+    isSaving.value = false;
+  }
+}
+
 // ── CRUD ──
 async function handleSave(payload: Record<string, unknown>) {
   isSaving.value = true;
@@ -453,6 +540,12 @@ function topMeta(s: Subject): string {
     />
 
     <template #bulk-actions>
+      <Button variant="secondary" size="sm" @click="openBulkStatus">
+        {{ $t('admin.sekolah.subject_management.bulk_status_action') }}
+      </Button>
+      <Button variant="secondary" size="sm" @click="openBulkKkm">
+        {{ $t('admin.sekolah.subject_management.bulk_kkm_action') }}
+      </Button>
       <Button variant="danger" size="sm" @click="bulkDeleteOpen = true">
         Hapus ({{ selectedIds.size }})
       </Button>
@@ -516,6 +609,100 @@ function topMeta(s: Subject): string {
     @confirm="performBulkDelete"
     @close="bulkDeleteOpen = false"
   />
+
+  <!-- Bulk-status modal — 2 radios (active/inactive). -->
+  <Modal
+    v-if="bulkStatusOpen"
+    :title="$t('admin.sekolah.subject_management.bulk_status_title', { count: selectedIds.size })"
+    :subtitle="$t('admin.sekolah.subject_management.bulk_status_subtitle')"
+    @close="bulkStatusOpen = false"
+  >
+    <div class="space-y-2">
+      <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+        <input
+          v-model="bulkTargetStatus"
+          type="radio"
+          value="active"
+          class="mt-1 accent-role-admin"
+        />
+        <div>
+          <p class="text-[13px] font-black text-slate-900">
+            {{ $t('status.Active') }}
+          </p>
+          <p class="text-[11.5px] text-slate-500 mt-0.5">
+            {{ $t('admin.sekolah.subject_management.bulk_status_active_hint') }}
+          </p>
+        </div>
+      </label>
+      <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+        <input
+          v-model="bulkTargetStatus"
+          type="radio"
+          value="inactive"
+          class="mt-1 accent-role-admin"
+        />
+        <div>
+          <p class="text-[13px] font-black text-slate-900">
+            {{ $t('status.Inactive') }}
+          </p>
+          <p class="text-[11.5px] text-slate-500 mt-0.5">
+            {{ $t('admin.sekolah.subject_management.bulk_status_inactive_hint') }}
+          </p>
+        </div>
+      </label>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <Button variant="secondary" block @click="bulkStatusOpen = false">
+          {{ $t('common.cancel') }}
+        </Button>
+        <Button
+          variant="primary"
+          block
+          :loading="isSaving"
+          :disabled="!bulkTargetStatus"
+          @click="performBulkStatus"
+        >
+          {{ $t('admin.sekolah.subject_management.bulk_status_confirm') }}
+        </Button>
+      </div>
+    </div>
+  </Modal>
+
+  <!-- Bulk-KKM modal — number 0-100 applied to N mapel. -->
+  <Modal
+    v-if="bulkKkmOpen"
+    :title="$t('admin.sekolah.subject_management.bulk_kkm_title', { count: selectedIds.size })"
+    :subtitle="$t('admin.sekolah.subject_management.bulk_kkm_subtitle')"
+    @close="bulkKkmOpen = false"
+  >
+    <div class="space-y-3">
+      <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
+        {{ $t('admin.sekolah.subject_management.bulk_kkm_label') }}
+      </label>
+      <input
+        v-model.number="bulkTargetKkm"
+        type="number"
+        min="0"
+        max="100"
+        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[14px] font-bold text-slate-900 outline-none focus:border-role-admin tabular-nums"
+      />
+      <p class="text-2xs text-slate-500 leading-relaxed">
+        {{ $t('admin.sekolah.subject_management.bulk_kkm_hint', { count: selectedIds.size, kkm: bulkTargetKkm }) }}
+      </p>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <Button variant="secondary" block @click="bulkKkmOpen = false">
+          {{ $t('common.cancel') }}
+        </Button>
+        <Button
+          variant="primary"
+          block
+          :loading="isSaving"
+          @click="performBulkKkm"
+        >
+          {{ $t('admin.sekolah.subject_management.bulk_kkm_confirm') }}
+        </Button>
+      </div>
+    </div>
+  </Modal>
 
   <AdminImportExcelModal
     v-if="showImport"

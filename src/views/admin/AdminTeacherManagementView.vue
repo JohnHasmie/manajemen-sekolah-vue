@@ -23,6 +23,7 @@ import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
 import PaginationView from '@/components/data/Pagination.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Button from '@/components/ui/Button.vue';
+import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
 import TeacherEditSheet from './widgets/TeacherEditSheet.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -329,6 +330,59 @@ async function performBulkDelete() {
       };
     } else {
       toast.value = { message: `${res.deleted} guru terhapus.`, tone: 'success' };
+    }
+  } catch (e) {
+    error.value = (e as Error).message;
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+// ── Bulk edit — employment status only ─────────────────────────────
+// employment_status is 4-tier (tetap / tidak_tetap / kontrak /
+// honorer) and applying the same value to N teachers is a real HR
+// operation. Personal fields (name/email/subjects/homeroom) stay OUT.
+const bulkStatusOpen = ref(false);
+const bulkTargetEmploymentStatus = ref<string>('');
+const EMPLOYMENT_STATUS_LABELS: Record<string, string> = {
+  tetap: 'Tetap',
+  tidak_tetap: 'Tidak Tetap',
+  kontrak: 'Kontrak',
+  honorer: 'Honorer',
+};
+const bulkTargetEmploymentLabel = computed(() =>
+  bulkTargetEmploymentStatus.value
+    ? EMPLOYMENT_STATUS_LABELS[bulkTargetEmploymentStatus.value] ?? ''
+    : '',
+);
+function openBulkStatus(): void {
+  bulkTargetEmploymentStatus.value = '';
+  bulkStatusOpen.value = true;
+}
+
+async function performBulkStatus(): Promise<void> {
+  if (!bulkTargetEmploymentStatus.value) return;
+  try {
+    isSaving.value = true;
+    const ids = Array.from(selectedIds.value);
+    const target = bulkTargetEmploymentStatus.value;
+    const res = await TeacherService.bulkUpdate(ids, {
+      employment_status: target,
+    });
+    const targetLabel = bulkTargetEmploymentLabel.value;
+    clearSelection();
+    bulkStatusOpen.value = false;
+    await reload(pagination.value?.current_page ?? 1);
+    if (res.failed > 0) {
+      toast.value = {
+        message: `${res.updated} guru diubah ke ${targetLabel} · ${res.failed} gagal.`,
+        tone: 'error',
+      };
+    } else {
+      toast.value = {
+        message: `${res.updated} guru diubah ke ${targetLabel}.`,
+        tone: 'success',
+      };
     }
   } catch (e) {
     error.value = (e as Error).message;
@@ -648,6 +702,9 @@ function statusFor(t: Teacher) {
     />
 
     <template #bulk-actions>
+      <Button variant="secondary" size="sm" @click="openBulkStatus">
+        {{ $t('admin.sekolah.teacher_management.bulk_status_action') }}
+      </Button>
       <Button variant="danger" size="sm" @click="bulkDeleteOpen = true">
         {{ $t('admin.sekolah.teacher_management.bulk_delete', { count: selectedIds.size }) }}
       </Button>
@@ -735,6 +792,56 @@ function statusFor(t: Teacher) {
     @confirm="performBulkDelete"
     @close="bulkDeleteOpen = false"
   />
+
+  <!-- Bulk-status-kepegawaian modal — 4 radios (tetap / tidak_tetap /
+       kontrak / honorer), applied to N selected teachers. -->
+  <Modal
+    v-if="bulkStatusOpen"
+    :title="$t('admin.sekolah.teacher_management.bulk_status_title', { count: selectedIds.size })"
+    :subtitle="$t('admin.sekolah.teacher_management.bulk_status_subtitle')"
+    @close="bulkStatusOpen = false"
+  >
+    <div class="space-y-2">
+      <label
+        v-for="opt in [
+          { key: 'tetap', label: 'Tetap' },
+          { key: 'tidak_tetap', label: 'Tidak Tetap' },
+          { key: 'kontrak', label: 'Kontrak' },
+          { key: 'honorer', label: 'Honorer' },
+        ]"
+        :key="opt.key"
+        class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer"
+      >
+        <input
+          v-model="bulkTargetEmploymentStatus"
+          type="radio"
+          :value="opt.key"
+          class="accent-role-admin"
+        />
+        <span class="text-[13px] font-black text-slate-900">{{ opt.label }}</span>
+      </label>
+      <p
+        v-if="bulkTargetEmploymentStatus"
+        class="text-2xs text-slate-500 leading-relaxed pt-1"
+      >
+        {{ $t('admin.sekolah.teacher_management.bulk_status_hint', { count: selectedIds.size, name: bulkTargetEmploymentLabel }) }}
+      </p>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <Button variant="secondary" block @click="bulkStatusOpen = false">
+          {{ $t('common.cancel') }}
+        </Button>
+        <Button
+          variant="primary"
+          block
+          :loading="isSaving"
+          :disabled="!bulkTargetEmploymentStatus"
+          @click="performBulkStatus"
+        >
+          {{ $t('admin.sekolah.teacher_management.bulk_status_confirm') }}
+        </Button>
+      </div>
+    </div>
+  </Modal>
 
   <AdminImportExcelModal
     v-if="showImport"
