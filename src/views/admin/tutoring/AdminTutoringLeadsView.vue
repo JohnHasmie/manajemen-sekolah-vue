@@ -203,9 +203,33 @@ async function remove(lead: TutoringLead) {
     }))
   )
     return;
+  // status / converted_* / dropped_* are lifecycle state we don't
+  // resurrect on restore — a re-created lead starts fresh (createLead's
+  // payload doesn't accept status either).
+  const snapshot = {
+    name: lead.name,
+    email: lead.email ?? undefined,
+    phone: lead.phone ?? undefined,
+    program_id: lead.program_id ?? undefined,
+    source: lead.source ?? undefined,
+    notes: lead.notes ?? undefined,
+  };
   try {
     await TutoringService.deleteLead(lead.id);
     await load();
+    toast.undoable(t('admin.bimbel.leads.deleted'), async () => {
+      try {
+        await TutoringService.createLead(snapshot);
+        await load();
+        toast.success(t('admin.bimbel.leads.restored'));
+      } catch (e) {
+        toast.error(
+          e instanceof Error
+            ? `${t('admin.bimbel.leads.restore_fail')}: ${e.message}`
+            : t('admin.bimbel.leads.restore_fail'),
+        );
+      }
+    });
   } catch (e) {
     toast.error(e instanceof Error ? e.message : t('admin.bimbel.leads.delete_fail'));
   }

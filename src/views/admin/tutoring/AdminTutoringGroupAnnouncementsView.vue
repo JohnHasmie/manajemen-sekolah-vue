@@ -99,8 +99,30 @@ async function remove(a: TutoringGroupAnnouncement) {
     }))
   )
     return;
-  try { await TutoringService.deleteGroupAnnouncement(a.id); await load(); }
-  catch (e) { toast.error(e instanceof Error ? e.message : t('admin.bimbel.group_announcements.delete_fail')); }
+  const snapshot = {
+    tutoring_group_id: a.tutoring_group_id,
+    title: a.title,
+    body: a.body,
+  };
+  try {
+    await TutoringService.deleteGroupAnnouncement(a.id);
+    await load();
+    toast.undoable(t('admin.bimbel.group_announcements.deleted'), async () => {
+      try {
+        await TutoringService.createGroupAnnouncement(snapshot);
+        await load();
+        toast.success(t('admin.bimbel.group_announcements.restored'));
+      } catch (e) {
+        toast.error(
+          e instanceof Error
+            ? `${t('admin.bimbel.group_announcements.restore_fail')}: ${e.message}`
+            : t('admin.bimbel.group_announcements.restore_fail'),
+        );
+      }
+    });
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : t('admin.bimbel.group_announcements.delete_fail'));
+  }
 }
 
 function recipientsFor(a: TutoringGroupAnnouncement): number {

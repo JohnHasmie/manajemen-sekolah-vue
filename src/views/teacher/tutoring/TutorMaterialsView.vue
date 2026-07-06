@@ -106,9 +106,30 @@ async function remove(m: TutoringMaterial) {
     }))
   )
     return;
+  const snapshot = {
+    tutoring_group_id: m.tutoring_group_id ?? undefined,
+    tutoring_program_id: m.tutoring_program_id ?? undefined,
+    title: m.title,
+    description: m.description ?? undefined,
+    file_url: m.file_url ?? undefined,
+    published_at: m.published_at ?? null,
+  };
   try {
     await TutoringService.deleteMaterial(m.id);
     await load();
+    toast.undoable(t('tutor.bimbel.materials.deleted'), async () => {
+      try {
+        await TutoringService.createMaterial(snapshot);
+        await load();
+        toast.success(t('tutor.bimbel.materials.restored'));
+      } catch (e) {
+        toast.error(
+          e instanceof Error
+            ? `${t('tutor.bimbel.materials.restore_fail')}: ${e.message}`
+            : t('tutor.bimbel.materials.restore_fail'),
+        );
+      }
+    });
   } catch (e) {
     toast.error(e instanceof Error ? e.message : t('tutor.bimbel.materials.err_delete_failed'));
   }

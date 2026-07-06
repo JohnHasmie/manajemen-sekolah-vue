@@ -347,10 +347,27 @@ async function deleteRule(id: string) {
     }))
   )
     return;
+  // Snapshot BEFORE deleting so undo can re-post the exact same
+  // payload (saveRule accepts create+update through the same shape,
+  // differentiated by `id`). We drop the id on restore so the server
+  // materialises a fresh row rather than colliding.
+  const snapshot = rules.value.find((r) => r.id === id);
   try {
     await TeacherAttendanceService.deleteRule(id);
-    toast.success('Aturan presensi berhasil dihapus.');
     await loadRules();
+    if (!snapshot) {
+      toast.success('Aturan presensi berhasil dihapus.');
+      return;
+    }
+    toast.undoable('Aturan presensi dihapus.', async () => {
+      try {
+        await TeacherAttendanceService.saveRule({ ...snapshot, id: null });
+        await loadRules();
+        toast.success('Aturan presensi dikembalikan.');
+      } catch (e) {
+        toast.error(`Gagal mengembalikan: ${(e as Error).message}`);
+      }
+    });
   } catch (e) {
     toast.error((e as Error).message);
   }
@@ -437,10 +454,23 @@ async function deleteCheckinRule(id: string) {
     }))
   )
     return;
+  const snapshot = rules.value.find((r) => r.id === id);
   try {
     await TeacherAttendanceService.deleteRule(id);
-    toast.success('Aturan jam datang berhasil dihapus.');
     await loadRules();
+    if (!snapshot) {
+      toast.success('Aturan jam datang berhasil dihapus.');
+      return;
+    }
+    toast.undoable('Aturan jam datang dihapus.', async () => {
+      try {
+        await TeacherAttendanceService.saveRule({ ...snapshot, id: null });
+        await loadRules();
+        toast.success('Aturan jam datang dikembalikan.');
+      } catch (e) {
+        toast.error(`Gagal mengembalikan: ${(e as Error).message}`);
+      }
+    });
   } catch (e) {
     toast.error((e as Error).message);
   }

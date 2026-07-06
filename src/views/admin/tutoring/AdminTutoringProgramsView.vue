@@ -110,10 +110,30 @@ async function remove(p: TutoringProgram) {
     }))
   )
     return;
+  // Snapshot the fields the createProgram payload needs — anything
+  // computed / server-owned (id, packages_count, groups_count) is
+  // discarded so the restore lands as a fresh row.
+  const snapshot = {
+    name: p.name,
+    description: p.description ?? undefined,
+    target_education_level: p.target_education_level ?? undefined,
+  };
   try {
     await TutoringService.deleteProgram(p.id);
-    toast.success(t('tutoring.programs.deleted'));
     await load();
+    toast.undoable(t('tutoring.programs.deleted'), async () => {
+      try {
+        await TutoringService.createProgram(snapshot);
+        await load();
+        toast.success(t('tutoring.programs.restored'));
+      } catch (e) {
+        toast.error(
+          e instanceof Error
+            ? `${t('tutoring.programs.restoreFailed')}: ${e.message}`
+            : t('tutoring.programs.restoreFailed'),
+        );
+      }
+    });
   } catch (e) {
     toast.error(
       e instanceof Error ? e.message : t('tutoring.programs.deleteFailed'),

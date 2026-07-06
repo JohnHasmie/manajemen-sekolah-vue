@@ -118,9 +118,35 @@ async function remove(v: TutoringVoucher) {
     }))
   )
     return;
+  // used_count is intentionally NOT copied — a restored voucher starts
+  // its usage tally fresh; carrying an old used_count would leak stale
+  // redemption history into a new server row.
+  const snapshot = {
+    code: v.code,
+    type: v.type,
+    value: v.value,
+    max_uses: v.max_uses ?? null,
+    valid_from: v.valid_from ?? null,
+    valid_until: v.valid_until ?? null,
+    is_active: v.is_active,
+    notes: v.notes ?? undefined,
+  };
   try {
     await TutoringService.deleteVoucher(v.id);
     await load();
+    toast.undoable(t('admin.bimbel.vouchers.deleted'), async () => {
+      try {
+        await TutoringService.createVoucher(snapshot);
+        await load();
+        toast.success(t('admin.bimbel.vouchers.restored'));
+      } catch (e) {
+        toast.error(
+          e instanceof Error
+            ? `${t('admin.bimbel.vouchers.restore_fail')}: ${e.message}`
+            : t('admin.bimbel.vouchers.restore_fail'),
+        );
+      }
+    });
   } catch (e) {
     toast.error(e instanceof Error ? e.message : t('admin.bimbel.vouchers.delete_fail'));
   }
