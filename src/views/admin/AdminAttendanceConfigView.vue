@@ -33,6 +33,7 @@ import type { CheckInMethod } from '@/types/attendance-qr';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
+import StickyActionBar from '@/components/ui/StickyActionBar.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import AttendanceConfigWizard from '@/components/feature/AttendanceConfigWizard.vue';
 
@@ -986,11 +987,17 @@ function jumpToSection(id: string): void {
           </div>
         </section>
 
-        <div class="flex justify-end">
-          <Button variant="primary" :loading="saving" @click="saveSettings">
+        <!-- STICKY SAVE — the Umum tab holds 30+ controls across four
+             dense sections; an admin editing anything at the top
+             shouldn't have to scroll all the way down to commit. The
+             sticky bar keeps the primary action thumb-reachable and
+             on desktop where the full form is visible it just floats
+             at the bottom of the tab body without changing the flow. -->
+        <StickyActionBar :cols="1">
+          <Button variant="primary" block :loading="saving" @click="saveSettings">
             <NavIcon name="check" :size="15" />Simpan Pengaturan
           </Button>
-        </div>
+        </StickyActionBar>
       </template>
     </template>
 
