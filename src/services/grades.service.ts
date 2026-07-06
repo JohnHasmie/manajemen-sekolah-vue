@@ -474,12 +474,26 @@ export const GradeService = {
         ? payload.assessment.name
         : payload.assessment.raw_title;
 
+    // Synthetic ids (`__new__…` from applyAddAsesmen, `__rename__…` from
+    // renameAssessment) mark columns that don't yet have a backend
+    // Assessment row. Sending them as `assessment_id` trips the backend
+    // rule `nullable|uuid` with "The assessment id field must be a
+    // valid UUID." — the value is a string but not UUID-shaped. Omit
+    // the field so CreateGradeAction falls through to its find-or-
+    // create-by-attrs path, which is the intended way to materialise
+    // the column server-side. The matrix refetch reconciles the real
+    // id afterwards.
+    const rawAid = payload.cell.assessment_id;
+    const uuidRe =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const assessmentId =
+      typeof rawAid === 'string' && uuidRe.test(rawAid) ? rawAid : null;
+
     const body: Record<string, unknown> = {
       student_id: payload.cell.student_id,
       student_class_id: payload.row.student_class_id ?? null,
       teacher_id: payload.teacher_id,
       subject_id: payload.subject_id,
-      assessment_id: payload.cell.assessment_id,
       type: payload.assessment.type,
       date: dateIso,
       title,
@@ -487,6 +501,11 @@ export const GradeService = {
         typeof payload.cell.score === 'number' ? payload.cell.score : 0,
       notes: payload.cell.notes ?? '',
     };
+    // Only include the id when it's a real UUID — omitting is more
+    // portable than sending null (some clients strip null keys).
+    if (assessmentId !== null) {
+      body.assessment_id = assessmentId;
+    }
 
     if (payload.cell.id) {
       const res = await api.put(`/grades/${payload.cell.id}`, body);
