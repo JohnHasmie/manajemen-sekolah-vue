@@ -256,7 +256,15 @@ const heroChipLabel = computed(() => {
       </button>
     </div>
 
-    <AsyncView :state="state" :empty-title="t('reportCard.notFound')" @retry="load">
+    <AsyncView
+      :state="state"
+      :empty-title="t('reportCard.notFound')"
+      :empty-description="t('parent.reportCard.detailNotFoundDesc')"
+      :empty-action-label="t('reportCard.list')"
+      empty-icon="file-text"
+      @retry="load"
+      @empty-action="goBack"
+    >
       <template #default>
         <div v-if="row" class="space-y-4">
           <!-- HEADER -->

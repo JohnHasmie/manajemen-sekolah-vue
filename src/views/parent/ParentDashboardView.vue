@@ -287,7 +287,13 @@ watch(sliceKey, () => {
       message="Di sini Anda bisa melihat nilai, absensi, dan tagihan anak Anda. Rapor semester tersedia setelah sekolah menerbitkannya. Ada beberapa anak? Ganti anak lewat chip di bagian atas."
       cta-label="Mengerti"
     />
-    <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
+    <AsyncView
+      :state="state"
+      :empty-title="t('parent.dashboard.emptyTitle')"
+      :empty-description="t('parent.dashboard.emptyDesc')"
+      empty-icon="home"
+      @retry="load"
+    >
       <template #default>
         <!-- Shared scaffold: fixed vertical rhythm + slot order across
              every role dashboard. Slots: greeting → kpis → hero → main →

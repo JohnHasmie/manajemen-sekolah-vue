@@ -2647,6 +2647,8 @@
   },
   "parent": {
     "dashboard": {
+      "emptyTitle": "Belum ada aktivitas anak Anda",
+      "emptyDesc": "Ringkasan kehadiran, nilai, dan tagihan akan muncul di sini begitu sekolah mulai mencatatnya.",
       "greetingMorning": "Selamat pagi",
       "greetingNoon": "Selamat siang",
       "greetingAfternoon": "Selamat sore",
@@ -2696,7 +2698,8 @@
       "decisionGraduated": "Lulus 🎉",
       "decisionNotGraduated": "Tidak Lulus",
       "decisionPending": "Belum diumumkan oleh sekolah",
-      "decisionOddSemester": "Akan diumumkan setelah Semester Genap"
+      "decisionOddSemester": "Akan diumumkan setelah Semester Genap",
+      "detailNotFoundDesc": "Rapor yang Anda cari mungkin belum diterbitkan oleh sekolah, atau tautannya sudah tidak berlaku."
     },
     "announcements": {
       "kicker": "Komunikasi · Pengumuman Sekolah",
