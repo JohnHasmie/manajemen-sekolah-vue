@@ -19,6 +19,13 @@ export interface Student {
   gender?: string | null;
   date_of_birth?: string | null;
   guardian_email?: string | null;
+  /**
+   * Account lifecycle status — server side is one of
+   * `active` | `inactive` | `unverified`. Optional because the API
+   * historically omitted it on older list responses; downstream code
+   * treats missing as `active` (matches the filter default).
+   */
+  status?: 'active' | 'inactive' | 'unverified' | null;
 }
 
 type AnyRecord = Record<string, unknown>;
@@ -112,7 +119,28 @@ export function studentFromJson(raw: AnyRecord): Student {
       (r.date_of_birth as string) ?? (r.tanggal_lahir as string) ?? null,
     guardian_email:
       (r.guardian_email as string) ?? (r.email_wali as string) ?? null,
+    status: normaliseStudentStatus(r.status ?? r.is_active),
   };
+}
+
+/**
+ * Map the raw student status onto the canonical enum. Accepts the
+ * three modern string values (`active`/`inactive`/`unverified`), the
+ * legacy boolean `is_active`, and the Indonesian strings
+ * (`aktif`/`nonaktif`) some older seed data still ships with. Returns
+ * `null` when the field is absent so callers know to treat as unknown.
+ */
+function normaliseStudentStatus(
+  raw: unknown,
+): 'active' | 'inactive' | 'unverified' | null {
+  if (raw == null) return null;
+  if (typeof raw === 'boolean') return raw ? 'active' : 'inactive';
+  const v = String(raw).toLowerCase().trim();
+  if (!v) return null;
+  if (v === 'active' || v === 'aktif' || v === '1') return 'active';
+  if (v === 'inactive' || v === 'nonaktif' || v === '0') return 'inactive';
+  if (v === 'unverified' || v === 'belum verifikasi') return 'unverified';
+  return null;
 }
 
 // ---- Teacher ----

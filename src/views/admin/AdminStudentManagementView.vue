@@ -360,6 +360,44 @@ const studentBulkDeleteImpact = computed<string[]>(() => [
   ...STUDENT_DELETE_IMPACT.value,
 ]);
 
+// ── Row status pill — reflect real account status ──────────────────
+// Was hard-coded to {tone:'success', label:'Aktif'} for every row so
+// an inactive or unverified student was indistinguishable from an
+// active one at a glance. The BrandListRow status prop already exists
+// (used by teacher/subject/classroom views the same way); this maps
+// the canonical Student.status enum to a tone + label per row.
+function statusFor(s: Student): { tone: 'success' | 'warning' | 'neutral'; label: string } {
+  switch (s.status) {
+    case 'inactive':
+      return { tone: 'neutral', label: t('status.Inactive') };
+    case 'unverified':
+      return { tone: 'warning', label: t('admin.student.unverified') };
+    // active + null both render as Aktif — null preserves the old
+    // "assume active when the API forgot to send status" behaviour.
+    case 'active':
+    default:
+      return { tone: 'success', label: t('status.Active') };
+  }
+}
+
+/**
+ * Detail-sheet variant. AdminEntityDetailSheet uses a different tone
+ * enum (green/amber/red/slate) from BrandListRow (success/warning/
+ * danger/info/neutral), so we translate the status into the sheet's
+ * shape here rather than push both palettes into the sheet.
+ */
+function statusPillFor(s: Student): { tone: 'green' | 'amber' | 'red' | 'slate'; label: string } {
+  switch (s.status) {
+    case 'inactive':
+      return { tone: 'slate', label: t('status.Inactive') };
+    case 'unverified':
+      return { tone: 'amber', label: t('admin.student.unverified') };
+    case 'active':
+    default:
+      return { tone: 'green', label: t('status.Active') };
+  }
+}
+
 // ── Bulk select ──
 function toggleSelect(id: string) {
   const set = new Set(selectedIds.value);
@@ -673,7 +711,7 @@ function topMeta(s: Student): string {
         <BrandListRow
           :title="s.name || t('admin.student.noName')"
           :top-meta="topMeta(s)"
-          :status="{ tone: 'success', label: t('admin.student.statusActive') }"
+          :status="statusFor(s)"
           :trailing-action-label="selectedIds.has(s.id) ? '' : t('admin.shared.detail')"
           :trailing-action-color="primaryColor"
           :selected="selectedIds.has(s.id)"
@@ -986,7 +1024,7 @@ function topMeta(s: Student): string {
     :avatar-name="detailTarget.name"
     :avatar-color="primaryColor"
     :sections="detailSections"
-    :status-pill="{ label: t('admin.student.statusActive'), tone: 'green' }"
+    :status-pill="statusPillFor(detailTarget)"
     :read-only="ayReadOnly"
     @close="detailTarget = null"
     @edit="detailEdit"
