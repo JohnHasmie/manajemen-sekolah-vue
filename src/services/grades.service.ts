@@ -613,81 +613,54 @@ export const GradeService = {
   },
 
   /**
-   * Edit an existing assessment column's details (title / type / date).
+   * Edit an existing assessment column's details (title / type / date)
+   * in place — one PATCH, no grade migration, `id` and `created_at`
+   * preserved. Backed by `PATCH /assessments/{id}` on edu_core.
    *
-   * The backend has no dedicated "update assessment" endpoint — the
-   * `assessments` row is implicit, keyed by the composite unique index
-   * `(teacher_id, subject_id, type, date, title)`, and only the
-   * delete-batch + grade-POST operations touch it. So an "edit" is
-   * expressed with the exact same primitives the rest of this service
-   * already uses:
+   * Historical context: this flow used to be a create-new + delete-old
+   * dance because the backend had no update endpoint. That was wrong on
+   * three counts — every rename minted a fresh `created_at`, the two-
+   * step wasn't atomic (mid-flight failure duplicated or wiped columns),
+   * and downstream references to the OLD assessment id silently rot.
+   * The new endpoint runs inside `DB::transaction` with a row lock, so
+   * a concurrent grade autosave against the same assessment can't slip
+   * in a create-or-update-by-attrs while we're rewriting the identity
+   * fields those attrs key on.
    *
-   *   1. Re-POST every *scored* cell of the column under the NEW
-   *      (type, date, title) — this lazily creates the new assessment
-   *      row + migrates the grades (POST /grades, same path as add +
-   *      autosave).
-   *   2. DELETE /grades/batch on the OLD (type, date, title) — removes
-   *      the now-orphaned original assessment + its grades.
-   *
-   * Ordering matters: create-new BEFORE delete-old so a mid-flight
-   * failure can never leave the teacher with zero columns. If the new
-   * key equals the old key (nothing actually changed) the caller
-   * should short-circuit and never reach here.
-   *
-   * `old.date` is required by the batch-delete filter; a column with no
-   * date can't be migrated from the web (same limitation the delete
-   * flow already surfaces). When the column has no scored cells yet
-   * there's nothing to re-POST — we still create a placeholder so the
-   * renamed column survives; the caller handles that by re-seeding the
-   * matrix locally.
+   * Callers still handle the "collision" case in the toast layer:
+   * backend maps a composite-unique-index conflict to 409 with an
+   * Indonesian message the toast can surface directly.
    */
   async renameAssessment(payload: {
-    rows: GradeRow[];
     old: { type: AssessmentType; date: string; title: string | null };
     next: { type: AssessmentType; date: string; title: string | null };
     assessmentId: string;
-    subject_id: string;
-    teacher_id: string;
-  }): Promise<void> {
-    const nextAssessment: Assessment = {
-      // Synthetic id — the backend assigns the real id on first POST;
-      // the matrix refetch reconciles it afterwards.
-      id: `__rename__${Date.now()}`,
-      name: payload.next.title || ASSESSMENT_LABELS[payload.next.type],
-      raw_title: payload.next.title,
-      type: payload.next.type,
-      date: payload.next.date,
-    };
-
-    // 1. Re-POST scored cells under the new key. Cells are sent with
-    //    their id stripped so saveCell takes the POST path (create),
-    //    landing the grade on the new/looked-up assessment row.
-    const tasks: Promise<unknown>[] = [];
-    for (const row of payload.rows) {
-      const cell = row.cells[payload.assessmentId];
-      if (!cell || typeof cell.score !== 'number') continue;
-      tasks.push(
-        GradeService.saveCell({
-          cell: {
-            student_id: cell.student_id,
-            assessment_id: nextAssessment.id,
-            score: cell.score,
-            notes: cell.notes ?? null,
-          },
-          row,
-          assessment: nextAssessment,
-          subject_id: payload.subject_id,
-          teacher_id: payload.teacher_id,
-        }),
-      );
+  }): Promise<Assessment> {
+    // Only send fields that actually changed — the backend action
+    // rejects an empty payload as a no-op anyway, but keeping the wire
+    // tight makes the change log clean and avoids incidental UPDATEs.
+    const body: Record<string, unknown> = {};
+    if (payload.next.type !== payload.old.type) {
+      body.type = payload.next.type;
     }
-    await Promise.all(tasks);
+    if (payload.next.date !== payload.old.date) {
+      body.date = payload.next.date;
+    }
+    if (payload.next.title !== payload.old.title) {
+      // Send `null` explicitly (not omitted) so an intentional clear-
+      // to-null is honoured — matches the backend action's
+      // `array_key_exists` check rather than `isset`.
+      body.title = payload.next.title;
+    }
 
-    // 2. Delete the old column by its DB id — bypasses the
-    //    (subject, type, date, title) filter path entirely so the
-    //    just-created NEW assessment can't be swept up as a false
-    //    match (which would happen for a null-titled OLD column,
-    //    where the batch filter couldn't distinguish old from new).
-    await GradeService.deleteAssessmentById(payload.assessmentId);
+    const res = await api.patch(`/assessments/${payload.assessmentId}`, body);
+    const raw = (res.data?.data ?? {}) as Record<string, unknown>;
+    return {
+      id: String(raw.id ?? payload.assessmentId),
+      name: (raw.title as string | null) || ASSESSMENT_LABELS[payload.next.type],
+      raw_title: (raw.title as string | null) ?? null,
+      type: normalizeAssessmentType(raw.type ?? payload.next.type),
+      date: (raw.date as string | undefined) ?? payload.next.date,
+    };
   },
 };

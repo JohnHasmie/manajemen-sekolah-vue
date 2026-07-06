@@ -757,23 +757,16 @@ async function applyEditColumn() {
     };
     return;
   }
-  const teacherId = auth.teacherId ?? auth.user?.id ?? '';
-  if (!teacherId) {
-    toast.value = {
-      message: t('tutor.sekolah.gradebook.toastTeacherIdMissing'),
-      tone: 'error',
-    };
-    return;
-  }
+  // The backend PATCH endpoint school-scopes internally and derives
+  // teacher_id from the row it locks, so no teacher_id gate is needed
+  // here. Grades stay attached to the same assessment_id (in-place
+  // update), so there's nothing to migrate row-by-row either.
   isSavingColumnEdit.value = true;
   try {
     await GradeService.renameAssessment({
-      rows: matrix.value.rows,
       old: { type: a.type, date: a.date, title: oldTitle },
       next: { type: f.type, date: f.date, title: nextTitle },
       assessmentId: a.id,
-      subject_id: matrixSubject.value.id,
-      teacher_id: teacherId,
     });
     toast.value = {
       message: t('tutor.sekolah.gradebook.toastAssessmentUpdated', {
