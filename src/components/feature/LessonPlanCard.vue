@@ -22,9 +22,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import InfoHint from '@/components/ui/InfoHint.vue';
 import {
   FORMAT_COLORS,
   FORMAT_SHORT_LABELS,
+  STATUS_HINTS,
   STATUS_LABELS,
   STATUS_TONES,
   type LessonPlan,
@@ -55,6 +57,7 @@ const accent = computed(() => FORMAT_COLORS[props.plan.format]);
 const formatLabel = computed(() => FORMAT_SHORT_LABELS[props.plan.format]);
 const statusTone = computed(() => STATUS_TONES[props.plan.status]);
 const statusLabel = computed(() => STATUS_LABELS[props.plan.status]);
+const statusHint = computed(() => STATUS_HINTS[props.plan.status]);
 
 /** Highlight admin's revision note for SentBack / Rejected rows. */
 const showAdminNote = computed(
@@ -117,6 +120,7 @@ function formatDateShort(iso: string): string {
           <span class="w-1.5 h-1.5 rounded-full" :class="statusTone.dot" />
           {{ statusLabel }}
         </span>
+        <InfoHint :text="statusHint" aria-label="Arti status ini" />
         <span
           v-if="plan.ai_generated"
           class="font-bold px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 uppercase tracking-wider inline-flex items-center gap-1"

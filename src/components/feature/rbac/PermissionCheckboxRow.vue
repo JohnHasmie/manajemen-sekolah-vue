@@ -2,10 +2,10 @@
 /**
  * Single permission row inside a [PermissionModuleAccordion].
  *
- * The key (e.g. `finance.bill.view`) is shown in monospace because
- * the catalog is keyed by strings and visual feedback ("which key did
- * I just toggle?") matters more than prettifying it. Description sits
- * below in muted text.
+ * The human-readable label leads — a principal reads "Lihat tagihan",
+ * not `finance.bill.view`. The description sits below it, and the raw
+ * catalog key is kept as a small muted technical reference at the end
+ * (useful for support, invisible to everyone else).
  */
 import type { RbacPermission } from '@/types/rbac';
 
@@ -42,11 +42,11 @@ defineEmits<{
       </svg>
     </span>
     <span class="perm-row__body">
-      <span class="perm-row__key">{{ permission.key }}</span>
       <span class="perm-row__label">{{ permission.label }}</span>
       <span v-if="permission.description" class="perm-row__desc">{{
         permission.description
       }}</span>
+      <span class="perm-row__key">{{ permission.key }}</span>
     </span>
   </label>
 </template>
@@ -89,17 +89,17 @@ defineEmits<{
   gap: 2px;
   min-width: 0;
 }
-.perm-row__key {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 12px;
+.perm-row__label {
+  font-size: 13px;
   font-weight: 600;
   color: #0f172a;
 }
-.perm-row__label {
+.perm-row__desc {
   font-size: 11px;
   color: #64748b;
 }
-.perm-row__desc {
+.perm-row__key {
+  font-family: ui-monospace, Menlo, monospace;
   font-size: 10px;
   color: #94a3b8;
 }
@@ -116,10 +116,10 @@ defineEmits<{
   background: #21afe6;
   border-color: #21afe6;
 }
-:global(.rbac-shell--tutoring) .perm-row__key {
+:global(.rbac-shell--tutoring) .perm-row__label {
   color: #f1f5f9;
 }
-:global(.rbac-shell--tutoring) .perm-row__label,
+:global(.rbac-shell--tutoring) .perm-row__key,
 :global(.rbac-shell--tutoring) .perm-row__desc {
   color: #94a3b8;
 }

@@ -20,6 +20,7 @@
 import { computed } from 'vue';
 import type { RaportSubject } from '@/types/report-card';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import InfoHint from '@/components/ui/InfoHint.vue';
 
 const props = defineProps<{ subject: RaportSubject }>();
 defineEmits<{ open: [RaportSubject] }>();
@@ -182,8 +183,14 @@ function predicateTone(score: number | null): string {
               : 'Belum dinilai'
         }}
       </span>
-      <span class="text-3xs font-bold text-slate-400 tabular-nums">
+      <span
+        class="inline-flex items-center gap-1 text-3xs font-bold text-slate-400 tabular-nums"
+      >
         KKM {{ kkm }}
+        <InfoHint
+          :text="`KKM = Kriteria Ketuntasan Minimal — nilai minimum agar sebuah pelajaran dianggap tuntas. Di sini ${kkm}.`"
+          aria-label="Apa itu KKM?"
+        />
       </span>
     </div>
 

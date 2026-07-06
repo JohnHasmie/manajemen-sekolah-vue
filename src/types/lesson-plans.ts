@@ -28,6 +28,19 @@ export const STATUS_LABELS: Record<LessonPlanStatus, string> = {
   SentBack: 'Perlu Revisi',
 };
 
+/**
+ * One-line, plain-language explanation of each status — surfaced via an
+ * InfoHint next to the status pill, so a teacher new to the flow knows
+ * what "Menunggu Review" or "Perlu Revisi" actually means for them.
+ */
+export const STATUS_HINTS: Record<LessonPlanStatus, string> = {
+  Draft: 'Masih draf — tersimpan, belum diajukan. Ajukan untuk direview admin.',
+  Pending: 'Sudah diajukan, menunggu review admin. Belum perlu tindakan dari Anda.',
+  Approved: 'Sudah disetujui admin. Tidak ada tindakan lagi.',
+  Rejected: 'Ditolak admin — lihat alasannya, perbaiki, lalu ajukan ulang.',
+  SentBack: 'Dikembalikan untuk revisi — baca catatan, perbaiki, lalu ajukan ulang.',
+};
+
 export const STATUS_TONES: Record<
   LessonPlanStatus,
   { bg: string; text: string; border: string; dot: string; tone: StatusBadgeTone }
