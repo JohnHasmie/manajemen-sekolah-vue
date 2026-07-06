@@ -2651,6 +2651,8 @@
   },
   "parent": {
     "dashboard": {
+      "emptyTitle": "No activity yet for your child",
+      "emptyDesc": "Attendance, grades, and bills will show up here as soon as the school starts recording them.",
       "greetingMorning": "Good morning",
       "greetingNoon": "Good afternoon",
       "greetingAfternoon": "Good evening",
@@ -2700,7 +2702,8 @@
       "decisionGraduated": "Graduated 🎉",
       "decisionNotGraduated": "Did not graduate",
       "decisionPending": "Not yet announced by the school",
-      "decisionOddSemester": "Will be announced after Semester 2"
+      "decisionOddSemester": "Will be announced after Semester 2",
+      "detailNotFoundDesc": "The report card you're looking for may not have been published yet, or the link is no longer valid."
     },
     "announcements": {
       "kicker": "Communication · School Announcements",
