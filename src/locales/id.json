@@ -1736,7 +1736,22 @@
         "confirm_unarchive_ok": "Batalkan arsip",
         "confirm_delete_title": "Hapus tahun ajaran?",
         "confirm_delete_msg": "{year} akan dihapus permanen. Data terkait (kelas, presensi, nilai) tidak akan ikut terhapus tapi referensinya akan hilang.",
-        "confirm_delete_ok": "Hapus"
+        "confirm_delete_ok": "Hapus",
+        "impact": {
+          "archive": {
+            "readOnly": "Tahun ajaran jadi read-only — pendaftaran siswa/guru + edit tidak diblokir.",
+            "freezeSchedule": "Kelas + jadwal yang terikat di-freeze; masih bisa dilihat, tak bisa diubah.",
+            "historyKept": "Nilai + presensi + rapor historis TETAP tersimpan utuh.",
+            "reversible": "Bisa dikembalikan ke aktif lewat 'Batalkan arsip'."
+          },
+          "delete": {
+            "classesLost": "Semua kelas pada tahun ajaran ini akan terhapus.",
+            "gradesLost": "Nilai + rekap semester untuk tahun ajaran ini akan hilang permanen.",
+            "attendanceLost": "Riwayat presensi tahun ajaran ini akan hilang.",
+            "reportCardsLost": "Rapor semester + sertifikat tahun ajaran ini akan terhapus.",
+            "considerArchive": "Pertimbangkan 'Arsipkan' sebagai alternatif — datanya tetap tersimpan."
+          }
+        }
       },
       "announcement": {
         "kicker": "Komunikasi · Broadcast",
@@ -2100,6 +2115,12 @@
         "delete_title": "Hapus Jam Pelajaran",
         "delete_message": "Hapus jam ke-{hour} ({start}–{end})? Jadwal yang terikat ke jam ini akan gagal load.",
         "delete": "Hapus",
+        "impact": {
+          "scheduleSlots": "Slot jadwal yang pakai jam ini akan gagal load — kelas terkait perlu diedit ulang.",
+          "attendanceKept": "Riwayat presensi yang tercatat pada jam ini TETAP tersimpan (mengarah ke jam yang dihapus).",
+          "activityKept": "Catatan kegiatan kelas yang tercatat di jam ini TETAP tersimpan.",
+          "recreatable": "Bisa dibuat ulang kapan saja — jam pelajaran hanyalah slot waktu, bukan data siswa."
+        },
         "toast_created": "Jam pelajaran ditambahkan.",
         "toast_updated": "Jam pelajaran diperbarui.",
         "toast_deleted": "Jam pelajaran dihapus.",

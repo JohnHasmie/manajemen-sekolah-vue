@@ -49,6 +49,19 @@ const isSaving = ref(false);
 const formErr = ref<string | null>(null);
 
 const confirmDelete = ref<LessonHour | null>(null);
+
+// ── Delete impact preview — concrete cascade consequences ──
+// Jam pelajaran (lesson hour) is a small structural row referenced by
+// schedule slots + activity + attendance rows. On delete the schedule
+// slot references go null (parent kelas keeps its other jam-nya), but
+// activity + attendance rows stay attached to their own day/session
+// context and survive intact.
+const lessonHourDeleteImpact = computed<string[]>(() => [
+  t('admin.sekolah.lesson_hours.impact.scheduleSlots'),
+  t('admin.sekolah.lesson_hours.impact.attendanceKept'),
+  t('admin.sekolah.lesson_hours.impact.activityKept'),
+  t('admin.sekolah.lesson_hours.impact.recreatable'),
+]);
 const isDeleting = ref(false);
 
 const showCopySheet = ref(false);
@@ -409,6 +422,7 @@ function dayName(id: string): string {
       :title="t('admin.sekolah.lesson_hours.delete_title')"
       :message="t('admin.sekolah.lesson_hours.delete_message', { hour: confirmDelete.hour_number, start: confirmDelete.start_time, end: confirmDelete.end_time })"
       :confirm-label="t('admin.sekolah.lesson_hours.delete')"
+      :impact="lessonHourDeleteImpact"
       danger
       :loading="isDeleting"
       @close="confirmDelete = null"

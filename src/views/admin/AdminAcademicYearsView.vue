@@ -202,6 +202,25 @@ const unarchiveTarget = ref<AcademicYear | null>(null);
 const deleteTarget = ref<AcademicYear | null>(null);
 const isMutating = ref(false);
 
+// ── Delete impact preview — concrete cascade consequences ──
+// Two distinct destructive actions on this view. Archive is reversible
+// (state flip) — call out the read-only downstream effects. Delete is
+// hard cascade — call out the historical data that goes with it and
+// nudge admins toward Archive as the safer alternative.
+const academicYearArchiveImpact = computed<string[]>(() => [
+  t('admin.sekolah.academic_year.impact.archive.readOnly'),
+  t('admin.sekolah.academic_year.impact.archive.freezeSchedule'),
+  t('admin.sekolah.academic_year.impact.archive.historyKept'),
+  t('admin.sekolah.academic_year.impact.archive.reversible'),
+]);
+const academicYearDeleteImpact = computed<string[]>(() => [
+  t('admin.sekolah.academic_year.impact.delete.classesLost'),
+  t('admin.sekolah.academic_year.impact.delete.gradesLost'),
+  t('admin.sekolah.academic_year.impact.delete.attendanceLost'),
+  t('admin.sekolah.academic_year.impact.delete.reportCardsLost'),
+  t('admin.sekolah.academic_year.impact.delete.considerArchive'),
+]);
+
 async function confirmSetCurrent() {
   const y = setCurrentTarget.value;
   setCurrentTarget.value = null;
@@ -518,6 +537,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
       :title="t('admin.sekolah.academic_year.confirm_archive_title')"
       :message="t('admin.sekolah.academic_year.confirm_archive_msg', { year: archiveTarget.year })"
       :confirm-label="t('admin.sekolah.academic_year.confirm_archive_ok')"
+      :impact="academicYearArchiveImpact"
       danger
       @close="archiveTarget = null"
       @confirm="confirmArchive"
@@ -535,6 +555,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
       :title="t('admin.sekolah.academic_year.confirm_delete_title')"
       :message="t('admin.sekolah.academic_year.confirm_delete_msg', { year: deleteTarget.year })"
       :confirm-label="t('admin.sekolah.academic_year.confirm_delete_ok')"
+      :impact="academicYearDeleteImpact"
       danger
       @close="deleteTarget = null"
       @confirm="confirmDelete"

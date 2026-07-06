@@ -1739,7 +1739,22 @@
         "confirm_unarchive_ok": "Undo archive",
         "confirm_delete_title": "Delete academic year?",
         "confirm_delete_msg": "{year} will be deleted permanently. Related data (classes, attendance, grades) will not be deleted, but their references will be lost.",
-        "confirm_delete_ok": "Delete"
+        "confirm_delete_ok": "Delete",
+        "impact": {
+          "archive": {
+            "readOnly": "The academic year becomes read-only — student/teacher enrolment + edits are blocked.",
+            "freezeSchedule": "Classes + schedules tied to this year are frozen; still viewable, not editable.",
+            "historyKept": "Grades + attendance + past report cards remain intact.",
+            "reversible": "Can be reverted to active via 'Undo archive'."
+          },
+          "delete": {
+            "classesLost": "All classes for this academic year will be deleted.",
+            "gradesLost": "Grades + semester summaries for this year will be permanently lost.",
+            "attendanceLost": "Attendance history for this year will be lost.",
+            "reportCardsLost": "Report cards + certificates for this year will be deleted.",
+            "considerArchive": "Consider 'Archive' as a safer alternative — the data stays on file."
+          }
+        }
       },
       "announcement": {
         "kicker": "Communication · Broadcast",
@@ -2103,6 +2118,12 @@
         "delete_title": "Delete Lesson Hour",
         "delete_message": "Delete hour {hour} ({start}–{end})? Schedules bound to this hour will fail to load.",
         "delete": "Delete",
+        "impact": {
+          "scheduleSlots": "Schedule slots using this hour will fail to load — related classes need to be re-edited.",
+          "attendanceKept": "Attendance records logged on this hour STAY on file (they reference the deleted hour).",
+          "activityKept": "Class-activity notes logged on this hour STAY on file.",
+          "recreatable": "Can be recreated at any time — lesson hours are just time slots, not student data."
+        },
         "toast_created": "Lesson hour added.",
         "toast_updated": "Lesson hour updated.",
         "toast_deleted": "Lesson hour deleted.",
