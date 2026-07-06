@@ -14,6 +14,13 @@ function activate(t: ToastMessage) {
   t.onClick?.();
   dismiss(t.id);
 }
+
+function runAction(t: ToastMessage) {
+  // Fire the inline action (e.g. Batal / undo) then clear so a second
+  // click doesn't fire it twice.
+  t.action?.onAction();
+  dismiss(t.id);
+}
 </script>
 
 <template>
@@ -25,8 +32,10 @@ function activate(t: ToastMessage) {
     :tone="t.tone"
     :duration-ms="t.durationMs"
     :clickable="!!t.onClick"
+    :action-label="t.action?.label"
     :style="{ marginBottom: `${idx * 4}px` }"
     @activate="activate(t)"
+    @action="runAction(t)"
     @close="dismiss(t.id)"
   />
 </template>

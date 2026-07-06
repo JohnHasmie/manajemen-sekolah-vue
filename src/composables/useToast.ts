@@ -24,6 +24,18 @@ export interface ToastMessage {
   title?: string;
   /** Optional click handler — makes the whole toast tappable. */
   onClick?: () => void;
+  /** Optional inline action button (e.g. "Batal" for undo). */
+  action?: ToastAction;
+}
+
+/**
+ * Inline action rendered as a button inside the toast body — separate
+ * from `onClick` (which turns the whole toast into a tap surface). Use
+ * this for undo affordances on destructive actions.
+ */
+export interface ToastAction {
+  label: string;
+  onAction: () => void;
 }
 
 /** Options for {@link useToast}.show — the richer, action-capable form. */
@@ -33,6 +45,7 @@ export interface ToastOptions {
   durationMs?: number;
   title?: string;
   onClick?: () => void;
+  action?: ToastAction;
 }
 
 // Singleton state — shared across all callers within the SPA so the
@@ -43,7 +56,11 @@ let counter = 0;
 function enqueue(opts: ToastOptions): number {
   counter += 1;
   const id = counter;
-  const durationMs = opts.durationMs ?? 4500;
+  // Toasts with an action (typically undo) auto-dismiss slower so the
+  // user actually has time to react — matches Material Design's undo
+  // snackbar spec of 8 seconds.
+  const defaultMs = opts.action ? 8000 : 4500;
+  const durationMs = opts.durationMs ?? defaultMs;
   toasts.value = [
     ...toasts.value,
     {
@@ -53,6 +70,7 @@ function enqueue(opts: ToastOptions): number {
       durationMs,
       title: opts.title,
       onClick: opts.onClick,
+      action: opts.action,
     },
   ];
   // Auto-remove after duration. We keep the timer here so the host
@@ -82,6 +100,23 @@ export function useToast() {
      * visible and tappable (navigates to its href + marks it read).
      */
     show: (opts: ToastOptions) => enqueue(opts),
+    /**
+     * Undo-style toast — fires immediately after a destructive action
+     * ("Aturan dihapus") and offers a "Batal" button that calls
+     * `onUndo`. Auto-dismisses at 8s (matches Material Design's undo
+     * snackbar) so the user has real time to react.
+     */
+    undoable: (
+      message: string,
+      onUndo: () => void,
+      opts: { label?: string; tone?: ToastTone; durationMs?: number } = {},
+    ) =>
+      enqueue({
+        message,
+        tone: opts.tone ?? 'info',
+        durationMs: opts.durationMs,
+        action: { label: opts.label ?? 'Batal', onAction: onUndo },
+      }),
     dismiss,
   };
 }

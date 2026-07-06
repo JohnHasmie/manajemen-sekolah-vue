@@ -18,9 +18,11 @@ const props = defineProps<{
   title?: string;
   /** When true the body is a button that emits `activate` on click. */
   clickable?: boolean;
+  /** When set, render an inline action button (e.g. "Batal" for undo). */
+  actionLabel?: string;
 }>();
 
-const emit = defineEmits<{ close: []; activate: [] }>();
+const emit = defineEmits<{ close: []; activate: []; action: [] }>();
 
 let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -55,6 +57,14 @@ onBeforeUnmount(() => {
           <span v-if="title" class="block font-semibold leading-snug">{{ title }}</span>
           <span class="block" :class="title ? 'opacity-90 font-normal' : ''">{{ message }}</span>
         </component>
+        <button
+          v-if="actionLabel"
+          type="button"
+          class="uppercase tracking-widest text-xs font-black opacity-90 hover:opacity-100 flex-shrink-0 self-center px-2 py-1 rounded-md hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
+          @click="emit('action')"
+        >
+          {{ actionLabel }}
+        </button>
         <button
           type="button"
           class="opacity-80 hover:opacity-100 flex-shrink-0 mt-0.5"
