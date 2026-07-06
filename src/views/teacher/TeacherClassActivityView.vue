@@ -50,6 +50,9 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
+import RoleToggleChipRow, {
+  type RoleOption,
+} from '@/components/feature/RoleToggleChipRow.vue';
 import ActivityCard from '@/components/feature/ActivityCard.vue';
 import ActivityDetailModal from '@/components/feature/ActivityDetailModal.vue';
 import ActivitySubmissionPickerModal from '@/components/feature/ActivitySubmissionPickerModal.vue';
@@ -64,6 +67,42 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 const auth = useAuthStore();
 const { fromQuickAction, queryString } = useQuickAction();
 const { t } = useI18n();
+
+// ── Role toggle (Mengajar / Wali kelas per homeroom) ──
+// Mirrors the pattern TeacherGradeRecapView.vue:51-78 uses so guru with
+// a homeroom class can toggle between "kegiatan yang saya ajarkan"
+// (default) and "semua kegiatan di kelas X yang saya wali" (per homeroom).
+// Backend already supports view=homeroom_teacher on the same
+// /class-activities/teacher-summary endpoint (GetTeacherSummaryAction.php:51);
+// only the frontend was missing the wiring.
+const selectedRoleId = ref<string>('mengajar');
+const roleOptions = computed<RoleOption[]>(() => {
+  const out: RoleOption[] = [
+    {
+      id: 'mengajar',
+      shortName: 'Mengajar',
+      subLabel: 'Kegiatan yang saya ajarkan',
+      avatarInitials: 'M',
+    },
+  ];
+  for (const hc of auth.homeroomClasses) {
+    const name = hc.name || hc.id;
+    out.push({
+      id: `wali:${hc.id}`,
+      shortName: `Wali ${name}`,
+      subLabel: 'Semua kegiatan di kelas ini',
+      avatarInitials:
+        name.length <= 2
+          ? name.toUpperCase()
+          : name.slice(0, 2).toUpperCase(),
+    });
+  }
+  return out;
+});
+const isWaliMode = computed(() => selectedRoleId.value.startsWith('wali:'));
+const activeHomeroomId = computed(() =>
+  isWaliMode.value ? selectedRoleId.value.slice(5) : null,
+);
 
 // ── Filter state ──
 const classes = ref<Classroom[]>([]);
@@ -158,10 +197,15 @@ async function reload() {
       const resp = await ClassActivityService.getTeacherSummary({
         teacher_id: teacherId,
         period: mapPeriod(rangeKey.value),
-        class_id: classFilter.value || undefined,
+        // Wali mode pins class_id to the selected homeroom (the
+        // teacher-summary backend uses class_id-without-teacher_id
+        // as an alternate wali trigger; passing both view + class_id
+        // is redundant but harmless and keeps the wire honest).
+        class_id: activeHomeroomId.value || classFilter.value || undefined,
         subject_id: subjectFilter.value || undefined,
         type: typeFilter.value === 'all' ? undefined : typeFilter.value,
         search: searchQuery.value || undefined,
+        view: isWaliMode.value ? 'homeroom_teacher' : 'teaching',
         per_page: 100,
       });
       items.value = resp.items;
@@ -192,6 +236,16 @@ onMounted(async () => {
   await reload();
 });
 
+// Toggling role pins/unpins the class filter to the homeroom class,
+// matching TeacherGradeRecapView.vue:242-249.
+watch(selectedRoleId, () => {
+  if (isWaliMode.value && activeHomeroomId.value) {
+    classFilter.value = activeHomeroomId.value;
+  } else {
+    classFilter.value = '';
+  }
+  reload();
+});
 watch([classFilter, subjectFilter, rangeKey, typeFilter], () => reload());
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
 watch(searchQuery, () => {
@@ -841,6 +895,13 @@ function pickSubject(id: string) {
       meta="Rekap pembelajaran harian, tugas, dan refleksi"
       :live-dot="false"
     >
+      <template v-if="roleOptions.length > 1" #role-toggle>
+        <RoleToggleChipRow
+          :selected-role-id="selectedRoleId"
+          :roles="roleOptions"
+          @update:selected-role-id="selectedRoleId = $event"
+        />
+      </template>
       <Button variant="primary" size="sm" @click="openAdd">
         <NavIcon name="plus" :size="14" />
         Tambah

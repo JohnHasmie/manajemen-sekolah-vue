@@ -148,6 +148,16 @@ export const ClassActivityService = {
     search?: string;
     page?: number;
     per_page?: number;
+    /**
+     * 'teaching' (default) groups results by the classes/subjects THIS
+     * teacher personally teaches. 'homeroom_teacher' groups by every
+     * (class, subject, teacher) triple within a homeroom class — the
+     * wali-kelas surfaces activities across all subjects in her class,
+     * not just the ones she personally teaches. Mirrors the same key
+     * the grade-recap teacher-summary endpoint accepts (backend:
+     * GetTeacherSummaryAction.php:51).
+     */
+    view?: 'teaching' | 'homeroom_teacher';
   }): Promise<TeacherActivitySummaryPage> {
     const res = await api.get('/class-activities/teacher-summary', {
       params: {
@@ -157,6 +167,7 @@ export const ClassActivityService = {
         ...(args.subject_id ? { subject_id: args.subject_id } : {}),
         ...(args.type ? { type: args.type } : {}),
         ...(args.search ? { search: args.search } : {}),
+        ...(args.view ? { view: args.view } : {}),
         page: args.page ?? 1,
         limit: args.per_page ?? 30,
       },
