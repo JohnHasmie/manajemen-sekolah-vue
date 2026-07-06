@@ -113,6 +113,77 @@ const statusLabel = computed(() => PAYMENT_STATUS_LABELS[props.payment.status]);
 const studentName = computed(() => props.payment.bill?.student?.name ?? '—');
 const billTitle = computed(() => props.payment.bill?.title ?? 'Tagihan');
 const isPending = computed(() => props.payment.status === 'pending');
+
+// Amount-match check — the single most important thing an admin needs
+// to decide before hitting Approve. Compare "nominal bayar" against
+// "nominal tagihan" and render a clear match / short / over indicator
+// so a busy admin doesn't approve an underpaid bukti by mistake.
+type AmountMatch =
+  | { kind: 'exact' }
+  | { kind: 'short'; diff: number }
+  | { kind: 'over'; diff: number }
+  | { kind: 'unknown' };
+
+const amountMatch = computed<AmountMatch>(() => {
+  const bill = props.payment.bill?.amount;
+  const paid = props.payment.amount;
+  if (typeof bill !== 'number' || typeof paid !== 'number') {
+    return { kind: 'unknown' };
+  }
+  const diff = paid - bill;
+  if (diff === 0) return { kind: 'exact' };
+  if (diff < 0) return { kind: 'short', diff: -diff };
+  return { kind: 'over', diff };
+});
+
+const matchChrome = computed(() => {
+  switch (amountMatch.value.kind) {
+    case 'exact':
+      return {
+        bg: 'bg-emerald-50',
+        border: 'border-emerald-200',
+        ring: 'border-emerald-600',
+        text: 'text-emerald-800',
+        label: 'text-emerald-900',
+        icon: 'check' as const,
+        title: '✓ Nominal cocok',
+        sub: 'Bukti transfer sesuai dengan tagihan.',
+      };
+    case 'short':
+      return {
+        bg: 'bg-red-50',
+        border: 'border-red-200',
+        ring: 'border-red-600',
+        text: 'text-red-800',
+        label: 'text-red-900',
+        icon: 'x' as const,
+        title: `⚠ Kurang ${formatRupiah(amountMatch.value.diff)}`,
+        sub: 'Nominal yang dibayar lebih kecil dari tagihan. Konfirmasi ke wali sebelum menyetujui.',
+      };
+    case 'over':
+      return {
+        bg: 'bg-amber-50',
+        border: 'border-amber-200',
+        ring: 'border-amber-600',
+        text: 'text-amber-800',
+        label: 'text-amber-900',
+        icon: 'info' as const,
+        title: `Lebih ${formatRupiah(amountMatch.value.diff)}`,
+        sub: 'Nominal yang dibayar melebihi tagihan. Cek apakah ini disengaja.',
+      };
+    default:
+      return {
+        bg: 'bg-slate-50',
+        border: 'border-slate-200',
+        ring: 'border-slate-400',
+        text: 'text-slate-600',
+        label: 'text-slate-700',
+        icon: 'info' as const,
+        title: 'Nominal tagihan tidak tersedia',
+        sub: 'Bandingkan manual dengan tagihan sebelum menyetujui.',
+      };
+  }
+});
 </script>
 
 <template>
@@ -162,6 +233,80 @@ const isPending = computed(() => props.payment.status === 'pending');
 
       <!-- Detail + actions -->
       <div class="space-y-3">
+        <!-- AMOUNT-CHECK card — the single most important thing an admin
+             needs to verify before Approve. Side-by-side "Bukti vs
+             Tagihan" plus an explicit match indicator; catches
+             underpayments a busy admin might otherwise wave through. -->
+        <div
+          class="rounded-2xl border p-3.5"
+          :class="[matchChrome.bg, matchChrome.border]"
+        >
+          <div class="grid grid-cols-2 gap-2 mb-2.5">
+            <div>
+              <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
+                Bukti transfer
+              </p>
+              <p class="mt-0.5 text-[15px] font-black tabular-nums text-slate-900">
+                {{ formatRupiah(payment.amount) }}
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
+                Tagihan
+              </p>
+              <p
+                v-if="payment.bill"
+                class="mt-0.5 text-[15px] font-black tabular-nums text-slate-900"
+              >
+                {{ formatRupiah(payment.bill.amount) }}
+              </p>
+              <p v-else class="mt-0.5 text-[15px] font-black text-slate-300">—</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-2 pt-2 border-t" :class="matchChrome.border">
+            <span
+              class="w-6 h-6 rounded-full bg-white flex items-center justify-center border-2 flex-shrink-0 mt-0.5"
+              :class="matchChrome.ring"
+              aria-hidden="true"
+            >
+              <svg
+                v-if="matchChrome.icon === 'check'"
+                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                class="w-3.5 h-3.5" :class="matchChrome.text"
+              >
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+              <svg
+                v-else-if="matchChrome.icon === 'x'"
+                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                class="w-3.5 h-3.5" :class="matchChrome.text"
+              >
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="w-3.5 h-3.5" :class="matchChrome.text"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 8v5" />
+                <path d="M12 16h.01" />
+              </svg>
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="text-[12.5px] font-black leading-tight" :class="matchChrome.label">
+                {{ matchChrome.title }}
+              </p>
+              <p class="mt-0.5 text-[11px] leading-snug" :class="matchChrome.text">
+                {{ matchChrome.sub }}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div class="bg-slate-50 rounded-xl p-3 space-y-1.5">
           <dl class="text-[12px] space-y-1.5">
             <div class="flex justify-between gap-2">
@@ -172,14 +317,6 @@ const isPending = computed(() => props.payment.status === 'pending');
                   :class="`${tones.bg} ${tones.text}`"
                 >{{ statusLabel }}</span>
               </dd>
-            </div>
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">Nominal bayar</dt>
-              <dd class="font-bold text-slate-900">{{ formatRupiah(payment.amount) }}</dd>
-            </div>
-            <div v-if="payment.bill" class="flex justify-between gap-2">
-              <dt class="text-slate-500">Nominal tagihan</dt>
-              <dd class="font-bold text-slate-900">{{ formatRupiah(payment.bill.amount) }}</dd>
             </div>
             <div class="flex justify-between gap-2">
               <dt class="text-slate-500">Metode</dt>
