@@ -568,6 +568,13 @@
       "guardianExample": "Mis. Ibu Ahmad",
       "deleteConfirm": "Hapus {name}?",
       "deleteWarning": "Tindakan ini tidak dapat dibatalkan. Semua data terkait siswa ini akan ikut terhapus.",
+      "impact": {
+        "grades": "Nilai, rekap semester, dan e-raport siswa akan hilang permanen.",
+        "attendance": "Riwayat presensi siswa akan hilang.",
+        "bills": "Tagihan yang belum lunas akan dibatalkan; kuitansi lunas tetap tersimpan.",
+        "guardianLink": "Akun wali murid TIDAK dihapus (bisa dipakai lagi kalau ada anak lain di sekolah).",
+        "bulkPrefix": "{count} siswa akan dihapus sekaligus."
+      },
       "editTitle": "Ubah Siswa",
       "addTitle": "Tambah Siswa",
       "editSubtitle": "Perbarui data siswa di bawah ini.",

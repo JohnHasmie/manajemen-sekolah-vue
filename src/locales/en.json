@@ -571,6 +571,13 @@
       "guardianExample": "E.g., Mrs. Ahmad",
       "deleteConfirm": "Delete {name}?",
       "deleteWarning": "This action cannot be undone. All student-related data will be deleted.",
+      "impact": {
+        "grades": "Grades, semester summaries, and e-reports will be permanently lost.",
+        "attendance": "Attendance history will be lost.",
+        "bills": "Unpaid bills will be cancelled; receipts for paid bills stay on file.",
+        "guardianLink": "Guardian accounts are NOT deleted (they can be reused if other children remain at the school).",
+        "bulkPrefix": "{count} students will be deleted at once."
+      },
       "editTitle": "Edit student",
       "addTitle": "Add student",
       "editSubtitle": "Update the student data below.",

@@ -24,6 +24,14 @@ export interface ConfirmOptions {
   cancelLabel?: string;
   /** Render the primary button in a destructive (red) style. */
   danger?: boolean;
+  /**
+   * Cascade consequences rendered as a warning card above the buttons.
+   * Each string is one bullet — a single specific thing that will
+   * happen when the action fires (e.g. "Rekap nilai + raport siswa
+   * akan hilang"). Only shown on destructive actions where the
+   * caller wants to warn the admin about downstream side effects.
+   */
+  impact?: string[];
 }
 
 interface ConfirmHostState extends ConfirmOptions {
@@ -38,6 +46,7 @@ const state = reactive<ConfirmHostState>({
   confirmLabel: undefined,
   cancelLabel: undefined,
   danger: false,
+  impact: undefined,
 });
 
 let resolver: ((value: boolean) => void) | null = null;
@@ -64,6 +73,7 @@ export function confirm(options: ConfirmOptions): Promise<boolean> {
   state.confirmLabel = options.confirmLabel;
   state.cancelLabel = options.cancelLabel;
   state.danger = options.danger ?? false;
+  state.impact = options.impact;
   state.open = true;
   return new Promise<boolean>((resolve) => {
     resolver = resolve;

@@ -342,6 +342,24 @@ const headerMeta = computed(() =>
   }),
 );
 
+// ── Delete impact preview — concrete cascade consequences ──
+// The strings are hand-written honest warnings (no fake counts):
+// they name each downstream table the delete cascade will remove or
+// mark orphaned, so an admin sees the true scope before hitting
+// Konfirmasi. Wali murid accounts stay because they can own multiple
+// children — only the anak link is severed.
+const STUDENT_DELETE_IMPACT = computed<string[]>(() => [
+  t('admin.student.impact.grades'),
+  t('admin.student.impact.attendance'),
+  t('admin.student.impact.bills'),
+  t('admin.student.impact.guardianLink'),
+]);
+const studentDeleteImpact = STUDENT_DELETE_IMPACT;
+const studentBulkDeleteImpact = computed<string[]>(() => [
+  t('admin.student.impact.bulkPrefix', { count: selectedIds.value.size }),
+  ...STUDENT_DELETE_IMPACT.value,
+]);
+
 // ── Bulk select ──
 function toggleSelect(id: string) {
   const set = new Set(selectedIds.value);
@@ -747,6 +765,7 @@ function topMeta(s: Student): string {
     :title="t('admin.student.deleteConfirm', { name: deleteTarget.name })"
     :message="t('admin.student.deleteWarning')"
     :confirm-label="t('common.delete')"
+    :impact="studentDeleteImpact"
     danger
     :loading="isSaving"
     @confirm="confirmDelete"
@@ -758,6 +777,7 @@ function topMeta(s: Student): string {
     :title="t('admin.student.bulkDeleteTitle', { count: selectedIds.size })"
     :message="t('admin.student.deleteWarning')"
     :confirm-label="t('admin.student.bulkDeleteConfirm')"
+    :impact="studentBulkDeleteImpact"
     danger
     :loading="isSaving"
     @confirm="performBulkDelete"
