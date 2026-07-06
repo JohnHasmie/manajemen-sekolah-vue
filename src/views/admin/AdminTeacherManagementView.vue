@@ -15,6 +15,7 @@ import { AdminDataExcelService } from '@/services/admin-data-excel.service';
 import { useRoleHex } from '@/composables/useRoleHex';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
+import { normalizeGender } from '@/types/entities';
 import type { Teacher, Classroom, Subject } from '@/types/entities';
 import type { Pagination } from '@/types/api';
 import AdminCrudScaffold from '@/components/feature/AdminCrudScaffold.vue';
@@ -249,7 +250,10 @@ const pageWithSubjectsCount = computed(
   () => teachers.value.filter((t) => (t.subject_names?.length ?? 0) > 0).length,
 );
 const pageFemaleCount = computed(
-  () => teachers.value.filter((t) => t.gender === 'P').length,
+  // Normalise so both legacy 'P' and canonical 'female' count. Without
+  // this, rows stored as 'female' fell through and the KPI card
+  // undercounted teachers on schools past the English-naming rollout.
+  () => teachers.value.filter((t) => normalizeGender(t.gender) === 'female').length,
 );
 
 const kpiCards = computed<KpiCard[]>(() => [
@@ -416,7 +420,20 @@ const detailSections = computed<DetailSection[]>(() => {
         { label: $t('admin.sekolah.teacher_management.field_nip'), value: teacher.employee_number ?? null },
         {
           label: $t('admin.sekolah.teacher_management.field_gender'),
-          value: teacher.gender === 'L' ? $t('admin.sekolah.teacher_management.gender_male') : teacher.gender === 'P' ? $t('admin.sekolah.teacher_management.gender_female') : null,
+          // Backend now emits canonical `male`/`female` (post English-
+          // naming migration) but this view was hard-coded to `L`/`P`,
+          // so the detail modal rendered null until the row was edited
+          // + saved (which re-wrote it as L/P via the edit sheet).
+          // Luay reported 2026-07-06: "di mobile sudah sesuai, di
+          // website belum, diedit dulu baru muncul". Normalise via
+          // the shared helper so both legacy L/P and canonical
+          // male/female resolve here.
+          value: (() => {
+            const g = normalizeGender(teacher.gender);
+            if (g === 'male') return $t('admin.sekolah.teacher_management.gender_male');
+            if (g === 'female') return $t('admin.sekolah.teacher_management.gender_female');
+            return null;
+          })(),
         },
         { label: $t('admin.sekolah.teacher_management.field_phone'), value: teacher.phone_number ?? null },
         { label: $t('admin.sekolah.teacher_management.field_address'), value: teacher.address ?? null },
