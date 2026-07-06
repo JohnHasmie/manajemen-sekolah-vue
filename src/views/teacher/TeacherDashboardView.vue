@@ -32,6 +32,7 @@ import PriorityInbox, { type PriorityItem } from '@/components/feature/PriorityI
 import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
 import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
+import WelcomeBanner from '@/components/ui/WelcomeBanner.vue';
 import { usePriorityInbox } from '@/composables/usePriorityInbox';
 
 type StatsPayload = Record<string, any>;
@@ -362,6 +363,17 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
 
 <template>
   <div class="space-y-6 pb-12">
+    <!-- First-run welcome — dismissible, keyed per-role so a re-designed
+         copy revision can invalidate the old sticker by bumping the
+         suffix. Renders above the AsyncView so it shows on cold boot
+         even before dashboard data has loaded. -->
+    <WelcomeBanner
+      storage-key="kamiledu.welcome.guru.v1"
+      emoji="🎓"
+      title="Selamat datang, Bapak/Ibu Guru!"
+      message="Presensi harian ada di menu Presensi. RPP dan Kegiatan Kelas ada di Akademik. Nilai siswa bisa Anda input di Buku Nilai. Semoga hari mengajar Anda menyenangkan!"
+      cta-label="Mengerti"
+    />
     <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
       <template #default>
         <!-- Shared scaffold: fixed vertical rhythm + slot order across

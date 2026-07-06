@@ -31,6 +31,7 @@ import { useMeStore } from '@/stores/me';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Card from '@/components/ui/Card.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import WelcomeBanner from '@/components/ui/WelcomeBanner.vue';
 import type { Role } from '@/types/auth';
 
 const auth = useAuthStore();
@@ -88,6 +89,13 @@ function go(routeName: string) {
       :kicker="t('staffHome.kicker')"
       :title="t('staffHome.greeting', { name: auth.user?.name ?? '' })"
       :meta="t('staffHome.roleMeta', { role: roleLabel })"
+    />
+    <WelcomeBanner
+      storage-key="kamiledu.welcome.staff.v1"
+      emoji="🗂️"
+      title="Selamat datang!"
+      message="Tap 'Presensi Saya' untuk absensi harian. Riwayat presensi Anda tersimpan di menu Presensi, dan pengaturan akun ada di menu Akun."
+      cta-label="Mengerti"
     />
 
     <!-- Real self-service surface — only when the ability is granted. -->

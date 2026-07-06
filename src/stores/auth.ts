@@ -1129,6 +1129,17 @@ export const useAuthStore = defineStore('auth', {
         storage.remove(StorageKeys.role);
         storage.remove(StorageKeys.teacherProfile);
         storage.remove(StorageKeys.parentActiveChild);
+        // Clear all first-run welcome-banner dismiss flags so a new
+        // account signing in on this device sees its own greeting
+        // fresh — one per role, versioned suffix.
+        for (const k of [
+          'kamiledu.welcome.guru.v1',
+          'kamiledu.welcome.wali.v1',
+          'kamiledu.welcome.staff.v1',
+          'kamiledu.welcome.admin.v1',
+        ]) {
+          storage.remove(k);
+        }
         // Tear down the realtime notifications socket so a logged-out
         // browser holds no Reverb connection. Lazy-imported to avoid a
         // load-time dependency on the Echo client (which is inert unless
