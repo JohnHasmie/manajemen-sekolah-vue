@@ -12,6 +12,8 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { FinanceService } from '@/services/finance.service';
 import { AcademicYearService } from '@/services/academic-year.service';
 import { useAcademicYearStore } from '@/stores/academic-year';
+import { useConfirm } from '@/composables/useConfirm';
+import { formatRupiah } from '@/lib/format';
 import type { PaymentType } from '@/types/billing';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
@@ -29,6 +31,7 @@ const emit = defineEmits<{
 }>();
 
 const ayStore = useAcademicYearStore();
+const { confirm } = useConfirm();
 
 const selectedTypeId = ref<string>(props.initialPaymentTypeId ?? '');
 const selectedYear = ref<number>(new Date().getFullYear());
@@ -94,6 +97,27 @@ async function submit() {
     err.value = 'Tagihan untuk bulan ini sudah pernah digenerate.';
     return;
   }
+
+  // Confirmation step — the bulk create can't be undone in the UI, so
+  // narrate exactly what's about to fire (jenis, periode, nominal) and
+  // require an explicit second tap. Cheaper than a wrong-month
+  // accident that ends up owning 300 wali murid a phantom tagihan.
+  const type = selectedType.value;
+  const monthLabel = `${MONTHS[selectedMonth.value - 1]} ${selectedYear.value}`;
+  const amountLabel = type
+    ? formatRupiah(Number(type.amount))
+    : 'nominal jenis ini';
+  const jenisLabel = type ? type.name : 'jenis terpilih';
+  const ok = await confirm({
+    title: `Generate tagihan ${monthLabel}?`,
+    message:
+      `Setiap siswa aktif akan mendapat 1 tagihan "${jenisLabel}" senilai ` +
+      `${amountLabel} untuk periode ${monthLabel}. ` +
+      `Setelah dijalankan, tagihan tidak bisa dibatalkan massal — ` +
+      `hanya bisa dihapus satu per satu dari daftar tagihan.`,
+    confirmLabel: 'Ya, generate',
+  });
+  if (!ok) return;
 
   isGenerating.value = true;
   err.value = null;
