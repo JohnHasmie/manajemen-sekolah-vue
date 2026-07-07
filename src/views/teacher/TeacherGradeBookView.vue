@@ -56,6 +56,7 @@ import RoleToggleChipRow, {
   type RoleOption,
 } from '@/components/feature/RoleToggleChipRow.vue';
 import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
+import GradeSubjectCard from '@/components/feature/GradeSubjectCard.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
@@ -1335,132 +1336,73 @@ function typeLabel(type: AssessmentType): string {
           <section
             class="grid grid-cols-1 lg:grid-cols-2 gap-3"
           >
-            <button
+            <!-- Round-11: extracted shared GradeSubjectCard so the
+                 rekap main grid can adopt the same tile shape without
+                 duplicating markup. Nilai keeps its type-pill +
+                 progress-bar footer via the #footer slot; rekap
+                 leaves the slot empty. -->
+            <GradeSubjectCard
               v-for="row in filteredCards"
               :key="`${row.class_id}__${row.subject.id}`"
-              type="button"
-              class="w-full text-left bg-white border border-slate-200 rounded-2xl p-4 hover:border-brand-cobalt/40 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30 transition-all"
+              :avg-score="row.subject.avg_score"
+              :avg-tone="avgTone(row.subject.avg_score, matrix.kkm)"
+              :class-label="t('tutor.sekolah.gradebook.cardClassPrefix', { name: row.class_name })"
+              :subject-name="row.subject.name"
+              :subject-detail="row.subject.code"
+              :open-label="t('tutor.sekolah.gradebook.cardOpen')"
+              :meta-cells="[
+                { label: t('tutor.sekolah.gradebook.cardSiswa'), value: row.student_count },
+                { label: t('tutor.sekolah.gradebook.cardAsesmen'), value: row.subject.assessments.length },
+                { label: t('tutor.sekolah.gradebook.cardNilai'), value: row.subject.total_nilai },
+              ]"
               @click="openMatrix(row)"
             >
-              <!-- Header row -->
-              <div class="flex items-start gap-3">
-                <span
-                  class="w-12 h-12 rounded-2xl border grid place-items-center text-[13px] font-black flex-shrink-0"
-                  :class="[
-                    avgTone(row.subject.avg_score, matrix.kkm).bg,
-                    avgTone(row.subject.avg_score, matrix.kkm).text,
-                    avgTone(row.subject.avg_score, matrix.kkm).border,
-                  ]"
+              <template #footer>
+                <!-- Type pills -->
+                <div
+                  v-if="row.subject.assessments.length > 0"
+                  class="flex flex-wrap items-center gap-1.5"
                 >
-                  <span v-if="row.subject.avg_score !== null">
-                    {{ row.subject.avg_score }}
+                  <span
+                    v-for="tc in typeCountsFor(row.subject)"
+                    :key="tc.type"
+                    class="text-3xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
+                    :class="typePillClass(tc.type)"
+                  >
+                    {{ typeLabel(tc.type) }} × {{ tc.count }}
                   </span>
-                  <span v-else>—</span>
-                </span>
-                <div class="flex-1 min-w-0">
-                  <p
-                    class="text-3xs font-bold text-brand-cobalt uppercase tracking-widest"
-                  >
-                    {{ t('tutor.sekolah.gradebook.cardClassPrefix', { name: row.class_name }) }}
-                  </p>
-                  <p
-                    class="text-[14px] font-black text-slate-900 leading-tight mt-0.5 truncate"
-                  >
-                    {{ row.subject.name }}
-                  </p>
-                  <p
-                    v-if="row.subject.code"
-                    class="text-[10.5px] text-slate-400 mt-0.5"
-                  >
-                    {{ row.subject.code }}
-                  </p>
                 </div>
-                <span
-                  class="text-3xs font-bold text-brand-cobalt inline-flex items-center gap-0.5 flex-shrink-0"
+
+                <!-- Progress strip (1 bar per assessment) -->
+                <div
+                  v-if="row.subject.assessments.length > 0"
+                  class="flex items-center gap-1 mt-3 h-1 rounded-full overflow-hidden bg-slate-100"
                 >
-                  {{ t('tutor.sekolah.gradebook.cardOpen') }}
-                  <NavIcon name="chevron-right" :size="12" />
-                </span>
-              </div>
+                  <span
+                    v-for="a in row.subject.assessments"
+                    :key="a.id"
+                    class="h-full flex-1 transition-colors"
+                    :class="
+                      a.avg !== null
+                        ? a.avg >= 75
+                          ? 'bg-emerald-500'
+                          : 'bg-amber-500'
+                        : 'bg-slate-200'
+                    "
+                    :title="`${a.label}: ${a.avg ?? t('tutor.sekolah.gradebook.cardProgressNoScore')}`"
+                  ></span>
+                </div>
 
-              <!-- 3 meta cells -->
-              <div class="grid grid-cols-3 gap-1.5 mt-3">
-                <div class="bg-slate-50 rounded-lg px-2 py-1.5 text-center">
-                  <p
-                    class="text-[8.5px] font-bold text-slate-400 uppercase tracking-widest"
-                  >
-                    {{ t('tutor.sekolah.gradebook.cardSiswa') }}
-                  </p>
-                  <p class="text-[12px] font-black text-slate-900 mt-0.5">
-                    {{ row.student_count }}
-                  </p>
-                </div>
-                <div class="bg-slate-50 rounded-lg px-2 py-1.5 text-center">
-                  <p
-                    class="text-[8.5px] font-bold text-slate-400 uppercase tracking-widest"
-                  >
-                    {{ t('tutor.sekolah.gradebook.cardAsesmen') }}
-                  </p>
-                  <p class="text-[12px] font-black text-slate-900 mt-0.5">
-                    {{ row.subject.assessments.length }}
-                  </p>
-                </div>
-                <div class="bg-slate-50 rounded-lg px-2 py-1.5 text-center">
-                  <p
-                    class="text-[8.5px] font-bold text-slate-400 uppercase tracking-widest"
-                  >
-                    {{ t('tutor.sekolah.gradebook.cardNilai') }}
-                  </p>
-                  <p class="text-[12px] font-black text-slate-900 mt-0.5">
-                    {{ row.subject.total_nilai }}
-                  </p>
-                </div>
-              </div>
-
-              <!-- Type pills -->
-              <div
-                v-if="row.subject.assessments.length > 0"
-                class="flex flex-wrap items-center gap-1.5 mt-3"
-              >
-                <span
-                  v-for="tc in typeCountsFor(row.subject)"
-                  :key="tc.type"
-                  class="text-3xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
-                  :class="typePillClass(tc.type)"
+                <!-- Empty assessment hint -->
+                <p
+                  v-else
+                  class="text-2xs text-slate-400 inline-flex items-center gap-1.5"
                 >
-                  {{ typeLabel(tc.type) }} × {{ tc.count }}
-                </span>
-              </div>
-
-              <!-- Progress strip (1 bar per assessment) -->
-              <div
-                v-if="row.subject.assessments.length > 0"
-                class="flex items-center gap-1 mt-3 h-1 rounded-full overflow-hidden bg-slate-100"
-              >
-                <span
-                  v-for="a in row.subject.assessments"
-                  :key="a.id"
-                  class="h-full flex-1 transition-colors"
-                  :class="
-                    a.avg !== null
-                      ? a.avg >= 75
-                        ? 'bg-emerald-500'
-                        : 'bg-amber-500'
-                      : 'bg-slate-200'
-                  "
-                  :title="`${a.label}: ${a.avg ?? t('tutor.sekolah.gradebook.cardProgressNoScore')}`"
-                ></span>
-              </div>
-
-              <!-- Empty assessment hint -->
-              <p
-                v-else
-                class="text-2xs text-slate-400 mt-3 inline-flex items-center gap-1.5"
-              >
-                <NavIcon name="bell" :size="11" />
-                {{ t('tutor.sekolah.gradebook.cardEmptyAssessment') }}
-              </p>
-            </button>
+                  <NavIcon name="bell" :size="11" />
+                  {{ t('tutor.sekolah.gradebook.cardEmptyAssessment') }}
+                </p>
+              </template>
+            </GradeSubjectCard>
           </section>
         </template>
       </AsyncView>
