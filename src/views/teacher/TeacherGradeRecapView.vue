@@ -29,6 +29,7 @@ import type {
   TeacherGradeRecapSummary,
 } from '@/types/grade-recap';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
+import GradeSubjectCard from '@/components/feature/GradeSubjectCard.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
@@ -143,6 +144,21 @@ const filteredCards = computed(() => {
     return true;
   });
 });
+
+// Detail line shown under the subject name in the card. Previously
+// inlined as three <template v-if>s — the shared GradeSubjectCard
+// takes a single string, so collapse here. Wali-kelas teachers see
+// the authoring teacher's name (they're browsing colleagues' recaps
+// as class homeroom); regular teachers just see the subject code.
+function recapCardDetail(row: RecapCardRow): string | null {
+  const code = row.subject.code?.trim();
+  const teacher = row.subject.teacher_name?.trim();
+  if (isWaliMode.value && teacher) {
+    const byTeacher = t('tutor.sekolah.gradeRecap.byTeacher', { name: teacher });
+    return code ? `${code} · ${byTeacher}` : byTeacher;
+  }
+  return code || null;
+}
 
 const summaryState = computed<AsyncState<RecapCardRow[]>>(() => {
   if (isSummaryLoading.value && summary.value.length === 0)
@@ -332,92 +348,36 @@ function progressBarTone(pct: number) {
       :empty-description="t('tutor.sekolah.gradeRecap.emptyDescription')"
       empty-icon="layers"
     >
-      <div class="space-y-3">
-        <article
+      <!-- Round-11: adopt shared GradeSubjectCard so the rekap grid
+           matches the nilai grid visually. The rekap-specific
+           completeness bar + wali-mode teacher-name line live inside
+           the #footer slot / subjectDetail prop, so nothing here
+           deviates from the nilai layout. -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <GradeSubjectCard
           v-for="row in filteredCards"
           :key="`${row.class_id}__${row.subject.id}`"
-          class="group bg-white border border-slate-200 rounded-2xl px-4 py-3 hover:border-brand-cobalt/40 hover:shadow-sm transition cursor-pointer"
+          :avg-score="row.subject.avg_final_score"
+          :avg-tone="{
+            ...avgTone(row.subject.avg_final_score),
+            border: 'border-current/20',
+          }"
+          :class-label="t('tutor.sekolah.gradeRecap.classLabel', { name: row.class_name })"
+          :subject-name="row.subject.name"
+          :subject-detail="recapCardDetail(row)"
+          :open-label="t('tutor.sekolah.gradeRecap.open')"
+          :meta-cells="[
+            { label: t('tutor.sekolah.gradeRecap.cellStudents'), value: `${row.subject.recap_count} / ${row.subject.total_students}` },
+            { label: t('tutor.sekolah.gradeRecap.cellChapters'), value: row.subject.chapter_count },
+            { label: t('tutor.sekolah.gradeRecap.cellAverage'), value: row.subject.avg_final_score !== null
+              ? Math.round(row.subject.avg_final_score * 10) / 10
+              : '—' },
+          ]"
           @click="openMatrix(row)"
         >
-          <!-- Top row: avg badge + class+subject + open chevron -->
-          <div class="flex items-start gap-3">
-            <div
-              class="w-12 h-12 rounded-2xl border grid place-items-center text-[13px] font-black flex-shrink-0"
-              :class="[
-                avgTone(row.subject.avg_final_score).bg,
-                avgTone(row.subject.avg_final_score).text,
-                'border-current/20',
-              ]"
-            >
-              <span v-if="row.subject.avg_final_score !== null">
-                {{ Math.round(row.subject.avg_final_score) }}
-              </span>
-              <span v-else>—</span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p
-                class="text-3xs font-bold uppercase tracking-widest text-brand-cobalt/80"
-              >
-                {{ t('tutor.sekolah.gradeRecap.classLabel', { name: row.class_name }) }}
-              </p>
-              <h3 class="text-[15px] font-extrabold text-slate-900 mt-0.5 leading-tight truncate">
-                {{ row.subject.name }}
-              </h3>
-              <p
-                v-if="row.subject.code || row.subject.teacher_name"
-                class="text-2xs text-slate-500 mt-0.5 truncate"
-              >
-                <template v-if="row.subject.code">{{ row.subject.code }}</template>
-                <template v-if="row.subject.code && row.subject.teacher_name"> · </template>
-                <template v-if="row.subject.teacher_name && isWaliMode">
-                  {{ t('tutor.sekolah.gradeRecap.byTeacher', { name: row.subject.teacher_name }) }}
-                </template>
-              </p>
-            </div>
-            <div class="text-brand-cobalt/70 font-bold text-[12px] flex-shrink-0 inline-flex items-center gap-1">
-              {{ t('tutor.sekolah.gradeRecap.open') }}
-              <NavIcon name="chevron-right" :size="14" />
-            </div>
-          </div>
-
-          <!-- Meta cells -->
-          <div class="grid grid-cols-3 gap-2 mt-3">
-            <div class="bg-slate-50 rounded-lg px-2 py-1.5 text-center">
-              <p
-                class="text-4xs font-bold uppercase tracking-widest text-slate-500"
-              >
-                {{ t('tutor.sekolah.gradeRecap.cellStudents') }}
-              </p>
-              <p class="text-[12px] font-black text-slate-900 mt-0.5">
-                {{ row.subject.recap_count }} / {{ row.subject.total_students }}
-              </p>
-            </div>
-            <div class="bg-slate-50 rounded-lg px-2 py-1.5 text-center">
-              <p
-                class="text-4xs font-bold uppercase tracking-widest text-slate-500"
-              >
-                {{ t('tutor.sekolah.gradeRecap.cellChapters') }}
-              </p>
-              <p class="text-[12px] font-black text-slate-900 mt-0.5">
-                {{ row.subject.chapter_count }}
-              </p>
-            </div>
-            <div class="bg-slate-50 rounded-lg px-2 py-1.5 text-center">
-              <p
-                class="text-4xs font-bold uppercase tracking-widest text-slate-500"
-              >
-                {{ t('tutor.sekolah.gradeRecap.cellAverage') }}
-              </p>
-              <p class="text-[12px] font-black text-slate-900 mt-0.5">
-                {{ row.subject.avg_final_score !== null
-                  ? Math.round(row.subject.avg_final_score * 10) / 10
-                  : '—' }}
-              </p>
-            </div>
-          </div>
-
-          <!-- Progress strip -->
-          <div class="mt-3">
+          <template #footer>
+            <!-- Completeness progress strip — rekap-only bit that
+                 nilai's footer slot doesn't render. -->
             <div class="flex items-center justify-between mb-1">
               <span
                 class="text-3xs font-bold uppercase tracking-widest text-slate-500"
@@ -435,8 +395,8 @@ function progressBarTone(pct: number) {
                 :style="{ width: `${Math.min(100, row.subject.completion_pct)}%` }"
               />
             </div>
-          </div>
-        </article>
+          </template>
+        </GradeSubjectCard>
       </div>
     </AsyncView>
 
