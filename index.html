@@ -18,15 +18,32 @@
       on style-src covers Tailwind's arbitrary-value inline styles and
       Vue's scoped-CSS style-tag injection at runtime.
 
-      connect-src covers the main backend + AI service. If the SPA
-      deployment adds a new API host (Pusher for realtime, Cloudinary
-      for uploads, etc.) update this whitelist BEFORE flipping the
-      switch or the requests silently fail with a CSP violation in the
-      browser console.
+      Google Sign-In: `accounts.google.com` needs to be whitelisted on
+      script-src (loading /gsi/client), connect-src (the /oauth2/*
+      XHRs the GIS client issues), and frame-src (the consent iframe
+      GIS pops open on button click). Landed after login started
+      returning "Loading the script … violates … script-src" — the
+      original CSP predated the migration from static token login to
+      GIS-hosted OAuth.
+
+      connect-src covers the main backend + AI service + log ingest +
+      Reverb websocket. Domain names were `edu-*.kamillabs.com` per
+      the nginx host configs in `kamiledu-dev-stack/docker/nginx/host/`;
+      the earlier CSP referenced `api.kamillabs.com` (unregistered) so
+      every backend call in prod silently 4xx'd via CSP block. Also
+      allow `http://localhost:*` / `ws://localhost:*` so `npm run dev`
+      against a locally-hosted Laravel + Reverb doesn't need a per-dev
+      CSP override — harmless in prod (the prod document is never
+      loaded from localhost).
+
+      If the SPA deployment adds a new API host (extra AI subservice,
+      Cloudinary uploads, Pusher swap, etc.) update this whitelist
+      BEFORE flipping the switch or the requests silently fail with a
+      CSP violation in the browser console.
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.kamillabs.com https://ai.kamillabs.com wss://api.kamillabs.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; script-src-elem 'self' 'wasm-unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://accounts.google.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://edu-api.kamillabs.com https://edu-ai-api.kamillabs.com https://edu-log-api.kamillabs.com wss://edu-reverb.kamillabs.com https://accounts.google.com http://localhost:* ws://localhost:*; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com;"
     />
     <title>KamilEdu — Manajemen Sekolah</title>
   </head>
