@@ -28,7 +28,7 @@ import {
   ref,
   watch,
 } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { ClassroomService } from '@/services/classrooms.service';
@@ -66,7 +66,23 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 const { fromQuickAction, queryString } = useQuickAction();
 const auth = useAuthStore();
 const route = useRoute();
+const router = useRouter();
 const { t } = useI18n();
+
+// URL-driven mode. The gradebook has two visual modes — a summary
+// grid of subject-class cards and a matrix of scores drilled into
+// one card — and they now share the same view. Parity with the
+// grade-recap pair (list + `:classId/:subjectId` detail): if the
+// route carries classId + subjectId, the matrix renders; otherwise
+// the summary grid renders. Browser back, deep-link, and refresh
+// all behave the way teachers expect because the state is in the
+// URL, not just in memory.
+const matrixClassIdFromRoute = computed(
+  () => (route.params.classId as string | undefined) ?? '',
+);
+const matrixSubjectIdFromRoute = computed(
+  () => (route.params.subjectId as string | undefined) ?? '',
+);
 
 // ── Admin-view support ──
 // Admins can drill into a teacher's gradebook from
@@ -520,10 +536,26 @@ watch(selectedRoleId, () => {
 });
 
 // ── Navigation between summary and matrix mode ──
+// openMatrix pushes to the matrix route. The route-params watcher
+// below picks the new params up and calls enterMatrixWithCard() to
+// hydrate the matrix state from the same card object — same effect
+// as before, but the URL now reflects the state so browser back +
+// refresh + deep-link work.
 function openMatrix(card: (typeof flatCards.value)[number]) {
-  // Track which (class, subject) the matrix is locked to — kept
-  // separate from the summary-page filters so going "back" can
-  // reset the chips to "Semua" without losing the matrix scope.
+  router.push({
+    name: 'teacher.grades.matrix',
+    params: { classId: card.class_id, subjectId: card.subject.id },
+    // Preserve any query params (e.g. ?teacher_id= admin drill-in,
+    // ?ay= academic-year override) so the matrix route inherits the
+    // same context.
+    query: route.query,
+  });
+}
+
+// Hydrate matrix state from a card object. Split out from openMatrix
+// so the route-params watcher can call it whether the user clicked a
+// card or landed via a deep-link URL.
+function enterMatrixWithCard(card: (typeof flatCards.value)[number]) {
   matrixClass.value = { id: card.class_id, name: card.class_name };
   matrixSubject.value = { id: card.subject.id, name: card.subject.name };
   // Lift the summary's per-assessment list as a seed so the matrix
@@ -542,7 +574,57 @@ function openMatrix(card: (typeof flatCards.value)[number]) {
   loadMatrix();
 }
 
-function backToSummary() {
+// Watch route params — sync mode with URL. Runs on mount too (via
+// { immediate: true }) so a hard refresh at
+// /teacher/grades/:classId/:subjectId lands on the matrix instead of
+// snapping back to the summary. Waits for summary to be loaded
+// before hydrating — the card object we need lives inside
+// flatCards.value.
+watch(
+  [matrixClassIdFromRoute, matrixSubjectIdFromRoute, () => flatCards.value],
+  ([classId, subjectId, cards]) => {
+    if (!classId || !subjectId) {
+      // Route says "list mode" — bail out of matrix if we were in it.
+      if (mode.value === 'matrix') {
+        resetMatrixState();
+      }
+      return;
+    }
+    // Route says "matrix mode" — find the matching card. If the
+    // summary hasn't loaded yet, cards is [] and we'll re-enter on
+    // the next tick when loadSummary() populates it.
+    if (mode.value === 'matrix'
+        && matrixClass.value?.id === classId
+        && matrixSubject.value?.id === subjectId) {
+      return;
+    }
+    const card = cards.find(
+      (c) => c.class_id === classId && c.subject.id === subjectId,
+    );
+    if (card) {
+      enterMatrixWithCard(card);
+    }
+    // If no matching card exists (bad deep-link / stale bookmark /
+    // teacher no longer teaches this subject), we stay on the
+    // summary. A dedicated 404 view would be nicer but is a
+    // follow-up — for now the summary is the safe fallback.
+  },
+  { immediate: true },
+);
+
+// Push to the list route. The route-params watcher above sees the
+// params clear and calls resetMatrixState(). Kept as a thin wrapper
+// so the ESC keyboard shortcut + the "Kembali ke daftar" button
+// share one entry point (and both trigger a real browser history
+// entry so the back button still works).
+function exitToSummary() {
+  router.push({
+    name: 'teacher.grades',
+    query: route.query,
+  });
+}
+
+function resetMatrixState() {
   mode.value = 'summary';
   matrixClass.value = null;
   matrixSubject.value = null;
@@ -666,7 +748,7 @@ function onWindowKeydown(e: KeyboardEvent) {
     // Only escape out when no input is focused.
     const t = document.activeElement;
     if (!t || (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA')) {
-      backToSummary();
+      exitToSummary();
     }
   }
 }
@@ -1170,7 +1252,7 @@ function typeLabel(type: AssessmentType): string {
         v-if="mode === 'matrix'"
         type="button"
         class="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-[12px] font-bold inline-flex items-center gap-1.5"
-        @click="backToSummary"
+        @click="exitToSummary"
       >
         <NavIcon name="chevron-left" :size="13" />
         {{ t('tutor.sekolah.gradebook.backToList') }}
