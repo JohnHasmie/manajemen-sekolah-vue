@@ -875,6 +875,19 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'guru' satisfies Role, ability: 'academic.grade.input' },
       },
       {
+        // Matrix mode — drilled into from a subject-class card on the
+        // gradebook grid. Shares the TeacherGradeBookView component
+        // with the list route; the view watches route.params to
+        // decide whether to render summary or matrix. Parallels the
+        // grade-recap detail route below so bookmarks + browser back
+        // + refresh-on-matrix all behave the way teachers expect.
+        path: 'teacher/grades/:classId/:subjectId',
+        name: 'teacher.grades.matrix',
+        component: TeacherGradeBookView,
+        props: true,
+        meta: { role: 'guru' satisfies Role, ability: 'academic.grade.input' },
+      },
+      {
         path: 'teacher/grade-recap',
         name: 'teacher.grade-recap',
         component: TeacherGradeRecapView,
