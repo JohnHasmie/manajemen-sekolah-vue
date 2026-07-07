@@ -6,6 +6,28 @@
     <link rel="apple-touch-icon" href="/icon/KamilEdu.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#4F46E5" />
+    <!--
+      Round-9 audit: Content Security Policy header. Even after the
+      v-html sanitisation + sessionStorage token move, CSP is the last
+      line of defence — any XSS that lands past DOMPurify would still
+      hit script-src 'self' and be blocked from loading an attacker's
+      exfil script.
+
+      script-src includes 'wasm-unsafe-eval' because Vue 3's reactivity
+      compiles templates via wasm in some build paths; 'unsafe-inline'
+      on style-src covers Tailwind's arbitrary-value inline styles and
+      Vue's scoped-CSS style-tag injection at runtime.
+
+      connect-src covers the main backend + AI service. If the SPA
+      deployment adds a new API host (Pusher for realtime, Cloudinary
+      for uploads, etc.) update this whitelist BEFORE flipping the
+      switch or the requests silently fail with a CSP violation in the
+      browser console.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.kamillabs.com https://ai.kamillabs.com wss://api.kamillabs.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"
+    />
     <title>KamilEdu — Manajemen Sekolah</title>
   </head>
   <body class="font-sans antialiased bg-slate-50 text-slate-900">

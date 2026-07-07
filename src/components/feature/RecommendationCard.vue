@@ -49,6 +49,7 @@ import {
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import { formatRelative } from '@/lib/format';
+import { sanitizeRichHtml } from '@/lib/sanitize-html';
 
 const props = withDefaults(
   defineProps<{
@@ -210,11 +211,16 @@ const dueRelative = computed(() => {
           </button>
         </div>
 
-        <!-- DESCRIPTION (HTML) -->
+        <!-- DESCRIPTION (HTML) — Round-9 audit: sanitize with DOMPurify
+             the way ParentRecommendationDetailModal already does. The
+             AI service may echo teacher/student-name fields into the
+             description text; without sanitisation an attacker who can
+             seed a student name with `<img onerror=steal>` gets stored
+             XSS against every parent whose card renders the rec. -->
         <div
           v-if="rec.description"
           class="rpp-prose"
-          v-html="rec.description"
+          v-html="sanitizeRichHtml(rec.description)"
         />
 
         <!-- AI REASONING -->
