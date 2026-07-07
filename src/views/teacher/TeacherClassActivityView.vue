@@ -940,9 +940,15 @@ function pickSubject(id: string) {
       </template>
     </PageFilterToolbar>
 
-    <!-- TYPE TABS — segmented control (consistent with the range picker
-         above; replaces the old pill-chip row for a uniform filter look). -->
-    <div class="overflow-x-auto">
+    <!-- TYPE TABS — labelled segmented control matching the RENTANG
+         row inside PageFilterToolbar's #segmented slot above. Adding
+         the JENIS prefix makes the two segmented filters visually
+         parallel (label + control) instead of the naked chip row that
+         read as a separate UI element. -->
+    <div class="flex items-center gap-2 overflow-x-auto">
+      <span class="text-3xs font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+        Jenis
+      </span>
       <SegmentedControl
         :model-value="typeFilter"
         :options="typeTabs"
