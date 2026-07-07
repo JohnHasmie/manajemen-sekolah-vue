@@ -525,15 +525,22 @@ function onHistoryIntent() {
                   </p>
                   <!--
                     Render stored HTML via v-html — value originates
-                    from Quill (mobile or web) and is XSS-sanitized at
-                    the backend (LessonPlanController's UpdateLessonPlan
-                    action runs strip_tags whitelist). `.rpp-prose`
-                    gives it heading/list/table styling.
+                    from Quill (mobile or web). Round-9 audit: the
+                    backend runs `strip_tags` with an allowlist, which
+                    strips disallowed *tags* but preserves attributes on
+                    allowed ones — so `<img src=x onerror=steal>` is a
+                    successful stored-XSS payload against a colleague
+                    or admin who opens the RPP. Pipe through DOMPurify
+                    (sanitizeRichHtml, same helper as
+                    AdminLessonPlanDetailView) which drops event
+                    handlers and javascript: URLs even inside allowed
+                    tags. `.rpp-prose` gives it heading/list/table
+                    styling.
                   -->
                   <div
                     v-if="s.value"
                     class="rpp-prose mt-2"
-                    v-html="s.value"
+                    v-html="sanitizeRichHtml(s.value)"
                   />
                   <p
                     v-else
