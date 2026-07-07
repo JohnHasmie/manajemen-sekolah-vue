@@ -541,13 +541,28 @@ watch(selectedRoleId, () => {
 // hydrate the matrix state from the same card object — same effect
 // as before, but the URL now reflects the state so browser back +
 // refresh + deep-link work.
+// Admin drills into this same view via `admin.grades.teacher` (see
+// router `role: 'admin'` gate). Pushing an admin click through the
+// teacher-only `teacher.grades.matrix` route would bounce at the
+// role guard, so route-detect and split the target.
 function openMatrix(card: (typeof flatCards.value)[number]) {
+  if (isAdminView.value) {
+    router.push({
+      name: 'admin.grades.teacher.matrix',
+      params: {
+        teacherId: routeTeacherId.value,
+        classId: card.class_id,
+        subjectId: card.subject.id,
+      },
+      query: route.query,
+    });
+    return;
+  }
   router.push({
     name: 'teacher.grades.matrix',
     params: { classId: card.class_id, subjectId: card.subject.id },
-    // Preserve any query params (e.g. ?teacher_id= admin drill-in,
-    // ?ay= academic-year override) so the matrix route inherits the
-    // same context.
+    // Preserve any query params (e.g. ?ay= academic-year override)
+    // so the matrix route inherits the same context.
     query: route.query,
   });
 }
@@ -617,7 +632,19 @@ watch(
 // so the ESC keyboard shortcut + the "Kembali ke daftar" button
 // share one entry point (and both trigger a real browser history
 // entry so the back button still works).
+//
+// Route-detect same as openMatrix — admin exits back to the
+// admin.grades.teacher route (which itself is TeacherGradeBookView
+// in list mode), never to teacher.grades (guru role).
 function exitToSummary() {
+  if (isAdminView.value) {
+    router.push({
+      name: 'admin.grades.teacher',
+      params: { teacherId: routeTeacherId.value },
+      query: route.query,
+    });
+    return;
+  }
   router.push({
     name: 'teacher.grades',
     query: route.query,

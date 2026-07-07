@@ -584,6 +584,26 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role, ability: 'academic.grade.recap.view' },
       },
       {
+        // Admin matrix drill — parallels `teacher.grades.matrix` but
+        // under the admin role gate so an admin clicking a subject
+        // card in the read-only teacher gradebook doesn't get bounced
+        // by the `role: 'guru'` guard from the sibling teacher route.
+        // The component reads `teacherId` + `admin_view=1` the same
+        // way `admin.grades.teacher` below does, so read-only
+        // affordances stay in place. `openMatrix()` in the view
+        // route-detects `isAdminView` and picks between this route
+        // and the teacher one.
+        //
+        // Route ordering matters — this more-specific path must sit
+        // BEFORE the `:teacherId?` variant below so vue-router picks
+        // it up first when both `:classId` + `:subjectId` are present.
+        path: 'admin/grades/teacher/:teacherId/:classId/:subjectId',
+        name: 'admin.grades.teacher.matrix',
+        component: TeacherGradeBookView,
+        props: true,
+        meta: { role: 'admin' satisfies Role, ability: 'academic.grade.view' },
+      },
+      {
         // Admin-side drill from AdminGradeOverviewView per-teacher
         // card. Reuses TeacherGradeBookView; the underlying component
         // reads `teacher_id` + `admin_view=1` from the query so it
