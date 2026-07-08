@@ -14,8 +14,28 @@
  * school's settings.
  */
 
-/** Computed presence status for a day's record. */
-export type TeacherAttendanceStatus = 'present' | 'late';
+/**
+ * Computed presence status for a day's record. Written by the
+ * check-in / check-out actions (present, late, early_leave) or the
+ * nightly CloseUncheckedOutDaysJob (no_checkout). `sick`/`excused`/
+ * `absent` are reserved for a future manual-mark scope.
+ */
+export type TeacherAttendanceStatus =
+  | 'present'
+  | 'late'
+  | 'early_leave'
+  | 'no_checkout';
+
+/**
+ * Non-dominant status flags on the same row. Backend column is a
+ * nullable JSON blob (`teacher_attendances.secondary_flags`). Populated
+ * by check-out when the row was `late` at check-in AND the pulang time
+ * fell before the early-leave boundary — dominant stays `late` for
+ * rekap counts, this side-channel drives the second pill in the UI.
+ */
+export interface TeacherAttendanceSecondaryFlags {
+  early_leave_secondary?: boolean;
+}
 
 /**
  * Per-school config governing how teachers presensi. Returned by both
@@ -119,6 +139,7 @@ export interface TeacherAttendanceRecord {
   teaching_schedule_id: string | null;
   date: string; // YYYY-MM-DD
   status: TeacherAttendanceStatus;
+  secondary_flags: TeacherAttendanceSecondaryFlags | null;
 
   check_in_at: string | null;
   check_in_photo_path: string | null;
@@ -231,13 +252,40 @@ export interface TeacherAttendanceAdminFilters {
   page?: number;
 }
 
-/** Indonesian label for a status pill. */
+/** Indonesian label for the MASUK pill (derived from the dominant status). */
 export function teacherAttendanceStatusLabel(
   status: TeacherAttendanceStatus | null | undefined,
 ): string {
   if (status === 'late') return 'Terlambat';
-  if (status === 'present') return 'Tepat Waktu';
+  if (status === 'early_leave') return 'Tepat waktu';
+  if (status === 'no_checkout') return 'Tepat waktu';
+  if (status === 'present') return 'Tepat waktu';
   return '-';
+}
+
+/**
+ * PULANG pill label — the second pill next to the masuk pill on
+ * TeacherAttendanceHistoryView. Renders 'Pulang cepat' when the row is
+ * `early_leave` OR when the row is `late` with the secondary flag set
+ * (both cases share the same UI truth: pulang before threshold).
+ * Returns null when there's nothing to show — either no check-out yet,
+ * or check-out happened on time.
+ */
+export function teacherAttendancePulangLabel(
+  status: TeacherAttendanceStatus | null | undefined,
+  secondary: TeacherAttendanceSecondaryFlags | null | undefined,
+  hasCheckOut: boolean,
+): { text: string; tone: 'good' | 'bad' | 'warn' } | null {
+  if (status === 'no_checkout') {
+    return { text: 'Belum absen pulang', tone: 'warn' };
+  }
+  if (!hasCheckOut) {
+    return null;
+  }
+  if (status === 'early_leave' || secondary?.early_leave_secondary) {
+    return { text: 'Pulang cepat', tone: 'bad' };
+  }
+  return { text: 'Pulang tepat', tone: 'good' };
 }
 
 /**

@@ -24,6 +24,7 @@ import type {
 import {
   teacherAttendanceStatusColumnLabel,
   teacherAttendanceStatusLabel,
+  teacherAttendancePulangLabel,
 } from '@/types/teacher-attendance';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
@@ -161,6 +162,26 @@ function fmtTime(iso?: string | null): string {
   });
 }
 
+/**
+ * Wraps the pure `teacherAttendancePulangLabel` type helper with the
+ * row-shape the template has. Kept as a template-local computed instead
+ * of inlined so the null-check + boolean derivation lives once.
+ */
+function pulangPill(
+  r: TeacherAttendanceRecord,
+): ReturnType<typeof teacherAttendancePulangLabel> {
+  return teacherAttendancePulangLabel(
+    r.status,
+    r.secondary_flags ?? null,
+    r.check_out_at !== null,
+  );
+}
+function pulangPillClass(tone: 'good' | 'bad' | 'warn'): string {
+  if (tone === 'good') return 'bg-emerald-100 text-emerald-700';
+  if (tone === 'bad') return 'bg-rose-100 text-rose-700';
+  return 'bg-amber-100 text-amber-700';
+}
+
 onMounted(reload);
 </script>
 
@@ -291,10 +312,15 @@ onMounted(reload);
             </div>
 
             <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 flex-wrap">
                 <p class="text-[13px] font-bold text-slate-900">
                   {{ fmtDate(r.date) }}
                 </p>
+                <!-- Masuk pill — derived from the dominant status.
+                     `no_checkout` and `early_leave` were both `present`
+                     at check-in, so the masuk side reads "Tepat waktu"
+                     even if pulang went wrong; `late` reads "Terlambat"
+                     regardless of pulang. -->
                 <span
                   class="text-3xs font-bold px-1.5 py-0.5 rounded-full"
                   :class="
@@ -304,6 +330,17 @@ onMounted(reload);
                   "
                 >
                   {{ teacherAttendanceStatusLabel(r.status) }}
+                </span>
+                <!-- Pulang pill — hidden when the person hasn't checked
+                     out yet (before the nightly no_checkout sweeper
+                     runs). `early_leave` and `late+early_leave_secondary`
+                     collapse to the same "Pulang cepat" visual. -->
+                <span
+                  v-if="pulangPill(r)"
+                  class="text-3xs font-bold px-1.5 py-0.5 rounded-full"
+                  :class="pulangPillClass(pulangPill(r)!.tone)"
+                >
+                  {{ pulangPill(r)!.text }}
                 </span>
               </div>
               <p class="text-[11.5px] text-slate-500 mt-0.5">
