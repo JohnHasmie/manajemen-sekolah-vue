@@ -316,32 +316,46 @@ onMounted(reload);
                 <p class="text-[13px] font-bold text-slate-900">
                   {{ fmtDate(r.date) }}
                 </p>
-                <!-- Masuk pill — derived from the dominant status.
-                     `no_checkout` and `early_leave` were both `present`
-                     at check-in, so the masuk side reads "Tepat waktu"
-                     even if pulang went wrong; `late` reads "Terlambat"
-                     regardless of pulang. -->
+                <!-- Libur pill wins over both status pills. Fires on
+                     weekend rows (workweek bitmask miss) OR seeded-
+                     holiday rows. Status may still be `present` /
+                     `late` on the row (backend doesn't rewrite the
+                     stamp), but the UI reads neutral so admins see
+                     the day for what it is. -->
                 <span
-                  class="text-3xs font-bold px-1.5 py-0.5 rounded-full"
-                  :class="
-                    r.status === 'late'
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-emerald-100 text-emerald-700'
-                  "
+                  v-if="r.is_workday === false"
+                  class="text-3xs font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600"
                 >
-                  {{ teacherAttendanceStatusLabel(r.status) }}
+                  Libur
                 </span>
-                <!-- Pulang pill — hidden when the person hasn't checked
-                     out yet (before the nightly no_checkout sweeper
-                     runs). `early_leave` and `late+early_leave_secondary`
-                     collapse to the same "Pulang cepat" visual. -->
-                <span
-                  v-if="pulangPill(r)"
-                  class="text-3xs font-bold px-1.5 py-0.5 rounded-full"
-                  :class="pulangPillClass(pulangPill(r)!.tone)"
-                >
-                  {{ pulangPill(r)!.text }}
-                </span>
+                <template v-else>
+                  <!-- Masuk pill — derived from the dominant status.
+                       `no_checkout` and `early_leave` were both `present`
+                       at check-in, so the masuk side reads "Tepat waktu"
+                       even if pulang went wrong; `late` reads "Terlambat"
+                       regardless of pulang. -->
+                  <span
+                    class="text-3xs font-bold px-1.5 py-0.5 rounded-full"
+                    :class="
+                      r.status === 'late'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-emerald-100 text-emerald-700'
+                    "
+                  >
+                    {{ teacherAttendanceStatusLabel(r.status) }}
+                  </span>
+                  <!-- Pulang pill — hidden when the person hasn't checked
+                       out yet (before the nightly no_checkout sweeper
+                       runs). `early_leave` and `late+early_leave_secondary`
+                       collapse to the same "Pulang cepat" visual. -->
+                  <span
+                    v-if="pulangPill(r)"
+                    class="text-3xs font-bold px-1.5 py-0.5 rounded-full"
+                    :class="pulangPillClass(pulangPill(r)!.tone)"
+                  >
+                    {{ pulangPill(r)!.text }}
+                  </span>
+                </template>
               </div>
               <p class="text-[11.5px] text-slate-500 mt-0.5">
                 {{ t('tutor.sekolah.presenceHistory.checkIn') }}

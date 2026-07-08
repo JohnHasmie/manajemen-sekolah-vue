@@ -140,6 +140,13 @@ export interface TeacherAttendanceRecord {
   date: string; // YYYY-MM-DD
   status: TeacherAttendanceStatus;
   secondary_flags: TeacherAttendanceSecondaryFlags | null;
+  /**
+   * Runtime-computed by the backend from WorkdayCalendar (workweek
+   * bitmask AND NOT holidays). Not persisted — an admin adding a
+   * holiday tomorrow doesn't rewrite past rows' status; the UI just
+   * renders a neutral "Libur" pill from this flag.
+   */
+  is_workday: boolean;
 
   check_in_at: string | null;
   check_in_photo_path: string | null;
