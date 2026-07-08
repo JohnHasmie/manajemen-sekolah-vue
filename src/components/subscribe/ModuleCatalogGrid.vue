@@ -13,6 +13,12 @@ const props = defineProps<{
   catalog: ModuleCatalog;
   selectedKeys: Set<string>;
   autoIncluded: Map<string, string[]>;
+  /**
+   * Inverse of [autoIncluded]: dep key → labels of currently-selected
+   * modules that require this dep. Forwarded to each ModuleCard so the
+   * auto-included dep renders disabled + "Diperlukan oleh …" hint.
+   */
+  requiredBy?: Map<string, string[]>;
   tenantType?: 'sekolah' | 'bimbel' | null;
 }>();
 
@@ -103,6 +109,7 @@ const groupIcon: Record<string, string> = {
           :item="item"
           :selected="selectedKeys.has(item.key)"
           :auto-include="autoIncluded.get(item.key)"
+          :required-by="props.requiredBy?.get(item.key)"
           :tenant-type="tenantType"
           @toggle="$emit('toggle', item.key)"
         />

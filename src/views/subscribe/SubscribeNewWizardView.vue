@@ -101,6 +101,7 @@ const {
   quote,
   expandedKeys,
   autoIncluded,
+  requiredBy,
   bundleBenchmark,
   selectedAiKeys,
   toggleModule,
@@ -800,6 +801,7 @@ function flagSubscribeIntent(): void {
             :catalog="catalog"
             :selected-keys="new Set(expandedKeys)"
             :auto-included="autoIncluded"
+            :required-by="requiredBy"
             :tenant-type="form.tenant_type"
             @toggle="toggleModule"
           />

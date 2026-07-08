@@ -124,6 +124,32 @@ export function useModuleSelection(opts: UseModuleSelectionOptions) {
   });
 
   /**
+   * INVERSE of [autoIncluded]: dep key → labels of currently-selected
+   * modules that require it. Used by the picker to render each
+   * auto-included dep as disabled/read-only with a "Diperlukan oleh …"
+   * hint — so users see WHY the card is pinned checked and understand
+   * they have to uncheck the requirer to release it. Yahya picked this
+   * UX 2026-07-08 (option "c" in the decision thread): "bikin card show
+   * as disabled/read-only ketika di-auto-include, plus tooltip".
+   */
+  const requiredBy = computed(() => {
+    const map = new Map<string, string[]>();
+    const cat = catalog.value;
+    if (!cat) return map;
+    selectedKeys.value.forEach((k) => {
+      if (k in cat.bundles) return;
+      const owner = cat.optional[k];
+      if (!owner) return;
+      owner.requires.forEach((depKey) => {
+        const bucket = map.get(depKey) ?? [];
+        bucket.push(owner.label);
+        map.set(depKey, bucket);
+      });
+    });
+    return map;
+  });
+
+  /**
    * "Would bundle_complete be cheaper?" benchmark for the calculator's
    * swap-to-bundle nudge card.
    */
@@ -379,6 +405,7 @@ export function useModuleSelection(opts: UseModuleSelectionOptions) {
     // derived
     expandedKeys,
     autoIncluded,
+    requiredBy,
     bundleBenchmark,
     selectedAiKeys,
     // actions

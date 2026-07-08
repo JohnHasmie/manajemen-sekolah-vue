@@ -20,13 +20,35 @@ const props = defineProps<{
   item: ModuleCatalogItem;
   selected: boolean;
   autoInclude?: string[];
+  /**
+   * Labels of currently-selected modules that `requires` this one.
+   * When non-empty the card renders read-only (disabled cursor, muted
+   * check pill, "Diperlukan oleh …" hint) so the user can see WHY the
+   * checkbox is pinned and how to release it. Yahya picked this UX
+   * 2026-07-08 ("kenapa aku tidak bisa yang unchecklist rpp dan
+   * materi" thread — chose option c "disabled + tooltip").
+   */
+  requiredBy?: string[];
   /** Tenant type so labels/taglines/units read naturally for bimbel. */
   tenantType?: 'sekolah' | 'bimbel' | null;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   toggle: [];
 }>();
+
+const isRequiredDep = computed(
+  () => (props.requiredBy?.length ?? 0) > 0,
+);
+
+function handleClick() {
+  // Read-only when this card is only checked because something else
+  // requires it — clicking is a no-op so the state is honest. The
+  // "Diperlukan oleh …" hint tells the user which upstream module to
+  // uncheck to release this dep.
+  if (isRequiredDep.value) return;
+  emit('toggle');
+}
 
 const tint = computed(
   () => CATEGORY_TINTS[props.item.group] ?? CATEGORY_TINTS.Default,
@@ -46,8 +68,10 @@ const unit = computed(() => seatUnit(props.item, props.tenantType));
   <button
     type="button"
     class="mc-root"
-    :class="{ 'is-on': selected }"
-    @click="$emit('toggle')"
+    :class="{ 'is-on': selected, 'is-locked': isRequiredDep }"
+    :aria-disabled="isRequiredDep || undefined"
+    :title="isRequiredDep ? `Diperlukan oleh ${requiredBy!.join(', ')}` : undefined"
+    @click="handleClick"
   >
     <div class="mc-top">
       <div
@@ -84,6 +108,11 @@ const unit = computed(() => seatUnit(props.item, props.tenantType));
     <div v-if="autoInclude && autoInclude.length" class="mc-req">
       <i class="ti ti-link" aria-hidden="true" />
       Otomatis termasuk: {{ autoInclude.join(', ') }}
+    </div>
+
+    <div v-if="isRequiredDep" class="mc-req mc-req-locked">
+      <i class="ti ti-lock" aria-hidden="true" />
+      Diperlukan oleh {{ requiredBy!.join(', ') }} — uncheck itu dulu untuk mematikan modul ini.
     </div>
 
     <div class="mc-price">
@@ -152,6 +181,18 @@ const unit = computed(() => seatUnit(props.item, props.tenantType));
   display: flex; align-items: center; gap: 4px;
 }
 .mc-req .ti { font-size: 11px; }
+
+/* Locked / read-only state — cursor + subtle desaturation cue that
+   clicks won't do anything, but the checkbox still reads as selected
+   because the module IS in the effective subscription (dep of the
+   requirer). */
+.mc-root.is-locked { cursor: not-allowed; }
+.mc-root.is-locked .mc-icon,
+.mc-root.is-locked .mc-title,
+.mc-root.is-locked .mc-desc,
+.mc-root.is-locked .mc-price { opacity: 0.75; }
+.mc-req-locked { color: #64748B; }
+.mc-req-locked .ti { font-size: 11px; }
 
 .mc-price {
   display: flex; align-items: baseline; gap: 4px;
