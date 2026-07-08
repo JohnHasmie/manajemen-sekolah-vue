@@ -166,6 +166,12 @@ export interface TeacherAttendanceRecord {
    */
   shift_id: string | null;
   shift?: TeacherAttendanceShift;
+  /**
+   * Minutes past (checkout_threshold + grace) at pulang. 0 on rows
+   * closed on time or early. Absent on responses issued before MR 5
+   * — treat as 0 to keep older FE builds compatible.
+   */
+  overtime_minutes: number;
 
   check_in_at: string | null;
   check_in_photo_path: string | null;
@@ -404,6 +410,11 @@ export interface TeacherAttendanceOwnSummaryTotals
   extends TeacherAttendanceStatusCounts {
   total: number;
   present_pct: number;
+  /**
+   * Sum of `overtime_minutes` across every row in the period. Absent
+   * from responses issued before MR 5 shipped — treat as 0.
+   */
+  overtime_minutes?: number;
 }
 
 /** GET /teacher-attendance/history/summary — auth teacher's own rekap. */

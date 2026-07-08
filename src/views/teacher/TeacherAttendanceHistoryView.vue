@@ -182,6 +182,21 @@ function pulangPillClass(tone: 'good' | 'bad' | 'warn'): string {
   return 'bg-amber-100 text-amber-700';
 }
 
+/**
+ * Human formatting for the "Lembur" card. Backend sums minutes across
+ * the periode; the KPI reads better in h/m the way payroll thinks —
+ * 135 → "2j 15m", 45 → "45m", 0 → "0m".
+ */
+function fmtOvertime(minutes: number | undefined): string {
+  const total = minutes ?? 0;
+  if (total <= 0) return '0m';
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}j`;
+  return `${h}j ${m}m`;
+}
+
 onMounted(reload);
 </script>
 
@@ -279,6 +294,24 @@ onMounted(reload);
           </p>
           <p class="text-3xs opacity-70 tabular-nums">
             {{ t('tutor.sekolah.presenceHistory.daysRecorded', { count: summary.summary.total }) }}
+          </p>
+        </div>
+        <!-- Lembur (MR 5). Sum of overtime_minutes across the
+             periode; falls back to 0m on responses issued before
+             MR 5 shipped. Sky-tinted to sit apart from the pass/fail
+             ramps on the neighbouring status cards. -->
+        <div
+          v-if="(summary.summary.overtime_minutes ?? 0) > 0"
+          class="rounded-xl px-3 py-2.5 bg-sky-100 text-sky-700"
+        >
+          <p class="text-3xs font-bold uppercase tracking-widest opacity-80">
+            Lembur
+          </p>
+          <p class="text-[20px] font-black leading-tight tabular-nums">
+            {{ fmtOvertime(summary.summary.overtime_minutes) }}
+          </p>
+          <p class="text-3xs opacity-70 tabular-nums">
+            di periode ini
           </p>
         </div>
       </div>
