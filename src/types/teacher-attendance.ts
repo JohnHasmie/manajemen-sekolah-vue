@@ -38,6 +38,18 @@ export interface TeacherAttendanceSecondaryFlags {
 }
 
 /**
+ * Shift attached to a teacher_attendances row. Populated on the
+ * history + admin-list endpoints via `whenLoaded('shift')` — one
+ * eager-load per collection, no N+1.
+ */
+export interface TeacherAttendanceShift {
+  id: string;
+  name: string;
+  start_time: string;
+  end_time: string;
+}
+
+/**
  * Per-school config governing how teachers presensi. Returned by both
  * GET /teacher-attendance/config (teacher bootstrap, `settings` block)
  * and GET /teacher-attendance/settings (admin form). The admin form
@@ -147,6 +159,13 @@ export interface TeacherAttendanceRecord {
    * renders a neutral "Libur" pill from this flag.
    */
   is_workday: boolean;
+  /**
+   * Multi-shift schools (bimbel + rotating staff) get one row per
+   * (person, day, shift). Null on single-shift schools — the row is
+   * "the whole day" and the FE hides the shift chip.
+   */
+  shift_id: string | null;
+  shift?: TeacherAttendanceShift;
 
   check_in_at: string | null;
   check_in_photo_path: string | null;

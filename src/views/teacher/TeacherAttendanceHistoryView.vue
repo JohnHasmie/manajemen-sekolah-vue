@@ -316,6 +316,15 @@ onMounted(reload);
                 <p class="text-[13px] font-bold text-slate-900">
                   {{ fmtDate(r.date) }}
                 </p>
+                <!-- Shift chip. Only lit on multi-shift schools; the
+                     eager-load brings the shift name down. Single-shift
+                     rows leave shift_id null and this chip stays hidden. -->
+                <span
+                  v-if="r.shift"
+                  class="text-3xs font-bold px-1.5 py-0.5 rounded-full bg-sky-100 text-sky-700"
+                >
+                  {{ r.shift.name }}
+                </span>
                 <!-- Libur pill wins over both status pills. Fires on
                      weekend rows (workweek bitmask miss) OR seeded-
                      holiday rows. Status may still be `present` /
