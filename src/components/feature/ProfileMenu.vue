@@ -169,12 +169,32 @@ function close(e: MouseEvent) {
   if (!target.closest('[data-profile-menu]')) open.value = false;
 }
 
+// The `setTimeout(0)` defers the click-outside-to-close listener by
+// one tick so THIS toggle-click doesn't count as an "outside" click.
+// Round-11 audit: track the timer so a close (or unmount) that fires
+// while the timer is still pending can cancel it. Without this, a
+// rapid toggle sequence — open → close → open — leaves the first
+// listener attached (because removeEventListener ran before the
+// setTimeout attached anything) and the second attach stacks another
+// listener on top; the menu then dismisses itself on clicks that
+// should stay open, or accumulates dangling listeners on unmount if
+// the tab closes mid-pending.
+let pendingAttach: ReturnType<typeof setTimeout> | null = null;
+
 function toggle() {
   open.value = !open.value;
   if (open.value) {
     loadRefs();
-    setTimeout(() => document.addEventListener('click', close), 0);
+    if (pendingAttach) clearTimeout(pendingAttach);
+    pendingAttach = setTimeout(() => {
+      pendingAttach = null;
+      document.addEventListener('click', close);
+    }, 0);
   } else {
+    if (pendingAttach) {
+      clearTimeout(pendingAttach);
+      pendingAttach = null;
+    }
     document.removeEventListener('click', close);
   }
 }
@@ -299,7 +319,10 @@ onMounted(() => {
   loadRefs();
 });
 
-onBeforeUnmount(() => document.removeEventListener('click', close));
+onBeforeUnmount(() => {
+  if (pendingAttach) clearTimeout(pendingAttach);
+  document.removeEventListener('click', close);
+});
 </script>
 
 <template>
