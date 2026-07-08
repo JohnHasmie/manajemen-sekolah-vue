@@ -27,6 +27,7 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { formatRupiah } from '@/lib/format';
 import DiscountCodeFormModal from './DiscountCodeFormModal.vue';
+import DiscountCodeRedemptionsModal from './DiscountCodeRedemptionsModal.vue';
 
 const rows = ref<DiscountCodeRow[]>([]);
 const meta = ref<DiscountCodeListMeta | null>(null);
@@ -46,6 +47,11 @@ const formOpen = ref(false);
 const editing = ref<DiscountCodeDetail | null>(null);
 const openingForm = ref(false);
 const deletingId = ref<string | null>(null);
+
+// Redemptions ledger — audit trail modal. Opens per row via "Riwayat"
+// button. Not lazy-loaded — the row already carries used_count so we
+// know whether it's worth showing at all (button disabled when 0).
+const ledgerRow = ref<DiscountCodeRow | null>(null);
 
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
@@ -288,6 +294,15 @@ function durationLabel(row: DiscountCodeRow): string {
             <button
               type="button"
               class="dcv-btn ghost"
+              :disabled="row.used_count === 0"
+              :title="row.used_count === 0 ? 'Belum ada yang pakai' : 'Lihat riwayat pemakaian'"
+              @click="ledgerRow = row"
+            >
+              Riwayat
+            </button>
+            <button
+              type="button"
+              class="dcv-btn ghost"
               :disabled="openingForm"
               @click="openEdit(row)"
             >
@@ -334,6 +349,12 @@ function durationLabel(row: DiscountCodeRow): string {
       :code="editing"
       @close="formOpen = false"
       @saved="onSaved"
+    />
+
+    <DiscountCodeRedemptionsModal
+      v-if="ledgerRow"
+      :code="ledgerRow"
+      @close="ledgerRow = null"
     />
 
     <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />
