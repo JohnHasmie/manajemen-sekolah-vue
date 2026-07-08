@@ -253,6 +253,17 @@ export function useModuleSelection(opts: UseModuleSelectionOptions) {
 
   // ── Quote ────────────────────────────────────────────────────────
   /**
+   * Monotonic sequence for in-flight backend quote requests. Two rapid
+   * toggles can put two requests on the wire, and Yahya's dev network
+   * is fast enough that responses often finish out of order — the older
+   * one arriving last would silently overwrite the newer one and leave
+   * the sidebar stuck on a stale price for the previous selection.
+   * Guarded via a "if my seq isn't the latest, discard my response"
+   * check after every await.
+   */
+  let quoteReqSeq = 0;
+
+  /**
    * Refresh the quote for the current selection. Prefers the backend
    * (authoritative — it also applies the yearly discount + any config
    * overrides), with an optional local fallback for anonymous callers
@@ -264,15 +275,21 @@ export function useModuleSelection(opts: UseModuleSelectionOptions) {
       quote.value = null;
       return;
     }
+    const mySeq = ++quoteReqSeq;
     try {
-      quote.value = await SubscriptionBillingService.quoteModular({
+      const result = await SubscriptionBillingService.quoteModular({
         student_count: opts.studentCount(),
         staff_count: opts.staffCount(),
         plan: period.value,
         modules: Array.from(selectedKeys.value),
         ...(opts.withAiQuota ? { ai_quota: aiQuota.value } : {}),
       });
+      // Someone else already fired a newer request — their response
+      // is authoritative; drop this one to keep the sidebar honest.
+      if (mySeq !== quoteReqSeq) return;
+      quote.value = result;
     } catch (e) {
+      if (mySeq !== quoteReqSeq) return;
       if (opts.localQuoteFallback) {
         // Backend refused (usually 401 while browsing anonymously) —
         // compute locally from the catalog so the sidebar still reflects
@@ -379,6 +396,24 @@ export function useModuleSelection(opts: UseModuleSelectionOptions) {
   // Debounced re-quote on any selection/pricing input change. Seat
   // counts are watched via the option getters; callers add extra
   // sources (e.g. selectedTenant) through `quoteDeps`.
+  //
+  // Two paths run per tick:
+  //
+  //   1. IMMEDIATE sync paint (localQuoteFallback path only) — the
+  //      sidebar reflects the checkbox change within a frame, using
+  //      the client-side mirror of the pricing math. Without this,
+  //      every click had a 250 ms debounce plus a network round-trip
+  //      before the price visibly moved — users described it as "the
+  //      count doesn't update when I toggle" and would click a
+  //      second time before the first landed.
+  //   2. DEBOUNCED authoritative refine — the backend still runs
+  //      after 250 ms of quiet and its result overrides the local
+  //      paint (yearly discount, config overrides, etc.). The seq
+  //      guard on refreshQuote drops out-of-order responses.
+  //
+  // Convert flow (SubscribeView) keeps its wait-for-backend UX
+  // because localQuoteFallback is off there — tenant-specific pricing
+  // could differ from the catalog defaults the local mirror uses.
   let quoteDebounce: number | null = null;
   watch(
     [
@@ -390,6 +425,15 @@ export function useModuleSelection(opts: UseModuleSelectionOptions) {
       ...(opts.quoteDeps ?? []),
     ],
     () => {
+      if (opts.localQuoteFallback && catalog.value) {
+        if (selectedKeys.value.size === 0) {
+          quote.value = null;
+        } else {
+          const local = computeLocalQuote();
+          if (local) quote.value = local;
+        }
+      }
+
       if (quoteDebounce !== null) window.clearTimeout(quoteDebounce);
       quoteDebounce = window.setTimeout(refreshQuote, 250) as unknown as number;
     },
