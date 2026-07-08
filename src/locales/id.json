@@ -1824,6 +1824,14 @@
         "filter_date_title": "Filter Tanggal",
         "filter_date_subtitle": "Pilih rentang tanggal"
       },
+      "attendance_config": {
+        "header_kicker": "PENGATURAN KEHADIRAN",
+        "header_title": "Kehadiran Guru",
+        "header_meta": "Atur metode, geofence, QR gerbang, dan jam kerja.",
+        "tab_general": "Umum",
+        "tab_checkin_rules": "Aturan Masuk",
+        "tab_checkout_rules": "Aturan Pulang"
+      },
       "attendance_tingkat_heatmap": {
         "back_to_dashboard": "Dashboard Kehadiran",
         "header_kicker": "Akademik · Kehadiran",

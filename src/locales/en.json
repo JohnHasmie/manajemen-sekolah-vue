@@ -1827,6 +1827,14 @@
         "filter_date_title": "Filter Date",
         "filter_date_subtitle": "Pick a date range"
       },
+      "attendance_config": {
+        "header_kicker": "ATTENDANCE SETTINGS",
+        "header_title": "Teacher Attendance",
+        "header_meta": "Configure methods, geofence, gate QR, and working hours.",
+        "tab_general": "General",
+        "tab_checkin_rules": "Check-in rules",
+        "tab_checkout_rules": "Check-out rules"
+      },
       "attendance_tingkat_heatmap": {
         "back_to_dashboard": "Attendance Dashboard",
         "header_kicker": "Academic · Attendance",
