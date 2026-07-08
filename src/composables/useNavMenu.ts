@@ -606,6 +606,11 @@ const SUPER_ADMIN_NAV: NavSection[] = [
         icon: 'credit-card',
       },
       {
+        to: '/super-admin/discount-codes',
+        labelKey: 'superAdmin.nav.discountCodes',
+        icon: 'sparkles',
+      },
+      {
         to: '/super-admin/demo-incomplete',
         labelKey: 'superAdmin.nav.incomplete',
         icon: 'clock',

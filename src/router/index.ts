@@ -168,6 +168,8 @@ const SuperAdminIncompleteRegistrationsView = () =>
   import('@/views/super-admin/SuperAdminIncompleteRegistrationsView.vue');
 const SuperAdminSubscriptionApprovalsView = () =>
   import('@/views/super-admin/SuperAdminSubscriptionApprovalsView.vue');
+const SuperAdminDiscountCodesView = () =>
+  import('@/views/super-admin/SuperAdminDiscountCodesView.vue');
 const SubscribeNewWizardView = () =>
   import('@/views/subscribe/SubscribeNewWizardView.vue');
 const SubscribeAddonView = () =>
@@ -823,6 +825,14 @@ const routes: RouteRecordRaw[] = [
         path: 'super-admin/subscription-approvals',
         name: 'super-admin.subscription-approvals',
         component: SuperAdminSubscriptionApprovalsView,
+        meta: { superAdmin: true },
+      },
+      {
+        // Discount code catalog CRUD. Backed by
+        // /billing/admin/discount-codes/* (super_admin-gated).
+        path: 'super-admin/discount-codes',
+        name: 'super-admin.discount-codes',
+        component: SuperAdminDiscountCodesView,
         meta: { superAdmin: true },
       },
 
