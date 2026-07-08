@@ -103,6 +103,18 @@ export interface TeacherAttendanceSettings {
    * Off by default — most schools start with teacher cards.
    */
   issue_student_cards?: boolean;
+  /**
+   * Workweek bitmask — bit0=Sunday..bit6=Saturday. Default 62 (Mon–Fri).
+   * Days outside this mask short-circuit to `is_workday=false`. Written
+   * by the Kalender panel (MR 3c).
+   */
+  workweek_days_bitmask?: number;
+  /**
+   * Daily cap on how many check-ins one person can register across all
+   * shifts. Default 1 (single-shift schools); bimbel wizards bump it
+   * to 3. Written by the Shift panel (MR 4c).
+   */
+  max_daily_shifts_per_person?: number;
 }
 
 /** Sensible client-side defaults mirroring the backend defaults(). */
@@ -123,6 +135,8 @@ export const DEFAULT_TEACHER_ATTENDANCE_SETTINGS: TeacherAttendanceSettings = {
   gate_qr_rotation_minutes: 15,
   geofence_required_for_qr: false,
   issue_student_cards: false,
+  workweek_days_bitmask: 62,
+  max_daily_shifts_per_person: 1,
 };
 
 /** Which methods were captured on a given check-in/out leg. */

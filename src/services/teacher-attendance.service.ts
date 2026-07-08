@@ -421,6 +421,8 @@ export const TeacherAttendanceService = {
         'gate_qr_rotation_minutes',
         'geofence_required_for_qr',
         'issue_student_cards',
+        'workweek_days_bitmask',
+        'max_daily_shifts_per_person',
       ];
       for (const k of keys) {
         if (patch[k] !== undefined) body[k] = patch[k];
