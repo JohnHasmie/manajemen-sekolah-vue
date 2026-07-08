@@ -67,7 +67,9 @@ const router = useRouter();
 
 // ── Data ────────────────────────────────────────────────────────────
 const rows = ref<ScheduleRow[]>([]);
-const stats = ref<ScheduleStats | null>(null);
+// stats is now a pure client-side derivation off `filteredRows` — see
+// the `stats` computed further down. The old ref + /stats fetch was
+// removed as part of the single-fetch-per-AY refactor.
 const filterOptions = ref<ScheduleFilterOptions | null>(null);
 const lessonHours = ref<LessonHour[]>([]);
 // Full school subject list — used to populate the Mapel filter so the
@@ -136,24 +138,23 @@ async function loadAllSubjects() {
   }
 }
 
-async function loadStats() {
-  try {
-    stats.value = await ScheduleService.getStats(activeFilters());
-  } catch {
-    stats.value = null;
-  }
-}
-
+// Single-fetch model: the /teaching-schedule/all endpoint returns
+// EVERY session for the current AY + semester in one shot. We keep
+// that entire dataset in `rows` and let the filter chips, search box,
+// view-mode toggle, and KPI counters all read from CLIENT-SIDE
+// computeds derived from it. That is what the user asked for —
+// "kenapa ganti view selalu fetch" — and the network tab now shows
+// a single /all + /stats call per AY change instead of a fetch per
+// interaction.
 async function loadRows() {
   isLoading.value = true;
   error.value = null;
   try {
-    if (viewMode.value === 'matrix') {
-      rows.value = await ScheduleService.listAll(activeFilters());
-    } else {
-      const res = await ScheduleService.list(activeFilters());
-      rows.value = res.items;
-    }
+    // Deliberately NOT passing activeFilters() — the /all endpoint
+    // only honours AY + semester server-side; sending chip filters
+    // (teacher/class/day/subject/hour/search) here would be a wasted
+    // round-trip since we re-apply them client-side anyway.
+    rows.value = await ScheduleService.listAll({});
   } catch (e) {
     error.value = (e as Error).message;
   } finally {
@@ -161,32 +162,21 @@ async function loadRows() {
   }
 }
 
-async function reload() {
-  await Promise.all([loadRows(), loadStats()]);
-}
-
 onMounted(async () => {
   await Promise.all([loadFilterOptions(), loadLessonHours(), loadAllSubjects()]);
-  await reload();
+  await loadRows();
 });
 
 useAcademicYearWatcher(async () => {
   await Promise.all([loadFilterOptions(), loadLessonHours(), loadAllSubjects()]);
-  await reload();
+  await loadRows();
 });
 
-// Watch filters + viewMode → reload rows. Stats reload sync with rows.
-watch(
-  [filterTeacherId, filterClassId, filterDayId, filterSubjectId, filterHourNumber, viewMode],
-  () => void reload(),
-);
-
-// Debounced search
-let searchTimer: ReturnType<typeof setTimeout> | null = null;
-watch(search, () => {
-  if (searchTimer) clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => void reload(), 300);
-});
+// No watchers on filter chips / search / viewMode — the computed
+// pipeline (filteredRows → rowsByDay + matrixRows + statsLive) reacts
+// synchronously and never issues a network call. The KPI header keeps
+// its old "total: 42" vs "conflicts: 12" split by reading from the
+// same client-side stats derivation.
 
 // ── Filter chip values ──────────────────────────────────────────────
 const teacherChipValue = computed(() => {
@@ -291,30 +281,14 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
-// ── List grouping (sticky day) ──────────────────────────────────────
-const rowsByDay = computed<Record<DayKey, ScheduleRow[]>>(() => {
-  const out: Record<DayKey, ScheduleRow[]> = {
-    mon: [], tue: [], wed: [], thu: [], fri: [], sat: [],
-  };
-  for (const r of rows.value) out[r.day].push(r);
-  for (const k of DAY_ORDER) {
-    out[k].sort((a, b) => {
-      if (a.hour_number !== b.hour_number) return a.hour_number - b.hour_number;
-      return a.start_time.localeCompare(b.start_time);
-    });
-  }
-  return out;
-});
-
-// ── Matrix view computation ─────────────────────────────────────────
+// ── Shared client-side filter for BOTH views ───────────────────────
 //
-// The matrix is fed by `/teaching-schedule/all`, which only honours
-// semester_id + academic_year_id server-side — it ignores the
-// teacher/class/day/subject/hour filter chips. So we re-apply those
-// chips client-side here, mirroring what the list endpoint does on the
-// server. The list view stays untouched (it's already filtered by the
-// backend), so this only narrows the matrix.
-const matrixRows = computed<ScheduleRow[]>(() => {
+// The full /teaching-schedule/all payload lives in `rows`. Both the
+// sticky-day list AND the week-grid matrix render off this single
+// filtered slice, so switching view mode is a pure re-render — no
+// network call. Filter chips + search are also client-side; the only
+// reason to hit the network is an AY change.
+const filteredRows = computed<ScheduleRow[]>(() => {
   return rows.value.filter((r) => {
     if (filterTeacherId.value && r.teacher_id !== filterTeacherId.value) return false;
     if (filterClassId.value && r.class_id !== filterClassId.value) return false;
@@ -330,6 +304,63 @@ const matrixRows = computed<ScheduleRow[]>(() => {
     }
     return true;
   });
+});
+
+// Historical alias — kept so the <matrix template ref="matrixRows"
+// … /> callsite and hourSlots below don't need to change. Matrix and
+// list now share the same filtered dataset.
+const matrixRows = filteredRows;
+
+// ── List grouping (sticky day) ──────────────────────────────────────
+const rowsByDay = computed<Record<DayKey, ScheduleRow[]>>(() => {
+  const out: Record<DayKey, ScheduleRow[]> = {
+    mon: [], tue: [], wed: [], thu: [], fri: [], sat: [],
+  };
+  for (const r of filteredRows.value) out[r.day].push(r);
+  for (const k of DAY_ORDER) {
+    out[k].sort((a, b) => {
+      if (a.hour_number !== b.hour_number) return a.hour_number - b.hour_number;
+      return a.start_time.localeCompare(b.start_time);
+    });
+  }
+  return out;
+});
+
+// ── Client-side stats derivation ────────────────────────────────────
+//
+// Replaces the /teaching-schedule/stats network call. Every field the
+// KPI cards + header meta line read comes from the already-fetched
+// rows. `today` mirrors the server's Carbon::now()->format('l') logic
+// by matching today's day-of-week key against ScheduleRow.day (which
+// the backend seeds lowercase mon/tue/…). Sunday returns undefined
+// and yields a zero count — schools don't schedule Sundays here.
+const DAY_KEY_BY_JS_INDEX: Record<number, DayKey | undefined> = {
+  0: undefined,
+  1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri', 6: 'sat',
+};
+const stats = computed<ScheduleStats>(() => {
+  const scope = filteredRows.value;
+  const teachers = new Set<string>();
+  const classes = new Set<string>();
+  const subjects = new Set<string>();
+  let conflicts = 0;
+  let today = 0;
+  const todayKey = DAY_KEY_BY_JS_INDEX[new Date().getDay()];
+  for (const r of scope) {
+    if (r.teacher_id) teachers.add(r.teacher_id);
+    if (r.class_id) classes.add(r.class_id);
+    if (r.subject_id) subjects.add(r.subject_id);
+    if (r.conflict_with && r.conflict_with.length > 0) conflicts += 1;
+    if (todayKey && r.day === todayKey) today += 1;
+  }
+  return {
+    total: scope.length,
+    total_teachers: teachers.size,
+    total_classes: classes.size,
+    total_subjects: subjects.size,
+    today,
+    conflicts,
+  };
 });
 
 const hourSlots = computed(() => {
