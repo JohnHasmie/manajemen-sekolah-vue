@@ -193,6 +193,8 @@ const TeacherAttendanceInputView = () =>
   import('@/views/teacher/TeacherAttendanceInputView.vue');
 const TeacherGradeBookView = () =>
   import('@/views/teacher/TeacherGradeBookView.vue');
+const TeacherGradeMatrixView = () =>
+  import('@/views/teacher/TeacherGradeMatrixView.vue');
 const TeacherGradeRecapView = () =>
   import('@/views/teacher/TeacherGradeRecapView.vue');
 const TeacherGradeRecapDetailView = () =>
@@ -599,7 +601,7 @@ const routes: RouteRecordRaw[] = [
         // it up first when both `:classId` + `:subjectId` are present.
         path: 'admin/grades/teacher/:teacherId/:classId/:subjectId',
         name: 'admin.grades.teacher.matrix',
-        component: TeacherGradeBookView,
+        component: TeacherGradeMatrixView,
         props: true,
         meta: { role: 'admin' satisfies Role, ability: 'academic.grade.view' },
       },
@@ -903,7 +905,7 @@ const routes: RouteRecordRaw[] = [
         // + refresh-on-matrix all behave the way teachers expect.
         path: 'teacher/grades/:classId/:subjectId',
         name: 'teacher.grades.matrix',
-        component: TeacherGradeBookView,
+        component: TeacherGradeMatrixView,
         props: true,
         meta: { role: 'guru' satisfies Role, ability: 'academic.grade.input' },
       },
