@@ -828,32 +828,21 @@ export const useAuthStore = defineStore('auth', {
       }
 
       if (this.step === 'role') {
-        // 1. Single role: pick it
+        // Single role: no choice to make — pick it and move on.
         if (this.roles.length === 1) {
           await this.selectRole(this.roles[0]);
           return;
         }
-        // 2. Multi-role: respect the previous choice if still valid.
-        //    CRITICAL: only honor the cached role when it actually
-        //    appears in the picker — otherwise we'd send a role the
-        //    backend will 422 on (e.g. user lost the role since last
-        //    login).
-        //
-        //    Normalize both sides before comparing because `this.roles`
-        //    holds raw backend values ('admin'/'teacher'/'parent') while
-        //    the stored role may be either raw OR an older
-        //    Indonesian alias ('teacher'/'parent') from a previous session.
-        const stored = storage.get<Role>(StorageKeys.role);
-        if (stored) {
-          const normStored = normalizeRole(stored);
-          const match = (this.roles as string[]).find(
-            (r) => normalizeRole(r) === normStored,
-          );
-          if (match) {
-            await this.selectRole(match as Role);
-            return;
-          }
-        }
+        // Multi-role: DO NOT auto-select even when a cached role from
+        // a previous session matches. Yahya (2026-07-08) reported the
+        // picker flashing on-screen for a fraction of a second before
+        // vanishing under the redirect — users literally couldn't
+        // reach the buttons. The picker exists precisely so the user
+        // can switch between admin / guru / wali; auto-picking the
+        // last-used role hides that affordance behind a Settings menu
+        // one login deep. The RolePicker component reads the cached
+        // role on mount and pre-highlights it, so the fast-path is
+        // still one click ("Lanjutkan" is already the accented CTA).
       }
     },
 
