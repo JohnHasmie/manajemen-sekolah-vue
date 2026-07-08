@@ -21,6 +21,30 @@
  */
 import DOMPurify from 'dompurify';
 
+/**
+ * Round-12 audit: the Quill/AI-authored HTML we render via v-html
+ * historically allowed `style` and unrestricted `class`. Both are
+ * CSS-injection carriers even when script/on-handlers are stripped:
+ *
+ *   <p style="position:fixed;inset:0;z-index:9999;background:#fff">
+ *     Masuk kembali dengan password Anda
+ *   </p>
+ *
+ * would render a full-screen fake login overlay on parent view of a
+ * poisoned lesson plan or AI recommendation. Even with `style` gone,
+ * an attacker could reach the same result via Tailwind's atomic
+ * classes (`class="fixed inset-0 z-50 bg-white"`) because the page's
+ * CSS registers them for genuine app UI.
+ *
+ * Fix:
+ *   1. Drop `style` entirely — Quill's inline color/background isn't
+ *      worth the CSS-injection footgun.
+ *   2. Keep `class` for Quill's own layout (`ql-align-center`, etc.)
+ *      but filter each class token to the `ql-` prefix so Tailwind
+ *      utilities never survive the sanitizer.
+ */
+const QUILL_CLASS_PREFIX = 'ql-';
+
 const RICH_HTML_ALLOWED_TAGS = [
   'p',
   'br',
@@ -65,9 +89,30 @@ const RICH_HTML_ALLOWED_ATTRS = [
   'height',
   'colspan',
   'rowspan',
-  'style',
   'class',
 ];
+
+/**
+ * Filter `class` attribute values so only Quill's own layout classes
+ * survive. Anything else (Tailwind atomics, tenant-injected utility
+ * names) gets stripped before DOMPurify emits the node.
+ */
+function installQuillClassFilter(): void {
+  DOMPurify.removeHook('uponSanitizeAttribute');
+  DOMPurify.addHook('uponSanitizeAttribute', (_node, data) => {
+    if (data.attrName !== 'class') return;
+    const kept = data.attrValue
+      .split(/\s+/)
+      .filter((token) => token.startsWith(QUILL_CLASS_PREFIX));
+    if (kept.length === 0) {
+      data.keepAttr = false;
+      return;
+    }
+    data.attrValue = kept.join(' ');
+  });
+}
+
+installQuillClassFilter();
 
 /**
  * Sanitize an HTML string produced by our rich-text editors (Quill,
