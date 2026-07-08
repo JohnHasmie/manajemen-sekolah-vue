@@ -425,6 +425,22 @@ export function useModuleSelection(opts: UseModuleSelectionOptions) {
       ...(opts.quoteDeps ?? []),
     ],
     () => {
+      // Invalidate ANY in-flight quote request the moment the user
+      // toggles a checkbox. Previously the seq only bumped when a
+      // fresh refreshQuote() call reached the backend — but if the
+      // user unchecked their last remaining module, the debounced
+      // refreshQuote() early-returned at the "size === 0" guard
+      // without touching the seq. An older in-flight response from
+      // BEFORE the uncheck would then arrive with a still-valid seq
+      // and clobber `quote` with the stale single-module payload,
+      // leaving the sidebar showing "Presensi Kelas Rp 120.000"
+      // when every visible checkbox was empty. Bumping here means
+      // "the selection just changed — anything already on the wire
+      // is authoritatively out of date". The next refreshQuote() (or
+      // the next sync paint on `quote.value = null`) is now the only
+      // writer that can commit.
+      ++quoteReqSeq;
+
       if (opts.localQuoteFallback && catalog.value) {
         if (selectedKeys.value.size === 0) {
           quote.value = null;

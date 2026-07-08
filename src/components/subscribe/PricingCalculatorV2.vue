@@ -9,7 +9,7 @@
   the /subscribe conversion flow.
 -->
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type {
   BillingPeriod,
   ModularQuote,
@@ -88,6 +88,24 @@ function breakdownFor(l: {
 
 const monthlyAmount = computed(() => props.quote?.monthly_amount ?? 0);
 const chosenAmount = computed(() => props.quote?.chosen_amount ?? 0);
+
+// Flash the total price for ~500 ms whenever it changes so the user
+// can SEE that their checkbox click landed. Without this, the sidebar
+// updates silently — the number moves but there's no visual anchor
+// tying the interaction to the price change, and users clicked twice.
+// `respects prefers-reduced-motion` because the animation is opt-out
+// via a media query in the CSS.
+const priceFlashing = ref(false);
+let flashTimer: ReturnType<typeof setTimeout> | null = null;
+watch(chosenAmount, (next, prev) => {
+  if (next === prev) return;
+  if (flashTimer !== null) clearTimeout(flashTimer);
+  priceFlashing.value = true;
+  flashTimer = setTimeout(() => {
+    priceFlashing.value = false;
+    flashTimer = null;
+  }, 550);
+});
 
 const perStudent = computed(() => {
   const total = monthlyAmount.value;
@@ -334,7 +352,10 @@ function onPlan(p: BillingPeriod) {
           </svg>
           {{ bundleSavings.bundleLabel }}
         </div>
-        <div class="pc-total-val">{{ money(chosenAmount) }}</div>
+        <div
+          class="pc-total-val"
+          :class="{ 'pc-total-val--flash': priceFlashing }"
+        >{{ money(chosenAmount) }}</div>
       </div>
 
       <!-- Honest per-unit breakdown replaces the misleading "per siswa"
@@ -548,6 +569,24 @@ function onPlan(p: BillingPeriod) {
   margin-top: 3px;
   font-variant-numeric: tabular-nums;
   line-height: 1.05;
+  /* Base transform so the flash keyframe can scale relative to it. */
+  transform: translateZ(0);
+}
+/* One-shot pulse fired for ~500 ms whenever the amount changes so the
+   user has a clear anchor tying their click to the price. Same
+   brand-blue base colour temporarily brightens + scales a hair, then
+   settles. Guarded by prefers-reduced-motion so a11y-mode users don't
+   get the animation. */
+.pc-total-val--flash {
+  animation: pc-price-flash 500ms ease-out;
+}
+@keyframes pc-price-flash {
+  0%   { transform: scale(1);    color: #113E75; }
+  35%  { transform: scale(1.06); color: #2563EB; }
+  100% { transform: scale(1);    color: #113E75; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-total-val--flash { animation: none; }
 }
 .pc-total-per {
   font-size: 11px; color: #64748B;
