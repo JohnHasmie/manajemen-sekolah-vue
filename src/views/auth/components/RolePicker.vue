@@ -3,15 +3,52 @@
   Mirrors `selection_helper.dart`'s role-list step (Frame E).
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
+import { storage, StorageKeys } from '@/lib/storage';
 import type { Role } from '@/types/auth';
+
+// Local mirror of auth.ts's normalizeRole. Kept as a small inline
+// helper — the picker only needs the enough-to-compare form and
+// exporting the store-local one would leak an internal contract.
+function normalizeRoleForCompare(r: string | null | undefined): string {
+  if (!r || typeof r !== 'string') return '';
+  const low = r.toLowerCase();
+  if (low === 'admin' || low === 'administrator') return 'admin';
+  if (low === 'guru' || low === 'teacher' || low === 'wali_kelas') return 'guru';
+  if (
+    low === 'wali' ||
+    low === 'parent' ||
+    low === 'orang_tua' ||
+    low === 'wali_murid' ||
+    low === 'walimurid'
+  )
+    return 'wali';
+  if (low === 'staff' || low === 'staf') return 'staff';
+  return low;
+}
 
 const { t } = useI18n();
 const auth = useAuthStore();
 
 const candidateRole = ref<Role | null>(null);
+
+// Fast-path for returning users. The auth store used to auto-submit
+// the picker when a cached role from a previous session matched one
+// of the current options — Yahya (2026-07-08) reported the picker
+// flashing on-screen for a fraction of a second before vanishing.
+// Now the picker always mounts; the cached role just pre-highlights
+// so "Lanjutkan" is one click for the common case.
+onMounted(() => {
+  const stored = storage.get<Role>(StorageKeys.role);
+  if (!stored) return;
+  const normStored = normalizeRoleForCompare(stored);
+  const match = (auth.roles as string[]).find(
+    (r) => normalizeRoleForCompare(r) === normStored,
+  );
+  if (match) candidateRole.value = match as Role;
+});
 
 const schoolName = computed(() => 
   auth.lastResponse?.selectedSchool?.school_name || 
