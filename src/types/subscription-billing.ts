@@ -144,6 +144,14 @@ export interface SubscribeRequest {
    * the base included. Keyed by module key (e.g. { ai_rpp: 30 }).
    */
   ai_quota?: Record<string, number>;
+  /**
+   * Discount code applied by the user at the sidebar. Backend
+   * re-validates + locks (SELECT … FOR UPDATE) inside the payment
+   * transaction — if the code expired / hit its max_uses between
+   * apply and pay, the subscribe still succeeds but the discount
+   * is silently dropped and the redemption row is not written.
+   */
+  applied_discount_code?: string;
 }
 
 /** Manual-transfer bank instructions, returned when gateway=bank_transfer_manual. */

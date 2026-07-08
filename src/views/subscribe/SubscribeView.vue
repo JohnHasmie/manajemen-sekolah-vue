@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useGoogleSignIn } from '@/composables/useGoogleSignIn';
 import { useModuleSelection } from '@/composables/useModuleSelection';
@@ -29,6 +29,8 @@ import {
   shareTokenFromUrl,
 } from '@/services/billing.service';
 import type {
+  AppliedDiscount,
+  DiscountPreviewFailure,
   ManualTransferInfo,
   ModuleCatalog,
   PricingPlan,
@@ -49,6 +51,7 @@ import { isModuleHiddenFor } from '@/components/subscribe/moduleTokens';
 
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 const auth = useAuthStore();
 const google = useGoogleSignIn();
 
@@ -85,6 +88,57 @@ const notifyingTransfer = ref(false);
 const transferNotified = ref(false);
 
 const googleContainer = ref<HTMLElement | null>(null);
+
+// ── Discount code state ────────────────────────────────────────────
+// Shared shape with SubscribeNewWizardView — a fresh apply on the
+// convert flow (existing tenant activating) validates against the
+// current monthly subtotal. The applied snapshot lives only in
+// memory; a refresh drops it and forces re-validation.
+const discountCode = ref('');
+const discountApplying = ref(false);
+const discountError = ref<DiscountPreviewFailure | null>(null);
+const appliedDiscount = ref<AppliedDiscount | null>(null);
+
+async function applyDiscount(codeRaw: string) {
+  const code = codeRaw.trim().toUpperCase();
+  if (!code || discountApplying.value) return;
+  discountApplying.value = true;
+  discountError.value = null;
+  try {
+    const monthlySubtotal = quote.value?.monthly_amount ?? 0;
+    const result = await SubscriptionBillingService.previewDiscountCode({
+      code,
+      monthly_subtotal: monthlySubtotal,
+      module_keys: Array.from(selectedKeys.value),
+      tenant_id: selectedTenant.value?.id ?? null,
+    });
+    if (result.valid) {
+      appliedDiscount.value = {
+        code: result.code,
+        description: result.description,
+        type: result.type,
+        value: result.value,
+        duration_months: result.duration_months,
+        discount_amount: result.discount_amount,
+        valid_until: result.valid_until,
+        used_count: result.used_count,
+        max_uses: result.max_uses,
+      };
+      discountError.value = null;
+      discountCode.value = '';
+    } else {
+      discountError.value = result;
+    }
+  } finally {
+    discountApplying.value = false;
+  }
+}
+
+function removeDiscount() {
+  appliedDiscount.value = null;
+  discountError.value = null;
+  discountCode.value = '';
+}
 
 // ── Module selection engine (shared with the wizard) ───────────────
 // All picker math (bundle explode on partial uncheck, expanded keys,
@@ -227,6 +281,23 @@ onMounted(async () => {
   if (!auth.isAuthenticated) {
     setTimeout(mountGoogleButton, 100);
   }
+  // URL discount auto-apply — /subscribe?discount_code=XYZ. Defer
+  // until after tenant pick + first quote so the preview sees a
+  // real monthly subtotal. Firing too early with a zero quote
+  // would trip the below_min reason unfairly.
+  const urlCode = route.query.discount_code;
+  if (typeof urlCode === 'string' && urlCode.trim() !== '') {
+    const stop = watch(
+      [() => selectedTenant.value, () => quote.value?.monthly_amount ?? 0],
+      ([tenant, subtotal]) => {
+        if (tenant && subtotal > 0) {
+          applyDiscount(urlCode);
+          stop();
+        }
+      },
+      { immediate: true },
+    );
+  }
 });
 
 // ── Actions ────────────────────────────────────────────────────────
@@ -239,6 +310,10 @@ function switchTenant() {
   selectedTenant.value = null;
   order.value = null;
   quote.value = null;
+  // Wipe the discount too — a code approved against tenant A's pricing
+  // may not qualify against tenant B (different tenant_type or seat
+  // counts flip the below_min or scope_mismatch reason).
+  removeDiscount();
 }
 
 function goToNewTenant() {
@@ -263,6 +338,7 @@ async function onSubmit() {
       gateway: gateway.value,
       wipe_demo_data: selectedTenant.value.is_demo ? wipeDemoData.value : undefined,
       modules: Array.from(selectedKeys.value),
+      applied_discount_code: appliedDiscount.value?.code ?? undefined,
     });
     await handleSubscribeResult(result);
   } catch (e) {
@@ -576,6 +652,12 @@ watch(() => auth.isAuthenticated, (v) => {
             :submitting="submitting"
             :yearly-discount-pct="plan?.yearly_discount_pct"
             :bundle-benchmark="bundleBenchmark"
+            v-model:discount-code="discountCode"
+            :discount-applying="discountApplying"
+            :discount-error="discountError"
+            :applied-discount="appliedDiscount"
+            @apply-discount="applyDiscount"
+            @remove-discount="removeDiscount"
             submit-label="Buat pesanan & tampilkan transfer"
             @submit="onSubmit"
             @switch-to-bundle="switchToBundle"

@@ -11,12 +11,16 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import type {
+  AppliedDiscount,
   BillingPeriod,
+  DiscountPreviewFailure,
   ModularQuote,
   ModuleCatalog,
 } from '@/types/subscription-billing';
 import { money, moduleLabel } from './moduleTokens';
 import { tenantLabel } from '@/lib/tenantTokens';
+import DiscountCodeInput from './DiscountCodeInput.vue';
+import DiscountAppliedCard from './DiscountAppliedCard.vue';
 
 const props = defineProps<{
   tenantName: string;
@@ -42,17 +46,61 @@ const props = defineProps<{
     monthlyTotal: number;
     bonusModuleCount: number;
   } | null;
+  // ── Discount code slot ─────────────────────────────────────────
+  // Parent owns the wiring: input v-model, apply/remove events,
+  // async state. This component just renders + emits.
+  discountCode?: string;
+  discountApplying?: boolean;
+  discountError?: DiscountPreviewFailure | null;
+  appliedDiscount?: AppliedDiscount | null;
 }>();
 
 const emit = defineEmits<{
   'update:plan': [plan: BillingPeriod];
   submit: [];
   'switch-to-bundle': [key: string];
+  'update:discountCode': [value: string];
+  'apply-discount': [code: string];
+  'remove-discount': [];
 }>();
 
 const discountPct = computed(() => props.yearlyDiscountPct ?? 20);
 const lines = computed(() => props.quote?.per_module ?? []);
 const aiLines = computed(() => props.quote?.ai_quota_lines ?? []);
+
+// ── Discount amounts ─────────────────────────────────────────────
+// For the CURRENTLY-CHOSEN plan (monthly/yearly), compute how much
+// the discount reduces the sidebar Total row. Discount is a MONTHLY
+// value from the backend (`discount_amount`); we apply it for
+// `duration_months` months and honour the plan choice:
+//
+//   • Monthly plan → show the reduced monthly for the first N months.
+//     Post-window, price reverts to the honest monthly amount.
+//   • Yearly plan  → savings = min(N, 12) × discount_amount over the
+//     first year; the pre-paid yearly total is reduced by that much
+//     for the first billing cycle.
+const discountedMonthlySavings = computed(() => {
+  const d = props.appliedDiscount;
+  if (!d) return 0;
+  return d.discount_amount;
+});
+
+const discountedTotalReduction = computed(() => {
+  const d = props.appliedDiscount;
+  if (!d) return 0;
+  const monthly = d.discount_amount;
+  if (props.plan === 'monthly') return monthly;
+  // Yearly plan: apply across N months of the first year (max 12).
+  const months = d.duration_months === null
+    ? 12
+    : Math.min(d.duration_months, 12);
+  return monthly * months;
+});
+
+const chosenAmountAfterDiscount = computed(() => {
+  const raw = props.quote?.chosen_amount ?? 0;
+  return Math.max(0, raw - discountedTotalReduction.value);
+});
 
 function labelFor(key: string): string {
   const optional = props.catalog?.optional[key];
@@ -309,6 +357,29 @@ function onPlan(p: BillingPeriod) {
         </div>
         <span class="pc-line-val">{{ money(ai.monthly_line) }}</span>
       </div>
+
+      <!-- Discount line — nyisip di antara module lines dan total.
+           Hanya render kalau ada applied discount. Green-ink; hemat
+           terlihat langsung. Duration-months hint biar user paham
+           discount cuma buat N bulan pertama. -->
+      <div v-if="appliedDiscount" class="pc-line pc-line-discount">
+        <div class="pc-line-body">
+          <div class="pc-line-lbl">
+            Diskon {{ appliedDiscount.code }}
+            <span v-if="appliedDiscount.type === 'percent'" class="pc-line-disc-pct">
+              −{{ appliedDiscount.value }}%
+            </span>
+          </div>
+          <div class="pc-line-sub">
+            {{ appliedDiscount.duration_months === null
+              ? 'Berlaku seumur langganan'
+              : `${appliedDiscount.duration_months} bulan pertama` }}
+          </div>
+        </div>
+        <span class="pc-line-val pc-line-val-neg">
+          − {{ money(discountedMonthlySavings) }}<span class="pc-line-val-mo">/bln</span>
+        </span>
+      </div>
     </div>
     <div v-else class="pc-empty">
       Belum ada modul dipilih.
@@ -354,8 +425,18 @@ function onPlan(p: BillingPeriod) {
         </div>
         <div
           class="pc-total-val"
-          :class="{ 'pc-total-val--flash': priceFlashing }"
+          :class="{ 'pc-total-val--flash': priceFlashing, 'pc-total-val--strike': !!appliedDiscount }"
         >{{ money(chosenAmount) }}</div>
+      </div>
+
+      <!-- Discounted final row — only when a code is applied. The
+           original chosenAmount above gets a strikethrough class,
+           and the effective post-discount amount lands here in a
+           green-ink "after" row so the user sees exactly what they
+           are being charged this cycle. -->
+      <div v-if="appliedDiscount" class="pc-total-final-row pc-total-final-row-after">
+        <div class="pc-total-after-lbl">Setelah diskon</div>
+        <div class="pc-total-val pc-total-val-after">{{ money(chosenAmountAfterDiscount) }}</div>
       </div>
 
       <!-- Honest per-unit breakdown replaces the misleading "per siswa"
@@ -418,6 +499,29 @@ function onPlan(p: BillingPeriod) {
           Ambil
         </button>
       </div>
+    </div>
+
+    <!-- Discount code slot — sits between the total block and the CTA,
+         matching the approved mockup. When a discount is applied, the
+         green DiscountAppliedCard renders here with description, meta,
+         and a remove ✕. Otherwise the 4-state DiscountCodeInput lets
+         the user paste a code and press Terapkan. Parent (Subscribe
+         wizard) owns the state via v-model:discountCode + the
+         apply-discount / remove-discount events. -->
+    <div class="pc-discount-slot">
+      <DiscountAppliedCard
+        v-if="appliedDiscount"
+        :discount="appliedDiscount"
+        @remove="emit('remove-discount')"
+      />
+      <DiscountCodeInput
+        v-else
+        :model-value="discountCode ?? ''"
+        :applying="!!discountApplying"
+        :error="discountError ?? null"
+        @update:model-value="v => emit('update:discountCode', v)"
+        @apply="c => emit('apply-discount', c)"
+      />
     </div>
 
     <div class="pc-cta">
@@ -593,6 +697,63 @@ function onPlan(p: BillingPeriod) {
   margin-top: 4px;
   font-variant-numeric: tabular-nums;
   line-height: 1.4;
+}
+
+/* Discount-applied styling — big total gets a strikethrough treatment
+   in muted ink, and the row below shows the post-discount amount in
+   emerald green so the user's eye jumps to what they actually pay. */
+.pc-total-val--strike {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  color: #94A3B8;
+  font-size: 18px;
+  animation: none;
+}
+.pc-total-final-row-after {
+  margin-top: 6px;
+  align-items: baseline;
+}
+.pc-total-after-lbl {
+  font-size: 10.5px; font-weight: 700;
+  color: #15803D; letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.pc-total-val-after {
+  font-size: 24px; font-weight: 700;
+  color: #15803D;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+  margin-top: 0;
+}
+
+/* Discount line row — sits inside pc-lines above the total. Green ink
+   marks a savings row without collapsing into the neutral module
+   rows. Negative amount rendered with an explicit minus glyph. */
+.pc-line-discount .pc-line-lbl {
+  color: #166534;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.pc-line-disc-pct {
+  font-size: 10px; font-weight: 800;
+  color: #15803D;
+  background: #DCFCE7;
+  padding: 2px 5px; border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+.pc-line-val-neg {
+  color: #15803D;
+  font-weight: 800;
+}
+.pc-line-val-mo {
+  font-size: 10px; font-weight: 600;
+  color: #16A34A; letter-spacing: 0;
+  margin-left: 2px;
+}
+
+/* Discount slot — wraps DiscountCodeInput or DiscountAppliedCard.
+   Sits between total block and CTA with matching side-padding. */
+.pc-discount-slot {
+  padding: 0 14px;
 }
 
 /* Bundle-mode overrides. Emerald tint anchors the whole block as

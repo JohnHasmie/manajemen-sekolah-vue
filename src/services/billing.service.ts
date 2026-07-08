@@ -686,6 +686,39 @@ export const SubscriptionBillingService = {
   },
 
   /**
+   * POST /billing/discount-codes/preview — validate a discount code
+   * against the current cart. Cheap; does NOT touch used_count. See
+   * the design doc §2 for counter semantics.
+   *
+   * Returned as a discriminated union so callers just switch on
+   * `result.valid` — no try/catch needed. Network / server 500 is
+   * mapped to `{valid:false, reason:'not_found', message}` so the
+   * FE always has SOMETHING readable to render.
+   */
+  async previewDiscountCode(payload: {
+    code: string;
+    monthly_subtotal: number;
+    module_keys?: string[];
+    tenant_id?: string | null;
+  }): Promise<import('@/types/subscription-billing').DiscountPreviewResult> {
+    try {
+      const res = await api.post('/billing/discount-codes/preview', {
+        code: payload.code.toUpperCase().trim(),
+        monthly_subtotal: Math.max(0, Math.round(payload.monthly_subtotal)),
+        module_keys: payload.module_keys ?? [],
+        tenant_id: payload.tenant_id ?? null,
+      });
+      return res.data as import('@/types/subscription-billing').DiscountPreviewResult;
+    } catch (e) {
+      return {
+        valid: false,
+        reason: 'not_found',
+        message: humanError(e, 'Gagal memeriksa kode. Coba lagi.'),
+      };
+    }
+  },
+
+  /**
    * POST /billing/quote with `modules[]` — the modular pricing quote.
    * Same endpoint as the legacy per-seat quote; the presence of
    * `modules` in the payload flips the backend into modular mode.

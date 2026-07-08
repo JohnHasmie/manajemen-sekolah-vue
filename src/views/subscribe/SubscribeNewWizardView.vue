@@ -12,7 +12,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useGoogleSignIn } from '@/composables/useGoogleSignIn';
 import { useModuleSelection, aiQuotaCfg } from '@/composables/useModuleSelection';
@@ -23,6 +23,8 @@ import {
   shareTokenFromUrl,
 } from '@/services/billing.service';
 import type {
+  AppliedDiscount,
+  DiscountPreviewFailure,
   ManualTransferInfo,
   ModuleCatalog,
   PricingPlan,
@@ -43,6 +45,7 @@ import OrderTransferCard from '@/components/subscribe/OrderTransferCard.vue';
 import OrderThanksCard from '@/components/subscribe/OrderThanksCard.vue';
 
 const router = useRouter();
+const route = useRoute();
 const auth = useAuthStore();
 const google = useGoogleSignIn();
 
@@ -136,6 +139,61 @@ const submitting = ref(false);
 const errorMessage = ref<string | null>(null);
 
 const googleContainer = ref<HTMLElement | null>(null);
+
+// ── Discount code state ────────────────────────────────────────────
+// P1: single active code per subscription (Yahya's "single active code"
+// choice). Parent view owns the state; PricingCalculatorV2 renders
+// the input/applied card and re-emits events. The applied snapshot
+// stays in memory only — a page refresh drops it, because pricing
+// may have changed and the code needs to be re-validated fresh.
+//
+// URL auto-apply: /subscribe/new?discount_code=XYZ auto-fills and
+// triggers apply on mount (per Yahya's "on untuk semua code" choice).
+const discountCode = ref('');
+const discountApplying = ref(false);
+const discountError = ref<DiscountPreviewFailure | null>(null);
+const appliedDiscount = ref<AppliedDiscount | null>(null);
+
+async function applyDiscount(codeRaw: string) {
+  const code = codeRaw.trim().toUpperCase();
+  if (!code || discountApplying.value) return;
+  discountApplying.value = true;
+  discountError.value = null;
+  try {
+    const monthlySubtotal = quote.value?.monthly_amount ?? 0;
+    const result = await SubscriptionBillingService.previewDiscountCode({
+      code,
+      monthly_subtotal: monthlySubtotal,
+      module_keys: Array.from(selectedKeys.value),
+      tenant_id: null,
+    });
+    if (result.valid) {
+      appliedDiscount.value = {
+        code: result.code,
+        description: result.description,
+        type: result.type,
+        value: result.value,
+        duration_months: result.duration_months,
+        discount_amount: result.discount_amount,
+        valid_until: result.valid_until,
+        used_count: result.used_count,
+        max_uses: result.max_uses,
+      };
+      discountError.value = null;
+      discountCode.value = '';
+    } else {
+      discountError.value = result;
+    }
+  } finally {
+    discountApplying.value = false;
+  }
+}
+
+function removeDiscount() {
+  appliedDiscount.value = null;
+  discountError.value = null;
+  discountCode.value = '';
+}
 
 interface OrderSnapshot {
   planLabel: string;
@@ -407,6 +465,19 @@ onMounted(async () => {
   // primes the sidebar with a real number before the first paint the
   // user actually looks at.
   refreshQuote();
+
+  // Auto-apply from URL — /subscribe/new?discount_code=XYZ. Runs AFTER
+  // the initial quote fires so previewDiscountCode() has a monthly
+  // subtotal to lock against. Silent-fail: an invalid URL code just
+  // populates the error state and stays visible until the user
+  // types over it, so campaign links with a typo don't confuse the
+  // flow. Only fires on load — subsequent query changes are ignored.
+  const urlCode = route.query.discount_code;
+  if (typeof urlCode === 'string' && urlCode.trim() !== '') {
+    // Give refreshQuote() a beat to populate monthly_amount so the
+    // preview's discount math sees a non-zero subtotal.
+    setTimeout(() => applyDiscount(urlCode), 400);
+  }
 });
 
 // ── Step navigation ────────────────────────────────────────────────
@@ -518,6 +589,10 @@ async function onSubmit() {
       },
       modules: Array.from(selectedKeys.value),
       ai_quota: aiQuota.value,
+      // Only send when we have a validated applied code — backend
+      // re-locks + re-validates on payment success (P1b) so an
+      // expired/exhausted code between apply and pay is caught there.
+      applied_discount_code: appliedDiscount.value?.code ?? undefined,
     });
     await handleSubscribeResult(result);
   } catch (e) {
@@ -836,6 +911,12 @@ function flagSubscribeIntent(): void {
             :bundle-benchmark="bundleBenchmark"
             :submit-label="midtransAvailable ? 'Lanjut ke pembayaran' : 'Buat pesanan'"
             :submitting="!midtransAvailable && submitting"
+            v-model:discount-code="discountCode"
+            :discount-applying="discountApplying"
+            :discount-error="discountError"
+            :applied-discount="appliedDiscount"
+            @apply-discount="applyDiscount"
+            @remove-discount="removeDiscount"
             @submit="next"
             @switch-to-bundle="switchToBundle"
           />
