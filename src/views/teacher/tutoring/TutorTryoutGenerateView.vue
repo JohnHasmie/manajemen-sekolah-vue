@@ -95,7 +95,7 @@ const inputCls =
 <template>
   <div class="space-y-md pb-12">
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.bimbel.tryout_generate.kicker')"
       :title="t('tutoring.ai.title')"
       :meta="t('tutor.bimbel.tryout_generate.meta')"

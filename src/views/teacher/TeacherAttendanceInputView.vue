@@ -413,7 +413,7 @@ function pickSubject(id: string) {
   <div class="space-y-md pb-28">
     <!-- ── 1. Brand header ───────────────────────────────────── -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.sekolah.attendanceInput.kicker')"
       :title="
         activeSubject && activeClass

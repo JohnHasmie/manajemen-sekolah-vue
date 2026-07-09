@@ -21,7 +21,9 @@ export interface RoleColor {
   ring: string;
 }
 
-const TABLE: Record<Role, RoleColor> = {
+// Partial: `student` has no web dashboard (parent-mediated), so it has no
+// entry — getRoleColor falls back for it (the lookup below already `??`s).
+const TABLE: Partial<Record<Role, RoleColor>> = {
   admin: {
     hex: '#143068',
     bg: 'bg-role-admin',
@@ -29,7 +31,7 @@ const TABLE: Record<Role, RoleColor> = {
     text: 'text-role-admin',
     ring: 'ring-role-admin',
   },
-  guru: {
+  teacher: {
     hex: '#1B6FB8',
     bg: 'bg-role-teacher',
     bgSoft: 'bg-role-teacher-soft',
@@ -43,7 +45,7 @@ const TABLE: Record<Role, RoleColor> = {
     text: 'text-role-teacher',
     ring: 'ring-role-teacher',
   },
-  wali: {
+  parent: {
     hex: '#21AFE6',
     bg: 'bg-role-parent',
     bgSoft: 'bg-role-parent-soft',

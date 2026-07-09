@@ -149,7 +149,7 @@ void auth;
   <div class="space-y-4 pb-12">
     <!-- HEADER -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.sekolah.reportCardHub.kicker')"
       :title="t('tutor.sekolah.reportCardHub.title')"
       :meta="

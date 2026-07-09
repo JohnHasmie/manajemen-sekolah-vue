@@ -240,7 +240,7 @@ function goBack() {
         <div v-if="original" class="space-y-4">
           <!-- HEADER -->
           <BrandPageHeader
-            role="guru"
+            role="teacher"
             :kicker="t('tutor.sekolah.recommendationEdit.kicker')"
             :title="titleField || original.title || t('tutor.sekolah.recommendationEdit.titleFallback')"
             :meta="t('tutor.sekolah.recommendationEdit.meta', {

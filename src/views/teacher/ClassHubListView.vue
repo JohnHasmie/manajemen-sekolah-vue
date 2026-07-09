@@ -16,7 +16,7 @@ import type { ClassCard } from '@/types/class-hub';
 
 const { t } = useI18n();
 const router = useRouter();
-const role = useRoleColor(() => 'guru');
+const role = useRoleColor(() => 'teacher');
 
 type Filter = 'all' | 'wali' | 'mengajar';
 

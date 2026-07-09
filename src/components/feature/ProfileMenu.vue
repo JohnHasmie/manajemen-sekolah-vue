@@ -174,13 +174,10 @@ function schoolDisplayName(s: School): string {
 }
 
 function roleDisplayLabel(r: Role): string {
-  // Map raw backend enums to the keys used in id.json translations
-  let key = r as string;
-  if (key === 'teacher') key = 'guru';
-  if (key === 'parent') key = 'wali';
-
+  // `role.*` i18n keys are now the canonical English role keys, so the FE
+  // role maps straight through — no legacy remap.
   try {
-    return t(`role.${key}`);
+    return t(`role.${r}`);
   } catch {
     return r;
   }
@@ -265,10 +262,10 @@ function roleHome(role: Role): string {
   switch (role) {
     case 'admin':
       return '/admin';
-    case 'guru':
+    case 'teacher':
     case 'wali_kelas':
       return '/teacher';
-    case 'wali':
+    case 'parent':
       return '/parent';
     case 'staff':
       return '/staff';

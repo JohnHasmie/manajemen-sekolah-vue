@@ -248,7 +248,7 @@ function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
 
     <!-- HEADER -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="headerKicker"
       :title="t('tutor.sekolah.reportCardClass.title')"
       :meta="headerMeta"

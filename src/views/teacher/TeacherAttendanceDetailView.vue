@@ -386,7 +386,7 @@ function backToList() {
   <div class="space-y-md pb-28">
     <!-- ── 1. Brand header with context ──────────────────────── -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.sekolah.attendanceDetail.kicker')"
       :title="
         subjectName && className

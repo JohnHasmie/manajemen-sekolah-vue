@@ -36,11 +36,11 @@ const { t } = useI18n();
 const props = withDefaults(
   defineProps<{
     announcement: Announcement;
-    viewerRole?: 'admin' | 'guru' | 'wali';
+    viewerRole?: 'admin' | 'teacher' | 'parent';
     isSelected?: boolean;
     showDelete?: boolean;
   }>(),
-  { viewerRole: 'wali', isSelected: false, showDelete: false },
+  { viewerRole: 'parent', isSelected: false, showDelete: false },
 );
 
 defineEmits<{

@@ -615,7 +615,7 @@ function onPredikatBlur(rowId: string) {
   <div class="space-y-4 pb-32 relative">
     <!-- HEADER -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.sekolah.gradeRecapDetail.kicker')"
       :title="`${subjectName} · ${className}`"
       :meta="t('tutor.sekolah.gradeRecapDetail.meta', { students: rows.length, chapters: chapters.length })"

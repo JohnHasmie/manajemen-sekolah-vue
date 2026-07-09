@@ -889,7 +889,7 @@ function pickSubject(id: string) {
   <div class="space-y-4 pb-12">
     <!-- HEADER -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       kicker="Akademik · Kegiatan Kelas"
       title="Catat Kegiatan Kelas"
       meta="Rekap pembelajaran harian, tugas, dan refleksi"

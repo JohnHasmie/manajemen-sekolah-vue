@@ -111,7 +111,7 @@ async function save() {
 <template>
   <div class="space-y-md pb-32">
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.bimbel.activity_submissions.kicker_prefix') + ' · ' + groupName"
       :title="title"
       :meta="t('tutor.bimbel.activity_submissions.meta_students', { count: rows.length })"

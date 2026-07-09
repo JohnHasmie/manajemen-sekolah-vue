@@ -64,13 +64,13 @@ const gradientClass = computed(() => {
   switch (activeRole.value) {
     case 'admin':
       return 'bg-role-admin-gradient';
-    case 'wali':
+    case 'parent':
       return 'bg-role-parent-gradient';
     case 'staff':
       return 'bg-role-staff-gradient';
     case 'super_admin':
       return 'bg-role-superadmin-gradient';
-    case 'guru':
+    case 'teacher':
     case 'wali_kelas':
     default:
       return 'bg-role-teacher-gradient';

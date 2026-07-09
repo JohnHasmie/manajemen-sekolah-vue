@@ -23,7 +23,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 const props = withDefaults(
   defineProps<{
     /** Role for tinting the expanded card. */
-    role?: 'admin' | 'guru' | 'wali' | 'staff';
+    role?: 'admin' | 'teacher' | 'parent' | 'staff';
   }>(),
   { role: 'admin' },
 );
@@ -46,7 +46,7 @@ const selectedIndex = computed(() =>
 
 const roleColorClass = computed(() => {
   switch (props.role) {
-    case 'guru':
+    case 'teacher':
       return {
         bg: 'bg-brand-cobalt/8',
         border: 'border-brand-cobalt/35',
@@ -54,7 +54,7 @@ const roleColorClass = computed(() => {
         chipActiveBg: 'bg-brand-cobalt',
         chipActiveText: 'text-white',
       };
-    case 'wali':
+    case 'parent':
       return {
         bg: 'bg-sky-50',
         border: 'border-sky-300',

@@ -449,7 +449,7 @@ function pickSubject(id: string) {
   <div class="space-y-md pb-24">
     <!-- ── 1. Header ─────────────────────────────────────────── -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="
         isWaliMode
           ? `Presensi · Wali Kelas ${activeHomeroom?.name ?? ''}`

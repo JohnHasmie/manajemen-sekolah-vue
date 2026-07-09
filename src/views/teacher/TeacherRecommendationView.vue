@@ -433,7 +433,7 @@ async function runGenerate(cfg: GenerateConfig) {
   <div class="space-y-4 pb-12">
     <!-- HEADER -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.sekolah.recommendationHub.kicker')"
       :title="t('tutor.sekolah.recommendationHub.title')"
       :meta="

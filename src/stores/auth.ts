@@ -42,7 +42,7 @@ function normalizeRole(role: string | null | undefined): Role | null {
   if (!role || typeof role !== 'string') return null;
   const r = role.toLowerCase();
   if (r === 'admin' || r === 'administrator') return 'admin';
-  if (r === 'guru' || r === 'teacher' || r === 'wali_kelas') return 'guru';
+  if (r === 'guru' || r === 'teacher' || r === 'wali_kelas') return 'teacher';
   if (
     r === 'wali' ||
     r === 'parent' ||
@@ -50,8 +50,8 @@ function normalizeRole(role: string | null | undefined): Role | null {
     r === 'wali_murid' ||
     r === 'walimurid'
   )
-    return 'wali';
-  if (r === 'siswa' || r === 'student') return 'siswa';
+    return 'parent';
+  if (r === 'siswa' || r === 'student') return 'student';
   if (r === 'staff') return 'staff';
   return r as Role;
 }

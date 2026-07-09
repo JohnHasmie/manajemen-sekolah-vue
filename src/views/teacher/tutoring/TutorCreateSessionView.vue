@@ -83,7 +83,7 @@ const inputCls =
 <template>
   <div class="space-y-md pb-12">
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       kicker="Bimbel · Sesi · Buat"
       :title="t('tutoring.createSession.title')"
       :meta="t('tutor.bimbel.create_session.meta')"

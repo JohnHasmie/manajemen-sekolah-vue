@@ -16,7 +16,7 @@ import type { ClassCard } from '@/types/class-hub';
 
 const { t } = useI18n();
 const router = useRouter();
-const role = useRoleColor(() => 'wali');
+const role = useRoleColor(() => 'parent');
 const { children, activeChildId, setActive } = useChildPicker();
 
 const loading = ref(true);

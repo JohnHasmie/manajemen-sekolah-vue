@@ -258,7 +258,7 @@ const today = computed(() => {
 async function load() {
   state.value = { status: 'loading' };
   try {
-    const role = auth.activeRole ?? 'guru';
+    const role = auth.activeRole ?? 'teacher';
     const [statsData, inboxData] = await Promise.all([
       DashboardService.getStats(role),
       DashboardService.teacherPriorityInbox(20),
@@ -726,7 +726,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
 
     <AcademicYearPickerModal
       v-if="showYearPicker"
-      role="guru"
+      role="teacher"
       @close="showYearPicker = false"
     />
   </div>

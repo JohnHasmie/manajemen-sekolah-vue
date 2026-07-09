@@ -343,7 +343,7 @@ function onHistoryIntent() {
         <div v-if="plan" class="space-y-4">
           <!-- HEADER -->
           <BrandPageHeader
-            role="guru"
+            role="teacher"
             :kicker="kicker"
             :title="plan.title || t('tutor.sekolah.lessonPlanDetail.untitled')"
             :meta="metaLine"

@@ -11,6 +11,8 @@ import { useI18n } from 'vue-i18n';
 import type { RouteLocationRaw } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import { useRoleColor } from '@/composables/useRoleColor';
+import { canonicalRole } from '@/utils/role';
+import type { Role } from '@/types/auth';
 import { ClassHubService } from '@/services/class-hub.service';
 import {
   isWaliKelas,
@@ -25,7 +27,7 @@ const props = withDefaults(
   { roleName: 'guru', studentId: undefined },
 );
 const { t } = useI18n();
-const role = useRoleColor(() => props.roleName);
+const role = useRoleColor(() => canonicalRole(props.roleName) as Role);
 
 // Deep-link a feed card to the underlying module, scoped to this class.
 // Guru-only — parent/admin hubs are read-only observers (mirrors the mobile

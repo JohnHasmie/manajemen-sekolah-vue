@@ -301,7 +301,7 @@ function progressBarTone(pct: number) {
   <div class="space-y-4 pb-12">
     <!-- HEADER -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.sekolah.gradeRecap.kicker')"
       :title="t('tutor.sekolah.gradeRecap.title')"
       :meta="t('tutor.sekolah.gradeRecap.meta')"

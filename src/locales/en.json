@@ -327,10 +327,10 @@
   },
   "role": {
     "admin": "ADMIN",
-    "guru": "TEACHER",
+    "teacher": "TEACHER",
     "wali_kelas": "Homeroom",
-    "wali": "PARENT",
-    "siswa": "Student",
+    "parent": "PARENT",
+    "student": "Student",
     "staff": "Staff",
     "super_admin": "Super Admin"
   },

@@ -478,7 +478,7 @@ function onUploaded(plan: LessonPlan) {
   <div class="space-y-4 pb-12">
     <!-- HEADER -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.sekolah.lessonPlanList.kicker')"
       :title="t('tutor.sekolah.lessonPlanList.title')"
       :meta="t('tutor.sekolah.lessonPlanList.headerMeta', { total: totalCount, pending: counts.pending })"

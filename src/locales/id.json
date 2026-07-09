@@ -324,10 +324,10 @@
   },
   "role": {
     "admin": "ADMIN",
-    "guru": "Guru",
+    "teacher": "Guru",
     "wali_kelas": "Wali Kelas",
-    "wali": "Wali murid",
-    "siswa": "Siswa",
+    "parent": "Wali murid",
+    "student": "Siswa",
     "staff": "Staf",
     "super_admin": "Super Admin"
   },

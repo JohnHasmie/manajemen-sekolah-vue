@@ -74,10 +74,10 @@ function roleHome(): string {
   switch (auth.activeRole) {
     case 'admin':
       return '/admin';
-    case 'guru':
+    case 'teacher':
     case 'wali_kelas':
       return '/teacher';
-    case 'wali':
+    case 'parent':
       return '/parent';
     case 'staff':
       return '/staff';

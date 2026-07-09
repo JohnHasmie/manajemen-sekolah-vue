@@ -435,7 +435,7 @@ function typeLabel(type: AssessmentType): string {
          List view — matrix has its own file
          (TeacherGradeMatrixView.vue) with its own header. -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="isWaliMode
         ? t('tutor.sekolah.gradebook.kickerHomeroom')
         : t('tutor.sekolah.gradebook.kickerDefault')"

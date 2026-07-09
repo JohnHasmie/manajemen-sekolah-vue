@@ -38,10 +38,10 @@
  */
 export type Role =
   | 'admin'
-  | 'guru'
+  | 'teacher'
   | 'wali_kelas'
-  | 'wali'
-  | 'siswa'
+  | 'parent'
+  | 'student'
   | 'staff'
   | 'super_admin';
 

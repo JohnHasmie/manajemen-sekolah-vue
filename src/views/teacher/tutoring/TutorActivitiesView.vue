@@ -147,7 +147,7 @@ function iconFor(tkey: string): string {
 <template>
   <div class="space-y-md pb-12">
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.bimbel.activities.kicker')"
       :title="t('tutor.bimbel.activities.title')"
       :meta="t('tutor.bimbel.activities.meta_active', { count: rows.length })"
