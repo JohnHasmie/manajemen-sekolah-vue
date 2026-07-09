@@ -98,3 +98,38 @@ export function classFeedItemFromJson(
     isRead: json.is_read === true,
   };
 }
+
+// --- Anggota tab (GET /classes/{id}/members) ---------------------------------
+
+export interface ClassMemberStudent {
+  id: string;
+  name: string;
+  nis: string | null;
+}
+
+export interface ClassMembers {
+  homeroomTeacherName: string | null;
+  studentCount: number;
+  students: ClassMemberStudent[];
+}
+
+export function classMembersFromJson(
+  json: Record<string, unknown>,
+): ClassMembers {
+  const homeroom = json.homeroom_teacher as
+    | Record<string, unknown>
+    | null
+    | undefined;
+  const rawStudents = Array.isArray(json.students)
+    ? (json.students as Record<string, unknown>[])
+    : [];
+  return {
+    homeroomTeacherName: homeroom ? String(homeroom.name ?? '') || null : null,
+    studentCount: toInt(json.student_count),
+    students: rawStudents.map((s) => ({
+      id: String(s.id ?? ''),
+      name: String(s.name ?? ''),
+      nis: s.nis == null ? null : String(s.nis),
+    })),
+  };
+}

@@ -6,7 +6,7 @@
   mobile ClassHubDetailScreen.
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AsyncView from '@/components/data/AsyncView.vue';
 import { useRoleColor } from '@/composables/useRoleColor';
@@ -16,6 +16,7 @@ import {
   type ClassCard,
   type ClassFeedItem,
   type ClassFeedType,
+  type ClassMembers,
 } from '@/types/class-hub';
 
 const props = withDefaults(
@@ -32,6 +33,11 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const items = ref<ClassFeedItem[]>([]);
 const card = ref<ClassCard | null>(null);
+
+// Anggota roster — lazily fetched the first time the tab is opened.
+const members = ref<ClassMembers | null>(null);
+const membersLoading = ref(false);
+const membersError = ref<string | null>(null);
 
 async function load() {
   loading.value = true;
@@ -54,6 +60,35 @@ async function load() {
   }
 }
 onMounted(load);
+
+async function loadMembers() {
+  membersLoading.value = true;
+  membersError.value = null;
+  try {
+    members.value = await ClassHubService.members(props.id);
+  } catch (e) {
+    membersError.value = e instanceof Error ? e.message : String(e);
+  } finally {
+    membersLoading.value = false;
+  }
+}
+watch(tab, (t) => {
+  if (t === 'anggota' && members.value === null && !membersLoading.value) {
+    loadMembers();
+  }
+});
+
+const homeroomName = computed(
+  () => members.value?.homeroomTeacherName ?? card.value?.homeroomTeacherName ?? null,
+);
+const roster = computed(() => members.value?.students ?? []);
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
 
 const tabs: { key: Tab; labelKey: string }[] = [
   { key: 'riwayat', labelKey: 'classHub.tabSessionLog' },
@@ -207,24 +242,68 @@ const roleLabel = computed(() => {
       </button>
     </div>
 
-    <div v-if="tab === 'anggota'">
-      <div class="bg-white rounded-xl border border-slate-200 divide-y">
-        <div v-if="card?.homeroomTeacherName" class="p-3 flex items-center gap-3">
+    <div v-if="tab === 'anggota'" class="space-y-4">
+      <div
+        v-if="homeroomName"
+        class="bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-3"
+      >
+        <span
+          class="w-9 h-9 rounded-full flex items-center justify-center"
+          :style="{ backgroundColor: role.hex + '26', color: role.hex }"
+        >★</span>
+        <span>
+          <span class="block text-sm font-medium">{{ homeroomName }}</span>
+          <span class="block text-xs text-slate-500">
+            {{ t('classHub.roleHomeroom') }}
+          </span>
+        </span>
+      </div>
+
+      <p class="text-xs font-medium text-slate-500">
+        {{ roster.length }} {{ t('classHub.kpiStudents') }}
+      </p>
+
+      <div v-if="membersLoading" class="py-8 text-center text-sm text-slate-500">
+        {{ t('common.loading') }}
+      </div>
+      <div v-else-if="membersError" class="py-8 text-center">
+        <p class="text-sm text-slate-500 mb-2">{{ t('common.error') }}</p>
+        <button
+          type="button"
+          class="text-sm font-medium"
+          :style="{ color: role.hex }"
+          @click="loadMembers"
+        >
+          {{ t('common.retry') }}
+        </button>
+      </div>
+      <div
+        v-else-if="roster.length === 0"
+        class="bg-white rounded-xl border border-slate-200 p-8 text-center"
+      >
+        <p class="text-sm font-medium text-slate-700">
+          {{ t('classHub.emptyRosterTitle') }}
+        </p>
+        <p class="text-xs text-slate-500 mt-1">
+          {{ t('classHub.emptyRosterMsg') }}
+        </p>
+      </div>
+      <div v-else class="bg-white rounded-xl border border-slate-200 divide-y">
+        <div
+          v-for="s in roster"
+          :key="s.id"
+          class="p-3 flex items-center gap-3"
+        >
           <span
-            class="w-9 h-9 rounded-full flex items-center justify-center"
-            :style="{ backgroundColor: role.hex + '26', color: role.hex }"
-          >★</span>
+            class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold"
+            :style="{ backgroundColor: role.hex + '1F', color: role.hex }"
+          >{{ initials(s.name) }}</span>
           <span>
-            <span class="block text-sm font-medium">
-              {{ card.homeroomTeacherName }}
-            </span>
-            <span class="block text-xs text-slate-500">
-              {{ t('classHub.roleHomeroom') }}
+            <span class="block text-sm font-medium">{{ s.name }}</span>
+            <span v-if="s.nis" class="block text-xs text-slate-500">
+              NIS {{ s.nis }}
             </span>
           </span>
-        </div>
-        <div class="p-3 text-sm text-slate-600">
-          {{ card?.studentCount ?? 0 }} {{ t('classHub.kpiStudents') }}
         </div>
       </div>
     </div>

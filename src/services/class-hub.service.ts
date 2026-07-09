@@ -5,8 +5,10 @@ import { api } from '@/lib/http';
 import {
   classCardFromJson,
   classFeedItemFromJson,
+  classMembersFromJson,
   type ClassCard,
   type ClassFeedItem,
+  type ClassMembers,
 } from '@/types/class-hub';
 
 function asRows(body: unknown): Record<string, unknown>[] {
@@ -17,6 +19,16 @@ function asRows(body: unknown): Record<string, unknown>[] {
   if (Array.isArray(data)) return data as Record<string, unknown>[];
   if (Array.isArray(body)) return body as Record<string, unknown>[];
   return [];
+}
+
+function asObject(body: unknown): Record<string, unknown> {
+  const data =
+    body && typeof body === 'object'
+      ? (body as { data?: unknown }).data
+      : undefined;
+  if (data && typeof data === 'object') return data as Record<string, unknown>;
+  if (body && typeof body === 'object') return body as Record<string, unknown>;
+  return {};
 }
 
 export const ClassHubService = {
@@ -47,5 +59,11 @@ export const ClassHubService = {
       },
     });
     return asRows(res.data).map(classFeedItemFromJson);
+  },
+
+  /** One class's "Anggota" roster (homeroom teacher + students). */
+  async members(classId: string): Promise<ClassMembers> {
+    const res = await api.get(`/classes/${classId}/members`);
+    return classMembersFromJson(asObject(res.data));
   },
 };

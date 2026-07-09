@@ -28,6 +28,8 @@
     "emptyListMsg": "Classes you teach or are homeroom of will appear here.",
     "emptyFeedTitle": "No activity yet",
     "emptyFeedMsg": "Share an assignment, material, or announcement to start this class.",
+    "emptyRosterTitle": "No students yet",
+    "emptyRosterMsg": "Enrolled students for this class will appear here.",
     "oversightTitle": "Class oversight",
     "oversightSubtitle": "Read-only · whole school",
     "needsAttention": "Needs attention",
