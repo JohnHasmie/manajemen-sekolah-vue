@@ -1,0 +1,100 @@
+// Types + JSON parsers for the class-first "Kelas" hub. Mirror the mobile
+// domain models (ClassCard / ClassFeedItem) and the backend response shapes
+// from GET /classes/mine and GET /classes/{id}/feed.
+
+export type ClassRoleInClass = 'wali_kelas' | 'guru_mapel' | null;
+
+export interface ClassCard {
+  id: string;
+  name: string;
+  gradeLevel: number | null;
+  studentCount: number;
+  isHomeroom: boolean;
+  isTeaching: boolean;
+  roleInClass: ClassRoleInClass;
+  homeroomTeacherName: string | null;
+  activeTugas: number;
+  needsGrading: number;
+  /** Admin oversight only — no class activity in the last 7 days ("sepi"). */
+  isSilent: boolean;
+}
+
+export type ClassFeedType =
+  | 'tugas'
+  | 'ujian'
+  | 'materi'
+  | 'pengumuman'
+  | 'nilai'
+  | 'unknown';
+
+export interface ClassFeedItem {
+  type: ClassFeedType;
+  id: string;
+  title: string;
+  subtitle: string | null;
+  occurredAt: string | null;
+  meta: Record<string, unknown>;
+  isRead: boolean;
+}
+
+function toInt(v: unknown): number {
+  if (typeof v === 'number') return Math.trunc(v);
+  if (typeof v === 'string') {
+    const n = parseInt(v, 10);
+    return Number.isNaN(n) ? 0 : n;
+  }
+  return 0;
+}
+
+export function classCardFromJson(json: Record<string, unknown>): ClassCard {
+  const homeroom = json.homeroom_teacher as
+    | Record<string, unknown>
+    | null
+    | undefined;
+  return {
+    id: String(json.id ?? ''),
+    name: String(json.name ?? ''),
+    gradeLevel: json.grade_level == null ? null : toInt(json.grade_level),
+    studentCount: toInt(json.student_count),
+    isHomeroom: json.is_homeroom === true,
+    isTeaching: json.is_teaching === true,
+    roleInClass: (json.role_in_class as ClassRoleInClass) ?? null,
+    homeroomTeacherName: homeroom ? String(homeroom.name ?? '') || null : null,
+    activeTugas: toInt(json.active_tugas),
+    needsGrading: toInt(json.needs_grading),
+    isSilent: json.is_silent === true,
+  };
+}
+
+export function isWaliKelas(c: ClassCard): boolean {
+  return c.roleInClass === 'wali_kelas' || c.isHomeroom;
+}
+
+const FEED_TYPES: ClassFeedType[] = [
+  'tugas',
+  'ujian',
+  'materi',
+  'pengumuman',
+  'nilai',
+];
+
+export function classFeedItemFromJson(
+  json: Record<string, unknown>,
+): ClassFeedItem {
+  const rawType = String(json.type ?? '');
+  const type = (FEED_TYPES as string[]).includes(rawType)
+    ? (rawType as ClassFeedType)
+    : 'unknown';
+  return {
+    type,
+    id: String(json.id ?? ''),
+    title: String(json.title ?? ''),
+    subtitle: json.subtitle == null ? null : String(json.subtitle),
+    occurredAt: json.occurred_at == null ? null : String(json.occurred_at),
+    meta:
+      json.meta && typeof json.meta === 'object'
+        ? (json.meta as Record<string, unknown>)
+        : {},
+    isRead: json.is_read === true,
+  };
+}

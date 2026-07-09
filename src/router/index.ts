@@ -203,6 +203,14 @@ const TeacherGradeRecapDetailView = () =>
   import('@/views/teacher/TeacherGradeRecapDetailView.vue');
 const TeacherClassActivityView = () =>
   import('@/views/teacher/TeacherClassActivityView.vue');
+const ClassHubListView = () => import('@/views/teacher/ClassHubListView.vue');
+const ClassHubView = () => import('@/views/teacher/ClassHubView.vue');
+const ParentClassHubListView = () =>
+  import('@/views/parent/ParentClassHubListView.vue');
+const ParentClassHubView = () =>
+  import('@/views/parent/ParentClassHubView.vue');
+const AdminClassOversightView = () =>
+  import('@/views/admin/AdminClassOversightView.vue');
 const TeacherMaterialView = () =>
   import('@/views/teacher/TeacherMaterialView.vue');
 const TeacherLessonPlanView = () =>
@@ -397,6 +405,21 @@ const routes: RouteRecordRaw[] = [
         name: 'admin.classes',
         component: AdminClassroomManagementView,
         meta: { role: 'admin' satisfies Role, needs: 'student-context' },
+      },
+      {
+        // Class-first read-only oversight (distinct from the class-management
+        // screen above, which stays at admin.classes / "Kelas").
+        path: 'admin/class-oversight',
+        name: 'admin.class-oversight',
+        component: AdminClassOversightView,
+        meta: { role: 'admin' satisfies Role, ability: 'school.class.view' },
+      },
+      {
+        path: 'admin/class-oversight/:id',
+        name: 'admin.class-oversight.detail',
+        component: ClassHubView,
+        props: (route) => ({ id: route.params.id, roleName: 'admin' }),
+        meta: { role: 'admin' satisfies Role, ability: 'activity.view' },
       },
       {
         path: 'admin/subjects',
@@ -934,6 +957,19 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'guru' satisfies Role, ability: 'academic.grade.recap.view' },
       },
       {
+        path: 'teacher/classes',
+        name: 'teacher.classes',
+        component: ClassHubListView,
+        meta: { role: 'guru' satisfies Role, ability: 'school.class.view' },
+      },
+      {
+        path: 'teacher/classes/:id',
+        name: 'teacher.classes.detail',
+        component: ClassHubView,
+        props: true,
+        meta: { role: 'guru' satisfies Role, ability: 'activity.view' },
+      },
+      {
         path: 'teacher/class-activity',
         name: 'teacher.class-activity',
         component: TeacherClassActivityView,
@@ -1017,6 +1053,19 @@ const routes: RouteRecordRaw[] = [
         path: 'parent',
         name: 'parent.home',
         component: ParentDashboardView,
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/classes',
+        name: 'parent.classes',
+        component: ParentClassHubListView,
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/classes/:id',
+        name: 'parent.classes.detail',
+        component: ParentClassHubView,
+        props: true,
         meta: { role: 'wali' satisfies Role },
       },
       {
