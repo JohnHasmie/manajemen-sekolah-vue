@@ -25,8 +25,20 @@ export interface AttendanceHolidayListFilters {
   end_date?: string;
 }
 
+/**
+ * Result of a CSV bulk import (MR 3 follow-up). `skipped` carries the
+ * 1-indexed line number and a human reason for every row the backend
+ * dropped so the FE can render the summary toast + an expandable list.
+ */
+export interface AttendanceHolidayImportResult {
+  imported: number;
+  updated: number;
+  skipped: { line: number; reason: string }[];
+}
+
 const Endpoints = {
   base: '/attendance-holidays',
+  import: '/attendance-holidays/import',
 } as const;
 
 export const AttendanceHolidaysService = {
@@ -52,5 +64,19 @@ export const AttendanceHolidaysService = {
 
   async destroy(id: string): Promise<void> {
     await api.delete(`${Endpoints.base}/${id}`);
+  },
+
+  /**
+   * Multipart CSV upload. Header row auto-detected on the backend;
+   * missing / bad type falls back to 'school'. Idempotent — re-
+   * uploading a corrected file just calls updateOrCreate row-by-row.
+   */
+  async importCsv(file: File): Promise<AttendanceHolidayImportResult> {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await api.post(Endpoints.import, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return (res.data?.data ?? { imported: 0, updated: 0, skipped: [] }) as AttendanceHolidayImportResult;
   },
 };

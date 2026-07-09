@@ -16,6 +16,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import {
   AttendanceHolidaysService,
   type AttendanceHoliday,
+  type AttendanceHolidayImportResult,
   type AttendanceHolidayType,
 } from '@/services/attendance-holidays.service';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
@@ -133,6 +134,37 @@ async function removeHoliday(id: string): Promise<void> {
     await AttendanceHolidaysService.destroy(id);
   } catch {
     holidays.value = backup;
+  }
+}
+
+// CSV import ------------------------------------------------------------
+
+const fileInput = ref<HTMLInputElement | null>(null);
+const isImporting = ref<boolean>(false);
+const importResult = ref<AttendanceHolidayImportResult | null>(null);
+const importError = ref<string | null>(null);
+
+function triggerImport(): void {
+  fileInput.value?.click();
+}
+
+async function onFileChosen(evt: Event): Promise<void> {
+  const input = evt.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  isImporting.value = true;
+  importResult.value = null;
+  importError.value = null;
+  try {
+    importResult.value = await AttendanceHolidaysService.importCsv(file);
+    await loadHolidays();
+  } catch (e) {
+    importError.value = (e as Error).message ?? 'Gagal mengimpor CSV.';
+  } finally {
+    isImporting.value = false;
+    // Reset the input so uploading the same file again fires the change
+    // event a second time — otherwise Chrome/Firefox suppress it.
+    input.value = '';
   }
 }
 
@@ -310,6 +342,72 @@ watch(currentYear, loadHolidays);
         class="col-span-full text-2xs text-rose-700 font-bold"
       >
         {{ formError }}
+      </p>
+    </section>
+
+    <!-- CSV bulk import (MR 3 follow-up).
+         Hidden file input clicked via the visible "Impor CSV" button.
+         Result banner shows counts + skipped rows so the admin knows
+         exactly what landed and what didn't. -->
+    <section class="bg-white border border-slate-200 rounded-xl p-3">
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <div>
+          <p class="text-xs font-bold text-slate-800">Impor CSV libur</p>
+          <p class="text-2xs text-slate-500">
+            Format:
+            <code class="bg-slate-100 px-1 rounded">tanggal,nama,tipe</code>.
+            Baris header opsional; kolom tipe boleh kosong (default sekolah).
+          </p>
+        </div>
+        <button
+          type="button"
+          class="text-xs font-bold px-3 py-2 rounded border border-brand-cobalt text-brand-cobalt disabled:opacity-50"
+          :disabled="isImporting"
+          @click="triggerImport"
+        >
+          <NavIcon name="upload" :size="12" class="inline align-[-2px] mr-1" />
+          {{ isImporting ? 'Mengimpor…' : 'Impor CSV' }}
+        </button>
+        <input
+          ref="fileInput"
+          type="file"
+          accept=".csv,text/csv"
+          class="hidden"
+          @change="onFileChosen"
+        />
+      </div>
+
+      <!-- Result banner — sticks around until the next import.
+           Shows counts prominently; expandable list for skipped rows. -->
+      <div
+        v-if="importResult"
+        class="mt-2 bg-emerald-50 border border-emerald-200 rounded p-2 text-2xs"
+      >
+        <p class="font-bold text-emerald-900">
+          Selesai — {{ importResult.imported }} ditambah,
+          {{ importResult.updated }} diperbarui,
+          {{ importResult.skipped.length }} dilewati.
+        </p>
+        <details v-if="importResult.skipped.length > 0" class="mt-1">
+          <summary class="cursor-pointer text-emerald-900 font-bold">
+            Lihat baris yang dilewati
+          </summary>
+          <ul class="mt-1 space-y-0.5">
+            <li
+              v-for="row in importResult.skipped"
+              :key="row.line"
+              class="text-rose-700"
+            >
+              Baris {{ row.line }}: {{ row.reason }}
+            </li>
+          </ul>
+        </details>
+      </div>
+      <p
+        v-if="importError"
+        class="mt-2 text-2xs text-rose-700 font-bold"
+      >
+        {{ importError }}
       </p>
     </section>
   </div>
