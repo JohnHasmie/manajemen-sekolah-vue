@@ -131,7 +131,13 @@ function cellDateLabel(entry: StudentHeatmapEntry, cellIdx: number): string {
 }
 
 function goBack() {
-  router.push({ name: 'admin.attendance' });
+  // Route name got renamed during the modular-SaaS split — the
+  // admin-side attendance dashboard now lives under the
+  // `admin.student-attendance` name via `AdminStudentAttendanceHub`.
+  // The old `admin.attendance` name still resolves for the QR / cards
+  // routes but not for the top-level dashboard, so `router.push` here
+  // was a silent no-op. Slack 1783562022 (Luay 2026-07-09).
+  router.push({ name: 'admin.student-attendance' });
 }
 
 const headerMeta = computed(() => {
