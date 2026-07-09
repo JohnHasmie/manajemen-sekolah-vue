@@ -20,14 +20,9 @@ import { AuthService } from '@/services/auth.service';
 import { SchoolService } from '@/services/schools.service';
 import { TeacherService } from '@/services/teachers.service';
 import { useMeStore } from '@/stores/me';
+import { canonicalRole, ROLE_ADMIN, ROLE_TEACHER } from '@/utils/role';
 import { storage, StorageKeys } from '@/lib/storage';
-import type {
-  AuthResponse,
-  AuthStep,
-  Role,
-  School,
-  User,
-} from '@/types/auth';
+import type { AuthResponse, AuthStep, Role, School, User } from '@/types/auth';
 
 /**
  * Normalizes backend role strings to canonical FE keys used by the
@@ -74,11 +69,7 @@ function normalizeSchool(raw: any): School {
     id: String(raw.id ?? raw.school_id ?? raw.sekolah_id ?? ''),
     school_id: raw.school_id ?? raw.id,
     name: String(
-      raw.name ??
-        raw.school_name ??
-        raw.nama_sekolah ??
-        raw.nama ??
-        'Sekolah',
+      raw.name ?? raw.school_name ?? raw.nama_sekolah ?? raw.nama ?? 'Sekolah',
     ),
     school_name: raw.school_name ?? raw.name ?? raw.nama_sekolah,
   } as School;
@@ -357,7 +348,8 @@ export const useAuthStore = defineStore('auth', {
           res.school ?? res.sekolah ?? res.selectedSchool ?? null;
         if (schoolFromRes) {
           const normalized = normalizeSchool(schoolFromRes);
-          this.schoolId = normalized.id || normalized.school_id || this.schoolId;
+          this.schoolId =
+            normalized.id || normalized.school_id || this.schoolId;
           if (this.schoolId) storage.set(StorageKeys.schoolId, this.schoolId);
         }
         this.step = 'role';
@@ -369,7 +361,10 @@ export const useAuthStore = defineStore('auth', {
         // auto-pick branch), fall back to the previously known role
         // OR the role we last persisted to localStorage.
         const normalized = normalizeRole(res.user.role);
-        res.user.role = (normalized ?? this.role ?? this.user?.role ?? 'admin') as Role;
+        res.user.role = (normalized ??
+          this.role ??
+          this.user?.role ??
+          'admin') as Role;
         // Pick up `school_name` (alias `nama_sekolah`) the backend
         // returns at the user level. Falls back to the top-level
         // school object some endpoints return after switchSchool.
@@ -460,7 +455,9 @@ export const useAuthStore = defineStore('auth', {
       // store ↔ preferences store ↔ settings service ↔ http ↔ auth).
       if (user.preferred_language) {
         import('./preferences')
-          .then((m) => m.usePreferencesStore().hydrateFromUser(user.preferred_language))
+          .then((m) =>
+            m.usePreferencesStore().hydrateFromUser(user.preferred_language),
+          )
           .catch(() => {
             // non-fatal — i18n stays on whatever the local prefs say
           });
@@ -488,7 +485,11 @@ export const useAuthStore = defineStore('auth', {
 
     /** Drops back one step (used by "Kembali" buttons in OTP / picker views). */
     goBack() {
-      if (this.step === 'otp' || this.step === 'school' || this.step === 'role') {
+      if (
+        this.step === 'otp' ||
+        this.step === 'school' ||
+        this.step === 'role'
+      ) {
         this.step = 'login';
         this.lastResponse = null;
         this.error = null;
@@ -531,7 +532,9 @@ export const useAuthStore = defineStore('auth', {
         // the auth↔prefs circular.
         if (user.preferred_language) {
           import('./preferences')
-            .then((m) => m.usePreferencesStore().hydrateFromUser(user.preferred_language))
+            .then((m) =>
+              m.usePreferencesStore().hydrateFromUser(user.preferred_language),
+            )
             .catch(() => {
               // non-fatal
             });
@@ -666,7 +669,7 @@ export const useAuthStore = defineStore('auth', {
         // the http layer will send it as X-Tenant-ID and the backend
         // resolves the tenant.
         const only = schools[0];
-        this.schoolId = (only.id ?? only.school_id) ?? this.schoolId;
+        this.schoolId = only.id ?? only.school_id ?? this.schoolId;
         if (this.schoolId) storage.set(StorageKeys.schoolId, this.schoolId);
         this.step = 'done';
       } else {
@@ -703,10 +706,11 @@ export const useAuthStore = defineStore('auth', {
       // that the user was legitimately routed to post-Google-return.
       if (this.step === 'school' || this.step === 'role') return;
       try {
+        const cr = canonicalRole(this.activeRole);
         const isTeacherLike =
-          this.activeRole === 'guru' ||
+          cr === ROLE_TEACHER ||
           this.activeRole === 'wali_kelas' ||
-          this.activeRole === 'admin';
+          cr === ROLE_ADMIN;
         const [schools, roles, activeSchool, teacherProfile] =
           await Promise.all([
             AuthService.listSchools().catch(() => null),
@@ -882,8 +886,11 @@ export const useAuthStore = defineStore('auth', {
      */
     _stripDapatBuatDemo(res: AuthResponse): AuthResponse {
       if (res?.dapat_buat_demo) {
-        const { dapat_buat_demo: _ignored, wizard_resume: _ignored2, ...rest } =
-          res as AuthResponse & { wizard_resume?: unknown };
+        const {
+          dapat_buat_demo: _ignored,
+          wizard_resume: _ignored2,
+          ...rest
+        } = res as AuthResponse & { wizard_resume?: unknown };
         return rest as AuthResponse;
       }
       return res;
@@ -965,7 +972,9 @@ export const useAuthStore = defineStore('auth', {
       storage.set(StorageKeys.role, role);
 
       if (!this.schoolId) {
-        this._setError('School ID tidak ditemukan. Silakan pilih sekolah kembali.');
+        this._setError(
+          'School ID tidak ditemukan. Silakan pilih sekolah kembali.',
+        );
         this.step = 'school';
         return;
       }
@@ -1025,11 +1034,14 @@ export const useAuthStore = defineStore('auth', {
       // Snapshot token before any call — Google login wrote it, and
       // we must NOT lose it across the switchSchool/Role round-trips
       // even if the backend response decides to return token=null.
-      const preservedToken = this.token ?? storage.get<string>(StorageKeys.token);
+      const preservedToken =
+        this.token ?? storage.get<string>(StorageKeys.token);
 
       const schools = await AuthService.listSchools();
       if (!schools || schools.length === 0) {
-        throw new Error('Sekolah demo belum tertaut ke akun Anda. Mohon muat ulang halaman.');
+        throw new Error(
+          'Sekolah demo belum tertaut ke akun Anda. Mohon muat ulang halaman.',
+        );
       }
       const firstId = String(schools[0].id ?? schools[0].school_id ?? '');
       if (!firstId) {
@@ -1052,10 +1064,14 @@ export const useAuthStore = defineStore('auth', {
         // Find admin; if not present (single_role teacher/parent), fall
         // back to whatever the user actually has so they still land
         // somewhere instead of being stuck on the picker.
-        const pick = (this.roles as string[]).find((r) => r === 'admin')
-          ?? (this.roles[0] as string | undefined);
+        const pick =
+          (this.roles as string[]).find((r) => r === 'admin') ??
+          (this.roles[0] as string | undefined);
         if (pick) {
-          const res2 = await AuthService.switchRole(pick as Role, this.schoolId);
+          const res2 = await AuthService.switchRole(
+            pick as Role,
+            this.schoolId,
+          );
           this._applyResponse(res2);
         }
       }
@@ -1108,7 +1124,10 @@ export const useAuthStore = defineStore('auth', {
         // (or the request never reached it). Either way the client is
         // logging out locally regardless. Log for diagnostics only.
         // eslint-disable-next-line no-console
-        console.warn('[auth] server logout failed, clearing session locally', e);
+        console.warn(
+          '[auth] server logout failed, clearing session locally',
+          e,
+        );
       } finally {
         // ── Local teardown — ALWAYS runs ──────────────────────────────
         this.reset();
