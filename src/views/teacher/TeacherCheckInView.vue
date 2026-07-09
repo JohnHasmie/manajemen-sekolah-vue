@@ -156,14 +156,20 @@ const submitting = ref(false);
  */
 const pickedShiftId = ref<string | null>(null);
 /**
- * Shift ids the user already checked in for today. Backend /config
- * currently returns just ONE `state.record` (the newest); a follow-up
- * MR should surface `state.today_records[]` so the picker can mute
- * every completed shift. For now this stays empty — schools with one
- * check-in per day don't notice, and multi-shift schools still get
- * useful auto-pick + explicit override.
+ * Shift ids the user already checked in for today, derived from the
+ * config's `state.today_records[]` (backend MR !367). Older backend
+ * builds omit the field — the computed defaults to an empty list so
+ * multi-shift schools running an older API still see the picker,
+ * they just don't get the "mute completed shift" cue. Nulls (single-
+ * shift rows on multi-shift days? impossible, but defensive) are
+ * filtered out so the picker's Set lookup stays clean.
  */
-const completedShiftIds = ref<string[]>([]);
+const completedShiftIds = computed<string[]>(() => {
+  const rows = config.value?.state?.today_records ?? [];
+  return rows
+    .map((r) => r.shift_id)
+    .filter((id): id is string => typeof id === 'string' && id.length > 0);
+});
 /** True once the parallel auto camera+location kick-off has run. */
 const autoStarted = ref(false);
 

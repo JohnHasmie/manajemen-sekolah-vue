@@ -233,6 +233,14 @@ export interface TeacherAttendanceState {
   has_checked_out: boolean;
   can_check_out: boolean;
   record: TeacherAttendanceRecord | null;
+  /**
+   * Every row for today across all shifts, newest first (backend
+   * MR !367). Single-shift schools get 0-or-1 elements; multi-shift
+   * schools get one per completed shift. Optional so older FE builds
+   * that don't read this key keep working — the shift picker
+   * gracefully treats missing as "no completed shifts".
+   */
+  today_records?: TeacherAttendanceRecord[];
 }
 
 /** Full GET /teacher-attendance/config bootstrap payload. */
