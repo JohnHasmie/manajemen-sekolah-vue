@@ -65,9 +65,15 @@ const TABS = computed<Tab[]>(() => [
 ]);
 
 const activeTab = computed<Tab['key']>(() => {
+  // Match on the ACTUAL router-name suffix — the child routes use
+  // English keys (`admin.finance.payments`, `admin.finance.types`),
+  // not the Indonesian tab labels this composable used to look for
+  // (`pembayaran`, `jenis`). Pre-fix the two `if`s never matched, so
+  // regardless of which sub-tab was open the active-pill stayed on
+  // Tagihan (Slack 1783563140, Yahya 2026-07-09).
   const name = String(route.name ?? '');
-  if (name.includes('pembayaran')) return 'pembayaran';
-  if (name.includes('jenis')) return 'jenis';
+  if (name.endsWith('.payments')) return 'pembayaran';
+  if (name.endsWith('.types')) return 'jenis';
   return 'tagihan';
 });
 
