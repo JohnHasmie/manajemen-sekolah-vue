@@ -59,7 +59,14 @@ export const useRbacStore = defineStore('rbac', () => {
 
   // ── Derived ────────────────────────────────────────────────────────
   const filteredRoles = computed<RbacRole[]>(() => {
-    let source = roles.value;
+    // Yahya 2026-07-09 (Slack 1783574909): hide the student role from
+    // the admin roles list — students don't have any actionable
+    // permissions in the current app and their presence in the picker
+    // was confusing admins. Filter by role_type (server enum) and key
+    // prefix so the guard survives a rename of the display label.
+    let source = roles.value.filter(
+      (r) => r.role_type !== 'student' && !r.key.startsWith('siswa'),
+    );
     if (filter.value === 'system') source = source.filter((r) => r.is_system);
     if (filter.value === 'custom') source = source.filter((r) => !r.is_system);
     const q = search.value.trim().toLowerCase();
