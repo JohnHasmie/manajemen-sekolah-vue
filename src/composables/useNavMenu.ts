@@ -111,6 +111,14 @@ const ADMIN_NAV: NavSection[] = [
         icon: 'layers',
         needs: 'student-context',
       },
+      // Class-first read-only oversight (health + Perlu Perhatian), distinct
+      // from the class-management entry above.
+      {
+        to: '/admin/class-oversight',
+        labelKey: 'classHub.oversightTitle',
+        icon: 'eye',
+        ability: 'school.class.view',
+      },
       {
         to: '/admin/subjects',
         labelKey: 'nav.subjects',
@@ -265,6 +273,15 @@ const TEACHER_NAV: NavSection[] = [
       // orphaned from the nav — re-added, Wave 7. Ungated: every
       // teacher can see their own priority inbox.
       { to: '/teacher/inbox', labelKey: 'nav.inbox', icon: 'inbox' },
+      // Class-first "Kelas" hub — promoted to the top as the primary
+      // working surface (the per-class Riwayat Sesi / Tugas / Anggota /
+      // Nilai). The older per-module views stay under their sections.
+      {
+        to: '/teacher/classes',
+        labelKey: 'nav.classHub',
+        icon: 'users',
+        ability: 'school.class.view',
+      },
       {
         to: '/teacher/my-attendance',
         labelKey: 'nav.myAttendance',
@@ -479,6 +496,9 @@ const PARENT_NAV: NavSection[] = [
       // the nav — re-added, Wave 7. Ungated: every parent can see
       // their own priority inbox.
       { to: '/parent/inbox', labelKey: 'nav.inbox', icon: 'inbox' },
+      // Class-first "Kelas" hub — the child's per-class Riwayat Sesi /
+      // Tugas / Anggota / Nilai (read-only). Promoted to the top.
+      { to: '/parent/classes', labelKey: 'nav.classHub', icon: 'users' },
       {
         to: '/parent/announcements',
         labelKey: 'nav.announcements',
