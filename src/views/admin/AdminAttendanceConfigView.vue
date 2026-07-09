@@ -25,6 +25,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import GeofenceMapPicker from '@/components/feature/GeofenceMapPicker.vue';
+import MultiGeofenceSettingsPanel from '@/components/feature/MultiGeofenceSettingsPanel.vue';
 import { useToast } from '@/composables/useToast';
 import { useConfirm } from '@/composables/useConfirm';
 import type { TeacherAttendanceSettings } from '@/types/teacher-attendance';
@@ -890,6 +891,15 @@ function jumpToSection(id: string): void {
             </span>
           </label>
         </section>
+
+        <!-- Multi-location (Slack 1783559232 — Luay/Yahya). Sits directly
+             below the single-loc section so admins with >1 campus can add
+             more locations without leaving the config screen. Empty list
+             = check-in falls back to the single-loc coordinates above. -->
+        <MultiGeofenceSettingsPanel
+          :school-lat="form.school_latitude ?? null"
+          :school-lng="form.school_longitude ?? null"
+        />
 
         <!-- QR -->
         <section

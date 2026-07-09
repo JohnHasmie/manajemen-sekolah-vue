@@ -117,6 +117,38 @@ export interface TeacherAttendanceSettings {
   max_daily_shifts_per_person?: number;
 }
 
+/**
+ * Multi-location geofence — one campus/site in a school with N
+ * physical locations. Backend contract (Slack 1783559232 + backend
+ * MR !375). Empty list means the school hasn't migrated to multi-
+ * loc yet; the check-in falls back to the legacy single-loc
+ * columns above.
+ */
+export interface TeacherAttendanceGeofence {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  radius_m: number;
+  is_primary: boolean;
+  is_active: boolean;
+}
+
+/**
+ * Client-side draft used by the add/edit modal. `id` absent = create
+ * mode; present = update. Backend accepts partial updates so unset
+ * flags fall through to their prior values.
+ */
+export interface TeacherAttendanceGeofenceDraft {
+  id?: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  radius_m: number;
+  is_primary: boolean;
+  is_active: boolean;
+}
+
 /** Sensible client-side defaults mirroring the backend defaults(). */
 export const DEFAULT_TEACHER_ATTENDANCE_SETTINGS: TeacherAttendanceSettings = {
   camera_required: true,

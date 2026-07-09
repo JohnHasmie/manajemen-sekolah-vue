@@ -29,6 +29,8 @@ import type {
   TeacherAttendanceAdminSummary,
   TeacherAttendanceAdminSummaryFilters,
   TeacherAttendanceConfig,
+  TeacherAttendanceGeofence,
+  TeacherAttendanceGeofenceDraft,
   TeacherAttendanceHistoryFilters,
   TeacherAttendanceListResult,
   TeacherAttendanceOwnSummary,
@@ -58,6 +60,7 @@ const Endpoints = {
   rules: '/teacher-attendance/rules',
   report: '/teacher-attendance/report',
   reportSummary: '/teacher-attendance/report/summary',
+  geofences: '/teacher-attendance/geofences',
 } as const;
 
 /**
@@ -440,6 +443,59 @@ export const TeacherAttendanceService = {
       throw new Error(
         humanError(e, 'Gagal menyimpan pengaturan presensi guru.'),
       );
+    }
+  },
+
+  /**
+   * GET /teacher-attendance/geofences — list all multi-location
+   * geofences for the current school (Slack 1783559232, backend
+   * MR !375). Sorted primary-first then alphabetical by name.
+   */
+  async listGeofences(): Promise<TeacherAttendanceGeofence[]> {
+    try {
+      const res = await api.get(Endpoints.geofences);
+      return (res.data?.data ?? []) as TeacherAttendanceGeofence[];
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat daftar lokasi geofence.'));
+    }
+  },
+
+  /**
+   * POST /teacher-attendance/geofences — create a new multi-loc row.
+   * Set `is_primary=true` and the server demotes the previous
+   * primary inside a DB transaction.
+   */
+  async createGeofence(
+    draft: TeacherAttendanceGeofenceDraft,
+  ): Promise<TeacherAttendanceGeofence> {
+    try {
+      const res = await api.post(Endpoints.geofences, draft);
+      return (res.data?.data ?? draft) as TeacherAttendanceGeofence;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menyimpan lokasi geofence.'));
+    }
+  },
+
+  /**
+   * PATCH /teacher-attendance/geofences/{id} — partial update.
+   */
+  async updateGeofence(
+    id: string,
+    draft: Partial<TeacherAttendanceGeofenceDraft>,
+  ): Promise<TeacherAttendanceGeofence> {
+    try {
+      const res = await api.patch(`${Endpoints.geofences}/${id}`, draft);
+      return (res.data?.data ?? draft) as TeacherAttendanceGeofence;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memperbarui lokasi geofence.'));
+    }
+  },
+
+  async deleteGeofence(id: string): Promise<void> {
+    try {
+      await api.delete(`${Endpoints.geofences}/${id}`);
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menghapus lokasi geofence.'));
     }
   },
 
