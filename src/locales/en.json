@@ -12,6 +12,8 @@
     "kpiStudents": "Students",
     "kpiActiveAssignments": "Active",
     "kpiNeedsGrading": "To grade",
+    "gradeNow": "Grade now",
+    "needsGradingBanner": "submissions need grading",
     "tabSessionLog": "Session log",
     "tabAssignments": "Assignments",
     "tabMembers": "Members",

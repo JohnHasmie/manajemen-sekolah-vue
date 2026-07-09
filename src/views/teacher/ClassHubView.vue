@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import type { RouteLocationRaw } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import { useRoleColor } from '@/composables/useRoleColor';
 import { ClassHubService } from '@/services/class-hub.service';
@@ -25,6 +26,35 @@ const props = withDefaults(
 );
 const { t } = useI18n();
 const role = useRoleColor(() => props.roleName);
+
+// Deep-link a feed card to the underlying module, scoped to this class.
+// Guru-only — parent/admin hubs are read-only observers (mirrors the mobile
+// ClassHubDetailScreen._feedTapFor). Returns null when the card isn't
+// actionable (nilai/unknown, or a non-guru viewer).
+function feedTarget(item: ClassFeedItem): RouteLocationRaw | null {
+  if (props.roleName !== 'guru') return null;
+  switch (item.type) {
+    case 'tugas':
+    case 'ujian':
+    case 'materi':
+      return { name: 'teacher.class-activity', query: { class_id: props.id } };
+    case 'pengumuman':
+      return { name: 'teacher.announcements' };
+    default:
+      return null;
+  }
+}
+
+// Inline grading: guru with a backlog can jump straight to the class-scoped
+// class-activity list (where submissions are graded) — from the "Perlu
+// dinilai" KPI and the Tugas-tab banner. Parent/admin stay read-only.
+const gradingTarget: RouteLocationRaw = {
+  name: 'teacher.class-activity',
+  query: { class_id: props.id },
+};
+const showGrading = computed(
+  () => props.roleName === 'guru' && (card.value?.needsGrading ?? 0) > 0,
+);
 
 type Tab = 'riwayat' | 'tugas' | 'anggota' | 'nilai';
 const tab = ref<Tab>('riwayat');
@@ -79,7 +109,10 @@ watch(tab, (t) => {
 });
 
 const homeroomName = computed(
-  () => members.value?.homeroomTeacherName ?? card.value?.homeroomTeacherName ?? null,
+  () =>
+    members.value?.homeroomTeacherName ??
+    card.value?.homeroomTeacherName ??
+    null,
 );
 const roster = computed(() => members.value?.students ?? []);
 
@@ -147,15 +180,21 @@ const buckets = computed<Bucket[]>(() => {
   return out;
 });
 
-const TYPE_STYLE: Record<ClassFeedType, { bg: string; fg: string; key: string }> =
-  {
-    tugas: { bg: '#FAEEDA', fg: '#854F0B', key: 'classHub.typeAssignment' },
-    ujian: { bg: '#FCEBEB', fg: '#791F1F', key: 'classHub.typeExam' },
-    materi: { bg: '#EAF3DE', fg: '#27500A', key: 'classHub.typeMaterial' },
-    pengumuman: { bg: '#E6F1FB', fg: '#0C447C', key: 'classHub.typeAnnouncement' },
-    nilai: { bg: '#E1F5EE', fg: '#085041', key: 'classHub.typeGrade' },
-    unknown: { bg: '#F1EFE8', fg: '#5F5E5A', key: 'classHub.typeMaterial' },
-  };
+const TYPE_STYLE: Record<
+  ClassFeedType,
+  { bg: string; fg: string; key: string }
+> = {
+  tugas: { bg: '#FAEEDA', fg: '#854F0B', key: 'classHub.typeAssignment' },
+  ujian: { bg: '#FCEBEB', fg: '#791F1F', key: 'classHub.typeExam' },
+  materi: { bg: '#EAF3DE', fg: '#27500A', key: 'classHub.typeMaterial' },
+  pengumuman: {
+    bg: '#E6F1FB',
+    fg: '#0C447C',
+    key: 'classHub.typeAnnouncement',
+  },
+  nilai: { bg: '#E1F5EE', fg: '#085041', key: 'classHub.typeGrade' },
+  unknown: { bg: '#F1EFE8', fg: '#5F5E5A', key: 'classHub.typeMaterial' },
+};
 
 function relTime(iso: string | null): string {
   if (!iso) return '';
@@ -192,7 +231,8 @@ const roleLabel = computed(() => {
           class="text-lg leading-none"
           :style="{ color: role.hex }"
           :aria-label="t('classHub.back')"
-        >‹</RouterLink>
+          >‹</RouterLink
+        >
         <div>
           <h1 class="text-base font-medium" :style="{ color: role.hex }">
             {{ card?.name ?? '' }}
@@ -209,7 +249,10 @@ const roleLabel = computed(() => {
             {{ t('classHub.kpiStudents') }}
           </div>
         </div>
-        <div class="flex-1 border-l pl-2" :style="{ borderColor: role.hex + '40' }">
+        <div
+          class="flex-1 border-l pl-2"
+          :style="{ borderColor: role.hex + '40' }"
+        >
           <div class="text-base font-medium" :style="{ color: role.hex }">
             {{ card.activeTugas }}
           </div>
@@ -217,14 +260,24 @@ const roleLabel = computed(() => {
             {{ t('classHub.kpiActiveAssignments') }}
           </div>
         </div>
-        <div class="flex-1 border-l pl-2" :style="{ borderColor: role.hex + '40' }">
-          <div class="text-base font-medium" :style="{ color: role.hex }">
+        <component
+          :is="showGrading ? 'RouterLink' : 'div'"
+          :to="showGrading ? gradingTarget : undefined"
+          class="flex-1 border-l pl-2 block"
+          :class="showGrading ? 'cursor-pointer' : ''"
+          :style="{ borderColor: role.hex + '40' }"
+        >
+          <div
+            class="text-base font-medium flex items-center gap-0.5"
+            :style="{ color: role.hex }"
+          >
             {{ card.needsGrading }}
+            <span v-if="showGrading" aria-hidden="true">›</span>
           </div>
           <div class="text-[11px]" :style="{ color: role.hex }">
             {{ t('classHub.kpiNeedsGrading') }}
           </div>
-        </div>
+        </component>
       </div>
     </header>
 
@@ -234,8 +287,12 @@ const roleLabel = computed(() => {
         :key="tb.key"
         type="button"
         class="pb-2 text-sm -mb-px border-b-2 transition"
-        :class="tab === tb.key ? 'font-medium' : 'text-slate-500 border-transparent'"
-        :style="tab === tb.key ? { color: role.hex, borderColor: role.hex } : {}"
+        :class="
+          tab === tb.key ? 'font-medium' : 'text-slate-500 border-transparent'
+        "
+        :style="
+          tab === tb.key ? { color: role.hex, borderColor: role.hex } : {}
+        "
         @click="tab = tb.key"
       >
         {{ t(tb.labelKey) }}
@@ -250,7 +307,8 @@ const roleLabel = computed(() => {
         <span
           class="w-9 h-9 rounded-full flex items-center justify-center"
           :style="{ backgroundColor: role.hex + '26', color: role.hex }"
-        >★</span>
+          >★</span
+        >
         <span>
           <span class="block text-sm font-medium">{{ homeroomName }}</span>
           <span class="block text-xs text-slate-500">
@@ -263,7 +321,10 @@ const roleLabel = computed(() => {
         {{ roster.length }} {{ t('classHub.kpiStudents') }}
       </p>
 
-      <div v-if="membersLoading" class="py-8 text-center text-sm text-slate-500">
+      <div
+        v-if="membersLoading"
+        class="py-8 text-center text-sm text-slate-500"
+      >
         {{ t('common.loading') }}
       </div>
       <div v-else-if="membersError" class="py-8 text-center">
@@ -297,7 +358,8 @@ const roleLabel = computed(() => {
           <span
             class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold"
             :style="{ backgroundColor: role.hex + '1F', color: role.hex }"
-          >{{ initials(s.name) }}</span>
+            >{{ initials(s.name) }}</span
+          >
           <span>
             <span class="block text-sm font-medium">{{ s.name }}</span>
             <span v-if="s.nis" class="block text-xs text-slate-500">
@@ -315,13 +377,35 @@ const roleLabel = computed(() => {
       :empty-description="t('classHub.emptyFeedMsg')"
     >
       <div class="space-y-4">
+        <RouterLink
+          v-if="tab === 'tugas' && showGrading"
+          :to="gradingTarget"
+          class="flex items-center gap-2 rounded-xl px-3.5 py-2.5"
+          :style="{ backgroundColor: role.hex + '14' }"
+        >
+          <span :style="{ color: role.hex }">✎</span>
+          <span class="text-sm font-medium flex-1" :style="{ color: role.hex }">
+            {{ card?.needsGrading ?? 0 }}
+            {{ t('classHub.needsGradingBanner') }}
+          </span>
+          <span class="text-sm font-semibold" :style="{ color: role.hex }">
+            {{ t('classHub.gradeNow') }} ›
+          </span>
+        </RouterLink>
         <section v-for="b in buckets" :key="b.key">
           <h2 class="text-xs font-medium text-slate-500 mb-2">{{ b.key }}</h2>
           <div class="space-y-2.5">
-            <div
+            <component
+              :is="feedTarget(it) ? 'RouterLink' : 'div'"
               v-for="it in b.items"
               :key="it.type + it.id"
-              class="bg-white rounded-xl border border-slate-200 p-3"
+              :to="feedTarget(it) ?? undefined"
+              class="block bg-white rounded-xl border border-slate-200 p-3"
+              :class="
+                feedTarget(it)
+                  ? 'hover:border-slate-300 hover:shadow-sm transition cursor-pointer'
+                  : ''
+              "
             >
               <div class="flex items-center justify-between">
                 <span
@@ -330,16 +414,19 @@ const roleLabel = computed(() => {
                     background: TYPE_STYLE[it.type].bg,
                     color: TYPE_STYLE[it.type].fg,
                   }"
-                >{{ t(TYPE_STYLE[it.type].key) }}</span>
+                  >{{ t(TYPE_STYLE[it.type].key) }}</span
+                >
                 <span class="text-[11px] text-slate-400">
                   {{ relTime(it.occurredAt) }}
                 </span>
               </div>
-              <p class="text-sm font-medium mt-2">{{ it.title }}</p>
+              <p class="text-sm font-medium mt-2 text-slate-900">
+                {{ it.title }}
+              </p>
               <p v-if="it.subtitle" class="text-xs text-slate-500 mt-1">
                 {{ it.subtitle }}
               </p>
-            </div>
+            </component>
           </div>
         </section>
       </div>
