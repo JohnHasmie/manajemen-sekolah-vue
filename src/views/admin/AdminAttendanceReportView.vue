@@ -291,7 +291,13 @@ function openDetail(r: AdminAttendanceSummary) {
 }
 
 function goBack() {
-  router.push({ name: 'admin.attendance' });
+  // Same fix as the tingkat-heatmap view (!701) — the attendance
+  // dashboard route was renamed to `admin.student-attendance` during
+  // the modular-SaaS split. Pushing the old `admin.attendance` name
+  // silently no-op'd, so the back button did nothing (Luay 2026-07-09
+  // Slack 1783562022 follow-up: "ini terjadi juga pada halaman
+  // laporan persiswa").
+  router.push({ name: 'admin.student-attendance' });
 }
 
 const headerMeta = computed(() =>
