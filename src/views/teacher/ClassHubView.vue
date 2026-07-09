@@ -10,7 +10,15 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { RouteLocationRaw } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
+import SegmentedControl from '@/components/filters/SegmentedControl.vue';
+import KpiStripCards, {
+  type KpiCard,
+} from '@/components/feature/KpiStripCards.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useRoleColor } from '@/composables/useRoleColor';
+import type { Role } from '@/types/auth';
+import type { StatusBadgeTone } from '@/types/status-badge';
 import { ClassHubService } from '@/services/class-hub.service';
 import {
   isWaliKelas,
@@ -25,7 +33,17 @@ const props = withDefaults(
   { roleName: 'guru', studentId: undefined },
 );
 const { t } = useI18n();
-const role = useRoleColor(() => props.roleName);
+// `roleName` is a plain string prop; narrow it to Role for the shared
+// role-aware components (useRoleColor / BrandPageHeader).
+const headerRole = computed<Role>(() => props.roleName as Role);
+const role = useRoleColor(() => props.roleName as Role);
+
+// Back target mirrors the role's list surface (mirrors the header link).
+const backTarget = computed<RouteLocationRaw>(() => {
+  if (props.roleName === 'admin') return { name: 'admin.class-oversight' };
+  if (props.roleName === 'wali') return { name: 'parent.classes' };
+  return { name: 'teacher.classes' };
+});
 
 // Deep-link a feed card to the underlying module, scoped to this class.
 // Guru-only — parent/admin hubs are read-only observers (mirrors the mobile
@@ -129,6 +147,37 @@ const tabs: { key: Tab; labelKey: string }[] = [
   { key: 'anggota', labelKey: 'classHub.tabMembers' },
   { key: 'nilai', labelKey: 'classHub.tabGrades' },
 ];
+const tabOptions = computed(() =>
+  tabs.map((tb) => ({ key: tb.key, label: t(tb.labelKey) })),
+);
+
+// Shared KPI strip — Siswa · Tugas aktif · Perlu dinilai. The grading
+// tap-through lives in the Tugas-tab banner (KpiStripCards is display-only).
+const kpiCards = computed<KpiCard[]>(() => {
+  const c = card.value;
+  if (!c) return [];
+  return [
+    {
+      icon: 'users',
+      label: t('classHub.kpiStudents'),
+      value: c.studentCount,
+      tone: 'brand',
+    },
+    {
+      icon: 'check-square',
+      label: t('classHub.kpiActiveAssignments'),
+      value: c.activeTugas,
+      tone: 'violet',
+    },
+    {
+      icon: 'edit',
+      label: t('classHub.kpiNeedsGrading'),
+      value: c.needsGrading,
+      tone: c.needsGrading > 0 ? 'amber' : 'green',
+      accented: c.needsGrading > 0,
+    },
+  ];
+});
 
 const visibleItems = computed(() => {
   if (tab.value === 'tugas') {
@@ -180,21 +229,19 @@ const buckets = computed<Bucket[]>(() => {
   return out;
 });
 
+// Feed type → shared StatusBadge tone + i18n label key. The tone palette
+// (success/warning/danger/info/neutral) replaces the old bespoke hex pairs.
 const TYPE_STYLE: Record<
   ClassFeedType,
-  { bg: string; fg: string; key: string }
+  { tone: StatusBadgeTone; key: string }
 > = {
-  tugas: { bg: '#FAEEDA', fg: '#854F0B', key: 'classHub.typeAssignment' },
-  ujian: { bg: '#FCEBEB', fg: '#791F1F', key: 'classHub.typeExam' },
-  materi: { bg: '#EAF3DE', fg: '#27500A', key: 'classHub.typeMaterial' },
-  pengumuman: {
-    bg: '#E6F1FB',
-    fg: '#0C447C',
-    key: 'classHub.typeAnnouncement',
-  },
-  nilai: { bg: '#E1F5EE', fg: '#085041', key: 'classHub.typeGrade' },
-  presensi: { bg: '#E8ECFB', fg: '#2A3E8F', key: 'classHub.typePresensi' },
-  unknown: { bg: '#F1EFE8', fg: '#5F5E5A', key: 'classHub.typeMaterial' },
+  tugas: { tone: 'warning', key: 'classHub.typeAssignment' },
+  ujian: { tone: 'danger', key: 'classHub.typeExam' },
+  materi: { tone: 'success', key: 'classHub.typeMaterial' },
+  pengumuman: { tone: 'info', key: 'classHub.typeAnnouncement' },
+  nilai: { tone: 'success', key: 'classHub.typeGrade' },
+  presensi: { tone: 'info', key: 'classHub.typePresensi' },
+  unknown: { tone: 'neutral', key: 'classHub.typeMaterial' },
 };
 
 function relTime(iso: string | null): string {
@@ -237,89 +284,29 @@ const roleLabel = computed(() => {
 
 <template>
   <div class="p-4 md:p-6">
-    <header
-      class="rounded-2xl px-5 py-4 mb-3"
-      :style="{ backgroundColor: role.hex + '1A' }"
+    <RouterLink
+      :to="backTarget"
+      class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-2"
+      :aria-label="t('classHub.back')"
     >
-      <div class="flex items-center gap-3">
-        <RouterLink
-          :to="{
-            name:
-              roleName === 'admin'
-                ? 'admin.class-oversight'
-                : roleName === 'wali'
-                  ? 'parent.classes'
-                  : 'teacher.classes',
-          }"
-          class="text-lg leading-none"
-          :style="{ color: role.hex }"
-          :aria-label="t('classHub.back')"
-          >‹</RouterLink
-        >
-        <div>
-          <h1 class="text-base font-medium" :style="{ color: role.hex }">
-            {{ card?.name ?? '' }}
-          </h1>
-          <p class="text-xs" :style="{ color: role.hex }">{{ roleLabel }}</p>
-        </div>
-      </div>
-      <div class="flex mt-3" v-if="card">
-        <div class="flex-1">
-          <div class="text-base font-medium" :style="{ color: role.hex }">
-            {{ card.studentCount }}
-          </div>
-          <div class="text-[11px]" :style="{ color: role.hex }">
-            {{ t('classHub.kpiStudents') }}
-          </div>
-        </div>
-        <div
-          class="flex-1 border-l pl-2"
-          :style="{ borderColor: role.hex + '40' }"
-        >
-          <div class="text-base font-medium" :style="{ color: role.hex }">
-            {{ card.activeTugas }}
-          </div>
-          <div class="text-[11px]" :style="{ color: role.hex }">
-            {{ t('classHub.kpiActiveAssignments') }}
-          </div>
-        </div>
-        <component
-          :is="showGrading ? 'RouterLink' : 'div'"
-          :to="showGrading ? gradingTarget : undefined"
-          class="flex-1 border-l pl-2 block"
-          :class="showGrading ? 'cursor-pointer' : ''"
-          :style="{ borderColor: role.hex + '40' }"
-        >
-          <div
-            class="text-base font-medium flex items-center gap-0.5"
-            :style="{ color: role.hex }"
-          >
-            {{ card.needsGrading }}
-            <span v-if="showGrading" aria-hidden="true">›</span>
-          </div>
-          <div class="text-[11px]" :style="{ color: role.hex }">
-            {{ t('classHub.kpiNeedsGrading') }}
-          </div>
-        </component>
-      </div>
-    </header>
+      ‹ {{ t('classHub.back') }}
+    </RouterLink>
 
-    <div class="flex gap-5 border-b border-slate-200 mb-4">
-      <button
-        v-for="tb in tabs"
-        :key="tb.key"
-        type="button"
-        class="pb-2 text-sm -mb-px border-b-2 transition"
-        :class="
-          tab === tb.key ? 'font-medium' : 'text-slate-500 border-transparent'
-        "
-        :style="
-          tab === tb.key ? { color: role.hex, borderColor: role.hex } : {}
-        "
-        @click="tab = tb.key"
-      >
-        {{ t(tb.labelKey) }}
-      </button>
+    <BrandPageHeader
+      :role="headerRole"
+      :kicker="roleLabel || undefined"
+      :title="card?.name ?? ''"
+    />
+
+    <KpiStripCards v-if="card" :cards="kpiCards" :lg-cols="3" class="mt-4" />
+
+    <div class="mt-4 mb-4">
+      <SegmentedControl
+        :model-value="tab"
+        :options="tabOptions"
+        size="md"
+        @update:model-value="tab = $event as Tab"
+      />
     </div>
 
     <div v-if="tab === 'anggota'" class="space-y-4">
@@ -431,14 +418,10 @@ const roleLabel = computed(() => {
               "
             >
               <div class="flex items-center justify-between">
-                <span
-                  class="text-[11px] font-medium px-2 py-0.5 rounded-full"
-                  :style="{
-                    background: TYPE_STYLE[it.type].bg,
-                    color: TYPE_STYLE[it.type].fg,
-                  }"
-                  >{{ t(TYPE_STYLE[it.type].key) }}</span
-                >
+                <StatusBadge
+                  :label="t(TYPE_STYLE[it.type].key)"
+                  :tone="TYPE_STYLE[it.type].tone"
+                />
                 <span class="text-[11px] text-slate-400">
                   {{ relTime(it.occurredAt) }}
                 </span>

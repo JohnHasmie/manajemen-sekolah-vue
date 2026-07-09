@@ -9,6 +9,7 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import { useChildPicker } from '@/composables/useChildPicker';
 import { useRoleColor } from '@/composables/useRoleColor';
 import { ClassHubService } from '@/services/class-hub.service';
@@ -65,15 +66,12 @@ function openClass(c: ClassCard) {
 
 <template>
   <div class="p-4 md:p-6">
-    <header
-      class="rounded-2xl px-5 py-4 mb-4"
-      :style="{ backgroundColor: role.hex + '1A' }"
-    >
-      <h1 class="text-lg font-medium" :style="{ color: role.hex }">
-        {{ t('classHub.title') }}
-      </h1>
-      <p class="text-sm text-slate-500">{{ t('classHub.listSubtitle') }}</p>
-    </header>
+    <BrandPageHeader
+      role="wali"
+      :title="t('classHub.title')"
+      :meta="t('classHub.listSubtitle')"
+      class="mb-4"
+    />
 
     <div v-if="childOptions.length > 1" class="mb-4">
       <SegmentedControl
