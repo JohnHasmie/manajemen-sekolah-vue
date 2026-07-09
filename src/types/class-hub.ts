@@ -25,6 +25,7 @@ export type ClassFeedType =
   | 'materi'
   | 'pengumuman'
   | 'nilai'
+  | 'presensi'
   | 'unknown';
 
 export interface ClassFeedItem {
@@ -76,6 +77,7 @@ const FEED_TYPES: ClassFeedType[] = [
   'materi',
   'pengumuman',
   'nilai',
+  'presensi',
 ];
 
 export function classFeedItemFromJson(

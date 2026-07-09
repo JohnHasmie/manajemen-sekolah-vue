@@ -193,6 +193,7 @@ const TYPE_STYLE: Record<
     key: 'classHub.typeAnnouncement',
   },
   nilai: { bg: '#E1F5EE', fg: '#085041', key: 'classHub.typeGrade' },
+  presensi: { bg: '#E8ECFB', fg: '#2A3E8F', key: 'classHub.typePresensi' },
   unknown: { bg: '#F1EFE8', fg: '#5F5E5A', key: 'classHub.typeMaterial' },
 };
 
@@ -201,6 +202,28 @@ function relTime(iso: string | null): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
   return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+}
+
+// Presensi events carry their tally in `meta`; compose a localised title +
+// subtitle here rather than relying on server-rendered display text.
+function feedTitle(it: ClassFeedItem): string {
+  if (it.type === 'presensi' && !it.title) {
+    return t('classHub.presensiTitleFallback');
+  }
+  return it.title;
+}
+function feedSubtitle(it: ClassFeedItem): string | null {
+  if (it.type !== 'presensi') return it.subtitle;
+  const num = (k: string): number => {
+    const v = it.meta[k];
+    return typeof v === 'number' ? v : 0;
+  };
+  const parts = [
+    `${num('present')}/${num('total')} ${t('classHub.attnPresent')}`,
+  ];
+  if (num('absent') > 0)
+    parts.push(`${num('absent')} ${t('classHub.attnAbsent')}`);
+  return parts.join(' · ');
 }
 
 const roleLabel = computed(() => {
@@ -421,10 +444,10 @@ const roleLabel = computed(() => {
                 </span>
               </div>
               <p class="text-sm font-medium mt-2 text-slate-900">
-                {{ it.title }}
+                {{ feedTitle(it) }}
               </p>
-              <p v-if="it.subtitle" class="text-xs text-slate-500 mt-1">
-                {{ it.subtitle }}
+              <p v-if="feedSubtitle(it)" class="text-xs text-slate-500 mt-1">
+                {{ feedSubtitle(it) }}
               </p>
             </component>
           </div>
