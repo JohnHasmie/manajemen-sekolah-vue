@@ -55,6 +55,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
+import CheckInShiftPicker from '@/components/feature/CheckInShiftPicker.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -147,6 +148,22 @@ const videoRef = ref<HTMLVideoElement | null>(null);
 const qrVideoRef = ref<HTMLVideoElement | null>(null);
 const notes = ref('');
 const submitting = ref(false);
+/**
+ * Which shift the user is checking in for (MR 4d). Auto-selected by
+ * CheckInShiftPicker on mount to the shift covering `now`, overridable
+ * via click. Sent as `shift_id` on the check-in POST; null on single-
+ * shift schools so the backend NULLS-NOT-DISTINCT unique keeps working.
+ */
+const pickedShiftId = ref<string | null>(null);
+/**
+ * Shift ids the user already checked in for today. Backend /config
+ * currently returns just ONE `state.record` (the newest); a follow-up
+ * MR should surface `state.today_records[]` so the picker can mute
+ * every completed shift. For now this stays empty — schools with one
+ * check-in per day don't notice, and multi-shift schools still get
+ * useful auto-pick + explicit override.
+ */
+const completedShiftIds = ref<string[]>([]);
 /** True once the parallel auto camera+location kick-off has run. */
 const autoStarted = ref(false);
 
@@ -515,6 +532,7 @@ async function submit() {
       latitude: geo.position.value?.latitude ?? null,
       longitude: geo.position.value?.longitude ?? null,
       notes: notes.value.trim() || null,
+      shift_id: pickedShiftId.value,
     };
     let result: TeacherAttendanceRecord;
     if (mode.value === 'check-out') {
@@ -544,6 +562,7 @@ function resetForm() {
   photoBlob.value = null;
   photoUrl.value = null;
   notes.value = '';
+  pickedShiftId.value = null;
   geo.clear();
   cam.stop();
   qr.stop();
@@ -1085,6 +1104,18 @@ function gotoHistory() {
               class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30 resize-none"
             ></textarea>
           </div>
+
+          <!-- ── Shift picker (multi-shift schools only) ──
+               Renders nothing when config.shifts is empty, so single-
+               shift schools see the same view they had before this MR.
+               Auto-picks the shift covering `now` on mount; user can
+               override by clicking a different card. -->
+          <CheckInShiftPicker
+            v-if="mode === 'check-in' && (config?.shifts?.length ?? 0) > 0"
+            v-model="pickedShiftId"
+            :shifts="config?.shifts ?? []"
+            :completed-shift-ids="completedShiftIds"
+          />
 
           <!-- ── Single primary action (snapshot live frame + post) ── -->
           <Button

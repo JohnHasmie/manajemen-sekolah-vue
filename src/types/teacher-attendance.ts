@@ -245,6 +245,13 @@ export interface TeacherAttendanceConfig {
   first_teaching_start: string | null;
   late_after: string | null;
   state: TeacherAttendanceState;
+  /**
+   * Full shift list for this school, embedded in /config so the check-in
+   * shift picker (MR 4d) can render without a second /attendance-shifts
+   * round-trip. Empty on single-shift schools — the picker renders nothing
+   * and the caller falls through to the single-shift path.
+   */
+  shifts?: import('@/services/attendance-shifts.service').AttendanceShift[];
 }
 
 /** Coordinates captured from navigator.geolocation. */
@@ -262,6 +269,12 @@ export interface TeacherAttendanceSubmission {
   latitude?: number | null;
   longitude?: number | null;
   notes?: string | null;
+  /**
+   * Which shift this check-in applies to (MR 4d). Null on single-shift
+   * schools — server treats null as "no shift" and enforces the
+   * (school, person, date) unique via NULLS NOT DISTINCT.
+   */
+  shift_id?: string | null;
 }
 
 /** Pagination meta echoed by Laravel resource collections. */

@@ -29,6 +29,7 @@ import type { CheckInMethod } from '@/types/attendance-qr';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import GeofenceMapPicker from '@/components/feature/GeofenceMapPicker.vue';
+import AttendanceShiftPanel from '@/components/feature/AttendanceShiftPanel.vue';
 
 const props = defineProps<{
   /** Current settings — the wizard opens with these values pre-filled. */
@@ -44,7 +45,7 @@ const emit = defineEmits<{
 const toast = useToast();
 
 // ── Wizard state ────────────────────────────────────────────────────
-type StepKey = 'metode' | 'lokasi' | 'qr' | 'waktu' | 'tinjau';
+type StepKey = 'metode' | 'lokasi' | 'qr' | 'waktu' | 'shift' | 'tinjau';
 type StepDef = { key: StepKey; label: string };
 const step = ref(0);
 const saving = ref(false);
@@ -97,6 +98,10 @@ const steps = computed<StepDef[]>(() => {
     base.push({ key: 'qr', label: 'QR Gerbang' });
   }
   base.push({ key: 'waktu', label: 'Waktu' });
+  // Shift step comes after Waktu — schools with a single shift only
+  // ever set max_daily_shifts_per_person = 1 and leave the list empty,
+  // so this step gracefully renders "belum ada shift" for them.
+  base.push({ key: 'shift', label: 'Shift' });
   base.push({ key: 'tinjau', label: 'Tinjau' });
   return base;
 });
@@ -531,7 +536,23 @@ const showsQrStep = computed(
         </div>
       </section>
 
-      <!-- ─── Step 5: Tinjau ─────────────────────────────── -->
+      <!-- ─── Step 5: Shift ──────────────────────────────── -->
+      <section v-else-if="currentStep.key === 'shift'" class="space-y-4">
+        <div>
+          <h3 class="text-[15px] font-black text-slate-900">Shift kerja</h3>
+          <p class="text-[12px] text-slate-500 mt-1 leading-relaxed">
+            Sekolah reguler biasanya cukup pakai satu shift dan lewati saja
+            langkah ini. Bimbel atau tempat kerja bergilir (pagi/sore/malam)
+            bisa tambah beberapa shift di sini.
+          </p>
+        </div>
+        <AttendanceShiftPanel
+          :initial-max-daily-shifts="draft.max_daily_shifts_per_person ?? 1"
+          @settings-changed="(p) => (draft.max_daily_shifts_per_person = p.max_daily_shifts_per_person)"
+        />
+      </section>
+
+      <!-- ─── Step 6: Tinjau ─────────────────────────────── -->
       <section v-else class="space-y-3">
         <div>
           <h3 class="text-[15px] font-black text-slate-900">

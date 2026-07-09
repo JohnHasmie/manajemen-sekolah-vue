@@ -36,6 +36,7 @@ import Button from '@/components/ui/Button.vue';
 import StickyActionBar from '@/components/ui/StickyActionBar.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import AttendanceConfigWizard from '@/components/feature/AttendanceConfigWizard.vue';
+import AttendanceKalenderPanel from '@/components/feature/AttendanceKalenderPanel.vue';
 import { useMeStore } from '@/stores/me';
 
 const toast = useToast();
@@ -43,7 +44,7 @@ const { t } = useI18n();
 const { confirm } = useConfirm();
 const me = useMeStore();
 
-type Tab = 'general' | 'checkin_rules' | 'checkout_rules';
+type Tab = 'general' | 'checkin_rules' | 'checkout_rules' | 'kalender';
 const tab = ref<Tab>('general');
 
 // ─────────────────────────────────────────────────────────────────
@@ -584,6 +585,18 @@ function jumpToSection(id: string): void {
           @click="switchTab('checkout_rules')"
         >
           <NavIcon name="clock" :size="13" />{{ t('admin.sekolah.attendance_config.tab_checkout_rules') }}
+        </button>
+        <button
+          type="button"
+          class="px-3 py-1 rounded-lg text-[11.5px] font-bold inline-flex items-center gap-1.5 transition-all"
+          :class="
+            tab === 'kalender'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-white/90 hover:text-white'
+          "
+          @click="switchTab('kalender')"
+        >
+          <NavIcon name="calendar" :size="13" />Kalender & Libur
         </button>
       </div>
     </BrandPageHeader>
@@ -1303,6 +1316,22 @@ function jumpToSection(id: string): void {
             </table>
           </div>
         </section>
+      </div>
+    </template>
+
+    <!-- ════════════════════ KALENDER & LIBUR TAB ════════════════════
+         New tab hosting AttendanceKalenderPanel — the panel is
+         self-contained (workweek chips + holiday CRUD auto-save via
+         updateSettings + AttendanceHolidaysService), so mounting it
+         is a one-liner. Bitmask default 62 = Mon–Fri; the panel
+         pushes back updates through the settings PATCH the same way
+         the flat form does. -->
+    <template v-else-if="tab === 'kalender'">
+      <div class="max-w-4xl mx-auto">
+        <AttendanceKalenderPanel
+          :initial-workweek-bitmask="form.workweek_days_bitmask ?? 62"
+          @workweek-changed="(m) => (form.workweek_days_bitmask = m)"
+        />
       </div>
     </template>
 

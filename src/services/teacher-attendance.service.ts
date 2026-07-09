@@ -249,6 +249,9 @@ function buildSubmission(payload: TeacherAttendanceSubmission): FormData {
   ) {
     fd.append('notes', payload.notes);
   }
+  if (payload.shift_id !== undefined && payload.shift_id !== null) {
+    fd.append('shift_id', payload.shift_id);
+  }
   return fd;
 }
 
