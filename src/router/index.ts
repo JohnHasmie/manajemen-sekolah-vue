@@ -526,19 +526,19 @@ const routes: RouteRecordRaw[] = [
         redirect: { name: 'admin.finance.bills' },
         children: [
           {
-            path: 'tagihan',
+            path: 'bills',
             name: 'admin.finance.bills',
             component: AdminFinanceBillsView,
             meta: { role: 'admin' satisfies Role, ability: 'finance.bill.view' },
           },
           {
-            path: 'pembayaran',
+            path: 'payments',
             name: 'admin.finance.payments',
             component: AdminFinancePaymentsView,
             meta: { role: 'admin' satisfies Role, ability: 'finance.payment.view' },
           },
           {
-            path: 'jenis',
+            path: 'types',
             name: 'admin.finance.types',
             component: AdminFinanceJenisView,
             meta: { role: 'admin' satisfies Role, ability: 'finance.bill_type.manage' },
