@@ -496,7 +496,7 @@ async function doReschedule(
     dragConflictRow.value = null;
     dragConflicts.value = [];
     dragForceSave.value = false;
-    await reload();
+    await loadRows();
     setTimeout(() => {
       dragBanner.value = null;
     }, 1500);
@@ -593,7 +593,7 @@ function onSaved(rows: ScheduleRow[]) {
       : `${rows.length} jadwal dibuat.`,
     tone: 'success',
   };
-  void reload();
+  void loadRows();
 }
 
 // Detail action handlers
@@ -631,7 +631,7 @@ async function confirmDelete() {
   try {
     await ScheduleService.destroy(deleteRow.value.id);
     toast.value = { message: 'Jadwal dihapus.', tone: 'success' };
-    await reload();
+    await loadRows();
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
@@ -642,11 +642,11 @@ async function confirmDelete() {
 
 function onRescheduled(_: ScheduleRow) {
   toast.value = { message: 'Slot dipindahkan.', tone: 'success' };
-  void reload();
+  void loadRows();
 }
 function onTeacherChanged(_: ScheduleRow) {
   toast.value = { message: 'Guru diganti.', tone: 'success' };
-  void reload();
+  void loadRows();
 }
 
 // ── Bulk select state ──────────────────────────────────────────────
@@ -689,7 +689,7 @@ function onBulkMoved(result: { moved: number; skipped: number }) {
     tone: 'success',
   };
   exitBulkMode();
-  void reload();
+  void loadRows();
 }
 function onBulkTeacherChanged(result: { changed: number; skipped: number }) {
   const skipNote = result.skipped > 0 ? ` · ${result.skipped} dilewati` : '';
@@ -698,7 +698,7 @@ function onBulkTeacherChanged(result: { changed: number; skipped: number }) {
     tone: 'success',
   };
   exitBulkMode();
-  void reload();
+  void loadRows();
 }
 // Print + Import modal state
 const showPrint = ref(false);
@@ -710,7 +710,7 @@ function onImportDone(res: { created: number; skipped: number }) {
     message: `${res.created} jadwal diimpor${skipNote}.`,
     tone: 'success',
   };
-  void reload();
+  void loadRows();
 }
 
 async function bulkDelete() {
@@ -723,7 +723,7 @@ async function bulkDelete() {
       tone: 'success',
     };
     exitBulkMode();
-    await reload();
+    await loadRows();
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
@@ -848,7 +848,7 @@ async function bulkDelete() {
       :empty-title="$t('admin.schedule.emptyTitle')"
       :empty-description="$t('admin.schedule.emptyDesc')"
       empty-icon="calendar"
-      @retry="reload"
+      @retry="loadRows"
     >
       <template #default>
         <!-- LIST VIEW — sticky day groups -->
