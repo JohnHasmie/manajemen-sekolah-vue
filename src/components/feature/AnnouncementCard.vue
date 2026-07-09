@@ -24,6 +24,12 @@ import { useI18n } from 'vue-i18n';
 import { formatRelative, formatDateLong } from '@/lib/format';
 import type { Announcement } from '@/types/announcements';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import {
+  canonicalRole,
+  ROLE_ADMIN,
+  ROLE_PARENT,
+  ROLE_TEACHER,
+} from '@/utils/role';
 
 const { t } = useI18n();
 
@@ -50,11 +56,31 @@ const CATEGORY_PALETTE: Record<
   string,
   { bg: string; text: string; labelKey: string }
 > = {
-  penting: { bg: 'bg-red-50', text: 'text-red-700', labelKey: 'announcement.categoryImportant' },
-  pengumuman: { bg: 'bg-slate-100', text: 'text-slate-600', labelKey: 'announcement.categoryGeneral' },
-  umum: { bg: 'bg-slate-100', text: 'text-slate-600', labelKey: 'announcement.categoryGeneral' },
-  acara: { bg: 'bg-violet-50', text: 'text-violet-700', labelKey: 'announcement.categoryEvent' },
-  libur: { bg: 'bg-amber-50', text: 'text-amber-700', labelKey: 'announcement.categoryHoliday' },
+  penting: {
+    bg: 'bg-red-50',
+    text: 'text-red-700',
+    labelKey: 'announcement.categoryImportant',
+  },
+  pengumuman: {
+    bg: 'bg-slate-100',
+    text: 'text-slate-600',
+    labelKey: 'announcement.categoryGeneral',
+  },
+  umum: {
+    bg: 'bg-slate-100',
+    text: 'text-slate-600',
+    labelKey: 'announcement.categoryGeneral',
+  },
+  acara: {
+    bg: 'bg-violet-50',
+    text: 'text-violet-700',
+    labelKey: 'announcement.categoryEvent',
+  },
+  libur: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    labelKey: 'announcement.categoryHoliday',
+  },
 };
 
 const categoryStyle = computed(() => {
@@ -68,7 +94,7 @@ const isUnread = computed(() => props.announcement.is_read === false);
 
 /** Show the brand-tinted background only for the parent inbox view. */
 const showUnreadTint = computed(
-  () => props.viewerRole === 'wali' && isUnread.value,
+  () => canonicalRole(props.viewerRole) === ROLE_PARENT && isUnread.value,
 );
 
 const audienceLabel = computed(() => {
@@ -92,7 +118,7 @@ const timeLabel = computed(() => {
 const showReadCounter = computed(() => {
   const a = props.announcement;
   return (
-    (props.viewerRole === 'admin' || props.viewerRole === 'guru') &&
+    [ROLE_ADMIN, ROLE_TEACHER].includes(canonicalRole(props.viewerRole)) &&
     typeof a.total_recipients === 'number' &&
     (a.total_recipients ?? 0) > 0
   );
@@ -131,11 +157,9 @@ const isExpired = computed(() => {
       <!-- Unread dot (parent only) / pin marker (admin) -->
       <div class="flex flex-col items-center gap-2 pt-1 flex-shrink-0">
         <span
-          v-if="viewerRole === 'wali'"
+          v-if="canonicalRole(viewerRole) === ROLE_PARENT"
           class="w-2.5 h-2.5 rounded-full"
-          :class="
-            isUnread ? 'bg-role-parent' : 'border border-slate-200'
-          "
+          :class="isUnread ? 'bg-role-parent' : 'border border-slate-200'"
           :aria-label="isUnread ? 'Belum dibaca' : 'Sudah dibaca'"
         />
         <NavIcon
@@ -163,7 +187,7 @@ const isExpired = computed(() => {
             → {{ audienceLabel }}
           </span>
           <span
-            v-if="sourceLabel && viewerRole === 'wali'"
+            v-if="sourceLabel && canonicalRole(viewerRole) === ROLE_PARENT"
             class="text-[10.5px] text-slate-500 truncate"
           >
             {{ sourceLabel }}
@@ -187,14 +211,16 @@ const isExpired = computed(() => {
             Draft
           </span>
           <span class="flex-1"></span>
-          <span class="text-2xs text-slate-400 flex-shrink-0">{{ timeLabel }}</span>
+          <span class="text-2xs text-slate-400 flex-shrink-0">{{
+            timeLabel
+          }}</span>
         </div>
 
         <!-- Title -->
         <p
           class="text-[14px] leading-snug text-slate-900 truncate"
           :class="
-            isUnread && viewerRole === 'wali'
+            isUnread && canonicalRole(viewerRole) === ROLE_PARENT
               ? 'font-black'
               : 'font-bold'
           "
@@ -216,7 +242,8 @@ const isExpired = computed(() => {
           class="text-[10.5px] text-slate-400 mt-2 inline-flex items-center gap-1"
         >
           <NavIcon name="eye" :size="11" />
-          Dibaca {{ announcement.read_count ?? 0 }} / {{ announcement.total_recipients }} wali murid
+          Dibaca {{ announcement.read_count ?? 0 }} /
+          {{ announcement.total_recipients }} wali murid
         </p>
       </div>
 

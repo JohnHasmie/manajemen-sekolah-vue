@@ -17,6 +17,7 @@ import type { Announcement } from '@/types/announcements';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import { canonicalRole, ROLE_ADMIN, ROLE_TEACHER } from '@/utils/role';
 
 const props = withDefaults(
   defineProps<{
@@ -63,14 +64,12 @@ const categoryStyle = computed(
 );
 
 const dateLabel = computed(() => {
-  const ts =
-    props.announcement.published_at ?? props.announcement.created_at;
+  const ts = props.announcement.published_at ?? props.announcement.created_at;
   return formatDateLong(ts);
 });
 
 const relativeLabel = computed(() => {
-  const ts =
-    props.announcement.published_at ?? props.announcement.created_at;
+  const ts = props.announcement.published_at ?? props.announcement.created_at;
   return formatRelative(ts);
 });
 
@@ -136,7 +135,7 @@ onMounted(() => {
     <!-- Read metrics (admin / teacher) -->
     <p
       v-if="
-        (viewerRole === 'admin' || viewerRole === 'guru') &&
+        [ROLE_ADMIN, ROLE_TEACHER].includes(canonicalRole(viewerRole)) &&
         typeof announcement.total_recipients === 'number' &&
         announcement.total_recipients > 0
       "
@@ -149,7 +148,9 @@ onMounted(() => {
 
     <!-- Footer actions -->
     <footer class="mt-5 flex items-center gap-2 flex-wrap">
-      <Button variant="secondary" size="sm" @click="emit('close')">Tutup</Button>
+      <Button variant="secondary" size="sm" @click="emit('close')"
+        >Tutup</Button
+      >
       <span class="flex-1"></span>
       <Button
         v-if="canDelete"

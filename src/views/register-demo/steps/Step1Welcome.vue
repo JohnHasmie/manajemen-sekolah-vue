@@ -34,6 +34,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import { useAuthStore } from '@/stores/auth';
+import { canonicalRole, ROLE_PARENT, ROLE_TEACHER } from '@/utils/role';
 import { useGoogleSignIn } from '@/composables/useGoogleSignIn';
 import { tenantKindFromRaw } from '@/composables/useTenant';
 
@@ -79,9 +80,12 @@ onMounted(() => {
 });
 
 // Re-mount if the auth state changes (e.g. session expiry mid-wizard).
-watch(() => auth.isAuthenticated, (v) => {
-  if (!v) void mountGoogleButton();
-});
+watch(
+  () => auth.isAuthenticated,
+  (v) => {
+    if (!v) void mountGoogleButton();
+  },
+);
 
 /**
  * Indonesian display name for a role code.
@@ -109,7 +113,8 @@ function roleLabel(code: string | null | undefined): string {
 
 const isParentOrTeacher = computed(() => {
   const r = auth.activeRole;
-  return r === 'guru' || r === 'wali_kelas' || r === 'wali';
+  const cr = canonicalRole(r);
+  return cr === ROLE_TEACHER || r === 'wali_kelas' || cr === ROLE_PARENT;
 });
 
 interface ExistingTenant {
@@ -135,7 +140,9 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
 
 <template>
   <div class="text-center max-w-md mx-auto py-4">
-    <div class="w-16 h-16 rounded-2xl bg-role-admin/10 mx-auto mb-5 flex items-center justify-center">
+    <div
+      class="w-16 h-16 rounded-2xl bg-role-admin/10 mx-auto mb-5 flex items-center justify-center"
+    >
       <NavIcon name="school" :size="32" class="text-role-admin" />
     </div>
     <p class="text-2xs font-bold tracking-widest text-slate-500 uppercase mb-2">
@@ -155,7 +162,9 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
       v-if="!auth.isAuthenticated"
       class="mt-6 max-w-sm mx-auto text-left rounded-xl border border-brand-cobalt/30 bg-white p-4 shadow-sm"
     >
-      <p class="text-2xs font-black uppercase tracking-widest text-brand-cobalt">
+      <p
+        class="text-2xs font-black uppercase tracking-widest text-brand-cobalt"
+      >
         {{ t('registerDemo.googleGateKicker') }}
       </p>
       <h3 class="mt-1 text-[15px] font-bold text-slate-900">
@@ -167,12 +176,17 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
 
       <!-- In-app browser (Threads/IG/…) can't run GIS. Point them out. -->
       <div
-        v-if="google.isInAppBrowser.value || google.error.value === 'GIS_LOAD_FAILED'"
+        v-if="
+          google.isInAppBrowser.value ||
+          google.error.value === 'GIS_LOAD_FAILED'
+        "
         class="mt-3 rounded-lg border-2 border-dashed border-amber-300 bg-amber-50 py-2.5 px-3 text-center text-2xs font-bold text-amber-800 leading-relaxed"
       >
-        {{ google.isInAppBrowser.value
+        {{
+          google.isInAppBrowser.value
             ? t('auth.demo.googleInAppBrowser')
-            : t('auth.googleLoadFailed') }}
+            : t('auth.googleLoadFailed')
+        }}
       </div>
       <div
         v-else-if="google.isEnabled.value"
@@ -190,7 +204,9 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
           class="w-full rounded-lg border-2 border-brand-dark-blue/30 bg-white/60 py-2.5 flex items-center justify-center gap-3 animate-pulse"
         >
           <div class="w-3.5 h-3.5 rounded-full bg-brand-dark-blue/20"></div>
-          <span class="text-2xs font-extrabold text-brand-dark-blue/50 uppercase tracking-widest">
+          <span
+            class="text-2xs font-extrabold text-brand-dark-blue/50 uppercase tracking-widest"
+          >
             {{ t('auth.loadingGoogle') }}
           </span>
         </div>
@@ -212,17 +228,28 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
       <div
         class="mt-6 max-w-sm mx-auto flex items-center gap-2.5 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2.5"
       >
-        <div class="w-8 h-8 rounded-full bg-emerald-500 text-white grid place-items-center flex-shrink-0">
+        <div
+          class="w-8 h-8 rounded-full bg-emerald-500 text-white grid place-items-center flex-shrink-0"
+        >
           <NavIcon name="check" :size="16" />
         </div>
         <div class="min-w-0 flex-1 text-left">
-          <p class="text-3xs font-black uppercase tracking-widest text-emerald-700">
+          <p
+            class="text-3xs font-black uppercase tracking-widest text-emerald-700"
+          >
             {{ t('registerDemo.signedInKicker') }}
           </p>
           <p class="text-[12.5px] font-semibold text-emerald-900 truncate">
-            {{ auth.user?.name || auth.user?.email || t('registerDemo.signedInAnon') }}
+            {{
+              auth.user?.name ||
+              auth.user?.email ||
+              t('registerDemo.signedInAnon')
+            }}
           </p>
-          <p v-if="auth.user?.email && auth.user?.name" class="text-2xs text-emerald-700 truncate">
+          <p
+            v-if="auth.user?.email && auth.user?.name"
+            class="text-2xs text-emerald-700 truncate"
+          >
             {{ auth.user.email }}
           </p>
         </div>
@@ -239,7 +266,9 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
           :key="bullet"
           class="flex items-start gap-2.5 text-[13px] text-slate-700"
         >
-          <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <span
+            class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5"
+          >
             <NavIcon name="check" :size="11" />
           </span>
           {{ bullet }}
@@ -251,7 +280,9 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
         class="mt-6 max-w-sm mx-auto text-left rounded-xl border border-amber-200 bg-amber-50 p-4"
       >
         <div class="flex items-start gap-2.5">
-          <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <span
+            class="w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5"
+          >
             <NavIcon name="info" :size="11" />
           </span>
           <div class="min-w-0 flex-1">
@@ -264,9 +295,17 @@ const activeRoleLabel = computed(() => roleLabel(auth.activeRole));
                 :key="`${tn.name}-${idx}`"
                 class="text-[12px] text-amber-800 leading-relaxed"
               >
-                {{ tn.kind === 'TUTORING_CENTER'
-                  ? t('registerDemo.existingTenantLineBimbel', { name: tn.name, role: activeRoleLabel })
-                  : t('registerDemo.existingTenantLineSchool', { name: tn.name, role: activeRoleLabel }) }}
+                {{
+                  tn.kind === 'TUTORING_CENTER'
+                    ? t('registerDemo.existingTenantLineBimbel', {
+                        name: tn.name,
+                        role: activeRoleLabel,
+                      })
+                    : t('registerDemo.existingTenantLineSchool', {
+                        name: tn.name,
+                        role: activeRoleLabel,
+                      })
+                }}
               </li>
             </ul>
             <p class="mt-2 text-2xs text-amber-700 leading-snug">

@@ -8,9 +8,19 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import {
+  canonicalRole,
+  ROLE_ADMIN,
+  ROLE_PARENT,
+  ROLE_STAFF,
+  ROLE_TEACHER,
+} from '@/utils/role';
 import { useI18n } from 'vue-i18n';
 import { usePreferencesStore } from '@/stores/preferences';
-import { useTutoringThemeStore, type TutoringThemeMode } from '@/stores/tutoring-theme';
+import {
+  useTutoringThemeStore,
+  type TutoringThemeMode,
+} from '@/stores/tutoring-theme';
 import { tenantKindFromRaw } from '@/composables/useTenant';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
@@ -41,11 +51,31 @@ const isTutoringTenant = computed(() => {
 
 const showAppearancePicker = ref(false);
 const appearanceOptions = computed<
-  Array<{ mode: TutoringThemeMode; icon: string; titleKey: string; subKey: string }>
+  Array<{
+    mode: TutoringThemeMode;
+    icon: string;
+    titleKey: string;
+    subKey: string;
+  }>
 >(() => [
-  { mode: 'auto', icon: 'smartphone', titleKey: 'profileMenu.appearanceAuto', subKey: 'profileMenu.appearanceAutoSub' },
-  { mode: 'light', icon: 'sun', titleKey: 'profileMenu.appearanceLight', subKey: 'profileMenu.appearanceLightSub' },
-  { mode: 'dark', icon: 'moon', titleKey: 'profileMenu.appearanceDark', subKey: 'profileMenu.appearanceDarkSub' },
+  {
+    mode: 'auto',
+    icon: 'smartphone',
+    titleKey: 'profileMenu.appearanceAuto',
+    subKey: 'profileMenu.appearanceAutoSub',
+  },
+  {
+    mode: 'light',
+    icon: 'sun',
+    titleKey: 'profileMenu.appearanceLight',
+    subKey: 'profileMenu.appearanceLightSub',
+  },
+  {
+    mode: 'dark',
+    icon: 'moon',
+    titleKey: 'profileMenu.appearanceDark',
+    subKey: 'profileMenu.appearanceDarkSub',
+  },
 ]);
 
 function pickAppearance(m: TutoringThemeMode) {
@@ -148,7 +178,7 @@ function roleDisplayLabel(r: Role): string {
   let key = r as string;
   if (key === 'teacher') key = 'guru';
   if (key === 'parent') key = 'wali';
-  
+
   try {
     return t(`role.${key}`);
   } catch {
@@ -264,7 +294,9 @@ async function pickSchool(s: School) {
     } else if (auth.step === 'done') {
       showSchoolPicker.value = false;
       toast.value = {
-        message: t('profileMenu.toastSchoolSwitched', { school: schoolDisplayName(s) }),
+        message: t('profileMenu.toastSchoolSwitched', {
+          school: schoolDisplayName(s),
+        }),
         tone: 'success',
       };
       const role = auth.activeRole;
@@ -298,7 +330,9 @@ async function pickRole(role: Role) {
     if (auth.step === 'done') {
       showRolePicker.value = false;
       toast.value = {
-        message: t('profileMenu.toastRoleSwitched', { role: roleDisplayLabel(role) }),
+        message: t('profileMenu.toastRoleSwitched', {
+          role: roleDisplayLabel(role),
+        }),
         tone: 'success',
       };
       router.replace(roleHome(role));
@@ -338,7 +372,9 @@ onBeforeUnmount(() => {
       >
         {{ initials }}
       </span>
-      <span class="hidden sm:inline truncate max-w-[6rem]">{{ auth.user?.name ?? '—' }}</span>
+      <span class="hidden sm:inline truncate max-w-[6rem]">{{
+        auth.user?.name ?? '—'
+      }}</span>
     </button>
 
     <Transition
@@ -360,7 +396,9 @@ onBeforeUnmount(() => {
           </p>
           <p class="text-xs text-slate-500 truncate">{{ auth.user?.email }}</p>
           <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            <span class="text-3xs font-bold uppercase tracking-wider text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full">
+            <span
+              class="text-3xs font-bold uppercase tracking-wider text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full"
+            >
               {{ roleLabel }}
             </span>
             <span
@@ -379,7 +417,16 @@ onBeforeUnmount(() => {
           class="w-full text-left px-md py-sm rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm text-slate-700"
           @click="goToProfile"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-4 h-4"
+          >
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
@@ -393,12 +440,23 @@ onBeforeUnmount(() => {
           class="w-full text-left px-md py-sm rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm text-slate-700"
           @click="openSchoolPicker"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-4 h-4"
+          >
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
           <span class="flex-1">{{ t('profileMenu.switchSchool') }}</span>
-          <span class="text-3xs font-bold text-slate-400 tabular-nums">{{ availableSchools.length }}</span>
+          <span class="text-3xs font-bold text-slate-400 tabular-nums">{{
+            availableSchools.length
+          }}</span>
         </button>
 
         <!-- Switch role (only when user has multiple roles) -->
@@ -408,14 +466,25 @@ onBeforeUnmount(() => {
           class="w-full text-left px-md py-sm rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm text-slate-700"
           @click="openRolePicker"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-4 h-4"
+          >
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
             <circle cx="9" cy="7" r="4" />
             <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
           </svg>
           <span class="flex-1">{{ t('profileMenu.switchRole') }}</span>
-          <span class="text-3xs font-bold text-slate-400 tabular-nums">{{ availableRoles.length }}</span>
+          <span class="text-3xs font-bold text-slate-400 tabular-nums">{{
+            availableRoles.length
+          }}</span>
         </button>
 
         <!-- Language -->
@@ -424,18 +493,35 @@ onBeforeUnmount(() => {
           class="w-full text-left px-md py-sm rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm text-slate-700"
           @click="toggleLocale"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-4 h-4"
+          >
             <circle cx="12" cy="12" r="10" />
             <line x1="2" y1="12" x2="22" y2="12" />
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            <path
+              d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+            />
           </svg>
           <!--
             Label is the language the user would switch TO (so it acts
             as an action). When currently in Indonesian, show "English";
             when in English, show "Bahasa Indonesia".
           -->
-          <span class="flex-1">{{ prefs.locale === 'id' ? t('profileMenu.languageEn') : t('profileMenu.languageId') }}</span>
-          <span class="text-xs text-slate-400 uppercase">{{ prefs.locale }}</span>
+          <span class="flex-1">{{
+            prefs.locale === 'id'
+              ? t('profileMenu.languageEn')
+              : t('profileMenu.languageId')
+          }}</span>
+          <span class="text-xs text-slate-400 uppercase">{{
+            prefs.locale
+          }}</span>
         </button>
 
         <!--
@@ -448,9 +534,21 @@ onBeforeUnmount(() => {
           v-if="isTutoringTenant"
           type="button"
           class="w-full text-left px-md py-sm rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm text-slate-700"
-          @click="showAppearancePicker = true; open = false;"
+          @click="
+            showAppearancePicker = true;
+            open = false;
+          "
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-4 h-4"
+          >
             <circle cx="12" cy="12" r="5" />
             <line x1="12" y1="1" x2="12" y2="3" />
             <line x1="12" y1="21" x2="12" y2="23" />
@@ -462,7 +560,11 @@ onBeforeUnmount(() => {
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
           </svg>
           <span class="flex-1">{{ t('profileMenu.appearance') }}</span>
-          <span class="text-3xs font-bold text-slate-400 uppercase">{{ t(`profileMenu.appearance${tutoringTheme.mode.charAt(0).toUpperCase() + tutoringTheme.mode.slice(1)}`) }}</span>
+          <span class="text-3xs font-bold text-slate-400 uppercase">{{
+            t(
+              `profileMenu.appearance${tutoringTheme.mode.charAt(0).toUpperCase() + tutoringTheme.mode.slice(1)}`,
+            )
+          }}</span>
         </button>
 
         <!-- Logout -->
@@ -472,7 +574,16 @@ onBeforeUnmount(() => {
             class="w-full text-left px-md py-sm rounded-lg hover:bg-status-danger-soft hover:text-status-danger flex items-center gap-2 text-sm text-slate-700"
             @click="handleLogout"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="w-4 h-4"
+            >
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
@@ -490,7 +601,10 @@ onBeforeUnmount(() => {
       :subtitle="t('profileMenu.schoolPickerSubtitle')"
       @close="switching ? null : (showSchoolPicker = false)"
     >
-      <div v-if="availableSchools.length === 0" class="py-6 text-center text-slate-400 text-sm">
+      <div
+        v-if="availableSchools.length === 0"
+        class="py-6 text-center text-slate-400 text-sm"
+      >
         {{ t('profileMenu.noOtherSchools') }}
       </div>
       <ul v-else class="space-y-1 max-h-[400px] overflow-y-auto -mx-1">
@@ -515,10 +629,16 @@ onBeforeUnmount(() => {
               <p class="text-[13px] font-bold text-slate-900 truncate">
                 {{ schoolDisplayName(s) }}
               </p>
-              <p v-if="s.city || s.address" class="text-2xs text-slate-500 truncate">
+              <p
+                v-if="s.city || s.address"
+                class="text-2xs text-slate-500 truncate"
+              >
                 {{ s.city ?? s.address }}
               </p>
-              <p v-if="s.roles && s.roles.length > 0" class="text-3xs text-slate-400 mt-0.5">
+              <p
+                v-if="s.roles && s.roles.length > 0"
+                class="text-3xs text-slate-400 mt-0.5"
+              >
                 {{ s.roles.map((r) => roleDisplayLabel(r)).join(' · ') }}
               </p>
             </div>
@@ -541,7 +661,10 @@ onBeforeUnmount(() => {
       :subtitle="t('profileMenu.rolePickerSubtitle')"
       @close="switching ? null : (showRolePicker = false)"
     >
-      <div v-if="availableRoles.length === 0" class="py-6 text-center text-slate-400 text-sm">
+      <div
+        v-if="availableRoles.length === 0"
+        class="py-6 text-center text-slate-400 text-sm"
+      >
         {{ t('profileMenu.noOtherRoles') }}
       </div>
       <ul v-else class="space-y-1 max-h-[400px] overflow-y-auto -mx-1">
@@ -557,8 +680,19 @@ onBeforeUnmount(() => {
             :disabled="switching === 'role'"
             @click="pickRole(role)"
           >
-            <span class="w-10 h-10 rounded-xl bg-violet-100 text-violet-700 grid place-items-center flex-shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+            <span
+              class="w-10 h-10 rounded-xl bg-violet-100 text-violet-700 grid place-items-center flex-shrink-0"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="w-5 h-5"
+              >
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
@@ -569,15 +703,15 @@ onBeforeUnmount(() => {
               </p>
               <p class="text-2xs text-slate-500">
                 {{
-                  role === 'admin'
+                  canonicalRole(role) === ROLE_ADMIN
                     ? t('profileMenu.roleDescAdmin')
-                    : role === 'guru'
+                    : canonicalRole(role) === ROLE_TEACHER
                       ? t('profileMenu.roleDescGuru')
                       : role === 'wali_kelas'
                         ? t('profileMenu.roleDescWaliKelas')
-                        : role === 'wali'
+                        : canonicalRole(role) === ROLE_PARENT
                           ? t('profileMenu.roleDescWali')
-                          : role === 'staff'
+                          : canonicalRole(role) === ROLE_STAFF
                             ? t('profileMenu.roleDescStaff')
                             : ''
                 }}
@@ -634,11 +768,31 @@ onBeforeUnmount(() => {
               "
             >
               <!-- Inline icon shapes — keeps this modal independent of NavIcon registration. -->
-              <svg v-if="opt.icon === 'smartphone'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+              <svg
+                v-if="opt.icon === 'smartphone'"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="w-4 h-4"
+              >
                 <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                 <line x1="12" y1="18" x2="12.01" y2="18" />
               </svg>
-              <svg v-else-if="opt.icon === 'sun'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+              <svg
+                v-else-if="opt.icon === 'sun'"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="w-4 h-4"
+              >
                 <circle cx="12" cy="12" r="5" />
                 <line x1="12" y1="1" x2="12" y2="3" />
                 <line x1="12" y1="21" x2="12" y2="23" />
@@ -649,13 +803,27 @@ onBeforeUnmount(() => {
                 <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
               </svg>
-              <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="w-4 h-4"
+              >
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
               </svg>
             </span>
             <span class="min-w-0 flex-1">
-              <span class="block text-sm font-bold text-slate-900">{{ t(opt.titleKey) }}</span>
-              <span class="block text-2xs text-slate-500">{{ t(opt.subKey) }}</span>
+              <span class="block text-sm font-bold text-slate-900">{{
+                t(opt.titleKey)
+              }}</span>
+              <span class="block text-2xs text-slate-500">{{
+                t(opt.subKey)
+              }}</span>
             </span>
             <span
               v-if="tutoringTheme.mode === opt.mode"
