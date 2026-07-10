@@ -43,7 +43,17 @@
     "attnSilent": "kelas tanpa aktivitas 7+ hari",
     "attnGrading": "kumpulan belum dinilai",
     "allGood": "Semua kelas aktif",
-    "back": "Kembali"
+    "back": "Kembali",
+    "allSubjects": "Semua mapel",
+    "viewOnly": "Hanya lihat",
+    "youTeach": "yang kamu ajar",
+    "groupPerSubject": "Per mata pelajaran",
+    "teacherLabel": "Guru",
+    "filterSubject": "Mapel",
+    "filterTeacher": "Guru",
+    "attendance": "Presensi",
+    "actionReport": "Rapor",
+    "generalViewHint": "Semua mapel · hanya lihat"
   },
   "app": {
     "name": "KamilEdu",

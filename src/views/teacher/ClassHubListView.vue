@@ -1,9 +1,8 @@
 <!--
-  The "Kelas" list — class-first entry for the teacher web app.
-  Guru sees their classes grouped into Kelas wali / Kelas ajar with a role
-  badge each and a Semua / Wali kelas / Mengajar filter. A card opens the hub.
-  Mirrors the mobile ClassHubListScreen; parent (child-scoped) support is a
-  follow-up.
+  The "Kelas" list (teacher web) — SUBJECT-LEVEL. One card per (class × subject)
+  the guru teaches, plus a general all-subjects card for a wali kelas. Grouped
+  Kelas wali / Kelas ajar with a Semua / Wali / Mengajar filter; a card opens
+  the hub scoped to that card. Mirrors the mobile ClassHubListScreen.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
@@ -15,7 +14,12 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useRoleColor } from '@/composables/useRoleColor';
 import { ClassHubService } from '@/services/class-hub.service';
-import type { ClassCard } from '@/types/class-hub';
+import {
+  classCardKey,
+  isGeneralCard,
+  isSubjectScoped,
+  type ClassCard,
+} from '@/types/class-hub';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -44,16 +48,21 @@ onMounted(load);
 const filtered = computed(() =>
   classes.value.filter((c) => {
     if (filter.value === 'wali') return c.isHomeroom;
-    if (filter.value === 'mengajar') return c.isTeaching;
+    if (filter.value === 'mengajar') return c.scope === 'subject';
     return true;
   }),
 );
-const waliClasses = computed(() =>
-  filtered.value.filter((c) => c.isHomeroom),
-);
-const ajarClasses = computed(() =>
-  filtered.value.filter((c) => c.isTeaching && !c.isHomeroom),
-);
+
+// Kelas wali = every card of a homeroom class (general + subjects); Kelas ajar
+// = subject cards of non-homeroom classes.
+const sections = computed(() => {
+  const out: { label: string; cards: ClassCard[] }[] = [];
+  const wali = filtered.value.filter((c) => c.isHomeroom);
+  const ajar = filtered.value.filter((c) => !c.isHomeroom);
+  if (wali.length) out.push({ label: t('classHub.groupHomeroom'), cards: wali });
+  if (ajar.length) out.push({ label: t('classHub.groupTeaching'), cards: ajar });
+  return out;
+});
 
 const state = computed(() => {
   if (loading.value) return { status: 'loading' as const };
@@ -71,14 +80,32 @@ const filterOptions = computed(() =>
   filters.map((f) => ({ key: f.key, label: t(f.labelKey) })),
 );
 
+function shortClass(name: string): string {
+  return name.toLowerCase().startsWith('kelas ') ? name.slice(6).trim() : name;
+}
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
+function cardTitle(c: ClassCard): string {
+  return isSubjectScoped(c)
+    ? `${c.subjectName ?? c.name} · ${shortClass(c.name)}`
+    : c.name;
+}
+function cardSubtitle(c: ClassCard): string {
+  if (isGeneralCard(c)) {
+    return `${t('classHub.allSubjects')} · ${c.studentCount} ${t('classHub.kpiStudents')}`;
+  }
+  return `${c.studentCount} ${t('classHub.kpiStudents')} · ${t('classHub.youTeach')}`;
+}
 
 function openClass(c: ClassCard) {
-  router.push({ name: 'teacher.classes.detail', params: { id: c.id } });
+  router.push({
+    name: 'teacher.classes.detail',
+    params: { id: c.id },
+    query: c.subjectId ? { subject_id: c.subjectId } : {},
+  });
 }
 </script>
 
@@ -105,14 +132,12 @@ function openClass(c: ClassCard) {
       :empty-description="t('classHub.emptyListMsg')"
     >
       <div class="space-y-6">
-        <section v-if="waliClasses.length">
-          <h2 class="text-xs font-medium text-slate-500 mb-2">
-            {{ t('classHub.groupHomeroom') }}
-          </h2>
+        <section v-for="s in sections" :key="s.label">
+          <h2 class="text-xs font-medium text-slate-500 mb-2">{{ s.label }}</h2>
           <div class="space-y-2.5">
             <button
-              v-for="c in waliClasses"
-              :key="c.id"
+              v-for="c in s.cards"
+              :key="classCardKey(c)"
               type="button"
               class="w-full text-left bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-3 hover:border-slate-300"
               @click="openClass(c)"
@@ -120,65 +145,30 @@ function openClass(c: ClassCard) {
               <span
                 class="w-11 h-11 rounded-xl flex items-center justify-center font-medium shrink-0"
                 :style="{ backgroundColor: role.hex + '26', color: role.hex }"
-              >{{ initials(c.name) }}</span>
+              >{{ initials(shortClass(c.name)) }}</span>
               <span class="flex-1 min-w-0">
-                <span class="block text-sm font-medium">{{ c.name }}</span>
+                <span class="block text-sm font-medium">{{ cardTitle(c) }}</span>
                 <span class="block text-xs text-slate-500">
-                  {{ c.studentCount }} {{ t('classHub.kpiStudents') }}
+                  {{ cardSubtitle(c) }}
                 </span>
                 <span class="flex flex-wrap gap-1.5 mt-1.5">
-                  <StatusBadge
-                    :label="t('classHub.roleHomeroom')"
-                    tone="info"
-                  />
-                  <StatusBadge
-                    v-if="c.activeTugas > 0"
-                    :label="`${c.activeTugas} ${t('classHub.kpiActiveAssignments')}`"
-                    tone="warning"
-                  />
-                  <StatusBadge
-                    v-if="c.needsGrading > 0"
-                    :label="`${c.needsGrading} ${t('classHub.kpiNeedsGrading')}`"
-                    tone="danger"
-                  />
-                </span>
-              </span>
-              <span class="text-slate-300">›</span>
-            </button>
-          </div>
-        </section>
-
-        <section v-if="ajarClasses.length">
-          <h2 class="text-xs font-medium text-slate-500 mb-2">
-            {{ t('classHub.groupTeaching') }}
-          </h2>
-          <div class="space-y-2.5">
-            <button
-              v-for="c in ajarClasses"
-              :key="c.id"
-              type="button"
-              class="w-full text-left bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-3 hover:border-slate-300"
-              @click="openClass(c)"
-            >
-              <span
-                class="w-11 h-11 rounded-xl flex items-center justify-center font-medium shrink-0"
-                :style="{ backgroundColor: role.hex + '26', color: role.hex }"
-              >{{ initials(c.name) }}</span>
-              <span class="flex-1 min-w-0">
-                <span class="block text-sm font-medium">{{ c.name }}</span>
-                <span class="block text-xs text-slate-500">
-                  {{ c.studentCount }} {{ t('classHub.kpiStudents') }}
-                </span>
-                <span class="flex flex-wrap gap-1.5 mt-1.5">
-                  <StatusBadge
-                    :label="t('classHub.roleSubject')"
-                    tone="neutral"
-                  />
-                  <StatusBadge
-                    v-if="c.needsGrading > 0"
-                    :label="`${c.needsGrading} ${t('classHub.kpiNeedsGrading')}`"
-                    tone="danger"
-                  />
+                  <template v-if="isGeneralCard(c)">
+                    <StatusBadge :label="t('classHub.roleHomeroom')" tone="info" />
+                    <StatusBadge :label="t('classHub.viewOnly')" tone="neutral" />
+                  </template>
+                  <template v-else>
+                    <StatusBadge :label="t('classHub.roleSubject')" tone="neutral" />
+                    <StatusBadge
+                      v-if="c.activeTugas > 0"
+                      :label="`${c.activeTugas} ${t('classHub.kpiActiveAssignments')}`"
+                      tone="warning"
+                    />
+                    <StatusBadge
+                      v-if="c.needsGrading > 0"
+                      :label="`${c.needsGrading} ${t('classHub.kpiNeedsGrading')}`"
+                      tone="danger"
+                    />
+                  </template>
                 </span>
               </span>
               <span class="text-slate-300">›</span>

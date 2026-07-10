@@ -43,7 +43,17 @@
     "attnSilent": "classes with no activity in 7+ days",
     "attnGrading": "submissions to grade",
     "allGood": "All classes are active",
-    "back": "Back"
+    "back": "Back",
+    "allSubjects": "All subjects",
+    "viewOnly": "View only",
+    "youTeach": "you teach",
+    "groupPerSubject": "By subject",
+    "teacherLabel": "Teacher",
+    "filterSubject": "Subject",
+    "filterTeacher": "Teacher",
+    "attendance": "Attendance",
+    "actionReport": "Report cards",
+    "generalViewHint": "All subjects · view only"
   },
   "languageSwitcher": {
     "label": "Choose language",
