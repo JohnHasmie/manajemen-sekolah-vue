@@ -10,9 +10,7 @@ import { useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useChildPicker } from '@/composables/useChildPicker';
-import { useRoleColor } from '@/composables/useRoleColor';
 import { ClassHubService } from '@/services/class-hub.service';
 import {
   classCardKey,
@@ -20,10 +18,10 @@ import {
   isSubjectScoped,
   type ClassCard,
 } from '@/types/class-hub';
+import { classHubAccent, classHubGradientCss } from '@/utils/classHubTheme';
 
 const { t } = useI18n();
 const router = useRouter();
-const role = useRoleColor(() => 'wali');
 const { children, activeChildId, setActive } = useChildPicker();
 
 const loading = ref(true);
@@ -73,26 +71,30 @@ const sections = computed(() => {
   return out;
 });
 
-function shortClass(name: string): string {
-  return name.toLowerCase().startsWith('kelas ') ? name.slice(6).trim() : name;
+// Subject key → deterministic colour, shared with the hub header.
+function subjectKey(c: ClassCard): string {
+  return c.subjectName ?? c.subjectId ?? c.id;
 }
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[1][0]).toUpperCase();
+function gradientFor(c: ClassCard): string {
+  return classHubGradientCss(isGeneralCard(c) ? null : subjectKey(c));
 }
-function cardTitle(c: ClassCard): string {
-  return isSubjectScoped(c)
-    ? `${c.subjectName ?? c.name} · ${shortClass(c.name)}`
-    : c.name;
+function accentFor(c: ClassCard): string {
+  return classHubAccent(isGeneralCard(c) ? null : subjectKey(c));
 }
-function cardSubtitle(c: ClassCard): string {
+function eyebrow(c: ClassCard): string {
+  return (isGeneralCard(c) ? t('classHub.allSubjects') : c.subjectName ?? c.name)
+    .toUpperCase();
+}
+function statusLine(c: ClassCard): string {
+  return `${c.studentCount} ${t('classHub.kpiStudents')}`;
+}
+function whoLine(c: ClassCard): string {
   if (isGeneralCard(c)) {
-    return `${t('classHub.allSubjects')} · ${c.studentCount} ${t('classHub.kpiStudents')}`;
+    return `${t('classHub.allSubjects')} · ${t('classHub.viewOnly')}`;
   }
   return c.teacherName
     ? `${t('classHub.teacherLabel')}: ${c.teacherName}`
-    : `${c.studentCount} ${t('classHub.kpiStudents')}`;
+    : t('classHub.roleSubject');
 }
 
 function openClass(c: ClassCard) {
@@ -129,31 +131,34 @@ function openClass(c: ClassCard) {
       <div class="space-y-6">
         <section v-for="s in sections" :key="s.label">
           <h2 class="text-xs font-medium text-slate-500 mb-2">{{ s.label }}</h2>
-          <div class="space-y-2.5">
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <button
               v-for="c in s.cards"
               :key="classCardKey(c)"
               type="button"
-              class="w-full text-left bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-3 hover:border-slate-300"
+              class="text-left rounded-2xl overflow-hidden ring-1 ring-slate-900/5 shadow-sm hover:shadow-md transition-shadow"
               @click="openClass(c)"
             >
-              <span
-                class="w-11 h-11 rounded-xl flex items-center justify-center font-medium shrink-0"
-                :style="{ backgroundColor: role.hex + '26', color: role.hex }"
-              >{{ initials(shortClass(c.name)) }}</span>
-              <span class="flex-1 min-w-0">
-                <span class="block text-sm font-medium">{{ cardTitle(c) }}</span>
-                <span class="block text-xs text-slate-500">
-                  {{ cardSubtitle(c) }}
+              <!-- Gradient hero -->
+              <div class="px-4 py-4 text-white" :style="{ background: gradientFor(c) }">
+                <p class="text-[11px] font-extrabold tracking-wide uppercase text-white/70 truncate m-0">
+                  {{ eyebrow(c) }}
+                </p>
+                <p class="mt-1 text-lg font-black leading-tight truncate m-0">
+                  {{ c.name }}
+                </p>
+                <p class="mt-1.5 text-sm text-white/80 m-0">{{ statusLine(c) }}</p>
+              </div>
+              <!-- White footer -->
+              <div class="flex items-center gap-2 px-4 py-3 bg-white">
+                <span class="flex-1 min-w-0 text-sm text-slate-600 truncate">
+                  {{ whoLine(c) }}
                 </span>
-                <span
-                  v-if="isGeneralCard(c)"
-                  class="flex flex-wrap gap-1.5 mt-1.5"
-                >
-                  <StatusBadge :label="t('classHub.viewOnly')" tone="neutral" />
+                <span class="text-sm font-semibold" :style="{ color: accentFor(c) }">
+                  {{ t('classHub.open') }}
                 </span>
-              </span>
-              <span class="text-slate-300">›</span>
+                <span :style="{ color: accentFor(c) }">›</span>
+              </div>
             </button>
           </div>
         </section>

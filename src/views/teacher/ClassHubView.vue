@@ -26,6 +26,7 @@ import {
   type ClassFeedType,
   type ClassMembers,
 } from '@/types/class-hub';
+import { classHubAccent, classHubGradientCss } from '@/utils/classHubTheme';
 
 const props = withDefaults(
   defineProps<{ id: string; roleName?: string; studentId?: string }>(),
@@ -345,6 +346,21 @@ const kicker = computed(() => {
     ? `${t('classHub.roleHomeroom')} · ${t('classHub.allSubjects')}`
     : t('classHub.allSubjects');
 });
+
+// Subject-scoped hubs are themed by the subject colour — the same hue as the
+// list card you opened, so the hub reads as "the same place". General / parent
+// / admin hubs keep the role accent over the navy overview gradient.
+const subjectKey = computed(
+  () => card.value?.subjectName ?? card.value?.subjectId ?? card.value?.id ?? '',
+);
+const accentHex = computed(() =>
+  isGeneral.value ? role.value.hex : classHubAccent(subjectKey.value),
+);
+// Header (+ list-card) gradient: subject gradient for a subject hub, navy
+// overview gradient for a general hub — matching the card you tapped.
+const headerGradient = computed(() =>
+  classHubGradientCss(isGeneral.value ? null : subjectKey.value),
+);
 </script>
 
 <template>
@@ -359,6 +375,7 @@ const kicker = computed(() => {
 
     <BrandPageHeader
       :role="headerRole"
+      :gradient="headerGradient"
       :kicker="kicker || undefined"
       :title="card?.name ?? ''"
     />
@@ -411,7 +428,7 @@ const kicker = computed(() => {
       >
         <span
           class="w-9 h-9 rounded-full flex items-center justify-center"
-          :style="{ backgroundColor: role.hex + '26', color: role.hex }"
+          :style="{ backgroundColor: accentHex + '26', color: accentHex }"
           >★</span
         >
         <span>
@@ -437,7 +454,7 @@ const kicker = computed(() => {
         <button
           type="button"
           class="text-sm font-medium"
-          :style="{ color: role.hex }"
+          :style="{ color: accentHex }"
           @click="loadMembers"
         >
           {{ t('common.retry') }}
@@ -462,7 +479,7 @@ const kicker = computed(() => {
         >
           <span
             class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold"
-            :style="{ backgroundColor: role.hex + '1F', color: role.hex }"
+            :style="{ backgroundColor: accentHex + '1F', color: accentHex }"
             >{{ initials(s.name) }}</span
           >
           <span>
@@ -486,14 +503,14 @@ const kicker = computed(() => {
           v-if="tab === 'tugas' && showGrading"
           :to="gradingTarget"
           class="flex items-center gap-2 rounded-xl px-3.5 py-2.5"
-          :style="{ backgroundColor: role.hex + '14' }"
+          :style="{ backgroundColor: accentHex + '14' }"
         >
-          <span :style="{ color: role.hex }">✎</span>
-          <span class="text-sm font-medium flex-1" :style="{ color: role.hex }">
+          <span :style="{ color: accentHex }">✎</span>
+          <span class="text-sm font-medium flex-1" :style="{ color: accentHex }">
             {{ card?.needsGrading ?? 0 }}
             {{ t('classHub.needsGradingBanner') }}
           </span>
-          <span class="text-sm font-semibold" :style="{ color: role.hex }">
+          <span class="text-sm font-semibold" :style="{ color: accentHex }">
             {{ t('classHub.gradeNow') }} ›
           </span>
         </RouterLink>

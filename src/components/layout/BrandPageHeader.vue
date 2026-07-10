@@ -35,6 +35,12 @@ const props = withDefaults(
     title: string;
     meta?: string;
     liveDot?: boolean;
+    /**
+     * Optional CSS background override (e.g. a subject-colour gradient). When
+     * set it replaces the role gradient class — used by the Kelas hub to theme
+     * the header by subject so it matches the list card you opened.
+     */
+    gradient?: string;
   }>(),
   {
     liveDot: false,
@@ -82,6 +88,7 @@ const gradientClass = computed(() => {
 // style. Unchanged from before.
 const shadowStyle = computed(() => ({
   boxShadow: `0 10px 28px ${getRoleColor(activeRole.value).hex}26`,
+  ...(props.gradient ? { background: props.gradient } : {}),
 }));
 </script>
 
