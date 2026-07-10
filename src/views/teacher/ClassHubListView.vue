@@ -10,6 +10,9 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
+import SegmentedControl from '@/components/filters/SegmentedControl.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useRoleColor } from '@/composables/useRoleColor';
 import { ClassHubService } from '@/services/class-hub.service';
 import type { ClassCard } from '@/types/class-hub';
@@ -64,6 +67,9 @@ const filters: { key: Filter; labelKey: string }[] = [
   { key: 'wali', labelKey: 'classHub.filterHomeroom' },
   { key: 'mengajar', labelKey: 'classHub.filterTeaching' },
 ];
+const filterOptions = computed(() =>
+  filters.map((f) => ({ key: f.key, label: t(f.labelKey) })),
+);
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -78,32 +84,19 @@ function openClass(c: ClassCard) {
 
 <template>
   <div class="p-4 md:p-6">
-    <header
-      class="rounded-2xl px-5 py-4 mb-4"
-      :style="{ backgroundColor: role.hex + '1A' }"
-    >
-      <h1 class="text-lg font-medium" :style="{ color: role.hex }">
-        {{ t('classHub.title') }}
-      </h1>
-      <p class="text-sm text-slate-500">{{ t('classHub.listSubtitle') }}</p>
-    </header>
+    <BrandPageHeader
+      role="guru"
+      :title="t('classHub.title')"
+      :meta="t('classHub.listSubtitle')"
+      class="mb-4"
+    />
 
-    <div class="flex gap-2 mb-4">
-      <button
-        v-for="f in filters"
-        :key="f.key"
-        type="button"
-        class="text-xs px-3 py-1.5 rounded-full border transition"
-        :class="
-          filter === f.key
-            ? 'text-white border-transparent'
-            : 'text-slate-600 border-slate-300 bg-white'
-        "
-        :style="filter === f.key ? { backgroundColor: role.hex } : {}"
-        @click="filter = f.key"
-      >
-        {{ t(f.labelKey) }}
-      </button>
+    <div class="mb-4">
+      <SegmentedControl
+        :model-value="filter"
+        :options="filterOptions"
+        @update:model-value="filter = $event as Filter"
+      />
     </div>
 
     <AsyncView
@@ -134,20 +127,20 @@ function openClass(c: ClassCard) {
                   {{ c.studentCount }} {{ t('classHub.kpiStudents') }}
                 </span>
                 <span class="flex flex-wrap gap-1.5 mt-1.5">
-                  <span
-                    class="text-[11px] font-medium px-2 py-0.5 rounded-full text-white"
-                    :style="{ backgroundColor: role.hex }"
-                  >{{ t('classHub.roleHomeroom') }}</span>
-                  <span
+                  <StatusBadge
+                    :label="t('classHub.roleHomeroom')"
+                    tone="info"
+                  />
+                  <StatusBadge
                     v-if="c.activeTugas > 0"
-                    class="text-[11px] font-medium px-2 py-0.5 rounded-full"
-                    style="background:#FAEEDA;color:#854F0B"
-                  >{{ c.activeTugas }} {{ t('classHub.kpiActiveAssignments') }}</span>
-                  <span
+                    :label="`${c.activeTugas} ${t('classHub.kpiActiveAssignments')}`"
+                    tone="warning"
+                  />
+                  <StatusBadge
                     v-if="c.needsGrading > 0"
-                    class="text-[11px] font-medium px-2 py-0.5 rounded-full"
-                    style="background:#FCEBEB;color:#791F1F"
-                  >{{ c.needsGrading }} {{ t('classHub.kpiNeedsGrading') }}</span>
+                    :label="`${c.needsGrading} ${t('classHub.kpiNeedsGrading')}`"
+                    tone="danger"
+                  />
                 </span>
               </span>
               <span class="text-slate-300">›</span>
@@ -177,15 +170,15 @@ function openClass(c: ClassCard) {
                   {{ c.studentCount }} {{ t('classHub.kpiStudents') }}
                 </span>
                 <span class="flex flex-wrap gap-1.5 mt-1.5">
-                  <span
-                    class="text-[11px] font-medium px-2 py-0.5 rounded-full"
-                    :style="{ backgroundColor: role.hex + '1F', color: role.hex }"
-                  >{{ t('classHub.roleSubject') }}</span>
-                  <span
+                  <StatusBadge
+                    :label="t('classHub.roleSubject')"
+                    tone="neutral"
+                  />
+                  <StatusBadge
                     v-if="c.needsGrading > 0"
-                    class="text-[11px] font-medium px-2 py-0.5 rounded-full"
-                    style="background:#FCEBEB;color:#791F1F"
-                  >{{ c.needsGrading }} {{ t('classHub.kpiNeedsGrading') }}</span>
+                    :label="`${c.needsGrading} ${t('classHub.kpiNeedsGrading')}`"
+                    tone="danger"
+                  />
                 </span>
               </span>
               <span class="text-slate-300">›</span>

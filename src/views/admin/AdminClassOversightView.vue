@@ -9,6 +9,9 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import Card from '@/components/ui/Card.vue';
+import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useRoleColor } from '@/composables/useRoleColor';
 import { ClassHubService } from '@/services/class-hub.service';
 import type { ClassCard } from '@/types/class-hub';
@@ -60,15 +63,12 @@ function openClass(c: ClassCard) {
 
 <template>
   <div class="p-4 md:p-6">
-    <header
-      class="rounded-2xl px-5 py-4 mb-4"
-      :style="{ backgroundColor: role.hex + '1A' }"
-    >
-      <h1 class="text-lg font-medium" :style="{ color: role.hex }">
-        {{ t('classHub.oversightTitle') }}
-      </h1>
-      <p class="text-sm text-slate-500">{{ t('classHub.oversightSubtitle') }}</p>
-    </header>
+    <BrandPageHeader
+      role="admin"
+      :title="t('classHub.oversightTitle')"
+      :meta="t('classHub.oversightSubtitle')"
+      class="mb-4"
+    />
 
     <AsyncView :state="state" :empty-title="t('classHub.emptyListTitle')">
       <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_260px]">
@@ -95,44 +95,43 @@ function openClass(c: ClassCard) {
               </span>
             </span>
             <span class="flex gap-1.5 shrink-0">
-              <span
+              <StatusBadge
                 v-if="c.needsGrading > 0"
-                class="text-[11px] font-medium px-2 py-0.5 rounded-full"
-                style="background:#FCEBEB;color:#791F1F"
-              >{{ c.needsGrading }} {{ t('classHub.kpiNeedsGrading') }}</span>
-              <span
+                :label="`${c.needsGrading} ${t('classHub.kpiNeedsGrading')}`"
+                tone="danger"
+              />
+              <StatusBadge
                 v-if="c.isSilent"
-                class="text-[11px] font-medium px-2 py-0.5 rounded-full"
-                style="background:#FAECE7;color:#993C1D"
-              >{{ t('classHub.silent') }}</span>
+                :label="t('classHub.silent')"
+                tone="warning"
+              />
             </span>
           </button>
         </div>
 
         <aside class="order-1 md:order-2">
-          <div class="bg-white rounded-xl border border-slate-200 p-3">
-            <div class="text-sm font-medium mb-2.5">
-              {{ t('classHub.needsAttention') }}
+          <Card :title="t('classHub.needsAttention')">
+            <div class="flex flex-col items-start gap-2">
+              <StatusBadge
+                v-if="allGood"
+                :label="t('classHub.allGood')"
+                tone="success"
+                dot
+              />
+              <StatusBadge
+                v-if="silent.length"
+                :label="`${silent.length} ${t('classHub.attnSilent')}`"
+                tone="warning"
+                dot
+              />
+              <StatusBadge
+                v-if="backlog > 0"
+                :label="`${backlog} ${t('classHub.attnGrading')}`"
+                tone="danger"
+                dot
+              />
             </div>
-            <div v-if="allGood" class="flex items-center gap-2 text-xs text-slate-500">
-              <span style="color:#16A34A">✓</span>
-              {{ t('classHub.allGood') }}
-            </div>
-            <div
-              v-if="silent.length"
-              class="flex items-start gap-2 text-xs text-slate-600 mb-2.5"
-            >
-              <span style="color:#993C1D">⚠</span>
-              <span>{{ silent.length }} {{ t('classHub.attnSilent') }}</span>
-            </div>
-            <div
-              v-if="backlog > 0"
-              class="flex items-start gap-2 text-xs text-slate-600"
-            >
-              <span style="color:#A32D2D">●</span>
-              <span>{{ backlog }} {{ t('classHub.attnGrading') }}</span>
-            </div>
-          </div>
+          </Card>
         </aside>
       </div>
     </AsyncView>
