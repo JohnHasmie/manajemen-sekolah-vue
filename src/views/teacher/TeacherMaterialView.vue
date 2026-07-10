@@ -942,7 +942,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
   <div class="space-y-4 pb-12">
     <!-- HEADER (shared chrome) -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.sekolah.material.kicker')"
       :title="activeSubject?.name ? t('tutor.sekolah.material.titleWithSubject', { subject: activeSubject.name }) : t('tutor.sekolah.material.titleFallback')"
       :meta="

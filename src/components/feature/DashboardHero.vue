@@ -10,7 +10,7 @@ import InitialsAvatar from './InitialsAvatar.vue';
 import NavIcon from './NavIcon.vue';
 
 const props = defineProps<{
-  role: 'admin' | 'guru' | 'wali';
+  role: 'admin' | 'teacher' | 'parent';
   schoolName: string;
   subtitle?: string;
   lastSync?: Date;

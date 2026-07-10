@@ -931,7 +931,7 @@ function typeLabel(type: AssessmentType): string {
          drilled-in class/subject + a Kembali button. The sibling
          TeacherGradeBookView owns the list-mode header. -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.sekolah.gradebook.kickerMatrix')"
       :title="matrixSubject && matrixClass
         ? `${matrixSubject.name} · ${matrixClass.name}`

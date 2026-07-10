@@ -360,7 +360,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
         <div v-if="original" class="space-y-4">
           <!-- HEADER -->
           <BrandPageHeader
-            role="guru"
+            role="teacher"
             :kicker="headerKicker"
             :title="original.student_name ?? t('tutor.sekolah.reportCardDetail.studentFallback')"
             :meta="headerMeta"

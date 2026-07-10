@@ -986,7 +986,7 @@ function parentTutoringNav(activeChildId: string): NavSection[] {
 /** Static tenant menus. `parent` resolves dynamically (needs child id). */
 const TUTORING_MENUS: Partial<Record<Role, NavSection[]>> = {
   admin: ADMIN_TUTORING_NAV,
-  guru: TEACHER_TUTORING_NAV,
+  teacher: TEACHER_TUTORING_NAV,
   // A tutoring center (bimbel) has NO homeroom concept — tutors teach
   // session groups, not homeroom classes, and none of the bimbel views
   // read `homeroomClasses`. So a wali_kelas on the bimbel surface is just
@@ -995,9 +995,11 @@ const TUTORING_MENUS: Partial<Record<Role, NavSection[]>> = {
   wali_kelas: TEACHER_TUTORING_NAV,
 };
 
-const MENUS: Record<Role, NavSection[]> = {
+// Partial: `student` has no web dashboard shell (parent-mediated), so it has
+// no menu — the `MENUS[role] ?? []` lookup covers the gap.
+const MENUS: Partial<Record<Role, NavSection[]>> = {
   admin: ADMIN_NAV,
-  guru: TEACHER_NAV,
+  teacher: TEACHER_NAV,
   // NOTE: `activeRole` is never literally 'wali_kelas' at runtime
   // (normalizeRole collapses it to 'guru'), so this map entry is not the
   // live selector. `useNavMenu` picks WALI_KELAS_NAV off the real
@@ -1005,7 +1007,7 @@ const MENUS: Record<Role, NavSection[]> = {
   // Role-union exhaustiveness and so a future un-collapsed role still
   // gets the homeroom-first nav rather than the plain teacher nav.
   wali_kelas: WALI_KELAS_NAV,
-  wali: PARENT_NAV,
+  parent: PARENT_NAV,
   staff: STAFF_NAV,
   // Super-admins get their OWN dedicated menu (handled in useNavMenu via
   // the isSuperAdmin check below). Map entry kept for exhaustiveness

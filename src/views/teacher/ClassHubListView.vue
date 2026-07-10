@@ -121,7 +121,7 @@ function openClass(c: ClassCard) {
 <template>
   <div class="p-4 md:p-6">
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :title="t('classHub.title')"
       :meta="t('classHub.listSubtitle')"
       class="mb-4"

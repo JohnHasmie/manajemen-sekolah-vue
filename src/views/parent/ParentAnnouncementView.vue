@@ -469,7 +469,7 @@ function pickStatus(k: StatusFilter) {
               v-for="a in g.items"
               :key="a.id"
               :announcement="a"
-              viewer-role="wali"
+              viewer-role="parent"
               @tap="openDetail"
             />
           </div>
@@ -527,7 +527,7 @@ function pickStatus(k: StatusFilter) {
     <AnnouncementDetailModal
       v-if="detail"
       :announcement="detail"
-      viewer-role="wali"
+      viewer-role="parent"
       :auto-mark-read="false"
       @close="detail = null"
     />

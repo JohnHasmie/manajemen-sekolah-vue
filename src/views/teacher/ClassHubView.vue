@@ -17,6 +17,7 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useRoleColor } from '@/composables/useRoleColor';
+import { canonicalRole, ROLE_ADMIN, ROLE_PARENT } from '@/utils/role';
 import type { Role } from '@/types/auth';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { ClassHubService } from '@/services/class-hub.service';
@@ -33,10 +34,12 @@ const props = withDefaults(
   { roleName: 'guru', studentId: undefined },
 );
 const { t } = useI18n();
-// `roleName` is a plain string prop; narrow it to Role for the shared
-// role-aware components (useRoleColor / BrandPageHeader).
-const headerRole = computed<Role>(() => props.roleName as Role);
-const role = useRoleColor(() => props.roleName as Role);
+// Canonicalise `roleName` (a plain string prop that may still be the legacy
+// 'guru'/'wali' spelling) once, then thread it through the shared role-aware
+// components (useRoleColor / BrandPageHeader) and the back-target routing.
+const canonRole = computed(() => canonicalRole(props.roleName));
+const headerRole = computed<Role>(() => canonRole.value as Role);
+const role = useRoleColor(() => canonRole.value as Role);
 
 // The opened card's scope comes from the ?subject_id= query: present → the
 // subject-scoped hub, absent → the general (all-subjects) hub.
@@ -52,8 +55,8 @@ const filterTeacherId = ref<string | null>(null);
 
 // Back target mirrors the role's list surface (mirrors the header link).
 const backTarget = computed<RouteLocationRaw>(() => {
-  if (props.roleName === 'admin') return { name: 'admin.class-oversight' };
-  if (props.roleName === 'wali') return { name: 'parent.classes' };
+  if (canonRole.value === ROLE_ADMIN) return { name: 'admin.class-oversight' };
+  if (canonRole.value === ROLE_PARENT) return { name: 'parent.classes' };
   return { name: 'teacher.classes' };
 });
 

@@ -393,7 +393,7 @@ function pickStatus(k: StatusFilter) {
   <div class="space-y-md pb-12">
     <!-- ── 1. Header ────────────────────────────────────────── -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       kicker="Komunikasi · Pengumuman"
       title="Pengumuman"
       :meta="`${items.length} pengumuman · ${publishedThisWeek} terbit minggu ini`"
@@ -449,7 +449,7 @@ function pickStatus(k: StatusFilter) {
             v-for="a in filtered"
             :key="a.id"
             :announcement="a"
-            viewer-role="guru"
+            viewer-role="teacher"
             show-delete
             @tap="detail = $event"
             @delete="deleteTarget = $event"
@@ -615,7 +615,7 @@ function pickStatus(k: StatusFilter) {
     <AnnouncementDetailModal
       v-if="detail"
       :announcement="detail"
-      viewer-role="guru"
+      viewer-role="teacher"
       can-edit
       can-delete
       :auto-mark-read="false"

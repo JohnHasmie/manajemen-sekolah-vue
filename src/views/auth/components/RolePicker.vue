@@ -24,7 +24,7 @@ function normalizeRoleForCompare(r: string | null | undefined): string {
     low === 'wali_murid' ||
     low === 'walimurid'
   )
-    return 'wali';
+    return 'parent';
   if (low === 'staff' || low === 'staf') return 'staff';
   return low;
 }

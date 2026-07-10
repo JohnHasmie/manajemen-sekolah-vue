@@ -146,7 +146,7 @@ async function load() {
   try {
     const studentId = (current.value.student_id as string | undefined) ?? undefined;
     const [statsData, recent, inbox] = await Promise.all([
-      DashboardService.getStats('wali'),
+      DashboardService.getStats('parent'),
       DashboardService.parentAcademicRecent(8),
       DashboardService.parentPriorityInbox(studentId),
     ]);
@@ -574,7 +574,7 @@ watch(sliceKey, () => {
 
     <AcademicYearPickerModal
       v-if="showYearPicker"
-      role="wali"
+      role="parent"
       @close="showYearPicker = false"
     />
   </div>

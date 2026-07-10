@@ -311,7 +311,7 @@ function goBack() {
 
     <!-- HEADER -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="headerKicker"
       :title="headerTitle"
       :meta="headerMeta"

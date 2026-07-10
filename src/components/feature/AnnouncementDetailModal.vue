@@ -22,7 +22,7 @@ import { canonicalRole, ROLE_ADMIN, ROLE_TEACHER } from '@/utils/role';
 const props = withDefaults(
   defineProps<{
     announcement: Announcement;
-    viewerRole?: 'admin' | 'guru' | 'wali';
+    viewerRole?: 'admin' | 'teacher' | 'parent';
     canEdit?: boolean;
     canDelete?: boolean;
     /**
@@ -33,7 +33,7 @@ const props = withDefaults(
     autoMarkRead?: boolean;
   }>(),
   {
-    viewerRole: 'wali',
+    viewerRole: 'parent',
     canEdit: false,
     canDelete: false,
     autoMarkRead: true,

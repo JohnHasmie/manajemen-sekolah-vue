@@ -29,7 +29,7 @@ const activeChildId = ref<string>(
 const loaded = ref(false);
 /**
  * Overdue-billing signal for the sidebar badge (Wave 7). Set from the
- * SAME `getStats('wali')` response `load()` already fetches for the
+ * SAME `getStats('parent')` response `load()` already fetches for the
  * child slices — no extra round-trip. True when any bill amount is
  * outstanding/overdue. The parent stats expose a rupiah TOTAL
  * (`outstanding_bills` / `overdue_total`), not a count, so this is a
@@ -87,7 +87,7 @@ export function useChildPicker() {
 
     // Primary: dashboard slices (tenant-aware, includes bimbel parent).
     try {
-      const stats = await DashboardService.getStats('wali');
+      const stats = await DashboardService.getStats('parent');
       hasOverdueBills.value = readOverdue(stats);
       const fromDash = fromSlices(stats?.slices);
       if (fromDash.length > 0) {

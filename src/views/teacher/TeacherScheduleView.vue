@@ -604,7 +604,7 @@ onMounted(() => {
   <div class="space-y-md">
     <!-- ── 1. Header ────────────────────────────────────────── -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="isWaliMode ? `Wali Kelas · ${activeHomeroom?.name ?? ''}` : 'Jadwal Mengajar · Realtime'"
       :title="isWaliMode ? `${t('teacher.schedule.thisWeek')} · ${activeHomeroom?.name ?? ''}` : t('teacher.schedule.thisWeek')"
       :meta="`${totalSessions} sesi · ${uniqueClasses} kelas · ${sessionsToday} sesi hari ini`"

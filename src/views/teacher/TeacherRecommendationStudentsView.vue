@@ -479,7 +479,7 @@ function studentStatusPills(
 
     <!-- HEADER -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="headerKicker"
       :title="t('tutor.sekolah.recommendationStudents.title')"
       :meta="headerMeta"

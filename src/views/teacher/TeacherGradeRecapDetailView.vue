@@ -80,6 +80,14 @@ const editDesc = ref<{
 // Add / rename / delete chapter modals
 const showAddChapter = ref(false);
 const addChapterDraft = ref('');
+// Slack 1783643111 — Luay Prio Medium 2026-07-10: "add nilai belum
+// ada pilihan untuk mengambil dari nilai [existing]". Toggle inside
+// the Add Chapter modal — when true, `confirmAddChapter` opens the
+// existing `GradeRecapSourcePickerModal` for the freshly-added bab
+// column so the teacher can prefill scores from a gradebook
+// assessment in one flow instead of add → then remember to open
+// picker manually.
+const addChapterFromExisting = ref(false);
 const renameChapter = ref<{ index: number; draft: string } | null>(null);
 const deleteChapter = ref<{ index: number } | null>(null);
 
@@ -322,6 +330,7 @@ function saveDescEdit() {
 // ── Chapter ops ──
 function openAddChapter() {
   addChapterDraft.value = `Bab ${chapters.value.length + 1}`;
+  addChapterFromExisting.value = false;
   showAddChapter.value = true;
 }
 
@@ -338,8 +347,16 @@ function confirmAddChapter() {
     r.chapter_scores.push(null);
     r.chapter_names.push(name);
   }
+  const newIndex = chapters.value.length - 1;
+  const shouldPrefill = addChapterFromExisting.value;
   showAddChapter.value = false;
   toast.value = { message: t('tutor.sekolah.gradeRecapDetail.chapterAddedToast'), tone: 'success' };
+  // Chain into the source picker when the teacher opted in — same
+  // modal every existing column uses, just seeded with the new bab
+  // name + index (Slack 1783643111).
+  if (shouldPrefill) {
+    openSourcePicker('bab', name, newIndex);
+  }
 }
 
 function openRenameChapter(index: number) {
@@ -615,7 +632,7 @@ function onPredikatBlur(rowId: string) {
   <div class="space-y-4 pb-32 relative">
     <!-- HEADER -->
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.sekolah.gradeRecapDetail.kicker')"
       :title="`${subjectName} · ${className}`"
       :meta="t('tutor.sekolah.gradeRecapDetail.meta', { students: rows.length, chapters: chapters.length })"
@@ -990,6 +1007,24 @@ function onPredikatBlur(rowId: string) {
           :placeholder="t('tutor.sekolah.gradeRecapDetail.chapterNameExample')"
           @keyup.enter="confirmAddChapter"
         />
+        <!-- Slack 1783643111 — Luay: "add nilai belum ada pilihan
+             untuk mengambil dari nilai [existing]". Checkbox opens
+             the same GradeRecapSourcePickerModal that already backs
+             every existing column, so the teacher gets one modal
+             flow instead of add → then remember to open the picker. -->
+        <label class="flex items-center gap-2 text-[12.5px] text-slate-700 cursor-pointer">
+          <input
+            v-model="addChapterFromExisting"
+            type="checkbox"
+            class="w-4 h-4 accent-brand-cobalt"
+          />
+          <span>
+            <b>Ambil nilai dari asesmen di gradebook.</b>
+            Setelah bab dibuat, aku akan buka picker asesmen supaya
+            skor per murid otomatis ke-fill dari nilai yang sudah
+            diinput di buku nilai.
+          </span>
+        </label>
         <div class="flex justify-end gap-2">
           <Button variant="ghost" @click="showAddChapter = false">{{ t('tutor.sekolah.gradeRecapDetail.cancel') }}</Button>
           <Button

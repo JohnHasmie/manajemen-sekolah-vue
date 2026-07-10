@@ -305,7 +305,7 @@ function normalizeSchool(raw: any): School {
 function normalizeRoleString(raw: string): Role {
   const r = String(raw ?? '').toLowerCase().trim();
   if (r === 'admin' || r === 'administrator') return 'admin';
-  if (r === 'guru' || r === 'teacher') return 'guru';
+  if (r === 'guru' || r === 'teacher') return 'teacher';
   if (r === 'wali_kelas' || r === 'walikelas') return 'wali_kelas';
   if (
     r === 'wali' ||
@@ -314,29 +314,23 @@ function normalizeRoleString(raw: string): Role {
     r === 'wali_murid' ||
     r === 'walimurid'
   ) {
-    return 'wali';
+    return 'parent';
   }
   if (r === 'staff' || r === 'staf') return 'staff';
   return r as Role;
 }
 
 /**
- * Converts the frontend's canonical Indonesian role names back to
- * the backend's English UserRole enum values. This is the inverse
- * of `normalizeRoleString`. Required because the backend stores
- * roles as 'teacher'/'parent' but the frontend displays and stores
- * them as 'teacher'/'parent'.
- *
- * Without this, switchRole sends 'teacher' to the backend which
- * doesn't match the UserRole enum and returns 422.
+ * Maps the FE canonical role to the backend's UserRole enum value.
+ * Now that the FE role keys are English (matching the backend), this is
+ * an identity for the plain roles; its only real job is collapsing the
+ * `wali_kelas` FE variant to the backend's `teacher`.
  */
 function denormalizeRole(role: Role): string {
   switch (role) {
-    case 'admin':     return 'admin';
-    case 'guru':      return 'teacher';
-    case 'wali_kelas': return 'teacher'; // wali_kelas is a sub-type of teacher
-    case 'wali':      return 'parent';
-    case 'staff':     return 'staff';
-    default:          return role;
+    case 'wali_kelas':
+      return 'teacher'; // wali_kelas is a sub-type of teacher
+    default:
+      return role;
   }
 }

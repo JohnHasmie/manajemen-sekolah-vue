@@ -120,7 +120,7 @@ const DAYS = computed<{ iso: number; label: string }[]>(() => [
 <template>
   <div class="space-y-md pb-12">
     <BrandPageHeader
-      role="guru"
+      role="teacher"
       :kicker="t('tutor.bimbel.recurring_sessions.kicker')"
       :title="t('tutor.bimbel.recurring_sessions.title')"
       :meta="t('tutor.bimbel.recurring_sessions.meta')"
