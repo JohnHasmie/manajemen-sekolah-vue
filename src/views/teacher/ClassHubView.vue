@@ -10,11 +10,14 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, type RouteLocationRaw } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
+import AppFilterChip from '@/components/filters/AppFilterChip.vue';
+import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import Modal from '@/components/ui/Modal.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useRoleColor } from '@/composables/useRoleColor';
 import { canonicalRole, ROLE_ADMIN, ROLE_PARENT } from '@/utils/role';
@@ -233,6 +236,41 @@ const teacherOptions = computed(() =>
   distinct('teacher_id', (i) => metaStr(i, 'teacher_name')),
 );
 
+// General-hub Mapel / Guru filter — shared AppFilterChip + a picker Modal,
+// mirroring the Kelas / Mapel chips on Kegiatan Kelas & Nilai.
+const activePicker = ref<null | 'subject' | 'teacher'>(null);
+
+function labelFor(
+  opts: { key: string; label: string }[],
+  id: string | null,
+): string {
+  if (!id) return t('classHub.filterAll');
+  return opts.find((o) => o.key === id)?.label ?? id;
+}
+const filterSubjectLabel = computed(() =>
+  labelFor(subjectOptions.value, filterSubjectId.value),
+);
+const filterTeacherLabel = computed(() =>
+  labelFor(teacherOptions.value, filterTeacherId.value),
+);
+
+const pickerTitle = computed(() =>
+  activePicker.value === 'teacher'
+    ? t('classHub.filterTeacher')
+    : t('classHub.filterSubject'),
+);
+const pickerOptions = computed(() =>
+  activePicker.value === 'teacher' ? teacherOptions.value : subjectOptions.value,
+);
+const pickerCurrent = computed(() =>
+  activePicker.value === 'teacher' ? filterTeacherId.value : filterSubjectId.value,
+);
+function choosePicker(id: string | null) {
+  if (activePicker.value === 'teacher') filterTeacherId.value = id;
+  else filterSubjectId.value = id;
+  activePicker.value = null;
+}
+
 const visibleItems = computed(() => {
   let list = items.value;
   if (isGeneral.value) {
@@ -387,33 +425,27 @@ const headerGradient = computed(() =>
 
     <!-- General (all-subjects) hub: filter the merged feed by subject / teacher.
          Read-only across subjects. -->
-    <div v-if="isGeneral" class="mt-4 flex flex-wrap items-center gap-2">
-      <select
-        :value="filterSubjectId ?? ''"
-        class="text-xs rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700"
-        @change="filterSubjectId = ($event.target as HTMLSelectElement).value || null"
-      >
-        <option value="">
-          {{ t('classHub.filterSubject') }}: {{ t('classHub.filterAll') }}
-        </option>
-        <option v-for="o in subjectOptions" :key="o.key" :value="o.key">
-          {{ o.label }}
-        </option>
-      </select>
-      <select
-        :value="filterTeacherId ?? ''"
-        class="text-xs rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700"
-        @change="filterTeacherId = ($event.target as HTMLSelectElement).value || null"
-      >
-        <option value="">
-          {{ t('classHub.filterTeacher') }}: {{ t('classHub.filterAll') }}
-        </option>
-        <option v-for="o in teacherOptions" :key="o.key" :value="o.key">
-          {{ o.label }}
-        </option>
-      </select>
-      <span class="text-xs text-slate-400">· {{ t('classHub.generalViewHint') }}</span>
-    </div>
+    <PageFilterToolbar v-if="isGeneral" hide-default-search class="mt-4">
+      <template #chips>
+        <AppFilterChip
+          :label="t('classHub.filterSubject')"
+          :value="filterSubjectLabel"
+          icon-name="book"
+          tone="brand"
+          @click="activePicker = 'subject'"
+        />
+        <AppFilterChip
+          :label="t('classHub.filterTeacher')"
+          :value="filterTeacherLabel"
+          icon-name="user"
+          tone="violet"
+          @click="activePicker = 'teacher'"
+        />
+        <span class="self-center text-xs text-slate-400">
+          · {{ t('classHub.generalViewHint') }}
+        </span>
+      </template>
+    </PageFilterToolbar>
 
     <div class="mt-4 mb-4">
       <SegmentedControl
@@ -567,5 +599,36 @@ const headerGradient = computed(() =>
         </section>
       </div>
     </AsyncView>
+
+    <!-- Mapel / Guru picker (general hub) -->
+    <Modal
+      v-if="activePicker"
+      :title="pickerTitle"
+      size="sm"
+      @close="activePicker = null"
+    >
+      <ul class="space-y-1 max-h-[60vh] overflow-y-auto">
+        <li>
+          <button
+            type="button"
+            class="w-full text-left rounded-lg px-3 py-2 text-sm font-medium hover:bg-slate-50"
+            :class="pickerCurrent == null ? 'text-brand-cobalt font-bold' : 'text-slate-700'"
+            @click="choosePicker(null)"
+          >
+            {{ t('classHub.filterAll') }}
+          </button>
+        </li>
+        <li v-for="o in pickerOptions" :key="o.key">
+          <button
+            type="button"
+            class="w-full text-left rounded-lg px-3 py-2 text-sm font-medium hover:bg-slate-50"
+            :class="pickerCurrent === o.key ? 'text-brand-cobalt font-bold' : 'text-slate-700'"
+            @click="choosePicker(o.key)"
+          >
+            {{ o.label }}
+          </button>
+        </li>
+      </ul>
+    </Modal>
   </div>
 </template>
