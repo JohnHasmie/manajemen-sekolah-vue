@@ -281,7 +281,10 @@ const TEACHER_NAV: NavSection[] = [
         to: '/teacher/classes',
         labelKey: 'nav.classHub',
         icon: 'users',
-        ability: 'school.class.view',
+        // The hub shows the teacher's OWN classes (GET /classes/mine), gated on
+        // `activity.view` — which every guru holds. NOT `school.class.view`:
+        // that's the admin-only school-wide read, so it hid Kelas from teachers.
+        ability: 'activity.view',
       },
       {
         to: '/teacher/my-attendance',
@@ -499,7 +502,12 @@ const PARENT_NAV: NavSection[] = [
       { to: '/parent/inbox', labelKey: 'nav.inbox', icon: 'inbox' },
       // Class-first "Kelas" hub — the child's per-class Riwayat Sesi /
       // Tugas / Anggota / Nilai (read-only). Promoted to the top.
-      { to: '/parent/classes', labelKey: 'nav.classHub', icon: 'users' },
+      {
+        to: '/parent/classes',
+        labelKey: 'nav.classHub',
+        icon: 'users',
+        ability: 'activity.view',
+      },
       {
         to: '/parent/announcements',
         labelKey: 'nav.announcements',
