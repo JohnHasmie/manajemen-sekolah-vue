@@ -49,12 +49,18 @@ export const ClassHubService = {
   /** One class's "Riwayat Sesi" feed. */
   async feed(
     classId: string,
-    opts: { subjectId?: string; before?: string; limit?: number } = {},
+    opts: {
+      subjectId?: string;
+      teacherId?: string;
+      before?: string;
+      limit?: number;
+    } = {},
   ): Promise<ClassFeedItem[]> {
     const res = await api.get(`/classes/${classId}/feed`, {
       params: {
         limit: opts.limit ?? 20,
         ...(opts.subjectId ? { subject_id: opts.subjectId } : {}),
+        ...(opts.teacherId ? { teacher_id: opts.teacherId } : {}),
         ...(opts.before ? { before: opts.before } : {}),
       },
     });

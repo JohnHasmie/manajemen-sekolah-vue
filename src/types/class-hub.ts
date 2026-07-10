@@ -2,7 +2,9 @@
 // domain models (ClassCard / ClassFeedItem) and the backend response shapes
 // from GET /classes/mine and GET /classes/{id}/feed.
 
-export type ClassRoleInClass = 'wali_kelas' | 'guru_mapel' | null;
+export type ClassRoleInClass = 'wali_kelas' | 'guru_mapel' | 'parent' | null;
+
+export type ClassScope = 'general' | 'subject';
 
 export interface ClassCard {
   id: string;
@@ -17,6 +19,13 @@ export interface ClassCard {
   needsGrading: number;
   /** Admin oversight only — no class activity in the last 7 days ("sepi"). */
   isSilent: boolean;
+  /** Subject this card is scoped to; null on a general (all-subjects) card. */
+  subjectId: string | null;
+  subjectName: string | null;
+  /** The subject's teacher (parent's per-subject cards show who teaches it). */
+  teacherName: string | null;
+  /** `general` (all subjects, oversight) | `subject` (scoped to subjectId). */
+  scope: ClassScope;
 }
 
 export type ClassFeedType =
@@ -64,11 +73,35 @@ export function classCardFromJson(json: Record<string, unknown>): ClassCard {
     activeTugas: toInt(json.active_tugas),
     needsGrading: toInt(json.needs_grading),
     isSilent: json.is_silent === true,
+    subjectId: json.subject_id == null ? null : String(json.subject_id),
+    subjectName: json.subject_name == null ? null : String(json.subject_name),
+    teacherName: json.teacher_name == null ? null : String(json.teacher_name),
+    // Fall back to deriving the scope from subject_id so this stays correct
+    // against an older backend that doesn't send `scope` yet.
+    scope:
+      typeof json.scope === 'string' && json.scope
+        ? (json.scope as ClassScope)
+        : json.subject_id != null
+          ? 'subject'
+          : 'general',
   };
 }
 
 export function isWaliKelas(c: ClassCard): boolean {
   return c.roleInClass === 'wali_kelas' || c.isHomeroom;
+}
+
+export function isSubjectScoped(c: ClassCard): boolean {
+  return c.scope === 'subject' && c.subjectId != null;
+}
+
+export function isGeneralCard(c: ClassCard): boolean {
+  return c.scope === 'general';
+}
+
+/** Stable per-card key — a class yields a general card + one per subject. */
+export function classCardKey(c: ClassCard): string {
+  return `${c.id}::${c.subjectId ?? 'general'}`;
 }
 
 const FEED_TYPES: ClassFeedType[] = [

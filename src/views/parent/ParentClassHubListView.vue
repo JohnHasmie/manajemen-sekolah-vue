@@ -10,10 +10,16 @@ import { useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useChildPicker } from '@/composables/useChildPicker';
 import { useRoleColor } from '@/composables/useRoleColor';
 import { ClassHubService } from '@/services/class-hub.service';
-import type { ClassCard } from '@/types/class-hub';
+import {
+  classCardKey,
+  isGeneralCard,
+  isSubjectScoped,
+  type ClassCard,
+} from '@/types/class-hub';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -53,14 +59,48 @@ const state = computed(() => {
   return { status: 'content' as const };
 });
 
+// Semua mapel (general overview) + Per mata pelajaran (per-subject cards).
+const sections = computed(() => {
+  const out: { label: string; cards: ClassCard[] }[] = [];
+  const general = classes.value.filter((c) => isGeneralCard(c));
+  const subjects = classes.value.filter((c) => isSubjectScoped(c));
+  if (general.length) {
+    out.push({ label: t('classHub.allSubjects'), cards: general });
+  }
+  if (subjects.length) {
+    out.push({ label: t('classHub.groupPerSubject'), cards: subjects });
+  }
+  return out;
+});
+
+function shortClass(name: string): string {
+  return name.toLowerCase().startsWith('kelas ') ? name.slice(6).trim() : name;
+}
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
+function cardTitle(c: ClassCard): string {
+  return isSubjectScoped(c)
+    ? `${c.subjectName ?? c.name} · ${shortClass(c.name)}`
+    : c.name;
+}
+function cardSubtitle(c: ClassCard): string {
+  if (isGeneralCard(c)) {
+    return `${t('classHub.allSubjects')} · ${c.studentCount} ${t('classHub.kpiStudents')}`;
+  }
+  return c.teacherName
+    ? `${t('classHub.teacherLabel')}: ${c.teacherName}`
+    : `${c.studentCount} ${t('classHub.kpiStudents')}`;
+}
 
 function openClass(c: ClassCard) {
-  router.push({ name: 'parent.classes.detail', params: { id: c.id } });
+  router.push({
+    name: 'parent.classes.detail',
+    params: { id: c.id },
+    query: c.subjectId ? { subject_id: c.subjectId } : {},
+  });
 }
 </script>
 
@@ -86,26 +126,37 @@ function openClass(c: ClassCard) {
       :empty-title="t('classHub.emptyListTitle')"
       :empty-description="t('classHub.emptyListMsg')"
     >
-      <div class="space-y-2.5">
-        <button
-          v-for="c in classes"
-          :key="c.id"
-          type="button"
-          class="w-full text-left bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-3 hover:border-slate-300"
-          @click="openClass(c)"
-        >
-          <span
-            class="w-11 h-11 rounded-xl flex items-center justify-center font-medium shrink-0"
-            :style="{ backgroundColor: role.hex + '26', color: role.hex }"
-          >{{ initials(c.name) }}</span>
-          <span class="flex-1 min-w-0">
-            <span class="block text-sm font-medium">{{ c.name }}</span>
-            <span class="block text-xs text-slate-500">
-              {{ c.studentCount }} {{ t('classHub.kpiStudents') }}
-            </span>
-          </span>
-          <span class="text-slate-300">›</span>
-        </button>
+      <div class="space-y-6">
+        <section v-for="s in sections" :key="s.label">
+          <h2 class="text-xs font-medium text-slate-500 mb-2">{{ s.label }}</h2>
+          <div class="space-y-2.5">
+            <button
+              v-for="c in s.cards"
+              :key="classCardKey(c)"
+              type="button"
+              class="w-full text-left bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-3 hover:border-slate-300"
+              @click="openClass(c)"
+            >
+              <span
+                class="w-11 h-11 rounded-xl flex items-center justify-center font-medium shrink-0"
+                :style="{ backgroundColor: role.hex + '26', color: role.hex }"
+              >{{ initials(shortClass(c.name)) }}</span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-sm font-medium">{{ cardTitle(c) }}</span>
+                <span class="block text-xs text-slate-500">
+                  {{ cardSubtitle(c) }}
+                </span>
+                <span
+                  v-if="isGeneralCard(c)"
+                  class="flex flex-wrap gap-1.5 mt-1.5"
+                >
+                  <StatusBadge :label="t('classHub.viewOnly')" tone="neutral" />
+                </span>
+              </span>
+              <span class="text-slate-300">›</span>
+            </button>
+          </div>
+        </section>
       </div>
     </AsyncView>
   </div>

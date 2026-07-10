@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { RouteLocationRaw } from 'vue-router';
+import { useRoute, type RouteLocationRaw } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import KpiStripCards, {
@@ -21,7 +21,6 @@ import type { Role } from '@/types/auth';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { ClassHubService } from '@/services/class-hub.service';
 import {
-  isWaliKelas,
   type ClassCard,
   type ClassFeedItem,
   type ClassFeedType,
@@ -37,6 +36,18 @@ const { t } = useI18n();
 // role-aware components (useRoleColor / BrandPageHeader).
 const headerRole = computed<Role>(() => props.roleName as Role);
 const role = useRoleColor(() => props.roleName as Role);
+
+// The opened card's scope comes from the ?subject_id= query: present → the
+// subject-scoped hub, absent → the general (all-subjects) hub.
+const route = useRoute();
+const subjectId = computed<string | null>(
+  () => (route.query.subject_id as string | undefined) ?? null,
+);
+const isGeneral = computed(() => subjectId.value == null);
+
+// General-hub client-side filter (subject / teacher), derived from the feed.
+const filterSubjectId = ref<string | null>(null);
+const filterTeacherId = ref<string | null>(null);
 
 // Back target mirrors the role's list surface (mirrors the header link).
 const backTarget = computed<RouteLocationRaw>(() => {
@@ -92,7 +103,12 @@ async function load() {
   error.value = null;
   try {
     const [feed, cards] = await Promise.all([
-      ClassHubService.feed(props.id),
+      // Subject cards narrow the feed server-side; the general hub loads
+      // everything and filters by subject/teacher client-side.
+      ClassHubService.feed(
+        props.id,
+        subjectId.value ? { subjectId: subjectId.value } : {},
+      ),
       // Admin reads the header card from the school-wide oversight list;
       // guru/parent from their own /classes/mine.
       props.roleName === 'admin'
@@ -100,7 +116,17 @@ async function load() {
         : ClassHubService.myClasses(props.studentId),
     ]);
     items.value = feed;
-    card.value = cards.find((c) => c.id === props.id) ?? null;
+    // A class now yields several cards — pick the one matching this scope.
+    card.value =
+      cards.find(
+        (c) =>
+          c.id === props.id &&
+          (subjectId.value
+            ? c.subjectId === subjectId.value
+            : c.scope === 'general'),
+      ) ??
+      cards.find((c) => c.id === props.id) ??
+      null;
   } catch (e) {
     error.value = e instanceof Error ? e.message : String(e);
   } finally {
@@ -179,16 +205,50 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
+const metaStr = (i: ClassFeedItem, k: string): string | null =>
+  typeof i.meta[k] === 'string' ? (i.meta[k] as string) : null;
+
+// Distinct subjects / teachers present in the feed → general-hub filter menus.
+function distinct(
+  idKey: string,
+  labelOf: (i: ClassFeedItem) => string | null,
+): { key: string; label: string }[] {
+  const seen = new Map<string, string>();
+  for (const i of items.value) {
+    const id = metaStr(i, idKey);
+    if (!id || seen.has(id)) continue;
+    const l = labelOf(i);
+    seen.set(id, l && l.length ? l : id);
+  }
+  return [...seen.entries()].map(([key, label]) => ({ key, label }));
+}
+const subjectOptions = computed(() =>
+  distinct('subject_id', (i) => i.subtitle),
+);
+const teacherOptions = computed(() =>
+  distinct('teacher_id', (i) => metaStr(i, 'teacher_name')),
+);
+
 const visibleItems = computed(() => {
+  let list = items.value;
+  if (isGeneral.value) {
+    list = list.filter((i) => {
+      if (filterSubjectId.value && metaStr(i, 'subject_id') !== filterSubjectId.value) {
+        return false;
+      }
+      if (filterTeacherId.value && metaStr(i, 'teacher_id') !== filterTeacherId.value) {
+        return false;
+      }
+      return true;
+    });
+  }
   if (tab.value === 'tugas') {
-    return items.value.filter((i) =>
-      ['tugas', 'ujian', 'materi'].includes(i.type),
-    );
+    return list.filter((i) => ['tugas', 'ujian', 'materi'].includes(i.type));
   }
   if (tab.value === 'nilai') {
-    return items.value.filter((i) => i.type === 'nilai');
+    return list.filter((i) => i.type === 'nilai');
   }
-  return items.value;
+  return list;
 });
 
 const state = computed(() => {
@@ -273,12 +333,17 @@ function feedSubtitle(it: ClassFeedItem): string | null {
   return parts.join(' · ');
 }
 
-const roleLabel = computed(() => {
-  // Parent is a read-only observer — no wali/guru-mapel label.
-  if (props.roleName === 'wali') return '';
-  return card.value && isWaliKelas(card.value)
-    ? t('classHub.roleHomeroom')
-    : t('classHub.roleSubject');
+// Kicker — subject-scoped shows the subject; general shows "all subjects".
+const kicker = computed(() => {
+  if (!isGeneral.value) {
+    const subj = card.value?.subjectName ?? '';
+    return props.roleName === 'wali'
+      ? subj
+      : `${t('classHub.roleSubject')} · ${subj}`;
+  }
+  return props.roleName === 'guru'
+    ? `${t('classHub.roleHomeroom')} · ${t('classHub.allSubjects')}`
+    : t('classHub.allSubjects');
 });
 </script>
 
@@ -294,11 +359,41 @@ const roleLabel = computed(() => {
 
     <BrandPageHeader
       :role="headerRole"
-      :kicker="roleLabel || undefined"
+      :kicker="kicker || undefined"
       :title="card?.name ?? ''"
     />
 
     <KpiStripCards v-if="card" :cards="kpiCards" :lg-cols="3" class="mt-4" />
+
+    <!-- General (all-subjects) hub: filter the merged feed by subject / teacher.
+         Read-only across subjects. -->
+    <div v-if="isGeneral" class="mt-4 flex flex-wrap items-center gap-2">
+      <select
+        :value="filterSubjectId ?? ''"
+        class="text-xs rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700"
+        @change="filterSubjectId = ($event.target as HTMLSelectElement).value || null"
+      >
+        <option value="">
+          {{ t('classHub.filterSubject') }}: {{ t('classHub.filterAll') }}
+        </option>
+        <option v-for="o in subjectOptions" :key="o.key" :value="o.key">
+          {{ o.label }}
+        </option>
+      </select>
+      <select
+        :value="filterTeacherId ?? ''"
+        class="text-xs rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700"
+        @change="filterTeacherId = ($event.target as HTMLSelectElement).value || null"
+      >
+        <option value="">
+          {{ t('classHub.filterTeacher') }}: {{ t('classHub.filterAll') }}
+        </option>
+        <option v-for="o in teacherOptions" :key="o.key" :value="o.key">
+          {{ o.label }}
+        </option>
+      </select>
+      <span class="text-xs text-slate-400">· {{ t('classHub.generalViewHint') }}</span>
+    </div>
 
     <div class="mt-4 mb-4">
       <SegmentedControl
@@ -429,7 +524,22 @@ const roleLabel = computed(() => {
               <p class="text-sm font-medium mt-2 text-slate-900">
                 {{ feedTitle(it) }}
               </p>
-              <p v-if="feedSubtitle(it)" class="text-xs text-slate-500 mt-1">
+              <div
+                v-if="isGeneral && it.subtitle"
+                class="flex items-center gap-1.5 mt-1.5 min-w-0"
+              >
+                <span
+                  class="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 shrink-0"
+                >{{ it.subtitle }}</span>
+                <span
+                  v-if="metaStr(it, 'teacher_name')"
+                  class="text-xs text-slate-500 truncate"
+                >{{ metaStr(it, 'teacher_name') }}</span>
+              </div>
+              <p
+                v-else-if="feedSubtitle(it)"
+                class="text-xs text-slate-500 mt-1"
+              >
                 {{ feedSubtitle(it) }}
               </p>
             </component>
