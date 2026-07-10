@@ -1,24 +1,25 @@
 <!--
   Admin "Pemantauan Kelas" (web) — school-wide, read-only oversight of every
-  class with health signals (grading backlog, "silent"/silent flag) + a
-  "Perlu perhatian" summary. A card opens the same per-class hub read-only.
-  Mirrors the mobile AdminClassOversightScreen.
+  class as gradient-hero cards (a distinct colour per class, so the list is
+  scannable) with health signals in the footer + a "Perlu perhatian" summary.
+  A card opens the same per-class hub read-only. Mirrors the mobile
+  AdminClassOversightScreen. Uses the shared ClassHeroCard.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
-import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import ClassHeroCard from '@/components/feature/ClassHeroCard.vue';
 import Card from '@/components/ui/Card.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
-import { useRoleColor } from '@/composables/useRoleColor';
 import { ClassHubService } from '@/services/class-hub.service';
 import type { ClassCard } from '@/types/class-hub';
+import { classHubAccent, classHubGradientCss } from '@/utils/classHubTheme';
 
 const { t } = useI18n();
 const router = useRouter();
-const role = useRoleColor(() => 'admin');
 
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -50,10 +51,17 @@ const state = computed(() => {
   return { status: 'content' as const };
 });
 
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[1][0]).toUpperCase();
+// Oversight is class-level (no subject), so colour each card by the class name
+// — deterministic + distinct, matching the Kelas hub gradient system.
+function gradientFor(c: ClassCard): string {
+  return classHubGradientCss(c.name);
+}
+function accentFor(c: ClassCard): string {
+  return classHubAccent(c.name);
+}
+function subline(c: ClassCard): string {
+  const count = `${c.studentCount} ${t('classHub.kpiStudents')}`;
+  return c.homeroomTeacherName ? `${c.homeroomTeacherName} · ${count}` : count;
 }
 
 function openClass(c: ClassCard) {
@@ -72,41 +80,40 @@ function openClass(c: ClassCard) {
 
     <AsyncView :state="state" :empty-title="t('classHub.emptyListTitle')">
       <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_260px]">
-        <div class="space-y-2.5 order-2 md:order-1">
-          <button
+        <div class="order-2 md:order-1 grid gap-3 sm:grid-cols-2">
+          <ClassHeroCard
             v-for="c in classes"
             :key="c.id"
-            type="button"
-            class="w-full text-left bg-white rounded-xl border p-3 flex items-center gap-3 hover:border-slate-300"
-            :class="c.isSilent ? 'border-orange-200' : 'border-slate-200'"
+            :identity-key="c.id"
+            :name="c.name"
+            :subline="subline(c)"
+            :gradient="gradientFor(c)"
             @click="openClass(c)"
           >
-            <span
-              class="w-10 h-10 rounded-xl flex items-center justify-center font-medium shrink-0"
-              :style="{ backgroundColor: role.hex + '26', color: role.hex }"
-            >{{ initials(c.name) }}</span>
-            <span class="flex-1 min-w-0">
-              <span class="block text-sm font-medium truncate">{{ c.name }}</span>
-              <span class="block text-xs text-slate-500 truncate">
-                <template v-if="c.homeroomTeacherName">
-                  {{ c.homeroomTeacherName }} ·
-                </template>
-                {{ c.studentCount }} {{ t('classHub.kpiStudents') }}
-              </span>
-            </span>
-            <span class="flex gap-1.5 shrink-0">
-              <StatusBadge
-                v-if="c.needsGrading > 0"
-                :label="`${c.needsGrading} ${t('classHub.kpiNeedsGrading')}`"
-                tone="danger"
-              />
-              <StatusBadge
-                v-if="c.isSilent"
-                :label="t('classHub.silent')"
-                tone="warning"
-              />
-            </span>
-          </button>
+            <template #footer>
+              <div class="flex items-center gap-2 bg-white px-4 py-3">
+                <span class="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                  <StatusBadge
+                    v-if="c.needsGrading > 0"
+                    :label="`${c.needsGrading} ${t('classHub.kpiNeedsGrading')}`"
+                    tone="danger"
+                  />
+                  <StatusBadge
+                    v-if="c.isSilent"
+                    :label="t('classHub.silent')"
+                    tone="warning"
+                  />
+                </span>
+                <span
+                  class="text-sm font-semibold"
+                  :style="{ color: accentFor(c) }"
+                >
+                  {{ t('classHub.open') }}
+                </span>
+                <span :style="{ color: accentFor(c) }">›</span>
+              </div>
+            </template>
+          </ClassHeroCard>
         </div>
 
         <aside class="order-1 md:order-2">
