@@ -1,0 +1,744 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KamilEdu Mobile — Wireframe High-Fidelity v1</title>
+<style>
+  /* ============================================================
+     Page chrome tokens (gallery around the phones).
+     Phone content uses the APP's own tokens (see --role-*, --st-*)
+     which mirror tailwind.config.ts / color_utils.dart exactly.
+     ============================================================ */
+  :root {
+    --bg: #f2f5fa;
+    --panel: #ffffff;
+    --ink: #16233b;
+    --ink-mid: #4b5a74;
+    --ink-lo: #8494ad;
+    --line: #dde5f0;
+    --accent: #1b6fb8;
+
+    /* App design tokens — DO NOT restyle; mirrors tailwind.config.ts */
+    --brand-dark-blue: #143068;
+    --brand-cobalt: #1b6fb8;
+    --brand-azure: #21afe6;
+    --brand-azure-deep: #1a8fbe;
+    --role-admin: #143068;
+    --role-admin-soft: #e8eef7;
+    --role-teacher: #1b6fb8;
+    --role-teacher-soft: #e6f7fd;
+    --role-parent: #21afe6;
+    --role-parent-soft: #f0f9ff;
+    --role-staff: #b45309;
+    --role-staff-soft: #fef3c7;
+    --st-success: #10b981;
+    --st-success-soft: #d1fae5;
+    --st-warning: #f59e0b;
+    --st-warning-soft: #fef3c7;
+    --st-danger: #ef4444;
+    --st-danger-soft: #fee2e2;
+    --st-info: #06b6d4;
+    --st-info-soft: #cffae8;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-700: #334155;
+    --slate-900: #0f172a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c1424;
+      --panel: #131e33;
+      --ink: #e7edf7;
+      --ink-mid: #a9b8d0;
+      --ink-lo: #6d7f9c;
+      --line: #24334e;
+    }
+  }
+  :root[data-theme='dark'] {
+    --bg: #0c1424;
+    --panel: #131e33;
+    --ink: #e7edf7;
+    --ink-mid: #a9b8d0;
+    --ink-lo: #6d7f9c;
+    --line: #24334e;
+  }
+  :root[data-theme='light'] {
+    --bg: #f2f5fa;
+    --panel: #ffffff;
+    --ink: #16233b;
+    --ink-mid: #4b5a74;
+    --ink-lo: #8494ad;
+    --line: #dde5f0;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+  }
+
+  /* ---------- gallery chrome ---------- */
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 40px 28px 80px; }
+  header.masthead { display: flex; flex-wrap: wrap; align-items: end; gap: 20px 40px; margin-bottom: 12px; }
+  .masthead h1 { font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+  .masthead .sub { color: var(--ink-mid); font-size: 14px; max-width: 62ch; margin: 6px 0 0; }
+  .eyebrow { text-transform: uppercase; letter-spacing: 0.14em; font-size: 11px; font-weight: 600; color: var(--accent); }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 18px; padding: 14px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; margin: 18px 0 8px; font-size: 12px; color: var(--ink-mid); }
+  .legend b { color: var(--ink); font-weight: 600; }
+  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 4px; vertical-align: -1px; margin-right: 6px; }
+
+  section.role { margin-top: 48px; }
+  section.role > h2 { font-size: 18px; font-weight: 700; margin: 4px 0 2px; }
+  section.role > p.desc { color: var(--ink-mid); font-size: 13.5px; margin: 0 0 20px; max-width: 70ch; }
+  .rolebar { display: inline-block; width: 34px; height: 5px; border-radius: 3px; margin-bottom: 6px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 36px 28px; }
+  figure.shot { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  figcaption { font-size: 12.5px; color: var(--ink-mid); padding: 0 6px; }
+  figcaption b { display: block; color: var(--ink); font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  figcaption ul { margin: 6px 0 0; padding-left: 16px; display: grid; gap: 3px; }
+
+  /* ---------- phone frame ---------- */
+  .phone {
+    width: 100%; max-width: 320px; margin: 0 auto;
+    aspect-ratio: 375 / 812;
+    background: #0b0f17; border-radius: 34px; padding: 7px;
+    box-shadow: 0 18px 40px -18px rgba(13, 30, 66, 0.45);
+  }
+  .screen {
+    position: relative; height: 100%; overflow: hidden;
+    background: var(--slate-50); border-radius: 27px;
+    display: flex; flex-direction: column;
+    font-size: 10px; color: var(--slate-900);
+    font-variant-numeric: tabular-nums;
+  }
+  .statusbar { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 8px 16px 4px; font-size: 8.5px; font-weight: 600; }
+  .statusbar .icons { letter-spacing: 1px; }
+  .statusbar.on-dark { color: #fff; }
+
+  /* app header band (role-colored) */
+  .apphdr { flex: none; padding: 6px 14px 14px; color: #fff; }
+  .apphdr .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .apphdr .kick { font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.85; }
+  .apphdr h3 { margin: 1px 0 0; font-size: 13px; font-weight: 700; }
+  .apphdr .sub { font-size: 8.5px; opacity: 0.85; }
+  .iconbtn { width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.18); display: grid; place-items: center; font-size: 10px; }
+  .avatar { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.25); display: grid; place-items: center; font-weight: 700; font-size: 8.5px; border: 1.5px solid rgba(255,255,255,0.6); }
+
+  .body { flex: 1; overflow: hidden; padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .body.overlap { margin-top: -12px; }
+
+  .card { background: #fff; border: 1px solid var(--slate-200); border-radius: 12px; padding: 9px 10px; }
+  .card h4 { margin: 0 0 6px; font-size: 9.5px; font-weight: 600; color: var(--slate-700); display: flex; justify-content: space-between; align-items: baseline; }
+  .card h4 .lnk { font-size: 8px; font-weight: 600; }
+
+  .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .kpi { background: #fff; border: 1px solid var(--slate-200); border-radius: 12px; padding: 8px 9px; }
+  .kpi .lab { font-size: 7.5px; color: var(--slate-500); }
+  .kpi .val { font-size: 14px; font-weight: 700; line-height: 1.15; }
+  .kpi .note { font-size: 7px; color: var(--slate-400); }
+
+  .pill { display: inline-block; padding: 1.5px 7px; border-radius: 999px; font-size: 7px; font-weight: 600; }
+  .p-success { background: var(--st-success-soft); color: #047857; }
+  .p-warning { background: var(--st-warning-soft); color: #b45309; }
+  .p-danger  { background: var(--st-danger-soft);  color: #b91c1c; }
+  .p-info    { background: #cffafe;  color: #0e7490; }
+  .p-neutral { background: var(--slate-100); color: var(--slate-500); }
+
+  .rowitem { display: flex; align-items: center; gap: 8px; padding: 6px 2px; border-bottom: 1px solid var(--slate-100); }
+  .rowitem:last-child { border-bottom: 0; }
+  .rowitem .dot { flex: none; width: 20px; height: 20px; border-radius: 8px; display: grid; place-items: center; font-size: 9px; }
+  .rowitem .tx { flex: 1; min-width: 0; }
+  .rowitem .t1 { font-size: 8.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rowitem .t2 { font-size: 7px; color: var(--slate-500); }
+  .rowitem .end { text-align: right; font-size: 8px; font-weight: 600; }
+
+  .btn { display: block; text-align: center; border-radius: 10px; padding: 8px; font-size: 9.5px; font-weight: 600; color: #fff; }
+  .btn.ghost { background: #fff; border: 1px solid var(--slate-200); color: var(--slate-700); }
+  .input { background: #fff; border: 1px solid var(--slate-200); border-radius: 10px; padding: 7px 9px; font-size: 8.5px; color: var(--slate-400); display: flex; justify-content: space-between; }
+  .input b { color: var(--slate-900); font-weight: 500; }
+  .flabel { font-size: 7.5px; font-weight: 600; color: var(--slate-700); margin: 3px 0 2px; }
+
+  .chips { display: flex; gap: 5px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--slate-200); background: #fff; color: var(--slate-500); border-radius: 999px; padding: 2.5px 8px; font-size: 7.5px; font-weight: 600; }
+  .chip.on { color: #fff; border-color: transparent; }
+
+  .bottomnav { flex: none; background: #fff; border-top: 1px solid var(--slate-200); display: flex; padding: 5px 4px 3px; }
+  .bottomnav .it { flex: 1; text-align: center; font-size: 6.8px; color: var(--slate-400); font-weight: 600; }
+  .bottomnav .it .ic { font-size: 12px; display: block; line-height: 1.2; }
+  .homebar { flex: none; display: grid; place-items: center; padding: 3px 0 5px; background: #fff; }
+  .homebar i { width: 66px; height: 3px; border-radius: 2px; background: var(--slate-200); }
+  .homebar.dark { background: transparent; } .homebar.dark i { background: rgba(255,255,255,0.4); }
+  .fab { position: absolute; right: 12px; bottom: 52px; width: 34px; height: 34px; border-radius: 12px; color: #fff; display: grid; place-items: center; font-size: 15px; box-shadow: 0 6px 14px -4px rgba(13,30,66,0.5); }
+
+  .seg { display: grid; grid-auto-flow: column; gap: 3px; }
+  .seg .s { width: 15px; height: 15px; border-radius: 6px; display: grid; place-items: center; font-size: 7px; font-weight: 700; background: var(--slate-100); color: var(--slate-400); }
+
+  .otp { display: flex; gap: 6px; justify-content: center; }
+  .otp .d { width: 30px; height: 36px; border-radius: 9px; border: 1.5px solid var(--slate-200); background: #fff; display: grid; place-items: center; font-size: 15px; font-weight: 700; }
+  .otp .d.on { border-color: var(--brand-cobalt); color: var(--brand-cobalt); }
+
+  .shortcut { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .shortcut .s { background: #fff; border: 1px solid var(--slate-200); border-radius: 11px; padding: 7px 3px; text-align: center; font-size: 6.8px; font-weight: 600; color: var(--slate-700); }
+  .shortcut .s .ic { display: grid; place-items: center; width: 22px; height: 22px; margin: 0 auto 3px; border-radius: 8px; font-size: 10px; }
+
+  .sticky-cta { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--slate-200); padding: 8px 12px 14px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <div class="eyebrow">KamilEdu · Manajemen Sekolah</div>
+      <h1>Wireframe High-Fidelity — Aplikasi Mobile v1</h1>
+      <p class="sub">
+        12 layar utama aplikasi mobile (Flutter) untuk tiga peran: Wali Murid, Guru, dan Admin.
+        Semua warna, tipografi, dan istilah mengikuti design token yang sudah ada di
+        <code>tailwind.config.ts</code> / <code>color_utils.dart</code> dan kanon <code>TERMINOLOGY.md</code>.
+      </p>
+    </div>
+  </header>
+
+  <div class="legend">
+    <span><b>Peran:</b></span>
+    <span><i class="sw" style="background:var(--role-admin)"></i>Admin — Dark Blue #143068</span>
+    <span><i class="sw" style="background:var(--role-teacher)"></i>Guru — Cobalt #1B6FB8</span>
+    <span><i class="sw" style="background:var(--role-parent)"></i>Wali — Azure #21AFE6</span>
+    <span><i class="sw" style="background:var(--role-staff)"></i>Staff — Amber #B45309</span>
+    <span style="margin-left:auto"><b>Status:</b></span>
+    <span><i class="sw" style="background:var(--st-success)"></i>Sukses</span>
+    <span><i class="sw" style="background:var(--st-warning)"></i>Menunggu</span>
+    <span><i class="sw" style="background:var(--st-danger)"></i>Bahaya</span>
+    <span><b>Huruf:</b> Poppins</span>
+  </div>
+
+  <!-- ================= AUTH ================= -->
+  <section class="role">
+    <span class="rolebar" style="background:linear-gradient(90deg,var(--brand-dark-blue),var(--brand-azure))"></span>
+    <h2>Autentikasi</h2>
+    <p class="desc">Alur masuk bersama semua peran: login → OTP (bila diperlukan) → pilih sekolah/peran. Band gradien brand di atas, kartu form menimpa band −24&nbsp;px (mengikuti <code>login_screen.dart</code>).</p>
+    <div class="grid">
+
+      <!-- 1. LOGIN -->
+      <figure class="shot">
+        <div class="phone"><div class="screen">
+          <div style="background:linear-gradient(135deg,var(--brand-dark-blue),var(--brand-cobalt) 55%,var(--brand-azure));padding-bottom:34px">
+            <div class="statusbar on-dark"><span>09:41</span><span class="icons">▂▄▆ ᯤ ▮</span></div>
+            <div style="padding:18px 16px 0;color:#fff">
+              <div style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-weight:800;font-size:13px">K</div>
+              <div style="font-size:15px;font-weight:700;margin-top:8px">Selamat Datang 👋</div>
+              <div style="font-size:8.5px;opacity:.85">Masuk ke akun KamilEdu Anda</div>
+            </div>
+          </div>
+          <div class="body overlap" style="margin-top:-24px">
+            <div class="card" style="padding:12px 11px;display:grid;gap:6px">
+              <div class="flabel">Email atau No. HP</div>
+              <div class="input"><b>budi.santoso@gmail.com</b></div>
+              <div class="flabel">Kata Sandi</div>
+              <div class="input"><b>••••••••</b><span>👁</span></div>
+              <div style="text-align:right;font-size:7.5px;font-weight:600;color:var(--brand-cobalt)">Lupa kata sandi?</div>
+              <div class="btn" style="background:var(--brand-cobalt)">Masuk</div>
+              <div style="display:flex;align-items:center;gap:6px;color:var(--slate-400);font-size:7px"><i style="flex:1;height:1px;background:var(--slate-200)"></i>atau<i style="flex:1;height:1px;background:var(--slate-200)"></i></div>
+              <div class="btn ghost">G &nbsp;Masuk dengan Google</div>
+            </div>
+            <div style="text-align:center;font-size:7.5px;color:var(--slate-500);margin-top:auto;padding-bottom:6px">
+              Belum punya akun? <b style="color:var(--brand-cobalt)">Hubungi admin sekolah</b><br />
+              <span style="color:var(--slate-400)">Ingin mencoba? <b style="color:var(--brand-cobalt)">Daftar Demo</b></span>
+            </div>
+          </div>
+          <div class="homebar"><i></i></div>
+        </div></div>
+        <figcaption><b>1 · Login</b>
+          <ul>
+            <li>Band gradien brand (dark-blue → azure), kartu form −24px overlap.</li>
+            <li>Login email/HP + sandi, atau SSO Google.</li>
+            <li>Footer: bantuan admin &amp; jalur daftar demo.</li>
+          </ul>
+        </figcaption>
+      </figure>
+
+      <!-- 2. OTP -->
+      <figure class="shot">
+        <div class="phone"><div class="screen">
+          <div style="background:linear-gradient(135deg,var(--brand-dark-blue),var(--brand-cobalt))">
+            <div class="statusbar on-dark"><span>09:41</span><span class="icons">▂▄▆ ᯤ ▮</span></div>
+            <div class="apphdr"><div class="row"><span style="font-size:12px">←</span><h3 style="font-size:11px">Verifikasi OTP</h3><span style="width:12px"></span></div></div>
+          </div>
+          <div class="body overlap">
+            <div class="card" style="padding:16px 12px;text-align:center;display:grid;gap:10px">
+              <div style="width:40px;height:40px;border-radius:14px;background:var(--role-teacher-soft);display:grid;place-items:center;font-size:18px;margin:0 auto">✉️</div>
+              <div>
+                <div style="font-size:11px;font-weight:700">Masukkan Kode OTP</div>
+                <div style="font-size:8px;color:var(--slate-500);max-width:32ch;margin:2px auto 0">Kode 6 digit telah dikirim ke <b>+62 812-••••-3456</b></div>
+              </div>
+              <div class="otp">
+                <span class="d">4</span><span class="d">7</span><span class="d">2</span>
+                <span class="d on">|</span><span class="d"></span><span class="d"></span>
+              </div>
+              <div class="btn" style="background:var(--brand-cobalt)">Verifikasi</div>
+              <div style="font-size:7.5px;color:var(--slate-500)">Kirim ulang kode dalam <b style="color:var(--brand-cobalt)">00:42</b></div>
+            </div>
+          </div>
+          <div class="homebar"><i></i></div>
+        </div></div>
+        <figcaption><b>2 · Verifikasi OTP</b>
+          <ul>
+            <li>6 kotak digit, auto-advance saat mengetik / paste.</li>
+            <li>Timer kirim ulang 60 detik; verifikasi otomatis di digit ke-6.</li>
+          </ul>
+        </figcaption>
+      </figure>
+
+      <!-- 3. ROLE PICKER -->
+      <figure class="shot">
+        <div class="phone"><div class="screen">
+          <div style="background:linear-gradient(135deg,var(--brand-dark-blue),var(--brand-cobalt))">
+            <div class="statusbar on-dark"><span>09:41</span><span class="icons">▂▄▆ ᯤ ▮</span></div>
+            <div class="apphdr"><div class="row"><span style="font-size:12px">←</span><h3 style="font-size:11px">Pilih Peran</h3><span style="width:12px"></span></div></div>
+          </div>
+          <div class="body overlap">
+            <div class="card" style="display:flex;align-items:center;gap:8px">
+              <div style="width:26px;height:26px;border-radius:9px;background:var(--role-admin-soft);display:grid;place-items:center;font-size:12px">🏫</div>
+              <div class="tx"><div style="font-size:9px;font-weight:700">SMP Harapan Bangsa</div><div style="font-size:7px;color:var(--slate-500)">Tahun Ajaran 2026/2027 · Ganti sekolah</div></div>
+            </div>
+            <div style="font-size:8px;color:var(--slate-500);padding:0 2px">Akun Anda memiliki lebih dari satu peran. Masuk sebagai:</div>
+            <div class="card" style="border-left:3px solid var(--role-teacher);display:flex;align-items:center;gap:8px">
+              <div class="dot" style="width:26px;height:26px;background:var(--role-teacher-soft);border-radius:9px;font-size:12px">🧑‍🏫</div>
+              <div class="tx" style="flex:1"><div style="font-size:9.5px;font-weight:700">Guru</div><div style="font-size:7px;color:var(--slate-500)">Matematika · Wali Kelas 8A</div></div>
+              <span style="color:var(--role-teacher);font-weight:700">›</span>
+            </div>
+            <div class="card" style="border-left:3px solid var(--role-parent);display:flex;align-items:center;gap:8px">
+              <div class="dot" style="width:26px;height:26px;background:var(--role-parent-soft);border-radius:9px;font-size:12px">👨‍👧</div>
+              <div class="tx" style="flex:1"><div style="font-size:9.5px;font-weight:700">Wali Murid</div><div style="font-size:7px;color:var(--slate-500)">2 anak · Nadia (8A), Raka (5B)</div></div>
+              <span style="color:var(--role-parent);font-weight:700">›</span>
+            </div>
+            <div class="card" style="border-left:3px solid var(--role-admin);display:flex;align-items:center;gap:8px">
+              <div class="dot" style="width:26px;height:26px;background:var(--role-admin-soft);border-radius:9px;font-size:12px">🗂️</div>
+              <div class="tx" style="flex:1"><div style="font-size:9.5px;font-weight:700">Admin Sekolah</div><div style="font-size:7px;color:var(--slate-500)">Akses penuh modul sekolah</div></div>
+              <span style="color:var(--role-admin);font-weight:700">›</span>
+            </div>
+          </div>
+          <div class="homebar"><i></i></div>
+        </div></div>
+        <figcaption><b>3 · Pilih Sekolah &amp; Peran</b>
+          <ul>
+            <li>Muncul hanya bila akun multi-tenant / multi-peran.</li>
+            <li>Aksen kiri kartu = warna peran (<code>useRoleColor</code>).</li>
+          </ul>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ================= PARENT ================= -->
+  <section class="role">
+    <span class="rolebar" style="background:var(--role-parent)"></span>
+    <h2>Wali Murid <span style="font-size:11px;font-weight:600;color:var(--role-parent)">· Azure #21AFE6</span></h2>
+    <p class="desc">Fokus pemantauan anak: ringkasan kehadiran, nilai, tagihan, dan pengumuman. Navigasi bawah 4 tab: Dashboard, Kelas, Tagihan, Akun.</p>
+    <div class="grid">
+
+      <!-- 4. PARENT DASHBOARD -->
+      <figure class="shot">
+        <div class="phone"><div class="screen">
+          <div style="background:linear-gradient(135deg,var(--brand-azure-deep),var(--role-parent))">
+            <div class="statusbar on-dark"><span>09:41</span><span class="icons">▂▄▆ ᯤ ▮</span></div>
+            <div class="apphdr">
+              <div class="row">
+                <div><div class="kick">Selamat pagi</div><h3>Halo, Bu Ratna 👋</h3></div>
+                <div style="display:flex;gap:6px"><span class="iconbtn">🔔</span><span class="avatar">R</span></div>
+              </div>
+              <div style="display:flex;gap:5px;margin-top:8px">
+                <span class="chip on" style="background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);color:#fff">Nadia · 8A</span>
+                <span class="chip" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)">Raka · 5B</span>
+              </div>
+            </div>
+          </div>
+          <div class="body overlap">
+            <div class="kpis">
+              <div class="kpi"><div class="lab">Kehadiran bulan ini</div><div class="val" style="color:var(--st-success)">96%</div><div class="note">22 hari hadir dari 23 hari</div></div>
+              <div class="kpi"><div class="lab">Rata-rata nilai</div><div class="val">87,5</div><div class="note">Semester 1 · 9 mapel</div></div>
+              <div class="kpi"><div class="lab">Tagihan</div><div class="val" style="color:var(--st-danger);font-size:11.5px">Rp450.000</div><div class="note" style="color:var(--role-parent);font-weight:600">Klik untuk bayar →</div></div>
+              <div class="kpi"><div class="lab">Pengumuman baru</div><div class="val">3</div><div class="note">Belum dibaca</div></div>
+            </div>
+            <div class="card">
+              <h4>Aktivitas terbaru <span class="lnk" style="color:var(--role-parent)">Lihat semua →</span></h4>
+              <div class="rowitem"><span class="dot" style="background:var(--st-warning-soft)">📢</span><div class="tx"><div class="t1">Pembagian Rapor Semester Ganjil</div><div class="t2">Pengumuman · 2 jam lalu</div></div><span class="pill p-warning">Penting</span></div>
+              <div class="rowitem"><span class="dot" style="background:var(--st-success-soft)">📝</span><div class="tx"><div class="t1">Nilai UH Matematika: 92</div><div class="t2">Nilai · Kemarin</div></div></div>
+              <div class="rowitem"><span class="dot" style="background:var(--role-parent-soft)">🎨</span><div class="tx"><div class="t1">Dokumentasi Pentas Seni 8A</div><div class="t2">Kegiatan kelas · 2 hari lalu</div></div></div>
+            </div>
+            <div>
+              <div style="font-size:8px;font-weight:600;color:var(--slate-500);margin:0 2px 4px">Pintasan</div>
+              <div class="shortcut">
+                <div class="s"><span class="ic" style="background:var(--role-parent-soft)">📅</span>Kehadiran</div>
+                <div class="s"><span class="ic" style="background:var(--st-success-soft)">📊</span>Nilai</div>
+                <div class="s"><span class="ic" style="background:var(--st-danger-soft)">💳</span>Tagihan</div>
+                <div class="s"><span class="ic" style="background:var(--st-warning-soft)">📖</span>Rapor</div>
+              </div>
+            </div>
+          </div>
+          <div class="bottomnav">
+            <div class="it" style="color:var(--role-parent)"><span class="ic">🏠</span>Dashboard</div>
+            <div class="it"><span class="ic">📚</span>Kelas</div>
+            <div class="it"><span class="ic">💳</span>Tagihan</div>
+            <div class="it"><span class="ic">👤</span>Akun</div>
+          </div>
+          <div class="homebar"><i></i></div>
+        </div></div>
+        <figcaption><b>4 · Dashboard Wali</b>
+          <ul>
+            <li>Salam sesuai waktu + pemilih anak (chip) di header.</li>
+            <li>4 KPI: kehadiran, rata-rata nilai, tagihan (tap → bayar), pengumuman.</li>
+            <li>Feed aktivitas campuran: pengumuman, nilai, kegiatan, tagihan.</li>
+          </ul>
+        </figcaption>
+      </figure>
+
+      <!-- 5. PARENT ATTENDANCE -->
+      <figure class="shot">
+        <div class="phone"><div class="screen">
+          <div style="background:var(--role-parent)">
+            <div class="statusbar on-dark"><span>09:41</span><span class="icons">▂▄▆ ᯤ ▮</span></div>
+            <div class="apphdr"><div class="row"><span style="font-size:12px">←</span><div style="text-align:center"><div class="kick">Akademik · Anak</div><h3 style="font-size:11px">Kehadiran — Nadia</h3></div><span class="iconbtn">📆</span></div></div>
+          </div>
+          <div class="body overlap">
+            <div class="chips">
+              <span class="chip on" style="background:var(--role-parent)">November 2026 ▾</span>
+              <span class="chip">Semua status ▾</span>
+            </div>
+            <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+              <div class="kpi" style="padding:6px"><div class="lab">Hadir</div><div class="val" style="font-size:11px;color:var(--st-success)">20</div></div>
+              <div class="kpi" style="padding:6px"><div class="lab">Terlambat</div><div class="val" style="font-size:11px;color:var(--st-warning)">1</div></div>
+              <div class="kpi" style="padding:6px"><div class="lab">Izin/Sakit</div><div class="val" style="font-size:11px;color:var(--st-info)">2</div></div>
+              <div class="kpi" style="padding:6px"><div class="lab">Alpa</div><div class="val" style="font-size:11px;color:var(--st-danger)">0</div></div>
+            </div>
+            <div class="card" style="flex:1">
+              <h4>Riwayat harian <span class="lnk" style="color:var(--role-parent)">Kalender penuh →</span></h4>
+              <div class="rowitem"><div class="tx"><div class="t1">Jumat, 20 Nov</div><div class="t2">Masuk 06.52 · Pulang 15.05</div></div><span class="pill p-success">Hadir</span></div>
+              <div class="rowitem"><div class="tx"><div class="t1">Kamis, 19 Nov</div><div class="t2">Masuk 07.14 · Pulang 15.02</div></div><span class="pill p-warning">Terlambat</span></div>
+              <div class="rowitem"><div class="tx"><div class="t1">Rabu, 18 Nov</div><div class="t2">Surat izin keluarga</div></div><span class="pill p-info">Izin</span></div>
+              <div class="rowitem"><div class="tx"><div class="t1">Selasa, 17 Nov</div><div class="t2">Masuk 06.45 · Pulang 15.00</div></div><span class="pill p-success">Hadir</span></div>
+              <div class="rowitem"><div class="tx"><div class="t1">Senin, 16 Nov</div><div class="t2">Keterangan dokter</div></div><span class="pill p-info">Sakit</span></div>
+            </div>
+          </div>
+          <div class="homebar"><i></i></div>
+        </div></div>
+        <figcaption><b>5 · Kehadiran Anak</b>
+          <ul>
+            <li>Filter bulan &amp; status via bottom-sheet (<code>Modal</code>).</li>
+            <li>KPI mini per status; istilah kanon: Hadir/Terlambat/Izin/Sakit/Alpa.</li>
+          </ul>
+        </figcaption>
+      </figure>
+
+      <!-- 6. PARENT BILLING -->
+      <figure class="shot">
+        <div class="phone"><div class="screen">
+          <div style="background:var(--role-parent)">
+            <div class="statusbar on-dark"><span>09:41</span><span class="icons">▂▄▆ ᯤ ▮</span></div>
+            <div class="apphdr"><div class="row"><div><div class="kick">Keuangan</div><h3 style="font-size:11px">Tagihan — Nadia</h3></div><span class="iconbtn">🕘</span></div></div>
+          </div>
+          <div class="body overlap" style="padding-bottom:56px">
+            <div class="card" style="background:linear-gradient(135deg,var(--brand-azure-deep),var(--role-parent));border:0;color:#fff">
+              <div style="font-size:7.5px;opacity:.85">Total belum dibayar</div>
+              <div style="font-size:16px;font-weight:700">Rp450.000</div>
+              <div style="font-size:7px;opacity:.85">2 tagihan · 1 jatuh tempo minggu ini</div>
+            </div>
+            <div class="chips"><span class="chip on" style="background:var(--role-parent)">Belum dibayar</span><span class="chip">Menunggu verifikasi</span><span class="chip">Lunas</span></div>
+            <div class="card">
+              <div class="rowitem"><span class="dot" style="background:var(--st-danger-soft)">💳</span><div class="tx"><div class="t1">SPP November 2026</div><div class="t2">Jatuh tempo 25 Nov 2026</div></div><div class="end">Rp300.000<br /><span class="pill p-danger">Belum dibayar</span></div></div>
+              <div class="rowitem"><span class="dot" style="background:var(--st-warning-soft)">🎒</span><div class="tx"><div class="t1">Kegiatan Studi Lapangan</div><div class="t2">Jatuh tempo 30 Nov 2026</div></div><div class="end">Rp150.000<br /><span class="pill p-danger">Belum dibayar</span></div></div>
+              <div class="rowitem"><span class="dot" style="background:var(--st-warning-soft)">🧾</span><div class="tx"><div class="t1">SPP Oktober 2026</div><div class="t2">Bukti transfer dikirim 3 Okt</div></div><div class="end">Rp300.000<br /><span class="pill p-warning">Menunggu</span></div></div>
+              <div class="rowitem"><span class="dot" style="background:var(--st-success-soft)">✅</span><div class="tx"><div class="t1">SPP September 2026</div><div class="t2">Dibayar 2 Sep · Transfer BSI</div></div><div class="end">Rp300.000<br /><span class="pill p-success">Lunas</span></div></div>
+            </div>
+            <div class="sticky-cta"><div class="btn" style="background:var(--role-parent)">Bayar 2 Tagihan · Rp450.000</div></div>
+          </div>
+          <div class="homebar"><i></i></div>
+        </div></div>
+        <figcaption><b>6 · Tagihan &amp; Pembayaran</b>
+          <ul>
+            <li>Hero total tertunggak; filter status; status via <code>mapStatus</code> (Menunggu/Lunas).</li>
+            <li>CTA lengket multi-pilih → checkout (transfer / VA / QRIS).</li>
+          </ul>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ================= TEACHER ================= -->
+  <section class="role">
+    <span class="rolebar" style="background:var(--role-teacher)"></span>
+    <h2>Guru <span style="font-size:11px;font-weight:600;color:var(--role-teacher)">· Cobalt #1B6FB8</span></h2>
+    <p class="desc">Alur harian guru: presensi diri, jadwal mengajar, input kehadiran siswa, buku nilai, dan RPP. Navigasi bawah: Dashboard, Kelas, Presensi, Akun.</p>
+    <div class="grid">
+
+      <!-- 7. TEACHER DASHBOARD -->
+      <figure class="shot">
+        <div class="phone"><div class="screen">
+          <div style="background:linear-gradient(135deg,var(--brand-dark-blue),var(--role-teacher))">
+            <div class="statusbar on-dark"><span>09:41</span><span class="icons">▂▄▆ ᯤ ▮</span></div>
+            <div class="apphdr">
+              <div class="row">
+                <div><div class="kick">Selamat pagi</div><h3>Pak Ahmad Fauzi</h3><div class="sub">Matematika · Wali Kelas 8A</div></div>
+                <div style="display:flex;gap:6px"><span class="iconbtn">🔔</span><span class="avatar">AF</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="body overlap">
+            <div class="card" style="display:flex;align-items:center;gap:8px;border-left:3px solid var(--st-success)">
+              <span class="dot" style="width:24px;height:24px;background:var(--st-success-soft);border-radius:9px">🕖</span>
+              <div class="tx" style="flex:1"><div class="t1">Presensi Saya — sudah check-in</div><div class="t2">Masuk 06.48 · QR Gerbang</div></div>
+              <span class="pill p-success">Hadir</span>
+            </div>
+            <div class="card">
+              <h4>Jadwal hari ini · Senin, 23 Nov <span class="lnk" style="color:var(--role-teacher)">Semua →</span></h4>
+              <div class="rowitem"><div class="end" style="text-align:left;color:var(--role-teacher)">07.00<br /><span style="font-weight:400;color:var(--slate-400)">08.20</span></div><div class="tx"><div class="t1">Matematika · 8A</div><div class="t2">Bab 5 — Persamaan Garis Lurus</div></div><span class="pill" style="background:var(--role-teacher-soft);color:var(--role-teacher)">Berlangsung</span></div>
+              <div class="rowitem"><div class="end" style="text-align:left;color:var(--slate-500)">08.20<br /><span style="font-weight:400;color:var(--slate-400)">09.40</span></div><div class="tx"><div class="t1">Matematika · 8C</div><div class="t2">Bab 5 — Persamaan Garis Lurus</div></div></div>
+              <div class="rowitem"><div class="end" style="text-align:left;color:var(--slate-500)">10.00<br /><span style="font-weight:400;color:var(--slate-400)">11.20</span></div><div class="tx"><div class="t1">Matematika · 9B</div><div class="t2">Bab 4 — Kekongruenan</div></div></div>
+            </div>
+            <div>
+              <div style="font-size:8px;font-weight:600;color:var(--slate-500);margin:0 2px 4px">Aksi cepat</div>
+              <div class="shortcut">
+                <div class="s"><span class="ic" style="background:var(--role-teacher-soft)">✅</span>Kehadiran</div>
+                <div class="s"><span class="ic" style="background:var(--st-success-soft)">📊</span>Nilai</div>
+                <div class="s"><span class="ic" style="background:var(--st-warning-soft)">📄</span>RPP</div>
+                <div class="s"><span class="ic" style="background:var(--role-parent-soft)">📁</span>Materi</div>
+              </div>
+            </div>
+            <div class="card" style="display:flex;align-items:center;gap:8px">
+              <span class="dot" style="background:var(--st-warning-soft)">⏳</span>
+              <div class="tx" style="flex:1"><div class="t1">1 RPP menunggu persetujuan</div><div class="t2">RPP Bab 6 — dikirim 20 Nov</div></div>
+              <span class="pill p-warning">Menunggu</span>
+            </div>
+          </div>
+          <div class="bottomnav">
+            <div class="it" style="color:var(--role-teacher)"><span class="ic">🏠</span>Dashboard</div>
+            <div class="it"><span class="ic">📚</span>Kelas</div>
+            <div class="it"><span class="ic">🕖</span>Presensi</div>
+            <div class="it"><span class="ic">👤</span>Akun</div>
+          </div>
+          <div class="homebar"><i></i></div>
+        </div></div>
+        <figcaption><b>7 · Dashboard Guru</b>
+          <ul>
+            <li>Kartu status Presensi Saya (check-in QR gerbang).</li>
+            <li>Jadwal hari ini dengan sesi berjalan disorot.</li>
+            <li>Pengingat RPP berstatus <i>Menunggu</i> (mapStatus).</li>
+          </ul>
+        </figcaption>
+      </figure>
+
+      <!-- 8. ATTENDANCE INPUT -->
+      <figure class="shot">
+        <div class="phone"><div class="screen">
+          <div style="background:var(--role-teacher)">
+            <div class="statusbar on-dark"><span>09:41</span><span class="icons">▂▄▆ ᯤ ▮</span></div>
+            <div class="apphdr"><div class="row"><span style="font-size:12px">←</span><div style="text-align:center"><div class="kick">Kehadiran Siswa</div><h3 style="font-size:11px">8A · Matematika · Jam ke-1</h3></div><span class="iconbtn">⋮</span></div></div>
+          </div>
+          <div class="body overlap" style="padding-bottom:56px">
+            <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:8px;color:var(--slate-500)">Senin, 23 Nov 2026 · 32 siswa</div>
+              <span class="chip on" style="background:var(--st-success)">Tandai semua Hadir</span>
+            </div>
+            <div class="card" style="flex:1">
+              <div class="rowitem"><span class="avatar" style="border-color:var(--slate-200);background:var(--role-teacher-soft);color:var(--role-teacher)">AN</span><div class="tx"><div class="t1">Aisyah Nurhaliza</div><div class="t2">No. absen 01</div></div>
+                <div class="seg"><span class="s" style="background:var(--st-success);color:#fff">H</span><span class="s">T</span><span class="s">I</span><span class="s">S</span><span class="s">A</span></div></div>
+              <div class="rowitem"><span class="avatar" style="border-color:var(--slate-200);background:var(--role-teacher-soft);color:var(--role-teacher)">BP</span><div class="tx"><div class="t1">Bima Prasetyo</div><div class="t2">No. absen 02</div></div>
+                <div class="seg"><span class="s" style="background:var(--st-success);color:#fff">H</span><span class="s">T</span><span class="s">I</span><span class="s">S</span><span class="s">A</span></div></div>
+              <div class="rowitem"><span class="avatar" style="border-color:var(--slate-200);background:var(--st-warning-soft);color:#b45309">CD</span><div class="tx"><div class="t1">Citra Dewi</div><div class="t2">Datang 07.12</div></div>
+                <div class="seg"><span class="s">H</span><span class="s" style="background:var(--st-warning);color:#fff">T</span><span class="s">I</span><span class="s">S</span><span class="s">A</span></div></div>
+              <div class="rowitem"><span class="avatar" style="border-color:var(--slate-200);background:var(--st-info-soft);color:#0e7490">DR</span><div class="tx"><div class="t1">Dimas Ramadhan</div><div class="t2">Surat izin — lampiran 📎</div></div>
+                <div class="seg"><span class="s">H</span><span class="s">T</span><span class="s" style="background:var(--st-info);color:#fff">I</span><span class="s">S</span><span class="s">A</span></div></div>
+              <div class="rowitem"><span class="avatar" style="border-color:var(--slate-200);background:var(--role-teacher-soft);color:var(--role-teacher)">ES</span><div class="tx"><div class="t1">Eka Saputra</div><div class="t2">No. absen 05</div></div>
+                <div class="seg"><span class="s" style="background:var(--st-success);color:#fff">H</span><span class="s">T</span><span class="s">I</span><span class="s">S</span><span class="s">A</span></div></div>
+              <div class="rowitem"><span class="avatar" style="border-color:var(--slate-200);background:var(--st-danger-soft);color:#b91c1c">FH</span><div class="tx"><div class="t1">Farhan Hidayat</div><div class="t2">Tanpa keterangan</div></div>
+                <div class="seg"><span class="s">H</span><span class="s">T</span><span class="s">I</span><span class="s">S</span><span class="s" style="background:var(--st-danger);color:#fff">A</span></div></div>
+            </div>
+            <div class="sticky-cta"><div style="display:flex;gap:6px;align-items:center">
+              <div style="flex:1;font-size:7.5px;color:var(--slate-500)">✅ 29 Hadir · 1 T · 1 I · 1 A</div>
+              <div class="btn" style="background:var(--role-teacher);flex:1.4;padding:7px">Simpan Kehadiran</div>
+            </div></div>
+          </div>
+          <div class="homebar"><i></i></div>
+        </div></div>
+        <figcaption><b>8 · Input Kehadiran Siswa</b>
+          <ul>
+            <li>Toggle H/T/I/S/A per siswa + "Tandai semua Hadir".</li>
+            <li>Ringkasan hitungan live di action bar lengket.</li>
+            <li>Izin/Sakit bisa melampirkan surat.</li>
+          </ul>
+        </figcaption>
+      </figure>
+
+      <!-- 9. GRADE BOOK -->
+      <figure class="shot">
+        <div class="phone"><div class="screen">
+          <div style="background:var(--role-teacher)">
+            <div class="statusbar on-dark"><span>09:41</span><span class="icons">▂▄▆ ᯤ ▮</span></div>
+            <div class="apphdr"><div class="row"><span style="font-size:12px">←</span><div style="text-align:center"><div class="kick">Buku Nilai</div><h3 style="font-size:11px">Matematika · 8A</h3></div><span class="iconbtn">＋</span></div></div>
+          </div>
+          <div class="body overlap">
+            <div class="chips"><span class="chip on" style="background:var(--role-teacher)">UH Bab 5</span><span class="chip">Tugas 4</span><span class="chip">UTS</span><span class="chip">Praktik</span></div>
+            <div class="card" style="display:flex;justify-content:space-between">
+              <div><div style="font-size:7.5px;color:var(--slate-500)">Rata-rata kelas</div><div style="font-size:13px;font-weight:700">84,2</div></div>
+              <div><div style="font-size:7.5px;color:var(--slate-500)">KKM</div><div style="font-size:13px;font-weight:700">75</div></div>
+              <div><div style="font-size:7.5px;color:var(--slate-500)">Terisi</div><div style="font-size:13px;font-weight:700">30/32</div></div>
+              <div><div style="font-size:7.5px;color:var(--slate-500)">&lt; KKM</div><div style="font-size:13px;font-weight:700;color:var(--st-danger)">3</div></div>
+            </div>
+            <div class="card" style="flex:1">
+              <h4>Nilai UH Bab 5 — Persamaan Garis Lurus</h4>
+              <div class="rowitem"><div class="tx"><div class="t1">01 · Aisyah Nurhaliza</div></div><div class="end" style="color:var(--st-success)">92</div></div>
+              <div class="rowitem"><div class="tx"><div class="t1">02 · Bima Prasetyo</div></div><div class="end">78</div></div>
+              <div class="rowitem"><div class="tx"><div class="t1">03 · Citra Dewi</div></div><div class="end" style="color:var(--st-danger)">68 ⚠</div></div>
+              <div class="rowitem"><div class="tx"><div class="t1">04 · Dimas Ramadhan</div></div><div class="end">85</div></div>
+              <div class="rowitem"><div class="tx"><div class="t1">05 · Eka Saputra</div></div><div class="end" style="color:var(--slate-400)">— belum</div></div>
+              <div class="rowitem"><div class="tx"><div class="t1">06 · Farhan Hidayat</div></div><div class="end">81</div></div>
+            </div>
+            <div class="btn" style="background:var(--role-teacher)">Simpan &amp; Kirim ke Rekap Nilai</div>
+          </div>
+          <div class="homebar"><i></i></div>
+        </div></div>
+        <figcaption><b>9 · Buku Nilai</b>
+          <ul>
+            <li>Tab penilaian (UH/Tugas/UTS/Praktik); tambah kolom via ＋.</li>
+            <li>Nilai &lt; KKM disorot merah; sel kosong jelas terlihat.</li>
+            <li>Sinkron ke Rekap Nilai per bab.</li>
+          </ul>
+        </figcaption>
+      </figure>
+
+      <!-- 10. RPP -->
+      <figure class="shot">
+        <div class="phone"><div class="screen">
+          <div style="background:var(--role-teacher)">
+            <div class="statusbar on-dark"><span>09:41</span><span class="icons">▂▄▆ ᯤ ▮</span></div>
+            <div class="apphdr"><div class="row"><div><div class="kick">Akademik</div><h3 style="font-size:11px">RPP Saya</h3></div><span class="iconbtn">🔍</span></div></div>
+          </div>
+          <div class="body overlap">
+            <div class="chips"><span class="chip on" style="background:var(--role-teacher)">Semua</span><span class="chip">Menunggu</span><span class="chip">Disetujui</span><span class="chip">Ditolak</span></div>
+            <div class="card">
+              <div class="rowitem"><span class="dot" style="background:var(--st-warning-soft)">📄</span><div class="tx"><div class="t1">RPP Bab 6 — Teorema Pythagoras</div><div class="t2">Matematika 8 · dikirim 20 Nov</div></div><span class="pill p-warning">Menunggu</span></div>
+              <div class="rowitem"><span class="dot" style="background:var(--st-success-soft)">📄</span><div class="tx"><div class="t1">RPP Bab 5 — Persamaan Garis Lurus</div><div class="t2">Disetujui Kepala Sekolah · 12 Nov</div></div><span class="pill p-success">Disetujui</span></div>
+              <div class="rowitem"><span class="dot" style="background:var(--st-danger-soft)">📄</span><div class="tx"><div class="t1">RPP Bab 4 — Relasi &amp; Fungsi</div><div class="t2">Catatan: lengkapi asesmen formatif</div></div><span class="pill p-danger">Ditolak</span></div>
+              <div class="rowitem"><span class="dot" style="background:var(--st-success-soft)">📄</span><div class="tx"><div class="t1">RPP Bab 3 — SPLDV</div><div class="t2">Disetujui · 28 Okt</div></div><span class="pill p-success">Disetujui</span></div>
+            </div>
+            <div class="card" style="border-style:dashed;text-align:center;color:var(--slate-400);font-size:8px;padding:12px">
+              ✨ Butuh draf cepat? <b style="color:var(--role-teacher)">Buat RPP dengan Asisten AI</b>
+            </div>
+          </div>
+          <div style="position:relative"><span class="fab" style="background:var(--role-teacher);bottom:14px">＋</span></div>
+          <div class="homebar"><i></i></div>
+        </div></div>
+        <figcaption><b>10 · RPP (Rencana Pembelajaran)</b>
+          <ul>
+            <li>Status Pending/Approved/Rejected selalu dipetakan → Menunggu/Disetujui/Ditolak.</li>
+            <li>RPP ditolak menampilkan catatan reviewer.</li>
+            <li>FAB buat baru + jalur draf Asisten AI.</li>
+          </ul>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ================= ADMIN ================= -->
+  <section class="role">
+    <span class="rolebar" style="background:var(--role-admin)"></span>
+    <h2>Admin Sekolah <span style="font-size:11px;font-weight:600;color:var(--role-admin)">· Dark Blue #143068</span></h2>
+    <p class="desc">Pusat operasional: KPI sekolah, modul Data Sekolah / Akademik / Keuangan / Komunikasi, dan pengelolaan pengumuman.</p>
+    <div class="grid">
+
+      <!-- 11. ADMIN DASHBOARD -->
+      <figure class="shot">
+        <div class="phone"><div class="screen">
+          <div style="background:linear-gradient(135deg,#0d2149,var(--role-admin) 60%,var(--brand-cobalt))">
+            <div class="statusbar on-dark"><span>09:41</span><span class="icons">▂▄▆ ᯤ ▮</span></div>
+            <div class="apphdr">
+              <div class="row">
+                <div><div class="kick">SMP Harapan Bangsa · 2026/2027</div><h3>Dashboard Admin</h3></div>
+                <div style="display:flex;gap:6px"><span class="iconbtn">🔔</span><span class="avatar">SA</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="body overlap">
+            <div class="kpis">
+              <div class="kpi"><div class="lab">Total siswa</div><div class="val">486</div><div class="note">18 rombel · 3 tingkat</div></div>
+              <div class="kpi"><div class="lab">Guru &amp; staf</div><div class="val">42</div><div class="note">38 guru · 4 staf</div></div>
+              <div class="kpi"><div class="lab">Kehadiran hari ini</div><div class="val" style="color:var(--st-success)">94,7%</div><div class="note">461 hadir · 12 izin · 13 alpa</div></div>
+              <div class="kpi"><div class="lab">Pembayaran Nov</div><div class="val" style="font-size:11.5px">Rp128,4jt</div><div class="note" style="color:var(--st-warning);font-weight:600">37 tagihan menunggu</div></div>
+            </div>
+            <div class="card">
+              <h4>Perlu tindakan</h4>
+              <div class="rowitem"><span class="dot" style="background:var(--st-warning-soft)">📄</span><div class="tx"><div class="t1">6 RPP menunggu persetujuan</div><div class="t2">Terlama 4 hari</div></div><span style="color:var(--slate-400)">›</span></div>
+              <div class="rowitem"><span class="dot" style="background:var(--st-warning-soft)">🧾</span><div class="tx"><div class="t1">9 bukti bayar menunggu verifikasi</div><div class="t2">Keuangan · SPP November</div></div><span style="color:var(--slate-400)">›</span></div>
+            </div>
+            <div>
+              <div style="font-size:8px;font-weight:600;color:var(--slate-500);margin:0 2px 4px">Modul</div>
+              <div class="shortcut" style="grid-template-columns:repeat(4,1fr)">
+                <div class="s"><span class="ic" style="background:var(--role-admin-soft)">🎓</span>Siswa</div>
+                <div class="s"><span class="ic" style="background:var(--role-admin-soft)">🧑‍🏫</span>Guru</div>
+                <div class="s"><span class="ic" style="background:var(--role-admin-soft)">🗓️</span>Jadwal</div>
+                <div class="s"><span class="ic" style="background:var(--role-admin-soft)">✅</span>Kehadiran</div>
+                <div class="s"><span class="ic" style="background:var(--st-success-soft)">💰</span>Keuangan</div>
+                <div class="s"><span class="ic" style="background:var(--st-warning-soft)">📖</span>Rapor</div>
+                <div class="s"><span class="ic" style="background:var(--role-parent-soft)">📢</span>Pengumuman</div>
+                <div class="s"><span class="ic" style="background:var(--slate-100)">⚙️</span>Pengaturan</div>
+              </div>
+            </div>
+          </div>
+          <div class="bottomnav">
+            <div class="it" style="color:var(--role-admin)"><span class="ic">🏠</span>Dashboard</div>
+            <div class="it"><span class="ic">🗂️</span>Data</div>
+            <div class="it"><span class="ic">💰</span>Keuangan</div>
+            <div class="it"><span class="ic">👤</span>Akun</div>
+          </div>
+          <div class="homebar"><i></i></div>
+        </div></div>
+        <figcaption><b>11 · Dashboard Admin</b>
+          <ul>
+            <li>KPI operasional: siswa, SDM, kehadiran hari ini, kas bulan berjalan.</li>
+            <li>"Perlu tindakan" = antrean persetujuan (RPP, verifikasi bayar).</li>
+            <li>Grid modul mengikuti seksi nav web: Data Sekolah/Akademik/Keuangan/Komunikasi.</li>
+          </ul>
+        </figcaption>
+      </figure>
+
+      <!-- 12. ADMIN ANNOUNCEMENTS -->
+      <figure class="shot">
+        <div class="phone"><div class="screen">
+          <div style="background:var(--role-admin)">
+            <div class="statusbar on-dark"><span>09:41</span><span class="icons">▂▄▆ ᯤ ▮</span></div>
+            <div class="apphdr"><div class="row"><span style="font-size:12px">←</span><div style="text-align:center"><div class="kick">Komunikasi</div><h3 style="font-size:11px">Pengumuman</h3></div><span class="iconbtn">📆</span></div></div>
+          </div>
+          <div class="body overlap">
+            <div class="input">🔍 Cari judul, isi, atau sumber…</div>
+            <div class="chips"><span class="chip on" style="background:var(--role-admin)">Semua</span><span class="chip">Aktif</span><span class="chip">Terjadwal</span><span class="chip">Kedaluwarsa</span><span class="chip">Prioritas ▾</span></div>
+            <div class="card" style="flex:1">
+              <div class="rowitem"><span class="dot" style="background:var(--st-danger-soft)">📢</span><div class="tx"><div class="t1">Pembagian Rapor Semester Ganjil</div><div class="t2">Semua kelas · tayang 23 Nov · 312 dibaca</div></div><div class="end"><span class="pill p-danger">Mendesak</span><br /><span class="pill p-success">Aktif</span></div></div>
+              <div class="rowitem"><span class="dot" style="background:var(--st-warning-soft)">🏆</span><div class="tx"><div class="t1">Lomba Sains Tingkat Kota</div><div class="t2">Kelas 8–9 · tayang 21 Nov</div></div><div class="end"><span class="pill p-warning">Penting</span><br /><span class="pill p-success">Aktif</span></div></div>
+              <div class="rowitem"><span class="dot" style="background:var(--role-admin-soft)">🗓️</span><div class="tx"><div class="t1">Libur Hari Guru Nasional</div><div class="t2">Semua · terbit otomatis 24 Nov 06.00</div></div><div class="end"><span class="pill p-neutral">Biasa</span><br /><span class="pill p-info">Terjadwal</span></div></div>
+              <div class="rowitem"><span class="dot" style="background:var(--slate-100)">🧾</span><div class="tx"><div class="t1">Sosialisasi Ujian Praktik</div><div class="t2">Kelas 9 · berakhir 15 Nov</div></div><div class="end"><span class="pill p-neutral">Biasa</span><br /><span class="pill p-neutral">Kedaluwarsa</span></div></div>
+            </div>
+          </div>
+          <div style="position:relative"><span class="fab" style="background:var(--role-admin);bottom:14px">＋</span></div>
+          <div class="homebar"><i></i></div>
+        </div></div>
+        <figcaption><b>12 · Kelola Pengumuman (Admin)</b>
+          <ul>
+            <li>Pencarian + filter status/prioritas (Mendesak/Penting/Biasa/Rendah).</li>
+            <li>Penjadwalan tayang otomatis; hitungan dibaca per pengumuman.</li>
+            <li>FAB → composer dengan target kelas &amp; lampiran.</li>
+          </ul>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <footer style="margin-top:56px;border-top:1px solid var(--line);padding-top:16px;font-size:12px;color:var(--ink-lo)">
+    KamilEdu · Wireframe high-fidelity mobile v1 — sumber kebenaran perilaku: aplikasi Flutter (<code>lib/features/…</code>).
+    Ikon emoji adalah placeholder; produksi memakai set ikon aplikasi. Semua data pada layar adalah dummy.
+  </footer>
+</div>
