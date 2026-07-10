@@ -179,8 +179,20 @@ export const GradeService = {
       return (Array.isArray(body) ? body : []).map((row) =>
         teacherGradeSummaryFromJson(row as Record<string, unknown>),
       );
-    } catch {
-      return [];
+    } catch (e) {
+      // Silent-swallow was hiding 500s from `GET /grades/teacher-
+      // summary`: the view got `[]` and rendered "buku nilai kosong"
+      // regardless of the actual failure mode. Luay Prio High
+      // 2026-07-10 Slack 1783642909 → Yahya "check sendiri dulu".
+      // Rethrow instead so `TeacherGradeBookView.loadSummary` can put
+      // the message on `summaryError.value` and surface it via
+      // `AsyncView` (or the retry banner), which is the same path
+      // every other loader in that view already uses.
+      throw new Error(
+        e instanceof Error
+          ? e.message
+          : 'Gagal memuat ringkasan nilai. Coba lagi.',
+      );
     }
   },
 
