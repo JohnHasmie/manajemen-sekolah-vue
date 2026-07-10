@@ -1,0 +1,1867 @@
+<title>KamilEdu — Mockup Mobile App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+      Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    --ground: #F5F7FB;
+    --ground-2: #EEF1F7;
+    --ink: #0F172A;
+    --ink-2: #334155;
+    --ink-3: #64748B;
+    --line: #E2E8F0;
+    --line-soft: #EEF2F7;
+    --card: #FFFFFF;
+    --bezel: #0F172A;
+    --bezel-edge: #1E293B;
+
+    --admin: #143068;
+    --admin-soft: #E8EEF7;
+    --admin-deep: #0A1F4D;
+    --teacher: #1B6FB8;
+    --teacher-soft: #E6F2FB;
+    --teacher-deep: #0F2A45;
+    --parent: #21AFE6;
+    --parent-soft: #E4F5FD;
+    --parent-deep: #0B5677;
+    --brand-primary: #4F46E5;
+
+    --ok: #10B981;
+    --ok-soft: #D1FAE5;
+    --warn: #F59E0B;
+    --warn-soft: #FEF3C7;
+    --bad: #EF4444;
+    --bad-soft: #FEE2E2;
+    --info: #06B6D4;
+    --info-soft: #CFFAFE;
+
+    --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04),
+      0 12px 32px -8px rgb(15 23 42 / 0.14);
+    --shadow-tile: 0 1px 2px 0 rgb(15 23 42 / 0.05),
+      0 4px 14px -2px rgb(15 23 42 / 0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0B1220;
+      --ground-2: #111a2c;
+      --ink: #E2E8F0;
+      --ink-2: #94A3B8;
+      --ink-3: #64748B;
+      --line: #1E293B;
+      --line-soft: #172033;
+      --card: #FFFFFF;
+      --bezel: #05070C;
+      --bezel-edge: #111827;
+    }
+  }
+  :root[data-theme='dark'] {
+    --ground: #0B1220;
+    --ground-2: #111a2c;
+    --ink: #E2E8F0;
+    --ink-2: #94A3B8;
+    --ink-3: #64748B;
+    --line: #1E293B;
+    --line-soft: #172033;
+    --bezel: #05070C;
+    --bezel-edge: #111827;
+  }
+  :root[data-theme='light'] {
+    --ground: #F5F7FB;
+    --ground-2: #EEF1F7;
+    --ink: #0F172A;
+    --ink-2: #334155;
+    --ink-3: #64748B;
+    --line: #E2E8F0;
+    --line-soft: #EEF2F7;
+    --bezel: #0F172A;
+    --bezel-edge: #1E293B;
+  }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(33,175,230,0.12), transparent 60%),
+      radial-gradient(900px 500px at 100% 10%, rgba(20,48,104,0.10), transparent 60%),
+      var(--ground);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .page {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 40px 24px 96px;
+  }
+
+  header.hero {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+  .hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .brandmark {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brandmark .logo {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #143068 0%, #1B6FB8 60%, #21AFE6 110%);
+    box-shadow: 0 6px 14px -4px rgba(20,48,104,0.5);
+    display: grid; place-items: center;
+    color: white; font-weight: 700; letter-spacing: 0.02em;
+    font-size: 15px;
+  }
+  .brandmark .name {
+    font-weight: 700; font-size: 18px; letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .brandmark .sub {
+    color: var(--ink-3); font-size: 12px; letter-spacing: 0.04em;
+    text-transform: uppercase; margin-top: 2px;
+  }
+
+  h1 {
+    font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+    text-wrap: balance;
+    max-width: 22ch;
+  }
+  h1 em {
+    font-style: normal;
+    background: linear-gradient(90deg, #143068, #1B6FB8 45%, #21AFE6 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero-copy p {
+    margin: 12px 0 0;
+    color: var(--ink-2);
+    font-size: 15px;
+    max-width: 60ch;
+    line-height: 1.55;
+  }
+
+  .role-legend {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .role-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    font-size: 12px; font-weight: 600;
+    box-shadow: var(--shadow-tile);
+  }
+  .role-chip .dot {
+    width: 8px; height: 8px; border-radius: 999px;
+  }
+  .role-chip.admin .dot { background: var(--admin); }
+  .role-chip.teacher .dot { background: var(--teacher); }
+  .role-chip.parent .dot { background: var(--parent); }
+  .role-chip.auth .dot {
+    background: linear-gradient(135deg, #143068, #21AFE6);
+  }
+
+  /* --- Device grid --- */
+  .gallery {
+    display: grid;
+    gap: 32px 24px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+  .stage {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 14px;
+  }
+  .caption {
+    text-align: center;
+  }
+  .caption .name {
+    font-weight: 600; font-size: 14px; letter-spacing: -0.005em;
+    color: var(--ink);
+  }
+  .caption .meta {
+    margin-top: 4px;
+    color: var(--ink-3); font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+
+  /* --- Phone bezel --- */
+  .phone {
+    width: 320px;
+    height: 680px;
+    background: var(--bezel);
+    border-radius: 44px;
+    padding: 12px;
+    position: relative;
+    box-shadow:
+      0 30px 60px -20px rgba(15,23,42,0.35),
+      0 8px 20px -6px rgba(15,23,42,0.20),
+      inset 0 0 0 1px rgba(255,255,255,0.05);
+    isolation: isolate;
+  }
+  .phone::before {
+    /* side button */
+    content: '';
+    position: absolute; top: 130px; right: -2px;
+    width: 3px; height: 60px;
+    background: var(--bezel-edge);
+    border-radius: 2px 0 0 2px;
+  }
+  .phone::after {
+    /* volume rocker */
+    content: '';
+    position: absolute; top: 130px; left: -2px;
+    width: 3px; height: 40px;
+    background: var(--bezel-edge);
+    border-radius: 0 2px 2px 0;
+    box-shadow: 0 60px 0 0 var(--bezel-edge);
+  }
+  .screen {
+    position: relative;
+    height: 100%;
+    background: #FFFFFF;
+    border-radius: 32px;
+    overflow: hidden;
+    color: #0F172A;
+    display: flex;
+    flex-direction: column;
+  }
+  .status-bar {
+    height: 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 22px;
+    font-size: 12px; font-weight: 600;
+    color: inherit;
+    flex-shrink: 0;
+  }
+  .status-bar .icons {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .status-bar svg { display: block; }
+  .status-bar .notch {
+    position: absolute;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 92px; height: 22px;
+    background: #05070C;
+    border-radius: 999px;
+    z-index: 5;
+  }
+  .home-indicator {
+    position: absolute;
+    bottom: 6px; left: 50%;
+    transform: translateX(-50%);
+    width: 108px; height: 4px;
+    border-radius: 999px;
+    background: rgba(15,23,42,0.35);
+    z-index: 6;
+  }
+
+  .screen-body {
+    flex: 1;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    padding-bottom: 8px;
+  }
+
+  /* --- Reusable screen atoms --- */
+  .hero-band {
+    position: relative;
+    padding: 8px 18px 20px;
+    color: #FFFFFF;
+  }
+  .hero-band.admin { background: linear-gradient(120deg, var(--admin-deep) 0%, var(--admin) 60%, var(--admin) 100%); }
+  .hero-band.teacher { background: linear-gradient(120deg, var(--teacher-deep) 0%, var(--teacher) 60%, var(--teacher) 100%); }
+  .hero-band.parent { background: linear-gradient(120deg, var(--parent-deep) 0%, var(--parent) 60%, var(--parent) 100%); }
+  .hero-band.brand { background: linear-gradient(120deg, #0A1F4D 0%, #143068 40%, #1B6FB8 80%, #21AFE6 120%); }
+
+  .greeting {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+  }
+  .greeting .who .hi {
+    font-size: 11px; opacity: 0.75;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .greeting .who .name {
+    font-size: 17px; font-weight: 700; letter-spacing: -0.01em;
+    margin-top: 2px;
+  }
+  .avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    color: white;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 13px;
+    border: 1px solid rgba(255,255,255,0.28);
+  }
+  .year-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px;
+    background: rgba(255,255,255,0.16);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
+    font-size: 11px; font-weight: 600;
+    margin-top: 12px;
+    color: #fff;
+  }
+
+  .content-area {
+    padding: 14px 14px 8px;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .section-title {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2px;
+  }
+  .section-title h3 {
+    margin: 0;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #334155;
+  }
+  .section-title a {
+    font-size: 11px; font-weight: 600;
+    color: #64748B; text-decoration: none;
+  }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .kpi {
+    background: white;
+    border: 1px solid #EEF2F7;
+    border-radius: 14px;
+    padding: 10px 8px 8px;
+    box-shadow: var(--shadow-tile);
+    display: flex; flex-direction: column; gap: 4px;
+    min-width: 0;
+  }
+  .kpi .label {
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: #64748B;
+  }
+  .kpi .value {
+    font-size: 16px; font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #0F172A;
+  }
+  .kpi .trend {
+    font-size: 9px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .kpi .trend.up { color: var(--ok); }
+  .kpi .trend.down { color: var(--bad); }
+  .kpi .trend.flat { color: #64748B; }
+  .kpi .bar {
+    height: 3px; border-radius: 999px;
+    background: #F1F5F9;
+    overflow: hidden;
+    margin-top: 2px;
+  }
+  .kpi .bar > i {
+    display: block; height: 100%;
+    border-radius: 999px;
+  }
+
+  /* Cards */
+  .card {
+    background: white;
+    border: 1px solid #EEF2F7;
+    border-radius: 16px;
+    box-shadow: var(--shadow-tile);
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    height: 62px;
+    background: white;
+    border-top: 1px solid #EEF2F7;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    padding: 0 6px 8px;
+    flex-shrink: 0;
+  }
+  .bottom-nav .item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 3px; justify-content: center;
+    font-size: 9px; font-weight: 600;
+    color: #94A3B8;
+    padding-top: 6px;
+  }
+  .bottom-nav .item .icn {
+    width: 24px; height: 24px;
+    display: grid; place-items: center;
+  }
+  .bottom-nav .item.active { color: var(--admin); }
+  .bottom-nav.teacher .item.active { color: var(--teacher); }
+  .bottom-nav.parent .item.active { color: var(--parent); }
+  .bottom-nav .item.active .icn {
+    background: color-mix(in srgb, currentColor 14%, white);
+    border-radius: 12px;
+  }
+
+  /* Priority inbox item */
+  .inbox-item {
+    display: flex; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #FBFCFE;
+    border: 1px solid #EEF2F7;
+    align-items: flex-start;
+  }
+  .inbox-item + .inbox-item { margin-top: 6px; }
+  .inbox-item .sev {
+    width: 3px; align-self: stretch;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .inbox-item .sev.high { background: var(--bad); }
+  .inbox-item .sev.med  { background: var(--warn); }
+  .inbox-item .sev.low  { background: var(--info); }
+  .inbox-item .body { flex: 1; min-width: 0; }
+  .inbox-item .body .t {
+    font-size: 12px; font-weight: 600; color: #0F172A;
+    letter-spacing: -0.005em;
+    line-height: 1.35;
+  }
+  .inbox-item .body .m {
+    font-size: 10px; color: #64748B; margin-top: 2px;
+    line-height: 1.35;
+  }
+  .inbox-item .body .meta {
+    display: flex; gap: 8px; margin-top: 6px;
+    font-size: 9px; color: #94A3B8; font-weight: 600;
+  }
+  .inbox-item .cta {
+    color: var(--admin); font-weight: 700; font-size: 10px;
+    align-self: center;
+    padding: 6px 10px;
+    background: var(--admin-soft);
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  /* Pills */
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  .pill.ok   { background: var(--ok-soft);   color: #047857; }
+  .pill.warn { background: var(--warn-soft); color: #B45309; }
+  .pill.bad  { background: var(--bad-soft);  color: #B91C1C; }
+  .pill.info { background: var(--info-soft); color: #0E7490; }
+  .pill.admin{ background: var(--admin-soft);color: var(--admin); }
+  .pill.teacher{ background: var(--teacher-soft);color: var(--teacher); }
+  .pill.parent{ background: var(--parent-soft);color: var(--parent); }
+
+  /* ============ SCREEN: LOGIN ============ */
+  .login-bg {
+    height: 100%;
+    background:
+      radial-gradient(180px 120px at 100% 0%, rgba(255,255,255,0.16), transparent 60%),
+      radial-gradient(200px 140px at 0% 100%, rgba(33,175,230,0.35), transparent 60%),
+      linear-gradient(160deg, #0A1F4D 0%, #143068 45%, #1B6FB8 100%);
+    padding: 44px 22px 24px;
+    color: white;
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  .login-logo {
+    width: 68px; height: 68px;
+    border-radius: 20px;
+    background: white;
+    color: var(--admin);
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 24px;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+    box-shadow: 0 12px 24px 0 rgba(15,23,42,0.28);
+  }
+  .login-title {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .login-sub {
+    color: rgba(255,255,255,0.75);
+    font-size: 12px; margin-top: 6px;
+    line-height: 1.5;
+    max-width: 26ch;
+  }
+  .login-card {
+    background: white;
+    border-radius: 22px;
+    padding: 18px 16px 16px;
+    color: #0F172A;
+    margin-top: 24px;
+    box-shadow: 0 14px 30px -8px rgba(0,0,0,0.35);
+  }
+  .login-card .field {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .login-card .field + .field { margin-top: 10px; }
+  .login-card label {
+    font-size: 10px; font-weight: 700; color: #64748B;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .login-card .input {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px; color: #0F172A;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .login-card .input .val { font-weight: 600; }
+  .login-card .input .caret { color: #94A3B8; font-size: 10px; }
+  .login-card .btn {
+    margin-top: 14px;
+    width: 100%;
+    background: linear-gradient(90deg, #143068, #1B6FB8);
+    color: white;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 700; font-size: 13px;
+    text-align: center;
+    letter-spacing: 0.02em;
+    box-shadow: 0 6px 14px -4px rgba(27,111,184,0.5);
+  }
+  .login-alt {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 11px;
+    color: #64748B;
+  }
+  .login-alt a { color: var(--teacher); font-weight: 700; text-decoration: none; }
+
+  .login-footer-note {
+    margin-top: auto;
+    text-align: center;
+    font-size: 10px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.04em;
+    padding-top: 16px;
+  }
+
+  /* ============ SCREEN: PARENT DASHBOARD ============ */
+  .child-tabs {
+    display: flex; gap: 6px;
+    margin-top: 14px;
+    overflow: hidden;
+  }
+  .child-tab {
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 999px;
+    font-size: 10px; font-weight: 600;
+    color: rgba(255,255,255,0.85);
+    border: 1px solid rgba(255,255,255,0.22);
+  }
+  .child-tab.active {
+    background: white; color: var(--parent-deep);
+    border-color: white;
+  }
+
+  .attendance-hero {
+    background: linear-gradient(120deg, var(--parent-deep), var(--parent));
+    color: white;
+    border-radius: 16px;
+    padding: 14px 14px 12px;
+    margin-top: 4px;
+  }
+  .attendance-hero .row1 {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 10px;
+  }
+  .attendance-hero .rate {
+    font-size: 30px; font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .attendance-hero .rate small {
+    font-size: 14px; font-weight: 600; margin-left: 2px; opacity: 0.85;
+  }
+  .attendance-hero .cap {
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    opacity: 0.75;
+  }
+  .attendance-hero .bar {
+    height: 4px; border-radius: 999px;
+    background: rgba(255,255,255,0.2);
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  .attendance-hero .bar > i {
+    display: block; height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, #F0FDFA, #FFFFFF);
+  }
+  .attendance-hero .foot {
+    display: flex; justify-content: space-between; margin-top: 8px;
+    font-size: 10px; opacity: 0.85; font-weight: 600;
+  }
+
+  .feed-item {
+    display: flex; gap: 10px; padding: 10px 12px;
+    align-items: flex-start;
+  }
+  .feed-item + .feed-item { border-top: 1px solid var(--line-soft); }
+  .feed-item .ico {
+    width: 30px; height: 30px; border-radius: 10px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    color: white;
+  }
+  .feed-item .ico.grade { background: var(--teacher); }
+  .feed-item .ico.att   { background: var(--parent); }
+  .feed-item .ico.bill  { background: var(--warn); }
+  .feed-item .ico.ann   { background: var(--admin); }
+  .feed-item .body { flex: 1; min-width: 0; }
+  .feed-item .body .t {
+    font-size: 12px; font-weight: 600; color: #0F172A;
+    line-height: 1.35;
+  }
+  .feed-item .body .m {
+    font-size: 10px; color: #64748B; margin-top: 2px;
+  }
+  .feed-item .ts {
+    font-size: 9px; color: #94A3B8; font-weight: 600;
+    white-space: nowrap; padding-top: 3px;
+  }
+
+  /* ============ SCREEN: BILLING ============ */
+  .bill-hero {
+    padding: 12px 16px 16px;
+    color: white;
+    background: linear-gradient(120deg, var(--parent-deep), var(--parent));
+  }
+  .bill-hero .cap {
+    font-size: 10px; opacity: 0.85; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .bill-hero .val {
+    font-size: 26px; font-weight: 700; letter-spacing: -0.02em;
+    margin-top: 4px;
+  }
+  .bill-hero .sub {
+    font-size: 11px; opacity: 0.85; margin-top: 2px;
+  }
+  .bill-hero .act {
+    margin-top: 12px;
+    background: white;
+    color: var(--parent-deep);
+    padding: 10px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 700; font-size: 12px;
+  }
+
+  .bill-item {
+    padding: 12px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px;
+  }
+  .bill-item + .bill-item { border-top: 1px solid var(--line-soft); }
+  .bill-item .info .t {
+    font-size: 12px; font-weight: 600; color: #0F172A;
+  }
+  .bill-item .info .m {
+    font-size: 10px; color: #64748B; margin-top: 3px;
+  }
+  .bill-item .amt {
+    text-align: right;
+  }
+  .bill-item .amt .n {
+    font-size: 12px; font-weight: 700; letter-spacing: -0.01em;
+    color: #0F172A;
+  }
+  .bill-item .amt .p {
+    margin-top: 4px;
+  }
+
+  /* ============ SCREEN: ATTENDANCE CALENDAR ============ */
+  .cal-hero {
+    padding: 12px 16px 14px;
+    color: white;
+    background: linear-gradient(120deg, var(--parent-deep), var(--parent));
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .cal-hero .m .cap {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+    opacity: 0.85; font-weight: 600;
+  }
+  .cal-hero .m .mo {
+    font-size: 18px; font-weight: 700; letter-spacing: -0.01em;
+    margin-top: 2px;
+  }
+  .cal-hero .navs {
+    display: flex; gap: 6px;
+  }
+  .cal-hero .navs button {
+    all: unset;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.22);
+    width: 26px; height: 26px; border-radius: 8px;
+    display: grid; place-items: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .cal-grid {
+    padding: 12px 14px;
+  }
+  .cal-grid .heads,
+  .cal-grid .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .cal-grid .heads {
+    margin-bottom: 6px;
+  }
+  .cal-grid .heads span {
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: #94A3B8;
+    text-align: center;
+  }
+  .cal-grid .day {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: 11px; font-weight: 600;
+    color: #0F172A;
+    background: #F8FAFC;
+    position: relative;
+  }
+  .cal-grid .day.mute { color: #CBD5E1; background: transparent; }
+  .cal-grid .day.h    { background: color-mix(in srgb, var(--ok) 18%, white); color: #065F46; }
+  .cal-grid .day.a    { background: color-mix(in srgb, var(--bad) 20%, white); color: #7F1D1D; }
+  .cal-grid .day.p    { background: color-mix(in srgb, var(--warn) 22%, white); color: #78350F; }
+  .cal-grid .day.today {
+    outline: 2px solid var(--parent);
+    outline-offset: -2px;
+  }
+  .cal-legend {
+    display: flex; gap: 12px; margin-top: 12px;
+    padding: 0 2px;
+    font-size: 10px; color: #64748B; font-weight: 600;
+  }
+  .cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .cal-legend .swatch {
+    width: 8px; height: 8px; border-radius: 2px;
+  }
+
+  /* ============ SCREEN: TEACHER DASHBOARD ============ */
+  .schedule-strip {
+    display: flex; gap: 8px; overflow: hidden;
+  }
+  .schedule-card {
+    flex: 0 0 44%;
+    background: white;
+    border: 1px solid #EEF2F7;
+    border-radius: 14px;
+    padding: 10px;
+    box-shadow: var(--shadow-tile);
+    min-width: 0;
+  }
+  .schedule-card.next {
+    background: linear-gradient(135deg, var(--teacher), #21AFE6);
+    color: white; border: none;
+  }
+  .schedule-card .time {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .schedule-card .subj {
+    font-size: 12px; font-weight: 700;
+    margin-top: 4px; letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+  .schedule-card .room {
+    font-size: 10px; margin-top: 2px;
+    opacity: 0.75;
+  }
+  .schedule-card.next .subj,
+  .schedule-card.next .room { color: white; }
+  .schedule-card.next .time { opacity: 0.9; }
+
+  .quick-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .quick {
+    background: white;
+    border: 1px solid #EEF2F7;
+    border-radius: 14px;
+    padding: 10px 6px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    box-shadow: var(--shadow-tile);
+  }
+  .quick .icn {
+    width: 30px; height: 30px; border-radius: 10px;
+    display: grid; place-items: center;
+    color: white;
+  }
+  .quick .lbl {
+    font-size: 9px; font-weight: 700; color: #0F172A;
+    text-align: center; line-height: 1.15;
+  }
+
+  /* ============ SCREEN: ATTENDANCE INPUT ============ */
+  .att-hero {
+    padding: 12px 16px 14px;
+    color: white;
+    background: linear-gradient(120deg, var(--teacher-deep), var(--teacher));
+  }
+  .att-hero .cap { font-size: 10px; opacity: 0.85; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+  .att-hero .cls { font-size: 16px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em; }
+  .att-hero .sub { font-size: 11px; margin-top: 4px; opacity: 0.85; }
+
+  .att-stats {
+    display: flex; gap: 6px; margin-top: 10px;
+  }
+  .att-stat {
+    flex: 1;
+    background: rgba(255,255,255,0.14);
+    border-radius: 10px;
+    padding: 6px 8px;
+    font-size: 10px; font-weight: 600;
+  }
+  .att-stat .n {
+    display: block; font-size: 15px; font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .att-list {
+    padding: 8px 12px;
+    overflow: hidden;
+    flex: 1;
+  }
+  .att-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .att-row:last-child { border-bottom: none; }
+  .att-row .name {
+    flex: 1; min-width: 0;
+  }
+  .att-row .name .n {
+    font-size: 12px; font-weight: 600; color: #0F172A;
+    letter-spacing: -0.005em;
+  }
+  .att-row .name .nis {
+    font-size: 10px; color: #94A3B8; margin-top: 2px;
+  }
+  .att-row .segs {
+    display: flex; gap: 4px;
+  }
+  .att-row .seg {
+    width: 22px; height: 22px; border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: 10px; font-weight: 700;
+    background: #F1F5F9;
+    color: #94A3B8;
+  }
+  .att-row .seg.H.on { background: var(--ok);   color: white; }
+  .att-row .seg.S.on { background: var(--warn); color: white; }
+  .att-row .seg.I.on { background: var(--info); color: white; }
+  .att-row .seg.A.on { background: var(--bad);  color: white; }
+
+  .att-submit {
+    margin: 8px 12px 4px;
+    padding: 11px;
+    background: var(--teacher);
+    color: white;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 700; font-size: 12px;
+    box-shadow: 0 6px 14px -4px rgba(27,111,184,0.5);
+  }
+
+  /* ============ SCREEN: ADMIN DASHBOARD ============ */
+  .heat {
+    padding: 10px;
+  }
+  .heat-row {
+    display: grid;
+    grid-template-columns: 34px repeat(5, 1fr);
+    gap: 4px;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .heat-row .lbl {
+    font-size: 9px; font-weight: 700;
+    color: #64748B;
+    text-align: right;
+    padding-right: 4px;
+  }
+  .heat-cell {
+    height: 22px; border-radius: 6px;
+    font-size: 9px; font-weight: 700;
+    display: grid; place-items: center;
+    color: white;
+  }
+  .heat-cell.head {
+    background: transparent; color: #94A3B8;
+    height: auto;
+  }
+  .finance-mini {
+    padding: 10px 12px 8px;
+  }
+  .finance-mini .row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 11px;
+  }
+  .finance-mini .row:last-child { border-bottom: none; }
+  .finance-mini .row .k { color: #64748B; font-weight: 600; }
+  .finance-mini .row .v { color: #0F172A; font-weight: 700; letter-spacing: -0.01em; }
+  .finance-mini .row .v.ok  { color: var(--ok); }
+  .finance-mini .row .v.bad { color: var(--bad); }
+
+  /* ============ SCREEN: PRIORITY INBOX ============ */
+  .inbox-hero {
+    padding: 12px 16px 14px;
+    color: white;
+    background: linear-gradient(120deg, #0A1F4D, #143068 60%, #1B6FB8);
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .inbox-hero .l .cap { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.85; font-weight: 600; }
+  .inbox-hero .l .t { font-size: 18px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em; }
+  .inbox-hero .l .m { font-size: 11px; margin-top: 4px; opacity: 0.85; }
+  .inbox-hero .c {
+    background: white; color: var(--admin);
+    width: 46px; height: 46px; border-radius: 14px;
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .filter-strip {
+    display: flex; gap: 6px; padding: 8px 12px 0; overflow: hidden;
+  }
+  .filter-strip .fp {
+    padding: 5px 10px; border-radius: 999px;
+    background: #F1F5F9; color: #475569;
+    font-size: 10px; font-weight: 700;
+    border: 1px solid #EEF2F7;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .filter-strip .fp.active {
+    background: var(--admin); color: white; border-color: var(--admin);
+  }
+  .filter-strip .fp .c {
+    background: rgba(255,255,255,0.25);
+    color: inherit;
+    padding: 1px 5px;
+    border-radius: 999px;
+    font-size: 9px;
+  }
+  .filter-strip .fp:not(.active) .c {
+    background: #FFFFFF;
+    color: var(--admin);
+  }
+
+  .inbox-list {
+    padding: 8px 12px;
+    overflow: hidden;
+    flex: 1;
+  }
+
+  /* Responsive: shrink phones on narrow screens */
+  @media (max-width: 380px) {
+    .phone { transform: scale(0.92); transform-origin: top center; }
+  }
+</style>
+
+<div class="page">
+  <header class="hero">
+    <div class="hero-top">
+      <div class="brandmark">
+        <div class="logo">KE</div>
+        <div>
+          <div class="name">KamilEdu</div>
+          <div class="sub">Mobile Mockup · v1</div>
+        </div>
+      </div>
+      <div class="role-legend">
+        <span class="role-chip auth"><span class="dot"></span>Auth</span>
+        <span class="role-chip parent"><span class="dot"></span>Wali</span>
+        <span class="role-chip teacher"><span class="dot"></span>Guru</span>
+        <span class="role-chip admin"><span class="dot"></span>Admin</span>
+      </div>
+    </div>
+    <div class="hero-copy">
+      <h1>Delapan layar utama, <em>satu bahasa desain</em> untuk tiga peran.</h1>
+      <p>Mockup dari alur inti sekolah — masuk, dasbor per-peran, kehadiran, tagihan, dan kotak prioritas — memakai token warna dan komponen yang sama dengan produk Vue. Palet, sudut, dan spasi mengikuti <code>tailwind.config.ts</code> apa adanya; gradien hero mengikuti peran (navy · cobalt · azure).</p>
+    </div>
+  </header>
+
+  <section class="gallery">
+
+    <!-- =================== 1. LOGIN =================== -->
+    <div class="stage">
+      <div class="phone">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="login-bg">
+            <div class="status-bar" style="color:white; padding:0;">
+              <span>9:41</span>
+              <span class="icons">
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M1 6.5v3M4.3 4.5v5M7.7 2.5v7M11 .5v9" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M2 4a7 7 0 0 1 10 0M4 6a4 4 0 0 1 6 0M6.5 8a1 1 0 0 1 1 0" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>
+                <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><rect x="0.5" y="0.5" width="18" height="9" rx="2" stroke="white" opacity="0.9"/><rect x="2" y="2" width="14" height="6" rx="1" fill="white"/><rect x="19" y="3.5" width="2" height="3" rx="0.5" fill="white" opacity="0.9"/></svg>
+              </span>
+            </div>
+            <div class="login-logo">KE</div>
+            <div class="login-title">Selamat datang<br/>di KamilEdu</div>
+            <div class="login-sub">Masuk untuk mengelola sekolah, mengajar kelas, atau memantau anak Anda.</div>
+
+            <div class="login-card">
+              <div class="field">
+                <label>Sekolah</label>
+                <div class="input">
+                  <span class="val">SMA Nurul Fikri Cirendeu</span>
+                  <span class="caret">▾</span>
+                </div>
+              </div>
+              <div class="field">
+                <label>No. HP / Email</label>
+                <div class="input">
+                  <span class="val" style="color:#0F172A;">yahya@nurulfikri.sch.id</span>
+                </div>
+              </div>
+              <div class="field">
+                <label>Kata sandi</label>
+                <div class="input">
+                  <span class="val" style="letter-spacing:2px;">••••••••</span>
+                  <span class="caret">👁</span>
+                </div>
+              </div>
+              <div class="btn">Masuk</div>
+              <div class="login-alt">Lupa sandi? <a>Butuh bantuan</a></div>
+            </div>
+
+            <div class="login-footer-note">v2.4 · Poppins · #kamiledu</div>
+          </div>
+          <div class="home-indicator" style="background: rgba(255,255,255,0.55);"></div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="name">Login · School picker</div>
+        <div class="meta">auth/LoginView.vue</div>
+      </div>
+    </div>
+
+    <!-- =================== 2. PARENT DASHBOARD =================== -->
+    <div class="stage">
+      <div class="phone">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="hero-band parent">
+            <div class="status-bar" style="color:white; padding:0;">
+              <span>9:41</span>
+              <span class="icons">
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M1 6.5v3M4.3 4.5v5M7.7 2.5v7M11 .5v9" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M2 4a7 7 0 0 1 10 0M4 6a4 4 0 0 1 6 0" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>
+                <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><rect x="0.5" y="0.5" width="18" height="9" rx="2" stroke="white" opacity="0.9"/><rect x="2" y="2" width="14" height="6" rx="1" fill="white"/><rect x="19" y="3.5" width="2" height="3" rx="0.5" fill="white" opacity="0.9"/></svg>
+              </span>
+            </div>
+            <div class="greeting">
+              <div class="who">
+                <div class="hi">Halo, Ibu</div>
+                <div class="name">Nur Aisyah</div>
+              </div>
+              <div class="avatar">NA</div>
+            </div>
+            <div class="year-chip">📚 2025/2026 · Semester Ganjil ▾</div>
+            <div class="child-tabs">
+              <div class="child-tab active">Alifa · 8A</div>
+              <div class="child-tab">Rizki · 5B</div>
+              <div class="child-tab">Naila · 2C</div>
+            </div>
+          </div>
+
+          <div class="content-area">
+            <div class="attendance-hero">
+              <div class="row1">
+                <div>
+                  <div class="cap">Kehadiran Alifa</div>
+                  <div class="rate">94<small>%</small></div>
+                </div>
+                <span class="pill" style="background:rgba(255,255,255,0.18);color:white;">▲ 3%</span>
+              </div>
+              <div class="bar"><i style="width:94%;"></i></div>
+              <div class="foot">
+                <span>Hadir 47 dari 50 sesi</span>
+                <span>3 tak hadir</span>
+              </div>
+            </div>
+
+            <div class="kpi-row">
+              <div class="kpi">
+                <div class="label">Rata Nilai</div>
+                <div class="value">86</div>
+                <div class="bar"><i style="width:86%;background:var(--teacher);"></i></div>
+              </div>
+              <div class="kpi">
+                <div class="label">Tagihan</div>
+                <div class="value" style="color:var(--bad);font-size:14px;">Rp 1,2jt</div>
+                <div class="trend down">2 jatuh tempo</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Tugas</div>
+                <div class="value">3</div>
+                <div class="trend flat">belum</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Info</div>
+                <div class="value">5</div>
+                <div class="trend up">baru</div>
+              </div>
+            </div>
+
+            <div class="section-title">
+              <h3>Aktivitas terkini</h3>
+              <a>Semua ›</a>
+            </div>
+            <div class="card">
+              <div class="feed-item">
+                <div class="ico grade">92</div>
+                <div class="body">
+                  <div class="t">Nilai ulangan Matematika terbit</div>
+                  <div class="m">Bab 3 · Aljabar linear</div>
+                </div>
+                <div class="ts">2j</div>
+              </div>
+              <div class="feed-item">
+                <div class="ico bill">₹</div>
+                <div class="body">
+                  <div class="t">SPP November jatuh tempo 25/11</div>
+                  <div class="m">Rp 850.000 · dapat dicicil</div>
+                </div>
+                <div class="ts">5j</div>
+              </div>
+              <div class="feed-item">
+                <div class="ico ann">📣</div>
+                <div class="body">
+                  <div class="t">Rapat wali murid 30 Nov</div>
+                  <div class="m">Aula lantai 2 · 09.00 WIB</div>
+                </div>
+                <div class="ts">1h</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bottom-nav parent">
+            <div class="item active"><div class="icn">🏠</div>Beranda</div>
+            <div class="item"><div class="icn">📅</div>Kelas</div>
+            <div class="item"><div class="icn">📊</div>Nilai</div>
+            <div class="item"><div class="icn">💳</div>Tagihan</div>
+            <div class="item"><div class="icn">👤</div>Saya</div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="name">Dasbor Wali · anak switcher</div>
+        <div class="meta">parent/ParentDashboardView.vue</div>
+      </div>
+    </div>
+
+    <!-- =================== 3. TEACHER DASHBOARD =================== -->
+    <div class="stage">
+      <div class="phone">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="hero-band teacher">
+            <div class="status-bar" style="color:white; padding:0;">
+              <span>9:41</span>
+              <span class="icons">
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M1 6.5v3M4.3 4.5v5M7.7 2.5v7M11 .5v9" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>
+                <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><rect x="0.5" y="0.5" width="18" height="9" rx="2" stroke="white" opacity="0.9"/><rect x="2" y="2" width="14" height="6" rx="1" fill="white"/><rect x="19" y="3.5" width="2" height="3" rx="0.5" fill="white" opacity="0.9"/></svg>
+              </span>
+            </div>
+            <div class="greeting">
+              <div class="who">
+                <div class="hi">Selamat pagi, Pak</div>
+                <div class="name">Ahmad Fauzi</div>
+              </div>
+              <div class="avatar">AF</div>
+            </div>
+            <div class="year-chip">📚 2025/2026 · Genap ▾</div>
+          </div>
+
+          <div class="content-area">
+            <div class="kpi-row">
+              <div class="kpi">
+                <div class="label">Sesi</div>
+                <div class="value">4</div>
+                <div class="trend flat" style="color:#64748B;">hari ini</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Kehadiran</div>
+                <div class="value">96<span style="font-size:10px;">%</span></div>
+                <div class="bar"><i style="width:96%;background:var(--ok);"></i></div>
+              </div>
+              <div class="kpi">
+                <div class="label">RPP</div>
+                <div class="value">2</div>
+                <div class="trend down">draf</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Nilai</div>
+                <div class="value">18</div>
+                <div class="trend up">belum</div>
+              </div>
+            </div>
+
+            <div class="section-title">
+              <h3>Jadwal hari ini</h3>
+              <a>Kalender ›</a>
+            </div>
+            <div class="schedule-strip">
+              <div class="schedule-card next">
+                <div class="time">08.30 – 10.00 · sekarang</div>
+                <div class="subj">Matematika</div>
+                <div class="room">Kelas 8A · R.202</div>
+              </div>
+              <div class="schedule-card">
+                <div class="time">10.15 – 11.45</div>
+                <div class="subj">Matematika</div>
+                <div class="room">Kelas 8B · R.204</div>
+              </div>
+              <div class="schedule-card">
+                <div class="time">13.00 – 14.30</div>
+                <div class="subj">Wali Kelas</div>
+                <div class="room">Kelas 8A · R.202</div>
+              </div>
+            </div>
+
+            <div class="section-title">
+              <h3>Perlu perhatian</h3>
+              <a>3 ›</a>
+            </div>
+            <div>
+              <div class="inbox-item">
+                <div class="sev high"></div>
+                <div class="body">
+                  <div class="t">Absensi kelas 8A belum diinput</div>
+                  <div class="m">Sesi 08.30 · terlambat 12 menit</div>
+                  <div class="meta"><span>📍 sekarang</span></div>
+                </div>
+                <div class="cta" style="background:var(--teacher-soft);color:var(--teacher);">Input</div>
+              </div>
+              <div class="inbox-item">
+                <div class="sev med"></div>
+                <div class="body">
+                  <div class="t">RPP Bab 4 masih draf</div>
+                  <div class="m">Deadline review admin 20 Nov</div>
+                  <div class="meta"><span>⏱ 3 hari lagi</span></div>
+                </div>
+                <div class="cta" style="background:var(--teacher-soft);color:var(--teacher);">Lanjut</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bottom-nav teacher">
+            <div class="item active"><div class="icn">🏠</div>Beranda</div>
+            <div class="item"><div class="icn">📅</div>Jadwal</div>
+            <div class="item"><div class="icn">✅</div>Absensi</div>
+            <div class="item"><div class="icn">📝</div>Nilai</div>
+            <div class="item"><div class="icn">👤</div>Saya</div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="name">Dasbor Guru · jadwal + perhatian</div>
+        <div class="meta">teacher/TeacherDashboardView.vue</div>
+      </div>
+    </div>
+
+    <!-- =================== 4. ADMIN DASHBOARD =================== -->
+    <div class="stage">
+      <div class="phone">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="hero-band admin">
+            <div class="status-bar" style="color:white; padding:0;">
+              <span>9:41</span>
+              <span class="icons">
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M1 6.5v3M4.3 4.5v5M7.7 2.5v7M11 .5v9" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>
+                <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><rect x="0.5" y="0.5" width="18" height="9" rx="2" stroke="white" opacity="0.9"/><rect x="2" y="2" width="14" height="6" rx="1" fill="white"/><rect x="19" y="3.5" width="2" height="3" rx="0.5" fill="white" opacity="0.9"/></svg>
+              </span>
+            </div>
+            <div class="greeting">
+              <div class="who">
+                <div class="hi">Halo, Kepala</div>
+                <div class="name">Bu Rahma S.</div>
+              </div>
+              <div class="avatar">RS</div>
+            </div>
+            <div class="year-chip">📚 SMA · 2025/2026 · Ganjil ▾</div>
+          </div>
+
+          <div class="content-area">
+            <div class="kpi-row">
+              <div class="kpi">
+                <div class="label">Siswa</div>
+                <div class="value">842</div>
+                <div class="bar"><i style="width:92%;background:var(--admin);"></i></div>
+              </div>
+              <div class="kpi">
+                <div class="label">Hadir</div>
+                <div class="value">93<span style="font-size:10px;">%</span></div>
+                <div class="trend up">▲ 1.2</div>
+              </div>
+              <div class="kpi">
+                <div class="label">RPP</div>
+                <div class="value">18</div>
+                <div class="trend down">tunggu</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Tagihan</div>
+                <div class="value" style="font-size:13px;">86%</div>
+                <div class="bar"><i style="width:86%;background:var(--ok);"></i></div>
+              </div>
+            </div>
+
+            <div class="section-title">
+              <h3>Heatmap kehadiran · kelas × hari</h3>
+              <a>Detail ›</a>
+            </div>
+            <div class="card heat">
+              <div class="heat-row">
+                <span class="lbl"></span>
+                <div class="heat-cell head">Sen</div>
+                <div class="heat-cell head">Sel</div>
+                <div class="heat-cell head">Rab</div>
+                <div class="heat-cell head">Kam</div>
+                <div class="heat-cell head">Jum</div>
+              </div>
+              <div class="heat-row">
+                <span class="lbl">10A</span>
+                <div class="heat-cell" style="background:#065F46">98</div>
+                <div class="heat-cell" style="background:#10B981">96</div>
+                <div class="heat-cell" style="background:#10B981">95</div>
+                <div class="heat-cell" style="background:#F59E0B">88</div>
+                <div class="heat-cell" style="background:#10B981">94</div>
+              </div>
+              <div class="heat-row">
+                <span class="lbl">10B</span>
+                <div class="heat-cell" style="background:#10B981">95</div>
+                <div class="heat-cell" style="background:#10B981">94</div>
+                <div class="heat-cell" style="background:#F59E0B">89</div>
+                <div class="heat-cell" style="background:#EF4444">78</div>
+                <div class="heat-cell" style="background:#F59E0B">86</div>
+              </div>
+              <div class="heat-row">
+                <span class="lbl">11A</span>
+                <div class="heat-cell" style="background:#10B981">96</div>
+                <div class="heat-cell" style="background:#10B981">95</div>
+                <div class="heat-cell" style="background:#10B981">93</div>
+                <div class="heat-cell" style="background:#10B981">94</div>
+                <div class="heat-cell" style="background:#065F46">97</div>
+              </div>
+              <div class="heat-row">
+                <span class="lbl">12A</span>
+                <div class="heat-cell" style="background:#F59E0B">88</div>
+                <div class="heat-cell" style="background:#F59E0B">89</div>
+                <div class="heat-cell" style="background:#10B981">92</div>
+                <div class="heat-cell" style="background:#10B981">94</div>
+                <div class="heat-cell" style="background:#F59E0B">90</div>
+              </div>
+            </div>
+
+            <div class="section-title">
+              <h3>Keuangan bulan ini</h3>
+              <a>Lihat ›</a>
+            </div>
+            <div class="card finance-mini">
+              <div class="row"><span class="k">Tertagih</span><span class="v">Rp 428 jt</span></div>
+              <div class="row"><span class="k">Terkumpul</span><span class="v ok">Rp 368 jt</span></div>
+              <div class="row"><span class="k">Tertunggak</span><span class="v bad">Rp 60 jt</span></div>
+            </div>
+          </div>
+
+          <div class="bottom-nav">
+            <div class="item active"><div class="icn">🏠</div>Beranda</div>
+            <div class="item"><div class="icn">👥</div>Data</div>
+            <div class="item"><div class="icn">✅</div>Absensi</div>
+            <div class="item"><div class="icn">💼</div>Keuangan</div>
+            <div class="item"><div class="icn">⚙️</div>Setelan</div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="name">Dasbor Admin · KPI + heatmap</div>
+        <div class="meta">admin/AdminDashboardView.vue</div>
+      </div>
+    </div>
+
+    <!-- =================== 5. PARENT ATTENDANCE CALENDAR =================== -->
+    <div class="stage">
+      <div class="phone">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="cal-hero">
+            <div class="status-bar" style="color:white; padding:0; position:absolute; top:0; left:0; right:0; width:100%;">
+              <span>9:41</span>
+              <span class="icons">
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M1 6.5v3M4.3 4.5v5M7.7 2.5v7M11 .5v9" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>
+                <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><rect x="0.5" y="0.5" width="18" height="9" rx="2" stroke="white" opacity="0.9"/><rect x="2" y="2" width="14" height="6" rx="1" fill="white"/><rect x="19" y="3.5" width="2" height="3" rx="0.5" fill="white" opacity="0.9"/></svg>
+              </span>
+            </div>
+            <div class="m" style="margin-top:22px;">
+              <div class="cap">Kehadiran · Alifa · 8A</div>
+              <div class="mo">November 2025</div>
+            </div>
+            <div class="navs" style="margin-top:22px;">
+              <button>‹</button>
+              <button>›</button>
+            </div>
+          </div>
+
+          <div class="content-area" style="padding: 12px 12px 0; gap:8px;">
+            <div class="kpi-row">
+              <div class="kpi">
+                <div class="label">Hadir</div>
+                <div class="value" style="color:var(--ok);">17</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Sakit</div>
+                <div class="value" style="color:var(--warn);">1</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Izin</div>
+                <div class="value" style="color:var(--info);">1</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Alfa</div>
+                <div class="value" style="color:var(--bad);">1</div>
+              </div>
+            </div>
+
+            <div class="card cal-grid">
+              <div class="heads">
+                <span>M</span><span>S</span><span>S</span><span>R</span><span>K</span><span>J</span><span>S</span>
+              </div>
+              <div class="days">
+                <div class="day mute">26</div><div class="day mute">27</div><div class="day mute">28</div><div class="day mute">29</div><div class="day mute">30</div><div class="day mute">31</div><div class="day h">1</div>
+                <div class="day mute">2</div><div class="day h">3</div><div class="day h">4</div><div class="day p">5</div><div class="day h">6</div><div class="day h">7</div><div class="day">8</div>
+                <div class="day mute">9</div><div class="day h">10</div><div class="day a">11</div><div class="day h">12</div><div class="day h">13</div><div class="day h">14</div><div class="day">15</div>
+                <div class="day mute">16</div><div class="day h">17</div><div class="day h">18</div><div class="day today h">19</div><div class="day">20</div><div class="day">21</div><div class="day">22</div>
+                <div class="day mute">23</div><div class="day">24</div><div class="day">25</div><div class="day">26</div><div class="day">27</div><div class="day">28</div><div class="day">29</div>
+                <div class="day mute">30</div><div class="day mute">1</div><div class="day mute">2</div><div class="day mute">3</div><div class="day mute">4</div><div class="day mute">5</div><div class="day mute">6</div>
+              </div>
+              <div class="cal-legend">
+                <span><span class="swatch" style="background:color-mix(in srgb, var(--ok) 25%, white);"></span>Hadir</span>
+                <span><span class="swatch" style="background:color-mix(in srgb, var(--warn) 30%, white);"></span>Sakit</span>
+                <span><span class="swatch" style="background:color-mix(in srgb, var(--info) 30%, white);"></span>Izin</span>
+                <span><span class="swatch" style="background:color-mix(in srgb, var(--bad) 30%, white);"></span>Alfa</span>
+              </div>
+            </div>
+
+            <div class="section-title" style="margin-top:2px;">
+              <h3>Catatan tak hadir</h3>
+              <a>2 ›</a>
+            </div>
+            <div class="card">
+              <div class="feed-item">
+                <div class="ico" style="background:var(--bad);color:white;">A</div>
+                <div class="body">
+                  <div class="t">Alfa · Selasa, 11 Nov</div>
+                  <div class="m">Tanpa keterangan · sesi 3-6</div>
+                </div>
+                <span class="pill bad">Alfa</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bottom-nav parent">
+            <div class="item"><div class="icn">🏠</div>Beranda</div>
+            <div class="item active"><div class="icn">📅</div>Kelas</div>
+            <div class="item"><div class="icn">📊</div>Nilai</div>
+            <div class="item"><div class="icn">💳</div>Tagihan</div>
+            <div class="item"><div class="icn">👤</div>Saya</div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="name">Kehadiran · kalender bulanan</div>
+        <div class="meta">parent/ParentAttendanceCalendarView.vue</div>
+      </div>
+    </div>
+
+    <!-- =================== 6. PARENT BILLING =================== -->
+    <div class="stage">
+      <div class="phone">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="bill-hero">
+            <div class="status-bar" style="color:white; padding:0; position:absolute; top:0; left:0; right:0; width:100%;">
+              <span>9:41</span>
+              <span class="icons">
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M1 6.5v3M4.3 4.5v5M7.7 2.5v7M11 .5v9" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>
+                <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><rect x="0.5" y="0.5" width="18" height="9" rx="2" stroke="white" opacity="0.9"/><rect x="2" y="2" width="14" height="6" rx="1" fill="white"/><rect x="19" y="3.5" width="2" height="3" rx="0.5" fill="white" opacity="0.9"/></svg>
+              </span>
+            </div>
+            <div style="margin-top:26px;">
+              <div class="cap">Total tagihan aktif</div>
+              <div class="val">Rp 1.235.000</div>
+              <div class="sub">2 jatuh tempo · 1 dicicil</div>
+            </div>
+            <div class="act">Bayar sekarang</div>
+          </div>
+
+          <div class="content-area" style="padding: 8px 0 0; gap: 0;">
+            <div class="section-title" style="padding: 8px 14px 4px;">
+              <h3>Jatuh tempo</h3>
+              <span class="pill bad">2 baru</span>
+            </div>
+            <div>
+              <div class="bill-item">
+                <div class="info">
+                  <div class="t">SPP November 2025</div>
+                  <div class="m">Jatuh tempo 25 Nov</div>
+                </div>
+                <div class="amt">
+                  <div class="n">Rp 850.000</div>
+                  <div class="p"><span class="pill bad">6h lagi</span></div>
+                </div>
+              </div>
+              <div class="bill-item">
+                <div class="info">
+                  <div class="t">Buku LKS Semester Ganjil</div>
+                  <div class="m">Jatuh tempo 30 Nov</div>
+                </div>
+                <div class="amt">
+                  <div class="n">Rp 285.000</div>
+                  <div class="p"><span class="pill warn">11h lagi</span></div>
+                </div>
+              </div>
+              <div class="bill-item">
+                <div class="info">
+                  <div class="t">Study tour Dieng</div>
+                  <div class="m">Cicilan 2 dari 3</div>
+                </div>
+                <div class="amt">
+                  <div class="n">Rp 100.000</div>
+                  <div class="p"><span class="pill info">Cicilan</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-title" style="padding: 12px 14px 4px;">
+              <h3>Riwayat</h3>
+              <a>2025 ›</a>
+            </div>
+            <div>
+              <div class="bill-item">
+                <div class="info">
+                  <div class="t">SPP Oktober 2025</div>
+                  <div class="m">Dibayar 22 Okt · BCA VA</div>
+                </div>
+                <div class="amt">
+                  <div class="n">Rp 850.000</div>
+                  <div class="p"><span class="pill ok">Lunas</span></div>
+                </div>
+              </div>
+              <div class="bill-item">
+                <div class="info">
+                  <div class="t">SPP September 2025</div>
+                  <div class="m">Dibayar 24 Sep · GoPay</div>
+                </div>
+                <div class="amt">
+                  <div class="n">Rp 850.000</div>
+                  <div class="p"><span class="pill ok">Lunas</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bottom-nav parent">
+            <div class="item"><div class="icn">🏠</div>Beranda</div>
+            <div class="item"><div class="icn">📅</div>Kelas</div>
+            <div class="item"><div class="icn">📊</div>Nilai</div>
+            <div class="item active"><div class="icn">💳</div>Tagihan</div>
+            <div class="item"><div class="icn">👤</div>Saya</div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="name">Tagihan · jatuh tempo + riwayat</div>
+        <div class="meta">parent/ParentBillingView.vue</div>
+      </div>
+    </div>
+
+    <!-- =================== 7. TEACHER ATTENDANCE INPUT =================== -->
+    <div class="stage">
+      <div class="phone">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="att-hero">
+            <div class="status-bar" style="color:white; padding:0; position:absolute; top:0; left:0; right:0; width:100%;">
+              <span>9:41</span>
+              <span class="icons">
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M1 6.5v3M4.3 4.5v5M7.7 2.5v7M11 .5v9" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>
+                <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><rect x="0.5" y="0.5" width="18" height="9" rx="2" stroke="white" opacity="0.9"/><rect x="2" y="2" width="14" height="6" rx="1" fill="white"/><rect x="19" y="3.5" width="2" height="3" rx="0.5" fill="white" opacity="0.9"/></svg>
+              </span>
+            </div>
+            <div style="margin-top:24px;">
+              <div class="cap">Absensi kelas · 08.30 sesi</div>
+              <div class="cls">Matematika · 8A</div>
+              <div class="sub">Senin, 19 November 2025 · 32 siswa</div>
+              <div class="att-stats">
+                <div class="att-stat">Hadir <span class="n">28</span></div>
+                <div class="att-stat">Sakit <span class="n">2</span></div>
+                <div class="att-stat">Izin <span class="n">1</span></div>
+                <div class="att-stat">Alfa <span class="n">1</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="att-list">
+            <div class="att-row">
+              <div class="avatar" style="background:#E2E8F0;color:#334155;border:none;">AN</div>
+              <div class="name">
+                <div class="n">Ahmad Naufal</div>
+                <div class="nis">NIS 240801 · L</div>
+              </div>
+              <div class="segs">
+                <div class="seg H on">H</div>
+                <div class="seg S">S</div>
+                <div class="seg I">I</div>
+                <div class="seg A">A</div>
+              </div>
+            </div>
+            <div class="att-row">
+              <div class="avatar" style="background:#E2E8F0;color:#334155;border:none;">AR</div>
+              <div class="name">
+                <div class="n">Alya Rahmadani</div>
+                <div class="nis">NIS 240802 · P</div>
+              </div>
+              <div class="segs">
+                <div class="seg H on">H</div>
+                <div class="seg S">S</div>
+                <div class="seg I">I</div>
+                <div class="seg A">A</div>
+              </div>
+            </div>
+            <div class="att-row">
+              <div class="avatar" style="background:#E2E8F0;color:#334155;border:none;">BP</div>
+              <div class="name">
+                <div class="n">Bagas Pratama</div>
+                <div class="nis">NIS 240803 · L</div>
+              </div>
+              <div class="segs">
+                <div class="seg H">H</div>
+                <div class="seg S on">S</div>
+                <div class="seg I">I</div>
+                <div class="seg A">A</div>
+              </div>
+            </div>
+            <div class="att-row">
+              <div class="avatar" style="background:#E2E8F0;color:#334155;border:none;">CD</div>
+              <div class="name">
+                <div class="n">Citra Dewi Larasati</div>
+                <div class="nis">NIS 240804 · P</div>
+              </div>
+              <div class="segs">
+                <div class="seg H on">H</div>
+                <div class="seg S">S</div>
+                <div class="seg I">I</div>
+                <div class="seg A">A</div>
+              </div>
+            </div>
+            <div class="att-row">
+              <div class="avatar" style="background:#E2E8F0;color:#334155;border:none;">DP</div>
+              <div class="name">
+                <div class="n">Dimas Prasetyo</div>
+                <div class="nis">NIS 240805 · L</div>
+              </div>
+              <div class="segs">
+                <div class="seg H">H</div>
+                <div class="seg S">S</div>
+                <div class="seg I">I</div>
+                <div class="seg A on">A</div>
+              </div>
+            </div>
+            <div class="att-row">
+              <div class="avatar" style="background:#E2E8F0;color:#334155;border:none;">EN</div>
+              <div class="name">
+                <div class="n">Elvira Nabila</div>
+                <div class="nis">NIS 240806 · P</div>
+              </div>
+              <div class="segs">
+                <div class="seg H on">H</div>
+                <div class="seg S">S</div>
+                <div class="seg I">I</div>
+                <div class="seg A">A</div>
+              </div>
+            </div>
+            <div class="att-row">
+              <div class="avatar" style="background:#E2E8F0;color:#334155;border:none;">FR</div>
+              <div class="name">
+                <div class="n">Fahri Ramadhan</div>
+                <div class="nis">NIS 240807 · L</div>
+              </div>
+              <div class="segs">
+                <div class="seg H">H</div>
+                <div class="seg S">S</div>
+                <div class="seg I on">I</div>
+                <div class="seg A">A</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="att-submit">Simpan absensi (32/32) →</div>
+
+          <div class="bottom-nav teacher">
+            <div class="item"><div class="icn">🏠</div>Beranda</div>
+            <div class="item"><div class="icn">📅</div>Jadwal</div>
+            <div class="item active"><div class="icn">✅</div>Absensi</div>
+            <div class="item"><div class="icn">📝</div>Nilai</div>
+            <div class="item"><div class="icn">👤</div>Saya</div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="name">Input absensi · roster + H/S/I/A</div>
+        <div class="meta">teacher/TeacherAttendanceInputView.vue</div>
+      </div>
+    </div>
+
+    <!-- =================== 8. PRIORITY INBOX =================== -->
+    <div class="stage">
+      <div class="phone">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="inbox-hero">
+            <div class="status-bar" style="color:white; padding:0; position:absolute; top:0; left:0; right:0; width:100%;">
+              <span>9:41</span>
+              <span class="icons">
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M1 6.5v3M4.3 4.5v5M7.7 2.5v7M11 .5v9" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>
+                <svg width="22" height="10" viewBox="0 0 22 10" fill="none"><rect x="0.5" y="0.5" width="18" height="9" rx="2" stroke="white" opacity="0.9"/><rect x="2" y="2" width="14" height="6" rx="1" fill="white"/><rect x="19" y="3.5" width="2" height="3" rx="0.5" fill="white" opacity="0.9"/></svg>
+              </span>
+            </div>
+            <div class="l" style="margin-top:22px;">
+              <div class="cap">Kotak prioritas</div>
+              <div class="t">14 hal butuh perhatian</div>
+              <div class="m">3 mendesak · 5 hari ini · 6 pekan ini</div>
+            </div>
+            <div class="c" style="margin-top:22px;">14</div>
+          </div>
+
+          <div class="filter-strip">
+            <div class="fp active">Semua <span class="c">14</span></div>
+            <div class="fp">Mendesak <span class="c">3</span></div>
+            <div class="fp">Absensi <span class="c">4</span></div>
+            <div class="fp">RPP <span class="c">2</span></div>
+          </div>
+
+          <div class="inbox-list">
+            <div class="inbox-item">
+              <div class="sev high"></div>
+              <div class="body">
+                <div class="t">RPP guru terlambat direview</div>
+                <div class="m">6 dokumen menunggu · deadline lewat 2 hari</div>
+                <div class="meta"><span>⚠ mendesak</span><span>· admin</span></div>
+              </div>
+              <div class="cta">Buka</div>
+            </div>
+            <div class="inbox-item">
+              <div class="sev high"></div>
+              <div class="body">
+                <div class="t">Tagihan SPP tertunggak Rp 60 jt</div>
+                <div class="m">18 wali murid · usia 30+ hari</div>
+                <div class="meta"><span>⚠ mendesak</span><span>· keuangan</span></div>
+              </div>
+              <div class="cta">Kirim</div>
+            </div>
+            <div class="inbox-item">
+              <div class="sev med"></div>
+              <div class="body">
+                <div class="t">Absensi 8B belum diinput hari ini</div>
+                <div class="m">Guru: Bu Nia · sesi 08.30 · 42 mnt lalu</div>
+                <div class="meta"><span>🕒 hari ini</span></div>
+              </div>
+              <div class="cta">Ingatkan</div>
+            </div>
+            <div class="inbox-item">
+              <div class="sev med"></div>
+              <div class="body">
+                <div class="t">4 permohonan reset sandi wali</div>
+                <div class="m">Semua dari kelas 5-6 · SDIT cabang B</div>
+                <div class="meta"><span>🕒 hari ini</span></div>
+              </div>
+              <div class="cta">Kelola</div>
+            </div>
+            <div class="inbox-item">
+              <div class="sev low"></div>
+              <div class="body">
+                <div class="t">Persetujuan izin siswa perlu revisi</div>
+                <div class="m">2 pengajuan menunggu tanda tangan</div>
+                <div class="meta"><span>📅 minggu ini</span></div>
+              </div>
+              <div class="cta">Tinjau</div>
+            </div>
+          </div>
+
+          <div class="bottom-nav">
+            <div class="item"><div class="icn">🏠</div>Beranda</div>
+            <div class="item"><div class="icn">👥</div>Data</div>
+            <div class="item active"><div class="icn">🔔</div>Inbox</div>
+            <div class="item"><div class="icn">💼</div>Keuangan</div>
+            <div class="item"><div class="icn">⚙️</div>Setelan</div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="name">Kotak Prioritas · filter + severity</div>
+        <div class="meta">common/PriorityInboxView.vue</div>
+      </div>
+    </div>
+
+  </section>
+</div>
