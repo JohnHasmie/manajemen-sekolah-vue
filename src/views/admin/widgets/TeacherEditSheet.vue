@@ -48,11 +48,13 @@ function normalizeGender(g: string | null | undefined): string {
     case 'male':
     case 'm':
     case 'l':
-      return 'L';
+    case 'laki-laki':
+      return 'male';
     case 'female':
     case 'f':
     case 'p':
-      return 'P';
+    case 'perempuan':
+      return 'female';
     default:
       return '';
   }
@@ -80,8 +82,8 @@ const roleOptions: FormFieldOption[] = [
   { value: 'wali_kelas', label: 'Wali Kelas' },
 ];
 const genderOptions: FormFieldOption[] = [
-  { value: 'L', label: 'Laki-laki' },
-  { value: 'P', label: 'Perempuan' },
+  { value: 'male', label: 'Laki-laki' },
+  { value: 'female', label: 'Perempuan' },
 ];
 const employmentOptions: FormFieldOption[] = [
   { value: 'tetap', label: 'Tetap' },

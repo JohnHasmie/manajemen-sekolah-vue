@@ -56,8 +56,8 @@ const filterOptions = shallowRef<TeacherFilterOptions>({
     { key: 'wali_kelas', label: $t('admin.sekolah.teacher_management.role_homeroom') },
   ],
   genders: [
-    { key: 'L', label: $t('admin.sekolah.teacher_management.gender_male') },
-    { key: 'P', label: $t('admin.sekolah.teacher_management.gender_female') },
+    { key: 'male', label: $t('admin.sekolah.teacher_management.gender_male') },
+    { key: 'female', label: $t('admin.sekolah.teacher_management.gender_female') },
   ],
   employment_statuses: [
     { key: 'tetap', label: $t('admin.sekolah.teacher_management.employ_permanent') },
@@ -77,7 +77,7 @@ const search = ref('');
 const filters = reactive<{
   role: 'guru' | 'wali_kelas' | null;
   class_id: string | null;
-  gender: 'L' | 'P' | null;
+  gender: 'male' | 'female' | null;
   employment_status: string | null;
   show_all: boolean;
 }>({
@@ -151,7 +151,7 @@ const classChipValue = computed(() => {
 });
 const genderChipValue = computed(() => {
   if (!filters.gender) return $t('admin.shared.allFilter');
-  return filters.gender === 'L'
+  return filters.gender === 'male'
     ? $t('admin.studentFilter.genderMale')
     : $t('admin.studentFilter.genderFemale');
 });
@@ -751,7 +751,7 @@ function statusFor(t: Teacher) {
     :options="genderOptions"
     :selected="filters.gender ?? ''"
     @close="showGenderPicker = false"
-    @apply="(v) => { filters.gender = (v as 'L' | 'P' | '') || null; reload(1); }"
+    @apply="(v) => { filters.gender = (v as 'male' | 'female' | '') || null; reload(1); }"
   />
   <FilterFacetPickerModal
     v-if="showEmploymentPicker"
