@@ -469,6 +469,20 @@ function detailDelete() {
   detailTarget.value = null;
 }
 
+// Add-mode reuse confirm ("Email sudah dipakai — tetap gunakan?"). Holds the
+// pending payload so we can resubmit it with use_another_user on confirm.
+const emailReuseConfirm = ref<{
+  payload: Record<string, unknown>;
+  email: string;
+} | null>(null);
+
+async function confirmEmailReuse() {
+  const pending = emailReuseConfirm.value;
+  emailReuseConfirm.value = null;
+  if (!pending) return;
+  await handleSave({ ...pending.payload, use_another_user: true });
+}
+
 async function handleSave(payload: Record<string, unknown>) {
   isSaving.value = true;
   // Clear any previous conflict hint so the sheet's callout
@@ -510,7 +524,15 @@ async function handleSave(payload: Record<string, unknown>) {
       /already been taken|has already|sudah (di)?pakai/i.test(
         `${emailFieldErr} ${msg}`,
       );
-    if (looksLikeConflict && editTarget.value) {
+    if (code === 'already_teacher_here') {
+      // The email's account already teaches at THIS school — a real duplicate,
+      // no reuse path. Tell the admin plainly.
+      error.value = $t('admin.sekolah.teacher_management.err_already_teacher_here');
+      toast.value = {
+        message: $t('admin.sekolah.teacher_management.err_already_teacher_here'),
+        tone: 'error',
+      };
+    } else if (looksLikeConflict && editTarget.value) {
       // Edit mode — keep the sheet open + flip the hint so the user can
       // retry with the "Ganti akun terkait" toggle on (migrate to the
       // existing user). The sheet's amber callout is the better surface.
@@ -519,9 +541,14 @@ async function handleSave(payload: Record<string, unknown>) {
         message: $t('admin.sekolah.teacher_management.toast_email_conflict_edit'),
         tone: 'error',
       };
+    } else if (code === 'email_conflict') {
+      // Add mode (Opsi 1) — the email belongs to another account that does NOT
+      // yet teach here, so offer to reuse it. Stash the payload + open the
+      // confirm; on OK we resubmit with use_another_user: true.
+      emailReuseConfirm.value = { payload, email: String(payload.email ?? '') };
     } else if (looksLikeConflict) {
-      // Add mode — there's no migration path, so tell the admin plainly
-      // to use a different email instead of the bare 422 / English text.
+      // Add mode against an OLD backend (plain unique 422, no reuse path) —
+      // fall back to the previous "use a different email" guidance.
       error.value = $t('admin.sekolah.teacher_management.err_email_conflict_add');
       toast.value = {
         message: $t('admin.sekolah.teacher_management.toast_email_conflict_add'),
@@ -796,6 +823,17 @@ function statusFor(t: Teacher) {
     :loading="isSaving"
     @confirm="confirmDelete"
     @close="deleteTarget = null"
+  />
+
+  <!-- Add-mode: email belongs to another account — reuse it as a teacher here? -->
+  <ConfirmationDialog
+    v-if="emailReuseConfirm"
+    :title="$t('admin.sekolah.teacher_management.email_reuse_confirm_title')"
+    :message="$t('admin.sekolah.teacher_management.email_reuse_confirm_message', { email: emailReuseConfirm.email })"
+    :confirm-label="$t('admin.sekolah.teacher_management.email_reuse_confirm_ok')"
+    :loading="isSaving"
+    @confirm="confirmEmailReuse"
+    @close="emailReuseConfirm = null"
   />
 
   <ConfirmationDialog
