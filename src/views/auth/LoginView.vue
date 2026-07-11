@@ -91,9 +91,35 @@ onMounted(async () => {
   }
 
   await auth.checkHealth();
+
+  // Surface any initial error passed via the query string
+  // (the 401 interceptor in http.ts redirects with ?reason=...),
+  // but only when the user is actually about to sign in — i.e.
+  // still on the credentials form. Yahya 2026-07-10: on the
+  // multi-tenant SchoolPicker / RolePicker path the user is
+  // already authenticated (the picker only renders because auth
+  // returned a token + the school list), so a stale
+  // "?reason=Sesi Anda telah berakhir" left over from the *previous*
+  // session's 401 redirect flashed a false-positive toast right
+  // after a successful login.
+  //
+  // Two-layer guard:
+  //   1. Skip the toast unless `auth.step === 'form'` — pickers
+  //      don't need session-expired warnings.
+  //   2. After reading the reason, strip it from the URL so a page
+  //      refresh (or a router-replace that keeps other query params)
+  //      does not surface the same warning again.
   const reason = route.query.reason;
   if (typeof reason === 'string' && reason.length > 0) {
-    toast.value = { message: reason, tone: 'error' };
+    if (auth.step === 'form') {
+      toast.value = { message: reason, tone: 'error' };
+    }
+    // Clean the stale reason out of the URL regardless of whether
+    // we showed the toast — its purpose is done and it must not
+    // survive into the next mount / navigation.
+    const { reason: _drop, ...restQuery } = route.query;
+    void _drop;
+    void router.replace({ query: restQuery });
   }
 });
 
