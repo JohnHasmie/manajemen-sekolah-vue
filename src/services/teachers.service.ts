@@ -14,7 +14,7 @@ export interface TeacherListParams {
   subject_id?: string | null;
   homeroom?: 'yes' | 'no' | null;
   class_id?: string | null;
-  gender?: 'L' | 'P' | null;
+  gender?: 'male' | 'female' | null;
   employment_status?: string | null;
   show_all?: boolean;
 }
@@ -156,8 +156,8 @@ export const TeacherService = {
           { key: 'wali_kelas', label: 'Wali Kelas' },
         ],
         genders: Array.isArray(body.genders) ? body.genders : [
-          { key: 'L', label: 'Laki-laki' },
-          { key: 'P', label: 'Perempuan' },
+          { key: 'male', label: 'Laki-laki' },
+          { key: 'female', label: 'Perempuan' },
         ],
         employment_statuses: Array.isArray(body.employment_statuses)
           ? body.employment_statuses
@@ -177,8 +177,8 @@ export const TeacherService = {
           { key: 'wali_kelas', label: 'Wali Kelas' },
         ],
         genders: [
-          { key: 'L', label: 'Laki-laki' },
-          { key: 'P', label: 'Perempuan' },
+          { key: 'male', label: 'Laki-laki' },
+          { key: 'female', label: 'Perempuan' },
         ],
         employment_statuses: [
           { key: 'tetap', label: 'Tetap' },
