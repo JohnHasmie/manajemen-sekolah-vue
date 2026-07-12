@@ -201,6 +201,7 @@ export function useModuleSelection(opts: UseModuleSelectionOptions) {
         if (cat.optional[key]?.is_ai) delete aiQuota.value[key];
       } else {
         // Bundle-expanded selection — find the owning bundle + explode.
+        let handled = false;
         for (const selKey of Array.from(next)) {
           const bundle = cat.bundles[selKey];
           if (bundle && bundle.members.includes(key)) {
@@ -208,7 +209,25 @@ export function useModuleSelection(opts: UseModuleSelectionOptions) {
             bundle.members.forEach((m) => {
               if (m !== key) next.add(m);
             });
+            handled = true;
             break;
+          }
+        }
+        // If no bundle owns this key, check if a directly-selected module
+        // `requires` it (e.g. `lms` is required by `ai_rpp` /
+        // `ai_material_quiz`; without this branch the click was a silent
+        // no-op — the checkbox stayed visually checked because
+        // `expandedKeys` kept including the required dep). Cascade-uncheck
+        // every requirer so the visible dep can actually be turned off.
+        // Yahya reported 2026-07-08: "kenapa aku tidak bisa yang
+        // unchecklist rpp dan materi".
+        if (!handled) {
+          for (const selKey of Array.from(next)) {
+            const requires = cat.optional[selKey]?.requires ?? [];
+            if (requires.includes(key)) {
+              next.delete(selKey);
+              if (cat.optional[selKey]?.is_ai) delete aiQuota.value[selKey];
+            }
           }
         }
       }
