@@ -193,8 +193,8 @@ export function teacherFromJson(raw: AnyRecord): Teacher {
       (r.no_pegawai as string) ??
       null,
     phone_number:
-      (r.phone_number as string) ?? (r.no_hp as string) ?? null,
-    address: (r.address as string) ?? (r.alamat as string) ?? null,
+      (r.phone_number as string) ?? (user?.phone_number as string) ?? (r.no_hp as string) ?? null,
+    address: (r.address as string) ?? (user?.address as string) ?? (r.alamat as string) ?? null,
     homeroom_class_id:
       (r.homeroom_class_id as string) ?? (homeroom?.id as string) ?? null,
     homeroom_class_name:
