@@ -78,7 +78,13 @@ export const AdminDataExcelService = {
   async importExcel(
     entity: AdminEntity,
     file: File,
-  ): Promise<{ imported: number; failed: number; message?: string }> {
+  ): Promise<{
+    imported: number;
+    failed: number;
+    skipped: number;
+    conflicts: number;
+    message?: string;
+  }> {
     try {
       const fd = new FormData();
       fd.append('file', file);
@@ -86,35 +92,39 @@ export const AdminDataExcelService = {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const body = res.data ?? {};
-      // Backend shapes vary across importers. StudentsImport (and the
-      // other Maatwebsite ToCollection importers) responds with
-      //   { message, results: { success, failed, errors } }
-      // while simpler endpoints respond at the top level
-      //   { imported, failed }
-      // We read both nests — top-level first, then `results.*` — so a
-      // successful 1-student import no longer shows "0 berhasil"
-      // (Luay 2026-06-16) because of a counter pulled from the wrong
-      // depth.
+      // Backend shapes vary across importers. StudentsImport / ClassesImport
+      // respond with { message, results: { success, failed, errors } };
+      // TeachersImport adds { results: { created, restored, skipped,
+      // conflicts, ... } } so "already exists" is no longer mislabelled as a
+      // failure. We read top-level first, then `results.*`.
+      //
+      // `success` is the universal "rows that ended up present" count (for
+      // teachers = created + restored), so it is preferred over `created`.
+      // `skipped` (already there) and `conflicts` (email used elsewhere) are
+      // NOT failures — they are surfaced separately and default to 0 for the
+      // importers that don't report them.
       const results = (body.results ?? {}) as Record<string, unknown>;
+      const num = (...vals: unknown[]): number => {
+        for (const v of vals) if (v !== undefined && v !== null) return Number(v);
+        return 0;
+      };
       return {
-        imported: Number(
-          body.imported
-          ?? body.created
-          ?? body.success
-          ?? results.imported
-          ?? results.created
-          ?? results.success
-          ?? 0,
+        imported: num(
+          body.imported,
+          body.created,
+          body.success,
+          results.success,
+          results.imported,
+          results.created,
         ),
-        failed: Number(
-          body.failed
-          ?? body.skipped
-          ?? body.errors_count
-          ?? results.failed
-          ?? results.skipped
-          ?? results.errors_count
-          ?? 0,
+        failed: num(
+          body.failed,
+          body.errors_count,
+          results.failed,
+          results.errors_count,
         ),
+        skipped: num(body.skipped, results.skipped),
+        conflicts: num(body.conflicts, results.conflicts),
         message: body.message ?? undefined,
       };
     } catch (e) {
