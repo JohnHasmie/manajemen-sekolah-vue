@@ -14,6 +14,15 @@ import { api } from '@/lib/http';
 
 export type AdminEntity = 'student' | 'teacher' | 'class' | 'subject';
 
+/** One actionable import row (conflict or failure) the admin should review. */
+export interface ImportReviewRow {
+  row: number;
+  name: string;
+  email: string;
+  type: 'conflict' | 'failed';
+  reason: string;
+}
+
 function humanError(e: unknown, fallback: string): string {
   const ax = e as any;
   if (ax?.response?.data) {
@@ -84,6 +93,10 @@ export const AdminDataExcelService = {
     skipped: number;
     conflicts: number;
     message?: string;
+    // Per-row detail for the rows that need admin attention (conflicts +
+    // failures) — so the UI can name WHICH row and WHY. Empty for importers
+    // that don't report it.
+    review: ImportReviewRow[];
   }> {
     try {
       const fd = new FormData();
@@ -126,6 +139,9 @@ export const AdminDataExcelService = {
         skipped: num(body.skipped, results.skipped),
         conflicts: num(body.conflicts, results.conflicts),
         message: body.message ?? undefined,
+        review: Array.isArray(results.review)
+          ? (results.review as ImportReviewRow[])
+          : [],
       };
     } catch (e) {
       throw new Error(humanError(e, 'Gagal mengimpor data.'));

@@ -11,6 +11,7 @@ import { ref } from 'vue';
 import {
   AdminDataExcelService,
   type AdminEntity,
+  type ImportReviewRow,
 } from '@/services/admin-data-excel.service';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
@@ -31,6 +32,7 @@ const emit = defineEmits<{
     skipped?: number;
     conflicts?: number;
     message?: string;
+    review?: ImportReviewRow[];
   }];
 }>();
 
