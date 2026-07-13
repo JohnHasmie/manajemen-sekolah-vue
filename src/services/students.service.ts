@@ -134,6 +134,27 @@ export const StudentService = {
   },
 
   /**
+   * Admin reset of a student's guardian (wali) login password.
+   * `POST /students/{id}/reset-guardian-password`. Pass a `password` to
+   * set a specific one, or omit it to let the server generate a random
+   * one. Returns the resulting password so the caller can show it once.
+   */
+  async resetGuardianPassword(
+    id: string,
+    password?: string,
+  ): Promise<{ password: string; was_generated: boolean }> {
+    const res = await api.post(
+      `/students/${id}/reset-guardian-password`,
+      password ? { password } : {},
+    );
+    const body = res.data as Record<string, unknown>;
+    return {
+      password: String(body.password ?? ''),
+      was_generated: Boolean(body.was_generated),
+    };
+  },
+
+  /**
    * Sequentially delete N students. Backend does NOT expose
    * `POST /student/bulk-delete` — that path 404s. Flutter loops per id
    * via DELETE /student/{id}, so we mirror that. Returns the number

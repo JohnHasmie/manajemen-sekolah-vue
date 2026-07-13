@@ -36,6 +36,7 @@ import AdminEntityDetailSheet, {
   type DetailSection,
 } from '@/components/feature/AdminEntityDetailSheet.vue';
 import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vue';
+import ResetPasswordModal from '@/components/feature/ResetPasswordModal.vue';
 import SubscriptionUsageBanner from '@/components/billing/SubscriptionUsageBanner.vue';
 import Toast from '@/components/ui/Toast.vue';
 import type { AsyncState } from '@/components/data/AsyncView.vue';
@@ -126,6 +127,20 @@ const selectedIds = ref<Set<string>>(new Set());
 const editTarget = ref<Student | null | undefined>(undefined);
 const detailTarget = ref<Student | null>(null);
 const deleteTarget = ref<Student | null>(null);
+const resetTarget = ref<Student | null>(null);
+
+function openResetPassword() {
+  // Reset the wali (guardian) password for the student in the detail sheet.
+  resetTarget.value = detailTarget.value;
+  detailTarget.value = null;
+}
+
+function onResetDone() {
+  toast.value = {
+    message: 'Password wali berhasil direset.',
+    tone: 'success',
+  };
+}
 const bulkDeleteOpen = ref(false);
 const showImport = ref(false);
 const isSaving = ref(false);
@@ -1026,9 +1041,20 @@ function topMeta(s: Student): string {
     :sections="detailSections"
     :status-pill="statusPillFor(detailTarget)"
     :read-only="ayReadOnly"
+    :reset-password-label="detailTarget.guardian_email ? 'Reset Password Wali' : undefined"
     @close="detailTarget = null"
     @edit="detailEdit"
     @delete="detailDelete"
+    @reset-password="openResetPassword"
+  />
+
+  <ResetPasswordModal
+    v-if="resetTarget"
+    title="Reset Password Wali"
+    :subject-name="resetTarget.guardian_name || resetTarget.name"
+    :reset-fn="(pwd?: string) => StudentService.resetGuardianPassword(resetTarget!.id, pwd)"
+    @close="resetTarget = null"
+    @done="onResetDone"
   />
 
   <AdminImportExcelModal

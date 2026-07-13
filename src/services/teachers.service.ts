@@ -90,6 +90,27 @@ export const TeacherService = {
   },
 
   /**
+   * Admin reset of a teacher's login password.
+   * `POST /teachers/{id}/reset-password`. Pass a `password` to set a
+   * specific one, or omit it to let the server generate a random one.
+   * Returns the resulting password so the caller can show it once.
+   */
+  async resetPassword(
+    id: string,
+    password?: string,
+  ): Promise<{ password: string; was_generated: boolean }> {
+    const res = await api.post(
+      `/teachers/${id}/reset-password`,
+      password ? { password } : {},
+    );
+    const body = res.data as Record<string, unknown>;
+    return {
+      password: String(body.password ?? ''),
+      was_generated: Boolean(body.was_generated),
+    };
+  },
+
+  /**
    * Apply the same partial update to N teachers. Loops per-id via PUT
    * because the backend has no dedicated bulk-update endpoint — mirrors
    * the bulkRemove shape. Payload is a shallow subset of the update

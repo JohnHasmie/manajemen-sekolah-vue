@@ -41,12 +41,19 @@ defineProps<{
   readOnly?: boolean;
   /** Optional pill text under the title (status badge). */
   statusPill?: { label: string; tone: 'green' | 'amber' | 'red' | 'slate' };
+  /**
+   * When set, renders a "Reset Password" action (label text) above the
+   * Edit/Hapus row and emits `reset-password`. Only entities with a login
+   * account (guru, wali) pass this; kelas/mapel omit it.
+   */
+  resetPasswordLabel?: string;
 }>();
 
 const emit = defineEmits<{
   close: [];
   edit: [];
   delete: [];
+  'reset-password': [];
 }>();
 </script>
 
@@ -107,15 +114,26 @@ const emit = defineEmits<{
       </section>
 
       <!-- Footer actions -->
-      <section v-if="!readOnly" class="grid grid-cols-2 gap-2 pt-2">
-        <Button variant="danger" block @click="emit('delete')">
-          <NavIcon name="trash-2" :size="13" />
-          Hapus
+      <section v-if="!readOnly" class="space-y-2 pt-2">
+        <Button
+          v-if="resetPasswordLabel"
+          variant="secondary"
+          block
+          @click="emit('reset-password')"
+        >
+          <NavIcon name="lock" :size="13" />
+          {{ resetPasswordLabel }}
         </Button>
-        <Button variant="primary" block @click="emit('edit')">
-          <NavIcon name="edit" :size="13" />
-          Edit
-        </Button>
+        <div class="grid grid-cols-2 gap-2">
+          <Button variant="danger" block @click="emit('delete')">
+            <NavIcon name="trash-2" :size="13" />
+            Hapus
+          </Button>
+          <Button variant="primary" block @click="emit('edit')">
+            <NavIcon name="edit" :size="13" />
+            Edit
+          </Button>
+        </div>
       </section>
       <Button v-else variant="secondary" block @click="emit('close')">Tutup</Button>
     </div>

@@ -36,6 +36,7 @@ import AdminEntityDetailSheet, {
   type DetailSection,
 } from '@/components/feature/AdminEntityDetailSheet.vue';
 import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vue';
+import ResetPasswordModal from '@/components/feature/ResetPasswordModal.vue';
 import SubscriptionUsageBanner from '@/components/billing/SubscriptionUsageBanner.vue';
 import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
@@ -91,6 +92,20 @@ const selectedIds = ref<Set<string>>(new Set());
 
 const editTarget = ref<Teacher | null | undefined>(undefined);
 const detailTarget = ref<Teacher | null>(null);
+const resetTarget = ref<Teacher | null>(null);
+
+function openResetPassword() {
+  // Open the reset modal on the teacher currently in the detail sheet.
+  resetTarget.value = detailTarget.value;
+  detailTarget.value = null;
+}
+
+function onResetDone() {
+  toast.value = {
+    message: 'Password guru berhasil direset.',
+    tone: 'success',
+  };
+}
 const showImport = ref(false);
 const deleteTarget = ref<Teacher | null>(null);
 const bulkDeleteOpen = ref(false);
@@ -826,9 +841,20 @@ function statusFor(t: Teacher) {
     :avatar-color="primaryColor"
     :sections="detailSections"
     :read-only="ayReadOnly"
+    reset-password-label="Reset Password Guru"
     @close="detailTarget = null"
     @edit="detailEdit"
     @delete="detailDelete"
+    @reset-password="openResetPassword"
+  />
+
+  <ResetPasswordModal
+    v-if="resetTarget"
+    title="Reset Password Guru"
+    :subject-name="resetTarget.name"
+    :reset-fn="(pwd?: string) => TeacherService.resetPassword(resetTarget!.id, pwd)"
+    @close="resetTarget = null"
+    @done="onResetDone"
   />
 
   <ConfirmationDialog
