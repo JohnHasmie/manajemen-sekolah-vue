@@ -28,8 +28,15 @@ import GeofenceMapPicker from '@/components/feature/GeofenceMapPicker.vue';
 import MultiGeofenceSettingsPanel from '@/components/feature/MultiGeofenceSettingsPanel.vue';
 import { useToast } from '@/composables/useToast';
 import { useConfirm } from '@/composables/useConfirm';
-import type { TeacherAttendanceSettings } from '@/types/teacher-attendance';
-import { DEFAULT_TEACHER_ATTENDANCE_SETTINGS } from '@/types/teacher-attendance';
+import type {
+  TeacherAttendanceReminderScope,
+  TeacherAttendanceReminderSettings,
+  TeacherAttendanceSettings,
+} from '@/types/teacher-attendance';
+import {
+  DEFAULT_TEACHER_ATTENDANCE_REMINDER_SETTINGS,
+  DEFAULT_TEACHER_ATTENDANCE_SETTINGS,
+} from '@/types/teacher-attendance';
 import type { CheckInMethod } from '@/types/attendance-qr';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
@@ -183,6 +190,123 @@ async function saveSettings() {
     toast.error((e as Error).message);
   } finally {
     saving.value = false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Pengingat presensi guru — SEPARATE endpoint from the settings above
+// (GET/PUT /teacher-attendance/reminder-settings, backend MR1 !413 +
+// scheduler MR2 !415, Slack 1783935842). Own load + save + form state
+// because it's a distinct resource; the shared Simpan button only
+// touches /teacher-attendance/settings.
+// ─────────────────────────────────────────────────────────────────
+/** Same ability that gates the sibling rule edit/delete actions. */
+const canManage = computed(() => me.can('attendance.staff.settings.manage'));
+
+const reminder = ref<TeacherAttendanceReminderSettings>({
+  ...DEFAULT_TEACHER_ATTENDANCE_REMINDER_SETTINGS,
+  // Clone the arrays — spreading the shared default would alias its
+  // arrays and let addOffset/removeOffset mutate the constant in place.
+  checkin_offsets_minutes: [
+    ...DEFAULT_TEACHER_ATTENDANCE_REMINDER_SETTINGS.checkin_offsets_minutes,
+  ],
+  checkout_offsets_minutes: [
+    ...DEFAULT_TEACHER_ATTENDANCE_REMINDER_SETTINGS.checkout_offsets_minutes,
+  ],
+});
+const reminderLoading = ref(true);
+const reminderError = ref<string | null>(null);
+const reminderSaving = ref(false);
+/** Draft inputs for the "add offset" fields (one per leg). */
+const checkinOffsetInput = ref('');
+const checkoutOffsetInput = ref('');
+
+const REMINDER_SCOPES: { value: TeacherAttendanceReminderScope }[] = [
+  { value: 'all_workdays' },
+  { value: 'teaching_days_only' },
+];
+
+/** Offsets sorted soonest-last for a stable, readable chip row. */
+const checkinOffsetsSorted = computed(() =>
+  [...reminder.value.checkin_offsets_minutes].sort((a, b) => b - a),
+);
+const checkoutOffsetsSorted = computed(() =>
+  [...reminder.value.checkout_offsets_minutes].sort((a, b) => b - a),
+);
+
+async function loadReminder() {
+  reminderLoading.value = true;
+  reminderError.value = null;
+  try {
+    reminder.value = await TeacherAttendanceService.getReminderSettings();
+  } catch (e) {
+    reminderError.value = (e as Error).message;
+  } finally {
+    reminderLoading.value = false;
+  }
+}
+
+/**
+ * Parse + validate the draft input, then push a de-duplicated minute
+ * offset into the given leg. Bounds mirror the backend (0..1440).
+ */
+function addOffset(leg: 'checkin' | 'checkout') {
+  const input = leg === 'checkin' ? checkinOffsetInput : checkoutOffsetInput;
+  const list =
+    leg === 'checkin'
+      ? reminder.value.checkin_offsets_minutes
+      : reminder.value.checkout_offsets_minutes;
+  const n = parseInt(input.value, 10);
+  if (!Number.isFinite(n) || n < 0 || n > 1440) {
+    toast.error(t('admin.sekolah.attendance_config.reminder.offset_invalid'));
+    return;
+  }
+  if (list.includes(n)) {
+    toast.info(t('admin.sekolah.attendance_config.reminder.offset_duplicate'));
+    input.value = '';
+    return;
+  }
+  if (list.length >= 10) {
+    toast.error(t('admin.sekolah.attendance_config.reminder.offset_max'));
+    return;
+  }
+  list.push(n);
+  input.value = '';
+}
+
+function removeOffset(leg: 'checkin' | 'checkout', value: number) {
+  const list =
+    leg === 'checkin'
+      ? reminder.value.checkin_offsets_minutes
+      : reminder.value.checkout_offsets_minutes;
+  const i = list.indexOf(value);
+  if (i !== -1) list.splice(i, 1);
+}
+
+async function saveReminder() {
+  // When enabled, at least one offset per active leg must exist — mirror
+  // the backend's ≥1 rule with a friendly message before the 422.
+  if (
+    reminder.value.enabled &&
+    reminder.value.checkin_offsets_minutes.length === 0 &&
+    reminder.value.checkout_offsets_minutes.length === 0
+  ) {
+    toast.error(t('admin.sekolah.attendance_config.reminder.need_one_offset'));
+    return;
+  }
+  reminderSaving.value = true;
+  try {
+    reminder.value = await TeacherAttendanceService.updateReminderSettings({
+      enabled: reminder.value.enabled,
+      scope: reminder.value.scope,
+      checkin_offsets_minutes: reminder.value.checkin_offsets_minutes,
+      checkout_offsets_minutes: reminder.value.checkout_offsets_minutes,
+    });
+    toast.success(t('admin.sekolah.attendance_config.reminder.saved'));
+  } catch (e) {
+    toast.error((e as Error).message);
+  } finally {
+    reminderSaving.value = false;
   }
 }
 
@@ -505,7 +629,10 @@ function getDayName(dayIndex: string): string {
   return names[dayIndex] ?? dayIndex;
 }
 
-onMounted(loadSettings);
+onMounted(() => {
+  loadSettings();
+  loadReminder();
+});
 
 // Panduan wizard — a 5-step guided overlay that walks admins through
 // the same fields the flat form exposes. Rendered lazily via v-if so
@@ -528,6 +655,10 @@ const sectionJumps = computed<{ id: string; label: string }[]>(() => [
   { id: 'section-geofence', label: 'Geofence' },
   { id: 'section-qr', label: 'QR Gerbang' },
   { id: 'section-waktu', label: 'Waktu' },
+  {
+    id: 'section-reminder',
+    label: t('admin.sekolah.attendance_config.reminder.jump_label'),
+  },
 ]);
 
 function jumpToSection(id: string): void {
@@ -1010,6 +1141,243 @@ function jumpToSection(id: string): void {
               Terlambat dihitung setelah jam mengajar pertama + toleransi.
             </p>
           </div>
+        </section>
+
+        <!-- Pengingat Presensi Guru — SEPARATE endpoint + own Save. The
+             sticky Simpan below only writes /teacher-attendance/settings;
+             this card writes /teacher-attendance/reminder-settings. -->
+        <section
+          id="section-reminder"
+          class="bg-white border border-slate-200 rounded-2xl overflow-hidden scroll-mt-32"
+        >
+          <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-3">
+            <div
+              class="w-9 h-9 rounded-lg bg-role-admin/10 text-role-admin grid place-items-center flex-shrink-0"
+            >
+              <NavIcon name="bell" :size="16" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-[13px] font-black text-slate-900">
+                {{ t('admin.sekolah.attendance_config.reminder.title') }}
+              </h3>
+              <p class="text-2xs text-slate-500 mt-0.5">
+                {{ t('admin.sekolah.attendance_config.reminder.subtitle') }}
+              </p>
+            </div>
+          </div>
+
+          <div
+            v-if="reminderLoading"
+            class="flex items-center justify-center py-lg text-slate-400"
+          >
+            <Spinner size="md" />
+          </div>
+
+          <div
+            v-else-if="reminderError"
+            class="m-4 bg-red-50 border border-red-200 rounded-xl p-4 text-center"
+          >
+            <p class="text-[13px] font-bold text-red-700">{{ reminderError }}</p>
+            <Button
+              variant="secondary"
+              size="sm"
+              class="mt-3"
+              @click="loadReminder"
+            >
+              {{ t('admin.sekolah.attendance_config.reminder.retry') }}
+            </Button>
+          </div>
+
+          <template v-else>
+            <!-- Master toggle -->
+            <label
+              class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50"
+              :class="{ 'opacity-60 pointer-events-none': !canManage }"
+            >
+              <div class="flex-1 min-w-0">
+                <p class="text-[13px] font-bold text-slate-900">
+                  {{ t('admin.sekolah.attendance_config.reminder.enable_label') }}
+                </p>
+                <p class="text-2xs text-slate-500">
+                  {{ t('admin.sekolah.attendance_config.reminder.enable_hint') }}
+                </p>
+              </div>
+              <input
+                v-model="reminder.enabled"
+                type="checkbox"
+                :disabled="!canManage"
+                class="w-5 h-5 accent-role-admin"
+              />
+            </label>
+
+            <!-- Scope -->
+            <div class="px-4 py-3 border-t border-slate-100">
+              <p
+                class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-2"
+              >
+                {{ t('admin.sekolah.attendance_config.reminder.scope_label') }}
+              </p>
+              <div class="space-y-2">
+                <label
+                  v-for="opt in REMINDER_SCOPES"
+                  :key="opt.value"
+                  class="flex items-start gap-3 cursor-pointer"
+                  :class="{ 'opacity-60 pointer-events-none': !canManage }"
+                >
+                  <input
+                    v-model="reminder.scope"
+                    type="radio"
+                    :value="opt.value"
+                    :disabled="!canManage"
+                    class="mt-0.5 w-4 h-4 accent-role-admin"
+                  />
+                  <span class="flex-1 min-w-0">
+                    <span class="text-[13px] font-bold text-slate-900 block">
+                      {{
+                        t(
+                          `admin.sekolah.attendance_config.reminder.scope_${opt.value}`,
+                        )
+                      }}
+                      <span
+                        v-if="opt.value === 'teaching_days_only'"
+                        class="ml-1 align-middle text-3xs font-bold text-amber-700 bg-amber-100 rounded-full px-1.5 py-0.5"
+                      >
+                        {{
+                          t(
+                            'admin.sekolah.attendance_config.reminder.coming_soon',
+                          )
+                        }}
+                      </span>
+                    </span>
+                    <span class="text-2xs text-slate-500 block">
+                      {{
+                        t(
+                          `admin.sekolah.attendance_config.reminder.scope_${opt.value}_hint`,
+                        )
+                      }}
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Check-in offsets -->
+            <div class="px-4 py-3 border-t border-slate-100">
+              <label
+                class="text-3xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mb-2"
+              >
+                <NavIcon name="clock" :size="12" />
+                {{ t('admin.sekolah.attendance_config.reminder.checkin_label') }}
+              </label>
+              <div
+                v-if="checkinOffsetsSorted.length"
+                class="flex gap-2 flex-wrap mb-2"
+              >
+                <span
+                  v-for="m in checkinOffsetsSorted"
+                  :key="m"
+                  class="inline-flex items-center gap-1.5 rounded-full bg-role-admin/10 text-role-admin px-3 py-1 text-[12.5px] font-bold"
+                >
+                  {{ t('admin.sekolah.attendance_config.reminder.chip_minutes', { count: m }) }}
+                  <button
+                    v-if="canManage"
+                    type="button"
+                    class="rounded-full hover:bg-role-admin/20 p-0.5 -mr-1"
+                    :aria-label="t('admin.sekolah.attendance_config.reminder.remove_offset')"
+                    @click="removeOffset('checkin', m)"
+                  >
+                    <NavIcon name="x" :size="12" />
+                  </button>
+                </span>
+              </div>
+              <p v-else class="text-2xs text-slate-400 mb-2">
+                {{ t('admin.sekolah.attendance_config.reminder.no_offsets') }}
+              </p>
+              <div v-if="canManage" class="flex gap-2">
+                <input
+                  v-model="checkinOffsetInput"
+                  type="number"
+                  min="0"
+                  max="1440"
+                  :placeholder="t('admin.sekolah.attendance_config.reminder.offset_placeholder')"
+                  class="w-32 rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30"
+                  @keydown.enter.prevent="addOffset('checkin')"
+                />
+                <Button variant="secondary" size="sm" @click="addOffset('checkin')">
+                  <NavIcon name="plus" :size="14" />{{ t('admin.sekolah.attendance_config.reminder.add') }}
+                </Button>
+              </div>
+              <p class="text-3xs text-slate-400 mt-1">
+                {{ t('admin.sekolah.attendance_config.reminder.checkin_help') }}
+              </p>
+            </div>
+
+            <!-- Check-out offsets -->
+            <div class="px-4 py-3 border-t border-slate-100">
+              <label
+                class="text-3xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mb-2"
+              >
+                <NavIcon name="log-out" :size="12" />
+                {{ t('admin.sekolah.attendance_config.reminder.checkout_label') }}
+              </label>
+              <div
+                v-if="checkoutOffsetsSorted.length"
+                class="flex gap-2 flex-wrap mb-2"
+              >
+                <span
+                  v-for="m in checkoutOffsetsSorted"
+                  :key="m"
+                  class="inline-flex items-center gap-1.5 rounded-full bg-role-admin/10 text-role-admin px-3 py-1 text-[12.5px] font-bold"
+                >
+                  {{ t('admin.sekolah.attendance_config.reminder.chip_minutes', { count: m }) }}
+                  <button
+                    v-if="canManage"
+                    type="button"
+                    class="rounded-full hover:bg-role-admin/20 p-0.5 -mr-1"
+                    :aria-label="t('admin.sekolah.attendance_config.reminder.remove_offset')"
+                    @click="removeOffset('checkout', m)"
+                  >
+                    <NavIcon name="x" :size="12" />
+                  </button>
+                </span>
+              </div>
+              <p v-else class="text-2xs text-slate-400 mb-2">
+                {{ t('admin.sekolah.attendance_config.reminder.no_offsets') }}
+              </p>
+              <div v-if="canManage" class="flex gap-2">
+                <input
+                  v-model="checkoutOffsetInput"
+                  type="number"
+                  min="0"
+                  max="1440"
+                  :placeholder="t('admin.sekolah.attendance_config.reminder.offset_placeholder')"
+                  class="w-32 rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30"
+                  @keydown.enter.prevent="addOffset('checkout')"
+                />
+                <Button variant="secondary" size="sm" @click="addOffset('checkout')">
+                  <NavIcon name="plus" :size="14" />{{ t('admin.sekolah.attendance_config.reminder.add') }}
+                </Button>
+              </div>
+              <p class="text-3xs text-slate-400 mt-1">
+                {{ t('admin.sekolah.attendance_config.reminder.checkout_help') }}
+              </p>
+            </div>
+
+            <!-- Reminder-only save (separate endpoint) -->
+            <div
+              v-if="canManage"
+              class="px-4 py-3 border-t border-slate-100 flex justify-end"
+            >
+              <Button
+                variant="primary"
+                size="sm"
+                :loading="reminderSaving"
+                @click="saveReminder"
+              >
+                <NavIcon name="check" :size="14" />{{ t('admin.sekolah.attendance_config.reminder.save') }}
+              </Button>
+            </div>
+          </template>
         </section>
 
         <!-- STICKY SAVE — the Umum tab holds 30+ controls across four

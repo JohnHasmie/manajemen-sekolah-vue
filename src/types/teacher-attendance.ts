@@ -149,6 +149,49 @@ export interface TeacherAttendanceGeofenceDraft {
   is_active: boolean;
 }
 
+/**
+ * Who the daily attendance-reminder push fans out to (backend MR1 !413 +
+ * scheduler MR2 !415, Slack 1783935842).
+ *   · all_workdays        — every teacher on each workday of the school.
+ *   · teaching_days_only  — only teachers who actually have a class that
+ *                           day (roadmap; the value is wired now so the
+ *                           setting survives once the scheduler honours it).
+ */
+export type TeacherAttendanceReminderScope =
+  | 'all_workdays'
+  | 'teaching_days_only';
+
+/**
+ * Per-school teacher attendance-reminder config. Distinct endpoint from
+ * TeacherAttendanceSettings: GET/PUT /teacher-attendance/reminder-settings.
+ * The scheduler reads `checkin_offsets_minutes` / `checkout_offsets_minutes`
+ * per tenant and pushes a reminder that many minutes BEFORE the person's
+ * check-in / check-out time.
+ */
+export interface TeacherAttendanceReminderSettings {
+  /** Master switch — when false the scheduler skips this school entirely. */
+  enabled: boolean;
+  /** Audience for the reminder (see TeacherAttendanceReminderScope). */
+  scope: TeacherAttendanceReminderScope;
+  /** Minutes before the check-in time to fire each reminder. */
+  checkin_offsets_minutes: number[];
+  /** Minutes before the check-out time to fire each reminder. */
+  checkout_offsets_minutes: number[];
+}
+
+/**
+ * Client-side fallback used before the GET resolves / on load error.
+ * The API returns the authoritative per-school defaults; this only
+ * seeds the form so it never renders an empty, offset-less card.
+ */
+export const DEFAULT_TEACHER_ATTENDANCE_REMINDER_SETTINGS: TeacherAttendanceReminderSettings =
+  {
+    enabled: false,
+    scope: 'all_workdays',
+    checkin_offsets_minutes: [15],
+    checkout_offsets_minutes: [15],
+  };
+
 /** Sensible client-side defaults mirroring the backend defaults(). */
 export const DEFAULT_TEACHER_ATTENDANCE_SETTINGS: TeacherAttendanceSettings = {
   camera_required: true,

@@ -37,6 +37,8 @@ import type {
   TeacherAttendanceOwnSummaryTotals,
   TeacherAttendancePageMeta,
   TeacherAttendanceRecord,
+  TeacherAttendanceReminderScope,
+  TeacherAttendanceReminderSettings,
   TeacherAttendanceSettings,
   TeacherAttendanceSubmission,
   TeacherAttendanceSummaryFilters,
@@ -57,6 +59,7 @@ const Endpoints = {
   history: '/teacher-attendance/history',
   historySummary: '/teacher-attendance/history/summary',
   settings: '/teacher-attendance/settings',
+  reminderSettings: '/teacher-attendance/reminder-settings',
   rules: '/teacher-attendance/rules',
   report: '/teacher-attendance/report',
   reportSummary: '/teacher-attendance/report/summary',
@@ -205,6 +208,56 @@ function settingsFromJson(
     gate_qr_rotation_minutes: asInt(raw.gate_qr_rotation_minutes, 15),
     geofence_required_for_qr: asBool(raw.geofence_required_for_qr, false),
     issue_student_cards: asBool(raw.issue_student_cards, false),
+  };
+}
+
+/** Allowed reminder-scope keys. Anything else falls back to all_workdays. */
+const ALLOWED_REMINDER_SCOPES: readonly TeacherAttendanceReminderScope[] = [
+  'all_workdays',
+  'teaching_days_only',
+];
+
+/**
+ * Coerce a raw offsets field into a clean minute list: finite, integer,
+ * non-negative, de-duplicated, sorted descending (soonest reminder last).
+ * Accepts the server's JSON array or a comma-separated string. Empty in →
+ * empty out; the caller / backend enforce the ≥1 constraint so a bad row
+ * never silently gains a phantom offset here.
+ */
+function offsetsFromJson(raw: unknown): number[] {
+  let list: unknown[] = [];
+  if (Array.isArray(raw)) list = raw;
+  else if (typeof raw === 'string' && raw !== '') list = raw.split(',');
+  const seen = new Set<number>();
+  for (const v of list) {
+    const n = Number(v);
+    if (Number.isFinite(n)) {
+      const i = Math.round(n);
+      if (i >= 0) seen.add(i);
+    }
+  }
+  return [...seen].sort((a, b) => b - a);
+}
+
+/**
+ * Normalize a raw reminder-settings object (handles 0/1, missing keys,
+ * and an out-of-range scope). Mirrors settingsFromJson so the view can
+ * trust every field is present and typed.
+ */
+function reminderSettingsFromJson(
+  raw: Record<string, unknown>,
+): TeacherAttendanceReminderSettings {
+  const scopeRaw = String(raw.scope ?? 'all_workdays');
+  const scope = (
+    ALLOWED_REMINDER_SCOPES as readonly string[]
+  ).includes(scopeRaw)
+    ? (scopeRaw as TeacherAttendanceReminderScope)
+    : 'all_workdays';
+  return {
+    enabled: asBool(raw.enabled, false),
+    scope,
+    checkin_offsets_minutes: offsetsFromJson(raw.checkin_offsets_minutes),
+    checkout_offsets_minutes: offsetsFromJson(raw.checkout_offsets_minutes),
   };
 }
 
@@ -442,6 +495,63 @@ export const TeacherAttendanceService = {
     } catch (e) {
       throw new Error(
         humanError(e, 'Gagal menyimpan pengaturan presensi guru.'),
+      );
+    }
+  },
+
+  /**
+   * GET /teacher-attendance/reminder-settings — per-school attendance
+   * reminder config (backend MR1 !413, Slack 1783935842). The endpoint
+   * always returns a body — the school's saved row or the API defaults —
+   * so the settings card never has to invent offsets locally.
+   *
+   * School context rides the `X-School-ID` header from the axios
+   * interceptor, exactly like getSettings() above (no schoolId arg).
+   */
+  async getReminderSettings(): Promise<TeacherAttendanceReminderSettings> {
+    try {
+      const res = await api.get(Endpoints.reminderSettings);
+      const data = (res.data?.data ?? res.data ?? {}) as Record<
+        string,
+        unknown
+      >;
+      return reminderSettingsFromJson(data);
+    } catch (e) {
+      throw new Error(
+        humanError(e, 'Gagal memuat pengaturan pengingat presensi guru.'),
+      );
+    }
+  },
+
+  /**
+   * PUT /teacher-attendance/reminder-settings — full replace of the
+   * reminder config. Sends only the keys present in `patch`; the backend
+   * validates offsets (integer minutes) and rejects an enabled config
+   * with zero offsets, so the view guards that before calling.
+   */
+  async updateReminderSettings(
+    patch: Partial<TeacherAttendanceReminderSettings>,
+  ): Promise<TeacherAttendanceReminderSettings> {
+    try {
+      const body: Record<string, unknown> = {};
+      const keys: (keyof TeacherAttendanceReminderSettings)[] = [
+        'enabled',
+        'scope',
+        'checkin_offsets_minutes',
+        'checkout_offsets_minutes',
+      ];
+      for (const k of keys) {
+        if (patch[k] !== undefined) body[k] = patch[k];
+      }
+      const res = await api.put(Endpoints.reminderSettings, body);
+      const data = (res.data?.data ?? res.data ?? body) as Record<
+        string,
+        unknown
+      >;
+      return reminderSettingsFromJson(data);
+    } catch (e) {
+      throw new Error(
+        humanError(e, 'Gagal menyimpan pengaturan pengingat presensi guru.'),
       );
     }
   },
