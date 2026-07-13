@@ -593,11 +593,29 @@ async function downloadTemplate() {
     toast.value = { message: (e as Error).message, tone: 'error' };
   }
 }
-function onImportDone(res: { imported: number; failed: number }) {
-  const note = res.failed > 0 ? ` · ${res.failed} gagal` : '';
+function onImportDone(res: {
+  imported: number;
+  failed: number;
+  skipped?: number;
+  conflicts?: number;
+  message?: string;
+}) {
+  // Report the truth instead of lumping "already exists" into "gagal": a
+  // re-import of an existing roster now reads "0 ditambahkan · 18 sudah
+  // terdaftar", not "18 gagal".
+  const skipped = res.skipped ?? 0;
+  const conflicts = res.conflicts ?? 0;
+  const parts = [`${res.imported} guru ditambahkan`];
+  if (skipped > 0) parts.push(`${skipped} sudah terdaftar`);
+  if (conflicts > 0) parts.push(`${conflicts} perlu ditinjau`);
+  if (res.failed > 0) parts.push(`${res.failed} gagal`);
+
+  // "Sudah terdaftar" is a harmless no-op; only genuine failures or email
+  // conflicts that need admin attention colour the toast as an error.
+  const needsAttention = res.failed > 0 || conflicts > 0;
   toast.value = {
-    message: `${res.imported} guru diimpor${note}.`,
-    tone: 'success',
+    message: `${parts.join(' · ')}.`,
+    tone: needsAttention ? 'error' : 'success',
   };
   reload(1);
 }

@@ -24,7 +24,14 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: [];
-  done: [{ imported: number; failed: number }];
+  done: [{
+    imported: number;
+    failed: number;
+    // Teacher import also reports these; other entities omit them.
+    skipped?: number;
+    conflicts?: number;
+    message?: string;
+  }];
 }>();
 
 const file = ref<File | null>(null);
