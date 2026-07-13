@@ -16,7 +16,7 @@ import { useMeStore } from '@/stores/me';
 import { useTenant } from '@/composables/useTenant';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type { Role } from '@/types/auth';
-import { canonicalRole, ROLE_PARENT, ROLE_TEACHER } from '@/utils/role';
+import { canonicalRole, ROLE_PARENT, ROLE_STAFF, ROLE_TEACHER } from '@/utils/role';
 
 export interface NavItem {
   to: string;
@@ -1110,10 +1110,15 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
     // WALI_KELAS_NAV so their "Kelas Saya" work leads. Same routes,
     // different ordering — a pure subject teacher (no homeroom) keeps
     // TEACHER_NAV untouched.
-    const source =
-      canonicalRole(role) === ROLE_TEACHER && auth.homeroomClasses.length > 0
-        ? WALI_KELAS_NAV
-        : (MENUS[role] ?? []);
+    let source = MENUS[role] ?? [];
+    if (canonicalRole(role) === ROLE_TEACHER && auth.homeroomClasses.length > 0) {
+      source = WALI_KELAS_NAV;
+    } else if (canonicalRole(role) === ROLE_STAFF) {
+      // Append admin modules to the staff menu so staff with admin RBAC
+      // permissions (e.g. Bendahara Umum) can access them. We exclude the
+      // first ADMIN_NAV section (which is just the admin dashboard).
+      source = [...STAFF_NAV, ...ADMIN_NAV.filter((sec) => sec.titleKey !== '')];
+    }
     const gated = applyGates(
       source,
       auth.hasAbility,

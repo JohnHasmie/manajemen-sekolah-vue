@@ -1701,7 +1701,7 @@ router.beforeEach(async (to) => {
       // `meta.role: 'admin'`. Without this, a pure super-admin (whose
       // activeRole is 'super_admin', not 'admin') would never match an
       // admin route and bounce in a redirect loop on its own home.
-      (requiredRole === 'admin' && auth.isSuperAdmin);
+      (requiredRole === 'admin' && (auth.isSuperAdmin || auth.activeRole === 'staff'));
     if (!matches) {
       return { path: roleHomePath[auth.activeRole] ?? '/login' };
     }
