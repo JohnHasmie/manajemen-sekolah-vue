@@ -50,17 +50,34 @@ export function activeNotificationAudience(): NotificationAudience {
   }
 }
 
+/**
+ * The `?role=` value to send to the notifications API. Uses the routing
+ * audience (parent/teacher/admin) when known; otherwise falls back to the
+ * RAW active role (e.g. staff / tata_usaha / musyrifah) so a non-standard
+ * context is STILL role-scoped by the backend (which maps unknown roles to a
+ * safe announcements-only base). Without this, staff/custom contexts sent no
+ * role → the backend applied no filter → they saw admin billing notifications.
+ */
+function notificationRoleParam(): string | undefined {
+  const audience = activeNotificationAudience();
+  if (audience) return audience;
+  const raw = String(useAuthStore().activeRole ?? '')
+    .toLowerCase()
+    .trim();
+  return raw || undefined;
+}
+
 export const NotificationService = {
   async list(
     page = 1,
     perPage = 20,
   ): Promise<{ items: AppNotification[]; pagination?: Pagination }> {
-    // Pass the active-role audience so the backend role-scopes the list
-    // (e.g. a multi-role "teacher" context doesn't get admin/parent billing
-    // notifications). Backend accepts teacher/parent/admin.
+    // Role-scope the list to the active context (see notificationRoleParam):
+    // a teacher/staff context must not get admin billing notifications.
     const audience = activeNotificationAudience();
+    const role = notificationRoleParam();
     const res = await api.get<ApiPaginated<NotificationJson>>(Endpoints.list, {
-      params: { page, per_page: perPage, ...(audience ? { role: audience } : {}) },
+      params: { page, per_page: perPage, ...(role ? { role } : {}) },
     });
     const items = (res.data.data ?? []).map((row) =>
       notificationFromJson(row, audience),
@@ -96,11 +113,12 @@ export const NotificationService = {
     // therefore always yielded `undefined → 0`, so the bell badge showed 0
     // on mount regardless of real unread rows. Accept both shapes defensively.
     // Role-scope the badge count to match the list (see list() above), so a
-    // multi-role "teacher" context doesn't have billing notifications inflate it.
-    const audience = activeNotificationAudience();
+    // multi-role "teacher"/"staff" context doesn't have admin billing
+    // notifications inflate it.
+    const role = notificationRoleParam();
     const res = await api.get<{ count?: number } | ApiSuccess<{ count: number }>>(
       Endpoints.unreadCount,
-      { params: audience ? { role: audience } : {} },
+      { params: role ? { role } : {} },
     );
     const body = res.data as {
       count?: number;
