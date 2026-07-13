@@ -27,11 +27,15 @@ const auth = useAuthStore();
 const rbac = useRbacStore();
 const { can } = useMe();
 const { isTutoringCenter } = useTenant();
-// Phase D gate: only users holding `rbac.role.manage` can create /
-// edit / delete roles. Read-only viewers (rbac.role.view) still see
-// the list but the +Tambah button and per-card destructive actions
-// disappear. Server-side gate stays authoritative.
-const canManageRoles = () => can('rbac.role.manage');
+// Phase D gate: only users holding `rbac.role.create` see the
+// +Tambah Role button. Read-only viewers (rbac.role.view) still see
+// the list but cannot create. Mirrors the server gate in
+// StoreRoleRequest (`rbac.role.create`) so the button never shows when
+// the API would 403 — and, crucially, never stays hidden when it would
+// allow. (Was gated on `rbac.role.manage`, a key the backend catalog
+// never defines, so `can()` always returned false and the button was
+// invisible for every admin. Slack 1783914874.)
+const canCreateRole = () => can('rbac.role.create');
 
 const {
   rolesLoading,
@@ -111,7 +115,7 @@ function onCreated(role: RbacRole) {
     >
       <template #default>
         <button
-          v-if="canManageRoles()"
+          v-if="canCreateRole()"
           type="button"
           class="rl__add"
           @click="showCreateModal = true"

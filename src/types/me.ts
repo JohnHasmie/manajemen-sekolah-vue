@@ -33,7 +33,7 @@ export interface MeSnapshot {
   isSuperAdmin: boolean;
   /**
    * Flat permission-key set from the resolver, e.g.
-   *   { "finance.bill.view", "rbac.role.manage", ... }
+   *   { "finance.bill.view", "rbac.role.create", ... }
    *
    * A Set (not an array) so `has()` is O(1) — the nav menu iterates
    * every render.

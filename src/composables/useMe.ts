@@ -8,7 +8,7 @@
  *
  * Example:
  *   const { can } = useMe();
- *   <button v-if="can('rbac.role.manage')">Tambah Role</button>
+ *   <button v-if="can('rbac.role.create')">Tambah Role</button>
  */
 import { storeToRefs } from 'pinia';
 import { useMeStore } from '@/stores/me';

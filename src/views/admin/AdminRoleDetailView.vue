@@ -30,8 +30,15 @@ const auth = useAuthStore();
 const rbac = useRbacStore();
 const { can } = useMe();
 const { isTutoringCenter } = useTenant();
-const canManageRoles = () => can('rbac.role.manage');
-const canManageMembers = () => can('rbac.member.assign');
+// Real backend keys (PermissionCatalog): editing a role's label /
+// permissions authorizes on `rbac.role.update`; assigning or removing
+// members on `rbac.user.assign`. These previously read the phantom keys
+// `rbac.role.manage` / `rbac.member.assign`, which the backend never
+// grants — so `can()` always returned false and the save bar plus the
+// member add/remove buttons were permanently hidden for every admin.
+// Slack 1783914874.
+const canEditRole = () => can('rbac.role.update');
+const canManageMembers = () => can('rbac.user.assign');
 
 const {
   role,
@@ -376,7 +383,7 @@ function backToList() {
 
     <!-- Sticky save bar (Permission tab only, manage-only) -->
     <div
-      v-if="activeTab === 'permission' && role && canManageRoles()"
+      v-if="activeTab === 'permission' && role && canEditRole()"
       class="rd__save-bar"
     >
       <span class="rd__save-hint">
