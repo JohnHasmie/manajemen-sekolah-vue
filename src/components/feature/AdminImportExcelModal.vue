@@ -12,6 +12,7 @@ import {
   AdminDataExcelService,
   type AdminEntity,
   type ImportReviewRow,
+  type ImportDetailRow,
 } from '@/services/admin-data-excel.service';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
@@ -33,6 +34,8 @@ const emit = defineEmits<{
     conflicts?: number;
     message?: string;
     review?: ImportReviewRow[];
+    // Per-row detail of EVERY processed row — feeds the shared result dialog.
+    details?: ImportDetailRow[];
   }];
 }>();
 

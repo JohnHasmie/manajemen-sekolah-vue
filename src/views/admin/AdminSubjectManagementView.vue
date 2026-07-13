@@ -28,6 +28,8 @@ import FilterFacetPickerModal, {
 } from '@/components/feature/FilterFacetPickerModal.vue';
 import AdminDataMenu from '@/components/feature/AdminDataMenu.vue';
 import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vue';
+import AdminImportResultModal from '@/components/feature/AdminImportResultModal.vue';
+import type { ImportDetailRow } from '@/services/admin-data-excel.service';
 import Modal from '@/components/ui/Modal.vue';
 import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
@@ -62,6 +64,15 @@ const deleteTarget = ref<Subject | null>(null);
 const bulkDeleteOpen = ref(false);
 const showImport = ref(false);
 const isSaving = ref(false);
+
+// Per-row import result — feeds the shared result dialog when non-empty.
+const importDetails = ref<ImportDetailRow[]>([]);
+const importCounts = ref<{
+  imported?: number;
+  skipped?: number;
+  conflicts?: number;
+  failed?: number;
+}>({});
 
 const showStatusPicker = ref(false);
 const showGradePicker = ref(false);
@@ -406,11 +417,25 @@ async function downloadTemplate() {
     toast.value = { message: (e as Error).message, tone: 'error' };
   }
 }
-function onImportDone(res: { imported: number; failed: number }) {
+function onImportDone(res: {
+  imported: number;
+  failed: number;
+  skipped?: number;
+  conflicts?: number;
+  details?: ImportDetailRow[];
+}) {
+  // Surface EVERY processed row grouped by status in the shared dialog.
+  importDetails.value = res.details ?? [];
+  importCounts.value = {
+    imported: res.imported,
+    skipped: res.skipped ?? 0,
+    conflicts: res.conflicts ?? 0,
+    failed: res.failed,
+  };
   const note = res.failed > 0 ? ` · ${res.failed} gagal` : '';
   toast.value = {
     message: `${res.imported} mapel diimpor${note}.`,
-    tone: 'success',
+    tone: res.failed > 0 ? 'error' : 'success',
   };
   reload(1);
 }
@@ -710,6 +735,15 @@ function topMeta(s: Subject): string {
     :title="$t('admin.sekolah.subject_management.import_title')"
     @close="showImport = false"
     @done="onImportDone"
+  />
+
+  <!-- Post-import result: EVERY processed mapel grouped by status. -->
+  <AdminImportResultModal
+    v-if="importDetails.length > 0"
+    entity-label="mapel"
+    :details="importDetails"
+    :counts="importCounts"
+    @close="importDetails = []"
   />
 
   <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />

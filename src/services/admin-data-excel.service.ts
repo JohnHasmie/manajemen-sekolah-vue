@@ -23,6 +23,20 @@ export interface ImportReviewRow {
   reason: string;
 }
 
+/**
+ * One processed import row — EVERY row the importer touched, not just the
+ * problematic ones. Grouped by `status` in the shared result dialog so the
+ * admin sees exactly what happened to each entry (added / already there /
+ * needs review / failed) instead of just a summary count.
+ */
+export interface ImportDetailRow {
+  row: number;
+  label: string;
+  sublabel: string | null;
+  status: 'created' | 'restored' | 'skipped' | 'conflict' | 'failed';
+  reason: string | null;
+}
+
 function humanError(e: unknown, fallback: string): string {
   const ax = e as any;
   if (ax?.response?.data) {
@@ -97,6 +111,10 @@ export const AdminDataExcelService = {
     // failures) — so the UI can name WHICH row and WHY. Empty for importers
     // that don't report it.
     review: ImportReviewRow[];
+    // Per-row detail for EVERY processed row (added / already there / needs
+    // review / failed) — the shared result dialog groups these by status.
+    // Empty for importers that don't report it.
+    details: ImportDetailRow[];
   }> {
     try {
       const fd = new FormData();
@@ -141,6 +159,9 @@ export const AdminDataExcelService = {
         message: body.message ?? undefined,
         review: Array.isArray(results.review)
           ? (results.review as ImportReviewRow[])
+          : [],
+        details: Array.isArray(results.details)
+          ? (results.details as ImportDetailRow[])
           : [],
       };
     } catch (e) {

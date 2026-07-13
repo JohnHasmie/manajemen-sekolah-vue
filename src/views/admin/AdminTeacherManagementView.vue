@@ -36,7 +36,8 @@ import AdminEntityDetailSheet, {
   type DetailSection,
 } from '@/components/feature/AdminEntityDetailSheet.vue';
 import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vue';
-import type { ImportReviewRow } from '@/services/admin-data-excel.service';
+import AdminImportResultModal from '@/components/feature/AdminImportResultModal.vue';
+import type { ImportDetailRow } from '@/services/admin-data-excel.service';
 import ResetPasswordModal from '@/components/feature/ResetPasswordModal.vue';
 import SubscriptionUsageBanner from '@/components/billing/SubscriptionUsageBanner.vue';
 import type { AsyncState } from '@/components/data/AsyncView.vue';
@@ -108,9 +109,16 @@ function onResetDone() {
   };
 }
 const showImport = ref(false);
-// Rows the import flagged for admin attention (conflict / failed). When
-// non-empty, a detail dialog opens naming WHICH teacher + WHY.
-const reviewRows = ref<ImportReviewRow[]>([]);
+// Per-row import result. When non-empty, the shared result dialog opens
+// listing EVERY processed row grouped by status (added / already there /
+// needs review / failed).
+const importDetails = ref<ImportDetailRow[]>([]);
+const importCounts = ref<{
+  imported?: number;
+  skipped?: number;
+  conflicts?: number;
+  failed?: number;
+}>({});
 const deleteTarget = ref<Teacher | null>(null);
 const bulkDeleteOpen = ref(false);
 const isSaving = ref(false);
@@ -618,11 +626,17 @@ function onImportDone(res: {
   skipped?: number;
   conflicts?: number;
   message?: string;
-  review?: ImportReviewRow[];
+  details?: ImportDetailRow[];
 }) {
-  // Name WHICH teachers need review (conflict / failed) so the admin isn't
-  // left guessing what "N perlu ditinjau" refers to.
-  reviewRows.value = res.review ?? [];
+  // Surface EVERY processed row (not just conflicts/failures) so the admin
+  // sees exactly what happened to each entry in the shared result dialog.
+  importDetails.value = res.details ?? [];
+  importCounts.value = {
+    imported: res.imported,
+    skipped: res.skipped ?? 0,
+    conflicts: res.conflicts ?? 0,
+    failed: res.failed,
+  };
   // Report the truth instead of lumping "already exists" into "gagal": a
   // re-import of an existing roster now reads "0 ditambahkan · 18 sudah
   // terdaftar", not "18 gagal".
@@ -958,47 +972,14 @@ function statusFor(t: Teacher) {
     @done="onImportDone"
   />
 
-  <!-- Post-import detail: names the exact guru that needs review + why. -->
-  <Modal
-    v-if="reviewRows.length > 0"
-    title="Perlu ditinjau"
-    subtitle="Baris berikut tidak otomatis diimpor — silakan cek."
-    size="md"
-    @close="reviewRows = []"
-  >
-    <div class="space-y-2">
-      <div
-        v-for="r in reviewRows"
-        :key="r.row"
-        class="rounded-xl border p-3"
-        :class="r.type === 'conflict'
-          ? 'border-amber-200 bg-amber-50'
-          : 'border-red-200 bg-red-50'"
-      >
-        <div class="flex items-center justify-between gap-2">
-          <p class="text-[13px] font-bold text-slate-900 truncate">
-            {{ r.name || '—' }}
-          </p>
-          <span
-            class="text-4xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex-shrink-0"
-            :class="r.type === 'conflict'
-              ? 'bg-amber-200 text-amber-800'
-              : 'bg-red-200 text-red-800'"
-          >
-            {{ r.type === 'conflict' ? 'Perlu ditinjau' : 'Gagal' }}
-          </span>
-        </div>
-        <p v-if="r.email" class="text-2xs text-slate-500 mt-0.5">{{ r.email }}</p>
-        <p class="text-2xs text-slate-700 mt-1.5 leading-relaxed">{{ r.reason }}</p>
-      </div>
-      <p class="text-2xs text-slate-500 leading-relaxed pt-1">
-        "Perlu ditinjau" biasanya karena email sudah dipakai akun lain. Untuk
-        tetap menjadikannya guru, tambahkan lewat <strong>Tambah Guru</strong>
-        dan konfirmasi saat diminta.
-      </p>
-      <Button variant="primary" block @click="reviewRows = []">Mengerti</Button>
-    </div>
-  </Modal>
+  <!-- Post-import result: EVERY processed guru grouped by status. -->
+  <AdminImportResultModal
+    v-if="importDetails.length > 0"
+    entity-label="guru"
+    :details="importDetails"
+    :counts="importCounts"
+    @close="importDetails = []"
+  />
 
   <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />
 </template>
