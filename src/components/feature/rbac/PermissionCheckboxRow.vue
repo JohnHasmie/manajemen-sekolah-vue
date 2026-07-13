@@ -46,7 +46,10 @@ defineEmits<{
       <span v-if="permission.description" class="perm-row__desc">{{
         permission.description
       }}</span>
-      <span class="perm-row__key">{{ permission.key }}</span>
+      <!-- Raw catalog key only as a fallback when there is no
+           description — admins read the plain-language description, not
+           `finance.bill.view`. Slack 1783905789. -->
+      <span v-else class="perm-row__key">{{ permission.key }}</span>
     </span>
   </label>
 </template>
