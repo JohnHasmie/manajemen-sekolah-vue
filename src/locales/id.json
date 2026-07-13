@@ -406,6 +406,8 @@
   "staffHome": {
     "title": "Belum ada menu mandiri untuk staf",
     "body": "Peran staf belum memiliki halaman layanan mandiri di web. Fitur presensi dan data staf dikelola oleh admin sekolah. Hubungi admin sekolah Anda bila memerlukan akses ke data tertentu.",
+    "modulesTitle": "Menu modul Anda ada di samping",
+    "modulesBody": "Sesuai izin yang diberikan admin, menu modul yang bisa Anda kelola (mis. Keuangan) muncul di sidebar kiri. Pilih menu di sana untuk mulai bekerja.",
     "contactAdmin": "Hubungi admin sekolah",
     "kicker": "Beranda Staf",
     "greeting": "Selamat datang, {name}",

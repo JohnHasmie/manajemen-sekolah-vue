@@ -409,6 +409,8 @@
   "staffHome": {
     "title": "No self-service menu for staff yet",
     "body": "The staff role has no self-service pages on the web yet. Staff attendance and records are managed by the school admin. Contact your school admin if you need access to specific data.",
+    "modulesTitle": "Your module menus are in the sidebar",
+    "modulesBody": "Based on the permissions your admin granted, the modules you can manage (e.g. Finance) appear in the left sidebar. Pick a menu there to get started.",
     "contactAdmin": "Contact school admin",
     "kicker": "Staff home",
     "greeting": "Welcome, {name}",

@@ -28,6 +28,7 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useMeStore } from '@/stores/me';
+import { useNavMenu } from '@/composables/useNavMenu';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Card from '@/components/ui/Card.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
@@ -48,6 +49,20 @@ const roleLabel = computed(() => {
 // (me.can returns false pre-hydration) so we never flash a tile the staff
 // member can't actually use.
 const canSelfCheckIn = computed(() => me.can('attendance.self.view_own'));
+
+// A staff with admin RBAC (e.g. Bendahara → Keuangan) now gets real
+// module menus in the sidebar. Detect that from the SAME source of truth
+// the sidebar uses, so this never drifts from the actual nav. When true
+// we replace the "you have no menus, contact admin" dead-end with a
+// pointer to those menus — otherwise a finance staff without self-checkin
+// would be told they have nothing, while their Keuangan menu sits right
+// there in the sidebar.
+const navSections = useNavMenu();
+const hasModuleMenus = computed(() =>
+  navSections.value.some((sec) =>
+    sec.items.some((it) => it.to.startsWith('/admin')),
+  ),
+);
 
 interface StaffTile {
   labelKey: string;
@@ -122,7 +137,17 @@ function go(routeName: string) {
       </button>
     </template>
 
-    <!-- Honest empty state — staff without the self-checkin ability. -->
+    <!-- Staff with admin-module access (e.g. Bendahara → Keuangan) but no
+         self check-in: point them to the module menus in the sidebar
+         instead of the dead-end copy. -->
+    <Card v-else-if="hasModuleMenus" :title="t('staffHome.modulesTitle')">
+      <p class="text-sm text-slate-600 leading-relaxed">
+        {{ t('staffHome.modulesBody') }}
+      </p>
+    </Card>
+
+    <!-- Honest empty state — staff with neither self check-in nor any
+         module menu. -->
     <Card v-else :title="t('staffHome.title')">
       <p class="text-sm text-slate-600 leading-relaxed">
         {{ t('staffHome.body') }}

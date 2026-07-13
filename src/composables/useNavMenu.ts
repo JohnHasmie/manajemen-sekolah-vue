@@ -101,11 +101,21 @@ const ADMIN_NAV: NavSection[] = [
         labelKey: 'nav.students',
         icon: 'users',
         needs: 'student-context',
+        // Ability-tagged so a staff (Kesiswaan/TU) holding the student
+        // ability sees it too — matching the mobile "People" tab. Admins
+        // hold both keys so they are unaffected. Without a gate the staff
+        // strict-filter (see the staff branch below) would drop it.
+        abilityAny: ['school.student.view', 'school.student.manage'],
       },
       // Guru roster stays available — every tenant with
       // attendance_staff needs it to model non-teaching personnel
       // and assign QR cards.
-      { to: '/admin/teachers', labelKey: 'nav.teachers', icon: 'user-check' },
+      {
+        to: '/admin/teachers',
+        labelKey: 'nav.teachers',
+        icon: 'user-check',
+        abilityAny: ['school.teacher.view', 'school.teacher.manage'],
+      },
       {
         to: '/admin/classes',
         labelKey: 'nav.classes',
@@ -260,7 +270,14 @@ const ADMIN_NAV: NavSection[] = [
     //    tiles — one door, no more six-entry sprawl. ───────────────
     titleKey: '',
     items: [
-      { to: '/admin/settings', labelKey: 'nav.settings', icon: 'settings' },
+      {
+        to: '/admin/settings',
+        labelKey: 'nav.settings',
+        icon: 'settings',
+        // Ability-tagged so a staff holding settings access sees the
+        // hub too (mobile "System" tab parity). Admins hold both keys.
+        abilityAny: ['school.settings.view', 'school.settings.manage'],
+      },
     ],
   },
 ];
@@ -1114,10 +1131,21 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
     if (canonicalRole(role) === ROLE_TEACHER && auth.homeroomClasses.length > 0) {
       source = WALI_KELAS_NAV;
     } else if (canonicalRole(role) === ROLE_STAFF) {
-      // Append admin modules to the staff menu so staff with admin RBAC
-      // permissions (e.g. Bendahara Umum) can access them. We exclude the
-      // first ADMIN_NAV section (which is just the admin dashboard).
-      source = [...STAFF_NAV, ...ADMIN_NAV.filter((sec) => sec.titleKey !== '')];
+      // Append the admin module sections so a staff with admin RBAC (e.g.
+      // Bendahara Umum) can reach them. STRICT for staff: keep ONLY items
+      // that carry an explicit ability/abilityAny gate. The blanket admin
+      // items — the /admin dashboard, plus Classes/Subjects (context-gated
+      // but not ability-gated) — have no per-user gate, and the router is
+      // fail-closed for staff on un-gated admin routes, so surfacing them
+      // here would only dangle links that bounce straight back. applyGates
+      // then drops whatever the staff doesn't actually hold; empty sections
+      // fall away. STAFF_NAV's own items (staff home + self check-in + Akun)
+      // are always kept.
+      const adminModuleSections = ADMIN_NAV.map((sec) => ({
+        titleKey: sec.titleKey,
+        items: sec.items.filter((it) => it.ability || it.abilityAny),
+      }));
+      source = [...STAFF_NAV, ...adminModuleSections];
     }
     const gated = applyGates(
       source,

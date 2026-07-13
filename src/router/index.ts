@@ -392,13 +392,23 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/students',
         name: 'admin.students',
         component: AdminStudentManagementView,
-        meta: { role: 'admin' satisfies Role, needs: 'student-context' },
+        // abilityAny lets a Kesiswaan/TU staff reach this too (mobile
+        // "People" parity); the staff guard is fail-closed on un-gated
+        // admin routes, so the gate is what admits them. Admins hold both.
+        meta: {
+          role: 'admin' satisfies Role,
+          needs: 'student-context',
+          abilityAny: ['school.student.view', 'school.student.manage'],
+        },
       },
       {
         path: 'admin/teachers',
         name: 'admin.teachers',
         component: AdminTeacherManagementView,
-        meta: { role: 'admin' satisfies Role },
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['school.teacher.view', 'school.teacher.manage'],
+        },
       },
       {
         path: 'admin/classes',
@@ -663,7 +673,14 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/settings',
         name: 'admin.settings',
         component: AdminSettingsView,
-        meta: { role: 'admin' satisfies Role },
+        // Settings hub — reachable by a staff holding settings access
+        // (mobile "System" tab parity). The staff guard is fail-closed on
+        // un-gated admin routes, so this gate is what admits them; admins
+        // hold both keys. Aligned with the nav item's abilityAny.
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['school.settings.view', 'school.settings.manage'],
+        },
       },
       {
         path: 'admin/roles',
@@ -700,25 +717,37 @@ const routes: RouteRecordRaw[] = [
         name: 'admin.settings.modules',
         component: ManageModulesView,
         props: { embedded: true },
-        meta: { role: 'admin' satisfies Role },
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['school.settings.view', 'school.settings.manage'],
+        },
       },
       {
         path: 'admin/settings/data',
         name: 'admin.settings.data',
         component: AdminDataManagementView,
-        meta: { role: 'admin' satisfies Role },
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['school.settings.view', 'school.settings.manage'],
+        },
       },
       {
         path: 'admin/settings/school',
         name: 'admin.settings.school',
         component: AdminSchoolLevelSettingsView,
-        meta: { role: 'admin' satisfies Role },
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['school.settings.view', 'school.settings.manage'],
+        },
       },
       {
         path: 'admin/settings/manage-academic-years',
         name: 'admin.settings.manage-academic-years',
         component: AdminAcademicYearsView,
-        meta: { role: 'admin' satisfies Role },
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['school.settings.view', 'school.settings.manage'],
+        },
       },
       {
         // PRESENSI GURU — admin config + report for teacher daily
@@ -1692,6 +1721,18 @@ router.beforeEach(async (to) => {
 
   const requiredRole = to.meta.role as Role | undefined;
   if (requiredRole && auth.activeRole) {
+    // A staff (Bendahara/TU/etc.) may cross into the /admin subtree, but
+    // ONLY for routes that carry an explicit `ability`/`abilityAny` gate.
+    // This is fail-closed: an admin route with no per-user gate stays
+    // out of reach for staff, so a newly-added un-tagged admin route can
+    // never silently leak to every staff member. The route's ability is
+    // then enforced by the `requiredAbility`/`requiredAny` checks below,
+    // so a staff without the ability is still bounced. (Nav already hides
+    // these items; this closes the direct-URL hole.)
+    const routeHasAbilityGate =
+      typeof to.meta.ability === 'string' ||
+      (Array.isArray(to.meta.abilityAny) &&
+        (to.meta.abilityAny as unknown[]).length > 0);
     // Teacher and wali_kelas share the /teacher subtree.
     const matches =
       requiredRole === auth.activeRole ||
@@ -1701,7 +1742,11 @@ router.beforeEach(async (to) => {
       // `meta.role: 'admin'`. Without this, a pure super-admin (whose
       // activeRole is 'super_admin', not 'admin') would never match an
       // admin route and bounce in a redirect loop on its own home.
-      (requiredRole === 'admin' && (auth.isSuperAdmin || auth.activeRole === 'staff'));
+      (requiredRole === 'admin' && auth.isSuperAdmin) ||
+      // Staff → admin subtree, gated per-route (see above).
+      (requiredRole === 'admin' &&
+        auth.activeRole === 'staff' &&
+        routeHasAbilityGate);
     if (!matches) {
       return { path: roleHomePath[auth.activeRole] ?? '/login' };
     }
