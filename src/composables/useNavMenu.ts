@@ -117,6 +117,15 @@ const ADMIN_NAV: NavSection[] = [
         abilityAny: ['school.teacher.view', 'school.teacher.manage'],
       },
       {
+        // "Data Staf" — non-teaching personnel. No student-context needed
+        // (staff exist regardless of student modules). Ability-gated so a
+        // TU/Kesiswaan staff holding school.staff.* sees it too.
+        to: '/admin/staff',
+        labelKey: 'nav.staff',
+        icon: 'briefcase',
+        abilityAny: ['school.staff.view', 'school.staff.manage'],
+      },
+      {
         to: '/admin/classes',
         labelKey: 'nav.classes',
         icon: 'layers',

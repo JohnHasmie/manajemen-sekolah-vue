@@ -48,6 +48,8 @@ const AdminStudentManagementView = () =>
   import('@/views/admin/AdminStudentManagementView.vue');
 const AdminTeacherManagementView = () =>
   import('@/views/admin/AdminTeacherManagementView.vue');
+const AdminStaffManagementView = () =>
+  import('@/views/admin/AdminStaffManagementView.vue');
 const AdminClassroomManagementView = () =>
   import('@/views/admin/AdminClassroomManagementView.vue');
 const AdminSubjectManagementView = () =>
@@ -408,6 +410,18 @@ const routes: RouteRecordRaw[] = [
         meta: {
           role: 'admin' satisfies Role,
           abilityAny: ['school.teacher.view', 'school.teacher.manage'],
+        },
+      },
+      {
+        // "Data Staf" — non-teaching personnel roster (TU, bendahara,
+        // musyrifah, dst.). Gated by school.staff.* so a TU/Kesiswaan staff
+        // holding the ability reaches it too, same as the roster nav item.
+        path: 'admin/staff',
+        name: 'admin.staff',
+        component: AdminStaffManagementView,
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['school.staff.view', 'school.staff.manage'],
         },
       },
       {
