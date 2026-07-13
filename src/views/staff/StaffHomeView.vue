@@ -139,12 +139,28 @@ function go(routeName: string) {
 
     <!-- Staff with admin-module access (e.g. Bendahara → Keuangan) but no
          self check-in: point them to the module menus in the sidebar
-         instead of the dead-end copy. -->
-    <Card v-else-if="hasModuleMenus" :title="t('staffHome.modulesTitle')">
-      <p class="text-sm text-slate-600 leading-relaxed">
-        {{ t('staffHome.modulesBody') }}
-      </p>
-    </Card>
+         instead of the dead-end copy. Styled to match the self-service
+         tiles above (icon square + title + hint) so the staff dashboard
+         reads as one consistent surface rather than a bare text card. -->
+    <div
+      v-else-if="hasModuleMenus"
+      class="flex items-start gap-3 bg-white border border-slate-200 rounded-2xl px-4 py-4"
+    >
+      <div
+        class="w-10 h-10 rounded-xl bg-role-staff-soft text-role-staff grid place-items-center flex-shrink-0"
+      >
+        <NavIcon name="grid" :size="18" />
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[13px] font-bold text-slate-900">
+          {{ t('staffHome.modulesTitle') }}
+        </p>
+        <p class="text-2xs text-slate-500 mt-0.5 leading-relaxed">
+          {{ t('staffHome.modulesBody') }}
+        </p>
+      </div>
+      <NavIcon name="arrow-left" :size="16" class="text-role-staff mt-1 flex-shrink-0" />
+    </div>
 
     <!-- Honest empty state — staff with neither self check-in nor any
          module menu. -->

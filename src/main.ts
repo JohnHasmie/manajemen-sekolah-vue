@@ -14,6 +14,7 @@ import App from './App.vue';
 import router from './router';
 import { i18n } from './lib/i18n';
 import { useAuthStore } from '@/stores/auth';
+import { storage, StorageKeys } from '@/lib/storage';
 
 // LogRocket session replay + monitoring. Initialised as early as possible
 // so the full session is captured. Guarded to production builds only, so
@@ -92,6 +93,33 @@ window.addEventListener('vite:preloadError', (event) => {
   sessionStorage.setItem(KEY, String(Date.now()));
   event.preventDefault();
   window.location.reload();
+});
+
+// Back/forward-cache (bfcache) guard for the login page.
+//
+// When the browser restores a page from bfcache on a "back" navigation, it
+// does NOT re-run Vue Router's `beforeEach` — the whole document is served
+// from the in-memory snapshot. So a user who logged in and then pressed
+// browser-back would land on the STALE /login page sitting behind their live
+// session, even though the router guard would otherwise redirect /login → /.
+// (Reported by Luay: "ketika di-back malah bisa ke pilih email login lagi,
+// harusnya mentok di dashboard karena masih login.")
+//
+// localStorage survives bfcache (it isn't part of the page snapshot), so on a
+// bfcache restore we re-assert routing directly: if we're sitting on /login
+// but a valid session is still stored, hard-redirect to the dashboard so the
+// app + guard re-initialise on the authenticated route. `replace` keeps the
+// dead /login entry out of history. Not authenticated → left alone (a genuine
+// logged-out user stays on the login form).
+window.addEventListener('pageshow', (event) => {
+  if (!(event as PageTransitionEvent).persisted) return;
+  const onLoginPage = window.location.pathname === '/login';
+  const hasSession = Boolean(
+    storage.get(StorageKeys.token) && storage.get(StorageKeys.user),
+  );
+  if (onLoginPage && hasSession) {
+    window.location.replace('/');
+  }
 });
 
 app.mount('#app');
