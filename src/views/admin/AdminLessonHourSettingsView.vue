@@ -14,7 +14,7 @@
     POST   /lesson-hour-settings/bulk-delete
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { LessonHourService } from '@/services/lesson-hour.service';
 import { ScheduleService } from '@/services/schedule.service';
@@ -105,18 +105,45 @@ const hoursByDay = computed<Record<string, LessonHour[]>>(() => {
 // `listState` comes from useDataRefresh — its generic empty rule (empty
 // array → 'empty') matches this view's `hours.length === 0` exactly.
 
-function openAdd(dayId: string) {
-  editingHour.value = null;
-  editingDayId.value = dayId;
+// Seed the form's hour-number/time defaults from the last existing row of
+// `dayId` (next hour number, start = previous end, +45m). Shared by both the
+// per-day quick-add and the header-level "pick a day" add so the defaults
+// re-derive whenever the target day changes.
+function applyAddDefaults(dayId: string) {
   const existing = hoursByDay.value[dayId] ?? [];
   formHourNumber.value = (existing[existing.length - 1]?.hour_number ?? 0) + 1;
   const lastEnd = existing[existing.length - 1]?.end_time ?? '07:00';
   formStart.value = lastEnd;
   formEnd.value = addMinutes(lastEnd, 45);
+}
+
+function openAdd(dayId: string) {
+  editingHour.value = null;
+  editingDayId.value = dayId;
+  applyAddDefaults(dayId);
   formRoom.value = '';
   formErr.value = null;
   showForm.value = true;
 }
+
+// Header-level add — not tied to a day column, so it opens the form with a day
+// picker. Stays reachable even when the list is empty (the day grid, and its
+// per-day add buttons, are hidden behind AsyncView's empty state). Defaults to
+// the first day so a brand-new school can add its very first lesson hour.
+function openAddPickDay() {
+  editingHour.value = null;
+  editingDayId.value = days.value[0]?.id ?? '';
+  applyAddDefaults(editingDayId.value);
+  formRoom.value = '';
+  formErr.value = null;
+  showForm.value = true;
+}
+
+// When adding, switching the day in the modal re-derives the numbering/time
+// defaults for that day. Guarded so it never disturbs an in-progress edit.
+watch(editingDayId, (id) => {
+  if (showForm.value && !editingHour.value) applyAddDefaults(id);
+});
 
 function openEdit(h: LessonHour) {
   editingHour.value = h;
@@ -238,10 +265,22 @@ function dayName(id: string): string {
       :title="t('admin.sekolah.lesson_hours.header_title')"
       :meta="t('admin.sekolah.lesson_hours.header_meta', { slots: hours.length, days: days.length })"
     >
-      <Button variant="secondary" size="sm" @click="showCopySheet = true">
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-admin text-[12px] font-bold hover:bg-white/90 transition-colors"
+        @click="openAddPickDay"
+      >
+        <NavIcon name="plus" :size="13" />
+        {{ t('admin.sekolah.lesson_hours.add_title') }}
+      </button>
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[12px] font-bold transition-colors"
+        @click="showCopySheet = true"
+      >
         <NavIcon name="copy" :size="12" />
         {{ t('admin.sekolah.lesson_hours.copy_day') }}
-      </Button>
+      </button>
     </BrandPageHeader>
 
     <AsyncView
@@ -320,6 +359,16 @@ function dayName(id: string): string {
       @close="showForm = false"
     >
       <div class="space-y-3">
+        <div v-if="!editingHour">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_day') }}</label>
+          <select
+            v-model="editingDayId"
+            class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
+          >
+            <option value="">{{ t('admin.sekolah.lesson_hours.pick_day') }}</option>
+            <option v-for="d in days" :key="d.id" :value="d.id">{{ d.name }}</option>
+          </select>
+        </div>
         <div>
           <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_hour_number') }}</label>
           <input

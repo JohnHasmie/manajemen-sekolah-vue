@@ -2248,6 +2248,7 @@
         "add_title": "Tambah Jam Pelajaran",
         "edit_title": "Edit Jam Pelajaran",
         "form_subtitle": "Hari {day}",
+        "field_day": "Hari",
         "field_hour_number": "Jam ke-",
         "field_start": "Mulai",
         "field_end": "Selesai",

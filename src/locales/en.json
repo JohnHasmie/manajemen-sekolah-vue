@@ -2251,6 +2251,7 @@
         "add_title": "Add Lesson Hour",
         "edit_title": "Edit Lesson Hour",
         "form_subtitle": "{day}",
+        "field_day": "Day",
         "field_hour_number": "Hour #",
         "field_start": "Start",
         "field_end": "End",
