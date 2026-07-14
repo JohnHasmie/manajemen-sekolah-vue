@@ -23,6 +23,8 @@ import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useMeStore } from '@/stores/me';
 import { DashboardService, type InboxResponse } from '@/services/dashboard.service';
+import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
+import type { TeacherAttendanceConfig } from '@/types/teacher-attendance';
 import { formatNumber, formatTime } from '@/lib/format';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
@@ -62,6 +64,13 @@ const stats = ref<StatsPayload>({});
 const inbox = ref<InboxResponse>({ items: [], counts: {} });
 const state = ref<AsyncState<StatsPayload>>({ status: 'loading' });
 const lastSync = ref(new Date());
+
+// Teacher's own daily check-in (PRESENSI GURU) state — powers the
+// "Anda belum presensi hari ini" Perlu-Perhatian nudge. Loaded from
+// GET /teacher-attendance/config independently of the main stats so a
+// 403 (module off / not a teacher) or network error just hides the
+// nudge and never blocks the dashboard. `null` = unknown/not loaded.
+const attendanceConfig = ref<TeacherAttendanceConfig | null>(null);
 
 // Carousel state
 const activeSlice = ref(0);
@@ -184,15 +193,59 @@ const gradesTone = computed<'brand' | 'success'>(() =>
 const { mapToPriorityItems, handlePriorityTap, priorityCountLabel } =
   usePriorityInbox('teacher');
 
-const priorityItems = computed<PriorityItem[]>(() =>
+const backendPriorityItems = computed<PriorityItem[]>(() =>
   mapToPriorityItems(stats.value.priority_inbox),
 );
 
+// Workweek gate — bit0=Sunday .. bit6=Saturday (default 62 = Mon–Fri).
+// Keeps the nudge off weekends without a second round-trip. Holidays
+// aren't captured here (config only exposes is_workday on an existing
+// record), so this stays a simple "is today a scheduled workday" check.
+function isTodayWorkday(cfg: TeacherAttendanceConfig): boolean {
+  const mask = cfg.settings.workweek_days_bitmask ?? 62;
+  const dow = new Date().getDay(); // 0=Sun..6=Sat
+  return ((mask >> dow) & 1) === 1;
+}
+
+// Client-synthesised "Anda belum presensi hari ini" attention item —
+// the on-screen companion to the FCM check-in reminder. Shown only when
+// the teacher holds the self-attendance ability, today's config has
+// loaded, today is a workday, and they have NOT yet checked in. Returns
+// null (item hidden) the moment any of those flips — including right
+// after a successful check-in, since a reload sets has_checked_in=true.
+const selfAttendanceItem = computed<PriorityItem | null>(() => {
+  if (!me.can('attendance.self.view_own')) return null;
+  const cfg = attendanceConfig.value;
+  if (!cfg) return null;
+  if (cfg.state.has_checked_in) return null;
+  if (!isTodayWorkday(cfg)) return null;
+  return {
+    id: 'teacher-self-attendance-not-checked-in',
+    type: 'teacher_self_attendance',
+    severity: 'warning',
+    label: t('teacher.dashboard.selfAttendance.notCheckedInTitle'),
+    subtitle: t('teacher.dashboard.selfAttendance.notCheckedInSubtitle'),
+    count: 1,
+    occurred_at: new Date().toISOString(),
+    target_route: 'teacher_self_attendance',
+    target_params: {},
+  };
+});
+
+// The synthetic nudge (when present) leads the list so the teacher sees
+// it first, followed by the backend aggregator rows.
+const priorityItems = computed<PriorityItem[]>(() => {
+  const self = selfAttendanceItem.value;
+  const backend = backendPriorityItems.value;
+  return self ? [self, ...backend] : backend;
+});
+
 const priorityTotal = computed(() => {
+  const extra = selfAttendanceItem.value ? 1 : 0;
   const total = stats.value.priority_inbox_total;
-  if (typeof total === 'number') return total;
+  if (typeof total === 'number') return total + extra;
   if (typeof total === 'string')
-    return Number.parseInt(total, 10) || priorityItems.value.length;
+    return (Number.parseInt(total, 10) || backendPriorityItems.value.length) + extra;
   return priorityItems.value.length;
 });
 
@@ -272,6 +325,26 @@ async function load() {
     sliceProgress.value = 0;
   } catch (e) {
     state.value = { status: 'error', error: (e as Error).message };
+  }
+  // Fire-and-forget: never let the check-in status fetch block or fail
+  // the main dashboard render.
+  void loadAttendanceStatus();
+}
+
+// Teacher self check-in status — fetched independently of the main
+// stats so a 403 (module off / not a teacher) or network hiccup just
+// hides the "belum presensi" nudge. Gated on the same ability the
+// presensi-guru route uses; the router guard has already hydrated `me`
+// before this view mounts, so the check is reliable here.
+async function loadAttendanceStatus() {
+  if (!me.can('attendance.self.view_own')) {
+    attendanceConfig.value = null;
+    return;
+  }
+  try {
+    attendanceConfig.value = await TeacherAttendanceService.config();
+  } catch {
+    attendanceConfig.value = null;
   }
 }
 

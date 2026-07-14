@@ -2747,7 +2747,11 @@
       "requiresAttention": "Perlu Perhatian",
       "quickActions": "Aksi Cepat",
       "otherModules": "Modul Lainnya",
-      "accessReportsAndTools": "Akses laporan, materi, dan alat bantu lainnya"
+      "accessReportsAndTools": "Akses laporan, materi, dan alat bantu lainnya",
+      "selfAttendance": {
+        "notCheckedInTitle": "Anda belum presensi hari ini",
+        "notCheckedInSubtitle": "Lakukan presensi masuk agar kehadiran Anda tercatat."
+      }
     },
     "schedule": {
       "teaching": "Mengajar",

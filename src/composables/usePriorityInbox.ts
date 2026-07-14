@@ -40,6 +40,11 @@ const ROUTE_MAPS: Record<PriorityRole, RouteMap> = {
   teacher: {
     // target_route values from teacher aggregators
     teacher_attendance: '/teacher/attendance',
+    // Client-synthesised "belum presensi hari ini" nudge (not a backend
+    // aggregator row) → the teacher's OWN daily check-in flow. Distinct
+    // from `teacher_attendance` above, which is per-session STUDENT
+    // attendance. Named apart so the two never collide.
+    teacher_self_attendance: '/teacher/my-attendance',
     lesson_plan_detail: '/teacher/lesson-plans',
     grade_book: '/teacher/grades',
     recommendation_detail: '/teacher/recommendations',
