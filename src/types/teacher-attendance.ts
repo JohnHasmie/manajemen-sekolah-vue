@@ -557,7 +557,14 @@ export interface TeacherAttendanceSummaryMeta {
 /** One per-teacher rekap row (admin/summary `data[]`). */
 export interface TeacherAttendanceSummaryRow
   extends TeacherAttendanceStatusCounts {
-  teacher_id: string;
+  /** Stable unique key per person — teacher's id or staff's user id.
+   *  Use this as the row key: `teacher_id` is null for staff rows. */
+  person_id: string;
+  /** 'teacher' | 'staff' — the rekap now covers both personnel types. */
+  personnel_type?: TeacherAttendancePersonnelType;
+  /** Null for staff rows (they key on user id via person_id). */
+  teacher_id: string | null;
+  /** Teacher's name, or the staff member's user name for staff rows. */
   teacher_name: string;
   employee_number: string | null;
   /** Records aggregated for this teacher over the range. */
