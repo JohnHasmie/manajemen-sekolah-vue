@@ -600,13 +600,13 @@ function fmtTime(iso?: string | null): string {
         >
           <div>
             <h3 class="text-[13px] font-black text-slate-900">
-              Rekap Kehadiran per Guru
+              Rekap Kehadiran per Pegawai
             </h3>
             <p class="text-2xs text-slate-500 mt-0.5">
               <template v-if="summaryRangeLabel"
                 >Periode {{ summaryRangeLabel }} ·
               </template>
-              {{ summaryTotals?.teacher_count ?? summaryRows.length }} guru
+              {{ summaryTotals?.teacher_count ?? summaryRows.length }} pegawai
             </p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
