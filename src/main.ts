@@ -111,13 +111,36 @@ window.addEventListener('vite:preloadError', (event) => {
 // app + guard re-initialise on the authenticated route. `replace` keeps the
 // dead /login entry out of history. Not authenticated → left alone (a genuine
 // logged-out user stays on the login form).
+//
+// Scope: ONLY the plain post-login case. The self-serve subscribe /
+// register-demo flows use Google in redirect mode, which does full-page
+// navigations that can leave a bfcache'd /login document sitting BEHIND
+// /subscribe/new (and friends). Pressing browser-back from /subscribe/new
+// then restores that /login, and a blanket redirect would slam the user to
+// the admin dashboard mid-signup instead of doing a normal history-back —
+// exactly the "kembali dari /subscribe/new langsung ke dashboard admin" bug
+// Luay reported. Those flows advertise themselves via the `subscribe_intent_v1`
+// / `demo_intent_v1` sessionStorage flags (set on the Google round-trip, and
+// they survive bfcache), so when either is present we step aside and let the
+// browser's own back-navigation stand.
 window.addEventListener('pageshow', (event) => {
   if (!(event as PageTransitionEvent).persisted) return;
   const onLoginPage = window.location.pathname === '/login';
   const hasSession = Boolean(
     storage.get(StorageKeys.token) && storage.get(StorageKeys.user),
   );
-  if (onLoginPage && hasSession) {
+  // In an active self-serve subscribe / register-demo flow → don't clobber
+  // back-navigation with a dashboard redirect.
+  let inSelfServeFlow = false;
+  try {
+    inSelfServeFlow =
+      sessionStorage.getItem('subscribe_intent_v1') === '1' ||
+      sessionStorage.getItem('demo_intent_v1') === '1';
+  } catch {
+    // sessionStorage can throw in private mode — treat as "not in a flow"
+    // so the original post-login guard still protects the common case.
+  }
+  if (onLoginPage && hasSession && !inSelfServeFlow) {
     window.location.replace('/');
   }
 });
