@@ -3514,7 +3514,12 @@
     "validUntil": "Until {date}",
     "defaultAuthor": "School",
     "untitled": "(Untitled)",
-    "goToSlide": "Go to announcement {n}"
+    "goToSlide": "Go to announcement {n}",
+    "acknowledge": "Got it",
+    "eventToday": "Today",
+    "eventTomorrow": "Tomorrow",
+    "eventInDays": "in {n} days",
+    "eventOngoing": "Ongoing"
   },
   "superAdmin": {
     "platformName": "KamilEdu Platform",

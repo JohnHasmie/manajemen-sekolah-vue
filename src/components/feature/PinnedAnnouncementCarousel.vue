@@ -1,20 +1,16 @@
 <!--
-  PinnedAnnouncementCarousel.vue — "Pengumuman disematkan" strip shown at
-  the TOP of every role's dashboard.
+  PinnedAnnouncementCarousel.vue — "Pengumuman disematkan" strip at the TOP
+  of every role's dashboard. "Prioritas memimpin" model:
 
-  Self-fetches the pinned feed on mount via `AnnouncementService.pinned()`
-  (which degrades to [] when the tenant lacks the `communication` module),
-  and renders NOTHING when the list is empty — so it never breaks a
-  dashboard or leaves an empty gap.
-
-  Shows ONE pinned card at a time. With >1 item it auto-advances every
-  6s, exposes clickable dot indicators, and pauses on hover. Tapping the
-  card (or "Baca selengkapnya") opens the shared AnnouncementDetailModal,
-  wired exactly like TeacherAnnouncementView.
-
-  Theme-aware via Tailwind `dark:` variants (the app's `.tutoring-dark`
-  selector strategy) — matching the surrounding light-only dashboard
-  cards outside a dark scope.
+  • Priority-adaptive cards: PENTING (high/urgent) red, ACARA (event) violet
+    with a countdown, UMUM (normal) gold.
+  • When an unacknowledged PENTING item exists, auto-advance is DISABLED so the
+    urgent card can never be rotated out of view; otherwise the strip gently
+    auto-advances every 6s. Dot indicators allow manual browsing.
+  • PENTING cards carry a "Mengerti" acknowledge that marks the row read and
+    drops it locally (like the welcome banner) so it stops nagging.
+  • All icons are inline SVG (no emoji). Renders nothing when empty / on error
+    (the endpoint returns [] when the tenant lacks the communication module).
 -->
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
@@ -26,11 +22,8 @@ import AnnouncementDetailModal from '@/components/feature/AnnouncementDetailModa
 
 const props = withDefaults(
   defineProps<{
-    /** Optional class scope forwarded to the endpoint as `class_id`. */
     classId?: string;
-    /** Max pinned rows to request. */
     limit?: number;
-    /** Viewer role forwarded to the detail modal (read metrics visibility). */
     viewerRole?: 'admin' | 'teacher' | 'parent';
   }>(),
   { limit: 8, viewerRole: 'parent' },
@@ -38,24 +31,35 @@ const props = withDefaults(
 
 const { t } = useI18n();
 
+type Tier = 'penting' | 'acara' | 'umum';
+
 const items = ref<Announcement[]>([]);
 const active = ref(0);
 const detail = ref<Announcement | null>(null);
+const acknowledging = ref<string | null>(null);
 
 const AUTO_ADVANCE_MS = 6000;
 let timer: ReturnType<typeof setInterval> | null = null;
 
-const hasMultiple = computed(() => items.value.length > 1);
+function tierOf(a: Announcement): Tier {
+  if (a.priority === 'high' || a.priority === 'urgent') return 'penting';
+  if (a.type === 'event' || a.event_at) return 'acara';
+  return 'umum';
+}
+
 const current = computed<Announcement | null>(
   () => items.value[Math.min(active.value, items.value.length - 1)] ?? null,
 );
+const currentTier = computed<Tier>(() =>
+  current.value ? tierOf(current.value) : 'umum',
+);
+const hasMultiple = computed(() => items.value.length > 1);
+// An unacknowledged PENTING anywhere freezes auto-advance so it stays visible.
+const hasUrgent = computed(() => items.value.some((a) => tierOf(a) === 'penting'));
 
-// ── Author name + initials avatar (reuse the `source` label the
-//    AnnouncementCard/mapper expose as the friendly creator name). ──
 const authorName = computed(
   () => current.value?.source || t('announcements.defaultAuthor'),
 );
-
 const authorInitials = computed(() => {
   const parts = authorName.value.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '?';
@@ -63,28 +67,15 @@ const authorInitials = computed(() => {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 });
 
-// ── Priority badge — high/urgent → Penting, event → Acara, else Umum.
-//    Colours match the spec (red #dc2626 / violet #6d28d9 / blue #1b6fb8)
-//    with dark-scope fallbacks. ──
-const badge = computed(() => {
-  const a = current.value;
-  if (!a) return null;
-  if (a.priority === 'high' || a.priority === 'urgent') {
-    return {
-      label: t('announcement.categoryImportant'),
-      cls: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10',
-    };
+const badgeLabel = computed(() => {
+  switch (currentTier.value) {
+    case 'penting':
+      return t('announcement.categoryImportant');
+    case 'acara':
+      return t('announcement.categoryEvent');
+    default:
+      return t('announcement.categoryGeneral');
   }
-  if (a.type === 'event') {
-    return {
-      label: t('announcement.categoryEvent'),
-      cls: 'text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-500/10',
-    };
-  }
-  return {
-    label: t('announcement.categoryGeneral'),
-    cls: 'text-[#1b6fb8] dark:text-sky-400 bg-sky-50 dark:bg-sky-500/10',
-  };
 });
 
 const snippet = computed(() => current.value?.body?.trim() || '');
@@ -102,30 +93,59 @@ const validUntilLabel = computed(() => {
   return t('announcements.validUntil', { date: formatDateShort(until) });
 });
 
-// ── Auto-advance timer (only meaningful with >1 item). ──
+// Event countdown — "Hari ini" / "Besok" / "N hari lagi" / "Berlangsung".
+const countdown = computed(() => {
+  const a = current.value;
+  if (!a || currentTier.value !== 'acara' || !a.event_at) return '';
+  const ev = new Date(a.event_at);
+  if (Number.isNaN(ev.getTime())) return '';
+  const startOfDay = (d: Date) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((startOfDay(ev) - startOfDay(new Date())) / 86400000);
+  if (days < 0) return t('announcements.eventOngoing');
+  if (days === 0) return t('announcements.eventToday');
+  if (days === 1) return t('announcements.eventTomorrow');
+  return t('announcements.eventInDays', { n: days });
+});
+const eventWhen = computed(() =>
+  current.value?.event_at ? formatDateShort(current.value.event_at) : '',
+);
+
+// ── Auto-advance (paused while an urgent item is present). ──
 function start() {
   stop();
-  if (!hasMultiple.value) return;
+  if (!hasMultiple.value || hasUrgent.value) return;
   timer = setInterval(() => {
     active.value = (active.value + 1) % items.value.length;
   }, AUTO_ADVANCE_MS);
 }
-
 function stop() {
   if (timer) {
     clearInterval(timer);
     timer = null;
   }
 }
-
 function goTo(i: number) {
   active.value = i;
-  // Restart the clock so a manual pick doesn't get yanked forward early.
   start();
 }
 
 function openDetail(a: Announcement | null) {
   if (a) detail.value = a;
+}
+
+async function acknowledge(a: Announcement | null) {
+  if (!a || acknowledging.value) return;
+  acknowledging.value = a.id;
+  try {
+    await AnnouncementService.markAsRead(a.id);
+  } catch {
+    // ignore — still drop it locally so the dashboard clears.
+  }
+  items.value = items.value.filter((x) => x.id !== a.id);
+  if (active.value >= items.value.length) active.value = 0;
+  acknowledging.value = null;
+  start();
 }
 
 onMounted(async () => {
@@ -135,7 +155,6 @@ onMounted(async () => {
   });
   start();
 });
-
 onUnmounted(stop);
 </script>
 
@@ -143,113 +162,87 @@ onUnmounted(stop);
   <section
     v-if="items.length"
     class="pinned-carousel"
+    :class="`tier-${currentTier}`"
     @mouseenter="stop"
     @mouseleave="start"
   >
-    <button
-      type="button"
-      class="relative w-full overflow-hidden rounded-2xl border border-amber-200 dark:border-amber-500/25 bg-white dark:bg-slate-900 text-left shadow-sm transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500/30"
-      @click="openDetail(current)"
-    >
-      <!-- Gold/amber left accent stripe -->
-      <span
-        class="absolute inset-y-0 left-0 w-1.5 bg-[#b45309]"
-        aria-hidden="true"
-      ></span>
-      <!-- Faint amber gradient across the top -->
-      <span
-        class="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-amber-100/70 to-transparent dark:from-amber-500/10"
-        aria-hidden="true"
-      ></span>
+    <button type="button" class="pc-card" @click="openDetail(current)">
+      <span class="pc-rail" aria-hidden="true"></span>
 
-      <div class="relative pl-5 pr-4 py-4">
-        <!-- Label + priority badge + validity chip -->
-        <div class="flex items-center gap-2 flex-wrap mb-2">
-          <span
-            class="inline-flex items-center gap-1 text-3xs font-black uppercase tracking-wider text-[#b45309] dark:text-amber-300"
-          >
-            📌 {{ t('announcements.pinnedLabel') }}
-          </span>
-          <span
-            v-if="badge"
-            class="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-            :class="badge.cls"
-          >
-            {{ badge.label }}
-          </span>
-          <span class="flex-1"></span>
-          <span
-            v-if="validUntilLabel"
-            class="inline-flex items-center gap-1 text-3xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded-full flex-shrink-0"
-          >
-            🕒 {{ validUntilLabel }}
-          </span>
-        </div>
+      <div class="pc-head">
+        <span class="pc-typeicon" aria-hidden="true">
+          <!-- PENTING: alert-triangle -->
+          <svg v-if="currentTier === 'penting'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+            <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <!-- ACARA: calendar -->
+          <svg v-else-if="currentTier === 'acara'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <!-- UMUM: megaphone -->
+          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m3 11 18-5v12L3 14v-3z" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
+          </svg>
+        </span>
+        <span class="pc-badge">{{ badgeLabel }}</span>
+        <span class="pc-pin" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 17v5" /><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
+          </svg>
+        </span>
+        <span class="pc-spacer"></span>
+        <span v-if="validUntilLabel" class="pc-valid">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" /></svg>
+          {{ validUntilLabel }}
+        </span>
+      </div>
 
-        <!-- Title (1 line) -->
-        <p
-          class="text-[15px] font-black text-slate-900 dark:text-slate-50 leading-snug truncate"
+      <p class="pc-title">{{ current?.title || t('announcements.untitled') }}</p>
+
+      <!-- Event countdown replaces the snippet for ACARA -->
+      <div v-if="currentTier === 'acara' && countdown" class="pc-event">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+        <span class="pc-event-when">{{ eventWhen }}</span>
+        <span class="pc-countdown">{{ countdown }}</span>
+      </div>
+      <p v-else-if="snippet" class="pc-snippet">{{ snippet }}</p>
+
+      <div class="pc-meta">
+        <span class="pc-avatar">{{ authorInitials }}</span>
+        <span class="pc-author">{{ authorName }}</span>
+        <span class="pc-dot">·</span>
+        <span class="pc-time">{{ timeLabel }}</span>
+        <span class="pc-spacer"></span>
+
+        <span
+          v-if="currentTier === 'penting'"
+          class="pc-ack"
+          role="button"
+          @click.stop="acknowledge(current)"
         >
-          {{ current?.title || t('announcements.untitled') }}
-        </p>
-
-        <!-- Snippet (2 lines) -->
-        <p
-          v-if="snippet"
-          class="text-[12.5px] text-slate-600 dark:text-slate-300 mt-1 line-clamp-2 leading-relaxed"
-        >
-          {{ snippet }}
-        </p>
-
-        <!-- Meta row: avatar + author + relative time + read-more -->
-        <div class="flex items-center gap-2 mt-3">
-          <span
-            class="w-7 h-7 rounded-full grid place-items-center text-[11px] font-black text-white bg-[#b45309] flex-shrink-0"
-          >
-            {{ authorInitials }}
-          </span>
-          <span
-            class="text-[12px] font-bold text-slate-700 dark:text-slate-200 truncate"
-          >
-            {{ authorName }}
-          </span>
-          <span class="text-slate-300 dark:text-slate-600">·</span>
-          <span
-            class="text-[11.5px] text-slate-400 dark:text-slate-500 flex-shrink-0"
-          >
-            {{ timeLabel }}
-          </span>
-          <span class="flex-1"></span>
-          <span
-            class="inline-flex items-center gap-1 text-[12px] font-black text-[#b45309] dark:text-amber-300 flex-shrink-0"
-          >
-            {{ t('announcements.readMore') }} →
-          </span>
-        </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          {{ t('announcements.acknowledge') }}
+        </span>
+        <span v-else class="pc-readmore">
+          {{ t('announcements.readMore') }}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+        </span>
       </div>
     </button>
 
-    <!-- Dot indicators (only with >1 item) -->
-    <div
-      v-if="hasMultiple"
-      class="mt-2.5 flex items-center justify-center gap-1.5"
-    >
+    <div v-if="hasMultiple" class="pc-dots">
       <button
         v-for="(a, i) in items"
         :key="a.id || i"
         type="button"
-        class="h-1.5 rounded-full transition-all"
-        :class="
-          i === active
-            ? 'w-5 bg-[#b45309]'
-            : 'w-1.5 bg-amber-200 dark:bg-amber-500/30 hover:bg-amber-300'
-        "
+        class="pc-dotbtn"
+        :class="{ 'is-active': i === active }"
         :aria-label="t('announcements.goToSlide', { n: i + 1 })"
         @click="goTo(i)"
       />
     </div>
 
-    <!-- Shared detail modal — wired like TeacherAnnouncementView. -->
     <AnnouncementDetailModal
       v-if="detail"
       :announcement="detail"
@@ -259,3 +252,228 @@ onUnmounted(stop);
     />
   </section>
 </template>
+
+<style scoped>
+/* Per-tier accent — one variable drives stripe, badge, icon, countdown. */
+.pinned-carousel {
+  --accent: #b45309;
+  --accent-bg: #fef3c7;
+  --accent-line: #fcd9a1;
+}
+.pinned-carousel.tier-penting {
+  --accent: #dc2626;
+  --accent-bg: #fee2e2;
+  --accent-line: #fecaca;
+}
+.pinned-carousel.tier-acara {
+  --accent: #6d28d9;
+  --accent-bg: #ede9fe;
+  --accent-line: #ddd6fe;
+}
+.pinned-carousel.tier-umum {
+  --accent: #1b6fb8;
+  --accent-bg: #e0edff;
+  --accent-line: #c7ddf7;
+}
+
+.pc-card {
+  position: relative;
+  width: 100%;
+  display: block;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--accent-line);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent-bg) 85%, transparent), transparent 60%),
+    #ffffff;
+  padding: 13px 15px 12px 18px;
+  box-shadow: 0 2px 10px rgba(11, 20, 45, 0.06);
+  transition: box-shadow 0.15s ease;
+}
+.pc-card:hover {
+  box-shadow: 0 8px 22px rgba(11, 20, 45, 0.12);
+}
+.pc-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.pc-rail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  border-radius: 16px 0 0 16px;
+  background: var(--accent);
+}
+
+.pc-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.pc-typeicon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+.pc-typeicon svg { width: 15px; height: 15px; }
+.pc-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-bg);
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.pc-pin { color: var(--accent); display: inline-flex; }
+.pc-pin svg { width: 14px; height: 14px; }
+.pc-spacer { flex: 1; }
+.pc-valid {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.pc-valid svg { width: 12px; height: 12px; }
+
+.pc-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.28;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pc-snippet {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #64748b;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pc-event {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+}
+.pc-event svg { width: 15px; height: 15px; color: var(--accent); flex: 0 0 auto; }
+.pc-event-when { font-size: 12px; font-weight: 700; color: #334155; }
+.pc-countdown {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--accent);
+  background: var(--accent-bg);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.pc-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 11px;
+}
+.pc-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #ffffff;
+  background: var(--accent);
+  flex: 0 0 auto;
+}
+.pc-author {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 40%;
+}
+.pc-dot { color: #cbd5e1; }
+.pc-time { font-size: 11px; color: #94a3b8; flex: 0 0 auto; }
+.pc-readmore {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--accent);
+  flex: 0 0 auto;
+}
+.pc-readmore svg { width: 13px; height: 13px; }
+.pc-ack {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+  background: var(--accent);
+  padding: 6px 12px;
+  border-radius: 9px;
+  flex: 0 0 auto;
+}
+.pc-ack svg { width: 13px; height: 13px; }
+
+.pc-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+.pc-dotbtn {
+  width: 6px;
+  height: 6px;
+  border: 0;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--accent-line);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.pc-dotbtn.is-active { width: 18px; background: var(--accent); }
+
+/* Dark theme */
+@media (prefers-color-scheme: dark) {
+  .pc-card {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 60%),
+      #0f1a2e;
+    border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  .pc-title { color: #f1f5f9; }
+  .pc-snippet { color: #94a3b8; }
+  .pc-author, .pc-event-when { color: #cbd5e1; }
+}
+:root[data-theme='dark'] .pc-card {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 60%),
+    #0f1a2e;
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+:root[data-theme='dark'] .pc-title { color: #f1f5f9; }
+:root[data-theme='dark'] .pc-snippet { color: #94a3b8; }
+:root[data-theme='dark'] .pc-author,
+:root[data-theme='dark'] .pc-event-when { color: #cbd5e1; }
+</style>
