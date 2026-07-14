@@ -152,6 +152,7 @@ const form = reactive({
   event_at: '' as string,
   event_location: '' as string,
   is_pinned: false,
+  pinned_until: '' as string,
 });
 
 // ── Filtered + grouped ──
@@ -290,6 +291,7 @@ function resetForm() {
   form.event_at = '';
   form.event_location = '';
   form.is_pinned = false;
+  form.pinned_until = '';
   previewReach.value = null;
   editingId.value = null;
 }
@@ -329,6 +331,7 @@ function openEdit(a: Announcement) {
   form.event_at = (a.event_at ?? '').slice(0, 16);
   form.event_location = a.event_location ?? '';
   form.is_pinned = !!a.is_pinned;
+  form.pinned_until = (a.pinned_until ?? '').slice(0, 16);
   showCompose.value = true;
   refreshPreviewReach();
 }
@@ -388,6 +391,7 @@ async function publish() {
       priority: form.priority,
       audience_matrix: form.audienceMatrix,
       is_pinned: form.is_pinned,
+      pinned_until: form.is_pinned ? form.pinned_until || null : null,
       scheduled_at: form.scheduled_at || null,
       event_at: form.event_at || null,
       event_location: form.event_location.trim() || null,
@@ -884,6 +888,24 @@ function pickAudience(k: AudienceFilter) {
                 />
               </span>
             </button>
+            <template v-if="form.is_pinned">
+              <label
+                class="block text-2xs font-semibold text-tutoring-text-mid mt-2 mb-1"
+              >
+                {{ t('admin.announcement.pinnedUntilLabel') }}
+              </label>
+              <input
+                v-model="form.pinned_until"
+                type="datetime-local"
+                class="w-full px-3 py-2 rounded-xl border border-tutoring-border-soft bg-tutoring-panel text-sm text-tutoring-text-hi"
+              />
+              <p
+                v-if="!form.pinned_until"
+                class="mt-1 text-2xs text-tutoring-text-mid"
+              >
+                {{ t('admin.announcement.pinnedIndefinite') }}
+              </p>
+            </template>
           </div>
         </div>
 

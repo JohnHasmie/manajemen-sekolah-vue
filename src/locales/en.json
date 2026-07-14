@@ -605,6 +605,8 @@
       "pinLabel": "Pin",
       "pinnedToTop": "Pinned to top",
       "notPinned": "Not pinned",
+      "pinnedUntilLabel": "Pinned until (optional)",
+      "pinnedIndefinite": "Leave empty = pinned until removed",
       "scheduleButton": "Schedule",
       "publishButton": "Publish",
       "selectMinOneAudience": "Select at least 1 audience.",

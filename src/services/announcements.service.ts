@@ -178,6 +178,9 @@ export const AnnouncementService = {
      *  'all' | tingkat | class-id. When present the backend uses this. */
     audience_matrix?: Record<string, (string | number)[]>;
     is_pinned?: boolean;
+    /** When pinned, the date the pin auto-expires (dashboard stops showing
+     *  it). Null / omitted = pinned indefinitely. */
+    pinned_until?: string | null;
     scheduled_at?: string | null;
     event_at?: string | null;
     event_location?: string | null;

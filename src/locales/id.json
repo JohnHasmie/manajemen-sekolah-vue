@@ -602,6 +602,8 @@
       "pinLabel": "Sematkan",
       "pinnedToTop": "Disematkan di puncak",
       "notPinned": "Tidak disematkan",
+      "pinnedUntilLabel": "Disematkan sampai (opsional)",
+      "pinnedIndefinite": "Kosongkan = disematkan terus sampai dilepas",
       "scheduleButton": "Jadwalkan",
       "publishButton": "Terbitkan",
       "selectMinOneAudience": "Pilih minimal 1 audiens.",
