@@ -781,6 +781,8 @@
       "searchPlaceholder": "Search teacher name or ID...",
       "rowPrefix": "ID {nip}",
       "homeroomPrefix": "Homeroom {class}",
+      "statusActiveTeaching": "Active teaching",
+      "statusNotAssigned": "Not assigned yet",
       "addFab": "Add Teacher",
       "emptyTitle": "No teachers yet",
       "emptyDesc": "Tap the + button to add a new teacher."

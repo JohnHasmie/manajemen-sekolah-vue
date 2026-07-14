@@ -160,6 +160,7 @@ export interface Teacher {
   subject_ids?: string[];
   subject_names?: string[];
   user_id?: string | null;
+  is_active_this_year?: boolean;
 }
 
 export function teacherFromJson(raw: AnyRecord): Teacher {
@@ -216,6 +217,7 @@ export function teacherFromJson(raw: AnyRecord): Teacher {
           .filter(Boolean)
       : undefined,
     user_id: (r.user_id as string) ?? (user?.id as string) ?? null,
+    is_active_this_year: r.is_active_this_year === true,
   };
 }
 

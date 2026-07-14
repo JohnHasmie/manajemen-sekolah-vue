@@ -684,7 +684,16 @@ function statusFor(t: Teacher) {
       label: $t('admin.teachers.homeroomPrefix', { class: t.homeroom_class_name }),
     };
   }
-  return { tone: 'success' as const, label: $t('admin.subjects.statusActive') };
+  if (t.is_active_this_year) {
+    return {
+      tone: 'success' as const,
+      label: $t('admin.teachers.statusActiveTeaching'),
+    };
+  }
+  return {
+    tone: 'neutral' as const,
+    label: $t('admin.teachers.statusNotAssigned'),
+  };
 }
 </script>
 

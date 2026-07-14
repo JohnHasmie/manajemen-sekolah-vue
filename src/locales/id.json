@@ -778,6 +778,8 @@
       "searchPlaceholder": "Cari nama guru atau NIP...",
       "rowPrefix": "NIP {nip}",
       "homeroomPrefix": "Wali {class}",
+      "statusActiveTeaching": "Aktif mengajar",
+      "statusNotAssigned": "Belum ditugaskan",
       "addFab": "Tambah Guru",
       "emptyTitle": "Belum ada guru",
       "emptyDesc": "Tap tombol + untuk menambahkan guru baru."
