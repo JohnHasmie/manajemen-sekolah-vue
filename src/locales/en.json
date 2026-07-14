@@ -498,6 +498,8 @@
         "kicker": "QR attendance",
         "title": "Personnel QR cards",
         "meta": "Issue, revoke, and download QR cards for teachers and staff.",
+        "entryTitle": "Student/teacher/staff cards & QR codes",
+        "entryDesc": "Issue & download QR cards for students, teachers, and staff.",
         "loadFail": "Failed to load personnel list.",
         "searchPh": "Search name, employee number, or email…",
         "roleAll": "All roles",

@@ -928,6 +928,39 @@ function jumpToSection(id: string): void {
           </label>
         </section>
 
+        <!-- Kartu & QR Code personel — visible entry point to the
+             PersonnelCardManagerView (route admin.attendance.cards). That
+             batch-issue / revoke / "Unduh PDF" screen still exists but had
+             no link, so it felt "gone". Surface it right beside the QR-card
+             method toggles above, gated on the SAME ability that guards the
+             card manager (attendance.cards.issue) so it only shows for
+             authorised admins. RouterLink is globally registered by the
+             router plugin — no import needed. -->
+        <RouterLink
+          v-if="me.can('attendance.cards.issue')"
+          :to="{ name: 'admin.attendance.cards' }"
+          class="group flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 py-3 hover:border-role-admin/40 hover:shadow-sm transition-all"
+        >
+          <div
+            class="w-9 h-9 rounded-lg bg-role-admin/10 text-role-admin grid place-items-center flex-shrink-0"
+          >
+            <NavIcon name="id-card" :size="16" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-[13px] font-bold text-slate-900">
+              {{ t('admin.attendance.cards.entryTitle') }}
+            </p>
+            <p class="text-2xs text-slate-500">
+              {{ t('admin.attendance.cards.entryDesc') }}
+            </p>
+          </div>
+          <NavIcon
+            name="chevron-right"
+            :size="18"
+            class="text-slate-300 group-hover:text-role-admin flex-shrink-0 transition-colors"
+          />
+        </RouterLink>
+
         <!-- Geofence -->
         <section
           id="section-geofence"
