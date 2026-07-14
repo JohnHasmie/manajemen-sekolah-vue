@@ -454,26 +454,20 @@ onUnmounted(stop);
 }
 .pc-dotbtn.is-active { width: 18px; background: var(--accent); }
 
-/* Dark theme */
-@media (prefers-color-scheme: dark) {
-  .pc-card {
-    background:
-      linear-gradient(180deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 60%),
-      #0f1a2e;
-    border-color: color-mix(in srgb, var(--accent) 35%, transparent);
-  }
-  .pc-title { color: #f1f5f9; }
-  .pc-snippet { color: #94a3b8; }
-  .pc-author, .pc-event-when { color: #cbd5e1; }
-}
-:root[data-theme='dark'] .pc-card {
+/* Dark theme — this app is LIGHT-only for schools; dark is opt-in and
+   class-driven via `.tutoring-dark` (tailwind darkMode: ['selector',
+   '.tutoring-dark']), NOT the OS `prefers-color-scheme`. Scoping the dark
+   styling to `.tutoring-dark` keeps the card LIGHT on every school dashboard
+   even when the viewer's OS is in dark mode (the earlier prefers-color-scheme
+   rule wrongly darkened it there). */
+.tutoring-dark .pc-card {
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 60%),
     #0f1a2e;
   border-color: color-mix(in srgb, var(--accent) 35%, transparent);
 }
-:root[data-theme='dark'] .pc-title { color: #f1f5f9; }
-:root[data-theme='dark'] .pc-snippet { color: #94a3b8; }
-:root[data-theme='dark'] .pc-author,
-:root[data-theme='dark'] .pc-event-when { color: #cbd5e1; }
+.tutoring-dark .pc-title { color: #f1f5f9; }
+.tutoring-dark .pc-snippet { color: #94a3b8; }
+.tutoring-dark .pc-author,
+.tutoring-dark .pc-event-when { color: #cbd5e1; }
 </style>
