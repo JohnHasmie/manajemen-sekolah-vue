@@ -189,6 +189,21 @@ const groups = computed<SettingsGroup[]>(() => {
       ],
     },
     {
+      // Keamanan — per-school security toggles (account-activation
+      // Opsi B + login OTP 2FA). Gated on the same settings-view key
+      // that admits the hub; the detail view enforces manage for writes.
+      title: t('admin.sekolah.settings.group_security'),
+      items: [
+        {
+          icon: 'shield',
+          label: t('admin.sekolah.settings.item_security_label'),
+          desc: t('admin.sekolah.settings.item_security_desc'),
+          to: '/admin/settings/security',
+          ability: 'school.settings.view',
+        },
+      ],
+    },
+    {
       title: t('admin.sekolah.settings.group_data'),
       items: [
         { icon: 'layers', label: t('admin.sekolah.settings.item_data_management_label'), desc: t('admin.sekolah.settings.item_data_management_desc'), to: '/admin/settings/data' },

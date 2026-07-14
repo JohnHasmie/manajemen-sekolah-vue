@@ -109,6 +109,8 @@ const AdminDataManagementView = () =>
   import('@/views/admin/AdminDataManagementView.vue');
 const AdminSchoolLevelSettingsView = () =>
   import('@/views/admin/AdminSchoolLevelSettingsView.vue');
+const AdminSecuritySettingsView = () =>
+  import('@/views/admin/AdminSecuritySettingsView.vue');
 const AdminAcademicYearsView = () =>
   import('@/views/admin/AdminAcademicYearsView.vue');
 const PriorityInboxView = () =>
@@ -758,6 +760,18 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/settings/manage-academic-years',
         name: 'admin.settings.manage-academic-years',
         component: AdminAcademicYearsView,
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['school.settings.view', 'school.settings.manage'],
+        },
+      },
+      {
+        // Keamanan & Aktivasi Akun — per-school security toggles
+        // (account-activation Opsi B + login OTP 2FA). Read admits the
+        // page; the view makes controls read-only without manage.
+        path: 'admin/settings/security',
+        name: 'admin.settings.security',
+        component: AdminSecuritySettingsView,
         meta: {
           role: 'admin' satisfies Role,
           abilityAny: ['school.settings.view', 'school.settings.manage'],
