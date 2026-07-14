@@ -340,6 +340,15 @@ export interface MySubscription {
  */
 export interface MyModuleRow {
   module_key: string;
+  /**
+   * True when `module_key` is a BUNDLE (e.g. `bundle_complete`) rather
+   * than a bare optional module. Bundles are stored as a single
+   * subscription_modules row and expanded to their member modules only
+   * at entitlement-resolve time, so the client resolves the label /
+   * icon / price from the bundle catalog instead of the optional one.
+   * Absent on pre-fix backends — treat missing as false.
+   */
+  is_bundle?: boolean;
   source: 'paid' | 'comp';
   cancel_at_period_end: boolean;
   price_per_student_snapshot: number;
