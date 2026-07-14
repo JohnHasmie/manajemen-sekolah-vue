@@ -88,9 +88,33 @@ const cancelledRows = computed<MyModuleRow[]>(() =>
   mine.value.modules.filter((r) => r.cancel_at_period_end),
 );
 
+/**
+ * Every module key the tenant already holds, with bundle rows expanded
+ * to their members and each à la carte module's `requires[]` deps
+ * pulled in. This mirrors what GetEntitledModulesAction unlocks at the
+ * gate, so the "Tambah modul" list never re-offers a module the tenant
+ * already owns THROUGH a package (a bundle stores one `bundle_complete`
+ * row, not ten member rows — without this expansion all ten members
+ * looked "addable").
+ */
+const heldModuleKeys = computed<Set<string>>(() => {
+  const held = new Set<string>();
+  const cat = catalog.value;
+  mine.value.modules.forEach((r) => {
+    held.add(r.module_key);
+    const bundle = cat?.bundles[r.module_key];
+    if (bundle) {
+      bundle.members.forEach((m) => held.add(m));
+    } else {
+      (cat?.optional[r.module_key]?.requires ?? []).forEach((req) => held.add(req));
+    }
+  });
+  return held;
+});
+
 const availableCatalog = computed(() => {
   if (!catalog.value) return [] as { key: string; item: NonNullable<ModuleCatalog['optional'][string]> }[];
-  const held = new Set(mine.value.modules.map((r) => r.module_key));
+  const held = heldModuleKeys.value;
   const tt = tenantType.value;
   return Object.entries(catalog.value.optional)
     .filter(([key, item]) => {
@@ -332,6 +356,25 @@ function shareTokenFromShareUrl(url: string | null | undefined): string | null {
  * `v-if` around every row.
  */
 function itemFor(key: string) {
+  // Bundle rows (e.g. `bundle_complete`) live in `catalog.bundles`, not
+  // `catalog.optional`, and have a different shape. Adapt one into the
+  // ModuleCatalogItem `<ModuleTile>` expects so a package renders as a
+  // proper managed row (label + package icon/tint) instead of falling
+  // through to the raw-key fallback below.
+  const bundle = catalog.value?.bundles[key];
+  if (bundle) {
+    return {
+      key,
+      label: bundle.label,
+      group: 'Paket',
+      prefixes: [] as string[],
+      price_per_student: bundle.price_per_student,
+      price_per_staff: bundle.price_per_staff,
+      pricing_seat: 'student' as const,
+      requires: [] as string[],
+      is_ai: false,
+    };
+  }
   return (
     catalog.value?.optional[key] ?? {
       key,
@@ -347,10 +390,15 @@ function itemFor(key: string) {
   );
 }
 function labelFor(key: string): string {
+  const bundle = catalog.value?.bundles[key];
+  if (bundle) return bundle.label;
   const item = catalog.value?.optional[key];
   return item ? moduleLabel(item, tenantType.value) : key;
 }
 function taglineFor(key: string): string {
+  if (catalog.value?.bundles[key]) {
+    return moduleTagline(itemFor(key), tenantType.value);
+  }
   const item = catalog.value?.optional[key];
   return item ? moduleTagline(item, tenantType.value) : '';
 }

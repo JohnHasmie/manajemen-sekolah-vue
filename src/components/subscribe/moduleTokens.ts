@@ -17,6 +17,9 @@ export const CATEGORY_TINTS: Record<string, { bg: string; fg: string }> = {
   Komunikasi: { bg: '#E6F1FB', fg: '#185FA5' },
   Bimbel: { bg: '#EAF3DE', fg: '#27500A' },
   AI: { bg: '#FBEAF0', fg: '#993556' },
+  // Bundles (Paket Lengkap / Bimbel / AI) surface as a single managed
+  // row in ManageModulesView; they carry the synthetic group 'Paket'.
+  Paket: { bg: '#E6F1FB', fg: '#113E75' },
   Default: { bg: '#F5F8FC', fg: '#64748B' },
 };
 
@@ -43,6 +46,11 @@ export const MODULE_ICONS: Record<string, string> = {
   ai_recommendation: 'bulb',
   ai_material_quiz: 'sparkles',
   ai_rpp: 'file-text',
+  // Bundles — rendered as one managed row in ManageModulesView when a
+  // tenant subscribed to a package rather than à la carte modules.
+  bundle_complete: 'package',
+  bundle_tutoring: 'package',
+  bundle_ai: 'package',
 };
 
 /** Short marketing tagline shown under each module (default = sekolah). */
@@ -67,6 +75,12 @@ export const MODULE_TAGLINES: Record<string, string> = {
     'Generate materi + quiz + referensi · 20 generate / guru / bln.',
   ai_rpp:
     'Rencana pembelajaran otomatis · 15 RPP / guru / bln, bisa dinaikkan.',
+  // Bundle taglines — shown when a package is the tenant's active row
+  // in ManageModulesView. Kept generic; the seat-breakdown sub-line
+  // already carries the exact bundle rate × seat count.
+  bundle_complete: 'Paket lengkap sekolah — semua modul inti dalam satu langganan hemat.',
+  bundle_tutoring: 'Paket bimbel — operasional sesi, peserta, dan tagihan dalam satu langganan.',
+  bundle_ai: 'Paket AI — semua modul kecerdasan buatan dalam satu langganan.',
 };
 
 /**
