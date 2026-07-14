@@ -16,6 +16,7 @@ export interface TeacherListParams {
   class_id?: string | null;
   gender?: 'male' | 'female' | null;
   employment_status?: string | null;
+  activity_status?: 'active' | 'inactive' | null;
   show_all?: boolean;
   academic_year_id?: string | null;
 }
@@ -62,6 +63,7 @@ export const TeacherService = {
         ...(params.employment_status
           ? { employment_status: params.employment_status }
           : {}),
+        ...(params.activity_status ? { activity_status: params.activity_status } : {}),
         ...(params.show_all ? { show_all: 1 } : {}),
         ...(params.academic_year_id ? { academic_year_id: params.academic_year_id } : {}),
       },

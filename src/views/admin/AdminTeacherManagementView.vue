@@ -82,13 +82,13 @@ const filters = reactive<{
   class_id: string | null;
   gender: 'male' | 'female' | null;
   employment_status: string | null;
-  show_all: boolean;
+  activity_status: 'active' | 'inactive' | null;
 }>({
   role: null,
   class_id: null,
   gender: null,
   employment_status: null,
-  show_all: false,
+  activity_status: null,
 });
 const selectedIds = ref<Set<string>>(new Set());
 
@@ -137,6 +137,7 @@ const showRolePicker = ref(false);
 const showClassPicker = ref(false);
 const showGenderPicker = ref(false);
 const showEmploymentPicker = ref(false);
+const showActivityPicker = ref(false);
 
 const state = computed<AsyncState<Teacher[]>>(() => {
   if (isLoading.value && teachers.value.length === 0) return { status: 'loading' };
@@ -164,6 +165,10 @@ const employmentOptions = computed<FacetOption[]>(() =>
     label: es.label,
   })),
 );
+const activityOptions = computed<FacetOption[]>(() => [
+  { key: 'active', label: $t('admin.teachers.activityActive') },
+  { key: 'inactive', label: $t('admin.teachers.activityInactive') },
+]);
 
 // ── Chip display values ────────────────────────────────────────────
 const roleChipValue = computed(() => {
@@ -189,6 +194,12 @@ const employmentChipValue = computed(() => {
       ?.label ?? '—'
   );
 });
+const activityStatusChipValue = computed(() => {
+  if (!filters.activity_status) return $t('admin.shared.allFilter');
+  return filters.activity_status === 'active'
+    ? $t('admin.teachers.activityActive')
+    : $t('admin.teachers.activityInactive');
+});
 
 const activeFilterCount = computed(() => {
   let n = 0;
@@ -196,7 +207,7 @@ const activeFilterCount = computed(() => {
   if (filters.class_id) n++;
   if (filters.gender) n++;
   if (filters.employment_status) n++;
-  if (filters.show_all) n++;
+  if (filters.activity_status) n++;
   return n;
 });
 
@@ -212,7 +223,7 @@ async function reload(page = 1) {
       class_id: filters.class_id ?? undefined,
       gender: filters.gender ?? undefined,
       employment_status: filters.employment_status ?? undefined,
-      show_all: filters.show_all || undefined,
+      activity_status: filters.activity_status ?? undefined,
       academic_year_id: ayStore.activeYearId || undefined,
     });
     teachers.value = res.items;
@@ -262,7 +273,7 @@ function clearAll() {
   filters.class_id = null;
   filters.gender = null;
   filters.employment_status = null;
-  filters.show_all = false;
+  filters.activity_status = null;
   search.value = '';
   reload(1);
 }
@@ -740,18 +751,13 @@ function statusFor(t: Teacher) {
         tone="green"
         @click="showEmploymentPicker = true"
       />
-      <button
-        type="button"
-        class="text-2xs font-bold px-3 py-1.5 rounded-lg border transition-colors"
-        :class="
-          filters.show_all
-            ? 'bg-role-admin text-white border-role-admin'
-            : 'bg-white text-slate-700 border-slate-200 hover:border-role-admin/40'
-        "
-        @click="filters.show_all = !filters.show_all; reload(1)"
-      >
-        {{ $t('admin.teachers.semuaGuru') }}
-      </button>
+      <AppFilterChip
+        icon-name="activity"
+        :label="$t('admin.teachers.filterActivity')"
+        :value="activityStatusChipValue"
+        tone="rose"
+        @click="showActivityPicker = true"
+      />
     </template>
 
     <ul class="space-y-2">
@@ -843,6 +849,14 @@ function statusFor(t: Teacher) {
     :selected="filters.employment_status ?? ''"
     @close="showEmploymentPicker = false"
     @apply="(v) => { filters.employment_status = v || null; reload(1); }"
+  />
+  <FilterFacetPickerModal
+    v-if="showActivityPicker"
+    :title="$t('admin.teachers.filterActivity')"
+    :options="activityOptions"
+    :selected="filters.activity_status ?? ''"
+    @close="showActivityPicker = false"
+    @apply="(v) => { filters.activity_status = (v as 'active' | 'inactive' | '') || null; reload(1); }"
   />
 
   <TeacherEditSheet
