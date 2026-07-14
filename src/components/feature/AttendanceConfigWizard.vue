@@ -21,7 +21,7 @@
   refresh its form without a second GET.
 -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, toRaw, watch } from 'vue';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import { useToast } from '@/composables/useToast';
 import type { TeacherAttendanceSettings } from '@/types/teacher-attendance';
@@ -51,7 +51,11 @@ const step = ref(0);
 const saving = ref(false);
 
 /** Working copy — mutated per step, committed via updateSettings in step 5. */
-const draft = ref<TeacherAttendanceSettings>(structuredClone(props.initial));
+// `props.initial` is the parent's reactive `form` object. structuredClone()
+// THROWS "DataCloneError" on a Vue reactive proxy, which aborted the wizard's
+// setup — so clicking "Panduan" mounted a component that immediately threw and
+// nothing rendered (the button looked dead). Clone the RAW target instead.
+const draft = ref<TeacherAttendanceSettings>(structuredClone(toRaw(props.initial)));
 
 // Method toggles drive `allowed_methods[]` on save. SELFIE stays in
 // the array (mobile parity — the backend enforces ≥1 method, selfie
@@ -77,7 +81,7 @@ const geofenceLngStr = ref(
 watch(
   () => props.initial,
   (v) => {
-    draft.value = structuredClone(v);
+    draft.value = structuredClone(toRaw(v));
     qrGateEnabled.value = (v.allowed_methods ?? ['SELFIE']).includes('QR_GATE');
     qrCardEnabled.value = (v.allowed_methods ?? ['SELFIE']).includes('QR_CARD');
     geofenceLatStr.value = v.geofence_lat != null ? String(v.geofence_lat) : '';
