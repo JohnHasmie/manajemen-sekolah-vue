@@ -230,6 +230,25 @@ export interface TeacherAttendanceTeacher {
 }
 
 /**
+ * Which personnel kind a teacher_attendances row belongs to. The one
+ * table holds BOTH teachers and staff behind this discriminator; the
+ * admin report (adminIndex) returns both. Teacher rows populate the
+ * `teacher` relation, staff rows populate `user`.
+ */
+export type TeacherAttendancePersonnelType = 'teacher' | 'staff';
+
+/**
+ * Minimal staff identity embedded in a `personnel_type='staff'` row.
+ * Mirrors the API `user` relation (no employee_number — staff aren't
+ * in the teachers table).
+ */
+export interface TeacherAttendanceUser {
+  id: string;
+  name: string;
+  email: string | null;
+}
+
+/**
  * One teacher-attendance row (TeacherAttendanceResource). Returned by
  * check-in/out, config.state.record, history items, and admin list items.
  */
@@ -281,8 +300,17 @@ export interface TeacherAttendanceRecord {
   methods_used: TeacherAttendanceMethods | null;
   notes: string | null;
 
-  /** Only present in the admin list (whenLoaded). */
+  /**
+   * Personnel discriminator on the admin report rows (adminIndex).
+   * Absent on the teacher-facing history/config responses — treat a
+   * missing value as 'teacher' (the historical default).
+   */
+  personnel_type?: TeacherAttendancePersonnelType;
+
+  /** Present on teacher rows (whenLoaded('teacher')). Null for staff. */
   teacher?: TeacherAttendanceTeacher;
+  /** Present on staff rows (whenLoaded('user')). Null for teachers. */
+  user?: TeacherAttendanceUser;
 
   created_at: string;
   updated_at: string;
@@ -382,6 +410,13 @@ export interface TeacherAttendanceHistoryFilters {
   page?: number;
 }
 
+/**
+ * Personnel-type narrowing for the admin report. `all` (or omitted)
+ * returns teachers + staff; the other two narrow to one kind. Mirrors
+ * the backend `personnel_type` query param.
+ */
+export type TeacherAttendancePersonnelFilter = 'all' | 'teacher' | 'staff';
+
 /** Filters for the admin report list. */
 export interface TeacherAttendanceAdminFilters {
   date?: string;
@@ -390,8 +425,46 @@ export interface TeacherAttendanceAdminFilters {
   /** Accepts a Teacher ID OR User ID; server resolves school-scoped. */
   teacher_id?: string;
   status?: TeacherAttendanceStatus;
+  /** teacher | staff | all — narrows the unified personnel report. */
+  personnel_type?: TeacherAttendancePersonnelFilter;
   per_page?: number;
   page?: number;
+}
+
+/**
+ * Resolve the display name for a personnel attendance row. The
+ * teacher_attendances table carries BOTH teachers and staff behind
+ * `personnel_type`; teacher rows populate the `teacher` relation, staff
+ * rows populate `user`. Reading only `teacher.name` left staff rows
+ * blank on the admin report (MTs Muhammadiyah). Prefer the relation
+ * matching the discriminator, fall back to the other, then to '-'.
+ */
+export function teacherAttendancePersonName(
+  row: Pick<TeacherAttendanceRecord, 'personnel_type' | 'teacher' | 'user'>,
+): string {
+  const teacherName = row.teacher?.name?.trim() || '';
+  const userName = row.user?.name?.trim() || '';
+  if (row.personnel_type === 'staff') return userName || teacherName || '-';
+  return teacherName || userName || '-';
+}
+
+/**
+ * Employee number sub-line for a personnel row. Only teachers carry a
+ * NIP (employee_number); staff have none, so this returns null for them
+ * and the caller renders nothing.
+ */
+export function teacherAttendanceEmployeeNumber(
+  row: Pick<TeacherAttendanceRecord, 'teacher'>,
+): string | null {
+  const nip = row.teacher?.employee_number?.trim();
+  return nip ? nip : null;
+}
+
+/** Indonesian chip label for the personnel discriminator (Guru / Staf). */
+export function teacherAttendancePersonnelLabel(
+  type: TeacherAttendancePersonnelType | null | undefined,
+): string {
+  return type === 'staff' ? 'Staf' : 'Guru';
 }
 
 /** Indonesian label for the MASUK pill (derived from the dominant status). */

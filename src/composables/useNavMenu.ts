@@ -148,19 +148,21 @@ const ADMIN_NAV: NavSection[] = [
     ],
   },
   // ── KEHADIRAN — modules: attendance_class · attendance_gate ·
-  //    attendance_staff. Wave 7 splits the former single "Kehadiran"
-  //    pile into three legible buckets so the daily student flow, the
-  //    staff/teacher report, and the QR gate/card OPS screens no longer
-  //    read as undifferentiated siblings. Same routes, same abilities,
-  //    same icons — pure regrouping. Each section gates independently
-  //    (applyGates drops any that empties out), so a tenant that only
-  //    owns attendance_staff sees just "Kehadiran Staff", etc. The QR
-  //    config still lives in the Pengaturan hub (Wave 2). ───────────
+  //    attendance_staff. Two legible buckets: the attendance-RECORD
+  //    views (Kehadiran Siswa + Kehadiran Pegawai) under one "Kehadiran"
+  //    header, and the QR gate/card OPS screens under "Gerbang & Kartu".
+  //    Same routes, same abilities, same icons — pure regrouping. Each
+  //    section gates independently (applyGates drops any item — and any
+  //    section that empties out), so a tenant that only owns
+  //    attendance_staff sees just "Kehadiran Pegawai". The QR config
+  //    still lives in the Pengaturan hub (Wave 2). ───────────
   {
-    // Absensi Siswa — attendance_class owners get view+submit;
-    // attendance_gate-only owners get view_own+export. Either is
-    // enough to justify the menu entry.
-    titleKey: 'nav.sectionAttendanceStudent',
+    // Both attendance-record views share one header. Item gates are
+    // independent: attendance_class owners get view+submit (or, for
+    // gate-only owners, view_own+export) → Kehadiran Siswa;
+    // attendance_staff owners → Kehadiran Pegawai. The section shows
+    // whenever EITHER item survives gating.
+    titleKey: 'nav.sectionAttendance',
     items: [
       {
         to: '/admin/student-attendance',
@@ -168,12 +170,6 @@ const ADMIN_NAV: NavSection[] = [
         icon: 'check-square',
         abilityAny: ['attendance.student.view', 'attendance.student.export'],
       },
-    ],
-  },
-  {
-    // Kehadiran Staff — the personnel (teacher/staff) attendance report.
-    titleKey: 'nav.sectionAttendanceStaff',
-    items: [
       {
         to: '/admin/teacher-attendance/report',
         labelKey: 'nav.teacherAttendance',

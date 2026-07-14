@@ -22,10 +22,14 @@ import { useToast } from '@/composables/useToast';
 import type {
   TeacherAttendanceAdminSummary,
   TeacherAttendanceListResult,
+  TeacherAttendancePersonnelFilter,
   TeacherAttendanceRecord,
   TeacherAttendanceSummaryRow,
 } from '@/types/teacher-attendance';
 import {
+  teacherAttendanceEmployeeNumber,
+  teacherAttendancePersonName,
+  teacherAttendancePersonnelLabel,
   teacherAttendanceStatusColumnLabel,
   teacherAttendanceStatusLabel,
 } from '@/types/teacher-attendance';
@@ -67,6 +71,20 @@ const filterStartDate = ref(ayStart());
 const filterEndDate = ref(ayEnd());
 const filterTeacher = ref('');
 const userTouchedDates = ref(false);
+/**
+ * Personnel-type narrowing for the unified report: Semua | Guru | Staf.
+ * Defaults to 'all' (both teachers and staff). Drives the detail per-row
+ * list + its CSV export; the segmented control refetches on change.
+ */
+const filterPersonnelType = ref<TeacherAttendancePersonnelFilter>('all');
+const personnelTypeOptions: {
+  value: TeacherAttendancePersonnelFilter;
+  label: string;
+}[] = [
+  { value: 'all', label: 'Semua' },
+  { value: 'teacher', label: 'Guru' },
+  { value: 'staff', label: 'Staf' },
+];
 /** Detail-only filters (the rekap ignores these). */
 const filterDate = ref('');
 const filterStatus = ref<'' | 'present' | 'late'>('');
@@ -152,6 +170,7 @@ async function exportReportDetailCsv() {
     end_date: filterEndDate.value || undefined,
     teacher_id: filterTeacher.value.trim() || undefined,
     status: filterStatus.value || undefined,
+    personnel_type: filterPersonnelType.value,
     per_page: MAX_ROWS,
     page: 1,
   };
@@ -174,7 +193,8 @@ async function exportReportDetailCsv() {
     return;
   }
   const header = [
-    'Nama Guru',
+    'Nama Pegawai',
+    'Tipe',
     'NIP',
     'Tanggal',
     'Status',
@@ -183,8 +203,11 @@ async function exportReportDetailCsv() {
   ];
   const body = items.map((r) =>
     [
-      r.teacher?.name ?? '-',
-      r.teacher?.employee_number ?? '',
+      // Name-by-personnel_type: teacher rows read teacher.name, staff
+      // rows read user.name — staff used to export blank.
+      teacherAttendancePersonName(r),
+      teacherAttendancePersonnelLabel(r.personnel_type),
+      teacherAttendanceEmployeeNumber(r) ?? '',
       // date arrives as YYYY-MM-DD; render dd/mm/yyyy so Excel doesn't
       // misinterpret + so it matches the local admin conventions.
       r.date ? fmtDateShort(r.date) : '-',
@@ -207,7 +230,7 @@ async function exportReportDetailCsv() {
   const range = bulk?.meta
     ? `${bulk.meta.start_date ?? bulk.meta.date ?? 'range'}_${bulk.meta.end_date ?? ''}`.replace(/_$/, '')
     : new Date().toISOString().slice(0, 10);
-  a.download = `presensi_guru_detail_${range}.csv`;
+  a.download = `presensi_pegawai_detail_${range}.csv`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -320,6 +343,7 @@ async function loadReport() {
       end_date: filterEndDate.value || undefined,
       teacher_id: filterTeacher.value.trim() || undefined,
       status: filterStatus.value || undefined,
+      personnel_type: filterPersonnelType.value,
       per_page: reportPerPage,
       page: reportPage.value,
     });
@@ -342,6 +366,20 @@ function applyReportFilters() {
   if (showDetail.value) loadReport();
 }
 
+/**
+ * Switch the personnel-type narrowing (Semua/Guru/Staf). The filter
+ * applies to the detail per-row list (the unified teacher+staff report),
+ * so we surface that list when it was collapsed and refetch it. The
+ * per-teacher rekap above is unaffected by this narrowing.
+ */
+function selectPersonnelType(type: TeacherAttendancePersonnelFilter) {
+  if (filterPersonnelType.value === type) return;
+  filterPersonnelType.value = type;
+  reportPage.value = 1;
+  if (!showDetail.value) showDetail.value = true;
+  loadReport();
+}
+
 function clearReportFilters() {
   filterDate.value = '';
   // Reset to the active AY bounds (not empty) — "Kosongkan" should
@@ -353,6 +391,7 @@ function clearReportFilters() {
   userTouchedDates.value = false;
   filterTeacher.value = '';
   filterStatus.value = '';
+  filterPersonnelType.value = 'all';
   reportPage.value = 1;
   loadSummary();
   if (showDetail.value) loadReport();
@@ -491,7 +530,7 @@ function fmtTime(iso?: string | null): string {
           <label
             class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
           >
-            ID Guru
+            ID Pegawai
           </label>
           <input
             v-model="filterTeacher"
@@ -500,11 +539,46 @@ function fmtTime(iso?: string | null): string {
             class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 w-44 focus:outline-none focus:ring-2 focus:ring-role-admin/30"
           />
         </div>
+        <!--
+          Tipe pegawai — narrows the unified report to Guru / Staf / all.
+          Segmented buttons refetch the detail per-row list on click (the
+          rekap above is per-guru and unaffected).
+        -->
+        <div>
+          <label
+            class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
+          >
+            Tipe
+          </label>
+          <div
+            class="inline-flex gap-0.5 p-0.5 rounded-lg bg-slate-100 border border-slate-200"
+          >
+            <button
+              v-for="opt in personnelTypeOptions"
+              :key="opt.value"
+              type="button"
+              class="px-2.5 py-1 rounded-md text-[11.5px] font-bold transition-all"
+              :class="
+                filterPersonnelType === opt.value
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              "
+              @click="selectPersonnelType(opt.value)"
+            >
+              {{ opt.label }}
+            </button>
+          </div>
+        </div>
         <Button variant="primary" size="sm" @click="applyReportFilters">
           <NavIcon name="filter" :size="13" />Terapkan
         </Button>
         <Button
-          v-if="filterStartDate || filterEndDate || filterTeacher"
+          v-if="
+            filterStartDate ||
+            filterEndDate ||
+            filterTeacher ||
+            filterPersonnelType !== 'all'
+          "
           variant="ghost"
           size="sm"
           @click="clearReportFilters"
@@ -672,7 +746,8 @@ function fmtTime(iso?: string | null): string {
               Detail per Baris
             </h3>
             <p class="text-2xs text-slate-500 mt-0.5">
-              Catatan presensi harian guru (masuk/pulang, lokasi, foto).
+              Catatan presensi harian pegawai (guru & staf): masuk/pulang,
+              lokasi, foto.
             </p>
           </div>
           <NavIcon
@@ -746,7 +821,7 @@ function fmtTime(iso?: string | null): string {
       <AsyncView
         :state="reportState"
         empty-title="Belum ada data presensi"
-        empty-description="Tidak ada catatan presensi guru untuk filter ini."
+        empty-description="Tidak ada catatan presensi pegawai untuk filter ini."
         @retry="loadReport"
       >
         <template #default>
@@ -759,7 +834,8 @@ function fmtTime(iso?: string | null): string {
                   <tr
                     class="bg-slate-50 text-3xs font-bold text-slate-400 uppercase tracking-widest"
                   >
-                    <th class="px-4 py-2.5">Guru</th>
+                    <th class="px-4 py-2.5">Nama</th>
+                    <th class="px-4 py-2.5">Tipe</th>
                     <th class="px-4 py-2.5">Tanggal</th>
                     <th class="px-4 py-2.5">Status</th>
                     <th class="px-4 py-2.5">Masuk</th>
@@ -776,14 +852,26 @@ function fmtTime(iso?: string | null): string {
                   >
                     <td class="px-4 py-2.5">
                       <p class="font-bold text-slate-900">
-                        {{ r.teacher?.name ?? '-' }}
+                        {{ teacherAttendancePersonName(r) }}
                       </p>
                       <p
-                        v-if="r.teacher?.employee_number"
+                        v-if="teacherAttendanceEmployeeNumber(r)"
                         class="text-[10.5px] text-slate-400"
                       >
-                        {{ r.teacher.employee_number }}
+                        {{ teacherAttendanceEmployeeNumber(r) }}
                       </p>
+                    </td>
+                    <td class="px-4 py-2.5">
+                      <span
+                        class="text-3xs font-bold px-1.5 py-0.5 rounded-full"
+                        :class="
+                          r.personnel_type === 'staff'
+                            ? 'bg-violet-100 text-violet-700'
+                            : 'bg-sky-100 text-sky-700'
+                        "
+                      >
+                        {{ teacherAttendancePersonnelLabel(r.personnel_type) }}
+                      </span>
                     </td>
                     <td class="px-4 py-2.5 text-slate-600">
                       {{ fmtDate(r.date) }}

@@ -650,6 +650,9 @@ export const TeacherAttendanceService = {
       if (filters.end_date) params.end_date = filters.end_date;
       if (filters.teacher_id) params.teacher_id = filters.teacher_id;
       if (filters.status) params.status = filters.status;
+      // Unified teacher+staff report: teacher | staff | all. Sent as-is
+      // (including 'all', which the backend treats the same as omitted).
+      if (filters.personnel_type) params.personnel_type = filters.personnel_type;
       if (filters.per_page) params.per_page = filters.per_page;
       if (filters.page) params.page = filters.page;
       const res = await api.get(Endpoints.report, { params });
