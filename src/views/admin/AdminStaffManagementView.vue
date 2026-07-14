@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, shallowRef } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
 import { StaffService } from '@/services/staff.service';
 import { RbacService } from '@/services/rbac.service';
 import { AdminDataExcelService, type ImportDetailRow } from '@/services/admin-data-excel.service';
@@ -30,6 +31,14 @@ import ResetPasswordModal from '@/components/feature/ResetPasswordModal.vue';
 const { t: $t } = useI18n();
 const primaryColor = useRoleHex();
 const authStore = useAuthStore();
+const route = useRoute();
+const router = useRouter();
+
+// When opened from the RBAC "Tambah anggota" picker's "+ Tambah staf baru"
+// shortcut (?create=1&role_id=&role_label=), pre-select that role so the new
+// staff lands in it automatically.
+const createRoleId = ref<number | null>(null);
+const createRoleLabel = ref('');
 
 const staff = shallowRef<StaffMember[]>([]);
 const roles = shallowRef<StaffRole[]>([]);
@@ -116,9 +125,46 @@ async function loadRoles() {
   } catch {}
 }
 
+// Roles offered in the create form — the loaded list, plus a synthetic entry
+// for a deep-linked role that hasn't loaded yet (so the dropdown can show it
+// immediately without waiting on loadRoles).
+const formRoles = computed<StaffRole[]>(() => {
+  const list = roles.value;
+  const id = createRoleId.value;
+  if (id == null || list.some((r) => r.id === id)) return list;
+  return [
+    { id, key: '', label: createRoleLabel.value || `Role #${id}`, role_type: '' },
+    ...list,
+  ];
+});
+
+function openCreate() {
+  createRoleId.value = null;
+  createRoleLabel.value = '';
+  editTarget.value = null;
+}
+
+function closeSheet() {
+  editTarget.value = undefined;
+  createRoleId.value = null;
+  createRoleLabel.value = '';
+}
+
 onMounted(() => {
   reload();
   loadRoles();
+
+  // Deep-link from the RBAC picker: open the create form pre-scoped to a role.
+  if (route.query.create === '1') {
+    const rid = Number(route.query.role_id);
+    if (Number.isFinite(rid) && rid > 0) {
+      createRoleId.value = rid;
+      createRoleLabel.value = String(route.query.role_label ?? '');
+    }
+    editTarget.value = null; // open the create sheet
+    // Strip the query so a refresh / back-nav doesn't reopen the form.
+    router.replace({ query: {} });
+  }
 });
 
 function onSearch(q: string) { search.value = q; reload(1); }
@@ -312,7 +358,7 @@ const staffDeleteImpact = computed<string[]>(() => [ $t('admin.staff.deleteImpac
     :fab-label="$t('admin.staff.addFab')"
     @search="onSearch"
     @clear-all-filters="clearAllFilters"
-    @add-click="editTarget = null"
+    @add-click="openCreate"
     @retry="reload()"
   >
     <template #header-actions>
@@ -393,9 +439,10 @@ const staffDeleteImpact = computed<string[]>(() => [ $t('admin.staff.deleteImpac
   <StaffEditSheet
     v-if="editTarget !== undefined"
     :staff="editTarget"
-    :roles="roles"
+    :roles="formRoles"
+    :initial-role-id="createRoleId"
     :is-saving="isSaving"
-    @close="editTarget = undefined"
+    @close="closeSheet"
     @save="handleSave"
   />
 

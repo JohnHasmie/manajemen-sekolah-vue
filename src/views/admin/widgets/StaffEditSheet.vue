@@ -26,6 +26,12 @@ const props = defineProps<{
   /** Assignable RBAC roles for the "Akses" picker (create mode). */
   roles: StaffRole[];
   isSaving: boolean;
+  /**
+   * Pre-selected role in create mode — used when this form is opened from
+   * the RBAC "Tambah anggota" picker's "+ Tambah staf baru" shortcut, so
+   * the new staff lands in that role automatically.
+   */
+  initialRoleId?: number | null;
 }>();
 
 const emit = defineEmits<{
@@ -41,7 +47,9 @@ const name = ref(props.staff?.name ?? '');
 const email = ref(props.staff?.email ?? '');
 const position = ref(props.staff?.position ?? '');
 const phone = ref(props.staff?.phone ?? '');
-const roleId = ref<number | null>(props.staff?.roles?.[0]?.id ?? null);
+const roleId = ref<number | null>(
+  props.staff?.roles?.[0]?.id ?? props.initialRoleId ?? null,
+);
 const employeeNumber = ref(props.staff?.employee_number ?? '');
 const gender = ref<string | null>(props.staff?.gender ?? null);
 const address = ref(props.staff?.address ?? '');

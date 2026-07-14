@@ -10,11 +10,13 @@
  */
 import { computed, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
 
 import MemberPickerRow from '@/components/feature/rbac/MemberPickerRow.vue';
 import MemberAvatar from '@/components/feature/rbac/MemberAvatar.vue';
 import AssignConfirmationModal from '@/components/feature/rbac/AssignConfirmationModal.vue';
 import { useRbacStore } from '@/stores/rbac';
+import { useMe } from '@/composables/useMe';
 
 const props = defineProps<{
   open: boolean;
@@ -31,6 +33,8 @@ const emit = defineEmits<{
 }>();
 
 const rbac = useRbacStore();
+const router = useRouter();
+const { can } = useMe();
 const {
   pickerQuery,
   pickerResults,
@@ -38,6 +42,23 @@ const {
   pickerLoading,
   pickerTotal,
 } = storeToRefs(rbac);
+
+// "+ Tambah staf baru" shortcut — jumps to Data Staf's create form with this
+// role pre-selected, for people who aren't in the system yet. Only shown to
+// admins who can actually manage staff (the Data Staf page needs it too).
+const canCreateStaff = computed(() => can('school.staff.manage'));
+
+function createNewStaff() {
+  emit('close');
+  void router.push({
+    name: 'admin.staff',
+    query: {
+      create: '1',
+      role_id: String(props.roleId),
+      role_label: props.roleLabel,
+    },
+  });
+}
 
 const confirmOpen = ref(false);
 const submitting = ref(false);
@@ -125,6 +146,22 @@ const canSubmit = computed(() => pickerSelected.value.length > 0);
           autofocus
         />
       </div>
+
+      <button
+        v-if="canCreateStaff"
+        type="button"
+        class="amm__newstaff"
+        @click="createNewStaff"
+      >
+        <span class="amm__newstaff-plus" aria-hidden="true">＋</span>
+        <span class="amm__newstaff-body">
+          <span class="amm__newstaff-title">Tambah staf baru</span>
+          <span class="amm__newstaff-sub">
+            Orang belum ada di sistem → buat &amp; beri role ini
+          </span>
+        </span>
+        <span class="amm__newstaff-go" aria-hidden="true">›</span>
+      </button>
 
       <div v-if="pickerSelected.length" class="amm__chips">
         <span class="amm__chips-label">DIPILIH · {{ pickerSelected.length }}</span>
@@ -270,6 +307,56 @@ const canSubmit = computed(() => pickerSelected.value.length > 0);
   font-size: 13px;
   font-weight: 500;
   color: #0f172a;
+}
+.amm__newstaff {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 24px 0;
+  padding: 11px 14px;
+  background: #ffffff;
+  border: 1.5px dashed #fcd9a1;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  width: calc(100% - 48px);
+}
+.amm__newstaff:hover {
+  background: #fffbeb;
+  border-color: #f59e0b;
+}
+.amm__newstaff-plus {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 18px;
+  font-weight: 700;
+}
+.amm__newstaff-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.amm__newstaff-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #12203b;
+}
+.amm__newstaff-sub {
+  font-size: 11px;
+  color: #7688a4;
+}
+.amm__newstaff-go {
+  color: #94a3b8;
+  font-size: 18px;
+  flex: 0 0 auto;
 }
 .amm__chips {
   margin: 16px 24px 0;
