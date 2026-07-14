@@ -137,12 +137,42 @@ const isExpired = computed(() => {
   if (!a.expires_at) return false;
   return Date.parse(a.expires_at) < Date.now();
 });
+
+// Priority tier drives the coloured left rail. A pinned row overrides to gold
+// so the "disematkan" ones stand out at the top of the list.
+const tier = computed<'penting' | 'acara' | 'umum'>(() => {
+  const a = props.announcement;
+  if (a.priority === 'high' || a.priority === 'urgent') return 'penting';
+  if (a.type === 'event' || a.event_at || a.category === 'acara') return 'acara';
+  return 'umum';
+});
+const railClass = computed(() => {
+  if (props.announcement.is_pinned) return 'bg-amber-500';
+  return { penting: 'bg-red-500', acara: 'bg-violet-500', umum: 'bg-sky-400' }[
+    tier.value
+  ];
+});
+
+// Event countdown pill — "Hari ini" / "Besok" / "N hari lagi".
+const countdown = computed(() => {
+  const iso = props.announcement.event_at;
+  if (!iso) return '';
+  const ev = new Date(iso);
+  if (Number.isNaN(ev.getTime())) return '';
+  const day = (d: Date) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((day(ev) - day(new Date())) / 86400000);
+  if (days < 0) return t('announcements.eventOngoing');
+  if (days === 0) return t('announcements.eventToday');
+  if (days === 1) return t('announcements.eventTomorrow');
+  return t('announcements.eventInDays', { n: days });
+});
 </script>
 
 <template>
   <button
     type="button"
-    class="w-full text-left rounded-2xl border transition-all p-3.5 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+    class="relative overflow-hidden w-full text-left rounded-2xl border transition-all p-3.5 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
     :class="[
       isSelected
         ? 'border-brand-cobalt bg-brand-cobalt/5'
@@ -153,6 +183,11 @@ const isExpired = computed(() => {
     @click="$emit('tap', announcement)"
     @contextmenu.prevent="$emit('longPress', announcement)"
   >
+    <span
+      class="absolute inset-y-0 left-0 w-1"
+      :class="railClass"
+      aria-hidden="true"
+    ></span>
     <div class="flex items-start gap-3">
       <!-- Unread dot (parent only) / pin marker (admin) -->
       <div class="flex flex-col items-center gap-2 pt-1 flex-shrink-0">
@@ -179,6 +214,13 @@ const isExpired = computed(() => {
             :class="[categoryStyle.bg, categoryStyle.text]"
           >
             {{ categoryStyle.label }}
+          </span>
+          <span
+            v-if="countdown"
+            class="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 inline-flex items-center gap-1"
+          >
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+            {{ countdown }}
           </span>
           <span
             v-if="audienceLabel"
