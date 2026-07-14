@@ -3511,7 +3511,12 @@
     "validUntil": "Berlaku s/d {date}",
     "defaultAuthor": "Sekolah",
     "untitled": "(Tanpa judul)",
-    "goToSlide": "Buka pengumuman {n}"
+    "goToSlide": "Buka pengumuman {n}",
+    "acknowledge": "Mengerti",
+    "eventToday": "Hari ini",
+    "eventTomorrow": "Besok",
+    "eventInDays": "{n} hari lagi",
+    "eventOngoing": "Berlangsung"
   },
   "superAdmin": {
     "platformName": "KamilEdu Platform",
