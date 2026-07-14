@@ -664,7 +664,7 @@ function fmtTime(iso?: string | null): string {
                 <tbody>
                   <tr
                     v-for="row in summaryRows"
-                    :key="row.teacher_id"
+                    :key="row.person_id"
                     class="border-t border-slate-100 text-[12.5px] hover:bg-slate-50"
                   >
                     <td class="px-4 py-2.5">
