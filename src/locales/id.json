@@ -3516,7 +3516,9 @@
     "eventToday": "Hari ini",
     "eventTomorrow": "Besok",
     "eventInDays": "{n} hari lagi",
-    "eventOngoing": "Berlangsung"
+    "eventOngoing": "Berlangsung",
+    "addToCalendar": "Tambah ke kalender",
+    "attachment": "Lampiran"
   },
   "superAdmin": {
     "platformName": "KamilEdu Platform",

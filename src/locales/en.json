@@ -3520,7 +3520,9 @@
     "eventToday": "Today",
     "eventTomorrow": "Tomorrow",
     "eventInDays": "in {n} days",
-    "eventOngoing": "Ongoing"
+    "eventOngoing": "Ongoing",
+    "addToCalendar": "Add to calendar",
+    "attachment": "Attachment"
   },
   "superAdmin": {
     "platformName": "KamilEdu Platform",
