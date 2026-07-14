@@ -3506,6 +3506,14 @@
     "audienceClass": "By class",
     "audienceStudent": "By student"
   },
+  "announcements": {
+    "pinnedLabel": "Pinned",
+    "readMore": "Read more",
+    "validUntil": "Until {date}",
+    "defaultAuthor": "School",
+    "untitled": "(Untitled)",
+    "goToSlide": "Go to announcement {n}"
+  },
   "superAdmin": {
     "platformName": "KamilEdu Platform",
     "kicker": "Platform Super Admin",

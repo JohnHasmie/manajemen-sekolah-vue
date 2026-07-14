@@ -85,6 +85,33 @@ export const AnnouncementService = {
   },
 
   /**
+   * `/announcements/pinned` — the pinned-announcement carousel feed
+   * surfaced at the top of every role's dashboard. Rows share the exact
+   * same shape as `list`, so each is run through `announcementFromJson`.
+   *
+   * Degrades SILENTLY to `[]` on ANY error. The endpoint 403s when the
+   * tenant doesn't own the `communication` module, and the carousel must
+   * never break or leave empty space on a dashboard.
+   */
+  async pinned(
+    params: { classId?: string; limit?: number } = {},
+  ): Promise<Announcement[]> {
+    try {
+      const res = await api.get('/announcements/pinned', {
+        params: {
+          ...(params.classId ? { class_id: params.classId } : {}),
+          limit: params.limit ?? 8,
+        },
+      });
+      return unwrapItems(res.data).map((r) =>
+        announcementFromJson(r as Record<string, unknown>),
+      );
+    } catch {
+      return [];
+    }
+  },
+
+  /**
    * `/announcement/filter-options` — drop-in for the admin filter
    * sheet. Backend ships `{priority_options, target_options,
    * status_options}` each with `{value, label}` rows.

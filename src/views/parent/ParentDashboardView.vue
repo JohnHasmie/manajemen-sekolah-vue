@@ -29,6 +29,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
 import { usePriorityInbox } from '@/composables/usePriorityInbox';
 import WelcomeBanner from '@/components/ui/WelcomeBanner.vue';
+import PinnedAnnouncementCarousel from '@/components/feature/PinnedAnnouncementCarousel.vue';
 
 type StatsPayload = Record<string, any>;
 type Slice = Record<string, any>;
@@ -287,6 +288,7 @@ watch(sliceKey, () => {
       message="Di sini Anda bisa melihat nilai, absensi, dan tagihan anak Anda. Rapor semester tersedia setelah sekolah menerbitkannya. Ada beberapa anak? Ganti anak lewat chip di bagian atas."
       cta-label="Mengerti"
     />
+    <PinnedAnnouncementCarousel viewer-role="parent" />
     <AsyncView
       :state="state"
       :empty-title="t('parent.dashboard.emptyTitle')"
