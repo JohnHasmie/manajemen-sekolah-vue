@@ -33,6 +33,7 @@ import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
 import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
 import WelcomeBanner from '@/components/ui/WelcomeBanner.vue';
+import PinnedAnnouncementCarousel from '@/components/feature/PinnedAnnouncementCarousel.vue';
 import { usePriorityInbox } from '@/composables/usePriorityInbox';
 
 type StatsPayload = Record<string, any>;
@@ -374,6 +375,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
       message="Presensi harian ada di menu Presensi. RPP dan Kegiatan Kelas ada di Akademik. Nilai siswa bisa Anda input di Buku Nilai. Semoga hari mengajar Anda menyenangkan!"
       cta-label="Mengerti"
     />
+    <PinnedAnnouncementCarousel viewer-role="teacher" />
     <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
       <template #default>
         <!-- Shared scaffold: fixed vertical rhythm + slot order across

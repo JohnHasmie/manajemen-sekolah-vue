@@ -3504,6 +3504,14 @@
     "audienceClass": "Per kelas",
     "audienceStudent": "Per siswa"
   },
+  "announcements": {
+    "pinnedLabel": "Disematkan",
+    "readMore": "Baca selengkapnya",
+    "validUntil": "Berlaku s/d {date}",
+    "defaultAuthor": "Sekolah",
+    "untitled": "(Tanpa judul)",
+    "goToSlide": "Buka pengumuman {n}"
+  },
   "superAdmin": {
     "platformName": "KamilEdu Platform",
     "kicker": "Platform Super Admin",
