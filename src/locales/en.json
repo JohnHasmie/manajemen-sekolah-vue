@@ -2752,7 +2752,11 @@
       "requiresAttention": "Requires Attention",
       "quickActions": "Quick Actions",
       "otherModules": "Other Modules",
-      "accessReportsAndTools": "Access reports, materials, and other tools"
+      "accessReportsAndTools": "Access reports, materials, and other tools",
+      "selfAttendance": {
+        "notCheckedInTitle": "You haven't checked in today",
+        "notCheckedInSubtitle": "Check in so your attendance is recorded."
+      }
     },
     "schedule": {
       "teaching": "Teaching",
