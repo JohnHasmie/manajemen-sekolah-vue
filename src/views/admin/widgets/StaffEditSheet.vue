@@ -42,6 +42,9 @@ const email = ref(props.staff?.email ?? '');
 const position = ref(props.staff?.position ?? '');
 const phone = ref(props.staff?.phone ?? '');
 const roleId = ref<number | null>(props.staff?.roles?.[0]?.id ?? null);
+const employeeNumber = ref(props.staff?.employee_number ?? '');
+const gender = ref<string | null>(props.staff?.gender ?? null);
+const address = ref(props.staff?.address ?? '');
 
 type PwMode = 'generate' | 'manual';
 const pwMode = ref<PwMode>('generate');
@@ -75,6 +78,9 @@ function submit() {
       name: name.value.trim(),
       position: position.value.trim(),
       phone: phone.value.trim() || null,
+      employee_number: employeeNumber.value.trim() || null,
+      gender: gender.value || null,
+      address: address.value.trim() || null,
     });
     return;
   }
@@ -84,6 +90,9 @@ function submit() {
     email: email.value.trim(),
     position: position.value.trim(),
     phone: phone.value.trim() || null,
+    employee_number: employeeNumber.value.trim() || null,
+    gender: gender.value || null,
+    address: address.value.trim() || null,
     role_id: roleId.value ?? undefined,
     // Omit password entirely in generate mode → the server mints one.
     ...(pwMode.value === 'manual' ? { password: password.value.trim() } : {}),
@@ -106,6 +115,12 @@ const labelClass = 'block text-2xs font-bold text-slate-600 mb-1';
       <div>
         <label :class="labelClass">{{ $t('admin.staff.fieldName') }}</label>
         <input v-model="name" :class="inputClass" :placeholder="$t('admin.staff.fieldNamePlaceholder')" />
+      </div>
+
+      <!-- NIP Pegawai -->
+      <div>
+        <label :class="labelClass">NIP Pegawai <span class="text-slate-400 font-medium">({{ $t('admin.staff.optional') }})</span></label>
+        <input v-model="employeeNumber" :class="inputClass" placeholder="Masukkan NIP Pegawai" />
       </div>
 
       <!-- Email (create only; read-only in edit) -->
@@ -140,6 +155,44 @@ const labelClass = 'block text-2xs font-bold text-slate-600 mb-1';
           </label>
           <input v-model="phone" :class="inputClass" placeholder="08…" />
         </div>
+      </div>
+
+      <!-- Jenis Kelamin -->
+      <div>
+        <label :class="labelClass">Jenis Kelamin <span class="text-slate-400 font-medium">({{ $t('admin.staff.optional') }})</span></label>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            class="flex-1 rounded-xl border py-2.5 text-center text-[13px] font-bold transition-colors"
+            :class="gender === 'male'
+              ? 'border-role-admin bg-role-admin text-white'
+              : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'"
+            @click="gender = 'male'"
+          >
+            Laki-laki
+          </button>
+          <button
+            type="button"
+            class="flex-1 rounded-xl border py-2.5 text-center text-[13px] font-bold transition-colors"
+            :class="gender === 'female'
+              ? 'border-role-admin bg-role-admin text-white'
+              : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'"
+            @click="gender = 'female'"
+          >
+            Perempuan
+          </button>
+        </div>
+      </div>
+
+      <!-- Alamat -->
+      <div>
+        <label :class="labelClass">Alamat Lengkap <span class="text-slate-400 font-medium">({{ $t('admin.staff.optional') }})</span></label>
+        <textarea
+          v-model="address"
+          rows="2"
+          :class="[inputClass, 'resize-none']"
+          placeholder="Masukkan alamat lengkap"
+        ></textarea>
       </div>
 
       <!-- Akses (role) — create only -->

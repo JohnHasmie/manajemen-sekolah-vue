@@ -213,6 +213,7 @@ async function reload(page = 1) {
       gender: filters.gender ?? undefined,
       employment_status: filters.employment_status ?? undefined,
       show_all: filters.show_all || undefined,
+      academic_year_id: ayStore.activeYearId || undefined,
     });
     teachers.value = res.items;
     pagination.value = res.pagination ?? null;
@@ -660,7 +661,7 @@ function onImportDone(res: {
 function topMeta(t: Teacher): string {
   const role = t.role === 'wali_kelas'
     ? $t('role.wali_kelas')
-    : $t('role.guru');
+    : $t('role.teacher');
   const nip = t.employee_number;
   return nip ? `${role} · ${$t('admin.teachers.rowPrefix', { nip })}` : role;
 }

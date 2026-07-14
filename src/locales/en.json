@@ -338,10 +338,10 @@
     }
   },
   "role": {
-    "admin": "ADMIN",
-    "teacher": "TEACHER",
+    "admin": "Admin",
+    "teacher": "Teacher",
     "wali_kelas": "Homeroom",
-    "parent": "PARENT",
+    "parent": "Parent",
     "student": "Student",
     "staff": "Staff",
     "super_admin": "Super Admin"

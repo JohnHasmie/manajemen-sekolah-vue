@@ -95,6 +95,7 @@ function onSearchInput(e: Event) {
           :value="search"
           type="search"
           :placeholder="searchPlaceholder"
+          autocomplete="off"
           class="bg-transparent border-0 outline-none flex-1 text-[12px] font-medium text-slate-900 placeholder:text-slate-400"
           @input="onSearchInput"
         />

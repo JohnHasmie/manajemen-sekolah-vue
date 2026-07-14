@@ -88,9 +88,9 @@ const PRIORITY_OPTIONS = computed<{ key: PriorityFilter; label: string }[]>(() =
 ]);
 const AUDIENCE_OPTIONS = computed<{ key: AudienceFilter; label: string }[]>(() => [
   { key: 'all', label: t('admin.announcement.allAudiences') },
-  { key: 'teacher', label: t('role.guru') },
-  { key: 'student', label: t('role.siswa') },
-  { key: 'parent', label: t('role.wali') },
+  { key: 'teacher', label: t('role.teacher') },
+  { key: 'student', label: t('role.student') },
+  { key: 'parent', label: t('role.parent') },
 ]);
 
 const activeStatus = computed(

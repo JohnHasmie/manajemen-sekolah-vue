@@ -16,11 +16,24 @@ export interface StaffListParams {
   page?: number;
   per_page?: number;
   search?: string;
+  role_id?: number | string;
+  gender?: string;
+  employment_status?: string;
+  position?: string;
 }
 
 export interface StaffListResult {
   items: StaffMember[];
   pagination?: Pagination;
+  kpis?: {
+    total: number;
+    with_access: number;
+    unique_positions: number;
+    female: number;
+  };
+  facets?: {
+    positions: string[];
+  };
 }
 
 export const StaffService = {
@@ -30,6 +43,10 @@ export const StaffService = {
         page: params.page ?? 1,
         per_page: params.per_page ?? 20,
         ...(params.search ? { search: params.search } : {}),
+        ...(params.role_id ? { role_id: params.role_id } : {}),
+        ...(params.gender ? { gender: params.gender } : {}),
+        ...(params.employment_status ? { employment_status: params.employment_status } : {}),
+        ...(params.position ? { position: params.position } : {}),
       },
     });
     const body = (res.data ?? {}) as {
@@ -39,6 +56,8 @@ export const StaffService = {
         last_page?: number;
         per_page?: number;
         total?: number;
+        kpis?: StaffListResult['kpis'];
+        facets?: StaffListResult['facets'];
       };
     };
     const meta = body.meta ?? {};
@@ -53,7 +72,7 @@ export const StaffService = {
             has_next_page: meta.current_page < (meta.last_page ?? 1),
           }
         : undefined;
-    return { items, pagination };
+    return { items, pagination, kpis: meta.kpis, facets: meta.facets };
   },
 
   async create(payload: StaffCreatePayload): Promise<StaffCreateResult> {
@@ -70,4 +89,10 @@ export const StaffService = {
   async remove(id: string): Promise<void> {
     await api.delete(`/staff/${id}`);
   },
+
+  async resetPassword(id: string, password?: string): Promise<{ success: boolean; password?: string; was_generated: boolean }> {
+    const res = await api.post(`/staff/${id}/reset-password`, { password });
+    return res.data;
+  },
 };
+

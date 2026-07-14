@@ -22,6 +22,7 @@ export interface StaffMember {
   email: string | null;
   gender: string | null;
   employment_status: string | null;
+  address: string | null;
   joined_at: string | null;
   roles: StaffRole[];
   created_at?: string | null;
@@ -37,6 +38,7 @@ export interface StaffCreatePayload {
   employee_number?: string | null;
   gender?: string | null;
   employment_status?: string | null;
+  address?: string | null;
   joined_at?: string | null;
   /** RBAC role to grant in the same step (optional). */
   role_id?: number | null;

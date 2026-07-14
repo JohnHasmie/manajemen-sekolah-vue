@@ -335,7 +335,7 @@
     }
   },
   "role": {
-    "admin": "ADMIN",
+    "admin": "Admin",
     "teacher": "Guru",
     "wali_kelas": "Wali Kelas",
     "parent": "Wali murid",

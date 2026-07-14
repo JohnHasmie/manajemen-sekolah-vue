@@ -34,7 +34,7 @@ const router = useRouter();
 const { t } = useI18n();
 
 interface Tab {
-  key: 'summary' | 'report' | 'detail';
+  key: 'summary' | 'report';
   label: string;
   icon: string;
   route: string;
@@ -43,10 +43,9 @@ interface Tab {
 const TABS = computed<Tab[]>(() => [
   { key: 'summary', label: t('hubs.studentAttendance.tab_summary'), icon: 'bar-chart', route: 'admin.student-attendance' },
   { key: 'report', label: t('hubs.studentAttendance.tab_report'), icon: 'file-text', route: 'admin.student-attendance.report' },
-  { key: 'detail', label: t('hubs.studentAttendance.tab_detail'), icon: 'list', route: 'admin.student-attendance.detail' },
 ]);
 
-const activeTab = computed<Tab['key']>(() => {
+const activeTab = computed<'summary' | 'report' | 'detail'>(() => {
   const name = String(route.name ?? '');
   if (name.includes('report')) return 'report';
   if (name.includes('detail')) return 'detail';
@@ -61,8 +60,9 @@ function goTab(tab: Tab) {
 
 <template>
   <div class="space-y-md pb-12">
-    <!-- Tab nav -->
+    <!-- Tab nav (hidden on detail view) -->
     <nav
+      v-if="activeTab !== 'detail'"
       class="bg-white border border-slate-200 rounded-2xl p-1.5 flex items-center gap-1 overflow-x-auto"
       role="tablist"
     >

@@ -153,7 +153,7 @@ async function handleConfirm() {
                   v-for="r in s.roles" :key="r"
                   class="px-1.5 py-0.5 rounded-full bg-brand-cobalt/10 text-brand-cobalt text-[8px] font-black tracking-[0.3px] uppercase"
                 >
-                  {{ r === 'administrator' ? t('role.admin') : r === 'teacher' ? t('role.guru') : r === 'parent' ? t('role.wali') : r.toUpperCase() }}
+                  {{ r === 'administrator' ? t('role.admin') : r === 'teacher' ? t('role.teacher') : r === 'parent' ? t('role.parent') : r.toUpperCase() }}
                 </span>
               </div>
             </div>

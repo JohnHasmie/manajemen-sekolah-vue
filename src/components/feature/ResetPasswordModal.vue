@@ -123,6 +123,7 @@ async function copyPassword() {
             :type="showPassword ? 'text' : 'password'"
             v-model="password"
             placeholder="Minimal 6 karakter"
+            autocomplete="new-password"
             class="w-full rounded-xl border border-slate-300 px-3 py-2.5 pr-10 text-[13px] focus:border-role-admin focus:outline-none focus:ring-1 focus:ring-role-admin"
             @keyup.enter="submit"
           />

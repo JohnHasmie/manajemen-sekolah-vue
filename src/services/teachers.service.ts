@@ -17,6 +17,7 @@ export interface TeacherListParams {
   gender?: 'male' | 'female' | null;
   employment_status?: string | null;
   show_all?: boolean;
+  academic_year_id?: string | null;
 }
 
 export interface TeacherFilterOptions {
@@ -48,22 +49,21 @@ export const TeacherService = {
       params: {
         // Cache-buster: the admin teacher list is re-fetched right after
         // add/edit, but the browser was serving the previous (cached) GET
-        // response, so the list looked stale until a manual hard-reload.
-        // A unique param per call forces a fresh response. Backend ignores
-        // unknown query params.
-        _t: Date.now(),
+        // because of pagination cache middleware.
+        _: new Date().getTime(),
         page: params.page ?? 1,
         per_page: params.per_page ?? 10,
         ...(params.search ? { search: params.search } : {}),
         ...(params.role ? { role: params.role } : {}),
         ...(params.subject_id ? { subject_id: params.subject_id } : {}),
         ...(params.homeroom ? { homeroom: params.homeroom } : {}),
-        ...(params.class_id ? { class_id: params.class_id } : {}),
+        ...(params.class_id ? { homeroom_class_id: params.class_id } : {}),
         ...(params.gender ? { gender: params.gender } : {}),
         ...(params.employment_status
           ? { employment_status: params.employment_status }
           : {}),
         ...(params.show_all ? { show_all: 1 } : {}),
+        ...(params.academic_year_id ? { academic_year_id: params.academic_year_id } : {}),
       },
     });
     const { data, pagination } = unwrap(res.data);

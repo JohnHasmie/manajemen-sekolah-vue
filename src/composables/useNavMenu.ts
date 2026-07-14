@@ -333,7 +333,7 @@ const TEACHER_NAV: NavSection[] = [
     ],
   },
   {
-    titleKey: 'role.guru',
+    titleKey: 'role.teacher',
     items: [
       {
         to: '/teacher/attendance',
@@ -493,7 +493,7 @@ const WALI_KELAS_NAV: NavSection[] = [
     //    the homeroom section. These are the TEACHER_NAV items NOT
     //    promoted above; schedule/materials/lesson-plans are general
     //    teaching tools, not homeroom-specific. ─────────────────────
-    titleKey: 'role.guru',
+    titleKey: 'role.teacher',
     items: [
       {
         to: '/teacher/schedule',
@@ -543,7 +543,7 @@ const PARENT_NAV: NavSection[] = [
     ],
   },
   {
-    titleKey: 'role.wali',
+    titleKey: 'role.parent',
     items: [
       {
         to: '/parent/attendance',
