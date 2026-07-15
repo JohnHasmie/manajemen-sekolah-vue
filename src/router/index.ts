@@ -342,6 +342,10 @@ const routes: RouteRecordRaw[] = [
     path: '/subscribe/addon',
     name: 'subscribe-addon',
     component: SubscribeAddonView,
+    meta: {
+      role: 'admin' satisfies Role,
+      abilityAny: ['school.settings.view', 'school.settings.manage'],
+    },
   },
   {
     // Admin self-service module management. Path matches the upgrade_url
@@ -349,9 +353,27 @@ const routes: RouteRecordRaw[] = [
     // clicking "upgrade" on a locked AI feature lands here directly.
     // Requires a signed-in user + an active subscription for the scoped
     // tenant; empty-state renders when neither is true.
+    //
+    // Gated identically to its in-shell twin (admin.settings.modules) —
+    // same component, so an ungated mount here let ANY authenticated
+    // member read the tenant's plan, amount, seat counts and module
+    // pricing via GET /billing/modules/mine (tenant-scoped, but not
+    // admin-scoped). Writes were never exposed: the billing Actions
+    // enforce userHoldsAdminRole server-side.
+    //
+    // NOTE: the 402 upgrade_url above is NOT admin-only — a teacher
+    // (role.teacher AI routes) or a parent (/recommendations/parent-*,
+    // auth-only) can trip it, and mobile's dio_client pops the
+    // ModuleUpsellSheet for any role. Those users now bounce to their
+    // role home here. Tracked separately — needs a "hubungi admin
+    // sekolahmu" message instead of a silent redirect.
     path: '/subscribe/manage-modules',
     name: 'subscribe-manage-modules',
     component: ManageModulesView,
+    meta: {
+      role: 'admin' satisfies Role,
+      abilityAny: ['school.settings.view', 'school.settings.manage'],
+    },
   },
   {
     path: '/register-demo/wizard',
