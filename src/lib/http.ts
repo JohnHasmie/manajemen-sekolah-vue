@@ -4,6 +4,8 @@
  * Mirrors `lib/core/network/dio_client.dart` from the Flutter app:
  *   - Bearer token injected from auth store
  *   - X-School-ID header on every request
+ *   - X-Active-Role header (when a role is selected) so the backend can
+ *     scope abilities to the role the user is currently acting as
  *   - 30s timeout
  *   - 401 → clear auth + redirect to /login (matches Flutter's global
  *     error handler in `lib/core/network/error_interceptor.dart`)
@@ -98,6 +100,12 @@ function buildClient(
     const token = storage.get<string>(StorageKeys.token);
     const schoolId = storage.get<string>(StorageKeys.schoolId);
     const locale = storage.get<string>(StorageKeys.language) ?? 'id';
+    // Read the ACTIVE role fresh on every request (not captured once at
+    // module load) so a "pindah peran" switch takes effect on the very
+    // next call — the auth store writes StorageKeys.role synchronously
+    // in `selectRole` before it fires switchRole, so even that request
+    // already carries the new role.
+    const activeRole = storage.get<string>(StorageKeys.role);
 
     if (token) {
       config.headers.set('Authorization', `Bearer ${token}`);
@@ -118,6 +126,29 @@ function buildClient(
       // AuthInterceptor.
       config.headers.set('X-School-ID', schoolId);
       config.headers.set('X-Tenant-ID', schoolId);
+    }
+
+    // Tell the backend which role the user is CURRENTLY acting as, so
+    // its AbilityResolver can scope abilities to that one role instead
+    // of unioning every active role the user holds at this school.
+    //
+    // Why: a user with parent+teacher+staff roles was getting teacher's
+    // `academic.*` abilities while acting as *staff*, which wrongly lit
+    // up Jadwal/Nilai/Rekap/RPP/Kegiatan/Riwayat-Presensi in the staff
+    // sidebar.
+    //
+    // Scope note: this ONLY narrows abilities server-side. The user's
+    // full roles + schools list is unaffected, so the role switcher
+    // ("pindah peran") still sees every role.
+    //
+    // Omitted entirely when there's no active role (unauthenticated, or
+    // the picker hasn't run yet) — the backend then falls back to the
+    // legacy union behaviour. Never send an empty string.
+    //
+    // Sent as stored; the backend canonicalises aliases (guru→teacher,
+    // wali→parent) itself.
+    if (activeRole) {
+      config.headers.set('X-Active-Role', activeRole);
     }
     // Tell the backend which locale to render server-side strings in
     // (priority-inbox labels/subtitles, validator messages, mail
