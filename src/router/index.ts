@@ -1131,14 +1131,14 @@ const routes: RouteRecordRaw[] = [
         path: 'parent/classes',
         name: 'parent.classes',
         component: ParentClassHubListView,
-        meta: { role: 'parent' satisfies Role },
+        meta: { role: 'parent' satisfies Role, ability: 'activity.view' },
       },
       {
         path: 'parent/classes/:id',
         name: 'parent.classes.detail',
         component: ParentClassHubView,
         props: true,
-        meta: { role: 'parent' satisfies Role },
+        meta: { role: 'parent' satisfies Role, ability: 'activity.view' },
       },
       {
         path: 'parent/inbox',
