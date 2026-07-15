@@ -134,3 +134,30 @@ export function sanitizeRichHtml(input: string | null | undefined): string {
     ALLOW_DATA_ATTR: false,
   });
 }
+
+const HTMLISH = /<\/?(p|br|ul|ol|li|h[1-6]|strong|em|b|i|u|s|a|blockquote|pre|code|div|span)\b/i;
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/**
+ * Render an announcement body to safe HTML, bridging the two content eras:
+ *  - New rich content (from the Quill editor) is already HTML → sanitize it.
+ *  - Legacy plain-text announcements have real newlines and WhatsApp-style
+ *    `*bold*`; escape them, upgrade `*x*` → <strong>, newlines → <br>, so their
+ *    line breaks survive (a raw v-html would collapse them) without ever
+ *    trusting unescaped input.
+ */
+export function renderAnnouncementHtml(input: string | null | undefined): string {
+  const raw = (input ?? '').trim();
+  if (!raw) return '';
+  if (HTMLISH.test(raw)) return sanitizeRichHtml(raw);
+  const upgraded = escapeHtml(raw)
+    .replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>')
+    .replace(/\r?\n/g, '<br>');
+  return sanitizeRichHtml(upgraded);
+}

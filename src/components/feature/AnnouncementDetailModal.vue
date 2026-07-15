@@ -17,6 +17,7 @@ import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import { canonicalRole, ROLE_ADMIN, ROLE_TEACHER } from '@/utils/role';
+import { renderAnnouncementHtml } from '@/lib/sanitize-html';
 
 const props = withDefaults(
   defineProps<{
@@ -152,6 +153,11 @@ const showReadMetrics = computed(
     props.announcement.total_recipients > 0,
 );
 
+// Rich body → sanitized HTML (new Quill content) or upgraded legacy plain text.
+const renderedBody = computed(() =>
+  renderAnnouncementHtml(props.announcement.body),
+);
+
 onMounted(() => {
   if (props.autoMarkRead && props.announcement.is_read === false) {
     AnnouncementService.markAsRead(props.announcement.id);
@@ -239,12 +245,14 @@ onMounted(() => {
       </a>
     </div>
 
-    <!-- Body -->
+    <!-- Body — rich HTML (Quill), sanitized. Legacy plain-text bodies keep
+         their line breaks + WhatsApp *bold* via renderAnnouncementHtml. -->
     <article
-      class="mt-4 text-[13px] text-slate-700 leading-relaxed whitespace-pre-wrap"
-    >
-      {{ announcement.body || '(Tanpa isi)' }}
-    </article>
+      v-if="renderedBody"
+      class="rpp-prose mt-4 text-[14.5px] text-slate-700 leading-relaxed"
+      v-html="renderedBody"
+    ></article>
+    <p v-else class="mt-4 text-[13px] italic text-slate-400">(Tanpa isi)</p>
 
     <!-- Attachment -->
     <a

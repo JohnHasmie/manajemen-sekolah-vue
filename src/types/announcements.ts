@@ -57,7 +57,10 @@ export type AnnouncementAudience = 'all' | 'role' | 'class' | 'student';
 export interface Announcement {
   id: string;
   title: string;
+  /** Full content — rich HTML (new) or legacy plain text. Detail view only. */
   body: string;
+  /** Plain-text snippet (backend `excerpt`) for list cards / previews. */
+  excerpt: string;
   /** Canonical column: `announcements.type`. */
   type: AnnouncementCategory;
   /** Back-compat alias for `type`. New code should read `type`. */
@@ -186,6 +189,7 @@ export function announcementFromJson(raw: Record<string, unknown>): Announcement
     id: String(r.id ?? ''),
     title: String(r.title ?? r.judul ?? ''),
     body: String(r.body ?? r.content ?? r.isi ?? ''),
+    excerpt: String(r.excerpt ?? ''),
     type,
     category: type,
     priority,

@@ -38,6 +38,7 @@ import AnnouncementCard from '@/components/feature/AnnouncementCard.vue';
 import AnnouncementDetailModal from '@/components/feature/AnnouncementDetailModal.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Modal from '@/components/ui/Modal.vue';
+import AppRichTextEditor from '@/components/ui/AppRichTextEditor.vue';
 import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Toast from '@/components/ui/Toast.vue';
@@ -803,13 +804,15 @@ function pickAudience(k: AudienceFilter) {
 
         <div>
           <label class="block text-sm font-medium text-tutoring-text-hi mb-1">{{ t('common.content') }}</label>
-          <textarea
-            v-model="form.body"
-            rows="6"
+          <!-- Rich text (Quill → HTML). Same engine as the mobile
+               flutter_quill editor, so content round-trips between the two
+               platforms. -->
+          <AppRichTextEditor
+            v-model:html="form.body"
             :placeholder="t('admin.announcement.contentPlaceholder')"
-            class="w-full rounded-xl border border-tutoring-border px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none resize-none"
-            :disabled="isSaving"
-          ></textarea>
+            :readonly="isSaving"
+            :min-height="200"
+          />
         </div>
 
         <!-- Acara (opsional) — tanggal kejadian + lokasi. Sejajar dengan

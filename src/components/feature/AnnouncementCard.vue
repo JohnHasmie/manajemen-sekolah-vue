@@ -83,6 +83,14 @@ const CATEGORY_PALETTE: Record<
   },
 };
 
+// Plain-text preview: prefer the backend excerpt; for legacy cached rows with
+// no excerpt, strip any tags from body defensively so no HTML leaks into the card.
+const bodyPreview = computed(() => {
+  const a = props.announcement;
+  if (a.excerpt) return a.excerpt;
+  return (a.body ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+});
+
 const categoryStyle = computed(() => {
   const entry =
     CATEGORY_PALETTE[props.announcement.category] ??
@@ -270,12 +278,13 @@ const countdown = computed(() => {
           {{ announcement.title || '(Tanpa judul)' }}
         </p>
 
-        <!-- Body preview — clamp 2 lines -->
+        <!-- Body preview — plain-text excerpt (content is now rich HTML, so
+             never render body raw here). Falls back to body for legacy rows. -->
         <p
-          v-if="announcement.body"
+          v-if="bodyPreview"
           class="text-[12px] text-slate-600 mt-1 line-clamp-2 leading-relaxed"
         >
-          {{ announcement.body }}
+          {{ bodyPreview }}
         </p>
 
         <!-- Read counter (admin / teacher) -->

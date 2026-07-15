@@ -78,7 +78,14 @@ const badgeLabel = computed(() => {
   }
 });
 
-const snippet = computed(() => current.value?.body?.trim() || '');
+// Content is now rich HTML — show the plain-text excerpt, or strip tags from
+// body as a fallback, so no markup leaks into the dashboard carousel.
+const snippet = computed(() => {
+  const a = current.value;
+  if (!a) return '';
+  if (a.excerpt) return a.excerpt;
+  return (a.body ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+});
 
 const timeLabel = computed(() => {
   const a = current.value;
