@@ -1,24 +1,47 @@
 <!--
-  ScheduleFormModal.vue — admin add/edit schedule sheet (Mockup Frame D).
+  ScheduleFormModal.vue — admin add/edit schedule (Sprint 2 Pola B).
 
-  Cascading dropdowns:
-    Teacher → Subject (filtered to teacher's mapel) → Class → Day(s) →
-    Lesson hour.
+  Two modes rendered inside a single <Modal>:
+    1. `setup`   — <ScheduleSetupChecklist> when GET /schedule/prereq-check
+                   reports the school hasn't seeded lesson-hours/classes/
+                   teachers. Only shown on CREATE — editing an existing
+                   row already implies the prereqs pass.
+    2. `form`    — the reordered Pola B field grid:
+                     Kelas → Semester → Slot (Hari × Jam Ke-) →
+                     Guru (slot-filtered) → Mapel (guru-filtered) →
+                     Ruangan (free-text, remembered per-class).
 
-  Live conflict probe: when teacher + class + days + lesson_hour are
-  all set, hits `GET /teaching-schedule/conflicts` and surfaces
-  conflicts inline. The Save button still enables — the server enforces
-  with a 409 + Paksa Simpan flow on submit.
+  Guru is the key change vs the old Pola A form: instead of picking a
+  teacher first and letting them collide with an existing slot, we ask
+  the backend for ONLY the teachers that are free at (class × day ×
+  lesson_hour) and sort the picked class's wali kelas to the top with
+  a "WALI KELAS" badge. Backend contract: MR A of Sprint 2.
 
-  Multi-day on create (one POST per day, server fans out via
-  `days_ids[] + lesson_hour_id`). Single-day on edit (uses PUT against
-  the picked slot).
+  "Buat + Tambah Lagi" button — after save it keeps the modal open,
+  resets Guru + Mapel (Kelas + Semester + Slot stay), and auto-advances
+  the Jam Ke- dropdown to the next hour on the same day. This turns the
+  common "fill 6 slots in one class in a row" flow into a one-form
+  session instead of one drawer per row.
+
+  The inline Quick-Add mapel panel from MR!866 is preserved beneath the
+  Mapel dropdown so a picked teacher with no assigned mapel can still
+  be used without leaving the drawer.
+
+  Ruangan is remembered per class in localStorage
+  (`schedule_last_room_${classId}`) so switching kelas rehydrates the
+  right last-used room instead of dragging a stale value across.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { ScheduleService } from '@/services/schedule.service';
+import {
+  ScheduleService,
+  type AvailableTeacher,
+  type LessonHourSeedPreset,
+  type LessonHourSeedResponse,
+  type SchedulePrereqCheck,
+} from '@/services/schedule.service';
 import { LessonHourService } from '@/services/lesson-hour.service';
 import { SubjectService } from '@/services/subjects.service';
 import { api } from '@/lib/http';
@@ -29,10 +52,12 @@ import type {
   ScheduleRow,
 } from '@/types/schedule';
 import { useAcademicYearStore } from '@/stores/academic-year';
+import { storage } from '@/lib/storage';
 import { semesterLabel, subjectLabel } from '@/lib/labels';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import ScheduleSetupChecklist from '@/components/feature/ScheduleSetupChecklist.vue';
 
 const props = defineProps<{
   /** Pass a row to edit; omit/null to create. */
@@ -54,6 +79,16 @@ const router = useRouter();
 
 const isEdit = computed(() => Boolean(props.row?.id));
 
+// ── Mode gate ───────────────────────────────────────────────────────
+// `checking` — initial prereq-check in flight (create only)
+// `setup`    — one or more prereqs missing → show checklist
+// `form`     — either edit mode or a green-lit create
+type Mode = 'checking' | 'setup' | 'form';
+const mode = ref<Mode>(isEdit.value ? 'form' : 'checking');
+const prereq = ref<SchedulePrereqCheck | null>(null);
+const isSeeding = ref(false);
+const setupError = ref<string | null>(null);
+
 // ── Form state ──────────────────────────────────────────────────────
 const teacherId = ref<string>(props.row?.teacher_id ?? '');
 const subjectId = ref<string>(props.row?.subject_id ?? '');
@@ -64,11 +99,12 @@ const semesterId = ref<string>(
 const academicYearId = ref<string | number>(
   props.row?.academic_year_id ?? ayStore.selectedYearId ?? '',
 );
-/** UUIDs of selected days. Multi for create, single for edit. */
-const selectedDayIds = ref<string[]>(
-  props.row?.day_id ? [props.row.day_id] : [],
-);
-/** UUID of the reference lesson_hour row (defines hour_number). */
+/** Pola B is single-day. UI drives one dayId at a time (paired with
+ *  lessonHourId for the "slot"). Multi-day fan-out has been dropped —
+ *  it clashed with the slot-filtered teacher dropdown, which is
+ *  scoped to one day × one hour. */
+const dayId = ref<string>(props.row?.day_id ?? '');
+/** UUID of the picked lesson_hour row (defines the JP slot). */
 const lessonHourId = ref<string>(
   props.row?.lesson_hour_days_id ?? '',
 );
@@ -82,24 +118,23 @@ const conflicts = ref<ScheduleConflict[]>([]);
 /** Occupied slots — existing schedules for the picked class/day/term.
  * Used to mark each lesson-hour option as "Terisi" + disable it. */
 const occupiedSlots = ref<ScheduleRow[]>([]);
+/** Slot-filtered teacher list (from /available-teachers). Populated
+ *  reactively whenever class + day + hour are all set. */
+const availableTeachers = ref<AvailableTeacher[]>([]);
+const isLoadingAvailableTeachers = ref(false);
+const availableTeachersError = ref<string | null>(null);
 /** True only when the teacher-subjects request errored (not when it
  * succeeded but returned an empty list). Mirrors Flutter: on error we
  * fall back to showing all subjects; on a genuine empty result we show
  * none so the picker is scoped strictly to the teacher's mapel. */
 const subjectsLoadFailed = ref(false);
 /** True only when the lesson-hours request errored. Same rationale as
- * `subjectsLoadFailed`: a genuine empty list means the school hasn't set
- * its Jam Pelajaran up yet (actionable — we point the admin at the
- * settings page), whereas a failed request means we simply don't know.
- * Telling an admin "belum diatur" after a network blip would be a lie. */
+ * `subjectsLoadFailed`. */
 const hoursLoadFailed = ref(false);
 
 const isLoadingSubjects = ref(false);
-// Starts true: the modal always loads hours on mount, and `onMounted`
-// awaits loadAllSubjects() first, so there is a real window before
-// loadLessonHours() even starts. Seeding this false would make the
-// "belum diatur" empty state flash on every open — including schools
-// that have hours — until the request resolves.
+// See legacy note: seeded true so the "belum diatur" empty state
+// doesn't flash on schools that have hours while the fetch resolves.
 const isLoadingHours = ref(true);
 const isProbingConflicts = ref(false);
 const isSaving = ref(false);
@@ -107,11 +142,9 @@ const err = ref<string | null>(null);
 const forceSave = ref(false);
 
 // ── Inline Quick-Add mapel state ────────────────────────────────────
-// When a picked teacher has no subjects, expose an inline expandable
-// panel so the admin can create + assign a mapel without leaving the
-// drawer (Sprint 1 pola A — see UX proposal 01/06). Emit the created
-// subject via `created` for callers; we also refresh the teacher's
-// subject list and auto-select the new one.
+// Preserved from MR!866 — when the picked teacher has no mapel we
+// expose an inline expandable panel so the admin can create + assign a
+// mapel without leaving the drawer.
 const quickAddOpen = ref(false);
 const quickAddName = ref('');
 const quickAddCode = ref('');
@@ -124,7 +157,6 @@ async function loadAllSubjects() {
     const res = await api.get('/subject', { params: { per_page: 200 } });
     const body = res.data;
     const list = Array.isArray(body?.data) ? body.data : Array.isArray(body) ? body : [];
-    // `code` distinguishes same-named subjects (Al Qur'an Hadis 7/8/9).
     allSubjects.value = list.map((s: any) => ({
       id: String(s.id),
       name: String(s.name ?? s.nama ?? ''),
@@ -144,11 +176,6 @@ async function loadSubjectsForTeacher(tId: string) {
   isLoadingSubjects.value = true;
   subjectsLoadFailed.value = false;
   try {
-    // Reuse SubjectService.listForTeacher — returns the teacher's own
-    // mapel (full {id,name} rows, not just IDs). scope='teaching' drops
-    // the parent-kelas homeroom-class curriculum, so picking a homeroom
-    // teacher lists only the subjects they actually teach (not every
-    // subject offered in their class).
     const list = await SubjectService.listForTeacher(tId, 'teaching');
     const ids = new Set(list.map((s) => s.id));
     teacherSubjects.value = list.map((s) => ({
@@ -156,10 +183,8 @@ async function loadSubjectsForTeacher(tId: string) {
       name: s.name,
       code: s.code ?? null,
     }));
-    // Clear subject if it's no longer in the teacher's set.
     if (subjectId.value && !ids.has(subjectId.value)) subjectId.value = '';
   } catch {
-    // On error only, fall back to all subjects (mirrors Flutter mixin).
     subjectsLoadFailed.value = true;
     teacherSubjects.value = [];
   } finally {
@@ -184,7 +209,7 @@ async function probeConflicts() {
   if (
     !teacherId.value ||
     !classId.value ||
-    selectedDayIds.value.length === 0 ||
+    !dayId.value ||
     !lessonHourId.value ||
     !semesterId.value ||
     !academicYearId.value
@@ -200,7 +225,7 @@ async function probeConflicts() {
       semester_id: semesterId.value,
       academic_year_id: academicYearId.value,
       lesson_hour_id: lessonHourId.value,
-      days_ids: selectedDayIds.value,
+      days_ids: [dayId.value],
       exclude_id: props.row?.id,
     });
   } catch {
@@ -212,28 +237,23 @@ async function probeConflicts() {
 
 /**
  * Fetch the slots already taken for the selected class on the selected
- * day (+ term / academic year). Mirrors Flutter's `fetchOccupiedSlots`:
- * each occupied row's lesson hour gets marked "Terisi" + disabled in the
+ * day (+ term / academic year). Mirrors the legacy behaviour: each
+ * occupied row's lesson hour gets marked "Terisi" + disabled in the
  * Jam Pelajaran picker so the admin can't double-book a slot.
  */
 async function fetchOccupiedSlots() {
-  if (
-    !classId.value ||
-    selectedDayIds.value.length === 0 ||
-    !semesterId.value
-  ) {
+  if (!classId.value || !dayId.value || !semesterId.value) {
     occupiedSlots.value = [];
     return;
   }
   try {
     const res = await ScheduleService.list({
       class_id: classId.value,
-      day_id: selectedDayIds.value[0],
+      day_id: dayId.value,
       semester_id: semesterId.value,
       academic_year_id: academicYearId.value || undefined,
       per_page: 100,
     });
-    // Exclude the row currently being edited — its own slot isn't "taken".
     occupiedSlots.value = props.row?.id
       ? res.items.filter((s) => s.id !== props.row?.id)
       : res.items;
@@ -242,16 +262,145 @@ async function fetchOccupiedSlots() {
   }
 }
 
+/**
+ * Slot-filtered teacher list. Only asked once the four inputs the
+ * backend needs are all set — otherwise the list stays cleared and the
+ * dropdown surfaces its "isi Kelas + Slot dulu" hint.
+ */
+async function loadAvailableTeachers() {
+  if (!classId.value || !dayId.value || !lessonHourId.value) {
+    availableTeachers.value = [];
+    availableTeachersError.value = null;
+    return;
+  }
+  isLoadingAvailableTeachers.value = true;
+  availableTeachersError.value = null;
+  try {
+    const list = await ScheduleService.getAvailableTeachers({
+      classId: classId.value,
+      dayId: dayId.value,
+      lessonHourId: lessonHourId.value,
+      semesterId: semesterId.value || undefined,
+      academicYearId: academicYearId.value || undefined,
+    });
+    // Sort wali kelas first, then subjects_count desc (more-versatile
+    // teachers surface earlier), then name.
+    list.sort((a, b) => {
+      if (a.is_wali_kelas_of_this_class !== b.is_wali_kelas_of_this_class) {
+        return a.is_wali_kelas_of_this_class ? -1 : 1;
+      }
+      if (a.subjects_count !== b.subjects_count) {
+        return b.subjects_count - a.subjects_count;
+      }
+      return a.name.localeCompare(b.name, 'id');
+    });
+    availableTeachers.value = list;
+    // If the previously-picked teacher is no longer in the free list
+    // (e.g. slot changed), clear the selection so the admin doesn't
+    // submit a stale pick that will re-conflict.
+    if (
+      teacherId.value &&
+      !list.some((tt) => tt.id === teacherId.value)
+    ) {
+      teacherId.value = '';
+      subjectId.value = '';
+    }
+  } catch (e) {
+    availableTeachersError.value = (e as Error).message;
+    availableTeachers.value = [];
+  } finally {
+    isLoadingAvailableTeachers.value = false;
+  }
+}
+
+// ── Setup-first gate ────────────────────────────────────────────────
+async function runPrereqCheck() {
+  mode.value = 'checking';
+  setupError.value = null;
+  try {
+    const p = await ScheduleService.checkPrereq();
+    prereq.value = p;
+    mode.value = p.ready ? 'form' : 'setup';
+  } catch {
+    // The service already fail-safes to `ready: true` on error, so
+    // we're unlikely to land here. If we do, let the form load.
+    mode.value = 'form';
+  }
+}
+
+async function onSeed(preset: LessonHourSeedPreset) {
+  isSeeding.value = true;
+  setupError.value = null;
+  try {
+    const res: LessonHourSeedResponse = await ScheduleService.seedLessonHours({
+      preset,
+      overwrite: false,
+    });
+    if (res.status === 'SUCCESS') {
+      toast.value = {
+        message: t('admin.schedule.setup.seededToast', { count: res.created }),
+        tone: 'success',
+      };
+    } else {
+      toast.value = {
+        message: t('admin.schedule.setup.seededSkippedToast'),
+        tone: 'success',
+      };
+    }
+    // Refresh the checklist so the "done" tick renders in place. Also
+    // refresh the local lessonHours cache so the Jam Ke- dropdown has
+    // options once the admin lands on the form.
+    await Promise.all([runPrereqCheck(), loadLessonHours()]);
+  } catch (e) {
+    setupError.value = (e as Error).message;
+  } finally {
+    isSeeding.value = false;
+  }
+}
+
+function onOpenTeachersFromSetup() {
+  emit('close');
+  void router.push({ name: 'admin.teachers' });
+}
+
+function onOpenClassesFromSetup() {
+  emit('close');
+  void router.push({ name: 'admin.classes' });
+}
+
+function onContinueFromSetup() {
+  // Prereq-check is the gate; the button is disabled unless ready.
+  mode.value = 'form';
+}
+
+// Local toast so seed feedback surfaces without needing the parent to
+// wire another prop through — we still bubble `saved` up like before.
+const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
+
+// ── Lifecycle ───────────────────────────────────────────────────────
 onMounted(async () => {
   await loadAllSubjects();
   await loadLessonHours();
   if (teacherId.value) await loadSubjectsForTeacher(teacherId.value);
   await fetchOccupiedSlots();
+
+  // Rehydrate last-used room for this class ONLY on create — on edit
+  // the row already has its own room value we mustn't overwrite.
+  if (!isEdit.value && classId.value && !room.value) {
+    room.value = readLastRoomForClass(classId.value);
+  }
+
+  if (isEdit.value) {
+    // Existing row implies the prereqs pass; skip the gate.
+    mode.value = 'form';
+  } else {
+    await runPrereqCheck();
+  }
 });
 
+// Teacher change: refresh their subject list + kill any stale
+// quick-add UI so we don't leak state onto a different teacher.
 watch(teacherId, async (v) => {
-  // Fold the panel + reset its inputs whenever the teacher changes so
-  // we don't leak "Simpan & pakai" state onto a different teacher.
   quickAddOpen.value = false;
   quickAddName.value = '';
   quickAddCode.value = '';
@@ -259,48 +408,45 @@ watch(teacherId, async (v) => {
   await loadSubjectsForTeacher(v);
 });
 
+// Re-hydrate last-used room whenever the picked class changes (create
+// only). If the new class has no memorised value we blank the field
+// rather than dragging the previous class's room across.
+watch(classId, (newId, oldId) => {
+  if (isEdit.value) return;
+  if (newId === oldId) return;
+  room.value = newId ? readLastRoomForClass(newId) : '';
+});
+
 // Re-fetch occupied slots whenever the class / day / term context changes.
 watch(
-  [classId, selectedDayIds, semesterId, academicYearId],
+  [classId, dayId, semesterId, academicYearId],
   () => void fetchOccupiedSlots(),
-  { deep: true },
+);
+
+// Re-fetch slot-filtered teachers whenever class + slot inputs change.
+watch(
+  [classId, dayId, lessonHourId, semesterId, academicYearId],
+  () => void loadAvailableTeachers(),
 );
 
 // Debounced conflict probe
 let probeTimer: ReturnType<typeof setTimeout> | null = null;
 watch(
-  [teacherId, classId, lessonHourId, selectedDayIds, semesterId, academicYearId],
+  [teacherId, classId, lessonHourId, dayId, semesterId, academicYearId],
   () => {
     if (probeTimer) clearTimeout(probeTimer);
     probeTimer = setTimeout(() => void probeConflicts(), 250);
   },
-  { deep: true },
 );
 
 // ── Derived ────────────────────────────────────────────────────────
-// Scope the mapel picker strictly to the selected teacher's subjects.
-// Only fall back to the full catalogue when the teacher-subjects request
-// errored — a successful-but-empty result means the teacher has no mapel,
-// so we show none (matching the Flutter behaviour).
 const subjectOptions = computed(() =>
   subjectsLoadFailed.value ? allSubjects.value : teacherSubjects.value,
 );
 
 const days = computed(() => props.filterOptions?.days ?? []);
-const teachers = computed(() => props.filterOptions?.teachers ?? []);
 const classes = computed(() => props.filterOptions?.classes ?? []);
 const semesters = computed(() => props.filterOptions?.semesters ?? []);
-
-function toggleDay(id: string) {
-  if (isEdit.value) {
-    selectedDayIds.value = [id]; // edit = single
-    return;
-  }
-  const set = new Set(selectedDayIds.value);
-  if (set.has(id)) set.delete(id);
-  else set.add(id);
-  selectedDayIds.value = Array.from(set);
-}
 
 const formValid = computed(
   () =>
@@ -309,7 +455,7 @@ const formValid = computed(
     classId.value &&
     semesterId.value &&
     academicYearId.value &&
-    selectedDayIds.value.length > 0 &&
+    dayId.value &&
     lessonHourId.value,
 );
 
@@ -321,7 +467,7 @@ const canSubmit = computed(() => {
 });
 
 // ── Save ───────────────────────────────────────────────────────────
-async function save() {
+async function save(opts: { continueAfter?: boolean } = {}) {
   if (!formValid.value) {
     err.value = 'Lengkapi semua kolom.';
     return;
@@ -334,27 +480,34 @@ async function save() {
         teacher_id: teacherId.value,
         subject_id: subjectId.value,
         class_id: classId.value,
-        days_ids: selectedDayIds.value,
+        days_ids: [dayId.value],
         lesson_hour_id: lessonHourId.value,
         semester_id: semesterId.value,
         academic_year_id: academicYearId.value,
         room: room.value || null,
       });
+      persistRoomForClass();
       emit('saved', [updated]);
+      emit('close');
     } else {
       const created = await ScheduleService.create({
         teacher_id: teacherId.value,
         subject_id: subjectId.value,
         class_id: classId.value,
-        days_ids: selectedDayIds.value,
+        days_ids: [dayId.value],
         lesson_hour_id: lessonHourId.value,
         semester_id: semesterId.value,
         academic_year_id: academicYearId.value,
         room: room.value || null,
       });
+      persistRoomForClass();
       emit('saved', created);
+      if (opts.continueAfter) {
+        advanceToNextSlotAndReset();
+      } else {
+        emit('close');
+      }
     }
-    emit('close');
   } catch (e) {
     err.value = (e as Error).message;
   } finally {
@@ -362,19 +515,83 @@ async function save() {
   }
 }
 
-// ── Quick-Add mapel ────────────────────────────────────────────────
-/** Human name of the selected teacher, used in the empty-state copy. */
+/**
+ * "Buat + Tambah Lagi" tail: preserve Kelas + Semester + Slot day,
+ * bump Jam Ke- to the next hour on the same day if one exists, and
+ * wipe Guru + Mapel so the admin picks fresh for the new slot. If
+ * we're already at the day's last hour we clear the hour instead and
+ * toast so the admin knows they've hit the end of that day.
+ */
+function advanceToNextSlotAndReset() {
+  const currentHour = filteredHours.value.find((h) => h.id === lessonHourId.value);
+  const nextHour = currentHour
+    ? filteredHours.value.find((h) => h.hour_number > currentHour.hour_number && !isHourOccupied(h))
+    : null;
+
+  // Reset teacher + subject regardless — the next slot needs its own
+  // slot-filtered teacher lookup.
+  teacherId.value = '';
+  subjectId.value = '';
+  availableTeachers.value = [];
+  conflicts.value = [];
+  forceSave.value = false;
+  err.value = null;
+
+  if (nextHour) {
+    lessonHourId.value = nextHour.id;
+    toast.value = {
+      message: t('admin.schedule.formB.createdToast'),
+      tone: 'success',
+    };
+  } else {
+    lessonHourId.value = '';
+    toast.value = {
+      message: t('admin.schedule.formB.createdToastLast'),
+      tone: 'success',
+    };
+  }
+}
+
+// ── Room memory (per-class localStorage) ────────────────────────────
+function roomStorageKey(cId: string): string {
+  return `schedule_last_room_${cId}`;
+}
+
+function readLastRoomForClass(cId: string): string {
+  try {
+    const v = storage.get<string>(roomStorageKey(cId));
+    return typeof v === 'string' ? v : '';
+  } catch {
+    return '';
+  }
+}
+
+function persistRoomForClass() {
+  if (!classId.value) return;
+  const value = room.value.trim();
+  if (value) {
+    storage.set(roomStorageKey(classId.value), value);
+  } else {
+    // Clearing the field also clears the memory so a subsequent open
+    // doesn't zombie-populate a room the admin deliberately blanked.
+    storage.remove(roomStorageKey(classId.value));
+  }
+}
+
+// ── Quick-Add mapel (from MR!866) ──────────────────────────────────
+/**
+ * The picked teacher's display name — pulled from availableTeachers
+ * first (that's the source of truth for Pola B), falling back to the
+ * hub's full teacher roster if the slot-filter is empty (e.g. edit
+ * mode restored a teacher who is themself the conflict).
+ */
 const selectedTeacherName = computed(() => {
-  const t = teachers.value.find((x) => x.id === teacherId.value);
-  return t?.name ?? '';
+  const fromAvail = availableTeachers.value.find((x) => x.id === teacherId.value);
+  if (fromAvail) return fromAvail.name;
+  const fromFilter = props.filterOptions?.teachers.find((x) => x.id === teacherId.value);
+  return fromFilter?.name ?? '';
 });
 
-/**
- * True when the picked teacher genuinely has no mapel assigned — the
- * only case where we surface the inline Quick-Add CTA. A load error
- * (subjectsLoadFailed) or an in-flight request are both excluded so we
- * don't offer the CTA when the empty list is a transient state.
- */
 const teacherHasNoSubjects = computed(
   () =>
     !!teacherId.value &&
@@ -397,10 +614,6 @@ async function submitQuickAdd() {
       code: quickAddCode.value.trim() || undefined,
       teacherId: teacherId.value,
     });
-    // Refresh the teacher's subject list from the server so the picker
-    // reflects every attach the backend just committed (not just the
-    // one we optimistically added). Fall back to a local push if the
-    // refresh fails so the newly-created row is still selectable.
     try {
       await loadSubjectsForTeacher(teacherId.value);
     } catch {
@@ -441,16 +654,10 @@ const groupedHours = computed(() => {
 });
 
 const filteredHours = computed(() => {
-  // If a day is selected, show only hours for that day (the reference
-  // hour determines hour_number — backend will map to each day's
-  // matching hour_number row).
-  if (selectedDayIds.value.length === 0) return lessonHours.value;
-  const first = selectedDayIds.value[0];
-  return groupedHours.value.get(first) ?? [];
+  if (!dayId.value) return [];
+  return groupedHours.value.get(dayId.value) ?? [];
 });
 
-/** Lesson-hour slot ids that are already booked for the picked class/day.
- * Mirrors Flutter's match on `lesson_hour_days_id`. */
 const occupiedHourIds = computed<Set<string>>(() => {
   const ids = new Set<string>();
   for (const s of occupiedSlots.value) {
@@ -463,65 +670,227 @@ function isHourOccupied(hour: LessonHour): boolean {
   return occupiedHourIds.value.has(hour.id);
 }
 
-/**
- * The school has no Jam Pelajaran at all. Without one the Jam Pelajaran
- * picker has nothing to offer, `lessonHourId` can never be set, and so
- * `formValid` can never become true — the Buat Jadwal button would sit
- * disabled forever with no stated reason. Surface the cause + the fix
- * instead of letting the admin conclude the feature is broken.
- */
 const hasNoLessonHours = computed(
   () => !isLoadingHours.value && !hoursLoadFailed.value && lessonHours.value.length === 0,
 );
 
-/**
- * Hours exist, but none for the day the admin picked (e.g. the school
- * set Senin–Jumat and they picked Sabtu). Same dead-end, narrower cause.
- */
 const dayHasNoLessonHours = computed(
   () =>
     !isLoadingHours.value &&
     !hoursLoadFailed.value &&
     lessonHours.value.length > 0 &&
-    selectedDayIds.value.length > 0 &&
+    !!dayId.value &&
     filteredHours.value.length === 0,
 );
 
-/** Leave the modal behind — the fix lives on the settings page. */
 function goToLessonHourSettings() {
   emit('close');
   void router.push({ name: 'admin.schedule.lesson-hours' });
 }
+
+// ── Modal shell ────────────────────────────────────────────────────
+const modalTitle = computed(() => {
+  if (mode.value === 'setup' || mode.value === 'checking') {
+    return t('admin.schedule.setup.modalTitle');
+  }
+  return isEdit.value
+    ? t('admin.schedule.formB.editTitle')
+    : t('admin.schedule.formB.createTitle');
+});
+
+const modalSubtitle = computed(() => {
+  if (mode.value === 'setup' || mode.value === 'checking') {
+    return t('admin.schedule.setup.modalSubtitle');
+  }
+  return isEdit.value
+    ? t('admin.schedule.formB.editSubtitle')
+    : t('admin.schedule.formB.createSubtitle');
+});
+
+const teacherPickerLocked = computed(
+  () => !classId.value || !dayId.value || !lessonHourId.value,
+);
 </script>
 
 <template>
   <Modal
-    :title="isEdit ? 'Edit Jadwal' : 'Tambah Jadwal'"
-    :subtitle="
-      isEdit
-        ? 'Perubahan langsung diterapkan ke jadwal pekan ini.'
-        : 'Pilih guru, mapel, kelas, hari, lalu jam pelajaran.'
-    "
+    :title="modalTitle"
+    :subtitle="modalSubtitle"
     size="lg"
     @close="emit('close')"
   >
-    <div class="space-y-3">
-      <!-- Teacher -->
-      <div>
-        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Guru</label>
-        <select
-          v-model="teacherId"
-          class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
-        >
-          <option value="">— pilih guru —</option>
-          <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.name }}</option>
-        </select>
+    <!-- ── Checking prereqs ────────────────────────────────────── -->
+    <div v-if="mode === 'checking'" class="py-8 flex flex-col items-center text-center gap-3">
+      <NavIcon name="loader" :size="18" class="animate-spin text-slate-400" />
+      <p class="text-2xs text-slate-500">
+        {{ t('admin.schedule.setup.checking') }}
+      </p>
+    </div>
+
+    <!-- ── Setup checklist ────────────────────────────────────── -->
+    <ScheduleSetupChecklist
+      v-else-if="mode === 'setup' && prereq"
+      :prereq="prereq"
+      :is-checking="false"
+      :is-seeding="isSeeding"
+      :error="setupError"
+      @seed="onSeed"
+      @open-teachers="onOpenTeachersFromSetup"
+      @open-classes="onOpenClassesFromSetup"
+      @continue="onContinueFromSetup"
+      @close="emit('close')"
+    />
+
+    <!-- ── Pola B reordered form ─────────────────────────────── -->
+    <div v-else class="space-y-3">
+      <!-- Kelas + Semester -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
+            {{ t('admin.schedule.formB.classLabel') }}
+          </label>
+          <select
+            v-model="classId"
+            class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
+          >
+            <option value="">{{ t('admin.schedule.formB.classPlaceholder') }}</option>
+            <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
+            {{ t('admin.schedule.formB.semesterLabel') }}
+          </label>
+          <select
+            v-model="semesterId"
+            class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
+          >
+            <option value="">{{ t('admin.schedule.formB.semesterPlaceholder') }}</option>
+            <option v-for="s in semesters" :key="s.id" :value="s.id">{{ semesterLabel(s.name) }}</option>
+          </select>
+        </div>
       </div>
 
-      <!-- Subject (filtered by teacher) -->
+      <!-- Slot (Hari × Jam Ke-) — always paired to make the "one slot"
+           metaphor obvious. -->
       <div>
         <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
-          Mata Pelajaran
+          {{ t('admin.schedule.formB.slotLabel') }}
+        </label>
+        <div class="mt-1 grid grid-cols-2 gap-3">
+          <select
+            v-model="dayId"
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
+          >
+            <option value="">{{ t('admin.schedule.formB.dayPlaceholder') }}</option>
+            <option v-for="d in days" :key="d.id" :value="d.id">{{ d.name }}</option>
+          </select>
+
+          <!-- Jam Ke- — surfaces the same empty-hours guidance from the
+               legacy form when the school hasn't seeded any. Since the
+               setup-first gate now catches "no hours at all", this
+               branch mostly serves the narrower "hours exist but none
+               for the picked day" case. -->
+          <template v-if="hasNoLessonHours">
+            <button
+              type="button"
+              class="w-full text-left rounded-xl border border-dashed border-amber-300 bg-amber-50 px-3 py-2 hover:bg-amber-100 transition-colors"
+              @click="goToLessonHourSettings"
+            >
+              <p class="text-3xs font-bold uppercase tracking-widest text-amber-700 flex items-center gap-1.5">
+                <NavIcon name="alert-triangle" :size="12" />
+                {{ t('admin.schedule.emptyLessonHours.badge') }}
+              </p>
+            </button>
+          </template>
+          <select
+            v-else
+            v-model="lessonHourId"
+            :disabled="!dayId || isLoadingHours"
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin disabled:opacity-50"
+          >
+            <option value="">{{ t('admin.schedule.formB.hourPlaceholder') }}</option>
+            <option
+              v-for="h in filteredHours"
+              :key="h.id"
+              :value="h.id"
+              :disabled="isHourOccupied(h)"
+            >
+              {{ t('common.lessonHour', { n: h.hour_number }) }} · {{ h.start_time }}–{{ h.end_time }}{{ isHourOccupied(h) ? ` (${t('common.occupied')})` : '' }}
+            </option>
+          </select>
+        </div>
+        <p v-if="dayHasNoLessonHours" class="text-2xs text-amber-700 mt-1.5 leading-relaxed">
+          {{ t('admin.schedule.emptyLessonHours.dayEmpty') }}
+          <button
+            type="button"
+            class="font-bold underline hover:text-amber-900"
+            @click="goToLessonHourSettings"
+          >
+            {{ t('admin.schedule.emptyLessonHours.cta') }}
+          </button>
+        </p>
+      </div>
+
+      <!-- Guru — slot-filtered. Locked until Kelas + Slot are set so
+           the admin knows the picker will populate once they finish
+           the setup above. -->
+      <div>
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
+          {{ t('admin.schedule.formB.teacherLabel') }}
+          <span
+            v-if="isLoadingAvailableTeachers"
+            class="text-slate-400 normal-case font-normal ml-1"
+          >
+            {{ t('admin.schedule.formB.teacherLoading') }}
+          </span>
+        </label>
+
+        <p v-if="teacherPickerLocked" class="mt-1 text-2xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+          <NavIcon name="lock" :size="11" class="inline text-slate-400" />
+          {{ t('admin.schedule.formB.teacherLocked') }}
+        </p>
+
+        <template v-else>
+          <select
+            v-model="teacherId"
+            :disabled="isLoadingAvailableTeachers || availableTeachers.length === 0"
+            class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin disabled:opacity-50"
+          >
+            <option value="">{{ t('admin.schedule.formB.teacherPlaceholder') }}</option>
+            <option
+              v-for="tt in availableTeachers"
+              :key="tt.id"
+              :value="tt.id"
+            >
+              {{ tt.is_wali_kelas_of_this_class ? '★ ' : '' }}{{ tt.name }}{{ tt.is_wali_kelas_of_this_class ? ` · ${t('admin.schedule.formB.waliBadge')}` : '' }}
+            </option>
+          </select>
+
+          <p
+            v-if="!isLoadingAvailableTeachers && availableTeachers.length === 0 && !availableTeachersError"
+            class="text-2xs text-amber-700 mt-1.5 leading-relaxed"
+          >
+            <NavIcon name="alert-circle" :size="11" class="inline" />
+            {{ t('admin.schedule.formB.teacherEmpty') }}
+            <span class="block text-slate-500 font-normal">
+              {{ t('admin.schedule.formB.teacherEmptyHint') }}
+            </span>
+          </p>
+
+          <p
+            v-if="availableTeachersError"
+            class="text-2xs text-red-700 mt-1.5 leading-relaxed"
+          >
+            {{ availableTeachersError }}
+          </p>
+        </template>
+      </div>
+
+      <!-- Mapel — filtered by picked guru (existing from MR!866). -->
+      <div>
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
+          {{ t('common.subject') }}
           <span v-if="isLoadingSubjects" class="text-slate-400 normal-case font-normal ml-1">memuat...</span>
         </label>
         <select
@@ -533,11 +902,7 @@ function goToLessonHourSettings() {
           <option v-for="s in subjectOptions" :key="s.id" :value="s.id">{{ subjectLabel(s) }}</option>
         </select>
 
-        <!-- Inline Quick-Add: teacher-with-no-mapel dead-end handled in
-             the drawer instead of forcing a navigate-away. Toggle button
-             expands a panel that creates the mapel + assigns it to the
-             teacher atomically (POST /subject with assign_to_teacher_id).
-             Wireframe: 01 (Pola A) / 03 (web drawer). -->
+        <!-- Inline Quick-Add mapel — preserved verbatim from MR!866. -->
         <div v-if="teacherHasNoSubjects" class="mt-1.5">
           <button
             type="button"
@@ -609,123 +974,18 @@ function goToLessonHourSettings() {
         </div>
       </div>
 
-      <!-- Class + Semester -->
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Kelas</label>
-          <select
-            v-model="classId"
-            class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
-          >
-            <option value="">— pilih kelas —</option>
-            <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Semester</label>
-          <select
-            v-model="semesterId"
-            class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
-          >
-            <option value="">— pilih semester —</option>
-            <option v-for="s in semesters" :key="s.id" :value="s.id">{{ semesterLabel(s.name) }}</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Days (multi for create, single for edit) -->
+      <!-- Ruangan (optional, remembered per-class) -->
       <div>
         <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
-          Hari {{ isEdit ? '(pilih satu)' : '(boleh banyak)' }}
+          {{ t('admin.schedule.formB.roomLabel') }}
         </label>
-        <div class="mt-1 flex flex-wrap gap-1.5">
-          <button
-            v-for="d in days"
-            :key="d.id"
-            type="button"
-            class="px-3 py-1.5 rounded-full text-2xs font-bold border transition-colors"
-            :class="
-              selectedDayIds.includes(d.id)
-                ? 'bg-role-admin text-white border-role-admin'
-                : 'bg-white text-slate-700 border-slate-200 hover:border-role-admin/40'
-            "
-            @click="toggleDay(d.id)"
-          >
-            {{ d.name }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Lesson hour -->
-      <div>
-        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
-          Jam Pelajaran (referensi)
-        </label>
-
-        <!-- No Jam Pelajaran configured at all — the picker would be an
-             empty dead-end, so explain it and hand over the fix. -->
-        <button
-          v-if="hasNoLessonHours"
-          type="button"
-          class="mt-1 w-full text-left rounded-xl border border-dashed border-amber-300 bg-amber-50 p-3 hover:bg-amber-100 transition-colors"
-          @click="goToLessonHourSettings"
-        >
-          <p class="text-3xs font-bold uppercase tracking-widest text-amber-700 flex items-center gap-1.5">
-            <NavIcon name="alert-triangle" :size="12" />
-            {{ t('admin.schedule.emptyLessonHours.badge') }}
-          </p>
-          <p class="text-[13px] font-bold text-amber-900 mt-1">
-            {{ t('admin.schedule.emptyLessonHours.formDesc') }}
-          </p>
-          <p class="text-2xs text-amber-700 mt-1.5 font-bold">
-            {{ t('admin.schedule.emptyLessonHours.cta') }} ·
-            <span class="font-normal">{{ t('admin.schedule.emptyLessonHours.menuHint') }}</span>
-          </p>
-        </button>
-
-        <template v-else>
-          <select
-            v-model="lessonHourId"
-            :disabled="selectedDayIds.length === 0 || isLoadingHours"
-            class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin disabled:opacity-50"
-          >
-            <option value="">— pilih jam —</option>
-            <option
-              v-for="h in filteredHours"
-              :key="h.id"
-              :value="h.id"
-              :disabled="isHourOccupied(h)"
-            >
-              {{ t('common.lessonHour', { n: h.hour_number }) }} · {{ h.start_time }}–{{ h.end_time }}{{ isHourOccupied(h) ? ` (${t('common.occupied')})` : '' }}
-            </option>
-          </select>
-          <!-- Hours exist, but none on the picked day — same dead-end,
-               narrower cause, so name the day and offer the same fix. -->
-          <p v-if="dayHasNoLessonHours" class="text-2xs text-amber-700 mt-1.5 leading-relaxed">
-            {{ t('admin.schedule.emptyLessonHours.dayEmpty') }}
-            <button
-              type="button"
-              class="font-bold underline hover:text-amber-900"
-              @click="goToLessonHourSettings"
-            >
-              {{ t('admin.schedule.emptyLessonHours.cta') }}
-            </button>
-          </p>
-          <p v-if="!isEdit && selectedDayIds.length > 1" class="text-3xs text-slate-500 mt-1">
-            Setiap hari akan dibuat di jam ke-{{ filteredHours.find((h) => h.id === lessonHourId)?.hour_number ?? '?' }}.
-          </p>
-        </template>
-      </div>
-
-      <!-- Room (optional) -->
-      <div>
-        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Ruangan (opsional)</label>
         <input
           v-model="room"
           type="text"
-          placeholder="R-101"
+          :placeholder="t('admin.schedule.formB.roomPlaceholder')"
           class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
         />
+        <p class="text-3xs text-slate-500 mt-1">{{ t('admin.schedule.formB.roomHint') }}</p>
       </div>
 
       <!-- Conflict preview -->
@@ -761,16 +1021,53 @@ function goToLessonHourSettings() {
         {{ err }}
       </p>
 
-      <div class="grid grid-cols-2 gap-2 pt-2">
+      <p
+        v-if="toast"
+        class="text-2xs font-bold rounded-xl px-3 py-2"
+        :class="toast.tone === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'"
+      >
+        {{ toast.message }}
+      </p>
+
+      <!-- Action row. Layout:
+             1 col Batal · 2 col primary — on edit
+             1 col Batal · 2 col primary · optional 'Tambah Lagi' — on create
+           The "Tambah Lagi" tail is create-only because editing a
+           single row through the form doesn't need a fan-out variant. -->
+      <div v-if="isEdit" class="grid grid-cols-2 gap-2 pt-2">
         <Button variant="secondary" block @click="emit('close')">Batal</Button>
         <Button
           variant="primary"
           block
           :loading="isSaving"
           :disabled="!canSubmit"
-          @click="save"
+          @click="save()"
         >
-          {{ isEdit ? 'Simpan perubahan' : 'Buat jadwal' }}
+          {{ t('admin.schedule.formB.primaryEdit') }}
+        </Button>
+      </div>
+      <div v-else class="grid grid-cols-6 gap-2 pt-2">
+        <Button variant="secondary" block @click="emit('close')" class="col-span-2">Batal</Button>
+        <Button
+          variant="primary"
+          block
+          :loading="isSaving"
+          :disabled="!canSubmit"
+          class="col-span-2"
+          @click="save()"
+        >
+          {{ t('admin.schedule.formB.primaryCreate') }}
+        </Button>
+        <Button
+          variant="success"
+          block
+          :loading="isSaving"
+          :disabled="!canSubmit"
+          class="col-span-2"
+          @click="save({ continueAfter: true })"
+        >
+          <NavIcon name="plus" :size="12" />
+          {{ t('admin.schedule.formB.createAndContinue') }}
         </Button>
       </div>
     </div>

@@ -449,6 +449,83 @@ export type ScheduleImportResponse =
     };
 
 // ───────────────────────────────────────────────────────────────────
+// Setup-first — GET /schedule/prereq-check
+// ───────────────────────────────────────────────────────────────────
+//
+// Sprint 2 (MR A backend) — asks the server whether the four things a
+// schedule row depends on are in place BEFORE the admin lands on the
+// form. If any of them are missing, the ScheduleFormModal renders
+// ScheduleSetupChecklist instead of the form so the admin can seed
+// the school without leaving the drawer. `ready` collapses the four
+// bools into the single value the modal reads to decide "form or
+// checklist".
+
+/** One row inside a prereq-check response. */
+export interface PrereqCheckSection {
+  count: number;
+  has_any: boolean;
+}
+
+/** Full prereq-check payload. `ready === true` unlocks the form. */
+export interface SchedulePrereqCheck {
+  teachers: PrereqCheckSection;
+  classes: PrereqCheckSection;
+  lesson_hours: PrereqCheckSection;
+  rooms: PrereqCheckSection;
+  ready: boolean;
+}
+
+// ───────────────────────────────────────────────────────────────────
+// Lesson-hours seed — POST /lesson-hours/seed
+// ───────────────────────────────────────────────────────────────────
+//
+// One-tap "install the 8-hour SMP grid" (or the 9-hour SMA one).
+// Discriminated so callers can tell a genuine seed from a skip caused
+// by pre-existing hours (existing school re-visiting the checklist).
+
+/** Preset name accepted by the seed endpoint. */
+export type LessonHourSeedPreset = 'smp' | 'sma';
+
+/** Body sent to `/lesson-hours/seed`. */
+export interface LessonHourSeedPayload {
+  preset: LessonHourSeedPreset;
+  overwrite?: boolean;
+}
+
+/** Response from `/lesson-hours/seed`. */
+export type LessonHourSeedResponse =
+  | { status: 'SUCCESS'; created: number; skipped: number }
+  | { status: 'SKIPPED'; created: number; skipped: number; existing?: number };
+
+// ───────────────────────────────────────────────────────────────────
+// Slot-filtered teacher picker — GET /teaching-schedules/available-teachers
+// ───────────────────────────────────────────────────────────────────
+//
+// Pola B — after Kelas + Slot (day + lesson-hour) are set, the Guru
+// dropdown lists only teachers who are FREE for that slot (no other
+// schedule row occupies them in the same semester/AY). The wali kelas
+// flag lets the form sort the class's homeroom teacher first + render
+// a "Wali Kelas" badge next to their name.
+
+/** One row inside the /available-teachers response. */
+export interface AvailableTeacher {
+  id: string;
+  name: string;
+  subjects_count: number;
+  is_wali_kelas_of_this_class: boolean;
+}
+
+/** Query params for /available-teachers. Semester/AY are optional —
+ *  the backend defaults to the active semester + AY on the tenant. */
+export interface AvailableTeachersQuery {
+  classId: string;
+  dayId: string;
+  lessonHourId: string;
+  semesterId?: string;
+  academicYearId?: string | number;
+}
+
+// ───────────────────────────────────────────────────────────────────
 // Service
 // ───────────────────────────────────────────────────────────────────
 
@@ -1004,6 +1081,123 @@ export const ScheduleService = {
       );
     } catch (e) {
       throw new Error(humanError(e, 'Gagal membuat mapel.'));
+    }
+  },
+
+  /**
+   * GET /schedule/prereq-check — asks the server whether teachers,
+   * classes, lesson-hours and rooms are in place so the form can render
+   * a "Setup-first" checklist instead of a form that would sit disabled.
+   *
+   * Fail-safe: on network error we return a `ready: true` payload so a
+   * transient blip doesn't force a legitimate school through the setup
+   * screen. The form will error out on save with a real reason if the
+   * data actually isn't there.
+   */
+  async checkPrereq(): Promise<SchedulePrereqCheck> {
+    try {
+      const res = await api.get('/schedule/prereq-check');
+      const body = (res.data?.data ?? res.data ?? {}) as Record<string, any>;
+      const sec = (raw: any): PrereqCheckSection => ({
+        count: asNum(raw?.count),
+        has_any: Boolean(raw?.has_any),
+      });
+      const teachers = sec(body.teachers);
+      const classes = sec(body.classes);
+      const lesson_hours = sec(body.lesson_hours);
+      const rooms = sec(body.rooms);
+      // If the server didn't compute `ready` for us, derive it from the
+      // three hard prerequisites (rooms is informational, not gating).
+      const ready =
+        typeof body.ready === 'boolean'
+          ? body.ready
+          : teachers.has_any && classes.has_any && lesson_hours.has_any;
+      return { teachers, classes, lesson_hours, rooms, ready };
+    } catch {
+      // Don't block a legitimate school on a network hiccup — let the
+      // form load and fail with a real error on save if it must.
+      const empty: PrereqCheckSection = { count: 0, has_any: true };
+      return {
+        teachers: empty,
+        classes: empty,
+        lesson_hours: empty,
+        rooms: empty,
+        ready: true,
+      };
+    }
+  },
+
+  /**
+   * POST /lesson-hours/seed — one-tap install of a standard hour grid
+   * (SMP = 8 hours, SMA = 9 hours) across Senin–Sabtu. Backend is
+   * idempotent: on a school that already has hours it returns
+   * `status: 'SKIPPED'` with `existing`, so callers can distinguish
+   * "just seeded 8 rows" from "already had 8 rows".
+   */
+  async seedLessonHours(
+    payload: LessonHourSeedPayload,
+  ): Promise<LessonHourSeedResponse> {
+    try {
+      const body = { preset: payload.preset, overwrite: payload.overwrite ?? false };
+      const res = await api.post('/lesson-hours/seed', body);
+      const data = (res.data?.data ?? res.data ?? {}) as Record<string, any>;
+      const status = data.status === 'SKIPPED' ? 'SKIPPED' : 'SUCCESS';
+      const created = asNum(data.created);
+      const skipped = asNum(data.skipped);
+      if (status === 'SKIPPED') {
+        return {
+          status,
+          created,
+          skipped,
+          existing: data.existing !== undefined ? asNum(data.existing) : undefined,
+        };
+      }
+      return { status, created, skipped };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal membuat jam pelajaran otomatis.'));
+    }
+  },
+
+  /**
+   * GET /teaching-schedules/available-teachers — slot-filtered teacher
+   * roster for the Pola B Guru dropdown. Returns only teachers that are
+   * free at (class × day × lesson_hour), sorted by the backend so wali
+   * kelas of the picked class comes first.
+   *
+   * The reversed URL — `teaching-schedules` (plural) vs the singular
+   * everywhere else — matches Sprint 2 MR A's controller mount. Don't
+   * "normalise" it, that's the actual route.
+   */
+  async getAvailableTeachers(
+    q: AvailableTeachersQuery,
+  ): Promise<AvailableTeacher[]> {
+    try {
+      const params = sanitize({
+        class_id: q.classId,
+        day_id: q.dayId,
+        lesson_hour_id: q.lessonHourId,
+        semester_id: q.semesterId,
+        academic_year_id: q.academicYearId,
+      });
+      const res = await api.get('/teaching-schedules/available-teachers', {
+        params,
+      });
+      const body = res.data;
+      const list = Array.isArray(body?.data)
+        ? body.data
+        : Array.isArray(body)
+          ? body
+          : [];
+      return list.map((raw: any): AvailableTeacher => ({
+        id: asStr(raw.id),
+        name: asStr(raw.name),
+        subjects_count: asNum(raw.subjects_count),
+        is_wali_kelas_of_this_class: Boolean(
+          raw.is_wali_kelas_of_this_class,
+        ),
+      }));
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat guru yang tersedia.'));
     }
   },
 };
