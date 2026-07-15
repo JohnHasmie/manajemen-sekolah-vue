@@ -860,7 +860,7 @@
       "title": "School Schedule Management",
       "meta": "{sessions} sessions · {conflicts} conflicts · AY {year}",
       "viewList": "List",
-      "viewMatrix": "Matrix",
+      "viewTimetable": "Timetable",
       "print": "Print",
       "import": "Import",
       "lessonHours": "Lesson Hours",
@@ -961,6 +961,21 @@
         "createAndContinue": "Create + Add Another",
         "createdToast": "Schedule created. Slot moved to the next hour.",
         "createdToastLast": "Schedule created. That was the last hour today."
+      },
+      "timetable": {
+        "classPickerLabel": "CLASS",
+        "classPickerPlaceholder": "— pick a class —",
+        "semesterLabel": "SEMESTER",
+        "hourColumnHeader": "HOUR",
+        "pickClassTitle": "Pick a class first",
+        "pickClassDesc": "The timetable shows one class's full week. Pick a class above to load the grid.",
+        "noClassesTitle": "No classes yet",
+        "noClassesDesc": "The timetable cannot render until this school has at least one class.",
+        "noClassesCta": "Open Class Data",
+        "errorTitle": "Failed to load timetable",
+        "slotsFilled": "{filled} of {total} slots filled",
+        "editCellAria": "Edit {subject} on {day} hour {hour}",
+        "createCellAria": "Add schedule on {day} hour {hour}"
       }
     },
     "attendanceDashboard": {

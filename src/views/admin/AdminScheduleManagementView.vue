@@ -7,14 +7,14 @@
     1. BrandPageHeader (admin) — kicker + title + actions
     2. KpiStripCards — Total / Hari Ini / Bentrok / Teacher
     3. PageFilterToolbar — chips for Teacher / Mapel / Hari / Kelas / Jam + search
-    4. View toggle (List / Matrix)
-    5. Body — sticky-day list OR week × hour matrix
+    4. View toggle (List / Timetable) — persisted in localStorage
+    5. Body — sticky-day list OR per-class Pola C timetable grid
     6. Floating "Tambah" + bulk-mode CTAs (Phase 3+ wires them)
 
   Endpoints:
     GET /teaching-schedule         — paginated list (with filters)
-    GET /teaching-schedule/all     — non-paginated (for matrix)
-    GET /teaching-schedule/stats   — KPI
+    GET /teaching-schedule/all     — non-paginated (list-view backing data)
+    GET /teaching-schedules/matrix — per-class week grid (Pola C, Sprint 3)
     GET /teaching-schedule/filter-options — dropdown options
 -->
 <script setup lang="ts">
@@ -28,11 +28,9 @@ import type {
   AdminScheduleFilters,
 } from '@/services/schedule.service';
 import {
-  DAY_LABELS,
   DAY_ORDER,
   type DayKey,
   type LessonHour,
-  type ScheduleConflict,
   type ScheduleFilterOptions,
   type ScheduleRow,
   type ScheduleStats,
@@ -51,6 +49,9 @@ import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Toast from '@/components/ui/Toast.vue';
 import ScheduleFormModal from '@/components/feature/ScheduleFormModal.vue';
+import ScheduleTimetableGrid, {
+  type TimetableCreatePayload,
+} from '@/components/feature/ScheduleTimetableGrid.vue';
 import ScheduleDetailModal from '@/components/feature/ScheduleDetailModal.vue';
 import SingleRescheduleModal from '@/components/feature/SingleRescheduleModal.vue';
 import ChangeTeacherModal from '@/components/feature/ChangeTeacherModal.vue';
@@ -63,6 +64,7 @@ import ScheduleImportModal, {
 } from '@/components/feature/ScheduleImportModal.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useRouter } from 'vue-router';
+import { storage } from '@/lib/storage';
 
 const { t: $t } = useI18n();
 const ayStore = useAcademicYearStore();
@@ -102,9 +104,36 @@ const showDaySheet = ref(false);
 const showSubjectSheet = ref(false);
 const showHourSheet = ref(false);
 
-// View mode: list (sticky-day grouped) | matrix (week grid)
-type ViewMode = 'list' | 'matrix';
-const viewMode = ref<ViewMode>('list');
+// View mode: list (sticky-day grouped) | timetable (Pola C per-class
+// week grid, Sprint 3 MR C). The old drag-drop `matrix` mode is gone —
+// it showed all classes' cells overlaid in the same week grid, which
+// broke down for any school with more than a handful of teachers. The
+// new timetable view is a strict per-class read that also serves as an
+// entry surface (empty cell → CREATE with pre-fill, filled cell → EDIT).
+type ViewMode = 'list' | 'timetable';
+const VIEW_MODE_STORAGE_KEY = 'schedule_view_mode';
+// Rehydrate the last-picked mode so a page reload lands where the
+// admin left off. Ignored (falls back to 'list') if storage was
+// tampered with or holds an unknown legacy value.
+const initialViewMode: ViewMode = (() => {
+  const raw = storage.get<string>(VIEW_MODE_STORAGE_KEY);
+  return raw === 'timetable' || raw === 'list' ? raw : 'list';
+})();
+const viewMode = ref<ViewMode>(initialViewMode);
+// Persist on every change — the storage layer no-ops in SSR so this is
+// safe to call unconditionally.
+watch(viewMode, (v) => storage.set(VIEW_MODE_STORAGE_KEY, v));
+
+// Timetable grid ref — the parent calls .refresh() after ScheduleFormModal
+// saves so the matrix picks up the just-created/edited cell in place.
+const timetableGridRef = ref<InstanceType<typeof ScheduleTimetableGrid> | null>(
+  null,
+);
+// Pola C pre-fill payload — set when the admin clicks an empty cell in
+// the timetable grid. Consumed by ScheduleFormModal via props (see
+// preFilledClassId / preFilledDayId / preFilledLessonHourId).
+const prefill = ref<TimetableCreatePayload | null>(null);
+const skipSetupForForm = ref(false);
 
 // ── Loaders ─────────────────────────────────────────────────────────
 function activeFilters(): AdminScheduleFilters {
@@ -125,8 +154,11 @@ async function loadFilterOptions() {
 }
 
 async function loadLessonHours() {
-  // One-shot — lesson hours don't change often. Used as the lookup
-  // table for matrix drag-drop targets (day_id × hour_number → uuid).
+  // One-shot — lesson hours drive the "has no Jam Pelajaran" banner
+  // above the toolbar. The timetable grid does its own hour lookup
+  // via /matrix; this fetch is only kept so the top-of-page banner
+  // can distinguish "school hasn't seeded hours" from "school just
+  // hasn't loaded them yet".
   hoursLoadFailed.value = false;
   try {
     lessonHours.value = await LessonHourService.list();
@@ -346,11 +378,6 @@ const filteredRows = computed<ScheduleRow[]>(() => {
   });
 });
 
-// Historical alias — kept so the <matrix template ref="matrixRows"
-// … /> callsite and hourSlots below don't need to change. Matrix and
-// list now share the same filtered dataset.
-const matrixRows = filteredRows;
-
 // ── List grouping (sticky day) ──────────────────────────────────────
 const rowsByDay = computed<Record<DayKey, ScheduleRow[]>>(() => {
   const out: Record<DayKey, ScheduleRow[]> = {
@@ -403,175 +430,6 @@ const stats = computed<ScheduleStats>(() => {
   };
 });
 
-const hourSlots = computed(() => {
-  const set = new Map<number, { hour_number: number; start: string; end: string }>();
-  for (const r of matrixRows.value) {
-    if (!set.has(r.hour_number)) {
-      set.set(r.hour_number, {
-        hour_number: r.hour_number,
-        start: r.start_time,
-        end: r.end_time,
-      });
-    }
-  }
-  return Array.from(set.values()).sort((a, b) => a.hour_number - b.hour_number);
-});
-
-function cellFor(day: DayKey, hourNumber: number): ScheduleRow[] {
-  return matrixRows.value.filter((r) => r.day === day && r.hour_number === hourNumber);
-}
-
-// ── Drag-and-drop reschedule (matrix only) ──────────────────────────
-//
-// Cells are draggable; dropping on an empty slot calls /reschedule.
-// We resolve the target `lesson_hour_days_id` by matching the source
-// row's hour_number against the target day's lesson_hour row.
-//
-// On 409 conflict the modal opens with the conflicts list + Paksa
-// Simpan checkbox. The hub keeps a small inline "reschedule banner"
-// at the top of the matrix while the API is in flight.
-
-const draggingRow = ref<ScheduleRow | null>(null);
-const dropTargetKey = ref<string>(''); // `${day}-${hour}` of the cell being hovered
-const isRescheduling = ref(false);
-const dragBanner = ref<{ kind: 'loading' | 'success' | 'error'; message: string } | null>(null);
-const dragConflictRow = ref<ScheduleRow | null>(null);
-const dragTargetHourId = ref<string>('');
-const dragConflicts = ref<ScheduleConflict[]>([]);
-const dragForceSave = ref(false);
-
-// Map DayKey → UUID via filterOptions.days (the backend stores day
-// names like "Monday"/"Senin" — normalizeDayKey handles both).
-const dayKeyToId = computed<Record<DayKey, string>>(() => {
-  const out: Partial<Record<DayKey, string>> = {};
-  for (const d of filterOptions.value?.days ?? []) {
-    const k = normaliseFromName(d.name);
-    if (k) out[k] = d.id;
-  }
-  return out as Record<DayKey, string>;
-});
-
-function normaliseFromName(name: string): DayKey | null {
-  const s = name.toLowerCase();
-  if (s.startsWith('sen') || s.startsWith('mon')) return 'mon';
-  if (s.startsWith('sel') || s.startsWith('tue')) return 'tue';
-  if (s.startsWith('rab') || s.startsWith('wed')) return 'wed';
-  if (s.startsWith('kam') || s.startsWith('thu')) return 'thu';
-  if (s.startsWith('jum') || s.startsWith('fri')) return 'fri';
-  if (s.startsWith('sab') || s.startsWith('sat')) return 'sat';
-  return null;
-}
-
-function findLessonHourId(targetDayKey: DayKey, hourNumber: number): string | null {
-  const targetDayId = dayKeyToId.value[targetDayKey];
-  if (!targetDayId) return null;
-  const match = lessonHours.value.find(
-    (h) => h.day_id === targetDayId && h.hour_number === hourNumber,
-  );
-  return match?.id ?? null;
-}
-
-function onDragStart(e: DragEvent, row: ScheduleRow) {
-  if (!e.dataTransfer) return;
-  draggingRow.value = row;
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', row.id);
-}
-
-function onDragEnd() {
-  draggingRow.value = null;
-  dropTargetKey.value = '';
-}
-
-function onCellDragOver(e: DragEvent, day: DayKey, hourNumber: number) {
-  if (!draggingRow.value) return;
-  // Disallow dropping on the source cell itself.
-  const sourceSameSlot =
-    draggingRow.value.day === day && draggingRow.value.hour_number === hourNumber;
-  if (sourceSameSlot) return;
-  // Disallow dropping when target slot already occupied (force-save
-  // flow on top of an occupied cell would silently overwrite — for
-  // safety we make the user delete first or pick an empty slot).
-  if (cellFor(day, hourNumber).length > 0) return;
-  e.preventDefault();
-  e.dataTransfer!.dropEffect = 'move';
-  dropTargetKey.value = `${day}-${hourNumber}`;
-}
-
-function onCellDragLeave() {
-  dropTargetKey.value = '';
-}
-
-async function onCellDrop(_e: DragEvent, day: DayKey, hourNumber: number) {
-  const src = draggingRow.value;
-  draggingRow.value = null;
-  dropTargetKey.value = '';
-  if (!src) return;
-  const targetHourId = findLessonHourId(day, hourNumber);
-  if (!targetHourId) {
-    toast.value = {
-      message: `Slot tujuan (${DAY_LABELS[day]} jam ke-${hourNumber}) belum ada di matriks jam pelajaran.`,
-      tone: 'error',
-    };
-    return;
-  }
-  if (targetHourId === src.lesson_hour_days_id) return; // no-op
-  await doReschedule(src, targetHourId, false);
-}
-
-async function doReschedule(
-  src: ScheduleRow,
-  targetHourId: string,
-  force: boolean,
-) {
-  isRescheduling.value = true;
-  dragBanner.value = { kind: 'loading', message: $t('admin.sekolah.schedule_management.moving_slot') };
-  try {
-    await ScheduleService.reschedule(src.id, {
-      lesson_hour_days_id: targetHourId,
-      force: force || undefined,
-    });
-    dragBanner.value = { kind: 'success', message: $t('admin.sekolah.schedule_management.slot_moved') };
-    toast.value = { message: $t('admin.sekolah.schedule_management.slot_moved'), tone: 'success' };
-    dragConflictRow.value = null;
-    dragConflicts.value = [];
-    dragForceSave.value = false;
-    await loadRows();
-    setTimeout(() => {
-      dragBanner.value = null;
-    }, 1500);
-  } catch (e) {
-    const annotated = e as Error & { conflicts?: ScheduleConflict[] };
-    if (annotated.conflicts && annotated.conflicts.length > 0) {
-      dragBanner.value = null;
-      dragConflictRow.value = src;
-      dragTargetHourId.value = targetHourId;
-      dragConflicts.value = annotated.conflicts;
-      dragForceSave.value = false;
-    } else {
-      dragBanner.value = { kind: 'error', message: annotated.message };
-      toast.value = { message: annotated.message, tone: 'error' };
-      setTimeout(() => {
-        dragBanner.value = null;
-      }, 3000);
-    }
-  } finally {
-    isRescheduling.value = false;
-  }
-}
-
-async function confirmForceReschedule() {
-  if (!dragConflictRow.value) return;
-  await doReschedule(dragConflictRow.value, dragTargetHourId.value, true);
-}
-
-function cancelConflict() {
-  dragConflictRow.value = null;
-  dragConflicts.value = [];
-  dragForceSave.value = false;
-  dragTargetHourId.value = '';
-}
-
 const listState = computed<AsyncState<ScheduleRow[]>>(() => {
   if (isLoading.value && rows.value.length === 0) return { status: 'loading' };
   if (error.value) return { status: 'error', error: error.value };
@@ -621,6 +479,8 @@ const isDeleting = ref(false);
 
 function onAddClick() {
   editingRow.value = null;
+  prefill.value = null;
+  skipSetupForForm.value = false;
   showForm.value = true;
 }
 function onRowClick(row: ScheduleRow) {
@@ -633,7 +493,50 @@ function onSaved(rows: ScheduleRow[]) {
       : `${rows.length} jadwal dibuat.`,
     tone: 'success',
   };
+  // The list view reads from the shared `rows` cache; the timetable
+  // grid reads from its own /matrix cache. Refresh both so either view
+  // is fresh whichever one the admin is looking at right now.
   void loadRows();
+  timetableGridRef.value?.refresh();
+}
+
+// ── Pola C timetable grid handlers ─────────────────────────────────
+//
+// The grid emits either an `edit` (schedule_id) or a `create`
+// (pre-fill payload). Both paths reuse ScheduleFormModal; the create
+// path also flips skipSetupForForm so the modal doesn't briefly show
+// the setup checklist for a school whose class + hours were just
+// visibly rendered as an empty cell.
+function onTimetableEdit(scheduleId: string) {
+  const row = rows.value.find((r) => r.id === scheduleId);
+  if (!row) {
+    // rows[] is the full /all cache — a miss means the grid saw a
+    // schedule the list load missed (rare: race between /all and
+    // /matrix after a fresh create). Fall through to a light message
+    // rather than opening the modal on a stale/empty row.
+    toast.value = {
+      message: 'Jadwal tidak ditemukan di cache — coba muat ulang halaman.',
+      tone: 'error',
+    };
+    return;
+  }
+  editingRow.value = row;
+  prefill.value = null;
+  skipSetupForForm.value = false;
+  showForm.value = true;
+}
+
+function onTimetableCreate(payload: TimetableCreatePayload) {
+  editingRow.value = null;
+  prefill.value = payload;
+  skipSetupForForm.value = true;
+  showForm.value = true;
+}
+
+function onFormClose() {
+  showForm.value = false;
+  prefill.value = null;
+  skipSetupForForm.value = false;
 }
 
 // Detail action handlers
@@ -794,7 +697,7 @@ async function bulkDelete() {
           v-model="viewMode"
           :options="[
             { key: 'list', label: $t('admin.schedule.viewList') },
-            { key: 'matrix', label: $t('admin.schedule.viewMatrix') },
+            { key: 'timetable', label: $t('admin.schedule.viewTimetable') },
           ]"
         />
         <button
@@ -916,7 +819,22 @@ async function bulkDelete() {
       </template>
     </PageFilterToolbar>
 
+    <!-- TIMETABLE VIEW — Pola C per-class week grid (Sprint 3 MR C).
+         Rendered OUTSIDE AsyncView because it uses its own /matrix
+         data source and manages its own loading / error / empty
+         states; wrapping it in AsyncView would swap it out for the
+         list-view spinner whenever the /all fetch was in flight. -->
+    <ScheduleTimetableGrid
+      v-if="viewMode === 'timetable'"
+      ref="timetableGridRef"
+      :filter-options="filterOptions"
+      :default-semester-id="filterOptions?.semesters?.[0]?.id"
+      @edit="onTimetableEdit"
+      @create="onTimetableCreate"
+    />
+
     <AsyncView
+      v-else
       :state="listState"
       :empty-title="$t('admin.schedule.emptyTitle')"
       :empty-description="$t('admin.schedule.emptyDesc')"
@@ -925,7 +843,7 @@ async function bulkDelete() {
     >
       <template #default>
         <!-- LIST VIEW — sticky day groups -->
-        <div v-if="viewMode === 'list'" class="space-y-4">
+        <div class="space-y-4">
           <section
             v-for="d in DAY_ORDER"
             :key="d"
@@ -984,118 +902,6 @@ async function bulkDelete() {
           </section>
         </div>
 
-        <!-- MATRIX VIEW — week × hour grid, with drag-drop reschedule -->
-        <section v-else class="space-y-2">
-          <!-- Reschedule banner (loading/success/error) -->
-          <div
-            v-if="dragBanner"
-            class="rounded-xl px-3 py-2 text-2xs font-bold flex items-center gap-2"
-            :class="{
-              'bg-slate-100 text-slate-700': dragBanner.kind === 'loading',
-              'bg-emerald-100 text-emerald-800': dragBanner.kind === 'success',
-              'bg-red-100 text-red-800': dragBanner.kind === 'error',
-            }"
-          >
-            <NavIcon
-              :name="
-                dragBanner.kind === 'loading'
-                  ? 'clock'
-                  : dragBanner.kind === 'success'
-                    ? 'check-circle'
-                    : 'alert-triangle'
-              "
-              :size="12"
-            />
-            {{ dragBanner.message }}
-          </div>
-          <!-- Hint -->
-          <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest px-1">
-            <NavIcon name="move" :size="10" class="inline" />
-            Tarik & lepas sel untuk memindahkan slot
-          </p>
-          <div class="bg-white border border-slate-200 rounded-2xl overflow-x-auto">
-            <table class="w-full text-2xs border-collapse">
-              <thead>
-                <tr class="bg-slate-50">
-                  <th class="text-4xs font-bold text-slate-400 uppercase tracking-widest px-3 py-3 text-left min-w-[90px] sticky left-0 bg-slate-50 z-10">
-                    Jam
-                  </th>
-                  <th
-                    v-for="d in DAY_ORDER"
-                    :key="d"
-                    class="text-4xs font-bold text-slate-500 uppercase tracking-widest px-2 py-3 min-w-[140px]"
-                  >
-                    {{ LOCALIZED_DAY_LABELS[d] }}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="slot in hourSlots"
-                  :key="slot.hour_number"
-                  class="border-t border-slate-100"
-                >
-                  <td class="px-3 py-2 align-top sticky left-0 bg-white z-10 border-r border-slate-100">
-                    <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
-                      JP{{ slot.hour_number }}
-                    </p>
-                    <p class="text-2xs font-bold text-slate-900 tabular-nums">{{ slot.start }}</p>
-                    <p class="text-4xs text-slate-400 tabular-nums">{{ slot.end }}</p>
-                  </td>
-                  <td
-                    v-for="d in DAY_ORDER"
-                    :key="`${d}-${slot.hour_number}`"
-                    class="p-1 align-top transition-colors"
-                    :class="
-                      dropTargetKey === `${d}-${slot.hour_number}`
-                        ? 'bg-role-admin/10'
-                        : ''
-                    "
-                    @dragover="onCellDragOver($event, d, slot.hour_number)"
-                    @dragleave="onCellDragLeave"
-                    @drop="onCellDrop($event, d, slot.hour_number)"
-                  >
-                    <div class="space-y-1">
-                      <div
-                        v-for="cell in cellFor(d, slot.hour_number)"
-                        :key="cell.id"
-                        draggable="true"
-                        class="w-full text-left rounded-lg p-2 transition-all cursor-grab active:cursor-grabbing select-none"
-                        :class="[
-                          cell.conflict_with && cell.conflict_with.length > 0
-                            ? 'bg-red-50 border border-red-300 hover:bg-red-100'
-                            : 'bg-role-admin/5 border border-role-admin/20 hover:bg-role-admin/10',
-                          draggingRow?.id === cell.id ? 'opacity-50 ring-2 ring-role-admin' : '',
-                          isRescheduling ? 'opacity-60 pointer-events-none' : '',
-                        ]"
-                        @dragstart="onDragStart($event, cell)"
-                        @dragend="onDragEnd"
-                        @click="onRowClick(cell)"
-                      >
-                        <p class="text-3xs font-bold text-slate-900 truncate">{{ cell.subject_name }}</p>
-                        <p class="text-4xs text-slate-500 truncate">{{ cell.class_name }}</p>
-                        <p class="text-4xs text-slate-400 truncate">{{ cell.teacher_name ?? '—' }}</p>
-                      </div>
-                      <button
-                        v-if="cellFor(d, slot.hour_number).length === 0"
-                        type="button"
-                        class="w-full h-10 rounded-lg border border-dashed transition-colors text-xs"
-                        :class="
-                          dropTargetKey === `${d}-${slot.hour_number}`
-                            ? 'border-role-admin bg-role-admin/10 text-role-admin font-bold'
-                            : 'border-slate-200 hover:border-role-admin hover:bg-role-admin/5 text-slate-300 hover:text-role-admin'
-                        "
-                        @click="onAddClick"
-                      >
-                        {{ dropTargetKey === `${d}-${slot.hour_number}` ? 'Lepas di sini' : '+' }}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
       </template>
     </AsyncView>
 
@@ -1287,7 +1093,11 @@ async function bulkDelete() {
       :row="editingRow"
       :filter-options="filterOptions"
       :default-semester-id="filterOptions?.semesters?.[0]?.id"
-      @close="showForm = false"
+      :pre-filled-class-id="prefill?.class_id"
+      :pre-filled-day-id="prefill?.day_id"
+      :pre-filled-lesson-hour-id="prefill?.lesson_hour_id"
+      :skip-setup-check="skipSetupForForm"
+      @close="onFormClose"
       @saved="onSaved"
     />
 
@@ -1368,46 +1178,6 @@ async function bulkDelete() {
       @close="showImport = false"
       @done="onImportDone"
     />
-
-    <!-- Drag-drop conflict modal (409 from reschedule) -->
-    <Modal
-      v-if="dragConflictRow"
-      title="Slot Tujuan Bentrok"
-      :subtitle="`${dragConflictRow.subject_name} · ${dragConflictRow.class_name}`"
-      size="md"
-      @close="cancelConflict"
-    >
-      <div class="space-y-3">
-        <p class="text-[12px] text-slate-600">
-          Slot tujuan punya {{ dragConflicts.length }} jadwal lain yang bentrok dengan guru
-          atau kelas ini.
-        </p>
-        <ul class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3 space-y-1 max-h-40 overflow-y-auto">
-          <li v-for="c in dragConflicts" :key="c.id">
-            <strong>{{ c.day_name }} · {{ c.start_time }}–{{ c.end_time }}</strong>:
-            {{ c.subject_name ?? 'Mapel' }}
-            <span v-if="c.teacher_name"> · {{ c.teacher_name }}</span>
-            <span v-if="c.class_name"> · {{ c.class_name }}</span>
-          </li>
-        </ul>
-        <label class="flex items-center gap-2 text-2xs text-red-800 font-bold cursor-pointer">
-          <input v-model="dragForceSave" type="checkbox" class="accent-red-600" />
-          Paksa simpan meski bentrok
-        </label>
-        <div class="grid grid-cols-2 gap-2 pt-2">
-          <Button variant="secondary" block @click="cancelConflict">Batal</Button>
-          <Button
-            variant="danger"
-            block
-            :loading="isRescheduling"
-            :disabled="!dragForceSave || isRescheduling"
-            @click="confirmForceReschedule"
-          >
-            Paksa Pindah
-          </Button>
-        </div>
-      </div>
-    </Modal>
 
     <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />
   </div>

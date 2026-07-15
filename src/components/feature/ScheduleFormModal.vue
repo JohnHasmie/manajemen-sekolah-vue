@@ -66,6 +66,25 @@ const props = defineProps<{
   filterOptions?: ScheduleFilterOptions | null;
   /** Pre-filled semester id (defaults to first option). */
   defaultSemesterId?: string;
+  /**
+   * Sprint 3 Pola C — pre-filled slot coming from the timetable grid.
+   * When any of these three are set, the form opens with those fields
+   * already selected (the admin clicked an empty cell in the week grid
+   * and shouldn't have to re-pick the slot they just picked). The
+   * fields stay visible + editable — the pre-fill is a starting point,
+   * not a lock.
+   */
+  preFilledClassId?: string;
+  preFilledDayId?: string;
+  preFilledLessonHourId?: string;
+  /**
+   * Sprint 3 Pola C — the timetable grid only surfaces classes that
+   * exist, and only fires the pre-fill flow after prereqs are visibly
+   * satisfied by the grid itself. Set this to skip the prereq-check
+   * gate on create so the modal opens straight into the form instead
+   * of flashing the setup checklist for a school that's clearly ready.
+   */
+  skipSetupCheck?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -84,15 +103,25 @@ const isEdit = computed(() => Boolean(props.row?.id));
 // `setup`    — one or more prereqs missing → show checklist
 // `form`     — either edit mode or a green-lit create
 type Mode = 'checking' | 'setup' | 'form';
-const mode = ref<Mode>(isEdit.value ? 'form' : 'checking');
+// Edit mode and Pola-C-with-skipSetupCheck both bypass the prereq gate:
+// the row/grid caller has already established the school is ready.
+const mode = ref<Mode>(
+  isEdit.value || props.skipSetupCheck ? 'form' : 'checking',
+);
 const prereq = ref<SchedulePrereqCheck | null>(null);
 const isSeeding = ref(false);
 const setupError = ref<string | null>(null);
 
 // ── Form state ──────────────────────────────────────────────────────
+// Precedence for initial values: existing row (edit) > Pola C pre-fill
+// (grid empty-cell click) > empty. Pre-fills only take effect on
+// CREATE — editing an existing row must always trust the row's own
+// values or the admin could silently rewrite a different slot.
 const teacherId = ref<string>(props.row?.teacher_id ?? '');
 const subjectId = ref<string>(props.row?.subject_id ?? '');
-const classId = ref<string>(props.row?.class_id ?? '');
+const classId = ref<string>(
+  props.row?.class_id ?? props.preFilledClassId ?? '',
+);
 const semesterId = ref<string>(
   props.row?.semester_id ?? props.defaultSemesterId ?? '',
 );
@@ -103,10 +132,12 @@ const academicYearId = ref<string | number>(
  *  lessonHourId for the "slot"). Multi-day fan-out has been dropped —
  *  it clashed with the slot-filtered teacher dropdown, which is
  *  scoped to one day × one hour. */
-const dayId = ref<string>(props.row?.day_id ?? '');
+const dayId = ref<string>(
+  props.row?.day_id ?? props.preFilledDayId ?? '',
+);
 /** UUID of the picked lesson_hour row (defines the JP slot). */
 const lessonHourId = ref<string>(
-  props.row?.lesson_hour_days_id ?? '',
+  props.row?.lesson_hour_days_id ?? props.preFilledLessonHourId ?? '',
 );
 const room = ref<string>(props.row?.room ?? '');
 
@@ -390,8 +421,10 @@ onMounted(async () => {
     room.value = readLastRoomForClass(classId.value);
   }
 
-  if (isEdit.value) {
-    // Existing row implies the prereqs pass; skip the gate.
+  if (isEdit.value || props.skipSetupCheck) {
+    // Existing row implies the prereqs pass; timetable-grid pre-fill
+    // implies the caller already saw a populated matrix. Either way we
+    // skip the gate and land straight on the form.
     mode.value = 'form';
   } else {
     await runPrereqCheck();

@@ -860,7 +860,7 @@
       "title": "Manajemen Jadwal Sekolah",
       "meta": "{sessions} sesi · {conflicts} bentrok · TP {year}",
       "viewList": "List",
-      "viewMatrix": "Matrix",
+      "viewTimetable": "Timetable",
       "print": "Cetak",
       "import": "Import",
       "lessonHours": "Jam Pelajaran",
@@ -961,6 +961,21 @@
         "createAndContinue": "Buat + Tambah Lagi",
         "createdToast": "Jadwal dibuat. Slot pindah ke jam berikut.",
         "createdToastLast": "Jadwal dibuat. Sudah di jam terakhir hari ini."
+      },
+      "timetable": {
+        "classPickerLabel": "KELAS",
+        "classPickerPlaceholder": "— pilih kelas —",
+        "semesterLabel": "SEMESTER",
+        "hourColumnHeader": "JAM",
+        "pickClassTitle": "Pilih kelas dulu",
+        "pickClassDesc": "Timetable menampilkan seluruh pekan satu kelas. Pilih kelas di atas untuk memuat grid.",
+        "noClassesTitle": "Belum ada kelas",
+        "noClassesDesc": "Timetable belum bisa dimuat sebelum sekolah punya minimal satu kelas.",
+        "noClassesCta": "Buka Data Kelas",
+        "errorTitle": "Gagal memuat timetable",
+        "slotsFilled": "{filled} dari {total} slot terisi",
+        "editCellAria": "Edit {subject} di {day} jam ke-{hour}",
+        "createCellAria": "Tambah jadwal di {day} jam ke-{hour}"
       }
     },
     "attendanceDashboard": {

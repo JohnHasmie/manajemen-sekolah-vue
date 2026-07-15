@@ -526,6 +526,80 @@ export interface AvailableTeachersQuery {
 }
 
 // ───────────────────────────────────────────────────────────────────
+// Timetable matrix — GET /teaching-schedules/matrix
+// ───────────────────────────────────────────────────────────────────
+//
+// Sprint 3 Pola C — the per-class week grid entry mode. Backend
+// contract (MR A of Sprint 3):
+//
+//   GET /teaching-schedules/matrix?class_id=&semester_id=&academic_year_id=
+//
+// Returns days + hours + a cell map keyed by `${day_id}:${hour_number}`.
+// Empty cells simply have no key. The grid clicks a filled cell to
+// EDIT (pass schedule_id) and an empty one to CREATE (pass day_id +
+// lesson_hour_id pre-filled so the admin doesn't have to re-pick the
+// slot they just clicked).
+
+/** One day row in the matrix header. `display_name` is the Bahasa
+ *  version ("Senin") shown to the user; `name` is the canonical
+ *  English key ("Monday") the DB stores. */
+export interface TimetableDay {
+  id: string;
+  name: string;
+  display_name: string;
+  order_number: number;
+}
+
+/** One row on the left of the grid — a lesson-hour slot. `day_id` is
+ *  the hour's OWNER day (each day×hour tuple gets its own UUID) but
+ *  the grid only reads `hour_number` because that's what stitches
+ *  cells across all days into a single row. */
+export interface TimetableHour {
+  id: string;
+  hour_number: number;
+  name: string;
+  start_time: string;
+  end_time: string;
+  day_id: string;
+}
+
+/** Filled cell — a teaching-schedule row exposed at the cell's
+ *  position. Empty cells are simply absent from `cells`. */
+export interface TimetableCell {
+  schedule_id: string;
+  teacher: { id: string; name: string };
+  subject: { id: string; name: string; code?: string | null };
+  room?: string | null;
+}
+
+/** Matrix meta strip — counters + IDs surfaced under the grid. */
+export interface TimetableMeta {
+  class_id: string;
+  class_name: string;
+  semester_id: string;
+  academic_year_id: string | number;
+  total_filled: number;
+  total_slots: number;
+}
+
+/** Full matrix payload — days + hours + cell map + meta. */
+export interface TimetableMatrix {
+  days: TimetableDay[];
+  hours: TimetableHour[];
+  /** Keyed `${day_id}:${hour_number}` — a Record, not a Map, so it
+   *  survives JSON round-trips and Vue reactivity untouched. */
+  cells: Record<string, TimetableCell>;
+  meta: TimetableMeta;
+}
+
+/** Query params for /teaching-schedules/matrix. */
+export interface TimetableMatrixQuery {
+  classId: string;
+  semesterId?: string;
+  academicYearId?: string | number;
+}
+
+// ───────────────────────────────────────────────────────────────────
 // Service
 // ───────────────────────────────────────────────────────────────────
 
@@ -1168,6 +1242,82 @@ export const ScheduleService = {
    * everywhere else — matches Sprint 2 MR A's controller mount. Don't
    * "normalise" it, that's the actual route.
    */
+  /**
+   * GET /teaching-schedules/matrix — per-class week grid for the Pola C
+   * timetable entry mode (Sprint 3 MR C). class_id is REQUIRED; semester
+   * + academic year default to the active tenant context server-side.
+   *
+   * Failure mode: throws with a translated message. The Pola C grid
+   * catches it and renders its retry state — a partial matrix would be
+   * worse than "load failed" since the empty cells lie about the class's
+   * actual timetable.
+   */
+  async getTimetableMatrix(q: TimetableMatrixQuery): Promise<TimetableMatrix> {
+    try {
+      const params = sanitize({
+        class_id: q.classId,
+        semester_id: q.semesterId,
+        academic_year_id: q.academicYearId,
+      });
+      const res = await api.get('/teaching-schedules/matrix', { params });
+      const body = (res.data?.data ?? res.data ?? {}) as Record<string, any>;
+      const days: TimetableDay[] = Array.isArray(body.days)
+        ? body.days.map((d: any) => ({
+            id: asStr(d.id),
+            name: asStr(d.name),
+            display_name: asStr(d.display_name ?? d.name),
+            order_number: asNum(d.order_number),
+          }))
+        : [];
+      const hours: TimetableHour[] = Array.isArray(body.hours)
+        ? body.hours.map((h: any) => ({
+            id: asStr(h.id),
+            hour_number: asNum(h.hour_number),
+            name: asStr(h.name),
+            start_time: String(h.start_time ?? '').slice(0, 5),
+            end_time: String(h.end_time ?? '').slice(0, 5),
+            day_id: asStr(h.day_id),
+          }))
+        : [];
+      const cells: Record<string, TimetableCell> = {};
+      if (body.cells && typeof body.cells === 'object') {
+        for (const [k, raw] of Object.entries(body.cells as Record<string, any>)) {
+          if (!raw || typeof raw !== 'object') continue;
+          const teacher = raw.teacher ?? {};
+          const subject = raw.subject ?? {};
+          cells[k] = {
+            schedule_id: asStr(raw.schedule_id ?? raw.id),
+            teacher: {
+              id: asStr(teacher.id),
+              name: asStr(teacher.name ?? teacher.nama),
+            },
+            subject: {
+              id: asStr(subject.id),
+              name: asStr(subject.name ?? subject.nama),
+              code: subject.code ?? subject.kode ?? null,
+            },
+            room: raw.room ?? null,
+          };
+        }
+      }
+      const rawMeta = (body.meta ?? {}) as Record<string, any>;
+      const meta: TimetableMeta = {
+        class_id: asStr(rawMeta.class_id ?? q.classId),
+        class_name: asStr(rawMeta.class_name),
+        semester_id: asStr(rawMeta.semester_id ?? q.semesterId ?? ''),
+        academic_year_id:
+          rawMeta.academic_year_id ?? q.academicYearId ?? '',
+        total_filled: asNum(rawMeta.total_filled ?? Object.keys(cells).length),
+        total_slots: asNum(
+          rawMeta.total_slots ?? days.length * hours.length,
+        ),
+      };
+      return { days, hours, cells, meta };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat matrix jadwal.'));
+    }
+  },
+
   async getAvailableTeachers(
     q: AvailableTeachersQuery,
   ): Promise<AvailableTeacher[]> {
