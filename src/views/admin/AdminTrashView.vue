@@ -15,6 +15,7 @@ import SegmentedControl, {
 } from '@/components/filters/SegmentedControl.vue';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import Spinner from '@/components/ui/Spinner.vue';
@@ -69,17 +70,6 @@ const visibleGroups = computed(() =>
   activeTab.value === 'all'
     ? populated.value
     : populated.value.filter((g) => g.type === activeTab.value),
-);
-
-// Quota banner — how many trashed rows still hold a paid seat, broken down.
-const quotaGroups = computed(() => populated.value.filter((g) => g.quota));
-const quotaCount = computed(() =>
-  quotaGroups.value.reduce((sum, g) => sum + g.count, 0),
-);
-const quotaBreakdown = computed(() =>
-  quotaGroups.value
-    .map((g) => `${g.count} ${g.label.toLowerCase()}`)
-    .join(' · '),
 );
 
 const confirmWord = computed(() => t('admin.trash.confirmWord'));
@@ -189,22 +179,24 @@ onMounted(reload);
       :meta="t('admin.trash.meta', { count: total, days: retentionDays })"
     />
 
-    <!-- Quota banner — how much trashed data still costs a seat. -->
+    <!-- Quota note. Trashed rows do NOT hold a paid seat — GetSeatUsageAction
+         excludes soft-deleted rows (!428) — so this reassures rather than
+         warns. The only quota consequence left is that restoring a guru/siswa
+         takes a seat back. -->
     <div
-      class="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3"
+      class="flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3"
     >
       <span
-        class="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-white text-lg text-amber-600"
-        aria-hidden="true"
-      >📊</span>
+        class="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-white text-sky-600"
+      >
+        <NavIcon name="info" :size="18" />
+      </span>
       <div class="min-w-0">
-        <p class="text-sm font-bold text-amber-800">
-          {{ quotaCount > 0
-            ? t('admin.trash.quotaTitle', { count: quotaCount })
-            : t('admin.trash.quotaEmpty') }}
+        <p class="text-sm font-bold text-sky-900">
+          {{ t('admin.trash.quotaFreeTitle') }}
         </p>
-        <p v-if="quotaCount > 0" class="mt-0.5 text-xs text-amber-700">
-          <span v-if="quotaBreakdown">{{ quotaBreakdown }} — </span>{{ t('admin.trash.quotaSubtitle') }}
+        <p class="mt-0.5 text-xs text-sky-700">
+          {{ t('admin.trash.quotaFreeSubtitle') }}
         </p>
       </div>
     </div>
@@ -242,10 +234,6 @@ onMounted(reload);
                     class="rounded-md px-1.5 py-0.5 font-black uppercase tracking-wide"
                     :class="typeChipClass[item.type]"
                   >{{ group.label }}</span>
-                  <span
-                    v-if="group.quota"
-                    class="rounded-md bg-amber-100 px-1.5 py-0.5 font-black uppercase tracking-wide text-amber-700"
-                  >{{ t('admin.trash.quotaChip') }}</span>
                   <span v-if="item.deleted_at">· {{ t('admin.trash.deletedAgo', { time: formatRelative(item.deleted_at) }) }}</span>
                   <span
                     v-if="daysUntilPurge(item) !== null && daysUntilPurge(item)! <= 7"

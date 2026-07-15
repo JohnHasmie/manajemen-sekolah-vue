@@ -131,15 +131,6 @@ const ADMIN_NAV: NavSection[] = [
         icon: 'layers',
         needs: 'student-context',
       },
-      {
-        // "Data Terhapus" — recycle bin for soft-deleted guru/siswa/mapel.
-        // Dedicated permission (school.trash.*), same as every other module.
-        // view = see + restore; manage = permanent delete.
-        to: '/admin/trash',
-        labelKey: 'nav.dataTerhapus',
-        icon: 'trash-2',
-        abilityAny: ['school.trash.view', 'school.trash.manage'],
-      },
       // Class-first read-only oversight (health + Perlu Perhatian), distinct
       // from the class-management entry above.
       {
@@ -291,6 +282,18 @@ const ADMIN_NAV: NavSection[] = [
         // Ability-tagged so a staff holding settings access sees the
         // hub too (mobile "System" tab parity). Admins hold both keys.
         abilityAny: ['school.settings.view', 'school.settings.manage'],
+      },
+      {
+        // "Data Terhapus" — recycle bin for soft-deleted guru/siswa/mapel.
+        // Housekeeping, not day-to-day roster work, so it sits at the very
+        // bottom beside Pengaturan rather than inside Data Sekolah (where it
+        // interrupted the roster list). Mirrors the mobile System tab.
+        // Dedicated permission (school.trash.*), same as every other module:
+        // view = see + restore; manage = permanent delete.
+        to: '/admin/trash',
+        labelKey: 'nav.dataTerhapus',
+        icon: 'trash-2',
+        abilityAny: ['school.trash.view', 'school.trash.manage'],
       },
     ],
   },
