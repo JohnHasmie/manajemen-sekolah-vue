@@ -154,6 +154,14 @@ const occupiedSlots = ref<ScheduleRow[]>([]);
 const availableTeachers = ref<AvailableTeacher[]>([]);
 const isLoadingAvailableTeachers = ref(false);
 const availableTeachersError = ref<string | null>(null);
+/**
+ * True only once /available-teachers has actually ANSWERED for the current
+ * slot. An empty `availableTeachers` is ambiguous on its own — it means either
+ * "the server says nobody is free" or "we never asked" — and the UI must never
+ * present the second as the first. Without this the picker claimed "Semua guru
+ * sudah punya jadwal di jam ini" on a slot it had never sent a request for.
+ */
+const hasFetchedAvailableTeachers = ref(false);
 /** True only when the teacher-subjects request errored (not when it
  * succeeded but returned an empty list). Mirrors Flutter: on error we
  * fall back to showing all subjects; on a genuine empty result we show
@@ -302,10 +310,14 @@ async function loadAvailableTeachers() {
   if (!classId.value || !dayId.value || !lessonHourId.value) {
     availableTeachers.value = [];
     availableTeachersError.value = null;
+    hasFetchedAvailableTeachers.value = false;
     return;
   }
   isLoadingAvailableTeachers.value = true;
   availableTeachersError.value = null;
+  // The previous answer belonged to the previous slot — retire it now so a
+  // stale "nobody free" can't be shown against the slot we're about to ask for.
+  hasFetchedAvailableTeachers.value = false;
   try {
     const list = await ScheduleService.getAvailableTeachers({
       classId: classId.value,
@@ -326,6 +338,7 @@ async function loadAvailableTeachers() {
       return a.name.localeCompare(b.name, 'id');
     });
     availableTeachers.value = list;
+    hasFetchedAvailableTeachers.value = true;
     // If the previously-picked teacher is no longer in the free list
     // (e.g. slot changed), clear the selection so the admin doesn't
     // submit a stale pick that will re-conflict.
@@ -421,6 +434,26 @@ onMounted(async () => {
     room.value = readLastRoomForClass(classId.value);
   }
 
+  // Kick off the FIRST slot-filtered teacher fetch.
+  //
+  // The watcher below is change-only, but this modal routinely opens with the
+  // slot ALREADY filled (the timetable grid pre-fills class/day/hour from the
+  // clicked cell). Nothing then changes, so the watcher never fired, the
+  // request was never sent, `availableTeachers` stayed [] — and the picker
+  // announced "Tidak ada guru yang tersedia untuk slot ini" for a slot it had
+  // never asked about. Nudging the day was what finally triggered the first
+  // fetch, which is why re-picking the same slot appeared to "fix" it.
+  //
+  // Create-only, deliberately: /available-teachers takes no exclude_id, so in
+  // edit mode the row's OWN teacher is reported busy (by this very row) and
+  // would be filtered out — fetching on open would then wipe the admin's
+  // existing pick the moment the drawer appeared. Edit keeps the old
+  // behaviour: the list loads only once the admin actually changes the slot,
+  // which is the point at which invalidating the teacher is correct.
+  if (!isEdit.value) {
+    await loadAvailableTeachers();
+  }
+
   if (isEdit.value || props.skipSetupCheck) {
     // Existing row implies the prereqs pass; timetable-grid pre-fill
     // implies the caller already saw a populated matrix. Either way we
@@ -457,6 +490,9 @@ watch(
 );
 
 // Re-fetch slot-filtered teachers whenever class + slot inputs change.
+// NOTE: change-only on purpose — the initial fetch is kicked off explicitly in
+// onMounted (create only). See the comment there for why `immediate: true`
+// would be wrong for edit mode.
 watch(
   [classId, dayId, lessonHourId, semesterId, academicYearId],
   () => void loadAvailableTeachers(),
@@ -900,8 +936,11 @@ const teacherPickerLocked = computed(
             </option>
           </select>
 
+          <!-- Only claim "nobody is free" once the server has actually said so
+               (hasFetchedAvailableTeachers). An un-asked slot must never be
+               reported as a full one. -->
           <p
-            v-if="!isLoadingAvailableTeachers && availableTeachers.length === 0 && !availableTeachersError"
+            v-if="hasFetchedAvailableTeachers && !isLoadingAvailableTeachers && availableTeachers.length === 0 && !availableTeachersError"
             class="text-2xs text-amber-700 mt-1.5 leading-relaxed"
           >
             <NavIcon name="alert-circle" :size="11" class="inline" />
