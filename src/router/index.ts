@@ -1032,7 +1032,13 @@ const routes: RouteRecordRaw[] = [
         path: 'teacher/classes',
         name: 'teacher.classes',
         component: ClassHubListView,
-        meta: { role: 'teacher' satisfies Role, ability: 'school.class.view' },
+        // The hub reads the teacher's OWN classes (GET /classes/mine), which
+        // the backend gates on `activity.view` — the ability every guru /
+        // wali kelas holds. NOT `school.class.view`: that's the admin-only
+        // school-wide read (see PermissionCatalog::adminSchoolDefaults), so
+        // requiring it here bounced every guru back to /teacher on click.
+        // Matches the nav gate in useNavMenu.ts and the detail route below.
+        meta: { role: 'teacher' satisfies Role, ability: 'activity.view' },
       },
       {
         path: 'teacher/classes/:id',
