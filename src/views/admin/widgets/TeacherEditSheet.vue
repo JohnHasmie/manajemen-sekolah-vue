@@ -14,6 +14,7 @@ import { computed, reactive, ref, watch } from 'vue';
 import FormSheet from '@/components/ui/FormSheet.vue';
 import FormField, { type FormFieldOption } from '@/components/ui/FormField.vue';
 import type { Teacher, Classroom, Subject } from '@/types/entities';
+import { subjectLabel } from '@/lib/labels';
 
 const props = defineProps<{
   teacher?: Teacher | null;
@@ -292,7 +293,7 @@ function submit() {
             "
             @click="toggleSubject(s.id)"
           >
-            {{ s.name }}
+            {{ subjectLabel(s) }}
           </button>
         </div>
       </div>

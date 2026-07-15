@@ -25,10 +25,13 @@ import type { GenerateConfig, GenerateScope } from '@/types/recommendations';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import { subjectLabel } from '@/lib/labels';
 
 interface SubjectOption {
   id: string;
   name: string;
+  /** Distinguishes same-named subjects (Al Qur'an Hadis 7/8/9). Nullable. */
+  code?: string | null;
 }
 
 interface StudentOption {
@@ -406,7 +409,7 @@ function submit() {
               name="check"
               :size="10"
             />
-            {{ subj.name }}
+            {{ subjectLabel(subj) }}
           </button>
         </div>
       </div>

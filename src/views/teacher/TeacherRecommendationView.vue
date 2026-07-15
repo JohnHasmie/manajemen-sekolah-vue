@@ -509,7 +509,7 @@ async function runGenerate(cfg: GenerateConfig) {
       :class-name="generateTarget.className"
       :total-students="generateTarget.totalStudents"
       :at-risk-count="generateTarget.atRiskCount"
-      :subjects="subjects.map((s) => ({ id: s.id, name: s.name }))"
+      :subjects="subjects.map((s) => ({ id: s.id, name: s.name, code: s.code ?? null }))"
       :busy="isGenerating.has(generateTarget.classId)"
       @close="generateTarget = null"
       @generate="runGenerate"

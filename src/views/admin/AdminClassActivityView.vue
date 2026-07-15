@@ -45,6 +45,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { subjectLabel } from '@/lib/labels';
 
 // ── Reference data (filter pickers) ──
 const classes = ref<Classroom[]>([]);
@@ -496,7 +497,7 @@ function exportCsv() {
             :class="s.id === subjectFilter ? 'bg-role-admin/5 font-bold text-role-admin' : ''"
             @click="pickSubject(s.id)"
           >
-            {{ s.name }}
+            {{ subjectLabel(s) }}
           </button>
         </li>
       </ul>

@@ -29,7 +29,7 @@ import type {
   ScheduleRow,
 } from '@/types/schedule';
 import { useAcademicYearStore } from '@/stores/academic-year';
-import { semesterLabel } from '@/lib/labels';
+import { semesterLabel, subjectLabel } from '@/lib/labels';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
@@ -75,8 +75,8 @@ const lessonHourId = ref<string>(
 const room = ref<string>(props.row?.room ?? '');
 
 // ── Loaded data ─────────────────────────────────────────────────────
-const teacherSubjects = ref<Array<{ id: string; name: string }>>([]);
-const allSubjects = ref<Array<{ id: string; name: string }>>([]);
+const teacherSubjects = ref<Array<{ id: string; name: string; code?: string | null }>>([]);
+const allSubjects = ref<Array<{ id: string; name: string; code?: string | null }>>([]);
 const lessonHours = ref<LessonHour[]>([]);
 const conflicts = ref<ScheduleConflict[]>([]);
 /** Occupied slots — existing schedules for the picked class/day/term.
@@ -112,9 +112,11 @@ async function loadAllSubjects() {
     const res = await api.get('/subject', { params: { per_page: 200 } });
     const body = res.data;
     const list = Array.isArray(body?.data) ? body.data : Array.isArray(body) ? body : [];
+    // `code` distinguishes same-named subjects (Al Qur'an Hadis 7/8/9).
     allSubjects.value = list.map((s: any) => ({
       id: String(s.id),
       name: String(s.name ?? s.nama ?? ''),
+      code: s.code ?? s.kode ?? null,
     }));
   } catch {
     allSubjects.value = [];
@@ -137,7 +139,11 @@ async function loadSubjectsForTeacher(tId: string) {
     // subject offered in their class).
     const list = await SubjectService.listForTeacher(tId, 'teaching');
     const ids = new Set(list.map((s) => s.id));
-    teacherSubjects.value = list.map((s) => ({ id: s.id, name: s.name }));
+    teacherSubjects.value = list.map((s) => ({
+      id: s.id,
+      name: s.name,
+      code: s.code ?? null,
+    }));
     // Clear subject if it's no longer in the teacher's set.
     if (subjectId.value && !ids.has(subjectId.value)) subjectId.value = '';
   } catch {
@@ -443,7 +449,7 @@ function goToLessonHourSettings() {
           class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin disabled:opacity-50"
         >
           <option value="">— pilih mapel —</option>
-          <option v-for="s in subjectOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
+          <option v-for="s in subjectOptions" :key="s.id" :value="s.id">{{ subjectLabel(s) }}</option>
         </select>
         <p v-if="teacherId && teacherSubjects.length === 0 && !subjectsLoadFailed && !isLoadingSubjects" class="text-3xs text-amber-700 mt-1">
           Guru ini belum punya mapel terdaftar. Tambahkan mapel ke guru terlebih dahulu.

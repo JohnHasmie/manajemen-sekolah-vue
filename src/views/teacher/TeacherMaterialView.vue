@@ -45,6 +45,7 @@ import { formatDateShort, localISODate } from '@/lib/format';
 import { useQuickAction } from '@/composables/useQuickAction';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useI18n } from 'vue-i18n';
+import { subjectLabel } from '@/lib/labels';
 
 const auth = useAuthStore();
 const { fromQuickAction, queryString } = useQuickAction();
@@ -1217,7 +1218,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
             :class="{ 'bg-brand-cobalt/5 text-brand-cobalt font-bold': s.id === subjectId }"
             @click="pickSubject(s.id)"
           >
-            {{ s.name }}
+            {{ subjectLabel(s) }}
           </button>
         </li>
       </ul>

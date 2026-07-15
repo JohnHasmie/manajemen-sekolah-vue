@@ -63,6 +63,7 @@ import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { useQuickAction } from '@/composables/useQuickAction';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { subjectLabel } from '@/lib/labels';
 
 const auth = useAuthStore();
 const { fromQuickAction, queryString } = useQuickAction();
@@ -479,21 +480,45 @@ const formClasses = computed<{ id: string; name: string }[]>(() => {
 
 // Subjects scoped to what the teacher teaches in the selected class
 // (Bug 1a). Without schedule context, falls back to the full list.
-const formSubjects = computed<{ id: string; name: string }[]>(() => {
+type FormSubjectOption = { id: string; name: string; code?: string | null };
+
+/**
+ * Schedule rows carry no subject code, so resolve it from the subject
+ * catalogue by id — same `subject_schools` source, just the other shape.
+ * Null when the subject isn't in the catalogue: the label then renders
+ * name-only rather than showing an invented code.
+ */
+function formSubjectCode(id: string): string | null {
+  return subjects.value.find((s) => s.id === id)?.code ?? null;
+}
+
+const formSubjects = computed<FormSubjectOption[]>(() => {
   if (!hasScheduleContext.value) {
-    return subjects.value.map((s) => ({ id: s.id, name: s.name }));
+    return subjects.value.map((s) => ({
+      id: s.id,
+      name: s.name,
+      code: s.code ?? null,
+    }));
   }
   const seen = new Set<string>();
-  const out: { id: string; name: string }[] = [];
+  const out: FormSubjectOption[] = [];
   for (const s of schedules.value) {
     if (!s.subject_id) continue;
     if (form.classId && s.class_id !== form.classId) continue;
     if (seen.has(s.subject_id)) continue;
     seen.add(s.subject_id);
-    out.push({ id: s.subject_id, name: s.subject_name || '-' });
+    out.push({
+      id: s.subject_id,
+      name: s.subject_name || '-',
+      code: formSubjectCode(s.subject_id),
+    });
   }
   if (form.subjectId && !seen.has(form.subjectId)) {
-    out.push({ id: form.subjectId, name: formSubjectName(form.subjectId) });
+    out.push({
+      id: form.subjectId,
+      name: formSubjectName(form.subjectId),
+      code: formSubjectCode(form.subjectId),
+    });
   }
   return out;
 });
@@ -1072,7 +1097,7 @@ function pickSubject(id: string) {
                 {{ !form.classId ? 'Pilih kelas dulu' : 'Pilih mapel…' }}
               </option>
               <option v-for="s in formSubjects" :key="s.id" :value="s.id">
-                {{ s.name }}
+                {{ subjectLabel(s) }}
               </option>
             </select>
           </div>
@@ -1311,7 +1336,7 @@ function pickSubject(id: string) {
             :class="s.id === subjectFilter ? 'bg-brand-cobalt/5 font-bold text-brand-cobalt' : ''"
             @click="pickSubject(s.id)"
           >
-            {{ s.name }}
+            {{ subjectLabel(s) }}
           </button>
         </li>
       </ul>

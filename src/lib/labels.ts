@@ -180,3 +180,29 @@ export function educationLevelDisplay(
   if (slug === 'VOCATIONAL_HIGH') return 'SMK';
   return slug;
 }
+
+/**
+ * Display label for a school subject — `"Al Qur'an Hadis (QH-7)"`.
+ *
+ * A school carries one `subject_schools` row per subject × grade, so
+ * several rows legitimately share a `name` ("Al Qur'an Hadis" exists for
+ * grades 7, 8 and 9) and are told apart ONLY by `code` (QH-7/QH-8/QH-9).
+ * Rendering `name` alone makes those options visually identical in a
+ * picker — the admin cannot tell which one they are selecting.
+ *
+ * `code` is nullable: schools that never assigned codes have none, and
+ * those schools also have no duplicate names. So the suffix is
+ * conditional — a code-less subject renders exactly as it does today.
+ *
+ * DISPLAY ONLY. Selects bind on `subject_id`/`id`; never bind on this.
+ *
+ * Note: the master `subjects` catalogue (MasterSubject) has no `code`
+ * column at all, so master-fed pickers must not use this helper.
+ */
+export function subjectLabel(
+  subject: { name?: string | null; code?: string | null } | null | undefined,
+): string {
+  const name = String(subject?.name ?? '').trim();
+  const code = String(subject?.code ?? '').trim();
+  return code ? `${name} (${code})` : name;
+}

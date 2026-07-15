@@ -23,6 +23,7 @@ import { useI18n } from 'vue-i18n';
 import { ScheduleService } from '@/services/schedule.service';
 import { LessonHourService } from '@/services/lesson-hour.service';
 import { SubjectService } from '@/services/subjects.service';
+import { subjectLabel } from '@/lib/labels';
 import type {
   AdminScheduleFilters,
 } from '@/services/schedule.service';
@@ -82,7 +83,7 @@ const hoursLoadFailed = ref(false);
 // Full school subject list — used to populate the Mapel filter so the
 // list view offers every subject (not just the ones present in the
 // currently-loaded/paginated rows). Matches the matrix view's coverage.
-const allSubjects = ref<Array<{ id: string; name: string }>>([]);
+const allSubjects = ref<Array<{ id: string; name: string; code?: string | null }>>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
@@ -157,7 +158,13 @@ async function loadAllSubjects() {
   // the few that appear in the currently-loaded rows.
   try {
     const res = await SubjectService.list({ per_page: 200 });
-    allSubjects.value = res.items.map((s) => ({ id: s.id, name: s.name }));
+    // Keep `code` — several subjects share a name (Al Qur'an Hadis 7/8/9)
+    // and the Mapel filter can only tell them apart by their code.
+    allSubjects.value = res.items.map((s) => ({
+      id: s.id,
+      name: s.name,
+      code: s.code ?? null,
+    }));
   } catch {
     allSubjects.value = [];
   }
@@ -221,7 +228,7 @@ const subjectChipValue = computed(() => {
   // Prefer the full subject catalogue (covers subjects not in current rows);
   // fall back to deriving the name from the loaded rows.
   const fromCatalogue = allSubjects.value.find((s) => s.id === filterSubjectId.value);
-  if (fromCatalogue) return fromCatalogue.name;
+  if (fromCatalogue) return subjectLabel(fromCatalogue);
   const found = rows.value.find((r) => r.subject_id === filterSubjectId.value);
   return found?.subject_name ?? '—';
 });
@@ -234,16 +241,24 @@ const hourChipValue = computed(() => {
 // catalogue so the list view offers every subject (bug: it used to show
 // only the handful present in the currently-loaded rows). Fall back to
 // deriving from rows if the catalogue couldn't be loaded.
+//
+// Carries `code` through so same-named subjects stay distinguishable in
+// the picker. The rows fallback can't: ScheduleRow has no subject code
+// field, and this branch only runs when the catalogue fetch FAILED, so
+// there is nothing to look the code up against. Those options degrade to
+// name-only rather than showing a made-up code.
 const subjectOptions = computed(() => {
-  const seen = new Map<string, { id: string; name: string }>();
+  const seen = new Map<string, { id: string; name: string; code?: string | null }>();
   if (allSubjects.value.length > 0) {
     for (const s of allSubjects.value) {
-      if (!seen.has(s.id)) seen.set(s.id, { id: s.id, name: s.name });
+      if (!seen.has(s.id)) {
+        seen.set(s.id, { id: s.id, name: s.name, code: s.code ?? null });
+      }
     }
   } else {
     for (const r of rows.value) {
       if (!seen.has(r.subject_id)) {
-        seen.set(r.subject_id, { id: r.subject_id, name: r.subject_name });
+        seen.set(r.subject_id, { id: r.subject_id, name: r.subject_name, code: null });
       }
     }
   }
@@ -1234,7 +1249,7 @@ async function bulkDelete() {
           :class="filterSubjectId === s.id ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
           @click="filterSubjectId = s.id; showSubjectSheet = false"
         >
-          {{ s.name }}
+          {{ subjectLabel(s) }}
         </button>
       </div>
     </Modal>

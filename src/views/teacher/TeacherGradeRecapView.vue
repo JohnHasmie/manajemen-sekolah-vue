@@ -43,6 +43,7 @@ import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Modal from '@/components/ui/Modal.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { subjectLabel } from '@/lib/labels';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -480,7 +481,7 @@ function progressBarTone(pct: number) {
             showSubjectPicker = false;
           "
         >
-          <span class="text-sm font-semibold text-slate-900">{{ s.name }}</span>
+          <span class="text-sm font-semibold text-slate-900">{{ subjectLabel(s) }}</span>
         </button>
       </div>
     </Modal>

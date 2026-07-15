@@ -25,6 +25,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { LessonPlanService } from '@/services/lesson-plans.service';
 import { SubjectService } from '@/services/subjects.service';
+import { subjectLabel } from '@/lib/labels';
 import { ClassroomService } from '@/services/classrooms.service';
 import {
   FORMAT_LABELS,
@@ -479,7 +480,7 @@ function openDetail(plan: LessonPlan) {
             :class="{ 'bg-role-admin/5 text-role-admin font-bold': s.id === subjectId }"
             @click="pickSubject(s.id)"
           >
-            {{ s.name }}
+            {{ subjectLabel(s) }}
           </button>
         </li>
       </ul>

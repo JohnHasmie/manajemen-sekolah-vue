@@ -57,6 +57,7 @@ import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { useQuickAction } from '@/composables/useQuickAction';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { subjectLabel } from '@/lib/labels';
 
 const { fromQuickAction, queryString } = useQuickAction();
 const router = useRouter();
@@ -642,7 +643,7 @@ function onUploaded(plan: LessonPlan) {
             :class="{ 'bg-brand-cobalt/5 text-brand-cobalt font-bold': s.id === subjectId }"
             @click="pickSubject(s.id)"
           >
-            {{ s.name }}
+            {{ subjectLabel(s) }}
           </button>
         </li>
       </ul>

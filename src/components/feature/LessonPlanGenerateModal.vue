@@ -32,6 +32,7 @@ import { MaterialService } from '@/services/materials.service';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import { subjectLabel } from '@/lib/labels';
 
 interface Props {
   classes: Classroom[];
@@ -268,7 +269,7 @@ function submit() {
           >
             <option value="">Pilih mapel…</option>
             <option v-for="s in subjects" :key="s.id" :value="s.id">
-              {{ s.name }}
+              {{ subjectLabel(s) }}
             </option>
           </select>
         </div>
