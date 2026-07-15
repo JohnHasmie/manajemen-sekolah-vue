@@ -893,7 +893,16 @@
       "addFab": "Tambah Sesi",
       "emptyTitle": "Belum ada sesi jadwal",
       "emptyDesc": "Tap tombol + untuk menambahkan sesi jadwal baru.",
-      "hourNumber": "Jam ke-{n}"
+      "hourNumber": "Jam ke-{n}",
+      "emptyLessonHours": {
+        "badge": "JAM PELAJARAN BELUM DIATUR",
+        "formDesc": "Jadwal belum bisa dibuat sebelum jam pelajaran sekolah didaftarkan.",
+        "pageDesc": "Sekolah ini belum punya jam pelajaran, jadi sesi jadwal belum bisa ditambahkan.",
+        "cta": "Atur Jam Pelajaran",
+        "menuHint": "Pengaturan › Operasional › Jam pelajaran",
+        "dayEmpty": "Belum ada jam pelajaran untuk hari yang dipilih.",
+        "importAlternative": "Atau impor jadwal dari Excel — jam pelajaran yang belum terdaftar akan ditawarkan untuk didaftarkan otomatis."
+      }
     },
     "attendanceDashboard": {
       "kicker": "Akademik · Kehadiran",

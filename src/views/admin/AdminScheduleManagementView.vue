@@ -74,6 +74,11 @@ const rows = ref<ScheduleRow[]>([]);
 // removed as part of the single-fetch-per-AY refactor.
 const filterOptions = ref<ScheduleFilterOptions | null>(null);
 const lessonHours = ref<LessonHour[]>([]);
+/** True only when the lesson-hours request errored. Lets us tell a
+ * school that genuinely hasn't configured its Jam Pelajaran (actionable)
+ * apart from a request that simply failed (not the school's fault, and
+ * not something the settings page would fix). */
+const hoursLoadFailed = ref(false);
 // Full school subject list — used to populate the Mapel filter so the
 // list view offers every subject (not just the ones present in the
 // currently-loaded/paginated rows). Matches the matrix view's coverage.
@@ -121,12 +126,30 @@ async function loadFilterOptions() {
 async function loadLessonHours() {
   // One-shot — lesson hours don't change often. Used as the lookup
   // table for matrix drag-drop targets (day_id × hour_number → uuid).
+  hoursLoadFailed.value = false;
   try {
     lessonHours.value = await LessonHourService.list();
   } catch {
+    hoursLoadFailed.value = true;
     lessonHours.value = [];
   }
 }
+
+/**
+ * The school has no Jam Pelajaran configured. Everything downstream of
+ * it is quietly dead: "Tambah Sesi" opens a form whose Jam Pelajaran
+ * picker can never be filled, so its save button can never enable. The
+ * page's own empty state ("Tap tombol + …") points straight into that
+ * dead-end, so we surface the real blocker up front instead.
+ *
+ * Note the Excel import is NOT blocked by this — it detects unregistered
+ * hours and offers to register them from the file (MISSING_LESSON_HOURS
+ * → "Daftarkan & Impor"), which is why the banner names it as the other
+ * way out rather than warning the admin off it.
+ */
+const hasNoLessonHours = computed(
+  () => !isLoading.value && !hoursLoadFailed.value && lessonHours.value.length === 0,
+);
 
 async function loadAllSubjects() {
   // One-shot — the full school subject catalogue. The Mapel filter
@@ -787,6 +810,31 @@ async function bulkDelete() {
     </BrandPageHeader>
 
     <KpiStripCards :cards="kpiCards" />
+
+    <!-- Jam Pelajaran not set up — manual "Tambah Sesi" cannot work until
+         it is, so say so here rather than letting the admin discover it
+         as a permanently-disabled save button. -->
+    <button
+      v-if="hasNoLessonHours"
+      type="button"
+      class="w-full text-left rounded-2xl border border-dashed border-amber-300 bg-amber-50 p-4 hover:bg-amber-100 transition-colors"
+      @click="router.push({ name: 'admin.schedule.lesson-hours' })"
+    >
+      <p class="text-3xs font-bold uppercase tracking-widest text-amber-700 flex items-center gap-1.5">
+        <NavIcon name="alert-triangle" :size="12" />
+        {{ $t('admin.schedule.emptyLessonHours.badge') }}
+      </p>
+      <p class="text-[13px] font-bold text-amber-900 mt-1">
+        {{ $t('admin.schedule.emptyLessonHours.pageDesc') }}
+      </p>
+      <p class="text-2xs text-amber-700 mt-1.5 leading-relaxed">
+        <span class="font-bold">{{ $t('admin.schedule.emptyLessonHours.cta') }}</span> ·
+        {{ $t('admin.schedule.emptyLessonHours.menuHint') }}
+      </p>
+      <p class="text-2xs text-amber-700 mt-1 leading-relaxed">
+        {{ $t('admin.schedule.emptyLessonHours.importAlternative') }}
+      </p>
+    </button>
 
     <PageFilterToolbar
       v-model:search="search"

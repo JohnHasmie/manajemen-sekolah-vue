@@ -893,7 +893,16 @@
       "addFab": "Add Session",
       "emptyTitle": "No schedule sessions yet",
       "emptyDesc": "Tap the + button to add a new schedule session.",
-      "hourNumber": "Hour {n}"
+      "hourNumber": "Hour {n}",
+      "emptyLessonHours": {
+        "badge": "LESSON HOURS NOT SET UP",
+        "formDesc": "Schedules cannot be created until the school's lesson hours are registered.",
+        "pageDesc": "This school has no lesson hours yet, so schedule sessions cannot be added.",
+        "cta": "Set Up Lesson Hours",
+        "menuHint": "Settings › Operational › Lesson hours",
+        "dayEmpty": "No lesson hours for the selected day yet.",
+        "importAlternative": "Or import a schedule from Excel — any unregistered lesson hours will be offered for automatic registration."
+      }
     },
     "attendanceDashboard": {
       "kicker": "Academic · Attendance",

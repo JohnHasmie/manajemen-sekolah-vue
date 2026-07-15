@@ -17,6 +17,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { ScheduleService } from '@/services/schedule.service';
 import { LessonHourService } from '@/services/lesson-hour.service';
 import { SubjectService } from '@/services/subjects.service';
@@ -49,6 +50,7 @@ const emit = defineEmits<{
 
 const ayStore = useAcademicYearStore();
 const { t } = useI18n();
+const router = useRouter();
 
 const isEdit = computed(() => Boolean(props.row?.id));
 
@@ -85,9 +87,20 @@ const occupiedSlots = ref<ScheduleRow[]>([]);
  * fall back to showing all subjects; on a genuine empty result we show
  * none so the picker is scoped strictly to the teacher's mapel. */
 const subjectsLoadFailed = ref(false);
+/** True only when the lesson-hours request errored. Same rationale as
+ * `subjectsLoadFailed`: a genuine empty list means the school hasn't set
+ * its Jam Pelajaran up yet (actionable — we point the admin at the
+ * settings page), whereas a failed request means we simply don't know.
+ * Telling an admin "belum diatur" after a network blip would be a lie. */
+const hoursLoadFailed = ref(false);
 
 const isLoadingSubjects = ref(false);
-const isLoadingHours = ref(false);
+// Starts true: the modal always loads hours on mount, and `onMounted`
+// awaits loadAllSubjects() first, so there is a real window before
+// loadLessonHours() even starts. Seeding this false would make the
+// "belum diatur" empty state flash on every open — including schools
+// that have hours — until the request resolves.
+const isLoadingHours = ref(true);
 const isProbingConflicts = ref(false);
 const isSaving = ref(false);
 const err = ref<string | null>(null);
@@ -138,9 +151,11 @@ async function loadSubjectsForTeacher(tId: string) {
 
 async function loadLessonHours() {
   isLoadingHours.value = true;
+  hoursLoadFailed.value = false;
   try {
     lessonHours.value = await LessonHourService.list();
   } catch {
+    hoursLoadFailed.value = true;
     lessonHours.value = [];
   } finally {
     isLoadingHours.value = false;
@@ -360,6 +375,36 @@ const occupiedHourIds = computed<Set<string>>(() => {
 function isHourOccupied(hour: LessonHour): boolean {
   return occupiedHourIds.value.has(hour.id);
 }
+
+/**
+ * The school has no Jam Pelajaran at all. Without one the Jam Pelajaran
+ * picker has nothing to offer, `lessonHourId` can never be set, and so
+ * `formValid` can never become true — the Buat Jadwal button would sit
+ * disabled forever with no stated reason. Surface the cause + the fix
+ * instead of letting the admin conclude the feature is broken.
+ */
+const hasNoLessonHours = computed(
+  () => !isLoadingHours.value && !hoursLoadFailed.value && lessonHours.value.length === 0,
+);
+
+/**
+ * Hours exist, but none for the day the admin picked (e.g. the school
+ * set Senin–Jumat and they picked Sabtu). Same dead-end, narrower cause.
+ */
+const dayHasNoLessonHours = computed(
+  () =>
+    !isLoadingHours.value &&
+    !hoursLoadFailed.value &&
+    lessonHours.value.length > 0 &&
+    selectedDayIds.value.length > 0 &&
+    filteredHours.value.length === 0,
+);
+
+/** Leave the modal behind — the fix lives on the settings page. */
+function goToLessonHourSettings() {
+  emit('close');
+  void router.push({ name: 'admin.schedule.lesson-hours' });
+}
 </script>
 
 <template>
@@ -457,24 +502,60 @@ function isHourOccupied(hour: LessonHour): boolean {
         <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
           Jam Pelajaran (referensi)
         </label>
-        <select
-          v-model="lessonHourId"
-          :disabled="selectedDayIds.length === 0 || isLoadingHours"
-          class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin disabled:opacity-50"
+
+        <!-- No Jam Pelajaran configured at all — the picker would be an
+             empty dead-end, so explain it and hand over the fix. -->
+        <button
+          v-if="hasNoLessonHours"
+          type="button"
+          class="mt-1 w-full text-left rounded-xl border border-dashed border-amber-300 bg-amber-50 p-3 hover:bg-amber-100 transition-colors"
+          @click="goToLessonHourSettings"
         >
-          <option value="">— pilih jam —</option>
-          <option
-            v-for="h in filteredHours"
-            :key="h.id"
-            :value="h.id"
-            :disabled="isHourOccupied(h)"
+          <p class="text-3xs font-bold uppercase tracking-widest text-amber-700 flex items-center gap-1.5">
+            <NavIcon name="alert-triangle" :size="12" />
+            {{ t('admin.schedule.emptyLessonHours.badge') }}
+          </p>
+          <p class="text-[13px] font-bold text-amber-900 mt-1">
+            {{ t('admin.schedule.emptyLessonHours.formDesc') }}
+          </p>
+          <p class="text-2xs text-amber-700 mt-1.5 font-bold">
+            {{ t('admin.schedule.emptyLessonHours.cta') }} ·
+            <span class="font-normal">{{ t('admin.schedule.emptyLessonHours.menuHint') }}</span>
+          </p>
+        </button>
+
+        <template v-else>
+          <select
+            v-model="lessonHourId"
+            :disabled="selectedDayIds.length === 0 || isLoadingHours"
+            class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin disabled:opacity-50"
           >
-            {{ t('common.lessonHour', { n: h.hour_number }) }} · {{ h.start_time }}–{{ h.end_time }}{{ isHourOccupied(h) ? ` (${t('common.occupied')})` : '' }}
-          </option>
-        </select>
-        <p v-if="!isEdit && selectedDayIds.length > 1" class="text-3xs text-slate-500 mt-1">
-          Setiap hari akan dibuat di jam ke-{{ filteredHours.find((h) => h.id === lessonHourId)?.hour_number ?? '?' }}.
-        </p>
+            <option value="">— pilih jam —</option>
+            <option
+              v-for="h in filteredHours"
+              :key="h.id"
+              :value="h.id"
+              :disabled="isHourOccupied(h)"
+            >
+              {{ t('common.lessonHour', { n: h.hour_number }) }} · {{ h.start_time }}–{{ h.end_time }}{{ isHourOccupied(h) ? ` (${t('common.occupied')})` : '' }}
+            </option>
+          </select>
+          <!-- Hours exist, but none on the picked day — same dead-end,
+               narrower cause, so name the day and offer the same fix. -->
+          <p v-if="dayHasNoLessonHours" class="text-2xs text-amber-700 mt-1.5 leading-relaxed">
+            {{ t('admin.schedule.emptyLessonHours.dayEmpty') }}
+            <button
+              type="button"
+              class="font-bold underline hover:text-amber-900"
+              @click="goToLessonHourSettings"
+            >
+              {{ t('admin.schedule.emptyLessonHours.cta') }}
+            </button>
+          </p>
+          <p v-if="!isEdit && selectedDayIds.length > 1" class="text-3xs text-slate-500 mt-1">
+            Setiap hari akan dibuat di jam ke-{{ filteredHours.find((h) => h.id === lessonHourId)?.hour_number ?? '?' }}.
+          </p>
+        </template>
       </div>
 
       <!-- Room (optional) -->
