@@ -106,6 +106,18 @@ const isSaving = ref(false);
 const err = ref<string | null>(null);
 const forceSave = ref(false);
 
+// ── Inline Quick-Add mapel state ────────────────────────────────────
+// When a picked teacher has no subjects, expose an inline expandable
+// panel so the admin can create + assign a mapel without leaving the
+// drawer (Sprint 1 pola A — see UX proposal 01/06). Emit the created
+// subject via `created` for callers; we also refresh the teacher's
+// subject list and auto-select the new one.
+const quickAddOpen = ref(false);
+const quickAddName = ref('');
+const quickAddCode = ref('');
+const isQuickAdding = ref(false);
+const quickAddErr = ref<string | null>(null);
+
 // ── Loaders ─────────────────────────────────────────────────────────
 async function loadAllSubjects() {
   try {
@@ -238,6 +250,12 @@ onMounted(async () => {
 });
 
 watch(teacherId, async (v) => {
+  // Fold the panel + reset its inputs whenever the teacher changes so
+  // we don't leak "Simpan & pakai" state onto a different teacher.
+  quickAddOpen.value = false;
+  quickAddName.value = '';
+  quickAddCode.value = '';
+  quickAddErr.value = null;
   await loadSubjectsForTeacher(v);
 });
 
@@ -342,6 +360,69 @@ async function save() {
   } finally {
     isSaving.value = false;
   }
+}
+
+// ── Quick-Add mapel ────────────────────────────────────────────────
+/** Human name of the selected teacher, used in the empty-state copy. */
+const selectedTeacherName = computed(() => {
+  const t = teachers.value.find((x) => x.id === teacherId.value);
+  return t?.name ?? '';
+});
+
+/**
+ * True when the picked teacher genuinely has no mapel assigned — the
+ * only case where we surface the inline Quick-Add CTA. A load error
+ * (subjectsLoadFailed) or an in-flight request are both excluded so we
+ * don't offer the CTA when the empty list is a transient state.
+ */
+const teacherHasNoSubjects = computed(
+  () =>
+    !!teacherId.value &&
+    !isLoadingSubjects.value &&
+    !subjectsLoadFailed.value &&
+    teacherSubjects.value.length === 0,
+);
+
+async function submitQuickAdd() {
+  const name = quickAddName.value.trim();
+  if (!name || !teacherId.value) {
+    quickAddErr.value = 'Nama mapel wajib diisi.';
+    return;
+  }
+  isQuickAdding.value = true;
+  quickAddErr.value = null;
+  try {
+    const created = await ScheduleService.createSubjectAndAssign({
+      name,
+      code: quickAddCode.value.trim() || undefined,
+      teacherId: teacherId.value,
+    });
+    // Refresh the teacher's subject list from the server so the picker
+    // reflects every attach the backend just committed (not just the
+    // one we optimistically added). Fall back to a local push if the
+    // refresh fails so the newly-created row is still selectable.
+    try {
+      await loadSubjectsForTeacher(teacherId.value);
+    } catch {
+      teacherSubjects.value = [
+        ...teacherSubjects.value,
+        { id: created.id, name: created.name, code: created.code ?? null },
+      ];
+    }
+    subjectId.value = created.id;
+    quickAddOpen.value = false;
+    quickAddName.value = '';
+    quickAddCode.value = '';
+  } catch (e) {
+    quickAddErr.value = (e as Error).message;
+  } finally {
+    isQuickAdding.value = false;
+  }
+}
+
+function cancelQuickAdd() {
+  quickAddOpen.value = false;
+  quickAddErr.value = null;
 }
 
 // ── Display helpers ────────────────────────────────────────────────
@@ -451,9 +532,81 @@ function goToLessonHourSettings() {
           <option value="">— pilih mapel —</option>
           <option v-for="s in subjectOptions" :key="s.id" :value="s.id">{{ subjectLabel(s) }}</option>
         </select>
-        <p v-if="teacherId && teacherSubjects.length === 0 && !subjectsLoadFailed && !isLoadingSubjects" class="text-3xs text-amber-700 mt-1">
-          Guru ini belum punya mapel terdaftar. Tambahkan mapel ke guru terlebih dahulu.
-        </p>
+
+        <!-- Inline Quick-Add: teacher-with-no-mapel dead-end handled in
+             the drawer instead of forcing a navigate-away. Toggle button
+             expands a panel that creates the mapel + assigns it to the
+             teacher atomically (POST /subject with assign_to_teacher_id).
+             Wireframe: 01 (Pola A) / 03 (web drawer). -->
+        <div v-if="teacherHasNoSubjects" class="mt-1.5">
+          <button
+            type="button"
+            class="w-full flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 hover:border-amber-400 px-3 py-2 text-2xs text-amber-800 font-bold transition-colors text-left"
+            :aria-expanded="quickAddOpen"
+            @click="quickAddOpen = !quickAddOpen"
+          >
+            <NavIcon :name="quickAddOpen ? 'chevron-down' : 'chevron-right'" :size="12" />
+            <span class="flex-1 leading-relaxed">
+              {{ selectedTeacherName || 'Guru ini' }} belum punya mapel · tambahkan
+            </span>
+          </button>
+
+          <div
+            v-if="quickAddOpen"
+            class="mt-2 rounded-xl border border-amber-200 bg-amber-50/40 p-3 space-y-3 animate-in fade-in slide-in-from-top-1 duration-150"
+          >
+            <p class="text-3xs font-bold uppercase tracking-widest text-amber-800 flex items-center gap-1.5">
+              <NavIcon name="plus" :size="12" />
+              Tambah mapel baru
+            </p>
+            <div>
+              <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Nama mapel</label>
+              <input
+                v-model="quickAddName"
+                type="text"
+                placeholder="Matematika"
+                autocomplete="off"
+                class="mt-1 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
+                @keydown.enter.prevent="submitQuickAdd"
+              />
+            </div>
+            <div>
+              <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
+                Kode <span class="text-slate-400 normal-case font-normal">(opsional)</span>
+              </label>
+              <input
+                v-model="quickAddCode"
+                type="text"
+                placeholder="MTK"
+                autocomplete="off"
+                class="mt-1 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
+                @keydown.enter.prevent="submitQuickAdd"
+              />
+            </div>
+            <p class="text-3xs text-slate-500 leading-relaxed">
+              Mapel akan otomatis di-assign ke {{ selectedTeacherName || 'guru ini' }} dan langsung dipakai di slot ini.
+            </p>
+            <p
+              v-if="quickAddErr"
+              class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2"
+            >
+              {{ quickAddErr }}
+            </p>
+            <div class="grid grid-cols-2 gap-2">
+              <Button variant="secondary" size="sm" block @click="cancelQuickAdd">Batal</Button>
+              <Button
+                variant="primary"
+                size="sm"
+                block
+                :loading="isQuickAdding"
+                :disabled="!quickAddName.trim() || isQuickAdding"
+                @click="submitQuickAdd"
+              >
+                Simpan &amp; pakai
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Class + Semester -->

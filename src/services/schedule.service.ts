@@ -13,6 +13,7 @@
  *     `printPdf`, `importExcel`).
  */
 import { api } from '@/lib/http';
+import { subjectFromJson, type Subject } from '@/types/entities';
 import {
   normalizeDayKey,
   type BulkChangeTeacherPayload,
@@ -376,6 +377,76 @@ export interface PaginatedSchedules {
   last_page: number;
   per_page: number;
 }
+
+// ───────────────────────────────────────────────────────────────────
+// Import discriminated union — mirrors ImportSchedulesAction's four
+// possible responses. Callers switch on `status` to render each screen
+// (missing hours dialog, missing subjects dialog, validation report,
+// success toast).
+// ───────────────────────────────────────────────────────────────────
+
+/** Individual lesson-hour row missing from school settings. */
+export interface MissingLessonHourRow {
+  day_name?: string;
+  hour_number?: number;
+  start_time?: string | null;
+  end_time?: string | null;
+}
+
+/** (teacher, subject) pair from the Excel that isn't assigned in the DB. */
+export interface MissingSubjectPerTeacher {
+  teacher_name: string;
+  subject_name: string;
+}
+
+/** Per-row failure entry inside a VALIDATION_FAILED payload. */
+export interface ImportValidationDetail {
+  row?: number;
+  label?: string;
+  sublabel?: string;
+  reason?: string;
+}
+
+/** Success bucket-counts + optional per-row details. */
+export interface ScheduleImportResults {
+  created: number;
+  restored: number;
+  skipped: number;
+  failed: number;
+  details?: ImportValidationDetail[];
+}
+
+/**
+ * Known discriminators. Kept exported so callers can enumerate them
+ * for exhaustiveness / feature-flag work.
+ */
+export type ScheduleImportStatus =
+  | 'SUCCESS'
+  | 'MISSING_LESSON_HOURS'
+  | 'MISSING_SUBJECTS_PER_TEACHER'
+  | 'VALIDATION_FAILED';
+
+/**
+ * Discriminated union of every recognised import response. Callers
+ * `switch (res.status)` on the literal to unwrap safely. Unknown
+ * status strings from a newer backend fall through to the type-`never`
+ * else branch — surface them as an error toast rather than trying to
+ * read fields that don't exist on the actual payload.
+ */
+export type ScheduleImportResponse =
+  | { status: 'SUCCESS'; results: ScheduleImportResults }
+  | {
+      status: 'MISSING_LESSON_HOURS';
+      missing_hours: MissingLessonHourRow[];
+    }
+  | {
+      status: 'MISSING_SUBJECTS_PER_TEACHER';
+      missing_subjects: MissingSubjectPerTeacher[];
+    }
+  | {
+      status: 'VALIDATION_FAILED';
+      results: { details: ImportValidationDetail[] } & Partial<ScheduleImportResults>;
+    };
 
 // ───────────────────────────────────────────────────────────────────
 // Service
@@ -868,23 +939,71 @@ export const ScheduleService = {
     }
   },
 
-  /** POST /teaching-schedule/import — upload Excel. */
+  /**
+   * POST /teaching-schedule/import — upload Excel. The response is a
+   * discriminated union — callers must switch on `status` to know
+   * whether to render a confirm-dialog (MISSING_LESSON_HOURS,
+   * MISSING_SUBJECTS_PER_TEACHER), a validation report
+   * (VALIDATION_FAILED), or fire a success toast (SUCCESS). Missing
+   * lesson hours + missing subjects are chained by the backend: pass
+   * both flags on the retry and it will register hours + create-and-
+   * assign subjects atomically before importing.
+   */
   async importExcel(
     file: File,
-    createMissingHours = false,
-  ): Promise<any> {
+    opts:
+      | boolean
+      | {
+          createMissingHours?: boolean;
+          createMissingSubjects?: boolean;
+        } = false,
+  ): Promise<ScheduleImportResponse> {
+    // Back-compat: earlier callers passed a bare boolean for
+    // createMissingHours. Preserve that call shape while accepting the
+    // new options object.
+    const {
+      createMissingHours = false,
+      createMissingSubjects = false,
+    } = typeof opts === 'boolean' ? { createMissingHours: opts } : opts;
     try {
       const fd = new FormData();
       fd.append('file', file);
-      if (createMissingHours) {
-        fd.append('create_missing_hours', '1');
-      }
+      if (createMissingHours) fd.append('create_missing_hours', '1');
+      if (createMissingSubjects) fd.append('create_missing_subjects', '1');
       const res = await api.post('/teaching-schedule/import', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      return res.data;
+      return res.data as ScheduleImportResponse;
     } catch (e) {
       throw new Error(humanError(e, 'Gagal mengimpor jadwal.'));
+    }
+  },
+
+  /**
+   * POST /subject with `assign_to_teacher_id` — creates the mapel and
+   * attaches it to the teacher atomically. Used by the schedule form's
+   * inline Quick-Add panel so admins don't have to leave the drawer
+   * when a picked teacher has no subjects yet. Backend contract:
+   * MR !439 in edu_core.
+   */
+  async createSubjectAndAssign(args: {
+    name: string;
+    teacherId: string;
+    code?: string | null;
+  }): Promise<Subject> {
+    try {
+      const payload: Record<string, unknown> = {
+        name: args.name,
+        assign_to_teacher_id: args.teacherId,
+      };
+      if (args.code) payload.code = args.code;
+      const res = await api.post('/subject', payload);
+      const body = res.data as Record<string, unknown>;
+      return subjectFromJson(
+        (body.data ?? body) as Record<string, unknown>,
+      );
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal membuat mapel.'));
     }
   },
 };
