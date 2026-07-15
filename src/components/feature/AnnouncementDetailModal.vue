@@ -166,7 +166,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <Modal title="" @close="emit('close')">
+  <!-- lg (42rem). md squeezed the rich body into a ~448px strip; lg widens the
+       reading surface while keeping the line length in the comfortable
+       ~70-character range (xl would read too wide for prose). -->
+  <Modal title="" size="lg" @close="emit('close')">
     <!-- Priority-coloured reading hero (bleeds to modal edges) -->
     <header
       class="-mx-lg -mt-lg sm:-mx-xl sm:-mt-xl px-lg sm:px-xl pt-6 pb-5 rounded-t-2xl bg-gradient-to-br text-white relative overflow-hidden"
