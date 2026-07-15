@@ -429,15 +429,16 @@ const routes: RouteRecordRaw[] = [
       },
       {
         // "Data Terhapus" — the school recycle bin. Restore or permanently
-        // delete soft-deleted guru/siswa/mapel. Destructive (permanent delete
-        // cascades), so gated on school.settings.manage exactly like the
-        // backend TrashController — no visible-but-403 menu.
+        // delete soft-deleted guru/siswa/mapel. Gated on the dedicated
+        // school.trash.* permission (view = see + restore; manage = permanent
+        // delete), matching the backend TrashController — no visible-but-403
+        // menu.
         path: 'admin/trash',
         name: 'admin.trash',
         component: AdminTrashView,
         meta: {
           role: 'admin' satisfies Role,
-          ability: 'school.settings.manage',
+          abilityAny: ['school.trash.view', 'school.trash.manage'],
         },
       },
       {

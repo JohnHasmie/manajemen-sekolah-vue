@@ -133,12 +133,12 @@ const ADMIN_NAV: NavSection[] = [
       },
       {
         // "Data Terhapus" — recycle bin for soft-deleted guru/siswa/mapel.
-        // Admin-only + destructive, so gated on school.settings.manage to
-        // match the backend TrashController (a staff never sees it).
+        // Dedicated permission (school.trash.*), same as every other module.
+        // view = see + restore; manage = permanent delete.
         to: '/admin/trash',
         labelKey: 'nav.dataTerhapus',
         icon: 'trash-2',
-        ability: 'school.settings.manage',
+        abilityAny: ['school.trash.view', 'school.trash.manage'],
       },
       // Class-first read-only oversight (health + Perlu Perhatian), distinct
       // from the class-management entry above.

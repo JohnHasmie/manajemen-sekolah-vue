@@ -20,10 +20,16 @@ import Button from '@/components/ui/Button.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { formatRelative } from '@/lib/format';
+import { useAuthStore } from '@/stores/auth';
 import { TrashService } from '@/services/trash.service';
 import type { TrashGroup, TrashImpact, TrashItem, TrashType } from '@/types/trash';
 
 const { t } = useI18n();
+const auth = useAuthStore();
+
+// view = see the bin (read-only); manage = restore + permanent delete. A
+// view-only role sees a read-only bin with the action affordances hidden.
+const canManage = computed(() => auth.hasAbility('school.trash.manage'));
 
 const groups = ref<TrashGroup[]>([]);
 const total = ref(0);
@@ -247,7 +253,7 @@ onMounted(reload);
                   >· {{ t('admin.trash.purgeSoon', { n: daysUntilPurge(item) }) }}</span>
                 </div>
               </div>
-              <div class="flex flex-shrink-0 items-center gap-2">
+              <div v-if="canManage" class="flex flex-shrink-0 items-center gap-2">
                 <Button
                   variant="success"
                   size="sm"
