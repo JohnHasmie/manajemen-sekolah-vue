@@ -137,6 +137,25 @@ export function sanitizeRichHtml(input: string | null | undefined): string {
 
 const HTMLISH = /<\/?(p|br|ul|ol|li|h[1-6]|strong|em|b|i|u|s|a|blockquote|pre|code|div|span)\b/i;
 
+const BULLET_MARKER = /data-list\s*=\s*"bullet"/i;
+
+/**
+ * Quill 2 emits BOTH list kinds as `<ol>`, telling them apart with
+ * `data-list="bullet"` on each `<li>` plus its own editor CSS. Once the HTML
+ * leaves the editor — rendered here, or imported by the Flutter side — that
+ * reads as a NUMBERED list (and our sanitizer drops data-* anyway), so a bullet
+ * list comes out as "1. 2. 3.". Rewrite those blocks to a real `<ul>`.
+ * No-op for HTML without the marker.
+ */
+function normaliseQuillLists(html: string): string {
+  if (!BULLET_MARKER.test(html)) return html;
+  return html.replace(
+    /<ol(?:\s[^>]*)?>([\s\S]*?)<\/ol>/gi,
+    (whole, inner: string) =>
+      BULLET_MARKER.test(inner) ? `<ul>${inner}</ul>` : whole,
+  );
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -155,7 +174,7 @@ function escapeHtml(s: string): string {
 export function renderAnnouncementHtml(input: string | null | undefined): string {
   const raw = (input ?? '').trim();
   if (!raw) return '';
-  if (HTMLISH.test(raw)) return sanitizeRichHtml(raw);
+  if (HTMLISH.test(raw)) return sanitizeRichHtml(normaliseQuillLists(raw));
   const upgraded = escapeHtml(raw)
     .replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>')
     .replace(/\r?\n/g, '<br>');
