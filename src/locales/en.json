@@ -235,9 +235,7 @@
     "copyLink": "Copy link",
     "linkCopied": "Copied!",
     "needHelp": "Need help? Sign in help",
-    "needHelp__todo": true,
     "contactAdmin": "Is your school already using KamilEdu? Contact your school admin",
-    "contactAdmin__todo": true,
     "whatsappAdmin": "Chat admin on WhatsApp",
     "welcomeBack": "Welcome Back",
     "verifying": "Verifying...",
@@ -264,7 +262,6 @@
       "subtitleSingle": "Continue to your school",
       "subtitleMultiple": "You're registered at {count} schools · select to continue",
       "primary": "PRIMARY",
-      "primary__todo": false,
       "chooseLabel": "CHOOSE SCHOOL",
       "othersLabel": "OTHER SCHOOLS",
       "continueButton": "CONTINUE TO {candidateName}"
@@ -2822,7 +2819,6 @@
       "thisWeek": "This Week",
       "cards": "Cards",
       "matrix": "Matrix",
-      "matrix__todo": true,
       "searchPlaceholder": "Search subject or class...",
       "allClasses": "All classes",
       "dayCompleted": "day is completed",
@@ -3913,7 +3909,7 @@
       "downloadFailed": "Failed to download invoice",
       "resendSuccess": "Invoice resent to email + WhatsApp",
       "resendFailed": "Failed to resend invoice",
-      "resendConfirm": "Resend invoice to wali via email + WhatsApp?",
+      "resendConfirm": "Resend invoice to guardian via email + WhatsApp?",
       "resending": "Resending…"
     },
     "tenant": {
