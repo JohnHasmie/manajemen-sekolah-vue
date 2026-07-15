@@ -695,8 +695,12 @@ function pickAudience(k: AudienceFilter) {
     </Modal>
 
     <!-- ── Compose modal ────────────────────────────────────── -->
+    <!-- xl (56rem). The default md (28rem) wrapped the rich-editor toolbar onto
+         two rows and squeezed the audience matrix + writing area into a narrow
+         column — this form is the densest in the app and needs the width. -->
     <Modal
       v-if="showCompose"
+      size="xl"
       :title="editingId ? t('admin.announcement.editTitle') : t('admin.announcement.createTitle')"
       :subtitle="t('admin.announcement.sendToAudience')"
       @close="showCompose = false"
@@ -811,7 +815,7 @@ function pickAudience(k: AudienceFilter) {
             v-model:html="form.body"
             :placeholder="t('admin.announcement.contentPlaceholder')"
             :readonly="isSaving"
-            :min-height="200"
+            :min-height="280"
           />
         </div>
 
