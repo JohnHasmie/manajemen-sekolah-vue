@@ -15,6 +15,7 @@ import router from './router';
 import { i18n } from './lib/i18n';
 import { useAuthStore } from '@/stores/auth';
 import { storage, StorageKeys } from '@/lib/storage';
+import { isChunkLoadError, recoverFromChunkError } from '@/lib/chunk-recovery';
 
 // LogRocket session replay + monitoring. Initialised as early as possible
 // so the full session is captured. Guarded to production builds only, so
@@ -80,19 +81,24 @@ app.config.errorHandler = (err, _instance, info) => {
   }
 };
 
-// Auto-recover from stale dynamic-import chunks after a deploy. Vite fires
-// `vite:preloadError` when a lazy chunk 404s because a new build purged the
-// old hashed filename. Reload once to fetch the fresh index.html + chunks.
-// Shares the `chunk-reload-at` guard with router.onError so the two can't
-// loop or double-reload. (router.onError handles navigation imports; this
-// handles module preloads.)
+// Auto-recover from failed dynamic-import chunks. Vite fires
+// `vite:preloadError` when a lazy chunk can't be preloaded — a new build
+// purged the old hashed filename, or the network dropped it. Shares the
+// recovery budget with router.onError (see `@/lib/chunk-recovery`) so the two
+// can't loop or double-reload: router.onError covers navigation imports, this
+// covers module preloads. When the budget is spent this shows the error
+// screen rather than returning silently and leaving a blank page.
 window.addEventListener('vite:preloadError', (event) => {
-  const KEY = 'chunk-reload-at';
-  const last = Number(sessionStorage.getItem(KEY) ?? '0');
-  if (Date.now() - last < 10_000) return;
-  sessionStorage.setItem(KEY, String(Date.now()));
   event.preventDefault();
-  window.location.reload();
+  recoverFromChunkError();
+});
+
+// Last-resort net: an unhandled chunk failure that reaches neither handler
+// (e.g. an import fired outside a navigation) must still not leave a white
+// page. Only chunk errors are claimed here — everything else keeps its
+// normal reporting path.
+window.addEventListener('unhandledrejection', (event) => {
+  if (isChunkLoadError(event.reason)) recoverFromChunkError();
 });
 
 // Back/forward-cache (bfcache) guard for the login page.
