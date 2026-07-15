@@ -58,6 +58,50 @@ export function isChunkLoadError(err: unknown): boolean {
   );
 }
 
+/** Event name main.ts listens for to forward incidents to LogRocket. */
+export const CHUNK_INCIDENT_EVENT = 'kamiledu:chunk-incident';
+
+export interface ChunkIncident {
+  /** 'reload' = auto-recovering; 'exhausted' = budget spent, screen shown. */
+  stage: 'reload' | 'exhausted';
+  attempt: number;
+  path: string;
+  /** Network shape at the moment it failed — the whole point of measuring. */
+  online: boolean;
+  effectiveType?: string;
+  downlink?: number;
+  rtt?: number;
+}
+
+/**
+ * Report an incident WITHOUT importing a reporter.
+ *
+ * This module is the "everything is already broken" path, so it must not
+ * depend on LogRocket (which is itself a network-loaded script that has its
+ * own ways to fail). We just dispatch a DOM event; `main.ts` — where LogRocket
+ * already lives — decides what to do with it. Failing to report must never
+ * break recovery, hence the try/catch.
+ */
+function reportIncident(stage: ChunkIncident['stage'], attempt: number): void {
+  try {
+    // Network Information API — Chrome/Android (i.e. most of our users).
+    const c = (navigator as unknown as { connection?: Record<string, unknown> })
+      .connection;
+    const detail: ChunkIncident = {
+      stage,
+      attempt,
+      path: window.location.pathname,
+      online: navigator.onLine,
+      effectiveType: c?.effectiveType as string | undefined,
+      downlink: c?.downlink as number | undefined,
+      rtt: c?.rtt as number | undefined,
+    };
+    window.dispatchEvent(new CustomEvent(CHUNK_INCIDENT_EVENT, { detail }));
+  } catch {
+    /* telemetry must never break recovery */
+  }
+}
+
 function readCount(now: number): number {
   const last = Number(sessionStorage.getItem(RELOAD_AT_KEY) ?? '0');
   // Stale timestamp → previous incident is over; start the budget again.
@@ -99,9 +143,12 @@ export function recoverFromChunkError(targetPath?: string): void {
   }
 
   if (count >= MAX_RELOADS) {
+    reportIncident('exhausted', count);
     showChunkErrorScreen();
     return;
   }
+
+  reportIncident('reload', count + 1);
 
   try {
     sessionStorage.setItem(RELOAD_COUNT_KEY, String(count + 1));

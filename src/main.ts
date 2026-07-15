@@ -15,7 +15,12 @@ import router from './router';
 import { i18n } from './lib/i18n';
 import { useAuthStore } from '@/stores/auth';
 import { storage, StorageKeys } from '@/lib/storage';
-import { isChunkLoadError, recoverFromChunkError } from '@/lib/chunk-recovery';
+import {
+  CHUNK_INCIDENT_EVENT,
+  isChunkLoadError,
+  recoverFromChunkError,
+  type ChunkIncident,
+} from '@/lib/chunk-recovery';
 
 // LogRocket session replay + monitoring. Initialised as early as possible
 // so the full session is captured. Guarded to production builds only, so
@@ -99,6 +104,34 @@ window.addEventListener('vite:preloadError', (event) => {
 // normal reporting path.
 window.addEventListener('unhandledrejection', (event) => {
   if (isChunkLoadError(event.reason)) recoverFromChunkError();
+});
+
+// Chunk-incident telemetry. `chunk-recovery` stays reporter-free (it runs when
+// things are already broken, so it must not depend on a network-loaded script)
+// and just emits an event; forwarding lives here, where LogRocket already does.
+//
+// Why bother: LogRocket was CSP-blocked in prod until !867, so we have ZERO
+// recorded evidence of how often users actually hit this. The payload carries
+// the connection shape (effectiveType/downlink/rtt/online) at the moment of
+// failure, which is what tells us whether this is flaky school networks (the
+// hypothesis) or something server-side — and whether making AppShell eager
+// actually moved the number.
+window.addEventListener(CHUNK_INCIDENT_EVENT, (event) => {
+  const detail = (event as CustomEvent<ChunkIncident>).detail;
+  console.warn('[chunk] recovery', detail);
+  if (!import.meta.env.PROD) return;
+  try {
+    LogRocket.track('chunk_load_failure', { ...detail });
+    if (detail.stage === 'exhausted') {
+      // Budget spent = a user actually saw the error screen. Louder than a
+      // track() so it surfaces as an issue, not just a session property.
+      LogRocket.captureMessage('Chunk load failed — error screen shown', {
+        extra: { ...detail },
+      });
+    }
+  } catch {
+    /* reporting must never break the page */
+  }
 });
 
 // Back/forward-cache (bfcache) guard for the login page.

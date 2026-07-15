@@ -14,6 +14,7 @@
 // @ts-nocheck — vitest types optional in this workspace
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
+  CHUNK_INCIDENT_EVENT,
   isChunkLoadError,
   markChunkRecoverySucceeded,
   recoverFromChunkError,
@@ -21,6 +22,14 @@ import {
 } from './chunk-recovery';
 
 const OVERLAY = '#kamiledu-chunk-error';
+
+/** Collect the telemetry events main.ts forwards to LogRocket. */
+function captureIncidents() {
+  const seen: any[] = [];
+  const fn = (e: any) => seen.push(e.detail);
+  window.addEventListener(CHUNK_INCIDENT_EVENT, fn);
+  return { seen, stop: () => window.removeEventListener(CHUNK_INCIDENT_EVENT, fn) };
+}
 
 function stubLocation() {
   const assign = vi.fn();
@@ -107,6 +116,58 @@ describe('recoverFromChunkError', () => {
     recoverFromChunkError('/a');
     expect(assign).toHaveBeenCalledTimes(1);
     expect(document.querySelector(OVERLAY)).toBeNull();
+  });
+});
+
+describe('telemetry', () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+    document.body.innerHTML = '';
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it('emits a reload incident carrying the connection shape', () => {
+    stubLocation();
+    const cap = captureIncidents();
+
+    recoverFromChunkError('/admin/trash');
+
+    expect(cap.seen).toHaveLength(1);
+    expect(cap.seen[0]).toMatchObject({ stage: 'reload', attempt: 1 });
+    // `online` is what lets us test the "flaky school network" hypothesis.
+    expect(cap.seen[0]).toHaveProperty('online');
+    expect(cap.seen[0]).toHaveProperty('path');
+    cap.stop();
+  });
+
+  it('emits an "exhausted" incident when the user actually sees the error screen', () => {
+    stubLocation();
+    sessionStorage.setItem('chunk-reload-count', '2');
+    sessionStorage.setItem('chunk-reload-at', String(Date.now()));
+    const cap = captureIncidents();
+
+    recoverFromChunkError('/a');
+
+    expect(cap.seen).toHaveLength(1);
+    expect(cap.seen[0].stage).toBe('exhausted');
+    expect(document.querySelector(OVERLAY)).not.toBeNull();
+    cap.stop();
+  });
+
+  // NB: a throwing listener can't break recovery — dispatchEvent doesn't
+  // propagate listener exceptions to its caller — and the forwarder in main.ts
+  // try/catches anyway. Not asserted here: proving it means letting jsdom
+  // report an uncaught error, which makes the suite look broken for a
+  // guarantee the platform already gives us.
+
+  it('reports the path so we can see WHICH chunk/route fails most', () => {
+    stubLocation();
+    const cap = captureIncidents();
+
+    recoverFromChunkError('/teacher/kelas');
+
+    expect(cap.seen[0].path).toBe('/super-admin'); // location.pathname stub
+    cap.stop();
   });
 });
 

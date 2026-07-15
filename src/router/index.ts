@@ -26,6 +26,23 @@ import { useAuthStore } from '@/stores/auth';
 import { useMeStore } from '@/stores/me';
 import { tenantKindFromRaw } from '@/composables/useTenant';
 import type { Role } from '@/types/auth';
+import {
+  isChunkLoadError,
+  markChunkRecoverySucceeded,
+  recoverFromChunkError,
+} from '@/lib/chunk-recovery';
+// AppShell is imported EAGERLY, on purpose.
+//
+// It is the one component every authenticated route renders inside, so
+// lazy-loading it bought nothing — no user ever avoids downloading it. What it
+// did buy was a second network round-trip on the critical path, and when that
+// fetch failed the route component never resolved and the entire app went
+// blank (the prod incident behind chunk-recovery.ts). Our users are schools on
+// often-flaky connections and the build ships ~300 chunks, so a dropped chunk
+// is expected, not exotic — the fix is to not put the universal shell behind
+// one. Shipping it in the entry removes that failure mode outright and saves a
+// round-trip before first paint.
+import AppShell from '@/layouts/AppShell.vue';
 
 /**
  * True when the active tenant is a tutoring center. Read from the
@@ -41,8 +58,12 @@ function isTutoringTenant(): boolean {
 }
 
 // Lazy view loaders — keep initial bundle small.
+//
+// AppShell is deliberately NOT in this list (see the static import above).
+// Everything below is genuinely optional per user: a guru never downloads the
+// admin views, a parent never downloads the bimbel ones. That's what lazy is
+// for — splitting work a given user will never need.
 const LoginView = () => import('@/views/auth/LoginView.vue');
-const AppShell = () => import('@/layouts/AppShell.vue');
 const AdminDashboardView = () => import('@/views/admin/AdminDashboardView.vue');
 const AdminStudentManagementView = () =>
   import('@/views/admin/AdminStudentManagementView.vue');
@@ -1892,19 +1913,19 @@ router.beforeEach(async (to) => {
  * reloads while it has budget, then shows an actionable error screen.
  */
 router.onError((error, to) => {
-  const msg = String((error as Error | undefined)?.message ?? '');
-  const isChunkLoadError =
-    /Failed to fetch dynamically imported module/i.test(msg) ||
-    /error loading dynamically imported module/i.test(msg) ||
-    /Importing a module script failed/i.test(msg);
-  if (!isChunkLoadError) return;
+  if (!isChunkLoadError(error)) return;
+  // Delegate to the shared budget in `@/lib/chunk-recovery`: reload while it
+  // lasts, then show the error screen. It must NEVER end in a bare `return` —
+  // this is the navigation path that failed in prod (AppShell), and a silent
+  // return here leaves RouterView empty, which IS the blank page.
+  recoverFromChunkError(to?.fullPath);
+});
 
-  const KEY = 'chunk-reload-at';
-  const last = Number(sessionStorage.getItem(KEY) ?? '0');
-  if (Date.now() - last < 10_000) return; // already tried recently — avoid a loop
-  sessionStorage.setItem(KEY, String(Date.now()));
-
-  window.location.assign(to?.fullPath ?? window.location.pathname);
+// A completed navigation proves the chunks are reachable again — release the
+// budget so a later, unrelated blip gets a full set of retries instead of
+// hitting an exhausted counter and going straight to the error screen.
+router.afterEach(() => {
+  markChunkRecoverySucceeded();
 });
 
 export default router;
