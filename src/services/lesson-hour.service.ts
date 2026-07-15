@@ -128,7 +128,11 @@ export const LessonHourService = {
     payload: LessonHourCopyDayPayload,
   ): Promise<{ copied_count: number }> {
     try {
-      const res = await api.post('/lesson-hour-settings/copy', payload);
+      const res = await api.post('/lesson-hour-settings/copy', {
+        from_day_id: payload.source_day_id,
+        to_day_id: payload.target_day_id,
+        replace_existing: payload.overwrite,
+      });
       const body = res.data ?? {};
       return { copied_count: asNum(body.copied_count ?? body.count) };
     } catch (e) {

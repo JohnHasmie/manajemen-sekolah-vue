@@ -869,18 +869,20 @@ export const ScheduleService = {
   },
 
   /** POST /teaching-schedule/import — upload Excel. */
-  async importExcel(file: File): Promise<{ created: number; skipped: number }> {
+  async importExcel(
+    file: File,
+    createMissingHours = false,
+  ): Promise<any> {
     try {
       const fd = new FormData();
       fd.append('file', file);
+      if (createMissingHours) {
+        fd.append('create_missing_hours', '1');
+      }
       const res = await api.post('/teaching-schedule/import', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const body = res.data ?? {};
-      return {
-        created: asNum(body.created ?? body.imported),
-        skipped: asNum(body.skipped),
-      };
+      return res.data;
     } catch (e) {
       throw new Error(humanError(e, 'Gagal mengimpor jadwal.'));
     }
