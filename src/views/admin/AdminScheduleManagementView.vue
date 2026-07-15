@@ -57,7 +57,9 @@ import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import BulkDayPickerModal from '@/components/feature/BulkDayPickerModal.vue';
 import BulkTeacherPickerModal from '@/components/feature/BulkTeacherPickerModal.vue';
 import SchedulePrintScopeModal from '@/components/feature/SchedulePrintScopeModal.vue';
-import ScheduleImportModal from '@/components/feature/ScheduleImportModal.vue';
+import ScheduleImportModal, {
+  type ScheduleImportResults,
+} from '@/components/feature/ScheduleImportModal.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useRouter } from 'vue-router';
 
@@ -704,11 +706,19 @@ function onBulkTeacherChanged(result: { changed: number; skipped: number }) {
 const showPrint = ref(false);
 const showImport = ref(false);
 
-function onImportDone(res: { created: number; skipped: number }) {
-  const skipNote = res.skipped > 0 ? ` · ${res.skipped} dilewati` : '';
+function onImportDone(res: ScheduleImportResults) {
+  // Compose a toast that surfaces every non-zero bucket the backend
+  // reported. Previously we only read `created` + `skipped`, so
+  // `restored` (soft-deleted schedules re-hydrated on re-import) and
+  // `failed` (per-row rejections that didn't abort the whole file)
+  // were silently discarded.
+  const parts: string[] = [`${res.created} jadwal diimpor`];
+  if (res.restored > 0) parts.push(`${res.restored} dipulihkan`);
+  if (res.skipped > 0) parts.push(`${res.skipped} dilewati`);
+  if (res.failed > 0) parts.push(`${res.failed} gagal`);
   toast.value = {
-    message: `${res.created} jadwal diimpor${skipNote}.`,
-    tone: 'success',
+    message: `${parts.join(' · ')}.`,
+    tone: res.failed > 0 ? 'error' : 'success',
   };
   void loadRows();
 }

@@ -9,9 +9,22 @@ import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+// Payload mirrors the backend `results` object on a SUCCESS response
+// (see ImportSchedulesAction on the API). Previously typed as
+// `{ created, skipped }` only — the modal already emitted `res.results`
+// whole, so `restored` and `failed` were silently discarded by the
+// parent's outdated callback signature.
+export interface ScheduleImportResults {
+  created: number;
+  restored: number;
+  skipped: number;
+  failed: number;
+  details?: Array<Record<string, unknown>>;
+}
+
 const emit = defineEmits<{
   close: [];
-  done: [{ created: number; skipped: number }];
+  done: [ScheduleImportResults];
 }>();
 
 const file = ref<File | null>(null);
@@ -81,6 +94,11 @@ async function upload(createMissingHours = false) {
     } else if (res.status === 'SUCCESS') {
       emit('done', res.results);
       emit('close');
+    } else {
+      // Unknown status — surface an error instead of silently
+      // stopping the spinner with no feedback. Catches any future
+      // backend status this client doesn't yet recognise.
+      err.value = `Respons server tidak dikenali (${res.status ?? 'null'}). Silakan coba lagi.`;
     }
   } catch (e) {
     err.value = (e as Error).message;
