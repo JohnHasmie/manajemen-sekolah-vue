@@ -23,6 +23,14 @@ export interface MasterSubject {
   id: string;
   name: string;
   code?: string | null;
+  /**
+   * Master `subjects.grade` (varchar). Single grade ("7"), a range
+   * ("10-12"), or NULL for grade-agnostic mapel (Olahraga, Seni Budaya,
+   * Agama). The edit-sheet parses this to auto-fill the per-school grade
+   * dropdown when it's a single value; range + null are left manual.
+   */
+  grade?: string | null;
+  /** Older API alias — some responses used to call this `grade_level`. */
   grade_level?: string | null;
 }
 
@@ -193,7 +201,11 @@ export const SubjectService = {
         id: String(m.id),
         name: String(m.name ?? m.nama ?? ''),
         code: m.code ?? null,
-        grade_level: m.grade_level ?? null,
+        // Backend returns the raw `grade` column on the master table
+        // (varchar; "7", "10-12", or null). Keep both keys for backwards
+        // compat with call sites that already reach for `grade_level`.
+        grade: m.grade ?? null,
+        grade_level: m.grade_level ?? m.grade ?? null,
       }));
     } catch {
       return [];

@@ -854,7 +854,22 @@
       "emptyTitle": "No subjects yet",
       "emptyDesc": "Tap the + button to add a new subject.",
       "hasLinked": "Linked",
-      "notLinked": "Not linked"
+      "notLinked": "Not linked",
+      "form": {
+        "masterLabel": "Link to Master Subject",
+        "masterOptional": "(optional)",
+        "masterHint": "Linking to a master row lets multi-class grades and cross-school analytics roll up under one canonical mapel.",
+        "masterSearchPlaceholder": "Search master subject...",
+        "masterClear": "Unlink",
+        "masterLoading": "Loading...",
+        "gradeLabel": "Grade",
+        "gradeOptional": "(optional)",
+        "gradeAll": "All grades",
+        "gradeItem": "Grade {grade}",
+        "gradeHint": "Which grade uses this subject in this school? Leave empty for grade-agnostic subjects (PE, Arts, Religion, …).",
+        "gradeRangeHint": "Master covers grades {range} — pick one for this school.",
+        "gradeAutoFilled": "Grade from master: Grade {grade}"
+      }
     },
     "schedule": {
       "title": "School Schedule Management",

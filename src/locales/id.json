@@ -854,7 +854,22 @@
       "emptyTitle": "Belum ada mata pelajaran",
       "emptyDesc": "Tap tombol + untuk menambahkan mata pelajaran baru.",
       "hasLinked": "Sudah tertaut",
-      "notLinked": "Belum tertaut"
+      "notLinked": "Belum tertaut",
+      "form": {
+        "masterLabel": "Tautkan ke Master",
+        "masterOptional": "(opsional)",
+        "masterHint": "Menautkan ke mapel master memudahkan agregasi nilai antar kelas & lintas sekolah pada satu nama kanonik.",
+        "masterSearchPlaceholder": "Cari mata pelajaran master...",
+        "masterClear": "Lepas tautan",
+        "masterLoading": "Memuat...",
+        "gradeLabel": "Kelas",
+        "gradeOptional": "(opsional)",
+        "gradeAll": "Semua kelas",
+        "gradeItem": "Kelas {grade}",
+        "gradeHint": "Kelas berapa yang memakai mapel ini di sekolah? Biarkan kosong untuk mapel lintas-kelas (Olahraga, Seni Budaya, Agama, …).",
+        "gradeRangeHint": "Master mencakup kelas {range} — pilih salah satu untuk sekolah ini.",
+        "gradeAutoFilled": "Grade dari master: kelas {grade}"
+      }
     },
     "schedule": {
       "title": "Manajemen Jadwal Sekolah",

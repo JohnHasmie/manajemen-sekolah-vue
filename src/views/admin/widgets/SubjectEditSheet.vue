@@ -3,11 +3,20 @@
 
   Adds parity: master_subject_id autocomplete + is_active toggle so the
   admin can reactivate / deactivate subjects from the web.
+
+  Grade field (2026-07): per-school `grade` column on subject_schools
+  (nullable smallint 1..12; NULL = grade-agnostic). When the admin picks
+  a master row whose `grade` is a single value (e.g. "7"), we mirror it
+  into the dropdown to skip the double-entry. Range grades ("10-12") stay
+  manual with a helper string so the empty dropdown doesn't look like a
+  bug.
 -->
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import FormSheet from '@/components/ui/FormSheet.vue';
 import FormField from '@/components/ui/FormField.vue';
+import Toast from '@/components/ui/Toast.vue';
 import { SubjectService, type MasterSubject } from '@/services/subjects.service';
 import type { Subject } from '@/types/entities';
 
@@ -21,18 +30,51 @@ const emit = defineEmits<{
   save: [payload: Record<string, unknown>];
 }>();
 
-const form = reactive({
+const { t: $t } = useI18n();
+
+// Widen the reactive type past inferred literal keys so we can assign
+// numeric `grade` values (Vue's reactive() would otherwise pin the
+// initial `null` and refuse a later number assignment).
+type FormShape = {
+  name: string;
+  code: string;
+  kkm: number;
+  description: string;
+  master_subject_id: string;
+  master_subject_name: string;
+  grade: number | null;
+  is_active: boolean;
+};
+
+const form = reactive<FormShape>({
   name: props.subject?.name ?? '',
   code: props.subject?.code ?? '',
   kkm: props.subject?.kkm ?? 70,
   description: props.subject?.description ?? '',
   master_subject_id: props.subject?.master_subject_id ?? '',
   master_subject_name: props.subject?.master_subject_name ?? '',
+  // Per-school grade (nullable). Existing rows may carry it in either
+  // `grade` (post-migration) or `grade_level` (pre-migration string) —
+  // read both, coerce to int, drop invalid values.
+  grade: (() => {
+    const raw = (props.subject as unknown as Record<string, unknown>)?.grade
+      ?? props.subject?.grade_level
+      ?? null;
+    if (raw === null || raw === undefined || raw === '') return null;
+    const n = Number(raw);
+    return Number.isFinite(n) && n >= 1 && n <= 12 ? n : null;
+  })(),
   is_active: props.subject?.is_active ?? true,
 });
 
 const isEdit = computed(() => Boolean(props.subject?.id));
 const errors = reactive<Record<string, string>>({});
+
+// Track the last picked master so the "range" hint under the grade
+// dropdown can render without another lookup in `masterResults`.
+const lastPickedMaster = ref<MasterSubject | null>(null);
+
+const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
 // ── Master subject autocomplete ──────────────────────────────────
 const masterQuery = ref(form.master_subject_name ?? '');
@@ -64,14 +106,47 @@ watch(masterQuery, (q) => {
   }, 250);
 });
 
+/**
+ * Parse the master `grade` cell into a single 1..12 integer, or null.
+ *
+ * Examples:
+ *   "7"     → 7            (single grade → auto-fill)
+ *   " 12 "  → 12
+ *   "10-12" → null         (range → keep the dropdown untouched)
+ *   ""/null → null         (grade-agnostic master; nothing to fill)
+ *   "abc"   → null         (defensive; ignore junk)
+ */
+function parseMasterGrade(raw: string | null | undefined): number | null {
+  if (raw === null || raw === undefined) return null;
+  const s = String(raw).trim();
+  if (s.length === 0) return null;
+  if (s.includes('-') || s.includes(',') || s.includes('/')) return null;
+  const n = Number(s);
+  if (!Number.isFinite(n)) return null;
+  if (n < 1 || n > 12) return null;
+  return Math.floor(n);
+}
+
 function pickMaster(m: MasterSubject) {
   form.master_subject_id = m.id;
   form.master_subject_name = m.name;
   masterQuery.value = m.name;
+  lastPickedMaster.value = m;
   // Pre-fill name/code from master if subject is new and fields empty.
   if (!isEdit.value) {
     if (!form.name) form.name = m.name;
     if (!form.code && m.code) form.code = m.code;
+  }
+  // Auto-fill grade from master when the master carries a single grade
+  // ("7" → 7). Range ("10-12") and null are left alone so the admin
+  // picks the applicable grade for THIS school.
+  const parsed = parseMasterGrade(m.grade ?? m.grade_level ?? null);
+  if (parsed !== null) {
+    form.grade = parsed;
+    toast.value = {
+      message: $t('admin.subjects.form.gradeAutoFilled', { grade: parsed }),
+      tone: 'success',
+    };
   }
   showMasterDropdown.value = false;
 }
@@ -80,7 +155,23 @@ function clearMaster() {
   form.master_subject_id = '';
   form.master_subject_name = '';
   masterQuery.value = '';
+  lastPickedMaster.value = null;
 }
+
+/**
+ * When a range-grade master ("10-12") is picked, show a small hint under
+ * the grade dropdown so the empty state doesn't read as a broken form.
+ * Returns null when no master picked, or its grade is single / agnostic.
+ */
+const masterRangeHint = computed<string | null>(() => {
+  const m = lastPickedMaster.value;
+  if (!m) return null;
+  const raw = m.grade ?? m.grade_level ?? null;
+  if (raw === null || raw === undefined) return null;
+  const s = String(raw).trim();
+  if (!s.includes('-')) return null;
+  return $t('admin.subjects.form.gradeRangeHint', { range: s });
+});
 
 // Inline `setTimeout(...)` in the template (the previous
 // `@blur="setTimeout(() => showMasterDropdown = false, 150)"`) does NOT
@@ -106,12 +197,23 @@ function validate(): boolean {
 
 function submit() {
   if (!validate()) return;
+  const masterId = form.master_subject_id || null;
   emit('save', {
     name: form.name.trim(),
     code: form.code.trim() || null,
     kkm: form.kkm,
     description: form.description.trim() || null,
-    master_subject_id: form.master_subject_id || null,
+    // Send both keys — legacy call sites accept `master_subject_id`,
+    // the current backend validator (CreateSubjectRequest) reads
+    // `subject_id`. Belt-and-suspenders so a mid-flight schema swap
+    // doesn't silently drop the link.
+    master_subject_id: masterId,
+    subject_id: masterId,
+    // Per-school grade (nullable smallint). The backend column is being
+    // added by Agent 1's parallel migration; older backends ignore the
+    // unknown field silently so shipping this ahead of the schema is
+    // safe.
+    grade: form.grade,
     status: form.is_active ? 'active' : 'inactive',
     is_active: form.is_active,
   });
@@ -130,13 +232,14 @@ function submit() {
       <!-- Master subject autocomplete — bespoke type-ahead, kept inline. -->
       <div>
         <label class="block text-sm font-medium text-slate-700 mb-1">
-          Mata Pelajaran Master <span class="text-slate-400 font-normal">(opsional)</span>
+          {{ $t('admin.subjects.form.masterLabel') }}
+          <span class="text-slate-400 font-normal">{{ $t('admin.subjects.form.masterOptional') }}</span>
         </label>
         <div class="relative">
           <input
             v-model="masterQuery"
             type="text"
-            placeholder="Cari mata pelajaran master..."
+            :placeholder="$t('admin.subjects.form.masterSearchPlaceholder')"
             class="w-full rounded-xl border border-slate-300 px-md py-sm pr-9 text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
             :disabled="isSaving"
             @focus="showMasterDropdown = true"
@@ -146,6 +249,7 @@ function submit() {
             v-if="form.master_subject_id"
             type="button"
             class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-status-danger text-sm"
+            :title="$t('admin.subjects.form.masterClear')"
             @click="clearMaster"
           >
             ×
@@ -161,6 +265,15 @@ function submit() {
               class="w-full text-left px-3 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-50"
               @mousedown="pickMaster(m)"
             >
+              <!--
+                Show `[Grade badge] name` per option so the admin can pick
+                the right variant when a master has multiple grade rows
+                (e.g. "Matematika · Kelas 7" vs "· Kelas 10-12").
+              -->
+              <span
+                v-if="m.grade ?? m.grade_level"
+                class="inline-block mr-2 px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-3xs font-black tracking-wide"
+              >{{ m.grade ?? m.grade_level }}</span>
               {{ m.name }}
               <span v-if="m.code" class="text-slate-400 font-normal ml-1">· {{ m.code }}</span>
             </button>
@@ -168,10 +281,39 @@ function submit() {
           <div
             v-if="isLoadingMasters && showMasterDropdown"
             class="absolute left-0 right-0 top-full mt-1 z-10 bg-white border border-slate-200 rounded-xl shadow-lg p-2 text-2xs text-slate-500 text-center"
-          >Memuat...</div>
+          >{{ $t('admin.subjects.form.masterLoading') }}</div>
         </div>
         <p class="text-3xs text-slate-500 mt-1">
-          Menautkan ke mapel master memudahkan agregasi nilai antar kelas.
+          {{ $t('admin.subjects.form.masterHint') }}
+        </p>
+      </div>
+
+      <!--
+        Per-school grade (nullable 1..12). Sits under the master picker so
+        the auto-fill flow reads top-to-bottom (pick master → grade lands
+        below). NULL is a first-class value ("Semua kelas") for
+        grade-agnostic mapel (Olahraga, Seni Budaya, Agama).
+      -->
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">
+          {{ $t('admin.subjects.form.gradeLabel') }}
+          <span class="text-slate-400 font-normal">{{ $t('admin.subjects.form.gradeOptional') }}</span>
+        </label>
+        <select
+          v-model.number="form.grade"
+          :disabled="isSaving"
+          class="w-full rounded-xl border border-slate-300 bg-white px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none disabled:bg-slate-50"
+        >
+          <option :value="null">{{ $t('admin.subjects.form.gradeAll') }}</option>
+          <option v-for="g in 12" :key="g" :value="g">
+            {{ $t('admin.subjects.form.gradeItem', { grade: g }) }}
+          </option>
+        </select>
+        <p v-if="masterRangeHint" class="text-3xs text-slate-600 mt-1 leading-relaxed">
+          {{ masterRangeHint }}
+        </p>
+        <p v-else class="text-3xs text-slate-500 mt-1 leading-relaxed">
+          {{ $t('admin.subjects.form.gradeHint') }}
         </p>
       </div>
 
@@ -230,4 +372,6 @@ function submit() {
         />
       </label>
   </FormSheet>
+
+  <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />
 </template>
