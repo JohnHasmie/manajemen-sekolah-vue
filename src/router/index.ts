@@ -50,6 +50,7 @@ const AdminTeacherManagementView = () =>
   import('@/views/admin/AdminTeacherManagementView.vue');
 const AdminStaffManagementView = () =>
   import('@/views/admin/AdminStaffManagementView.vue');
+const AdminTrashView = () => import('@/views/admin/AdminTrashView.vue');
 const AdminClassroomManagementView = () =>
   import('@/views/admin/AdminClassroomManagementView.vue');
 const AdminSubjectManagementView = () =>
@@ -424,6 +425,19 @@ const routes: RouteRecordRaw[] = [
         meta: {
           role: 'admin' satisfies Role,
           abilityAny: ['school.staff.view', 'school.staff.manage'],
+        },
+      },
+      {
+        // "Data Terhapus" — the school recycle bin. Restore or permanently
+        // delete soft-deleted guru/siswa/mapel. Destructive (permanent delete
+        // cascades), so gated on school.settings.manage exactly like the
+        // backend TrashController — no visible-but-403 menu.
+        path: 'admin/trash',
+        name: 'admin.trash',
+        component: AdminTrashView,
+        meta: {
+          role: 'admin' satisfies Role,
+          ability: 'school.settings.manage',
         },
       },
       {

@@ -131,6 +131,15 @@ const ADMIN_NAV: NavSection[] = [
         icon: 'layers',
         needs: 'student-context',
       },
+      {
+        // "Data Terhapus" — recycle bin for soft-deleted guru/siswa/mapel.
+        // Admin-only + destructive, so gated on school.settings.manage to
+        // match the backend TrashController (a staff never sees it).
+        to: '/admin/trash',
+        labelKey: 'nav.dataTerhapus',
+        icon: 'trash-2',
+        ability: 'school.settings.manage',
+      },
       // Class-first read-only oversight (health + Perlu Perhatian), distinct
       // from the class-management entry above.
       {
