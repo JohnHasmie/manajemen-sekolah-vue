@@ -1878,20 +1878,18 @@ router.beforeEach(async (to) => {
 });
 
 /**
- * Recover from stale lazy-chunk failures after a new deploy.
+ * Recover from failed lazy-chunk imports — see `@/lib/chunk-recovery`.
  *
- * When a fresh build ships (Vercel), the previous hashed chunk filenames
- * (e.g. `RegisterDemoIdentityView-CgGh-UKk.js`) are purged. A browser still
- * running the OLD `index.html` then fails the dynamic `import()` on the next
- * navigation with "Failed to fetch dynamically imported module" — leaving the
- * user stuck (the exact error reported on "lanjut ke data diri").
+ * Two causes, same symptom. A fresh build purges the previous hashed chunk
+ * filenames, so a browser still running the OLD `index.html` fails the next
+ * dynamic `import()` ("lanjut ke data diri"); and a plain network/CDN blip can
+ * drop the chunk on an otherwise healthy deploy (observed in prod: AppShell
+ * failing while every chunk was present and served as valid JS).
  *
- * Here we detect that class of error and hard-navigate to the intended path
- * so the browser pulls the new `index.html` + current chunks. A sessionStorage
- * timestamp guards against a reload loop when the failure is genuinely
- * persistent (offline / server actually down) — at most one auto-reload per
- * 10s. The companion `vite:preloadError` handler in `main.ts` covers
- * preloads (vs navigation imports) using the same guard key.
+ * Either way the route component never resolves, `<RouterView/>` renders
+ * nothing, and — because App.vue is only RouterView + two v-if hosts — the
+ * page goes fully blank. So the recovery must never end in silence: it
+ * reloads while it has budget, then shows an actionable error screen.
  */
 router.onError((error, to) => {
   const msg = String((error as Error | undefined)?.message ?? '');
