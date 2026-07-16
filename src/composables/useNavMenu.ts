@@ -176,6 +176,15 @@ const ADMIN_NAV: NavSection[] = [
         icon: 'camera',
         ability: 'attendance.staff.report.view',
       },
+      // Prestasi & Gamifikasi Guru — paid module, gated by the
+      // admin variant of the ability. Ability strips out when the
+      // school loses the sub → nav item hidden automatically.
+      {
+        to: '/admin/prestasi-guru',
+        labelKey: 'nav.prestasiGuru',
+        icon: 'medal',
+        ability: 'gamification.admin.view',
+      },
     ],
   },
   {

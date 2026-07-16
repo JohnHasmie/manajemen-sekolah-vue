@@ -88,6 +88,73 @@ export interface SettingUpdatePayload {
   sembunyi_dari_peringkat: boolean;
 }
 
+// ─── Admin ─────────────────────────────────────────────────
+
+export interface AdminSorotanPayload {
+  guru_bulan_ini: {
+    state: 'guru_bulan_ini';
+    eyebrow?: string;
+    title: string;
+    sub?: string;
+    cta_label: string;
+    cta_target: string;
+    meta: null | { teacher_id: string; nama: string; poin: number };
+  };
+  perlu_sapaan: {
+    state: 'perlu_sapaan';
+    count: number;
+    eyebrow?: string;
+    title: string | null;
+    sub?: string;
+    cta_label?: string;
+    cta_target?: string;
+    meta: null | { teacher_ids: string[] };
+  };
+}
+
+export interface AdminTopEntry {
+  teacher_id: string;
+  nama: string;
+  foto_url: string | null;
+  poin: number;
+}
+
+export interface AdminRingkasanPayload {
+  total_guru: number;
+  aktif_minggu_ini: number;
+  rata_streak: number;
+  perlu_perhatian: number;
+  top_tiga: AdminTopEntry[];
+}
+
+export type TeacherRowStatus = 'aktif' | 'melambat' | 'sepi' | 'never';
+
+export interface AdminTeacherEngagementRow {
+  teacher_id: string;
+  nama: string;
+  foto_url: string | null;
+  level: number;
+  hari_beruntun: number;
+  poin_7_hari: number;
+  terakhir_aktif: string | null;
+  status: TeacherRowStatus;
+  /** 7-day XP sparkline; always length 7, oldest → newest. */
+  sparkline: number[];
+}
+
+export interface AdminIndexPayload {
+  data: AdminTeacherEngagementRow[];
+  meta: {
+    sorotan: AdminSorotanPayload;
+    kpi: AdminRingkasanPayload;
+  };
+}
+
+export interface KirimPengingatResponse {
+  terkirim: number;
+  total_target: number;
+}
+
 export const TeacherProgressService = {
   async getSorotan(): Promise<SorotanPayload> {
     const res = await api.get('/teacher/prestasi/sorotan');
@@ -112,5 +179,29 @@ export const TeacherProgressService = {
   async updateSetting(payload: SettingUpdatePayload): Promise<SettingUpdatePayload> {
     const res = await api.patch('/teacher/prestasi/setting', payload);
     return (res.data?.data ?? res.data) as SettingUpdatePayload;
+  },
+
+  // ─── Admin ─────────────────────────────────────────────
+
+  async getAdminSorotan(): Promise<AdminSorotanPayload> {
+    const res = await api.get('/admin/prestasi-guru/sorotan');
+    return (res.data?.data ?? res.data) as AdminSorotanPayload;
+  },
+
+  async getAdminRingkasan(): Promise<AdminRingkasanPayload> {
+    const res = await api.get('/admin/prestasi-guru/ringkasan');
+    return (res.data?.data ?? res.data) as AdminRingkasanPayload;
+  },
+
+  async getAdminIndex(): Promise<AdminIndexPayload> {
+    const res = await api.get('/admin/prestasi-guru');
+    return res.data as AdminIndexPayload;
+  },
+
+  async kirimPengingat(teacherIds: string[]): Promise<KirimPengingatResponse> {
+    const res = await api.post('/admin/prestasi-guru/kirim-pengingat', {
+      teacher_ids: teacherIds,
+    });
+    return (res.data?.data ?? res.data) as KirimPengingatResponse;
   },
 };

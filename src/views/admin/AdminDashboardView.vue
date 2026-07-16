@@ -27,6 +27,13 @@ import PriorityInbox from '@/components/feature/PriorityInbox.vue';
 import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
 import SubscriptionSummaryCard from '@/components/feature/SubscriptionSummaryCard.vue';
 import AdminTutoringDashboardView from '@/views/admin/tutoring/AdminTutoringDashboardView.vue';
+import SorotanPrestasiCard from '@/components/feature/prestasi/SorotanPrestasiCard.vue';
+import {
+  TeacherProgressService,
+  type AdminSorotanPayload,
+  type AdminRingkasanPayload,
+} from '@/services/teacher-progress.service';
+import { useMe } from '@/composables/useMe';
 import { useTenant } from '@/composables/useTenant';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
@@ -39,8 +46,33 @@ type Slice = Record<string, any>;
 
 const auth = useAuthStore();
 const me = useMeStore();
+const meApi = useMe();
 const router = useRouter();
 const { t } = useI18n();
+
+// Prestasi (paid module). Both `canSeePrestasi` and the payloads
+// stay null when the school hasn't subscribed — the ability strip
+// on the server side makes `meApi.can(...)` false so nothing renders.
+const canSeePrestasi = computed(() => meApi.can('gamification.admin.view'));
+const adminSorotan = ref<AdminSorotanPayload | null>(null);
+const adminRingkasan = ref<AdminRingkasanPayload | null>(null);
+
+async function loadPrestasi() {
+  if (!canSeePrestasi.value) return;
+  try {
+    const [s, r] = await Promise.all([
+      TeacherProgressService.getAdminSorotan(),
+      TeacherProgressService.getAdminRingkasan(),
+    ]);
+    adminSorotan.value = s;
+    adminRingkasan.value = r;
+  } catch {
+    // Silent — a mid-session sub loss must not disrupt the rest
+    // of the dashboard. The v-if drops the section cleanly.
+    adminSorotan.value = null;
+    adminRingkasan.value = null;
+  }
+}
 // A tutoring-center admin gets the bimbel dashboard; the school KPIs
 // below read zero for a bimbel. Reactive so it swaps in as soon as the
 // tenant resolves (the route redirect can race the schools fetch).
@@ -144,7 +176,10 @@ async function load() {
   }
 }
 
-onMounted(load);
+onMounted(() => {
+  void load();
+  void loadPrestasi();
+});
 
 // Refetch when the active academic year changes via the chip.
 useAcademicYearWatcher(() => load());
@@ -387,6 +422,104 @@ const financePct = computed(() =>
                "Details" buttons. -->
           <template #main>
           <div class="space-y-md">
+
+          <!-- Prestasi & Gamifikasi Guru — paid module. Renders 1 or
+               2 sorotan cards (guru_bulan_ini always, perlu_sapaan
+               conditional) + a compact ringkasan tile with 4 KPI +
+               top 3. All hidden when the module is off (ability
+               stripped server-side). Silent on fetch failure. -->
+          <template v-if="canSeePrestasi && adminSorotan">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <SorotanPrestasiCard
+                :state="adminSorotan.guru_bulan_ini.state"
+                :eyebrow="adminSorotan.guru_bulan_ini.eyebrow"
+                :title="adminSorotan.guru_bulan_ini.title"
+                :sub="adminSorotan.guru_bulan_ini.sub"
+                :cta-label="adminSorotan.guru_bulan_ini.cta_label"
+                :cta-target="adminSorotan.guru_bulan_ini.cta_target"
+                :meta="null"
+                @cta="router.push(adminSorotan.guru_bulan_ini.cta_target)"
+              />
+              <SorotanPrestasiCard
+                v-if="adminSorotan.perlu_sapaan.count > 0"
+                :state="adminSorotan.perlu_sapaan.state"
+                :eyebrow="adminSorotan.perlu_sapaan.eyebrow"
+                :title="adminSorotan.perlu_sapaan.title ?? ''"
+                :sub="adminSorotan.perlu_sapaan.sub"
+                :cta-label="adminSorotan.perlu_sapaan.cta_label ?? 'Kirim pengingat'"
+                :cta-target="adminSorotan.perlu_sapaan.cta_target ?? '/admin/prestasi-guru'"
+                :meta="null"
+                @cta="router.push('/admin/prestasi-guru')"
+              />
+            </div>
+
+            <!-- Compact ringkasan tile — 4 KPI + top-3 preview, tap → full page. -->
+            <section
+              v-if="adminRingkasan"
+              class="bg-white border border-slate-200 rounded-2xl p-4"
+            >
+              <header class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-xl bg-violet-100 text-violet-700 grid place-items-center">
+                    <NavIcon name="medal" :size="16" />
+                  </div>
+                  <div>
+                    <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Retensi</p>
+                    <h3 class="text-sm font-black text-slate-900">Engagement Guru</h3>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="text-2xs font-bold text-brand-cobalt hover:underline"
+                  @click="router.push('/admin/prestasi-guru')"
+                >
+                  Lihat detail →
+                </button>
+              </header>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                <div class="rounded-xl bg-slate-50 px-3 py-2">
+                  <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Total</p>
+                  <p class="text-base font-black text-slate-900 mt-0.5">{{ adminRingkasan.total_guru }}</p>
+                </div>
+                <div class="rounded-xl bg-emerald-50 px-3 py-2">
+                  <p class="text-3xs font-bold text-emerald-700 uppercase tracking-widest">Aktif</p>
+                  <p class="text-base font-black text-emerald-900 mt-0.5">{{ adminRingkasan.aktif_minggu_ini }}</p>
+                </div>
+                <div class="rounded-xl bg-orange-50 px-3 py-2">
+                  <p class="text-3xs font-bold text-orange-700 uppercase tracking-widest">Streak</p>
+                  <p class="text-base font-black text-orange-900 mt-0.5">
+                    {{ adminRingkasan.rata_streak }}<span class="text-3xs text-orange-700 font-bold ml-1">hr</span>
+                  </p>
+                </div>
+                <div class="rounded-xl bg-red-50 px-3 py-2">
+                  <p class="text-3xs font-bold text-red-700 uppercase tracking-widest">Sepi</p>
+                  <p class="text-base font-black text-red-900 mt-0.5">{{ adminRingkasan.perlu_perhatian }}</p>
+                </div>
+              </div>
+              <div v-if="adminRingkasan.top_tiga.length > 0">
+                <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest mb-2">Top minggu ini</p>
+                <ol class="space-y-1.5">
+                  <li
+                    v-for="(t, i) in adminRingkasan.top_tiga"
+                    :key="t.teacher_id"
+                    class="flex items-center gap-3"
+                  >
+                    <span
+                      class="w-5 text-2xs font-black text-center flex-shrink-0"
+                      :class="i === 0 ? 'text-amber-500' : i === 1 ? 'text-slate-500' : 'text-orange-500'"
+                    >
+                      #{{ i + 1 }}
+                    </span>
+                    <p class="flex-1 text-2xs font-bold text-slate-800 truncate">{{ t.nama }}</p>
+                    <p class="text-2xs font-black text-slate-800">
+                      {{ t.poin }}<span class="text-3xs text-slate-500 font-bold ml-1">XP</span>
+                    </p>
+                  </li>
+                </ol>
+              </div>
+            </section>
+          </template>
+
           <section class="grid grid-cols-1 lg:grid-cols-3 gap-md">
             <div
               v-if="me.canAny(['attendance.student.view', 'attendance.student.export'])"

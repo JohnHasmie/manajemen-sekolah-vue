@@ -94,6 +94,8 @@ const AdminStudentAttendanceHub = () =>
   import('@/views/admin/AdminStudentAttendanceHub.vue');
 const AdminAttendanceDashboardView = () =>
   import('@/views/admin/AdminAttendanceDashboardView.vue');
+const AdminTeacherEngagementView = () =>
+  import('@/views/admin/AdminTeacherEngagementView.vue');
 const AdminAttendanceTingkatHeatmapView = () =>
   import('@/views/admin/AdminAttendanceTingkatHeatmapView.vue');
 const AdminAttendanceReportView = () =>
@@ -844,6 +846,17 @@ const routes: RouteRecordRaw[] = [
         name: 'admin.teacher-attendance.report',
         component: AdminTeacherAttendanceView,
         meta: { role: 'admin' satisfies Role, ability: 'attendance.staff.report.view' },
+      },
+      {
+        // Prestasi & Gamifikasi Guru — admin engagement page (paid
+        // module). Ability is stripped when the school lacks the
+        // teacher_gamification sub, so the guard redirects to /admin
+        // before the view mounts. Route sits next to the other
+        // teacher-facing admin views for IA consistency.
+        path: 'admin/prestasi-guru',
+        name: 'admin.prestasi-guru',
+        component: AdminTeacherEngagementView,
+        meta: { role: 'admin' satisfies Role, ability: 'gamification.admin.view' },
       },
       {
         // Unified "Pengaturan Kehadiran" — Wave 2 IA refactor. ONE
