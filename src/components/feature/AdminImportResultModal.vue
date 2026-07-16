@@ -11,23 +11,35 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { ImportDetailRow } from '@/services/admin-data-excel.service';
+import type {
+  ImportDetailRow,
+  ImportWarningRow,
+} from '@/services/admin-data-excel.service';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 
-const props = defineProps<{
-  /** Singular entity noun for the header, e.g. "guru" / "siswa" / "kelas" / "mapel". */
-  entityLabel: string;
-  /** Every processed row, already normalised by the service. */
-  details: ImportDetailRow[];
-  /** Summary counts (some importers only set a subset — missing = 0). */
-  counts: {
-    imported?: number;
-    skipped?: number;
-    conflicts?: number;
-    failed?: number;
-  };
-}>();
+const props = withDefaults(
+  defineProps<{
+    /** Singular entity noun for the header, e.g. "guru" / "siswa" / "kelas" / "mapel". */
+    entityLabel: string;
+    /** Every processed row, already normalised by the service. */
+    details: ImportDetailRow[];
+    /** Summary counts (some importers only set a subset — missing = 0). */
+    counts: {
+      imported?: number;
+      skipped?: number;
+      conflicts?: number;
+      failed?: number;
+    };
+    /**
+     * Non-blocking per-row annotations attached to rows that DID
+     * import (post-!453 subject import: unresolved Master name). Empty
+     * for importers that don't emit warnings.
+     */
+    warnings?: ImportWarningRow[];
+  }>(),
+  { warnings: () => [] },
+);
 
 const emit = defineEmits<{ close: [] }>();
 
@@ -104,12 +116,14 @@ const summary = computed(() => {
   const skipped = props.counts.skipped ?? countBy(['skipped']);
   const conflicts = props.counts.conflicts ?? countBy(['conflict']);
   const failed = props.counts.failed ?? countBy(['failed']);
+  const warningsCount = props.warnings?.length ?? 0;
 
   const parts: string[] = [];
   if (imported > 0) parts.push(`${imported} ditambahkan`);
   if (skipped > 0) parts.push(`${skipped} sudah terdaftar`);
   if (conflicts > 0) parts.push(`${conflicts} perlu ditinjau`);
   if (failed > 0) parts.push(`${failed} gagal`);
+  if (warningsCount > 0) parts.push(`${warningsCount} perlu perhatian`);
   return parts.join(' · ');
 });
 </script>
@@ -148,6 +162,42 @@ const summary = computed(() => {
           </p>
           <p v-if="r.reason" class="text-2xs text-slate-700 mt-1.5 leading-relaxed">
             {{ r.reason }}
+          </p>
+        </div>
+      </section>
+
+      <!--
+        Non-blocking warnings — rows below imported successfully but need
+        follow-up (subject import: unresolved Master name). Kept in its
+        own section so it doesn't visually compete with successes.
+      -->
+      <section v-if="warnings && warnings.length > 0" class="space-y-2">
+        <h3 class="text-2xs font-black uppercase tracking-wider text-amber-700">
+          Peringatan ({{ warnings.length }})
+        </h3>
+        <p class="text-2xs text-slate-500 leading-relaxed">
+          Baris berikut berhasil diimpor, tapi perlu tindak lanjut manual.
+        </p>
+        <div
+          v-for="w in warnings"
+          :key="`warn-${w.row}`"
+          class="rounded-xl border p-3 border-amber-200 bg-amber-50"
+        >
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-[13px] font-bold text-slate-900 truncate">
+              {{ w.label || '—' }}
+            </p>
+            <span
+              class="text-4xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex-shrink-0 bg-amber-200 text-amber-800"
+            >
+              Baris {{ w.row }}
+            </span>
+          </div>
+          <p v-if="w.sublabel" class="text-2xs text-slate-500 mt-0.5">
+            {{ w.sublabel }}
+          </p>
+          <p class="text-2xs text-amber-900 mt-1.5 leading-relaxed">
+            {{ w.message }}
           </p>
         </div>
       </section>
