@@ -126,10 +126,15 @@ async function loadChapters(subId: string) {
   }
   chaptersLoading.value = true;
   try {
-    // `getTree` is teacher-agnostic for our purposes here (we only need
-    // the chapter list + ids); grade_level is optional and the backend
-    // scopes by subject already, so we omit it.
-    const tree = await MaterialService.getTree({ subject_id: subId });
+    // Scope by the picked class' grade_level when known so kelas-7 RPP
+    // doesn't surface kelas-8 chapters. Backend also folds in legacy
+    // universal (grade IS NULL) rows so nothing goes missing during
+    // the per-grade migration.
+    const gl = activeClass.value?.grade_level ?? null;
+    const tree = await MaterialService.getTree({
+      subject_id: subId,
+      grade_level: gl,
+    });
     chapters.value = tree.chapters;
   } catch {
     chapters.value = [];
@@ -140,6 +145,12 @@ async function loadChapters(subId: string) {
 
 // React to subject changes (manual pick OR seeded initialSubjectId).
 watch(subjectId, (id) => loadChapters(id), { immediate: true });
+
+// React to class changes so switching kelas re-scopes the bab list to
+// the new grade — the picker was previously fixed on the subject only.
+watch(classId, () => {
+  if (subjectId.value) loadChapters(subjectId.value);
+});
 
 // Reset the sub-bab choice whenever the chapter changes.
 watch(chapterId, () => {

@@ -27,7 +27,13 @@ import type {
 } from '@/types/materials';
 
 interface TreeParams {
-  grade_level?: string | null;
+  /**
+   * Grade level 1-12 to scope the bab list to. When set, the backend
+   * returns chapters matching that grade AND legacy universal rows
+   * (grade IS NULL) so the pre-existing chapter set stays discoverable.
+   * Accepts a string OR number — coerced to an integer for the API.
+   */
+  grade_level?: string | number | null;
   subject_id: string;
   semester?: string;
   /**
@@ -79,6 +85,19 @@ function chapterFromJson(raw: any): Chapter {
   const done_count = sub_chapters.filter((s) => s.done).length;
   // `urutan` is the chapter sequence number — drives "Bab N".
   const seq = raw.number ?? raw.nomor ?? raw.urutan ?? raw.order ?? '';
+  // Grade column added by 2026_07_16 migration; older API responses
+  // (or legacy rows) may omit it → coerce to null so the UI shows
+  // "Universal" badge instead of a bogus "Kelas 0".
+  const rawGrade = raw.grade;
+  const grade =
+    rawGrade == null
+      ? null
+      : typeof rawGrade === 'number'
+        ? Math.trunc(rawGrade)
+        : (() => {
+            const n = Number.parseInt(String(rawGrade), 10);
+            return Number.isFinite(n) ? n : null;
+          })();
   return {
     id: String(raw.id ?? ''),
     label: String(raw.label ?? `Bab ${seq}`).trim(),
@@ -92,6 +111,7 @@ function chapterFromJson(raw: any): Chapter {
         '',
     ),
     meta: raw.chapter_description ?? raw.meta ?? raw.deskripsi_bab ?? raw.deskripsi ?? '',
+    grade,
     sub_chapters,
     done_count,
     total_count: sub_chapters.length,
@@ -277,10 +297,23 @@ export const MaterialService = {
    */
   async getTree(params: TreeParams): Promise<MaterialTree> {
     try {
+      // Coerce grade_level to the integer the backend `?grade=N` filter
+      // expects. Non-numeric strings and null both fall through to the
+      // unscoped list (which still includes universal rows).
+      const gradeInt =
+        params.grade_level == null
+          ? null
+          : (() => {
+              const n =
+                typeof params.grade_level === 'number'
+                  ? params.grade_level
+                  : Number.parseInt(String(params.grade_level), 10);
+              return Number.isFinite(n) ? n : null;
+            })();
       const chapterRes = await api.get('/chapters', {
         params: {
           subject_id: params.subject_id,
-          ...(params.grade_level ? { grade_level: params.grade_level } : {}),
+          ...(gradeInt != null ? { grade: gradeInt } : {}),
           ...(params.semester ? { semester: params.semester } : {}),
         },
       });

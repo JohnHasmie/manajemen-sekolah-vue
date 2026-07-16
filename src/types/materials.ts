@@ -27,6 +27,13 @@ export interface Chapter {
   name: string;
   /** Total page count or estimated minutes — display-only. */
   meta?: string;
+  /**
+   * Grade level 1-12 the chapter is scoped to. `null` means the
+   * chapter is legacy / universal — it predates the per-grade
+   * column and applies across all grades until an admin classifies
+   * it. Backend column: `chapters.grade`.
+   */
+  grade: number | null;
   sub_chapters: SubChapter[];
   /** Computed: count of sub-chapters marked done. */
   done_count: number;

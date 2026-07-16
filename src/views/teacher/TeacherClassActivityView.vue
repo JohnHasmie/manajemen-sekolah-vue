@@ -641,7 +641,15 @@ async function loadChapters() {
   }
   isLoadingChapters.value = true;
   try {
-    const tree = await MaterialService.getTree({ subject_id: subjectId });
+    // Scope the bab list to the chosen kelas' grade so an aktivitas
+    // for kelas 7 doesn't surface kelas 8 chapters. Backend also
+    // returns legacy universal (grade IS NULL) rows so nothing goes
+    // missing during the per-grade migration.
+    const cls = classes.value.find((c) => c.id === form.classId);
+    const tree = await MaterialService.getTree({
+      subject_id: subjectId,
+      grade_level: cls?.grade_level ?? null,
+    });
     chapters.value = tree.chapters;
   } catch {
     chapters.value = [];

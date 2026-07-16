@@ -2854,6 +2854,21 @@
         "bulk_status_confirm": "Apply",
         "import_title": "Import Teachers from Excel"
       }
+    },
+    "lms": {
+      "chapter": {
+        "grade": {
+          "label": "Grade",
+          "universal": "Universal",
+          "all": "All grades",
+          "badge": "Grade {n}",
+          "universalHint": "Legacy chapter — not tied to a specific grade",
+          "filterLabel": "Filter by grade",
+          "formLabel": "Grade level",
+          "formHint": "Optional. Leave blank to apply to every grade (universal chapter).",
+          "formPlaceholder": "Choose a grade"
+        }
+      }
     }
   },
   "teacher": {
