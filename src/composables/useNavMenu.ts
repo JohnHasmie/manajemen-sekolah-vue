@@ -338,6 +338,16 @@ const TEACHER_NAV: NavSection[] = [
         icon: 'megaphone',
         ability: 'communication.announcement.view',
       },
+      // Prestasi & Gamifikasi (paid module). `gamification.view`
+      // ability is stripped by AbilityResolver when the school lacks
+      // the teacher_gamification sub, so `abilityAny` here does
+      // double duty as the module gate + role gate.
+      {
+        to: '/teacher/prestasi',
+        labelKey: 'nav.prestasi',
+        icon: 'medal',
+        ability: 'gamification.view',
+      },
     ],
   },
   {
