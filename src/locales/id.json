@@ -877,6 +877,22 @@
         "universalConfirmBody": "Sekolah kamu sudah punya \"{name}\" untuk kelas {grades}. Kalau tetap lanjut, akan tercipta row \"{name}\" tanpa kelas yang berlaku untuk semua kelas.\n\nYakin? Atau mau pilih kelas dulu?",
         "universalConfirmYes": "Ya, universal",
         "universalConfirmNo": "← Pilih Kelas"
+      },
+      "linkMaster": {
+        "bannerTitle": "Belum ditautkan ke master kurikulum",
+        "bannerBodyRecap": "Mata pelajaran ini belum ditautkan ke master kurikulum. Fitur Rekap Nilai baru bisa dipakai sepenuhnya setelah ditautkan.",
+        "bannerBodyChapter": "Mata pelajaran ini belum ditautkan ke master kurikulum. Bab kurikulum baru akan muncul setelah ditautkan.",
+        "bannerCta": "Tautkan Sekarang",
+        "pickerTitle": "Tautkan ke master kurikulum",
+        "pickerSubtitle": "Pilih mapel standar kurikulum yang sesuai dengan mapel sekolah ini.",
+        "pickerSearch": "Cari mapel master...",
+        "pickerEmpty": "Tidak ada mapel master ditemukan.",
+        "pickerLoading": "Memuat mapel master...",
+        "pickerSuggestedBadge": "Kandidat cocok",
+        "pickerConfirm": "Tautkan",
+        "pickerCancel": "Batal",
+        "success": "Mapel berhasil ditautkan ke master kurikulum.",
+        "failed": "Gagal menautkan mapel ke master."
       }
     },
     "schedule": {

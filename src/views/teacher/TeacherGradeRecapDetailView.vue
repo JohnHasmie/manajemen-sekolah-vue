@@ -44,6 +44,7 @@ import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import GradeRecapSourcePickerModal, {
   type RecapColumnKind,
 } from '@/components/feature/GradeRecapSourcePickerModal.vue';
+import LinkMasterBanner from '@/components/feature/LinkMasterBanner.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -650,6 +651,22 @@ function onPredikatBlur(rowId: string) {
 
     <!-- KPI -->
     <KpiStripCards :cards="kpiCards" />
+
+    <!--
+      Warning banner: if this subject_schools row isn't linked to a
+      master curriculum subject, admins/guru see an inline nudge with
+      a one-click "Tautkan Sekarang" flow. The matrix still renders
+      (score entry works either way) — the banner just surfaces that
+      chapter labels will land on ad-hoc names until the link exists.
+      When the link is saved we re-fetch the matrix so the recap
+      picks up any master-derived chapter defaults.
+    -->
+    <LinkMasterBanner
+      v-if="subjectId"
+      :subject-id="subjectId"
+      context="grade-recap"
+      @linked="load"
+    />
 
     <!-- TOOLBAR -->
     <div class="bg-white border border-slate-200 rounded-2xl p-3 flex items-center gap-2 flex-wrap">

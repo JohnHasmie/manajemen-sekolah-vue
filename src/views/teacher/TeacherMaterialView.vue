@@ -41,6 +41,7 @@ import KpiStripCards, {
 } from '@/components/feature/KpiStripCards.vue';
 import MaterialAiPollingOverlay from '@/components/feature/MaterialAiPollingOverlay.vue';
 import MaterialSectionEditorModal from '@/components/feature/MaterialSectionEditorModal.vue';
+import LinkMasterBanner from '@/components/feature/LinkMasterBanner.vue';
 import { formatDateShort, localISODate } from '@/lib/format';
 import { useQuickAction } from '@/composables/useQuickAction';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
@@ -963,6 +964,21 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
 
     <!-- KPI strip -->
     <KpiStripCards :cards="kpiCards" />
+
+    <!--
+      Warning banner: if the currently-picked subject_schools row
+      isn't linked to a master curriculum subject, the chapter tree
+      falls back to any manually-added Bab and skips the curriculum-
+      standard scaffold. The banner surfaces the "Tautkan Sekarang"
+      flow inline so admins/guru can bind the subject in one click
+      and the tree re-fetches with the fresh master link in place.
+    -->
+    <LinkMasterBanner
+      v-if="subjectId"
+      :subject-id="subjectId"
+      context="chapter"
+      @linked="reload"
+    />
 
     <!-- FILTER TOOLBAR -->
     <PageFilterToolbar>

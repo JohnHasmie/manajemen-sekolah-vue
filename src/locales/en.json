@@ -877,6 +877,22 @@
         "universalConfirmBody": "Your school already has \"{name}\" for grades {grades}. If you continue, a \"{name}\" row without a grade will be created that applies to all grades.\n\nAre you sure? Or would you rather pick a grade first?",
         "universalConfirmYes": "Yes, universal",
         "universalConfirmNo": "← Pick a Grade"
+      },
+      "linkMaster": {
+        "bannerTitle": "Not linked to master curriculum",
+        "bannerBodyRecap": "This subject isn't linked to the curriculum master. Grade recap will work fully once you link it.",
+        "bannerBodyChapter": "This subject isn't linked to the curriculum master. Chapters will show up once you link it.",
+        "bannerCta": "Link Now",
+        "pickerTitle": "Link to master curriculum",
+        "pickerSubtitle": "Pick the curriculum-standard subject that matches this school mapel.",
+        "pickerSearch": "Search master subject...",
+        "pickerEmpty": "No master subjects found.",
+        "pickerLoading": "Loading master subjects...",
+        "pickerSuggestedBadge": "Suggested match",
+        "pickerConfirm": "Link",
+        "pickerCancel": "Cancel",
+        "success": "Subject linked to master curriculum.",
+        "failed": "Failed to link subject to master."
       }
     },
     "schedule": {

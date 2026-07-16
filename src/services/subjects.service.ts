@@ -271,6 +271,58 @@ export const SubjectService = {
     }
   },
 
+  /**
+   * GET /subjects/{id}/link-status — read whether a subject_schools
+   * row is linked to a master curriculum subject. Drives the
+   * "Tautkan ke Master" banner on the LMS screens (Rekap Nilai,
+   * Bab/Chapter). Return null if the endpoint fails so the caller
+   * can silently hide the banner (fail-open on read).
+   */
+  async getLinkStatus(subjectId: string): Promise<{
+    subject_school_id: string;
+    name: string;
+    code: string | null;
+    subject_id: number | null;
+    master_name: string | null;
+    is_linked: boolean;
+    suggested_master_id: number | null;
+  } | null> {
+    try {
+      const res = await api.get(`/subjects/${subjectId}/link-status`);
+      const data = res.data?.data ?? null;
+      if (!data || typeof data !== 'object') return null;
+      const d = data as Record<string, unknown>;
+      return {
+        subject_school_id: String(d.subject_school_id ?? subjectId),
+        name: String(d.name ?? ''),
+        code: (d.code as string | null) ?? null,
+        subject_id: d.subject_id == null ? null : Number(d.subject_id),
+        master_name: (d.master_name as string | null) ?? null,
+        is_linked: Boolean(d.is_linked),
+        suggested_master_id:
+          d.suggested_master_id == null ? null : Number(d.suggested_master_id),
+      };
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * PATCH /subjects/{id}/link-master — bind a subject_schools row
+   * to a master curriculum subject. Backend gate: school.subject.
+   * manage. Throws on failure so the picker can surface an error
+   * toast (link-status is idempotent, so an ignored error would
+   * silently leave the banner up).
+   */
+  async linkToMaster(
+    subjectId: string,
+    masterSubjectId: number,
+  ): Promise<void> {
+    await api.patch(`/subjects/${subjectId}/link-master`, {
+      master_subject_id: masterSubjectId,
+    });
+  },
+
   /** GET /master-subjects — autocomplete source for the edit sheet. */
   async listMasterSubjects(search?: string): Promise<MasterSubject[]> {
     try {
