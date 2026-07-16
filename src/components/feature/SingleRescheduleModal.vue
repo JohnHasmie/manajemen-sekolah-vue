@@ -167,9 +167,18 @@ const dayLabel = computed(() => {
           Jam pelajaran ({{ dayLabel }})
           <span v-if="isLoadingHours" class="text-slate-400 normal-case font-normal ml-1">memuat...</span>
         </label>
+        <!-- Skeleton while /lesson-hours is in flight — matches the
+             pattern used across ScheduleFormModal so a reschedule
+             open reads as "loading", not "empty picker". -->
+        <div
+          v-if="isLoadingHours && filteredHours.length === 0"
+          class="mt-1 h-9 w-full rounded-xl bg-slate-100 animate-pulse motion-reduce:animate-none"
+          aria-hidden="true"
+        />
         <select
+          v-else
           v-model="lessonHourId"
-          :disabled="!dayId || isLoadingHours"
+          :disabled="!dayId"
           class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin disabled:opacity-50"
         >
           <option value="">— pilih jam —</option>

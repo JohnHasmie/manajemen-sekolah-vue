@@ -1226,15 +1226,19 @@ function pickSubject(id: string) {
             <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
               Bab (opsional)
             </label>
+            <div
+              v-if="isLoadingChapters && chapters.length === 0"
+              class="mt-1 h-9 w-full rounded-xl bg-slate-100 animate-pulse motion-reduce:animate-none"
+              aria-hidden="true"
+            />
             <select
+              v-else
               :value="form.chapterId"
-              :disabled="isSaving || isLoadingChapters"
+              :disabled="isSaving"
               class="mt-1 w-full text-sm rounded-xl border border-slate-200 focus:border-brand-cobalt focus:outline-none px-3 py-2 bg-white"
               @change="onChapterChange(($event.target as HTMLSelectElement).value)"
             >
-              <option value="">
-                {{ isLoadingChapters ? 'Memuat bab…' : '— Tanpa bab —' }}
-              </option>
+              <option value="">— Tanpa bab —</option>
               <option v-for="c in chapters" :key="c.id" :value="c.id">
                 {{ c.label }}{{ c.name ? ` · ${c.name}` : '' }}
               </option>

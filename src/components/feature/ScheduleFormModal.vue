@@ -1046,10 +1046,19 @@ const teacherPickerLocked = computed(
               </p>
             </button>
           </template>
+          <!-- Skeleton while the /lesson-hours GET is in flight so the
+               admin sees "loading" instead of a disabled empty box. Same
+               height + border as the real select so the layout is
+               stable when it swaps in. -->
+          <div
+            v-else-if="isLoadingHours && lessonHours.length === 0"
+            class="h-9 w-full rounded-xl bg-slate-100 animate-pulse motion-reduce:animate-none"
+            aria-hidden="true"
+          />
           <select
             v-else
             v-model="lessonHourId"
-            :disabled="!dayId || isLoadingHours"
+            :disabled="!dayId"
             class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin disabled:opacity-50"
           >
             <option value="">{{ t('admin.schedule.formB.hourPlaceholder') }}</option>
@@ -1095,9 +1104,19 @@ const teacherPickerLocked = computed(
         </p>
 
         <template v-else>
+          <!-- Skeleton while /available-teachers is in flight. Replaces
+               the disabled empty select so the admin sees "loading"
+               rather than a picker that looks broken. Same 9-unit
+               height as the real select keeps layout stable. -->
+          <div
+            v-if="isLoadingAvailableTeachers && availableTeachers.length === 0"
+            class="mt-1 h-9 w-full rounded-xl bg-slate-100 animate-pulse motion-reduce:animate-none"
+            aria-hidden="true"
+          />
           <select
+            v-else
             v-model="teacherId"
-            :disabled="isLoadingAvailableTeachers || availableTeachers.length === 0"
+            :disabled="availableTeachers.length === 0"
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin disabled:opacity-50"
           >
             <option value="">{{ t('admin.schedule.formB.teacherPlaceholder') }}</option>
@@ -1139,9 +1158,19 @@ const teacherPickerLocked = computed(
           {{ t('common.subject') }}
           <span v-if="isLoadingSubjects" class="text-slate-400 normal-case font-normal ml-1">memuat...</span>
         </label>
+        <!-- Skeleton while the teacher's linked-subjects list is being
+             fetched. The greyed-out disabled select was ambiguous
+             (looked like "empty + broken"); the pulsing bar is
+             unambiguously "loading". -->
+        <div
+          v-if="isLoadingSubjects && !!teacherId"
+          class="mt-1 h-9 w-full rounded-xl bg-slate-100 animate-pulse motion-reduce:animate-none"
+          aria-hidden="true"
+        />
         <select
+          v-else
           v-model="subjectId"
-          :disabled="!teacherId || isLoadingSubjects"
+          :disabled="!teacherId"
           class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin disabled:opacity-50"
         >
           <option value="">— pilih mapel —</option>
