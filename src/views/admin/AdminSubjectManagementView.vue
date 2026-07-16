@@ -29,7 +29,10 @@ import FilterFacetPickerModal, {
 import AdminDataMenu from '@/components/feature/AdminDataMenu.vue';
 import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vue';
 import AdminImportResultModal from '@/components/feature/AdminImportResultModal.vue';
-import type { ImportDetailRow } from '@/services/admin-data-excel.service';
+import type {
+  ImportDetailRow,
+  ImportWarningRow,
+} from '@/services/admin-data-excel.service';
 import Modal from '@/components/ui/Modal.vue';
 import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
@@ -73,6 +76,8 @@ const importCounts = ref<{
   conflicts?: number;
   failed?: number;
 }>({});
+// Non-blocking per-row warnings (post-!453: unresolved Master link).
+const importWarnings = ref<ImportWarningRow[]>([]);
 
 const showStatusPicker = ref(false);
 const showGradePicker = ref(false);
@@ -412,7 +417,13 @@ async function exportExcel() {
 async function downloadTemplate() {
   try {
     await AdminDataExcelService.downloadTemplate('subject');
-    toast.value = { message: 'Template terdownload.', tone: 'success' };
+    toast.value = {
+      // Post-!453 template gained 2 optional columns — call them out
+      // in the download-success toast so an admin who never opens the
+      // Petunjuk tab still knows what they are.
+      message: 'Template terdownload. Kolom baru: Kelas (1–12) & Master (opsional).',
+      tone: 'success',
+    };
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   }
@@ -423,18 +434,24 @@ function onImportDone(res: {
   skipped?: number;
   conflicts?: number;
   details?: ImportDetailRow[];
+  warnings?: ImportWarningRow[];
 }) {
   // Surface EVERY processed row grouped by status in the shared dialog.
   importDetails.value = res.details ?? [];
+  importWarnings.value = res.warnings ?? [];
   importCounts.value = {
     imported: res.imported,
     skipped: res.skipped ?? 0,
     conflicts: res.conflicts ?? 0,
     failed: res.failed,
   };
-  const note = res.failed > 0 ? ` · ${res.failed} gagal` : '';
+  const failPart = res.failed > 0 ? ` · ${res.failed} gagal` : '';
+  const warnPart =
+    importWarnings.value.length > 0
+      ? ` · ${importWarnings.value.length} perlu perhatian`
+      : '';
   toast.value = {
-    message: `${res.imported} mapel diimpor${note}.`,
+    message: `${res.imported} mapel diimpor${failPart}${warnPart}.`,
     tone: res.failed > 0 ? 'error' : 'success',
   };
   reload(1);
@@ -737,13 +754,21 @@ function topMeta(s: Subject): string {
     @done="onImportDone"
   />
 
-  <!-- Post-import result: EVERY processed mapel grouped by status. -->
+  <!--
+    Post-import result: EVERY processed mapel grouped by status, plus
+    the amber Peringatan section for non-blocking master-not-found
+    warnings (post-!453).
+  -->
   <AdminImportResultModal
-    v-if="importDetails.length > 0"
+    v-if="importDetails.length > 0 || importWarnings.length > 0"
     entity-label="mapel"
     :details="importDetails"
     :counts="importCounts"
-    @close="importDetails = []"
+    :warnings="importWarnings"
+    @close="
+      importDetails = [];
+      importWarnings = [];
+    "
   />
 
   <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />

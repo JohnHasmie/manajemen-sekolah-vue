@@ -37,6 +37,20 @@ export interface ImportDetailRow {
   reason: string | null;
 }
 
+/**
+ * Non-blocking per-row annotation attached to a row that DID import
+ * (post-!453 subject import emits these when a Master lookup misses —
+ * row goes in as an orphan but the admin should know to wire it up
+ * later). Additive top-level `warnings[]` on the response body so
+ * pre-!453 importers keep working (empty list = section skipped).
+ */
+export interface ImportWarningRow {
+  row: number;
+  label: string;
+  sublabel: string | null;
+  message: string;
+}
+
 function humanError(e: unknown, fallback: string): string {
   const ax = e as any;
   if (ax?.response?.data) {
@@ -115,6 +129,10 @@ export const AdminDataExcelService = {
     // review / failed) — the shared result dialog groups these by status.
     // Empty for importers that don't report it.
     details: ImportDetailRow[];
+    // Non-blocking per-row notes for rows that DID import but flag a
+    // follow-up (post-!453 subject import: unresolved Master name).
+    // Empty for importers that don't emit warnings.
+    warnings: ImportWarningRow[];
   }> {
     try {
       const fd = new FormData();
@@ -162,6 +180,9 @@ export const AdminDataExcelService = {
           : [],
         details: Array.isArray(results.details)
           ? (results.details as ImportDetailRow[])
+          : [],
+        warnings: Array.isArray(results.warnings)
+          ? (results.warnings as ImportWarningRow[])
           : [],
       };
     } catch (e) {

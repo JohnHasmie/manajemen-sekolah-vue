@@ -8,11 +8,13 @@
 -->
 <script setup lang="ts">
 import { ref } from 'vue';
+import { computed } from 'vue';
 import {
   AdminDataExcelService,
   type AdminEntity,
   type ImportReviewRow,
   type ImportDetailRow,
+  type ImportWarningRow,
 } from '@/services/admin-data-excel.service';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
@@ -36,8 +38,31 @@ const emit = defineEmits<{
     review?: ImportReviewRow[];
     // Per-row detail of EVERY processed row — feeds the shared result dialog.
     details?: ImportDetailRow[];
+    // Non-blocking per-row annotations (post-!453 subject import). Empty
+    // for importers that don't emit warnings.
+    warnings?: ImportWarningRow[];
   }];
 }>();
+
+/**
+ * Per-entity guidance banner. Subject template gained two optional
+ * columns after !453 (Kelas + Master) — most admins won't have read
+ * the release note so we spell it out at the point-of-use rather than
+ * hiding it in the .xlsx alone.
+ */
+const entityGuidance = computed<string | null>(() => {
+  switch (props.entity) {
+    case 'subject':
+      return (
+        'Template mapel sekarang punya 2 kolom opsional: ' +
+        'Kelas (1–12) untuk membedakan mapel per tingkat, dan ' +
+        'Master untuk menautkan ke master data (opsional, ' +
+        'membantu sinkron rekap nilai antar sekolah).'
+      );
+    default:
+      return null;
+  }
+});
 
 const file = ref<File | null>(null);
 const isUploading = ref(false);
@@ -104,6 +129,12 @@ async function upload() {
         <p class="text-2xs text-slate-600 leading-relaxed">
           Pastikan struktur kolom sesuai template. Kolom dengan ID akan
           divalidasi terhadap data yang ada di sistem.
+        </p>
+        <p
+          v-if="entityGuidance"
+          class="text-2xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2 leading-relaxed"
+        >
+          {{ entityGuidance }}
         </p>
         <Button
           variant="secondary"
