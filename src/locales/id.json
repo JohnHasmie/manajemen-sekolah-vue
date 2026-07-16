@@ -2869,6 +2869,21 @@
         "bulk_status_confirm": "Terapkan",
         "import_title": "Import Guru dari Excel"
       }
+    },
+    "lms": {
+      "chapter": {
+        "grade": {
+          "label": "Kelas",
+          "universal": "Universal",
+          "all": "Semua kelas",
+          "badge": "Kelas {n}",
+          "universalHint": "Bab lama — belum dikaitkan ke kelas tertentu",
+          "filterLabel": "Filter kelas",
+          "formLabel": "Tingkat kelas",
+          "formHint": "Opsional. Kosongkan kalau bab berlaku untuk semua kelas (universal).",
+          "formPlaceholder": "Pilih kelas"
+        }
+      }
     }
   },
   "teacher": {

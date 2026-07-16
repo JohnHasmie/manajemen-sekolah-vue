@@ -1093,6 +1093,26 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
                   {{ t('tutor.sekolah.material.chapterMetaSubCount', { count: c.total_count }) }}{{ c.meta ? ` · ${c.meta}` : '' }}
                 </p>
               </div>
+              <!--
+                Grade pill: "Kelas N" (cobalt) for grade-scoped chapters,
+                "Universal" (slate) for legacy rows where grade IS NULL.
+                Hidden when the payload didn't ship the field (older
+                backend / cached response).
+              -->
+              <span
+                v-if="c.grade !== undefined"
+                class="text-[10px] font-extrabold px-2 py-0.5 rounded-full flex-shrink-0"
+                :class="c.grade == null
+                  ? 'bg-slate-100 text-slate-500'
+                  : 'bg-brand-cobalt/10 text-brand-cobalt'"
+                :title="c.grade == null
+                  ? t('admin.lms.chapter.grade.universalHint')
+                  : t('admin.lms.chapter.grade.badge', { n: c.grade })"
+              >
+                {{ c.grade == null
+                    ? t('admin.lms.chapter.grade.universal')
+                    : t('admin.lms.chapter.grade.badge', { n: c.grade }) }}
+              </span>
               <div class="flex items-center gap-2 flex-shrink-0">
                 <span class="text-2xs font-bold text-slate-600">
                   {{ c.done_count }}/{{ c.total_count }}
