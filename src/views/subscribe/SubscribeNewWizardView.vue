@@ -481,26 +481,139 @@ onMounted(async () => {
 });
 
 // ── Step navigation ────────────────────────────────────────────────
-const canGoNext = computed(() => {
+// Pak Agus (Kepala Sekolah SMP Rushd) stuck 2 days on step 1 because the
+// "Lanjut" button was silently disabled — no asterisk on the label, a
+// filled-looking placeholder ("SMP Rushd"), no error message. He never
+// realised the empty Nama lembaga field was what greyed the button out.
+//
+// The fix: DON'T silent-disable. Let the user click, then validate on
+// click and tell them exactly which field is missing (red border, inline
+// error, focus jump). `validateStep()` replaces the old `canGoNext`
+// computed — same rules, but it returns the first invalid field name so
+// `next()` can focus + scroll to it. `fieldErrors` powers the per-field
+// error copy and red border in the template.
+const fieldErrors = ref<Record<string, string>>({});
+
+/**
+ * Validate the current step. Populates `fieldErrors` with a map of
+ * field name → message, and returns the FIRST invalid field name (for
+ * focus + scroll) or null when the step is clean and safe to advance.
+ *
+ * Field names match the `data-field="..."` attribute stamped on each
+ * `<input>` — `focusField()` uses that to locate the element.
+ * `'__modules__'` is a virtual field for the module picker (no
+ * focusable input, so the top banner alone communicates).
+ */
+function validateStep(): string | null {
+  const errors: Record<string, string> = {};
+  let firstInvalid: string | null = null;
+  const mark = (field: string, msg: string) => {
+    errors[field] = msg;
+    if (firstInvalid === null) firstInvalid = field;
+  };
   switch (activeStep.value) {
     case 'lembaga':
-      return !!form.tenant_type && form.tenant_name.trim().length >= 3;
+      if (form.tenant_name.trim().length < 3) {
+        mark('tenant_name', 'Nama lembaga wajib diisi (min. 3 karakter)');
+      }
+      break;
     case 'admin':
-      return (
-        form.admin_name.trim().length > 0 &&
-        /.+@.+\..+/.test(form.admin_email.trim()) &&
-        form.admin_whatsapp.trim().length >= 8
-      );
+      if (form.admin_name.trim().length === 0) {
+        mark('admin_name', 'Nama admin wajib diisi');
+      }
+      if (form.admin_job_title.trim().length === 0) {
+        mark('admin_job_title', 'Jabatan wajib diisi');
+      }
+      if (form.admin_whatsapp.trim().length < 8) {
+        mark('admin_whatsapp', 'Nomor WhatsApp wajib diisi (min. 8 digit)');
+      }
+      if (!/.+@.+\..+/.test(form.admin_email.trim())) {
+        mark('admin_email', 'Email admin belum valid');
+      }
+      break;
     case 'kapasitas':
-      return form.student_count + form.staff_count > 0;
+      if (form.student_count + form.staff_count <= 0) {
+        mark('student_count', 'Isi jumlah minimal 1 orang');
+      }
+      break;
     case 'modul':
-      return selectedKeys.value.size > 0;
-    default:
-      return true;
+      if (selectedKeys.value.size === 0) {
+        mark('__modules__', 'Pilih minimal satu modul dulu.');
+      }
+      break;
+  }
+  fieldErrors.value = errors;
+  return firstInvalid;
+}
+
+/**
+ * Scroll the invalid input into view and focus it. Uses `[data-field]`
+ * instead of a ref map so adding a new required input stays a template
+ * concern — just stamp the attribute and validateStep() picks it up.
+ * The focus is deferred one tick after scrollIntoView begins so the
+ * viewport can start moving without the focus jump snapping it.
+ */
+function focusField(field: string): void {
+  const el = document.querySelector<HTMLElement>(`[data-field="${field}"]`);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => {
+    if (typeof (el as HTMLInputElement).focus === 'function') {
+      (el as HTMLInputElement).focus();
+    }
+  }, 120);
+}
+
+/**
+ * Best-effort per-field error clearing as the user fixes the input.
+ * Keyed to the same validity check as `validateStep()` so the red
+ * border disappears the moment the field turns valid — not on the
+ * first keystroke (which would flash green on "SM" then red again).
+ */
+watch(() => form.tenant_name, (v) => {
+  if (fieldErrors.value.tenant_name && v.trim().length >= 3) {
+    const { tenant_name, ...rest } = fieldErrors.value;
+    void tenant_name;
+    fieldErrors.value = rest;
   }
 });
+watch(() => form.admin_name, (v) => {
+  if (fieldErrors.value.admin_name && v.trim().length > 0) {
+    const { admin_name, ...rest } = fieldErrors.value;
+    void admin_name;
+    fieldErrors.value = rest;
+  }
+});
+watch(() => form.admin_job_title, (v) => {
+  if (fieldErrors.value.admin_job_title && v.trim().length > 0) {
+    const { admin_job_title, ...rest } = fieldErrors.value;
+    void admin_job_title;
+    fieldErrors.value = rest;
+  }
+});
+watch(() => form.admin_whatsapp, (v) => {
+  if (fieldErrors.value.admin_whatsapp && v.trim().length >= 8) {
+    const { admin_whatsapp, ...rest } = fieldErrors.value;
+    void admin_whatsapp;
+    fieldErrors.value = rest;
+  }
+});
+watch(() => form.admin_email, (v) => {
+  if (fieldErrors.value.admin_email && /.+@.+\..+/.test(v.trim())) {
+    const { admin_email, ...rest } = fieldErrors.value;
+    void admin_email;
+    fieldErrors.value = rest;
+  }
+});
+
 function next() {
-  if (!canGoNext.value) return;
+  const invalid = validateStep();
+  if (invalid !== null) {
+    errorMessage.value = 'Ada field yang belum diisi. Lengkapi dulu ya.';
+    focusField(invalid);
+    return;
+  }
+  errorMessage.value = null;
   // Short-circuit: when there's only one payment method, going "next"
   // from Step 4 (modul) doesn't need to stop on Step 5 (payment picker)
   // — the picker would show a single card that self-selects. Fire
@@ -513,6 +626,11 @@ function next() {
   stepIndex.value = Math.min(STEPS.length - 1, stepIndex.value + 1);
 }
 function back() {
+  // Clearing errors on back-nav means bouncing between steps doesn't
+  // carry stale red borders forward into a step the user hadn't
+  // clicked Lanjut on yet.
+  fieldErrors.value = {};
+  errorMessage.value = null;
   stepIndex.value = Math.max(0, stepIndex.value - 1);
 }
 
@@ -722,6 +840,12 @@ function flagSubscribeIntent(): void {
           mencetak dokumen resmi ({{ tenantVariantLabel('documentTypes', form.tenant_type) }}).
         </p>
       </div>
+      <!-- Top banner fires when the user clicks Lanjut with an invalid
+           field — companion to the inline red text below each input. -->
+      <div v-if="errorMessage" class="sn-form-banner" role="alert">
+        <i class="ti ti-alert-circle" aria-hidden="true" />
+        {{ errorMessage }}
+      </div>
       <div class="sn-form">
         <div class="sn-tenant-toggle">
           <button
@@ -742,12 +866,23 @@ function flagSubscribeIntent(): void {
           </button>
         </div>
         <label class="sn-field">
-          <span class="sn-lbl">Nama lembaga</span>
+          <span class="sn-lbl">
+            Nama lembaga<em class="req" aria-label="wajib diisi">*</em>
+          </span>
           <input
             v-model="form.tenant_name"
             type="text"
-            :placeholder="form.tenant_type === 'bimbel' ? 'Bimbel Rushd' : 'SMP Rushd'"
+            data-field="tenant_name"
+            :class="{ 'sn-input-error': fieldErrors.tenant_name }"
+            :placeholder="form.tenant_type === 'bimbel' ? 'mis. Bimbel Rushd Cabang Solo' : 'mis. SMP Muhammadiyah Surakarta'"
           />
+          <!-- Error takes priority over the hint so the user always sees
+               the most actionable message. Hint stays subtle grey and only
+               surfaces on a fresh empty field to teach the expected shape. -->
+          <span v-if="fieldErrors.tenant_name" class="sn-field-err">{{ fieldErrors.tenant_name }}</span>
+          <span v-else-if="!form.tenant_name.trim()" class="sn-hint">
+            Contohnya "SMP Muhammadiyah Surakarta" atau "Bimbel Rushd Cabang Solo"
+          </span>
         </label>
         <label v-if="form.tenant_type === 'sekolah'" class="sn-field">
           <span class="sn-lbl">Jenjang</span>
@@ -762,16 +897,16 @@ function flagSubscribeIntent(): void {
         <div class="sn-field-row">
           <label class="sn-field">
             <span class="sn-lbl">Kota</span>
-            <input v-model="form.city" type="text" placeholder="Surakarta" />
+            <input v-model="form.city" type="text" placeholder="mis. Surakarta" />
           </label>
           <label v-if="form.tenant_type === 'sekolah'" class="sn-field">
             <span class="sn-lbl">NPSN (opsional)</span>
-            <input v-model="form.npsn" type="text" placeholder="20330001" />
+            <input v-model="form.npsn" type="text" placeholder="mis. 20330001" />
           </label>
         </div>
         <label class="sn-field">
           <span class="sn-lbl">Alamat</span>
-          <input v-model="form.address" type="text" placeholder="Jl. Pendidikan No. 99" />
+          <input v-model="form.address" type="text" placeholder="mis. Jl. Pendidikan No. 99" />
         </label>
       </div>
     </div>
@@ -785,23 +920,63 @@ function flagSubscribeIntent(): void {
           admin lain nanti dari dashboard.
         </p>
       </div>
+      <div v-if="errorMessage" class="sn-form-banner" role="alert">
+        <i class="ti ti-alert-circle" aria-hidden="true" />
+        {{ errorMessage }}
+      </div>
       <div class="sn-form">
         <label class="sn-field">
-          <span class="sn-lbl">Nama lengkap</span>
-          <input v-model="form.admin_name" type="text" />
+          <span class="sn-lbl">
+            Nama lengkap<em class="req" aria-label="wajib diisi">*</em>
+          </span>
+          <input
+            v-model="form.admin_name"
+            type="text"
+            data-field="admin_name"
+            :class="{ 'sn-input-error': fieldErrors.admin_name }"
+            placeholder="mis. Budi Santoso"
+          />
+          <span v-if="fieldErrors.admin_name" class="sn-field-err">{{ fieldErrors.admin_name }}</span>
         </label>
         <label class="sn-field">
-          <span class="sn-lbl">Jabatan</span>
-          <input v-model="form.admin_job_title" type="text" placeholder="Kepala Sekolah" />
+          <span class="sn-lbl">
+            Jabatan<em class="req" aria-label="wajib diisi">*</em>
+          </span>
+          <input
+            v-model="form.admin_job_title"
+            type="text"
+            data-field="admin_job_title"
+            :class="{ 'sn-input-error': fieldErrors.admin_job_title }"
+            placeholder="mis. Kepala Sekolah"
+          />
+          <span v-if="fieldErrors.admin_job_title" class="sn-field-err">{{ fieldErrors.admin_job_title }}</span>
         </label>
         <div class="sn-field-row">
           <label class="sn-field">
-            <span class="sn-lbl">WhatsApp</span>
-            <input v-model="form.admin_whatsapp" type="tel" placeholder="0812…" />
+            <span class="sn-lbl">
+              WhatsApp<em class="req" aria-label="wajib diisi">*</em>
+            </span>
+            <input
+              v-model="form.admin_whatsapp"
+              type="tel"
+              data-field="admin_whatsapp"
+              :class="{ 'sn-input-error': fieldErrors.admin_whatsapp }"
+              placeholder="mis. 08123456789"
+            />
+            <span v-if="fieldErrors.admin_whatsapp" class="sn-field-err">{{ fieldErrors.admin_whatsapp }}</span>
           </label>
           <label class="sn-field">
-            <span class="sn-lbl">Email</span>
-            <input v-model="form.admin_email" type="email" placeholder="admin@sekolah.sch.id" />
+            <span class="sn-lbl">
+              Email<em class="req" aria-label="wajib diisi">*</em>
+            </span>
+            <input
+              v-model="form.admin_email"
+              type="email"
+              data-field="admin_email"
+              :class="{ 'sn-input-error': fieldErrors.admin_email }"
+              placeholder="mis. admin@sekolah.sch.id"
+            />
+            <span v-if="fieldErrors.admin_email" class="sn-field-err">{{ fieldErrors.admin_email }}</span>
           </label>
         </div>
       </div>
@@ -999,11 +1174,14 @@ function flagSubscribeIntent(): void {
           <i class="ti ti-arrow-right" style="font-size:13px" aria-hidden="true" />
         </template>
       </button>
+      <!-- No :disabled — a greyed-out Lanjut with no explanation is exactly
+           what got a real user (pak Agus, SMP Rushd) stuck for two days.
+           The click now always fires; validateStep() decides whether to
+           advance or to surface the missing field. -->
       <button
         v-else-if="activeStep !== 'modul'"
         type="button"
         class="sn-foot-next"
-        :disabled="!canGoNext"
         @click="next"
       >
         Lanjut
@@ -1081,6 +1259,14 @@ function flagSubscribeIntent(): void {
   font-size: 10.5px; text-transform: uppercase;
   letter-spacing: 0.4px; color: #64748B; font-weight: 500;
 }
+/* Red asterisk marks required inputs. Reset italic + tiny left gap so
+   it sits tight against the label without visually merging with it. */
+.sn-lbl .req {
+  color: #EF4444;
+  font-style: normal;
+  margin-left: 2px;
+  font-weight: 600;
+}
 .sn-field input,
 .sn-field select {
   border: 0.5px solid #CBD5E1;
@@ -1097,6 +1283,48 @@ function flagSubscribeIntent(): void {
   border-color: #1B6FB8;
   box-shadow: 0 0 0 3px rgba(27, 111, 184, 0.14);
 }
+/* Error state: red border + red focus ring override the blue defaults.
+   Also raises specificity via `input.sn-input-error` so it wins over
+   `.sn-field input` on both idle and focus. */
+.sn-field input.sn-input-error,
+.sn-field input.sn-input-error:focus {
+  border-color: #EF4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
+}
+/* Inline field error copy — sits directly under the input. Different
+   class name from the top .sn-err banner so the two don't collide. */
+.sn-field-err {
+  color: #EF4444;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+  line-height: 1.4;
+}
+/* Fresh-empty hint — subtle grey, teaches the expected shape. Hidden
+   the moment the user types anything OR when the error takes over. */
+.sn-hint {
+  color: #94A3B8;
+  font-size: 11.5px;
+  margin-top: 4px;
+  display: block;
+  line-height: 1.4;
+  font-style: italic;
+}
+/* Top-of-step banner shown when validateStep() flags any field. Sits
+   just above the form so the user sees WHY the click didn't advance
+   before their eyes reach the (now red) input. */
+.sn-form-banner {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #FEF2F2;
+  border: 0.5px solid #FCA5A5;
+  color: #B91C1C;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.sn-form-banner i { font-size: 15px; flex-shrink: 0; }
 
 .sn-tenant-toggle {
   display: grid; grid-template-columns: 1fr 1fr;
