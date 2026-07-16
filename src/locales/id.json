@@ -858,7 +858,7 @@
       "form": {
         "masterLabel": "Tautkan ke Master",
         "masterOptional": "(opsional)",
-        "masterHint": "Kalau mapel ini juga ada di sekolah lain (Matematika, IPA, dll), tautkan ke daftar standar biar nilainya bisa dilihat gabungan lintas kelas atau nanti mudah ditampilkan di laporan.",
+        "masterHint": "Pilih dari daftar mata pelajaran standar (Matematika, IPA, PJOK, dll) supaya fitur rekap nilai dan bab kurikulum bisa dipakai untuk mata pelajaran ini.",
         "masterSearchPlaceholder": "Cari mata pelajaran master...",
         "masterClear": "Lepas tautan",
         "masterLoading": "Memuat...",

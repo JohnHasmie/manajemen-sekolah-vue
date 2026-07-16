@@ -858,7 +858,7 @@
       "form": {
         "masterLabel": "Link to Master Subject",
         "masterOptional": "(optional)",
-        "masterHint": "If this subject also exists in other schools (Math, Science, etc.), link it to the standard catalog so grades can be viewed across classes or shown in aggregated reports.",
+        "masterHint": "Pick from the standard subject list (Math, Science, PE, etc.) so features like grade reports and curriculum chapters can be used for this subject.",
         "masterSearchPlaceholder": "Search master subject...",
         "masterClear": "Unlink",
         "masterLoading": "Loading...",
