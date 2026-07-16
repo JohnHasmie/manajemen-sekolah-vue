@@ -113,6 +113,20 @@ onMounted(async () => {
             // /login (fresh session) doesn't misroute on them.
             try { sessionStorage.removeItem('demo_intent_v1'); } catch { /* non-fatal */ }
             try { sessionStorage.removeItem('subscribe_intent_v1'); } catch { /* non-fatal */ }
+            // HARDENING: while user is at /subscribe/* or /register-demo/*, actively
+            // collapse the tenant-picker state that hydrateFromToken set to 'school'.
+            // The subscribe/register-demo pages don't need a picker — they onboard
+            // a NEW tenant. Leaving step='school' is a race hazard: any code path
+            // that reads `auth.step` (LoginView picker, ProfileMenu, etc.) or that
+            // navigates the user away from /subscribe/* (e.g. an unrelated router
+            // push) could then trigger the picker they never asked for. Clear the
+            // pending schools list too so no picker UI has data to render even if
+            // it briefly mounts.
+            if (auth.step === 'school' || auth.step === 'role') {
+              auth.step = 'done';
+              auth.schools = [];
+              auth.roles = [];
+            }
           } else {
             let demoIntent = false;
             let subscribeIntent = false;
