@@ -17,7 +17,13 @@ import { useI18n } from 'vue-i18n';
 import FormSheet from '@/components/ui/FormSheet.vue';
 import FormField from '@/components/ui/FormField.vue';
 import Toast from '@/components/ui/Toast.vue';
-import { SubjectService, type MasterSubject } from '@/services/subjects.service';
+import NavIcon from '@/components/feature/NavIcon.vue';
+import { useConfirm } from '@/composables/useConfirm';
+import {
+  SubjectService,
+  type CheckExistingResult,
+  type MasterSubject,
+} from '@/services/subjects.service';
 import type { Subject } from '@/types/entities';
 
 const props = defineProps<{
@@ -31,6 +37,7 @@ const emit = defineEmits<{
 }>();
 
 const { t: $t } = useI18n();
+const { confirm } = useConfirm();
 
 // Widen the reactive type past inferred literal keys so we can assign
 // numeric `grade` values (Vue's reactive() would otherwise pin the
@@ -75,6 +82,75 @@ const errors = reactive<Record<string, string>>({});
 const lastPickedMaster = ref<MasterSubject | null>(null);
 
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
+
+// ── Smart-hint: "sudah ada X mapel dengan nama ini" ─────────────
+// Backend endpoint is /subjects/check-existing?name=X (parallel MR).
+// The service degrades to an empty result on 404 / network error, so
+// this whole block is invisible on older backends — the create form
+// still works, it just skips the pro-tip.
+//
+// Debounced on `form.name` so we don't fire one request per keystroke.
+// The current row itself is filtered out on edit (own-name is not a
+// "similar" hit — the admin is renaming, not duplicating).
+const similarCheck = ref<CheckExistingResult>({
+  matches: [],
+  has_similar: false,
+  existing_grades: [],
+});
+const isCheckingSimilar = ref(false);
+let similarTimer: ReturnType<typeof setTimeout> | null = null;
+
+async function fetchSimilar(name: string) {
+  const trimmed = name.trim();
+  if (trimmed.length < 2) {
+    similarCheck.value = { matches: [], has_similar: false, existing_grades: [] };
+    return;
+  }
+  isCheckingSimilar.value = true;
+  try {
+    const result = await SubjectService.checkExisting({ name: trimmed });
+    // Filter own row out on edit — renaming to the same name is not a
+    // duplicate warning.
+    const currentId = props.subject?.id;
+    const matches = currentId
+      ? result.matches.filter((m) => m.id !== currentId)
+      : result.matches;
+    const existing_grades = currentId
+      ? Array.from(new Set(matches.map((m) => m.grade).filter((g): g is number => g !== null))).sort((a, b) => a - b)
+      : result.existing_grades;
+    similarCheck.value = {
+      matches,
+      has_similar: matches.length > 0,
+      existing_grades,
+    };
+  } finally {
+    isCheckingSimilar.value = false;
+  }
+}
+
+watch(
+  () => form.name,
+  (v) => {
+    if (similarTimer) clearTimeout(similarTimer);
+    similarTimer = setTimeout(() => void fetchSimilar(v), 300);
+  },
+);
+
+/**
+ * Should we show the smart-hint warning? Yes if:
+ *   - backend returned matches (has_similar), AND
+ *   - the admin hasn't already picked a grade (grade === null).
+ * Once they pick a grade the warning is redundant — they've either
+ * chosen the same grade (server-side unique constraint will 422 for
+ * them) or a different grade (which is the whole point of the hint).
+ */
+const showSimilarWarn = computed(
+  () => similarCheck.value.has_similar && form.grade === null,
+);
+
+function existingGradesLabel(grades: number[]): string {
+  return grades.join(', ');
+}
 
 // ── Master subject autocomplete ──────────────────────────────────
 const masterQuery = ref(form.master_subject_name ?? '');
@@ -195,8 +271,29 @@ function validate(): boolean {
   return Object.keys(errors).length === 0;
 }
 
-function submit() {
+async function submit() {
   if (!validate()) return;
+
+  // Second-chance confirm: name collides with existing rows in this
+  // school AND the admin left grade empty. Ask before committing a
+  // universal ("all grades") row on top of grade-specific ones — this
+  // is almost always a mistake but is occasionally intentional (a real
+  // universal mapel the admin forgot to seed before adding grade-scoped
+  // rows). Skip on edit where the row already exists in DB and the
+  // admin is deliberately re-saving.
+  if (!isEdit.value && showSimilarWarn.value) {
+    const ok = await confirm({
+      title: $t('admin.subjects.form.universalConfirmTitle'),
+      message: $t('admin.subjects.form.universalConfirmBody', {
+        name: form.name.trim(),
+        grades: existingGradesLabel(similarCheck.value.existing_grades),
+      }),
+      confirmLabel: $t('admin.subjects.form.universalConfirmYes'),
+      cancelLabel: $t('admin.subjects.form.universalConfirmNo'),
+    });
+    if (!ok) return;
+  }
+
   const masterId = form.master_subject_id || null;
   emit('save', {
     name: form.name.trim(),
@@ -286,6 +383,51 @@ function submit() {
         <p class="text-3xs text-slate-500 mt-1">
           {{ $t('admin.subjects.form.masterHint') }}
         </p>
+      </div>
+
+      <!--
+        Smart-hint: name collides with existing rows in this school. Sits
+        directly above the Kelas dropdown so the "kalau kamu bikin untuk
+        kelas lain, pilih Kelas di bawah" line points at the actual
+        control. Visible only when has_similar && grade is unpicked —
+        picking a grade dismisses the warning, since the whole prompt is
+        "which grade do you mean?" and the admin just answered.
+      -->
+      <div
+        v-if="showSimilarWarn"
+        class="rounded-xl border border-amber-300 bg-amber-50 p-3 flex gap-2.5"
+        role="alert"
+      >
+        <NavIcon name="alert-circle" :size="18" class="flex-none mt-0.5 text-amber-700" />
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-bold text-amber-800 leading-snug">
+            {{
+              $t('admin.subjects.form.similarWarnTitle', {
+                count: similarCheck.matches.length,
+                name: form.name.trim(),
+              })
+            }}
+          </p>
+          <ul class="mt-1.5 space-y-0.5 text-2xs text-amber-800">
+            <li
+              v-for="m in similarCheck.matches"
+              :key="m.id"
+              class="leading-snug"
+            >
+              <span class="inline-block w-3 text-amber-500">·</span>
+              <span v-if="m.grade !== null">
+                {{ $t('admin.subjects.form.similarWarnItem', { name: m.name, grade: m.grade }) }}
+              </span>
+              <span v-else>
+                {{ $t('admin.subjects.form.similarWarnItemNoGrade', { name: m.name }) }}
+              </span>
+              <span v-if="m.code" class="text-amber-600 font-normal ml-1">· {{ m.code }}</span>
+            </li>
+          </ul>
+          <p class="mt-2 text-2xs text-amber-700 leading-relaxed">
+            {{ $t('admin.subjects.form.similarWarnHint') }}
+          </p>
+        </div>
       </div>
 
       <!--

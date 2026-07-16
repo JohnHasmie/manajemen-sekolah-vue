@@ -858,7 +858,7 @@
       "form": {
         "masterLabel": "Link to Master Subject",
         "masterOptional": "(optional)",
-        "masterHint": "Linking to a master row lets multi-class grades and cross-school analytics roll up under one canonical mapel.",
+        "masterHint": "If this subject also exists in other schools (Math, Science, etc.), link it to the standard catalog so grades can be viewed across classes or shown in aggregated reports.",
         "masterSearchPlaceholder": "Search master subject...",
         "masterClear": "Unlink",
         "masterLoading": "Loading...",
@@ -866,9 +866,17 @@
         "gradeOptional": "(optional)",
         "gradeAll": "All grades",
         "gradeItem": "Grade {grade}",
-        "gradeHint": "Which grade uses this subject in this school? Leave empty for grade-agnostic subjects (PE, Arts, Religion, …).",
+        "gradeHint": "Which grade uses this subject? Leave blank if it's a universal subject taught across all grades (like PE, Counseling).",
         "gradeRangeHint": "Master covers grades {range} — pick one for this school.",
-        "gradeAutoFilled": "Grade from master: Grade {grade}"
+        "gradeAutoFilled": "Grade from master: Grade {grade}",
+        "similarWarnTitle": "There are already {count} subjects named \"{name}\" in this school:",
+        "similarWarnItem": "{name} (Grade {grade})",
+        "similarWarnItemNoGrade": "{name} (all grades)",
+        "similarWarnHint": "If you're creating this for a different grade, pick a Grade below. If it's genuinely universal, leave it empty.",
+        "universalConfirmTitle": "Create a universal subject (no grade)?",
+        "universalConfirmBody": "Your school already has \"{name}\" for grades {grades}. If you continue, a \"{name}\" row without a grade will be created that applies to all grades.\n\nAre you sure? Or would you rather pick a grade first?",
+        "universalConfirmYes": "Yes, universal",
+        "universalConfirmNo": "← Pick a Grade"
       }
     },
     "schedule": {
