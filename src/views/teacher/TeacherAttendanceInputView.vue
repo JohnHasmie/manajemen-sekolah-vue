@@ -492,7 +492,7 @@ function pickSubject(id: string) {
     </section>
 
     <!-- ── 3. KPI strip ──────────────────────────────────────── -->
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <!-- ── 4. Roster toolbar ─────────────────────────────────── -->
     <PageFilterToolbar

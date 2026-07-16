@@ -642,7 +642,7 @@ onMounted(() => {
     </BrandPageHeader>
 
     <!-- ── 2. KPI strip ─────────────────────────────────────── -->
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <!-- ── 3. Filter toolbar ────────────────────────────────── -->
     <!-- Mode (Mengajar / Parent) lives in the brand header above —

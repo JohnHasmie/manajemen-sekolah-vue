@@ -650,7 +650,7 @@ function onPredikatBlur(rowId: string) {
     </BrandPageHeader>
 
     <!-- KPI -->
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <!--
       Warning banner: if this subject_schools row isn't linked to a

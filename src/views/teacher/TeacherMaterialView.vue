@@ -963,7 +963,7 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
     </BrandPageHeader>
 
     <!-- KPI strip -->
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <!--
       Warning banner: if the currently-picked subject_schools row

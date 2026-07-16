@@ -458,13 +458,24 @@ function clearFilters() {
   search.value = '';
 }
 
-const headerMeta = computed(() =>
-  $t('admin.schedule.meta', {
+// Header meta shows dashes while the first fetch is in flight — a bare
+// "0 sesi · 0 bentrok · TP —" reads like real data ("this school has no
+// sessions"), which is misleading before we've heard back from the API.
+// Once loaded, the real values render.
+const headerMeta = computed(() => {
+  if (isLoading.value && rows.value.length === 0) {
+    return $t('admin.schedule.meta', {
+      sessions: '—',
+      conflicts: '—',
+      year: ayStore.yearLabel || '—',
+    });
+  }
+  return $t('admin.schedule.meta', {
     sessions: stats.value?.total ?? rows.value.length,
     conflicts: stats.value?.conflicts ?? 0,
     year: ayStore.yearLabel,
-  }),
-);
+  });
+});
 
 // CRUD modal state
 const showForm = ref(false);
@@ -727,7 +738,7 @@ async function bulkDelete() {
       </div>
     </BrandPageHeader>
 
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading && rows.length === 0" />
 
     <!-- Jam Pelajaran not set up — manual "Tambah Sesi" cannot work until
          it is, so say so here rather than letting the admin discover it
@@ -829,6 +840,7 @@ async function bulkDelete() {
       ref="timetableGridRef"
       :filter-options="filterOptions"
       :default-semester-id="filterOptions?.semesters?.[0]?.id"
+      :options-loading="filterOptions === null"
       @edit="onTimetableEdit"
       @create="onTimetableCreate"
     />

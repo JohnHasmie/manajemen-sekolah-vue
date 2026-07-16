@@ -64,6 +64,14 @@ const props = defineProps<{
   filterOptions?: ScheduleFilterOptions | null;
   /** Optional default semester id (defaults to the first option). */
   defaultSemesterId?: string;
+  /**
+   * True while the parent's filter-options fetch is in flight. The
+   * grid uses this to distinguish "school genuinely has no classes"
+   * (fire the amber "Belum ada kelas" banner) from "parent hasn't
+   * resolved filterOptions yet" (render a skeleton picker instead of
+   * the banner, so the admin doesn't see a false alarm on cold open).
+   */
+  optionsLoading?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -255,8 +263,25 @@ const counterLabel = computed(() => {
 });
 
 // ── Empty-state helpers ────────────────────────────────────────────
+// Only fires when we've actually observed the class list (filterOptions
+// resolved and its `classes` array is empty). If the parent is still
+// fetching, `filterOptions` is null → we treat it as "unknown, don't
+// alarm yet" and show the skeleton instead of the amber banner.
 const hasNoClasses = computed(
-  () => (props.filterOptions?.classes.length ?? 0) === 0,
+  () =>
+    !props.optionsLoading &&
+    props.filterOptions !== null &&
+    props.filterOptions !== undefined &&
+    props.filterOptions.classes.length === 0,
+);
+// True while filterOptions hasn't arrived yet — the picker + counters
+// render as skeleton bars so the admin sees "loading" rather than a
+// prematurely-empty state.
+const isPickerSkeleton = computed(
+  () =>
+    props.optionsLoading === true ||
+    props.filterOptions === null ||
+    props.filterOptions === undefined,
 );
 
 function goToClasses() {
@@ -274,7 +299,11 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
   <section class="space-y-3">
     <!-- Class + semester pickers. Class is the primary driver; the
          semester defaults to the active AY's first semester so the
-         admin doesn't need to touch it in the common case. -->
+         admin doesn't need to touch it in the common case. While the
+         parent's filter-options fetch is in flight we render the label
+         + a skeleton bar in place of the <select> so the admin sees
+         "loading" rather than a disabled dropdown that reads like a
+         dead state. -->
     <div class="flex flex-wrap items-end gap-3">
       <div class="min-w-[240px] flex-1">
         <label
@@ -284,7 +313,13 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
           {{ t('admin.schedule.timetable.classPickerLabel') }}
           <span class="text-red-500 ml-0.5">*</span>
         </label>
+        <div
+          v-if="isPickerSkeleton"
+          class="mt-1 h-10 w-full rounded-xl bg-slate-100 animate-pulse"
+          aria-hidden="true"
+        />
         <select
+          v-else
           :id="classPickerId"
           v-model="classId"
           :disabled="hasNoClasses"
@@ -298,7 +333,7 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
           </option>
         </select>
       </div>
-      <div v-if="semesters.length > 1" class="min-w-[160px]">
+      <div v-if="!isPickerSkeleton && semesters.length > 1" class="min-w-[160px]">
         <label
           :for="semesterPickerId"
           class="text-3xs font-bold text-slate-400 uppercase tracking-widest"
@@ -317,9 +352,21 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
       </div>
     </div>
 
+    <!-- Body skeleton while filter-options still loading — replaces the
+         picker-prompt / empty banner. Full grid skeleton lives further
+         down (gated on `isLoading && !matrix`). -->
+    <div
+      v-if="isPickerSkeleton"
+      class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6"
+      aria-hidden="true"
+    >
+      <div class="h-3 w-40 rounded bg-slate-200 animate-pulse mx-auto" />
+      <div class="h-2 w-72 rounded bg-slate-200 animate-pulse mx-auto mt-2" />
+    </div>
+
     <!-- Empty state: no classes at all → CTA to Data Kelas -->
     <div
-      v-if="hasNoClasses"
+      v-else-if="hasNoClasses"
       class="rounded-2xl border border-dashed border-amber-300 bg-amber-50 p-6 text-center"
     >
       <NavIcon name="alert-triangle" :size="20" class="text-amber-600 mx-auto" />

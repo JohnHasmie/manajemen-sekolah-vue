@@ -456,7 +456,7 @@ function typeLabel(type: AssessmentType): string {
     <!-- ════════════════════════════════════════════════════════
          List — summary cards
          ════════════════════════════════════════════════════════ -->
-      <KpiStripCards :cards="summaryKpi" />
+      <KpiStripCards :cards="summaryKpi" :loading="isSummaryLoading && summary.length === 0" />
 
       <PageFilterToolbar
         :search="searchQuery"

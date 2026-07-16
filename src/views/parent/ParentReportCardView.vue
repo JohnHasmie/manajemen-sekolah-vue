@@ -251,7 +251,7 @@ function pickSemester(id: SemesterId) {
       </template>
     </ParentPageHeader>
 
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <!--
       Semester filter chips (Ganjil / Genap) — drive the API fetch.

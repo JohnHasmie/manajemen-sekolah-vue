@@ -222,7 +222,7 @@ const kpiCards = computed<KpiCard[]>(() => [
       </button>
     </BrandPageHeader>
 
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="loading" />
 
     <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}

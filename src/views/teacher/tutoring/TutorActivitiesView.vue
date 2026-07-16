@@ -162,7 +162,7 @@ function iconFor(tkey: string): string {
       </button>
     </BrandPageHeader>
 
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="loading" />
 
     <PageFilterToolbar :hide-default-search="true">
       <template #chips>

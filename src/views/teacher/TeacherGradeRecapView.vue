@@ -318,7 +318,7 @@ function progressBarTone(pct: number) {
     </BrandPageHeader>
 
     <!-- KPI -->
-    <KpiStripCards :cards="summaryKpi" />
+    <KpiStripCards :cards="summaryKpi" :loading="isSummaryLoading && summary.length === 0" />
 
     <!-- FILTERS -->
     <PageFilterToolbar

@@ -49,7 +49,7 @@ export interface KpiCard {
   accented?: boolean;
 }
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     cards: KpiCard[];
     /**
@@ -57,8 +57,17 @@ withDefaults(
      * canonical 4-up strip; pass 3 for screens with only 3 cards.
      */
     lgCols?: 3 | 4;
+    /**
+     * When true, renders one skeleton row per card slot instead of the
+     * real values — the label/icon still show, but the big value flips
+     * to a pulsing bar. Consumers pass `:loading="isLoading"` so pages
+     * don't flash "0" before the fetch resolves. The card `label` +
+     * `icon` still render because they're static copy — only the
+     * unknown value pulses.
+     */
+    loading?: boolean;
   }>(),
-  { lgCols: 4 },
+  { lgCols: 4, loading: false },
 );
 
 // ── Tone classes — kept as static literals so Tailwind JIT picks them up ─
@@ -145,7 +154,8 @@ void gridClass; // placeholder if we want it later
         </span>
         <p :class="labelClass(c)">{{ c.label }}</p>
       </div>
-      <p :class="valueClass(c)">
+      <p v-if="props.loading" class="mt-2 h-6 w-14 rounded-md bg-slate-200 animate-pulse" aria-hidden="true" />
+      <p v-else :class="valueClass(c)">
         {{ c.value }}
         <span
           v-if="c.suffix"

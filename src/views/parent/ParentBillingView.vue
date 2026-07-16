@@ -265,7 +265,7 @@ const headerMeta = computed(() => {
       </span>
     </button>
 
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <PageFilterToolbar
       v-model:search="search"

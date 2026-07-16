@@ -286,7 +286,7 @@ function openDetail(plan: LessonPlan) {
     />
 
     <!-- KPI -->
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <!-- FILTER TOOLBAR -->
     <PageFilterToolbar

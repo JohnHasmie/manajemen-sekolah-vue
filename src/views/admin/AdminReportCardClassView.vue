@@ -224,7 +224,7 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
     />
 
     <!-- KPI -->
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="listState.status === 'loading'" />
 
     <!-- LIST -->
     <AsyncView

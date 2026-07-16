@@ -256,7 +256,7 @@ function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
     />
 
     <!-- KPI -->
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <!-- STATUS CHIPS -->
     <div class="flex items-center gap-1.5 flex-wrap">

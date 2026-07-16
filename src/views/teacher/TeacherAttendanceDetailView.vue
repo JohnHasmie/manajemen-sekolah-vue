@@ -423,7 +423,7 @@ function backToList() {
     </section>
 
     <!-- ── 2. KPI HSIA strip ─────────────────────────────────── -->
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <!-- ── 3. Toolbar: search + status filter chips ──────────── -->
     <PageFilterToolbar

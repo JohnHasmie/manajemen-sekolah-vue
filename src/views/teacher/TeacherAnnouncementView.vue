@@ -410,7 +410,7 @@ function pickStatus(k: StatusFilter) {
     </BrandPageHeader>
 
     <!-- ── 2. KPI strip ─────────────────────────────────────── -->
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <!-- ── 3. Filter toolbar ────────────────────────────────── -->
     <PageFilterToolbar

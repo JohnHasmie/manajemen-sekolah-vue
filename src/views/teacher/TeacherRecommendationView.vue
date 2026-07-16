@@ -456,7 +456,7 @@ async function runGenerate(cfg: GenerateConfig) {
     </BrandPageHeader>
 
     <!-- KPI strip -->
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <!-- FILTER TOOLBAR -->
     <PageFilterToolbar

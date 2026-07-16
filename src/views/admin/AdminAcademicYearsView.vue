@@ -335,7 +335,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
       </button>
     </BrandPageHeader>
 
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <AsyncView
       :state="listState"

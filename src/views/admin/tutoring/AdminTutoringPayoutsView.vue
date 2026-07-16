@@ -167,7 +167,7 @@ function basisLabel(b: string) {
       :meta="t('admin.bimbel.payouts.meta', { configured: configuredCount, total: rows.length })"
     />
 
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="loading" />
 
     <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
       {{ t('tutoring.common.loading') }}

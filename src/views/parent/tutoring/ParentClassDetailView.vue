@@ -284,7 +284,7 @@ const heroTitle = computed(() => {
         </div>
         <span :class="r.pillCls">{{ r.pillLabel }}</span>
       </div>
-      <p v-if="!tugas.length" class="text-center text-[13px] text-tutoring-text-mid py-6">
+      <p v-if="!loading && !tugas.length" class="text-center text-[13px] text-tutoring-text-mid py-6">
         {{ t('wali.bimbel.class_detail.empty_tasks') }}
       </p>
     </div>
@@ -308,7 +308,7 @@ const heroTitle = computed(() => {
         </div>
         <span class="text-[16px] font-extrabold text-tutoring-text-hi">{{ r.score }}</span>
       </div>
-      <p v-if="!nilai.length" class="text-center text-[13px] text-tutoring-text-mid py-6">
+      <p v-if="!loading && !nilai.length" class="text-center text-[13px] text-tutoring-text-mid py-6">
         {{ t('wali.bimbel.class_detail.empty_grades') }}
       </p>
     </div>
@@ -333,7 +333,7 @@ const heroTitle = computed(() => {
           </p>
         </div>
       </div>
-      <p v-if="!siswa.length" class="text-center text-[13px] text-tutoring-text-mid py-6">
+      <p v-if="!loading && !siswa.length" class="text-center text-[13px] text-tutoring-text-mid py-6">
         {{ t('wali.bimbel.class_detail.empty_students') }}
       </p>
     </div>

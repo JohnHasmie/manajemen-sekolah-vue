@@ -487,7 +487,7 @@ function studentStatusPills(
     />
 
     <!-- KPI -->
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoadingStudents && students.length === 0" />
 
     <!-- FILTER TOOLBAR -->
     <PageFilterToolbar

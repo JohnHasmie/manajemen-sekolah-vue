@@ -194,7 +194,7 @@ const kicker = computed(() =>
       :meta="headerMeta"
     />
 
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <AsyncView
       :state="listState"

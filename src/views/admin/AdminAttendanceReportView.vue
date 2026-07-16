@@ -490,7 +490,7 @@ async function processExport() {
       </div>
     </BrandPageHeader>
 
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <PageFilterToolbar
       v-model:search="filters.search"

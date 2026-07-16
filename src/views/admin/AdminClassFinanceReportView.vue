@@ -291,7 +291,7 @@ function goBack() {
       :live-dot="false"
     />
 
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="loadState.status === 'loading'" />
 
     <!-- Filter bucket chips -->
     <div class="flex items-center gap-1.5 flex-wrap">

@@ -261,7 +261,7 @@ function onWizardDone(payload: {
       </div>
     </BrandPageHeader>
 
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <AsyncView
       :state="state"

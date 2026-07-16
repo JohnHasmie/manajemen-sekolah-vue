@@ -354,7 +354,7 @@ function exportCsv() {
     </BrandPageHeader>
 
     <!-- KPI -->
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading && items.length === 0" />
 
     <!-- FILTER TOOLBAR -->
     <PageFilterToolbar

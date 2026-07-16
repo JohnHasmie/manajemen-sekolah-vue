@@ -372,7 +372,7 @@ const headerMeta = computed(() => {
       </div>
     </BrandPageHeader>
 
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <AsyncView
       :state="listState"

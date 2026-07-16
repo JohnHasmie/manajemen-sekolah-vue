@@ -495,7 +495,7 @@ function onUploaded(plan: LessonPlan) {
     </BrandPageHeader>
 
     <!-- KPI strip -->
-    <KpiStripCards :cards="kpiCards" />
+    <KpiStripCards :cards="kpiCards" :loading="isLoading" />
 
     <!-- FILTER TOOLBAR -->
     <PageFilterToolbar

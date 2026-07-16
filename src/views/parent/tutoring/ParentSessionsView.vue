@@ -216,7 +216,7 @@ const grouped = computed(() => {
     <!-- LIST VIEW -->
     <template v-if="view === 'list'">
       <div
-        v-if="!grouped.length"
+        v-if="!loading && !grouped.length"
         class="rounded-xl bg-tutoring-panel border border-tutoring-border-soft p-8 text-center text-[14px] text-tutoring-text-mid"
       >{{ t('wali.bimbel.sessions.empty') }}</div>
 

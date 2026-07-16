@@ -1529,7 +1529,7 @@ function jumpToSection(id: string): void {
             </Button>
           </div>
 
-          <div v-if="checkinRules.length === 0" class="flex flex-col items-center justify-center py-10 text-slate-400 border border-dashed border-slate-200 rounded-xl">
+          <div v-if="!rulesLoading && checkinRules.length === 0" class="flex flex-col items-center justify-center py-10 text-slate-400 border border-dashed border-slate-200 rounded-xl">
             <NavIcon name="info-circle" :size="24" class="mb-2" />
             <p class="text-xs">Belum ada aturan jam datang khusus yang dibuat.</p>
             <p class="text-3xs">Semua guru akan mengikuti aturan jam datang default sekolah.</p>
@@ -1680,7 +1680,7 @@ function jumpToSection(id: string): void {
             </Button>
           </div>
 
-          <div v-if="checkoutRules.length === 0" class="flex flex-col items-center justify-center py-10 text-slate-400 border border-dashed border-slate-200 rounded-xl">
+          <div v-if="!rulesLoading && checkoutRules.length === 0" class="flex flex-col items-center justify-center py-10 text-slate-400 border border-dashed border-slate-200 rounded-xl">
             <NavIcon name="info-circle" :size="24" class="mb-2" />
             <p class="text-xs">Belum ada aturan presensi khusus yang dibuat.</p>
             <p class="text-3xs">Semua guru akan mengikuti aturan presensi default sekolah.</p>
