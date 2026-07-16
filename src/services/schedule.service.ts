@@ -1164,6 +1164,34 @@ export const ScheduleService = {
   },
 
   /**
+   * Attach one or more EXISTING subject_school rows to a teacher without
+   * touching their other assignments. Backend contract:
+   * `POST /teacher/{id}/subjects` with `mode=attach` + `subject_ids: [...]`
+   * (see TeacherController::syncSubjects — MR !439). Tenant-safe:
+   * subject ids that don't belong to the caller's school are silently
+   * filtered out server-side.
+   *
+   * Used by the Quick-Add "Pilih Existing" tab so admins can wire an
+   * already-created school subject to a fresh guru instead of minting
+   * a duplicate. syncWithoutDetaching semantics preserve any other
+   * mapel the guru already owns.
+   */
+  async attachSubjectsToTeacher(args: {
+    teacherId: string;
+    subjectIds: string[];
+  }): Promise<void> {
+    if (!args.teacherId || args.subjectIds.length === 0) return;
+    try {
+      await api.post(`/teacher/${args.teacherId}/subjects`, {
+        subject_ids: args.subjectIds,
+        mode: 'attach',
+      });
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menautkan mapel ke guru.'));
+    }
+  },
+
+  /**
    * GET /schedule/prereq-check — asks the server whether teachers,
    * classes, lesson-hours and rooms are in place so the form can render
    * a "Setup-first" checklist instead of a form that would sit disabled.

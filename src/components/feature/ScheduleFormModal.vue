@@ -190,6 +190,18 @@ const quickAddCode = ref('');
 const isQuickAdding = ref(false);
 const quickAddErr = ref<string | null>(null);
 
+// ── Quick-Add tabs — "Pilih Existing" (default) + "Buat Baru" ─────
+// The Quick-Add panel used to expose ONLY the "create new" form, which
+// pushed admins to mint duplicates of mapel the school already owned
+// (e.g. "Al Qur'an Hadis" next to the existing "Al Qur'an Hadis
+// (QH-7/8/9)"). Attach-existing shown first + create-new as escape
+// hatch makes the duplicate the harder path instead of the default.
+type QuickAddTab = 'pick' | 'create';
+const quickAddTab = ref<QuickAddTab>('pick');
+const quickAddSelectedExistingId = ref<string>('');
+const quickAddExistingSearch = ref<string>('');
+const isQuickAddAttaching = ref(false);
+
 // Smart-hint on quick-add: reuse /subjects/check-existing so the admin
 // gets the same "sudah ada N mapel bernama X" warning inline. Quick-Add
 // always creates a grade-agnostic row (no grade field in this panel),
@@ -503,6 +515,9 @@ watch(teacherId, async (v) => {
   quickAddCode.value = '';
   quickAddErr.value = null;
   quickAddSimilar.value = { matches: [], has_similar: false, existing_grades: [] };
+  quickAddTab.value = 'pick';
+  quickAddSelectedExistingId.value = '';
+  quickAddExistingSearch.value = '';
   await loadSubjectsForTeacher(v);
 });
 
@@ -732,6 +747,90 @@ const teacherHasNoSubjects = computed(
     teacherSubjects.value.length === 0,
 );
 
+/**
+ * Subjects in the school catalogue (allSubjects, already grade-scoped
+ * via loadAllSubjects) that the picked teacher does NOT already own —
+ * the source list for the Quick-Add "Pilih Existing" tab. When teacher
+ * has zero own mapel this collapses to `allSubjects`, but subtracting
+ * is defensive if we later relax the panel gate.
+ */
+const quickAddExistingCandidates = computed(() => {
+  const own = ownSubjectIds.value;
+  return allSubjects.value
+    .filter((s) => !own.has(s.id))
+    .slice()
+    .sort((a, b) => subjectLabel(a).localeCompare(subjectLabel(b), 'id'));
+});
+
+const quickAddFilteredCandidates = computed(() => {
+  const q = quickAddExistingSearch.value.trim().toLowerCase();
+  if (!q) return quickAddExistingCandidates.value;
+  return quickAddExistingCandidates.value.filter((s) => {
+    const name = s.name.toLowerCase();
+    const code = (s.code ?? '').toString().toLowerCase();
+    return name.includes(q) || code.includes(q);
+  });
+});
+
+// Auto-flip to "Buat Baru" when there's literally nothing to pick —
+// otherwise the admin lands on an empty tab and thinks Quick-Add is
+// broken. Fires whenever the candidates list transitions to empty
+// while the panel is open (e.g. all subjects already attached, or
+// school catalogue actually empty).
+watch(
+  [quickAddOpen, quickAddExistingCandidates],
+  ([open, candidates]) => {
+    if (
+      open &&
+      quickAddTab.value === 'pick' &&
+      candidates.length === 0 &&
+      !isQuickAddAttaching.value
+    ) {
+      quickAddTab.value = 'create';
+    }
+  },
+);
+
+/**
+ * Attach the selected school subject to the picked teacher via
+ * `POST /teacher/{id}/subjects` (mode=attach) and pre-select it in the
+ * dropdown so the admin can save the schedule row immediately.
+ */
+async function submitQuickAddAttach() {
+  const subjectPickId = quickAddSelectedExistingId.value;
+  if (!subjectPickId || !teacherId.value) return;
+  isQuickAddAttaching.value = true;
+  quickAddErr.value = null;
+  try {
+    await ScheduleService.attachSubjectsToTeacher({
+      teacherId: teacherId.value,
+      subjectIds: [subjectPickId],
+    });
+    // Refresh teacher's own list so the star badge + gate transition
+    // reflect reality on the next render.
+    try {
+      await loadSubjectsForTeacher(teacherId.value);
+    } catch {
+      // Best-effort — the attach itself already succeeded server-side.
+      const picked = allSubjects.value.find((s) => s.id === subjectPickId);
+      if (picked) {
+        teacherSubjects.value = [
+          ...teacherSubjects.value,
+          { id: picked.id, name: picked.name, code: picked.code ?? null },
+        ];
+      }
+    }
+    subjectId.value = subjectPickId;
+    quickAddOpen.value = false;
+    quickAddSelectedExistingId.value = '';
+    quickAddExistingSearch.value = '';
+  } catch (e) {
+    quickAddErr.value = (e as Error).message;
+  } finally {
+    isQuickAddAttaching.value = false;
+  }
+}
+
 async function submitQuickAdd() {
   const name = quickAddName.value.trim();
   if (!name || !teacherId.value) {
@@ -774,6 +873,8 @@ function cancelQuickAdd() {
   quickAddOpen.value = false;
   quickAddErr.value = null;
   quickAddSimilar.value = { matches: [], has_similar: false, existing_grades: [] };
+  quickAddSelectedExistingId.value = '';
+  quickAddExistingSearch.value = '';
 }
 
 // ── Display helpers ────────────────────────────────────────────────
@@ -1063,87 +1164,201 @@ const teacherPickerLocked = computed(
             v-if="quickAddOpen"
             class="mt-2 rounded-xl border border-amber-200 bg-amber-50/40 p-3 space-y-3 animate-in fade-in slide-in-from-top-1 duration-150"
           >
-            <p class="text-3xs font-bold uppercase tracking-widest text-amber-800 flex items-center gap-1.5">
-              <NavIcon name="plus" :size="12" />
-              Tambah mapel baru
-            </p>
-            <div>
-              <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Nama mapel</label>
-              <input
-                v-model="quickAddName"
-                type="text"
-                placeholder="Matematika"
-                autocomplete="off"
-                class="mt-1 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
-                @keydown.enter.prevent="submitQuickAdd"
-              />
-            </div>
-            <div>
-              <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
-                Kode <span class="text-slate-400 normal-case font-normal">(opsional)</span>
-              </label>
-              <input
-                v-model="quickAddCode"
-                type="text"
-                placeholder="MTK"
-                autocomplete="off"
-                class="mt-1 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
-                @keydown.enter.prevent="submitQuickAdd"
-              />
-            </div>
-            <!-- Smart-hint: mapel with this name already exists at
-                 grade-scoped rows. Purely informational here — Quick-Add
-                 has no grade field and always creates a universal row. -->
-            <div
-              v-if="quickAddSimilar.has_similar"
-              class="rounded-xl border border-amber-300 bg-amber-100/60 p-2.5 flex gap-2"
-              role="alert"
-            >
-              <NavIcon name="alert-circle" :size="14" class="flex-none mt-0.5 text-amber-800" />
-              <div class="min-w-0 flex-1">
-                <p class="text-2xs font-bold text-amber-900 leading-snug">
-                  {{
-                    $t('admin.subjects.form.similarWarnTitle', {
-                      count: quickAddSimilar.matches.length,
-                      name: quickAddName.trim(),
-                    })
-                  }}
-                </p>
-                <ul class="mt-1 space-y-0.5 text-3xs text-amber-900">
-                  <li v-for="m in quickAddSimilar.matches" :key="m.id" class="leading-snug">
-                    <span class="inline-block w-3 text-amber-600">·</span>
-                    <span v-if="m.grade !== null">
-                      {{ $t('admin.subjects.form.similarWarnItem', { name: m.name, grade: m.grade }) }}
-                    </span>
-                    <span v-else>
-                      {{ $t('admin.subjects.form.similarWarnItemNoGrade', { name: m.name }) }}
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-            <p class="text-3xs text-slate-500 leading-relaxed">
-              Mapel akan otomatis di-assign ke {{ selectedTeacherName || 'guru ini' }} dan langsung dipakai di slot ini.
-            </p>
-            <p
-              v-if="quickAddErr"
-              class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2"
-            >
-              {{ quickAddErr }}
-            </p>
-            <div class="grid grid-cols-2 gap-2">
-              <Button variant="secondary" size="sm" block @click="cancelQuickAdd">Batal</Button>
-              <Button
-                variant="primary"
-                size="sm"
-                block
-                :loading="isQuickAdding"
-                :disabled="!quickAddName.trim() || isQuickAdding"
-                @click="submitQuickAdd"
+            <!-- Tab strip — "Pilih Existing" default, "Buat Baru" escape -->
+            <div class="flex gap-1 rounded-xl bg-white border border-amber-200 p-1">
+              <button
+                type="button"
+                class="flex-1 rounded-lg px-3 py-1.5 text-2xs font-bold transition-colors"
+                :class="quickAddTab === 'pick'
+                  ? 'bg-amber-500 text-white'
+                  : 'text-amber-800 hover:bg-amber-50'"
+                :disabled="isQuickAddAttaching || isQuickAdding"
+                @click="quickAddTab = 'pick'; quickAddSelectedExistingId = ''"
               >
-                Simpan &amp; pakai
-              </Button>
+                Pilih Existing
+              </button>
+              <button
+                type="button"
+                class="flex-1 rounded-lg px-3 py-1.5 text-2xs font-bold transition-colors"
+                :class="quickAddTab === 'create'
+                  ? 'bg-amber-500 text-white'
+                  : 'text-amber-800 hover:bg-amber-50'"
+                :disabled="isQuickAddAttaching || isQuickAdding"
+                @click="quickAddTab = 'create'"
+              >
+                Buat Baru
+              </button>
             </div>
+
+            <!-- Tab: Pilih Existing -->
+            <template v-if="quickAddTab === 'pick'">
+              <template v-if="quickAddExistingCandidates.length > 0">
+                <p class="text-2xs text-slate-700 leading-relaxed">
+                  Tautkan mapel sekolah yang sudah ada ke
+                  <span class="font-bold">{{ selectedTeacherName || 'guru ini' }}</span>:
+                </p>
+                <!-- Search — only when list is long enough to warrant it -->
+                <input
+                  v-if="quickAddExistingCandidates.length > 5"
+                  v-model="quickAddExistingSearch"
+                  type="text"
+                  placeholder="Cari mapel..."
+                  autocomplete="off"
+                  :disabled="isQuickAddAttaching"
+                  class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-medium text-slate-900 outline-none focus:border-role-admin"
+                />
+                <div class="max-h-56 overflow-y-auto rounded-xl border border-slate-200 bg-white divide-y divide-slate-100">
+                  <template v-if="quickAddFilteredCandidates.length > 0">
+                    <label
+                      v-for="s in quickAddFilteredCandidates"
+                      :key="s.id"
+                      class="flex items-start gap-2.5 px-3 py-2 cursor-pointer hover:bg-amber-50/60"
+                    >
+                      <input
+                        v-model="quickAddSelectedExistingId"
+                        type="radio"
+                        name="quickAddExisting"
+                        :value="s.id"
+                        :disabled="isQuickAddAttaching"
+                        class="mt-1 accent-amber-500"
+                      />
+                      <div class="min-w-0 flex-1">
+                        <div class="text-[13px] font-bold text-slate-900 truncate">
+                          {{ s.name }}
+                        </div>
+                        <div
+                          v-if="s.code || (s as any).grade"
+                          class="text-3xs text-slate-500 mt-0.5"
+                        >
+                          <span v-if="s.code">{{ s.code }}</span>
+                          <span v-if="s.code && (s as any).grade"> · </span>
+                          <span v-if="(s as any).grade">Kelas {{ (s as any).grade }}</span>
+                        </div>
+                      </div>
+                    </label>
+                  </template>
+                  <p
+                    v-else
+                    class="px-3 py-4 text-2xs text-slate-500 text-center"
+                  >
+                    Tidak ada mapel yang cocok.
+                  </p>
+                </div>
+                <p
+                  v-if="quickAddErr"
+                  class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2"
+                >
+                  {{ quickAddErr }}
+                </p>
+                <div class="grid grid-cols-2 gap-2">
+                  <Button variant="secondary" size="sm" block @click="cancelQuickAdd">
+                    Batal
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    block
+                    :loading="isQuickAddAttaching"
+                    :disabled="!quickAddSelectedExistingId || isQuickAddAttaching"
+                    @click="submitQuickAddAttach"
+                  >
+                    Tautkan
+                  </Button>
+                </div>
+              </template>
+              <p
+                v-else
+                class="text-2xs text-slate-600 leading-relaxed py-2"
+              >
+                Sekolah belum punya mapel. Buat sekarang di tab
+                <span class="font-bold">Buat Baru</span>.
+              </p>
+            </template>
+
+            <!-- Tab: Buat Baru -->
+            <template v-else>
+              <p class="text-3xs font-bold uppercase tracking-widest text-amber-800 flex items-center gap-1.5">
+                <NavIcon name="plus" :size="12" />
+                Tambah mapel baru
+              </p>
+              <div>
+                <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Nama mapel</label>
+                <input
+                  v-model="quickAddName"
+                  type="text"
+                  placeholder="Matematika"
+                  autocomplete="off"
+                  class="mt-1 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
+                  @keydown.enter.prevent="submitQuickAdd"
+                />
+              </div>
+              <div>
+                <label class="text-3xs font-bold text-slate-500 uppercase tracking-widest">
+                  Kode <span class="text-slate-400 normal-case font-normal">(opsional)</span>
+                </label>
+                <input
+                  v-model="quickAddCode"
+                  type="text"
+                  placeholder="MTK"
+                  autocomplete="off"
+                  class="mt-1 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
+                  @keydown.enter.prevent="submitQuickAdd"
+                />
+              </div>
+              <!-- Smart-hint: mapel with this name already exists at
+                   grade-scoped rows. Purely informational here — Quick-Add
+                   has no grade field and always creates a universal row. -->
+              <div
+                v-if="quickAddSimilar.has_similar"
+                class="rounded-xl border border-amber-300 bg-amber-100/60 p-2.5 flex gap-2"
+                role="alert"
+              >
+                <NavIcon name="alert-circle" :size="14" class="flex-none mt-0.5 text-amber-800" />
+                <div class="min-w-0 flex-1">
+                  <p class="text-2xs font-bold text-amber-900 leading-snug">
+                    {{
+                      $t('admin.subjects.form.similarWarnTitle', {
+                        count: quickAddSimilar.matches.length,
+                        name: quickAddName.trim(),
+                      })
+                    }}
+                  </p>
+                  <ul class="mt-1 space-y-0.5 text-3xs text-amber-900">
+                    <li v-for="m in quickAddSimilar.matches" :key="m.id" class="leading-snug">
+                      <span class="inline-block w-3 text-amber-600">·</span>
+                      <span v-if="m.grade !== null">
+                        {{ $t('admin.subjects.form.similarWarnItem', { name: m.name, grade: m.grade }) }}
+                      </span>
+                      <span v-else>
+                        {{ $t('admin.subjects.form.similarWarnItemNoGrade', { name: m.name }) }}
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <p class="text-3xs text-slate-500 leading-relaxed">
+                Mapel akan otomatis di-assign ke {{ selectedTeacherName || 'guru ini' }} dan langsung dipakai di slot ini.
+              </p>
+              <p
+                v-if="quickAddErr"
+                class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2"
+              >
+                {{ quickAddErr }}
+              </p>
+              <div class="grid grid-cols-2 gap-2">
+                <Button variant="secondary" size="sm" block @click="cancelQuickAdd">Batal</Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  block
+                  :loading="isQuickAdding"
+                  :disabled="!quickAddName.trim() || isQuickAdding"
+                  @click="submitQuickAdd"
+                >
+                  Simpan &amp; pakai
+                </Button>
+              </div>
+            </template>
           </div>
         </div>
       </div>
