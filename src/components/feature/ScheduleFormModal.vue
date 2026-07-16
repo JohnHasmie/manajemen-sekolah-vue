@@ -571,29 +571,23 @@ const selectedClassGrade = computed<string | null>(() => {
   return g === null || g === undefined || g === '' ? null : String(g);
 });
 
+// The set of subject ids the picked guru is already linked to — used by the
+// "Pilih Existing" panel to hide mapel the teacher already teaches.
 const ownSubjectIds = computed(
   () => new Set(teacherSubjects.value.map((s) => s.id)),
 );
-function isOwnSubject(id: string): boolean {
-  return ownSubjectIds.value.has(id);
-}
 
-// The mapel picker now offers the whole grade-scoped CATALOGUE (unifying it
-// with the Edit-Guru chips), not just the teacher's pre-owned mapel — so an
-// admin assigns the existing "Al Qur'an Hadis (QH-9)" instead of minting a
-// duplicate. The teacher's own mapel sort first (starred in the template);
-// scheduling any of the others auto-attaches it on save (backend !458).
-// If the teacher-subjects request errored we simply can't star, but the
-// catalogue still shows.
-const subjectOptions = computed(() => {
-  const own = ownSubjectIds.value;
-  return [...allSubjects.value].sort((a, b) => {
-    const ao = own.has(a.id) ? 0 : 1;
-    const bo = own.has(b.id) ? 0 : 1;
-    if (ao !== bo) return ao - bo;
-    return subjectLabel(a).localeCompare(subjectLabel(b), 'id');
-  });
-});
+// The Mapel dropdown lists ONLY the mapel the picked guru is linked to teach —
+// the same "mata pelajaran yang diampu" shown on the teacher profile. It must
+// reflect reality, not the whole catalogue: showing an unlinked mapel here
+// (which an earlier iteration did) looked like the dropdown was lying, since
+// the guru doesn't teach it yet. To add one, the admin uses the "Tautkan"
+// panel below (Pilih Existing from the grade-scoped catalogue, or Buat Baru) —
+// which attaches it, after which it appears here. On a load error we fall back
+// to the full catalogue so a network blip can't strand the picker.
+const subjectOptions = computed(() =>
+  subjectsLoadFailed.value ? allSubjects.value : teacherSubjects.value,
+);
 
 const formValid = computed(
   () =>
@@ -745,6 +739,16 @@ const teacherHasNoSubjects = computed(
     !isLoadingSubjects.value &&
     !subjectsLoadFailed.value &&
     teacherSubjects.value.length === 0,
+);
+
+// Whether to offer the link ("Tautkan") panel: any time a guru is picked and
+// we know their linked mapel. For a guru with none it's the primary CTA; for
+// one who already teaches some it's the quieter way to link ANOTHER mapel that
+// isn't in the dropdown yet — the only path to grow that list under the
+// link-first model.
+const canLinkSubject = computed(
+  () =>
+    !!teacherId.value && !isLoadingSubjects.value && !subjectsLoadFailed.value,
 );
 
 /**
@@ -1142,21 +1146,32 @@ const teacherPickerLocked = computed(
         >
           <option value="">— pilih mapel —</option>
           <option v-for="s in subjectOptions" :key="s.id" :value="s.id">
-            {{ isOwnSubject(s.id) ? '★ ' : '' }}{{ subjectLabel(s) }}
+            {{ subjectLabel(s) }}
           </option>
         </select>
 
-        <!-- Inline Quick-Add mapel — preserved verbatim from MR!866. -->
-        <div v-if="teacherHasNoSubjects" class="mt-1.5">
+        <!-- Link-first mapel management. The dropdown above shows only the mapel
+             the guru is linked to; this panel is how you grow that list. For a
+             guru with none it's the primary CTA (amber "tautkan dulu"); for one
+             who already teaches some it's a quieter "tautkan mapel lain". -->
+        <div v-if="canLinkSubject" class="mt-1.5">
           <button
             type="button"
-            class="w-full flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 hover:border-amber-400 px-3 py-2 text-2xs text-amber-800 font-bold transition-colors text-left"
+            class="w-full flex items-center gap-2 rounded-xl border px-3 py-2 text-2xs font-bold transition-colors text-left"
+            :class="teacherHasNoSubjects
+              ? 'bg-amber-50 border-amber-200 hover:border-amber-400 text-amber-800'
+              : 'bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-600'"
             :aria-expanded="quickAddOpen"
             @click="quickAddOpen = !quickAddOpen"
           >
             <NavIcon :name="quickAddOpen ? 'chevron-down' : 'chevron-right'" :size="12" />
             <span class="flex-1 leading-relaxed">
-              {{ selectedTeacherName || 'Guru ini' }} belum punya mapel · tambahkan
+              <template v-if="teacherHasNoSubjects">
+                {{ selectedTeacherName || 'Guru ini' }} belum punya mapel · tautkan dulu
+              </template>
+              <template v-else>
+                + Tautkan mapel lain ke {{ selectedTeacherName || 'guru ini' }}
+              </template>
             </span>
           </button>
 
