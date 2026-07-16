@@ -42,7 +42,6 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import StickyActionBar from '@/components/ui/StickyActionBar.vue';
-import Spinner from '@/components/ui/Spinner.vue';
 import AttendanceConfigWizard from '@/components/feature/AttendanceConfigWizard.vue';
 import AttendanceKalenderPanel from '@/components/feature/AttendanceKalenderPanel.vue';
 import { useMeStore } from '@/stores/me';
@@ -735,11 +734,14 @@ function jumpToSection(id: string): void {
 
     <!-- ════════════════════ UMUM & METODE TAB ════════════════════ -->
     <template v-if="tab === 'general'">
-      <div
-        v-if="settingsLoading"
-        class="flex items-center justify-center py-xl text-slate-400"
-      >
-        <Spinner size="md" />
+      <div v-if="settingsLoading" class="space-y-2 py-4" aria-hidden="true">
+        <div v-for="i in 3" :key="i" class="flex items-center gap-3 rounded-xl bg-white border border-slate-200 p-3">
+          <div class="h-8 w-8 rounded-lg bg-slate-200 animate-pulse motion-reduce:animate-none" />
+          <div class="flex-1 space-y-2">
+            <div class="h-3 w-2/5 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+            <div class="h-2 w-3/5 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+          </div>
+        </div>
       </div>
 
       <div
@@ -1199,11 +1201,14 @@ function jumpToSection(id: string): void {
             </div>
           </div>
 
-          <div
-            v-if="reminderLoading"
-            class="flex items-center justify-center py-lg text-slate-400"
-          >
-            <Spinner size="md" />
+          <div v-if="reminderLoading" class="space-y-2 py-3" aria-hidden="true">
+            <div v-for="i in 3" :key="i" class="flex items-center gap-3 rounded-xl bg-white border border-slate-200 p-3">
+              <div class="h-8 w-8 rounded-lg bg-slate-200 animate-pulse motion-reduce:animate-none" />
+              <div class="flex-1 space-y-2">
+                <div class="h-3 w-2/5 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+                <div class="h-2 w-3/5 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+              </div>
+            </div>
           </div>
 
           <div
@@ -1429,8 +1434,14 @@ function jumpToSection(id: string): void {
 
     <!-- ════════════════════ CHECKIN RULES TAB ════════════════════ -->
     <template v-else-if="tab === 'checkin_rules'">
-      <div v-if="rulesLoading" class="flex items-center justify-center py-xl text-slate-400">
-        <Spinner size="md" />
+      <div v-if="rulesLoading" class="space-y-2 py-4" aria-hidden="true">
+        <div v-for="i in 3" :key="i" class="flex items-center gap-3 rounded-xl bg-white border border-slate-200 p-3">
+          <div class="h-8 w-8 rounded-lg bg-slate-200 animate-pulse motion-reduce:animate-none" />
+          <div class="flex-1 space-y-2">
+            <div class="h-3 w-2/5 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+            <div class="h-2 w-3/5 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+          </div>
+        </div>
       </div>
       <div v-else-if="rulesError" class="bg-red-50 text-red-600 rounded-xl p-4 text-[13px]">
         {{ rulesError }}
@@ -1581,8 +1592,14 @@ function jumpToSection(id: string): void {
 
     <!-- ════════════════════ CHECKOUT RULES TAB ════════════════════ -->
     <template v-else-if="tab === 'checkout_rules'">
-      <div v-if="rulesLoading" class="flex items-center justify-center py-xl text-slate-400">
-        <Spinner size="md" />
+      <div v-if="rulesLoading" class="space-y-2 py-4" aria-hidden="true">
+        <div v-for="i in 3" :key="i" class="flex items-center gap-3 rounded-xl bg-white border border-slate-200 p-3">
+          <div class="h-8 w-8 rounded-lg bg-slate-200 animate-pulse motion-reduce:animate-none" />
+          <div class="flex-1 space-y-2">
+            <div class="h-3 w-2/5 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+            <div class="h-2 w-3/5 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+          </div>
+        </div>
       </div>
       <div v-else-if="rulesError" class="bg-red-50 text-red-600 rounded-xl p-4 text-[13px]">
         {{ rulesError }}

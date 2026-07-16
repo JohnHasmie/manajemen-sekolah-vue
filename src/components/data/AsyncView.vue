@@ -4,10 +4,19 @@
 
   Pass a `state` object — { status: 'loading'|'error'|'empty'|'content', error?, … }
   and the component renders the right child:
-    - loading  → Spinner
+    - loading  → skeleton (shape controlled by `loading-variant` prop or #loading slot)
     - error    → ErrorState
     - empty    → EmptyState
     - content  → default slot (your list/table)
+
+  Loading branch shape:
+    - default: 'list' — N rows of icon-square + 2 lines, matches most
+      list-heavy views (schedule, roster, activity feed, announcement).
+    - 'cards' — grid of N placeholder cards (dashboards, hub tiles).
+    - 'spinner' — the legacy centred spinner + label (opt-in for
+      short-response calls where a skeleton would over-dominate).
+    - #loading slot — hand it a bespoke skeleton for unusual layouts
+      (matrix grids, forms, complex hero sections).
 
   This is the canonical pattern for list screens. Don't hand-roll
   `if (isLoading) … else if (error) …` blocks.
@@ -18,6 +27,8 @@ import { useI18n } from 'vue-i18n';
 import Spinner from '../ui/Spinner.vue';
 import EmptyState from './EmptyState.vue';
 import ErrorState from './ErrorState.vue';
+import SkeletonList from './SkeletonList.vue';
+import SkeletonCards from './SkeletonCards.vue';
 import { classifyError, type ErrorHint } from '@/lib/errorHints';
 
 export interface AsyncState<T> {
@@ -42,12 +53,26 @@ const props = withDefaults(
      */
     errorHint?: ErrorHint | null;
     minHeight?: string;
+    /**
+     * How the loading branch is rendered.
+     * - `list` (default): N stacked skeleton rows — matches most list
+     *   views and reads as "loading" everywhere else too.
+     * - `cards`: grid of N skeleton cards (dashboards, hub tiles).
+     * - `spinner`: legacy centred spinner + label — pick this only for
+     *   very short-response calls where a skeleton over-dominates.
+     * Providing a `#loading` slot overrides this prop entirely.
+     */
+    loadingVariant?: 'list' | 'cards' | 'spinner';
+    /** How many skeleton rows/cards to render (list/cards variants). */
+    loadingRows?: number;
   }>(),
   {
     emptyDescription: '',
     emptyIcon: 'inbox',
     emptyActionLabel: '',
     minHeight: '12rem',
+    loadingVariant: 'list',
+    loadingRows: 3,
   },
 );
 
@@ -80,13 +105,27 @@ const errorHintText = computed<ErrorHint | null>(() => {
 
 <template>
   <div :style="{ minHeight }" class="w-full">
-    <div
-      v-if="state.status === 'loading'"
-      class="flex flex-col items-center justify-center py-xl text-slate-400"
-    >
-      <Spinner size="md" />
-      <p class="mt-sm text-sm">{{ loadingLabelText }}</p>
-    </div>
+    <template v-if="state.status === 'loading'">
+      <!-- Custom skeleton from the parent — used by views whose loaded
+           shape isn't a list or a card grid (matrix, form, hero). -->
+      <slot name="loading">
+        <SkeletonList
+          v-if="loadingVariant === 'list'"
+          :rows="loadingRows"
+        />
+        <SkeletonCards
+          v-else-if="loadingVariant === 'cards'"
+          :cards="loadingRows"
+        />
+        <div
+          v-else
+          class="flex flex-col items-center justify-center py-xl text-slate-400"
+        >
+          <Spinner size="md" />
+          <p class="mt-sm text-sm">{{ loadingLabelText }}</p>
+        </div>
+      </slot>
+    </template>
 
     <ErrorState
       v-else-if="state.status === 'error'"

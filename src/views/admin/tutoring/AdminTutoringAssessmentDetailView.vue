@@ -48,8 +48,14 @@ onMounted(load);
       :meta="`${assessment?.questions?.length ?? 0} ${t('tutoring.assessment.questions')}`"
     />
 
-    <div v-if="loading" class="py-12 text-center text-tutoring-text-mid">
-      {{ t('tutoring.common.loading') }}
+    <div v-if="loading" class="space-y-2 py-4" aria-hidden="true">
+      <div v-for="i in 3" :key="i" class="flex items-center gap-3 rounded-xl bg-tutoring-panel border border-tutoring-border-soft p-3">
+        <div class="h-8 w-8 rounded-lg bg-tutoring-bg animate-pulse motion-reduce:animate-none" />
+        <div class="flex-1 space-y-2">
+          <div class="h-3 w-2/5 rounded bg-tutoring-bg animate-pulse motion-reduce:animate-none" />
+          <div class="h-2 w-3/5 rounded bg-tutoring-bg animate-pulse motion-reduce:animate-none" />
+        </div>
+      </div>
     </div>
 
     <template v-else>
