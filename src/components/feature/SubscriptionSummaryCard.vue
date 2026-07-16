@@ -54,9 +54,86 @@ const cancelledCount = computed(
   () => (data.value?.modules ?? []).length - activeCount.value,
 );
 
-const monthlyAmount = computed(() =>
+/**
+ * Sum of per-module `monthly_amount` — the pre-discount bill for the
+ * currently-active rows. Falls back to `subscription.monthly_amount`
+ * (the server-computed total) when the modules array is empty (paid
+ * comp tenants that hold no priced rows).
+ */
+const modulesMonthlyAmount = computed(() =>
   activeRows.value.reduce((sum, r) => sum + r.monthly_amount, 0),
 );
+
+/**
+ * Applied-discount snapshot (or null). Wired to `subscription.applied_discount`
+ * on !463+ backends; falls through to null on older payloads so the
+ * card silently downgrades to the pre-discount UI instead of throwing.
+ */
+const appliedDiscount = computed(() =>
+  data.value?.subscription?.applied_discount ?? null,
+);
+
+/**
+ * TAGIHAN / BULAN — the actual amount billed this cycle. Prefer the
+ * server-provided `subscription.amount` (discount-aware) so we render
+ * matching numbers to the DB. Falls back to the sum-of-modules when
+ * an older backend doesn't ship `amount` yet.
+ */
+const billedMonthlyAmount = computed(() => {
+  const serverAmount = data.value?.subscription?.amount;
+  if (typeof serverAmount === 'number') return serverAmount;
+  return modulesMonthlyAmount.value;
+});
+
+/**
+ * Full (pre-discount) price for the strike-through. Only rendered when
+ * a discount is active AND `monthly_amount > amount` — otherwise we'd
+ * strike through the same number we're showing.
+ */
+const originalMonthlyAmount = computed<number | null>(() => {
+  const monthly = data.value?.subscription?.monthly_amount;
+  if (typeof monthly !== 'number') return null;
+  if (monthly <= billedMonthlyAmount.value) return null;
+  return monthly;
+});
+
+/**
+ * Compact "50% off · MTSMUHSKA" label for the discount badge line. We
+ * favour the percent form when the code is a percent discount (matches
+ * how Yahya writes it in the marketing decks — "diskon 50%"), otherwise
+ * the plain Rp reduction from `discount_amount`. Falls back to just the
+ * code when neither is available (defensive path for pre-fix backends).
+ */
+const discountBadgeLabel = computed<string>(() => {
+  const d = appliedDiscount.value;
+  if (!d) return '';
+  const parts: string[] = [];
+  if (d.type === 'percent' && typeof d.value === 'number' && d.value > 0) {
+    parts.push(`Diskon ${d.value}%`);
+  } else if (d.discount_amount > 0) {
+    parts.push(`Hemat ${formatRupiah(d.discount_amount)}/bln`);
+  }
+  if (d.code) parts.push(d.code);
+  return parts.join(' · ');
+});
+
+const discountDurationLabel = computed<string>(() => {
+  const d = appliedDiscount.value;
+  if (!d) return '';
+  const bits: string[] = [];
+  if (typeof d.duration_months === 'number' && d.duration_months > 0) {
+    bits.push(`${d.duration_months} bulan`);
+  }
+  if (d.valid_until) {
+    const when = new Date(d.valid_until);
+    if (!isNaN(when.getTime())) {
+      bits.push(
+        `s/d ${when.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`,
+      );
+    }
+  }
+  return bits.join(' · ');
+});
 
 const expiresDate = computed<string>(() => {
   const raw = data.value?.subscription?.expires_at;
@@ -137,8 +214,16 @@ function subscribe(): void {
         <span class="ssc-stat-lbl">Tagihan / bulan</span>
         <span class="ssc-stat-val">
           <template v-if="loading">—</template>
-          <template v-else>{{ formatRupiah(monthlyAmount) }}</template>
+          <template v-else>{{ formatRupiah(billedMonthlyAmount) }}</template>
         </span>
+        <!-- Strike-through original + discount badge only rendered when
+             a code is active AND the pre-discount total is strictly
+             greater than what's billed — a redundant "Rp 500.000" struck
+             through above "Rp 500.000" would just look broken. -->
+        <span
+          v-if="!loading && originalMonthlyAmount !== null"
+          class="ssc-stat-strike"
+        >{{ formatRupiah(originalMonthlyAmount) }}</span>
       </div>
 
       <div class="ssc-stat">
@@ -158,6 +243,24 @@ function subscribe(): void {
       Kelola
       <NavIcon name="arrow-right" :size="14" />
     </button>
+
+    <!-- Discount badge — spans the full width below the stats when a
+         code is active. Amber/green highlight matches the savings
+         language elsewhere (BundleStrip, ManageModules quote box). -->
+    <div
+      v-if="!loading && appliedDiscount"
+      class="ssc-discount"
+      role="note"
+    >
+      <span class="ssc-discount-tag">
+        <NavIcon name="sparkles" :size="12" />
+        {{ discountBadgeLabel }}
+      </span>
+      <span
+        v-if="discountDurationLabel"
+        class="ssc-discount-meta"
+      >{{ discountDurationLabel }}</span>
+    </div>
   </div>
 
   <!-- Graceful error: kept intentionally quiet — admin can retry from
@@ -237,6 +340,47 @@ function subscribe(): void {
   color: #64748B;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+}
+/* Struck-through pre-discount price — sits directly under the billed
+   amount so the "was Rp 500.000, now Rp 250.000" story reads top-down
+   in the same column. */
+.ssc-stat-strike {
+  font-size: 11px;
+  color: #94A3B8;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-decoration: line-through;
+  text-decoration-color: rgba(148, 163, 184, 0.7);
+}
+
+/* Discount ribbon — full-width row spanning all three grid columns of
+   `.ssc`. Emerald tint so it echoes the "Langganan Anda" lead icon and
+   the savings pill in ManageModulesView instead of introducing a new
+   colour family just for this surface. */
+.ssc-discount {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #065F46;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+.ssc-discount-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+}
+.ssc-discount-meta {
+  color: #047857;
+  font-weight: 500;
+}
+.ssc-discount-meta::before {
+  content: "·";
+  margin-right: 6px;
+  color: #6EE7B7;
 }
 
 .ssc-cta {
