@@ -43,7 +43,7 @@ import {
   type SchedulePrereqCheck,
 } from '@/services/schedule.service';
 import { LessonHourService } from '@/services/lesson-hour.service';
-import { SubjectService } from '@/services/subjects.service';
+import { SubjectService, type CheckExistingResult } from '@/services/subjects.service';
 import { api } from '@/lib/http';
 import type {
   LessonHour,
@@ -189,6 +189,31 @@ const quickAddName = ref('');
 const quickAddCode = ref('');
 const isQuickAdding = ref(false);
 const quickAddErr = ref<string | null>(null);
+
+// Smart-hint on quick-add: reuse /subjects/check-existing so the admin
+// gets the same "sudah ada N mapel bernama X" warning inline. Quick-Add
+// always creates a grade-agnostic row (no grade field in this panel),
+// so the message is purely informational — no confirm dialog, just a
+// heads-up that they may be about to shadow their existing grade-scoped
+// rows with a universal one.
+const quickAddSimilar = ref<CheckExistingResult>({
+  matches: [],
+  has_similar: false,
+  existing_grades: [],
+});
+let quickAddSimilarTimer: ReturnType<typeof setTimeout> | null = null;
+
+watch(quickAddName, (v) => {
+  if (quickAddSimilarTimer) clearTimeout(quickAddSimilarTimer);
+  quickAddSimilarTimer = setTimeout(async () => {
+    const trimmed = v.trim();
+    if (trimmed.length < 2) {
+      quickAddSimilar.value = { matches: [], has_similar: false, existing_grades: [] };
+      return;
+    }
+    quickAddSimilar.value = await SubjectService.checkExisting({ name: trimmed });
+  }, 300);
+});
 
 // ── Loaders ─────────────────────────────────────────────────────────
 async function loadAllSubjects() {
@@ -471,6 +496,7 @@ watch(teacherId, async (v) => {
   quickAddName.value = '';
   quickAddCode.value = '';
   quickAddErr.value = null;
+  quickAddSimilar.value = { matches: [], has_similar: false, existing_grades: [] };
   await loadSubjectsForTeacher(v);
 });
 
@@ -695,6 +721,7 @@ async function submitQuickAdd() {
     quickAddOpen.value = false;
     quickAddName.value = '';
     quickAddCode.value = '';
+    quickAddSimilar.value = { matches: [], has_similar: false, existing_grades: [] };
   } catch (e) {
     quickAddErr.value = (e as Error).message;
   } finally {
@@ -705,6 +732,7 @@ async function submitQuickAdd() {
 function cancelQuickAdd() {
   quickAddOpen.value = false;
   quickAddErr.value = null;
+  quickAddSimilar.value = { matches: [], has_similar: false, existing_grades: [] };
 }
 
 // ── Display helpers ────────────────────────────────────────────────
@@ -1019,6 +1047,37 @@ const teacherPickerLocked = computed(
                 class="mt-1 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
                 @keydown.enter.prevent="submitQuickAdd"
               />
+            </div>
+            <!-- Smart-hint: mapel with this name already exists at
+                 grade-scoped rows. Purely informational here — Quick-Add
+                 has no grade field and always creates a universal row. -->
+            <div
+              v-if="quickAddSimilar.has_similar"
+              class="rounded-xl border border-amber-300 bg-amber-100/60 p-2.5 flex gap-2"
+              role="alert"
+            >
+              <NavIcon name="alert-circle" :size="14" class="flex-none mt-0.5 text-amber-800" />
+              <div class="min-w-0 flex-1">
+                <p class="text-2xs font-bold text-amber-900 leading-snug">
+                  {{
+                    $t('admin.subjects.form.similarWarnTitle', {
+                      count: quickAddSimilar.matches.length,
+                      name: quickAddName.trim(),
+                    })
+                  }}
+                </p>
+                <ul class="mt-1 space-y-0.5 text-3xs text-amber-900">
+                  <li v-for="m in quickAddSimilar.matches" :key="m.id" class="leading-snug">
+                    <span class="inline-block w-3 text-amber-600">·</span>
+                    <span v-if="m.grade !== null">
+                      {{ $t('admin.subjects.form.similarWarnItem', { name: m.name, grade: m.grade }) }}
+                    </span>
+                    <span v-else>
+                      {{ $t('admin.subjects.form.similarWarnItemNoGrade', { name: m.name }) }}
+                    </span>
+                  </li>
+                </ul>
+              </div>
             </div>
             <p class="text-3xs text-slate-500 leading-relaxed">
               Mapel akan otomatis di-assign ke {{ selectedTeacherName || 'guru ini' }} dan langsung dipakai di slot ini.

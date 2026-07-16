@@ -858,7 +858,7 @@
       "form": {
         "masterLabel": "Tautkan ke Master",
         "masterOptional": "(opsional)",
-        "masterHint": "Menautkan ke mapel master memudahkan agregasi nilai antar kelas & lintas sekolah pada satu nama kanonik.",
+        "masterHint": "Kalau mapel ini juga ada di sekolah lain (Matematika, IPA, dll), tautkan ke daftar standar biar nilainya bisa dilihat gabungan lintas kelas atau nanti mudah ditampilkan di laporan.",
         "masterSearchPlaceholder": "Cari mata pelajaran master...",
         "masterClear": "Lepas tautan",
         "masterLoading": "Memuat...",
@@ -866,9 +866,17 @@
         "gradeOptional": "(opsional)",
         "gradeAll": "Semua kelas",
         "gradeItem": "Kelas {grade}",
-        "gradeHint": "Kelas berapa yang memakai mapel ini di sekolah? Biarkan kosong untuk mapel lintas-kelas (Olahraga, Seni Budaya, Agama, …).",
+        "gradeHint": "Kelas berapa yang belajar mapel ini? Kalau semua kelas belajar mapel yang sama (mis. Olahraga, Bimbingan Konseling), biarkan kosong.",
         "gradeRangeHint": "Master mencakup kelas {range} — pilih salah satu untuk sekolah ini.",
-        "gradeAutoFilled": "Grade dari master: kelas {grade}"
+        "gradeAutoFilled": "Grade dari master: kelas {grade}",
+        "similarWarnTitle": "Sudah ada {count} mapel bernama \"{name}\" di sekolah ini:",
+        "similarWarnItem": "{name} (Kelas {grade})",
+        "similarWarnItemNoGrade": "{name} (semua kelas)",
+        "similarWarnHint": "Kalau kamu bikin untuk kelas lain, pilih Kelas di bawah. Kalau memang universal, biarkan kosong.",
+        "universalConfirmTitle": "Bikin mapel universal (tanpa kelas)?",
+        "universalConfirmBody": "Sekolah kamu sudah punya \"{name}\" untuk kelas {grades}. Kalau tetap lanjut, akan tercipta row \"{name}\" tanpa kelas yang berlaku untuk semua kelas.\n\nYakin? Atau mau pilih kelas dulu?",
+        "universalConfirmYes": "Ya, universal",
+        "universalConfirmNo": "← Pilih Kelas"
       }
     },
     "schedule": {

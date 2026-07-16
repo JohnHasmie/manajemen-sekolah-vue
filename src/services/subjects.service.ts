@@ -34,6 +34,32 @@ export interface MasterSubject {
   grade_level?: string | null;
 }
 
+/**
+ * Match returned by GET /subjects/check-existing — one row per existing
+ * `subject_schools` row that shares the queried name in this school.
+ * Grade is nullable: `null` means the existing row is universal
+ * (grade-agnostic like Olahraga / Seni Budaya).
+ */
+export interface ExistingSubjectMatch {
+  id: string;
+  name: string;
+  code?: string | null;
+  grade: number | null;
+}
+
+/**
+ * Response of GET /subjects/check-existing?name=X — the smart-hint
+ * warning source for the create-mapel form. `has_similar` is the
+ * caller-friendly boolean; `existing_grades` lists which grades already
+ * carry a row with this name so the UI can prompt "kalau memang
+ * universal, biarkan kosong; kalau untuk kelas lain, pilih kelasnya".
+ */
+export interface CheckExistingResult {
+  matches: ExistingSubjectMatch[];
+  has_similar: boolean;
+  existing_grades: number[];
+}
+
 export interface SubjectFilterOptions {
   statuses: { key: string; label: string }[];
   grade_levels: string[];
@@ -187,6 +213,61 @@ export const SubjectService = {
         ],
         grade_levels: [],
       };
+    }
+  },
+
+  /**
+   * GET /subjects/check-existing?name=X — smart-hint lookup that powers
+   * the "Sudah ada N mapel bernama X di sekolah ini" warning card.
+   *
+   * The backend endpoint (parallel MR) matches case-insensitively on
+   * `subject_schools.name` within the current school. Returns matches +
+   * a `has_similar` flag + the distinct grade values already occupied,
+   * so the form can prompt the admin to either pick a specific grade or
+   * confirm the universal (grade-agnostic) intent.
+   *
+   * Fail-safe: on any error (endpoint missing on older backend,
+   * network hiccup, non-2xx) we return an empty "no matches" shape so
+   * the caller degrades to the un-hinted flow instead of blowing up
+   * the whole create form.
+   */
+  async checkExisting(params: { name: string }): Promise<CheckExistingResult> {
+    const name = params.name.trim();
+    if (!name) {
+      return { matches: [], has_similar: false, existing_grades: [] };
+    }
+    try {
+      const res = await api.get('/subjects/check-existing', {
+        params: { name },
+      });
+      const body = res.data?.data ?? res.data ?? {};
+      const rawMatches = Array.isArray(body.matches) ? body.matches : [];
+      const matches: ExistingSubjectMatch[] = rawMatches.map((m: any) => {
+        const rawGrade = m?.grade ?? null;
+        let grade: number | null = null;
+        if (rawGrade !== null && rawGrade !== undefined && rawGrade !== '') {
+          const n = Number(rawGrade);
+          if (Number.isFinite(n) && n >= 1 && n <= 12) grade = Math.floor(n);
+        }
+        return {
+          id: String(m?.id ?? ''),
+          name: String(m?.name ?? ''),
+          code: m?.code ?? null,
+          grade,
+        };
+      });
+      const rawGrades = Array.isArray(body.existing_grades)
+        ? body.existing_grades
+        : [];
+      const existing_grades = rawGrades
+        .map((g: any) => Number(g))
+        .filter((n: number) => Number.isFinite(n) && n >= 1 && n <= 12)
+        .map((n: number) => Math.floor(n))
+        .sort((a: number, b: number) => a - b);
+      const has_similar = Boolean(body.has_similar ?? matches.length > 0);
+      return { matches, has_similar, existing_grades };
+    } catch {
+      return { matches: [], has_similar: false, existing_grades: [] };
     }
   },
 
