@@ -109,18 +109,46 @@ let scriptPromise: Promise<void> | null = null;
 let initPromise: Promise<void> | null = null;
 let initialized = false;
 
+// Max time we wait for the GIS client script before declaring failure.
+// A restrictive network (school firewall, captive portal, some corporate
+// proxies) can BLACK-HOLE the request to accounts.google.com — the
+// connection neither completes nor errors, so `onerror` never fires and
+// the UI would otherwise sit on "Menyiapkan Google…" forever. This
+// timeout converts that hang into a normal GIS_LOAD_FAILED so callers can
+// show a retry + email/password fallback instead of an infinite spinner.
+const GIS_LOAD_TIMEOUT_MS = 10_000;
+
 function loadScript(): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve();
   if (window.google?.accounts?.id) return Promise.resolve();
   if (scriptPromise) return scriptPromise;
 
   scriptPromise = new Promise((resolve, reject) => {
+    let settled = false;
+    const done = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      fn();
+    };
+    const timer = setTimeout(() => {
+      // A pending request that never fired load/error — treat as failed
+      // so the UI escapes the loading state. Allow a later retry by
+      // clearing the cached promise (mirrors ensureInit's retry reset).
+      done(() => {
+        scriptPromise = null;
+        reject(new Error('GIS_LOAD_FAILED'));
+      });
+    }, GIS_LOAD_TIMEOUT_MS);
+
     const existing = document.querySelector<HTMLScriptElement>(
       `script[src="${GIS_SRC}"]`,
     );
     if (existing) {
-      existing.addEventListener('load', () => resolve());
-      existing.addEventListener('error', () => reject(new Error('GIS_LOAD_FAILED')));
+      existing.addEventListener('load', () => done(resolve));
+      existing.addEventListener('error', () =>
+        done(() => reject(new Error('GIS_LOAD_FAILED'))),
+      );
       return;
     }
 
@@ -128,8 +156,8 @@ function loadScript(): Promise<void> {
     tag.src = GIS_SRC;
     tag.async = true;
     tag.defer = true;
-    tag.onload = () => resolve();
-    tag.onerror = () => reject(new Error('GIS_LOAD_FAILED'));
+    tag.onload = () => done(resolve);
+    tag.onerror = () => done(() => reject(new Error('GIS_LOAD_FAILED')));
     document.head.appendChild(tag);
   });
 

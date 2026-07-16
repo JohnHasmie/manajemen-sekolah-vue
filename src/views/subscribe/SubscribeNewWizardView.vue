@@ -11,7 +11,7 @@
   entirely UI + module selection payload.
 -->
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useGoogleSignIn } from '@/composables/useGoogleSignIn';
@@ -452,7 +452,13 @@ watch(
 
 onMounted(async () => {
   await Promise.all([loadPlan(), loadCatalog()]);
-  if (!auth.isAuthenticated) setTimeout(mountGoogleButton, 100);
+  if (!auth.isAuthenticated) {
+    // Prime GIS and attempt the first render. `mountButton` awaits init
+    // internally, and the isReady watcher above re-attempts once the
+    // script finishes loading — so a slow load still paints the button.
+    google.ensureReady().catch(() => { /* surfaced via google.error */ });
+    mountGoogleButton();
+  }
   // Fill from the auth store ONLY when the draft didn't provide a value —
   // the user's own words always win over the Google profile default.
   if (!form.admin_email && auth.user?.email) form.admin_email = auth.user.email;
@@ -674,14 +680,60 @@ function downloadInvoice() {
 
 // ── Google ────────────────────────────────────────────────────────
 async function mountGoogleButton() {
-  if (auth.isAuthenticated || !googleContainer.value || !google.isEnabled.value) return;
-  const w = googleContainer.value.clientWidth || 320;
-  await google.mountButton(googleContainer.value, {
+  if (auth.isAuthenticated || !google.isEnabled.value) return;
+  // Wait for the container to be in the DOM (it lives behind a v-show
+  // inside the anon gate). Without this, an early call can no-op when
+  // the ref hasn't populated yet.
+  await nextTick();
+  const el = googleContainer.value;
+  if (!el) return;
+  const w = el.clientWidth || 320;
+  await google.mountButton(el, {
     width: w,
     theme: 'outline',
     text: 'continue_with',
   });
 }
+
+// Re-attempt the render whenever GIS flips to ready. The old single
+// `setTimeout(mountGoogleButton, 100)` fired once and never retried, so
+// a slow or blocked GIS load left the gate permanently empty with no
+// button and no message — the reported "tidak bisa daftar" symptom.
+watch(
+  () => [google.isReady.value, auth.isAuthenticated] as const,
+  ([ready, authed]) => {
+    if (ready && !authed) mountGoogleButton();
+  },
+);
+
+function retryGoogle() {
+  google.error.value = null;
+  google.ensureReady().then(mountGoogleButton).catch(() => { /* surfaced via google.error */ });
+}
+
+// Escape hatch: when Google can't work here (in-app browser, blocked
+// GIS, missing client ID) the user still needs a way in. Route to the
+// full /login screen (email + password + its own Google handling) and
+// flag the subscribe intent so App.vue brings them back to subscribe
+// after auth.
+function goLoginFallback() {
+  flagSubscribeIntent();
+  router.push('/login');
+}
+
+// Copy the current URL so a user stuck in an in-app browser can paste it
+// into Chrome/Safari where Google sign-in works. Mirrors LoginForm.
+const linkCopied = ref(false);
+async function copyCurrentLink() {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    linkCopied.value = true;
+    setTimeout(() => { linkCopied.value = false; }, 2000);
+  } catch {
+    // Clipboard may be blocked in the webview; the URL is still in the bar.
+  }
+}
+
 function flagSubscribeIntent(): void {
   try { sessionStorage.setItem('subscribe_intent_v1', '1'); } catch { /* non-fatal */ }
 }
@@ -704,12 +756,59 @@ function flagSubscribeIntent(): void {
           dilanjut di device lain. Login lebih dulu, baru kita isi
           bareng-bareng.
         </p>
+
+        <!-- In-app browser (Threads/IG/FB/…) ATAU skrip GIS gagal dimuat:
+             Google Sign-In tak bisa jalan di sini. Beri pesan jelas +
+             jalan keluar, jangan biarkan kartu kosong tanpa aksi. -->
         <div
-          ref="googleContainer"
-          data-google-intent="subscribe"
-          class="sn-google-slot"
-          @pointerdown="flagSubscribeIntent"
-        />
+          v-if="google.isInAppBrowser.value || google.error.value === 'GIS_LOAD_FAILED'"
+          class="sn-google-notice"
+        >
+          <p class="sn-google-notice-t">
+            {{ google.isInAppBrowser.value
+              ? 'Buka halaman ini di browser Chrome atau Safari untuk masuk dengan Google.'
+              : 'Gagal memuat Google Sign-In. Periksa koneksi, lalu coba lagi — atau masuk lewat email & sandi.' }}
+          </p>
+          <button
+            v-if="google.isInAppBrowser.value"
+            type="button"
+            class="sn-google-alt-btn"
+            @click="copyCurrentLink"
+          >
+            {{ linkCopied ? 'Tautan tersalin ✓' : 'Salin tautan' }}
+          </button>
+          <button v-else type="button" class="sn-google-alt-btn" @click="retryGoogle">
+            Coba lagi
+          </button>
+        </div>
+
+        <!-- VITE_GOOGLE_CLIENT_ID tak diset di server ini -->
+        <div v-else-if="!google.isEnabled.value" class="sn-google-notice">
+          <p class="sn-google-notice-t">
+            Login Google belum dikonfigurasi. Silakan masuk lewat email &amp; sandi.
+          </p>
+        </div>
+
+        <!-- Google aktif: tombol GIS (v-show setelah siap) + skeleton -->
+        <template v-else>
+          <div
+            v-show="google.isReady.value"
+            ref="googleContainer"
+            data-google-intent="subscribe"
+            class="sn-google-slot"
+            @pointerdown="flagSubscribeIntent"
+          />
+          <div v-if="!google.isReady.value" class="sn-google-loading">
+            <span class="sn-spinner" aria-hidden="true" />
+            <span>Menyiapkan Google…</span>
+          </div>
+        </template>
+
+        <!-- Jalur cadangan yang SELALU tersedia supaya user tak pernah
+             mentok di kartu ini. -->
+        <button type="button" class="sn-anon-alt" @click="goLoginFallback">
+          Atau masuk dengan email &amp; sandi
+        </button>
       </div>
     </div>
 
@@ -1043,6 +1142,42 @@ function flagSubscribeIntent(): void {
   margin: 8px 0 20px; line-height: 1.55;
 }
 .sn-google-slot { min-height: 42px; display: flex; justify-content: center; }
+.sn-google-loading {
+  min-height: 42px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  color: #94A3B8; font-size: 12px; font-weight: 600;
+}
+.sn-spinner {
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 2px solid #E2E8F0; border-top-color: #1B6FB8;
+  animation: sn-spin 0.7s linear infinite;
+}
+@keyframes sn-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .sn-spinner { animation: none; } }
+.sn-google-notice {
+  border: 1px solid #FDE68A; background: #FFFBEB;
+  border-radius: 12px; padding: 12px 14px;
+  text-align: center;
+}
+.sn-google-notice-t {
+  font-size: 12px; color: #92400E; line-height: 1.5; font-weight: 600;
+  margin: 0;
+}
+.sn-google-alt-btn {
+  margin-top: 10px;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #FFFFFF; border: 1px solid #FCD34D;
+  color: #78350F; font-size: 11.5px; font-weight: 700;
+  padding: 7px 12px; border-radius: 9px; cursor: pointer;
+}
+.sn-google-alt-btn:hover { background: #FEF3C7; }
+.sn-anon-alt {
+  margin-top: 16px;
+  background: none; border: 0; cursor: pointer;
+  color: #1B6FB8; font-size: 12px; font-weight: 700;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.sn-anon-alt:hover { color: #143068; }
 
 /* Center the step content horizontally so the form sits in the
    middle of a wide viewport instead of pinning to the top-left. On
