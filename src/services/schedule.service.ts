@@ -1141,6 +1141,8 @@ export const ScheduleService = {
     name: string;
     teacherId: string;
     code?: string | null;
+    /** Grade to stamp on the new mapel (the class's grade_level). */
+    grade?: string | number | null;
   }): Promise<Subject> {
     try {
       const payload: Record<string, unknown> = {
@@ -1148,6 +1150,9 @@ export const ScheduleService = {
         assign_to_teacher_id: args.teacherId,
       };
       if (args.code) payload.code = args.code;
+      if (args.grade !== undefined && args.grade !== null && args.grade !== '') {
+        payload.grade = args.grade;
+      }
       const res = await api.post('/subject', payload);
       const body = res.data as Record<string, unknown>;
       return subjectFromJson(

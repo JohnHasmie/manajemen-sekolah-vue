@@ -216,9 +216,15 @@ watch(quickAddName, (v) => {
 });
 
 // ── Loaders ─────────────────────────────────────────────────────────
+// The school's mapel catalogue, scoped to the picked class's grade. Grade
+// scoping is what lets the admin pick the RIGHT "Al Qur'an Hadis" — the one
+// for kelas 9 (QH-9) — instead of QH-7/8, and keeps the list short. When no
+// grade is known yet (class not picked) we load the whole catalogue.
 async function loadAllSubjects() {
   try {
-    const res = await api.get('/subject', { params: { per_page: 200 } });
+    const params: Record<string, unknown> = { per_page: 500 };
+    if (selectedClassGrade.value) params.grade_level = selectedClassGrade.value;
+    const res = await api.get('/subject', { params });
     const body = res.data;
     const list = Array.isArray(body?.data) ? body.data : Array.isArray(body) ? body : [];
     allSubjects.value = list.map((s: any) => ({
@@ -504,8 +510,10 @@ watch(teacherId, async (v) => {
 // only). If the new class has no memorised value we blank the field
 // rather than dragging the previous class's room across.
 watch(classId, (newId, oldId) => {
-  if (isEdit.value) return;
   if (newId === oldId) return;
+  // Re-scope the mapel catalogue to the new class's grade (9B → grade 9).
+  void loadAllSubjects();
+  if (isEdit.value) return;
   room.value = newId ? readLastRoomForClass(newId) : '';
 });
 
@@ -535,13 +543,42 @@ watch(
 );
 
 // ── Derived ────────────────────────────────────────────────────────
-const subjectOptions = computed(() =>
-  subjectsLoadFailed.value ? allSubjects.value : teacherSubjects.value,
-);
-
 const days = computed(() => props.filterOptions?.days ?? []);
 const classes = computed(() => props.filterOptions?.classes ?? []);
 const semesters = computed(() => props.filterOptions?.semesters ?? []);
+
+/** grade_level of the picked class, e.g. '9' for 9B — scopes the catalogue. */
+const selectedClassGrade = computed<string | null>(() => {
+  const c = classes.value.find((x) => x.id === classId.value) as
+    | { grade_level?: string | number | null }
+    | undefined;
+  const g = c?.grade_level;
+  return g === null || g === undefined || g === '' ? null : String(g);
+});
+
+const ownSubjectIds = computed(
+  () => new Set(teacherSubjects.value.map((s) => s.id)),
+);
+function isOwnSubject(id: string): boolean {
+  return ownSubjectIds.value.has(id);
+}
+
+// The mapel picker now offers the whole grade-scoped CATALOGUE (unifying it
+// with the Edit-Guru chips), not just the teacher's pre-owned mapel — so an
+// admin assigns the existing "Al Qur'an Hadis (QH-9)" instead of minting a
+// duplicate. The teacher's own mapel sort first (starred in the template);
+// scheduling any of the others auto-attaches it on save (backend !458).
+// If the teacher-subjects request errored we simply can't star, but the
+// catalogue still shows.
+const subjectOptions = computed(() => {
+  const own = ownSubjectIds.value;
+  return [...allSubjects.value].sort((a, b) => {
+    const ao = own.has(a.id) ? 0 : 1;
+    const bo = own.has(b.id) ? 0 : 1;
+    if (ao !== bo) return ao - bo;
+    return subjectLabel(a).localeCompare(subjectLabel(b), 'id');
+  });
+});
 
 const formValid = computed(
   () =>
@@ -708,6 +745,10 @@ async function submitQuickAdd() {
       name,
       code: quickAddCode.value.trim() || undefined,
       teacherId: teacherId.value,
+      // Stamp the class's grade so a genuinely-new mapel lands in the right
+      // bucket and obeys the unique(school, LOWER(name), grade) index —
+      // instead of the old grade-less row that collided with 7/8/9 variants.
+      grade: selectedClassGrade.value ?? undefined,
     });
     try {
       await loadSubjectsForTeacher(teacherId.value);
@@ -999,7 +1040,9 @@ const teacherPickerLocked = computed(
           class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin disabled:opacity-50"
         >
           <option value="">— pilih mapel —</option>
-          <option v-for="s in subjectOptions" :key="s.id" :value="s.id">{{ subjectLabel(s) }}</option>
+          <option v-for="s in subjectOptions" :key="s.id" :value="s.id">
+            {{ isOwnSubject(s.id) ? '★ ' : '' }}{{ subjectLabel(s) }}
+          </option>
         </select>
 
         <!-- Inline Quick-Add mapel — preserved verbatim from MR!866. -->
