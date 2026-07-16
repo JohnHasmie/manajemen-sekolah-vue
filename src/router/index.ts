@@ -229,6 +229,8 @@ const TeacherGradeRecapDetailView = () =>
   import('@/views/teacher/TeacherGradeRecapDetailView.vue');
 const TeacherClassActivityView = () =>
   import('@/views/teacher/TeacherClassActivityView.vue');
+const TeacherProgressHub = () =>
+  import('@/views/teacher/TeacherProgressHub.vue');
 const ClassHubListView = () => import('@/views/teacher/ClassHubListView.vue');
 const ClassHubView = () => import('@/views/teacher/ClassHubView.vue');
 const ParentClassHubListView = () =>
@@ -1025,6 +1027,16 @@ const routes: RouteRecordRaw[] = [
         name: 'teacher.attendance',
         component: TeacherAttendanceView,
         meta: { role: 'teacher' satisfies Role, abilityAny: ['attendance.student.submit', 'attendance.student.view'] },
+      },
+      {
+        path: 'teacher/prestasi',
+        name: 'teacher.prestasi',
+        component: TeacherProgressHub,
+        // Gate on `gamification.view` — a school without the sub gets
+        // the ability stripped by AbilityResolver::intersectWithEntitledModules,
+        // and the router guard redirects to /teacher before the view
+        // ever mounts. Users without the role fall through the same way.
+        meta: { role: 'teacher' satisfies Role, ability: 'gamification.view' },
       },
       {
         path: 'teacher/attendance/detail',
