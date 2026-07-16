@@ -31,7 +31,6 @@ import ParentPageHeader from '@/components/layout/ParentPageHeader.vue';
 import AttendanceMiniKpi from '@/components/feature/AttendanceMiniKpi.vue';
 import AttendanceCalendarGrid from '@/components/feature/AttendanceCalendarGrid.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
-import Spinner from '@/components/ui/Spinner.vue';
 
 const router = useRouter();
 const { t } = useI18n();
@@ -300,12 +299,21 @@ function dotCls(s: ParentAttendanceStatus): string {
       />
     </ParentPageHeader>
 
-    <!-- Loading + error fallbacks -->
+    <!-- Loading + error fallbacks. Skeleton mimics the day-cell grid
+         below (7 columns × 5 rows for a month) so the swap on load is
+         layout-stable. -->
     <div
       v-if="isLoading && allEntries.length === 0"
-      class="bg-white border border-slate-200 rounded-2xl p-6 flex items-center justify-center text-slate-400"
+      class="bg-white border border-slate-200 rounded-2xl p-4"
+      aria-hidden="true"
     >
-      <Spinner size="md" />
+      <div class="grid grid-cols-7 gap-2">
+        <div
+          v-for="i in 35"
+          :key="i"
+          class="h-10 rounded-lg bg-slate-100 animate-pulse motion-reduce:animate-none"
+        />
+      </div>
     </div>
     <div
       v-else-if="error"

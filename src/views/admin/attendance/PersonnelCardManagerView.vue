@@ -32,6 +32,7 @@ import type { Pagination } from '@/types/api';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import EmptyState from '@/components/data/EmptyState.vue';
+import SkeletonList from '@/components/data/SkeletonList.vue';
 import PaginationWidget from '@/components/data/Pagination.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
@@ -327,14 +328,10 @@ onMounted(load);
       </select>
     </div>
 
-    <!-- Loading shell. -->
-    <div
-      v-if="loading"
-      class="flex items-center justify-center py-16 text-slate-500"
-    >
-      <Spinner size="md" />
-      <span class="ml-2 text-sm">{{ t('common.loading') }}</span>
-    </div>
+    <!-- Loading shell — reuses the shared SkeletonList (name row +
+         qr thumb column), same look-and-feel as every other admin
+         list surface after the skeleton sweep. -->
+    <SkeletonList v-if="loading" :rows="5" />
 
     <EmptyState
       v-else-if="rows.length === 0"

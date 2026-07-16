@@ -678,6 +678,11 @@ export const TeacherAttendanceService = {
       if (filters.start_date) params.start_date = filters.start_date;
       if (filters.end_date) params.end_date = filters.end_date;
       if (filters.teacher_id) params.teacher_id = filters.teacher_id;
+      // `all` = omit (backend also treats absent as all); teacher/staff
+      // narrows the rekap in lock-step with the detail below.
+      if (filters.personnel_type && filters.personnel_type !== 'all') {
+        params.personnel_type = filters.personnel_type;
+      }
       const res = await api.get(Endpoints.reportSummary, { params });
       const body = (res.data ?? {}) as {
         meta?: Record<string, unknown>;

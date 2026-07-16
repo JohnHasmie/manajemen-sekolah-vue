@@ -194,13 +194,21 @@ onBeforeUnmount(stopTicker);
       </BrandPageHeader>
     </div>
 
-    <!-- Loading shell — keeps the layout from jumping when the token lands. -->
+    <!-- Loading shell — mimics the QR card shape (kicker line, school
+         name, big QR square, then countdown) so the swap on load
+         doesn't jump the layout. -->
     <div
       v-if="loading"
-      class="flex items-center justify-center py-24 text-slate-500"
+      class="print-card mx-auto bg-white border border-slate-200 rounded-2xl shadow-sm p-xl max-w-3xl"
+      aria-hidden="true"
     >
-      <Spinner size="md" />
-      <span class="ml-2 text-sm">{{ t('common.loading') }}</span>
+      <div class="h-3 w-40 mx-auto rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+      <div class="h-6 w-56 mx-auto mt-2 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+      <div class="my-lg flex justify-center">
+        <div class="h-64 w-64 rounded-2xl bg-slate-200 animate-pulse motion-reduce:animate-none" />
+      </div>
+      <div class="h-3 w-64 mx-auto rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+      <div class="h-2 w-40 mx-auto mt-2 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
     </div>
 
     <!-- The QR card itself — also the only thing that prints. -->

@@ -124,6 +124,11 @@ async function loadSummary() {
       start_date: filterStartDate.value || undefined,
       end_date: filterEndDate.value || undefined,
       teacher_id: filterTeacher.value.trim() || undefined,
+      // Tipe (Semua/Guru/Staf) narrows BOTH the rekap and the detail —
+      // the segmented control sits above the rekap header, so the admin
+      // reasonably expects the rekap it's about to look at to reflect
+      // the choice.
+      personnel_type: filterPersonnelType.value,
     });
     summaryLoaded.value = true;
   } catch (e) {
@@ -367,17 +372,19 @@ function applyReportFilters() {
 }
 
 /**
- * Switch the personnel-type narrowing (Semua/Guru/Staf). The filter
- * applies to the detail per-row list (the unified teacher+staff report),
- * so we surface that list when it was collapsed and refetch it. The
- * per-teacher rekap above is unaffected by this narrowing.
+ * Switch the personnel-type narrowing (Semua/Guru/Staf). Applies to
+ * BOTH the per-teacher rekap AND the detail per-row list — the
+ * segmented control sits above the rekap header, so the admin
+ * reasonably expects the rekap they're about to look at to reflect
+ * the choice (Fla 2026-07-17: filter used to look like it did
+ * nothing because the rekap silently ignored it).
  */
 function selectPersonnelType(type: TeacherAttendancePersonnelFilter) {
   if (filterPersonnelType.value === type) return;
   filterPersonnelType.value = type;
   reportPage.value = 1;
-  if (!showDetail.value) showDetail.value = true;
-  loadReport();
+  loadSummary();
+  if (showDetail.value) loadReport();
 }
 
 function clearReportFilters() {

@@ -624,4 +624,12 @@ export interface TeacherAttendanceAdminSummaryFilters
   extends TeacherAttendanceSummaryFilters {
   /** Accepts a Teacher ID OR User ID; server resolves school-scoped. */
   teacher_id?: string;
+  /**
+   * Narrow the rekap to a single personnel kind. Same values as the
+   * detail-report filter so the top-of-page Tipe segmented control can
+   * drive BOTH sections in lock-step. `all`/omitted returns both.
+   * Backend: `TeacherAttendanceSummaryRequest` validates
+   * `nullable|in:teacher,staff,all`.
+   */
+  personnel_type?: TeacherAttendancePersonnelFilter;
 }

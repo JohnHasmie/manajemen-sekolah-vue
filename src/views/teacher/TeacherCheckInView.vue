@@ -603,12 +603,23 @@ function gotoHistory() {
       </div>
     </BrandPageHeader>
 
-    <!-- ── Loading / error ────────────────────────────────────── -->
+    <!-- ── Loading / error ──────────────────────────────────────
+         Skeleton mimics the config summary (badge row + 3 detail
+         lines) so the swap on load doesn't jump. -->
     <div
       v-if="isLoading"
-      class="flex items-center justify-center py-xl text-slate-400"
+      class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3"
+      aria-hidden="true"
     >
-      <Spinner size="md" />
+      <div class="flex items-center gap-2">
+        <div class="h-7 w-7 rounded-lg bg-slate-200 animate-pulse motion-reduce:animate-none" />
+        <div class="h-3 w-32 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+      </div>
+      <div class="h-5 w-2/3 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+      <div class="space-y-2">
+        <div class="h-2 w-full rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+        <div class="h-2 w-4/5 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+      </div>
     </div>
 
     <div

@@ -25,7 +25,6 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import MoneyFlowStrip from '@/components/feature/MoneyFlowStrip.vue';
 import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
-import Spinner from '@/components/ui/Spinner.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const route = useRoute();
@@ -101,9 +100,20 @@ const headerMeta = computed(() => {
       <AcademicYearChip />
     </BrandPageHeader>
 
-    <!-- Money flow strip -->
-    <div v-if="isLoadingFlow && !flow" class="bg-white border border-slate-200 rounded-2xl p-8 text-center">
-      <Spinner size="md" class="mx-auto" />
+    <!-- Money flow strip — skeleton mimics the 3-KPI shape (In/Out/Balance). -->
+    <div
+      v-if="isLoadingFlow && !flow"
+      class="grid gap-3 grid-cols-1 sm:grid-cols-3"
+      aria-hidden="true"
+    >
+      <div
+        v-for="i in 3"
+        :key="i"
+        class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3"
+      >
+        <div class="h-3 w-24 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+        <div class="h-6 w-32 rounded bg-slate-200 animate-pulse motion-reduce:animate-none" />
+      </div>
     </div>
     <div
       v-else-if="flowError"
