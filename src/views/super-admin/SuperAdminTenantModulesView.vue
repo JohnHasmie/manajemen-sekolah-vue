@@ -8,18 +8,32 @@
     - RIGHT: full module list for the selected tenant. Each row shows the
       entitlement state (Aktif · comp / paid / Belum aktif), the current
       per-seat snapshot, and either a "Grant · gratis" or "Cabut" button.
+      Bundle-sourced rows get a "via Paket X" sub-badge so it's obvious
+      the entitlement is inherited, not a standalone grant.
 
   All mutations flow through SuperAdminBillingService which hits
   /billing/admin/tenants/{schoolId}/modules — the tenant's cached
   entitlement is refreshed server-side before the response returns, so
   reloading the list picks up truth in one round-trip.
+
+  Regression fix (MTs Muhammadiyah, Jul 2026): the page used to iterate
+  the catalog and look up each module in a `subscription_modules` map;
+  bundle-only tenants (one row `bundle_complete`) matched nothing and
+  every module rendered "BELUM AKTIF" while the gate correctly unlocked
+  ten member modules. Backend now expands bundles; this view renders the
+  bundle_source badge + a dedicated "Paket aktif" tile so super-admin
+  understands the source of the flood of green pills.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { SuperAdminTenantService } from '@/services/super-admin-tenant.service';
 import { SuperAdminBillingService } from '@/services/super-admin-billing.service';
 import type { PlatformTenant } from '@/types/super-admin-tenant';
-import type { AdminTenantModuleRow } from '@/types/super-admin-billing';
+import type {
+  AdminTenantModuleRow,
+  AdminTenantBundleRow,
+  AdminTenantSubscriptionSnapshot,
+} from '@/types/super-admin-billing';
 import { tenantLabel } from '@/lib/tenantTokens';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import { useConfirm } from '@/composables/useConfirm';
@@ -35,6 +49,8 @@ const selectedTenant = ref<PlatformTenant | null>(null);
 
 // ── Module list state ───────────────────────────────────────────────
 const modules = ref<AdminTenantModuleRow[]>([]);
+const activeBundles = ref<AdminTenantBundleRow[]>([]);
+const subscription = ref<AdminTenantSubscriptionSnapshot | null>(null);
 const modulesLoading = ref(false);
 const modulesError = ref<string | null>(null);
 const rowBusyKey = ref<string | null>(null);
@@ -55,12 +71,45 @@ const groupedModules = computed<{ name: string; items: AdminTenantModuleRow[] }[
     .sort((a, b) => a.name.localeCompare(b.name));
 });
 
+// The row counters walk the expanded module list so a bundle-only
+// tenant is credited for every member module — pre-fix, entitledCount
+// read `0` for an MTs-Muhammadiyah-style tenant that owned everything
+// via `bundle_complete` because no individual row was flagged entitled.
 const entitledCount = computed<number>(
   () => modules.value.filter((r) => r.entitled).length,
 );
 const compCount = computed<number>(
   () => modules.value.filter((r) => r.entitled && r.source === 'comp').length,
 );
+const bundleSourcedCount = computed<number>(
+  () => modules.value.filter((r) => r.entitled && r.bundle_source !== null).length,
+);
+
+/**
+ * Whether the header tile should render strikethrough pricing + a
+ * discount badge. Guarded so a subscription with no discount (or a
+ * partially-populated `applied_discount` from an unpatched backend)
+ * still renders cleanly — we only paint the strikethrough when the
+ * paid amount is genuinely LESS than the pre-discount monthly.
+ */
+const hasDiscount = computed<boolean>(() => {
+  const s = subscription.value;
+  return s !== null
+    && s.applied_discount !== null
+    && s.amount < s.monthly_amount;
+});
+
+const discountLabel = computed<string | null>(() => {
+  const d = subscription.value?.applied_discount;
+  if (!d) return null;
+  if (d.type === 'percent' && d.value !== null) {
+    return `${d.value}% off`;
+  }
+  if (d.type === 'nominal' && d.discount_amount > 0) {
+    return `Hemat ${formatMoney(d.discount_amount)}`;
+  }
+  return d.code ?? 'Diskon aktif';
+});
 
 // ── Effects ─────────────────────────────────────────────────────────
 async function loadTenants(): Promise<void> {
@@ -84,15 +133,22 @@ async function loadTenants(): Promise<void> {
 async function loadModules(): Promise<void> {
   if (!selectedTenant.value) {
     modules.value = [];
+    activeBundles.value = [];
+    subscription.value = null;
     return;
   }
   modulesLoading.value = true;
   modulesError.value = null;
   try {
-    modules.value = await SuperAdminBillingService.listModules(selectedTenant.value.id);
+    const payload = await SuperAdminBillingService.listModules(selectedTenant.value.id);
+    modules.value = payload.modules;
+    activeBundles.value = payload.bundles;
+    subscription.value = payload.subscription;
   } catch (e) {
     modulesError.value = (e as Error).message;
     modules.value = [];
+    activeBundles.value = [];
+    subscription.value = null;
   } finally {
     modulesLoading.value = false;
   }
@@ -213,6 +269,19 @@ function formatMoney(n: number): string {
   return 'Rp ' + new Intl.NumberFormat('id-ID').format(Math.max(0, Math.round(n)));
 }
 
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  try {
+    return new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date(iso));
+  } catch {
+    return '—';
+  }
+}
+
 /**
  * Human-friendly price snippet. Some modules charge per-student only
  * (attendance_class, attendance_gate, grades, finance), some per-staff
@@ -224,6 +293,13 @@ function priceSnippet(row: AdminTenantModuleRow): string {
   const parts: string[] = [];
   if (row.price_per_student > 0) parts.push(`${formatMoney(row.price_per_student)}/siswa`);
   if (row.price_per_staff > 0) parts.push(`${formatMoney(row.price_per_staff)}/guru`);
+  return parts.length ? parts.join(' · ') + ' / bln' : 'Gratis';
+}
+
+function bundlePriceSnippet(b: AdminTenantBundleRow): string {
+  const parts: string[] = [];
+  if (b.price_per_student > 0) parts.push(`${formatMoney(b.price_per_student)}/siswa`);
+  if (b.price_per_staff > 0) parts.push(`${formatMoney(b.price_per_staff)}/guru`);
   return parts.length ? parts.join(' · ') + ' / bln' : 'Gratis';
 }
 </script>
@@ -347,6 +423,73 @@ function priceSnippet(row: AdminTenantModuleRow): string {
                 </div>
                 <div class="text-slate-400 mt-0.5">
                   {{ compCount }} gratis (comp)
+                  <template v-if="bundleSourcedCount > 0">
+                    · {{ bundleSourcedCount }} via paket
+                  </template>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subscription pricing sub-tile — strikethrough monthly +
+                 actual amount + discount badge. Only rendered when the
+                 tenant has an active subscription. Mirrors the LANGGANAN
+                 ANDA tile pattern from the self-service Kelola Modul
+                 page so both surfaces read the same. -->
+            <div
+              v-if="subscription"
+              class="mt-4 pt-4 border-t border-slate-100
+                     flex flex-wrap items-end justify-between gap-3"
+            >
+              <div class="min-w-0">
+                <div class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-500">
+                  Tagihan bulan ini
+                </div>
+                <div class="mt-1 flex items-end gap-2 flex-wrap">
+                  <div class="text-[20px] font-bold text-slate-900 tabular-nums leading-none">
+                    {{ formatMoney(subscription.amount) }}
+                  </div>
+                  <div
+                    v-if="hasDiscount"
+                    class="text-[13px] text-slate-400 line-through tabular-nums leading-tight"
+                  >
+                    {{ formatMoney(subscription.monthly_amount) }}
+                  </div>
+                  <span
+                    v-if="hasDiscount && discountLabel"
+                    class="text-3xs font-semibold uppercase tracking-wide
+                           px-2 py-0.5 rounded-full
+                           bg-rose-100 text-rose-800"
+                  >{{ discountLabel }}</span>
+                </div>
+                <div
+                  v-if="hasDiscount && subscription.applied_discount?.code"
+                  class="text-[11.5px] text-slate-500 mt-1.5"
+                >
+                  Kode <span class="font-mono font-semibold text-slate-700">{{ subscription.applied_discount.code }}</span>
+                  <template v-if="subscription.applied_discount.duration_months">
+                    · berlaku {{ subscription.applied_discount.duration_months }} bulan
+                  </template>
+                  <template v-if="subscription.applied_discount.valid_until">
+                    · hingga {{ formatDate(subscription.applied_discount.valid_until) }}
+                  </template>
+                </div>
+                <div
+                  v-if="hasDiscount && subscription.applied_discount?.description"
+                  class="text-[11px] text-slate-500 mt-0.5"
+                >{{ subscription.applied_discount.description }}</div>
+              </div>
+              <div class="text-right text-[12px] text-slate-600 space-y-0.5">
+                <div>
+                  <span class="text-slate-400">Paket:</span>
+                  <span class="ml-1 font-semibold text-slate-800">{{ subscription.plan === 'yearly' ? 'Tahunan' : 'Bulanan' }}</span>
+                </div>
+                <div>
+                  <span class="text-slate-400">Berakhir:</span>
+                  <span class="ml-1 text-slate-700">{{ formatDate(subscription.expires_at) }}</span>
+                  <span
+                    v-if="subscription.days_remaining > 0"
+                    class="ml-1 text-slate-400"
+                  >({{ subscription.days_remaining }} hari lagi)</span>
                 </div>
               </div>
             </div>
@@ -367,46 +510,42 @@ function priceSnippet(row: AdminTenantModuleRow): string {
             Memuat modul tenant…
           </div>
 
-          <!-- Grouped list -->
-          <div v-else class="space-y-6">
-            <section v-for="g in groupedModules" :key="g.name">
+          <template v-else>
+            <!-- ══ Paket aktif tile ══
+                 Only rendered when the tenant holds at least one bundle.
+                 Each package shows its member roster so super-admin can
+                 spot at a glance where the flood of green module badges
+                 below is inherited from. -->
+            <section v-if="activeBundles.length > 0" class="mb-6">
               <div class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-500 mb-2 px-1">
-                {{ g.name }}
+                Paket aktif
               </div>
               <div class="space-y-2">
                 <article
-                  v-for="row in g.items"
-                  :key="row.module_key"
-                  class="bg-white border border-slate-200 rounded-xl px-4 py-3
-                         flex items-center gap-3"
-                  :class="row.entitled
-                    ? row.cancel_at_period_end
-                      ? 'bg-amber-50/60 border-amber-200'
-                      : row.source === 'comp'
-                        ? 'bg-violet-50/40 border-violet-200'
-                        : ''
-                    : ''"
+                  v-for="bundle in activeBundles"
+                  :key="bundle.module_key"
+                  class="bg-white border border-blue-200 rounded-xl px-4 py-3
+                         flex items-start gap-3"
+                  :class="bundle.cancel_at_period_end ? 'bg-amber-50/60 border-amber-200' : 'bg-blue-50/40'"
                 >
+                  <div
+                    class="w-9 h-9 rounded-lg grid place-items-center flex-shrink-0
+                           bg-blue-100 text-blue-700"
+                    aria-hidden="true"
+                  >
+                    <i class="ti ti-package text-lg" />
+                  </div>
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2 flex-wrap">
-                      <span class="text-[13.5px] font-semibold text-slate-900">
-                        {{ row.label }}
-                      </span>
-                      <!-- Status pill -->
+                      <span class="text-[13.5px] font-semibold text-slate-900">{{ bundle.label }}</span>
                       <span
-                        v-if="!row.entitled"
-                        class="text-3xs font-semibold uppercase tracking-wide
-                               px-2 py-0.5 rounded-full
-                               bg-slate-100 text-slate-500"
-                      >Belum aktif</span>
-                      <span
-                        v-else-if="row.cancel_at_period_end"
+                        v-if="bundle.cancel_at_period_end"
                         class="text-3xs font-semibold uppercase tracking-wide
                                px-2 py-0.5 rounded-full
                                bg-amber-100 text-amber-800"
                       >Akan berakhir</span>
                       <span
-                        v-else-if="row.source === 'comp'"
+                        v-else-if="bundle.source === 'comp'"
                         class="text-3xs font-semibold uppercase tracking-wide
                                px-2 py-0.5 rounded-full
                                bg-violet-100 text-violet-800"
@@ -419,55 +558,158 @@ function priceSnippet(row: AdminTenantModuleRow): string {
                       >Aktif · paid</span>
                     </div>
                     <div class="text-[11.5px] text-slate-500 mt-1 tabular-nums">
-                      <span class="font-mono text-[10.5px] text-slate-400 mr-2">{{ row.module_key }}</span>
-                      {{ priceSnippet(row) }}
+                      <span class="font-mono text-[10.5px] text-slate-400 mr-2">{{ bundle.module_key }}</span>
+                      {{ bundlePriceSnippet(bundle) }}
                     </div>
-                  </div>
-
-                  <!-- Actions -->
-                  <div class="flex-shrink-0 flex items-center gap-2">
-                    <template v-if="!row.entitled">
-                      <button
-                        type="button"
-                        class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg
-                               bg-violet-600 text-white hover:bg-violet-700
-                               disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="rowBusyKey === row.module_key"
-                        @click="grantComp(row)"
-                      >Grant · gratis</button>
-                      <button
-                        type="button"
-                        class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg
-                               border border-slate-300 text-slate-700 hover:bg-slate-50
-                               disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="rowBusyKey === row.module_key"
-                        @click="grantPaid(row)"
-                      >Grant · paid</button>
-                    </template>
-                    <template v-else>
-                      <button
-                        v-if="!row.cancel_at_period_end"
-                        type="button"
-                        class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg
-                               border border-amber-300 text-amber-800 hover:bg-amber-50
-                               disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="rowBusyKey === row.module_key"
-                        @click="revokeAtPeriodEnd(row)"
-                      >Cabut · akhir periode</button>
-                      <button
-                        type="button"
-                        class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg
-                               border border-rose-300 text-rose-700 hover:bg-rose-50
-                               disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="rowBusyKey === row.module_key"
-                        @click="revokeNow(row)"
-                      >Cabut sekarang</button>
-                    </template>
+                    <div class="text-[11px] text-slate-600 mt-1.5">
+                      <span class="text-slate-400">Termasuk:</span>
+                      <span class="ml-1">
+                        {{ bundle.members.map((m) => m.label).join(' · ') }}
+                      </span>
+                    </div>
                   </div>
                 </article>
               </div>
             </section>
-          </div>
+
+            <!-- ══ Modules grouped by catalog group ══ -->
+            <div class="space-y-6">
+              <section v-for="g in groupedModules" :key="g.name">
+                <div class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-500 mb-2 px-1">
+                  {{ g.name }}
+                </div>
+                <div class="space-y-2">
+                  <article
+                    v-for="row in g.items"
+                    :key="row.module_key"
+                    class="bg-white border border-slate-200 rounded-xl px-4 py-3
+                           flex items-center gap-3"
+                    :class="row.entitled
+                      ? row.cancel_at_period_end
+                        ? 'bg-amber-50/60 border-amber-200'
+                        : row.source === 'comp'
+                          ? 'bg-violet-50/40 border-violet-200'
+                          : row.bundle_source
+                            ? 'bg-blue-50/30 border-blue-200'
+                            : ''
+                      : ''"
+                  >
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-[13.5px] font-semibold text-slate-900">
+                          {{ row.label }}
+                        </span>
+                        <!-- Status pill: not-entitled / expiring / comp / paid.
+                             Entitled rows inherited from a bundle also carry
+                             a SUB-badge so it's obvious the module isn't a
+                             standalone grant. -->
+                        <span
+                          v-if="!row.entitled"
+                          class="text-3xs font-semibold uppercase tracking-wide
+                                 px-2 py-0.5 rounded-full
+                                 bg-slate-100 text-slate-500"
+                        >Belum aktif</span>
+                        <span
+                          v-else-if="row.cancel_at_period_end"
+                          class="text-3xs font-semibold uppercase tracking-wide
+                                 px-2 py-0.5 rounded-full
+                                 bg-amber-100 text-amber-800"
+                        >Akan berakhir</span>
+                        <span
+                          v-else-if="row.source === 'comp'"
+                          class="text-3xs font-semibold uppercase tracking-wide
+                                 px-2 py-0.5 rounded-full
+                                 bg-violet-100 text-violet-800"
+                        >Aktif · comp</span>
+                        <span
+                          v-else
+                          class="text-3xs font-semibold uppercase tracking-wide
+                                 px-2 py-0.5 rounded-full
+                                 bg-emerald-100 text-emerald-800"
+                        >Aktif</span>
+                        <span
+                          v-if="row.entitled && row.bundle_source"
+                          class="text-3xs font-semibold uppercase tracking-wide
+                                 px-2 py-0.5 rounded-full
+                                 bg-blue-100 text-blue-800"
+                          :title="`Diaktifkan lewat ${row.bundle_label ?? row.bundle_source}`"
+                        >via {{ row.bundle_label ?? row.bundle_source }}</span>
+                      </div>
+                      <div class="text-[11.5px] text-slate-500 mt-1 tabular-nums">
+                        <span class="font-mono text-[10.5px] text-slate-400 mr-2">{{ row.module_key }}</span>
+                        {{ priceSnippet(row) }}
+                      </div>
+                    </div>
+
+                    <!-- Actions.
+                         Bundle-sourced rows intentionally do NOT expose a
+                         "Cabut sekarang" button — you can't revoke a
+                         member module without breaking the whole bundle.
+                         Super-admin can still comp-grant an override
+                         (individual row wins over bundle source), which
+                         we keep visible even when the bundle already
+                         entitles the module. -->
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                      <template v-if="!row.entitled">
+                        <button
+                          type="button"
+                          class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg
+                                 bg-violet-600 text-white hover:bg-violet-700
+                                 disabled:opacity-50 disabled:cursor-not-allowed"
+                          :disabled="rowBusyKey === row.module_key"
+                          @click="grantComp(row)"
+                        >Grant · gratis</button>
+                        <button
+                          type="button"
+                          class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg
+                                 border border-slate-300 text-slate-700 hover:bg-slate-50
+                                 disabled:opacity-50 disabled:cursor-not-allowed"
+                          :disabled="rowBusyKey === row.module_key"
+                          @click="grantPaid(row)"
+                        >Grant · paid</button>
+                      </template>
+                      <template v-else-if="row.bundle_source && row.source !== 'comp'">
+                        <!-- Bundle-inherited row with no standalone
+                             override → offer a comp override only. -->
+                        <span
+                          class="text-[11px] text-slate-400 italic mr-1"
+                          title="Modul ini diaktifkan lewat paket; cabut paket untuk menonaktifkan seluruh anggota."
+                        >dari paket</span>
+                        <button
+                          type="button"
+                          class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg
+                                 border border-violet-300 text-violet-700 hover:bg-violet-50
+                                 disabled:opacity-50 disabled:cursor-not-allowed"
+                          :disabled="rowBusyKey === row.module_key"
+                          @click="grantComp(row)"
+                          title="Tambah baris comp sebagai override individu (paket tetap aktif)."
+                        >Override · comp</button>
+                      </template>
+                      <template v-else>
+                        <button
+                          v-if="!row.cancel_at_period_end"
+                          type="button"
+                          class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg
+                                 border border-amber-300 text-amber-800 hover:bg-amber-50
+                                 disabled:opacity-50 disabled:cursor-not-allowed"
+                          :disabled="rowBusyKey === row.module_key"
+                          @click="revokeAtPeriodEnd(row)"
+                        >Cabut · akhir periode</button>
+                        <button
+                          type="button"
+                          class="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg
+                                 border border-rose-300 text-rose-700 hover:bg-rose-50
+                                 disabled:opacity-50 disabled:cursor-not-allowed"
+                          :disabled="rowBusyKey === row.module_key"
+                          @click="revokeNow(row)"
+                        >Cabut sekarang</button>
+                      </template>
+                    </div>
+                  </article>
+                </div>
+              </section>
+            </div>
+          </template>
         </template>
       </section>
     </div>

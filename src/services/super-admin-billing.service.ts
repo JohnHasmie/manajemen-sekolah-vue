@@ -8,24 +8,56 @@
  * the RBAC boundary obvious at the call site.
  */
 import { api } from '@/lib/http';
-import type { AdminTenantModuleRow } from '@/types/super-admin-billing';
+import type { AdminTenantModulesResponse } from '@/types/super-admin-billing';
 
 function humanError(e: unknown, fallback: string): string {
   const msg = (e as { response?: { data?: { error?: string; message?: string } } })?.response?.data;
   return msg?.error ?? msg?.message ?? (e as Error)?.message ?? fallback;
 }
 
+/**
+ * Empty payload used when the tenant has no active subscription (or the
+ * server returned an unexpected shape). Callers can render the empty
+ * state without null-checking every field.
+ */
+const EMPTY_RESPONSE: AdminTenantModulesResponse = {
+  subscription: null,
+  modules: [],
+  bundles: [],
+};
+
 export const SuperAdminBillingService = {
   /**
    * List every optional module for a tenant with per-row entitlement
-   * status. Includes both entitled + un-entitled rows so the grid can
-   * show both "grant" and "revoke" affordances in one pass.
+   * status, plus any bundles the tenant holds + a subscription snapshot
+   * (amount / monthly_amount / applied_discount) so the FE can render
+   * the header tile with strikethrough pricing.
+   *
+   * Regression fix (MTs Muhammadiyah, Jul 2026): the payload used to be
+   * a plain array of module rows; backend now expands bundle rows to
+   * their member modules so a tenant on `bundle_complete` no longer
+   * reads as "BELUM AKTIF" for all ten members. Legacy array-shaped
+   * responses from unpatched backends still work — the wrapper below
+   * degrades gracefully to `{ modules, bundles: [], subscription: null }`.
    */
-  async listModules(schoolId: string): Promise<AdminTenantModuleRow[]> {
+  async listModules(schoolId: string): Promise<AdminTenantModulesResponse> {
     try {
       const res = await api.get(`/billing/admin/tenants/${encodeURIComponent(schoolId)}/modules`);
       const body = res.data?.data ?? res.data;
-      return Array.isArray(body) ? body as AdminTenantModuleRow[] : [];
+      // Fresh shape: { subscription, modules, bundles }.
+      if (body && typeof body === 'object' && !Array.isArray(body) && Array.isArray(body.modules)) {
+        return {
+          subscription: body.subscription ?? null,
+          modules: body.modules,
+          bundles: Array.isArray(body.bundles) ? body.bundles : [],
+        };
+      }
+      // Legacy shape: bare array. Keep the page functional against an
+      // older deployment during coordinated rollouts.
+      if (Array.isArray(body)) {
+        return { ...EMPTY_RESPONSE, modules: body };
+      }
+      return EMPTY_RESPONSE;
     } catch (e) {
       throw new Error(humanError(e, 'Gagal memuat modul tenant.'));
     }
