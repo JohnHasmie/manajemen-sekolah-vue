@@ -460,6 +460,17 @@ const WALI_KELAS_NAV: NavSection[] = [
         icon: 'camera',
         ability: 'attendance.self.view_own',
       },
+      // Prestasi — mirror TEACHER_NAV. `gamification.view` ability is
+      // stripped when the school lacks the teacher_gamification sub, so
+      // this entry auto-hides. Wali kelas WAS missing this row and
+      // couldn't find their Prestasi hub from the sidebar (guru MTs SKA
+      // report).
+      {
+        to: '/teacher/prestasi',
+        labelKey: 'nav.prestasi',
+        icon: 'medal',
+        ability: 'gamification.view',
+      },
     ],
   },
   {
