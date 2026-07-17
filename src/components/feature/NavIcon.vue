@@ -513,6 +513,58 @@ defineProps<{
       <circle cx="12" cy="12" r="4" />
       <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8" />
     </template>
+    <!-- ── Prestasi & Gamifikasi icons ─────────────────────────────
+         Missing entries used to fall through to the default hollow
+         circle, so StreakFlameKpi + BadgeTile rendered as visible
+         "O" placeholders in prod (guru MTs SKA report). Add the
+         handful the Prestasi surfaces need. ─────────────────────── -->
+    <template v-else-if="name === 'flame'">
+      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+    </template>
+    <template v-else-if="name === 'medal'">
+      <path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15" />
+      <path d="M11 12 5.12 2.2" />
+      <path d="m13 12 5.88-9.8" />
+      <path d="M8 7h8" />
+      <circle cx="12" cy="17" r="5" />
+      <path d="M12 18v-2h-.5" />
+    </template>
+    <template v-else-if="name === 'trophy'">
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+      <path d="M4 22h16" />
+      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </template>
+    <template v-else-if="name === 'sunrise'">
+      <path d="M17 18a5 5 0 0 0-10 0" />
+      <line x1="12" x2="12" y1="2" y2="9" />
+      <line x1="4.22" x2="5.64" y1="10.22" y2="11.64" />
+      <line x1="1" x2="3" y1="18" y2="18" />
+      <line x1="21" x2="23" y1="18" y2="18" />
+      <line x1="18.36" x2="19.78" y1="11.64" y2="10.22" />
+      <line x1="23" x2="1" y1="22" y2="22" />
+      <polyline points="8 6 12 2 16 6" />
+    </template>
+    <template v-else-if="name === 'award'">
+      <circle cx="12" cy="8" r="6" />
+      <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+    </template>
+    <template v-else-if="name === 'lock'">
+      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </template>
+    <template v-else-if="name === 'info'">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" x2="12" y1="16" y2="12" />
+      <line x1="12" x2="12.01" y1="8" y2="8" />
+    </template>
+    <template v-else-if="name === 'alert-circle'">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" x2="12" y1="8" y2="12" />
+      <line x1="12" x2="12.01" y1="16" y2="16" />
+    </template>
     <template v-else>
       <circle cx="12" cy="12" r="10" />
     </template>
