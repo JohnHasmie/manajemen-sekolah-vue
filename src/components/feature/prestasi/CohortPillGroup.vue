@@ -16,7 +16,7 @@ const emit = defineEmits<{
 }>();
 
 const ALL: { key: Cohort; label: string }[] = [
-  { key: 'guru_baru', label: 'Guru Baru' },
+  { key: 'guru_baru', label: 'Guru Umum' },
   { key: 'guru_mapel', label: 'Guru Mapel' },
   { key: 'wali_kelas', label: 'Wali Kelas' },
   { key: 'staf', label: 'Staf' },
