@@ -125,6 +125,26 @@ function badgeState(code: string): 'earned' | 'new' | 'locked' {
 // for teacher-shaped users; keep all otherwise.
 const availableCohorts = computed<Cohort[]>(() => ['guru_baru', 'guru_mapel', 'wali_kelas']);
 
+// Empty-state copy for the Peringkat tab — cohort-aware so a guru
+// baru sees a welcoming "kamu pertama" nudge and a wali kelas sees
+// a message oriented to their own week's activity. Keeps the plain
+// "belum ada" bare-string out of the UI (Wave 1 warm-empty pattern).
+const cohortEmptyTitle = computed<string>(() => {
+  if (cohort.value === 'guru_baru') return 'Belum ada peringkat minggu ini';
+  if (cohort.value === 'wali_kelas') return 'Belum ada wali kelas aktif minggu ini';
+  return 'Belum ada guru mapel aktif minggu ini';
+});
+
+const cohortEmptyHint = computed<string>(() => {
+  if (cohort.value === 'guru_baru') {
+    return 'Absen tepat waktu besok pagi — kamu bisa jadi orang pertama yang tampil di sini.';
+  }
+  if (periode.value === 'bulan') {
+    return 'Coba lihat "Minggu ini" — periode bulanan baru mulai jalan begitu ada aktivitas cukup.';
+  }
+  return 'Peringkat dihitung dari poin minggu ini. Setelah kamu atau rekan sekelompok absen tepat waktu, peringkat akan otomatis tampil.';
+});
+
 function switchTab(tab: Tab) {
   activeTab.value = tab;
   if (tab === 'peringkat' && !leaderboard.value) {
@@ -269,8 +289,21 @@ onMounted(() => {
           <div class="rounded-2xl bg-white border border-slate-100 shadow-sm p-3">
             <div v-if="leaderboardError" class="text-2xs text-amber-700 p-3">{{ leaderboardError }}</div>
             <div v-else-if="!leaderboard" class="text-2xs text-slate-500 p-3">Memuat peringkat…</div>
-            <div v-else-if="leaderboard.data.length === 0" class="text-2xs text-slate-500 p-3">
-              Belum ada peringkat untuk kelompok ini.
+            <!-- Warm empty state — matches the "warm empty" pattern used
+                 across the app (Wave 1 UX). A brand-new school hits this
+                 the very first time they open Peringkat; a plain "belum
+                 ada" reads as broken. Icon + one-line reason + tiny nudge
+                 keeps the guru oriented. -->
+            <div v-else-if="leaderboard.data.length === 0" class="p-8 text-center">
+              <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 grid place-items-center mx-auto">
+                <NavIcon name="trophy" :size="24" />
+              </div>
+              <p class="mt-3 text-sm font-bold text-slate-800">
+                {{ cohortEmptyTitle }}
+              </p>
+              <p class="mt-1 text-2xs text-slate-500 leading-relaxed max-w-sm mx-auto">
+                {{ cohortEmptyHint }}
+              </p>
             </div>
             <div v-else class="space-y-1">
               <LeaderboardRow v-for="entry in leaderboard.data" :key="entry.teacher_id ?? entry.user_id ?? entry.posisi" :entry="entry" />
