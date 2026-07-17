@@ -872,8 +872,8 @@ const routes: RouteRecordRaw[] = [
         // teacher_gamification sub, so the guard redirects to /admin
         // before the view mounts. Route sits next to the other
         // teacher-facing admin views for IA consistency.
-        path: 'admin/prestasi-guru',
-        name: 'admin.prestasi-guru',
+        path: 'admin/teacher-engagement',
+        name: 'admin.teacher-engagement',
         component: AdminTeacherEngagementView,
         meta: { role: 'admin' satisfies Role, ability: 'gamification.admin.view' },
       },
@@ -1061,8 +1061,8 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'teacher' satisfies Role, abilityAny: ['attendance.student.submit', 'attendance.student.view'] },
       },
       {
-        path: 'teacher/prestasi',
-        name: 'teacher.prestasi',
+        path: 'teacher/gamification',
+        name: 'teacher.gamification',
         component: TeacherProgressHub,
         // Gate on `gamification.view` — a school without the sub gets
         // the ability stripped by AbilityResolver::intersectWithEntitledModules,

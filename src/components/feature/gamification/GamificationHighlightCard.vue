@@ -1,7 +1,7 @@
 <!--
-  SorotanPrestasiCard.vue — the Sorotan Prestasi hero card that lands
-  at the top of the guru dashboard (and the compact variant on
-  admin).
+  GamificationHighlightCard.vue — the gamification highlight hero card
+  that lands at the top of the guru dashboard (and the compact variant
+  on admin).
 
   Backend picks ONE `state` per day; this component picks the palette
   + icon + mini-badge tone from the state, and renders the shared
@@ -9,16 +9,16 @@
   below on the guru variant).
 
   Six states supported for guru:
-    badge_baru        gold / orange
-    naik_level        cobalt / blue
+    new_badge         gold / orange
+    level_up          cobalt / blue
     streak_milestone  red / orange
     top_rank          violet / pink
-    delta_positif     green / emerald
-    sapaan_awal       cobalt / navy
+    positive_delta    green / emerald
+    welcome           cobalt / navy
 
   Plus two admin-only variants:
-    guru_bulan_ini    violet / navy
-    perlu_sapaan      amber / orange
+    teacher_of_month  violet / navy
+    needs_attention   amber / orange
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
@@ -48,13 +48,13 @@ const emit = defineEmits<{
 
 const stateMeta = computed<{ gradient: string; icon: string; miniBadgeTone: string }>(() => {
   switch (props.state) {
-    case 'badge_baru':
+    case 'new_badge':
       return {
         gradient: 'from-amber-500 to-orange-600',
         icon: 'trophy',
         miniBadgeTone: 'bg-white/25 text-white',
       };
-    case 'naik_level':
+    case 'level_up':
       return {
         gradient: 'from-brand-cobalt to-blue-700',
         icon: 'trending-up',
@@ -72,25 +72,25 @@ const stateMeta = computed<{ gradient: string; icon: string; miniBadgeTone: stri
         icon: 'medal',
         miniBadgeTone: 'bg-white/25 text-white',
       };
-    case 'delta_positif':
+    case 'positive_delta':
       return {
         gradient: 'from-emerald-500 to-green-700',
         icon: 'trending-up',
         miniBadgeTone: 'bg-white/25 text-white',
       };
-    case 'sapaan_awal':
+    case 'welcome':
       return {
         gradient: 'from-brand-cobalt to-slate-800',
         icon: 'sparkles',
         miniBadgeTone: 'bg-white/25 text-white',
       };
-    case 'guru_bulan_ini':
+    case 'teacher_of_month':
       return {
         gradient: 'from-violet-600 to-slate-800',
         icon: 'trophy',
         miniBadgeTone: 'bg-white/25 text-white',
       };
-    case 'perlu_sapaan':
+    case 'needs_attention':
       return {
         gradient: 'from-amber-500 to-orange-600',
         icon: 'bell',

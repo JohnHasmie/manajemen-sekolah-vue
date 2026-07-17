@@ -27,11 +27,11 @@ import PriorityInbox from '@/components/feature/PriorityInbox.vue';
 import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
 import SubscriptionSummaryCard from '@/components/feature/SubscriptionSummaryCard.vue';
 import AdminTutoringDashboardView from '@/views/admin/tutoring/AdminTutoringDashboardView.vue';
-import SorotanPrestasiCard from '@/components/feature/prestasi/SorotanPrestasiCard.vue';
+import GamificationHighlightCard from '@/components/feature/gamification/GamificationHighlightCard.vue';
 import {
   TeacherProgressService,
-  type AdminSorotanPayload,
-  type AdminRingkasanPayload,
+  type AdminHighlightPayload,
+  type AdminSummaryPayload,
 } from '@/services/teacher-progress.service';
 import { useMe } from '@/composables/useMe';
 import { useTenant } from '@/composables/useTenant';
@@ -54,23 +54,23 @@ const { t } = useI18n();
 // stay null when the school hasn't subscribed — the ability strip
 // on the server side makes `meApi.can(...)` false so nothing renders.
 const canSeePrestasi = computed(() => meApi.can('gamification.admin.view'));
-const adminSorotan = ref<AdminSorotanPayload | null>(null);
-const adminRingkasan = ref<AdminRingkasanPayload | null>(null);
+const adminHighlight = ref<AdminHighlightPayload | null>(null);
+const adminSummary = ref<AdminSummaryPayload | null>(null);
 
 async function loadPrestasi() {
   if (!canSeePrestasi.value) return;
   try {
     const [s, r] = await Promise.all([
-      TeacherProgressService.getAdminSorotan(),
-      TeacherProgressService.getAdminRingkasan(),
+      TeacherProgressService.getAdminHighlight(),
+      TeacherProgressService.getAdminSummary(),
     ]);
-    adminSorotan.value = s;
-    adminRingkasan.value = r;
+    adminHighlight.value = s;
+    adminSummary.value = r;
   } catch {
     // Silent — a mid-session sub loss must not disrupt the rest
     // of the dashboard. The v-if drops the section cleanly.
-    adminSorotan.value = null;
-    adminRingkasan.value = null;
+    adminHighlight.value = null;
+    adminSummary.value = null;
   }
 }
 // A tutoring-center admin gets the bimbel dashboard; the school KPIs
@@ -424,38 +424,38 @@ const financePct = computed(() =>
           <div class="space-y-md">
 
           <!-- Prestasi & Gamifikasi Guru — paid module. Renders 1 or
-               2 sorotan cards (guru_bulan_ini always, perlu_sapaan
+               2 highlight cards (teacher_of_month always, needs_attention
                conditional) + a compact ringkasan tile with 4 KPI +
                top 3. All hidden when the module is off (ability
                stripped server-side). Silent on fetch failure. -->
-          <template v-if="canSeePrestasi && adminSorotan">
+          <template v-if="canSeePrestasi && adminHighlight">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
-              <SorotanPrestasiCard
-                :state="adminSorotan.guru_bulan_ini.state"
-                :eyebrow="adminSorotan.guru_bulan_ini.eyebrow"
-                :title="adminSorotan.guru_bulan_ini.title"
-                :sub="adminSorotan.guru_bulan_ini.sub"
-                :cta-label="adminSorotan.guru_bulan_ini.cta_label"
-                :cta-target="adminSorotan.guru_bulan_ini.cta_target"
+              <GamificationHighlightCard
+                :state="adminHighlight.teacher_of_month.state"
+                :eyebrow="adminHighlight.teacher_of_month.eyebrow"
+                :title="adminHighlight.teacher_of_month.title"
+                :sub="adminHighlight.teacher_of_month.sub"
+                :cta-label="adminHighlight.teacher_of_month.cta_label"
+                :cta-target="adminHighlight.teacher_of_month.cta_target"
                 :meta="null"
-                @cta="router.push(adminSorotan.guru_bulan_ini.cta_target)"
+                @cta="router.push(adminHighlight.teacher_of_month.cta_target)"
               />
-              <SorotanPrestasiCard
-                v-if="adminSorotan.perlu_sapaan.count > 0"
-                :state="adminSorotan.perlu_sapaan.state"
-                :eyebrow="adminSorotan.perlu_sapaan.eyebrow"
-                :title="adminSorotan.perlu_sapaan.title ?? ''"
-                :sub="adminSorotan.perlu_sapaan.sub"
-                :cta-label="adminSorotan.perlu_sapaan.cta_label ?? 'Kirim pengingat'"
-                :cta-target="adminSorotan.perlu_sapaan.cta_target ?? '/admin/prestasi-guru'"
+              <GamificationHighlightCard
+                v-if="adminHighlight.needs_attention.count > 0"
+                :state="adminHighlight.needs_attention.state"
+                :eyebrow="adminHighlight.needs_attention.eyebrow"
+                :title="adminHighlight.needs_attention.title ?? ''"
+                :sub="adminHighlight.needs_attention.sub"
+                :cta-label="adminHighlight.needs_attention.cta_label ?? 'Kirim pengingat'"
+                :cta-target="adminHighlight.needs_attention.cta_target ?? '/admin/teacher-engagement'"
                 :meta="null"
-                @cta="router.push('/admin/prestasi-guru')"
+                @cta="router.push('/admin/teacher-engagement')"
               />
             </div>
 
-            <!-- Compact ringkasan tile — 4 KPI + top-3 preview, tap → full page. -->
+            <!-- Compact summary tile — 4 KPI + top-3 preview, tap → full page. -->
             <section
-              v-if="adminRingkasan"
+              v-if="adminSummary"
               class="bg-white border border-slate-200 rounded-2xl p-4"
             >
               <header class="flex items-center justify-between mb-3">
@@ -471,7 +471,7 @@ const financePct = computed(() =>
                 <button
                   type="button"
                   class="text-2xs font-bold text-brand-cobalt hover:underline"
-                  @click="router.push('/admin/prestasi-guru')"
+                  @click="router.push('/admin/teacher-engagement')"
                 >
                   Lihat detail →
                 </button>
@@ -479,28 +479,28 @@ const financePct = computed(() =>
               <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
                 <div class="rounded-xl bg-slate-50 px-3 py-2">
                   <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Total</p>
-                  <p class="text-base font-black text-slate-900 mt-0.5">{{ adminRingkasan.total_guru }}</p>
+                  <p class="text-base font-black text-slate-900 mt-0.5">{{ adminSummary.total_teachers }}</p>
                 </div>
                 <div class="rounded-xl bg-emerald-50 px-3 py-2">
                   <p class="text-3xs font-bold text-emerald-700 uppercase tracking-widest">Aktif</p>
-                  <p class="text-base font-black text-emerald-900 mt-0.5">{{ adminRingkasan.aktif_minggu_ini }}</p>
+                  <p class="text-base font-black text-emerald-900 mt-0.5">{{ adminSummary.active_this_week }}</p>
                 </div>
                 <div class="rounded-xl bg-orange-50 px-3 py-2">
                   <p class="text-3xs font-bold text-orange-700 uppercase tracking-widest">Streak</p>
                   <p class="text-base font-black text-orange-900 mt-0.5">
-                    {{ adminRingkasan.rata_streak }}<span class="text-3xs text-orange-700 font-bold ml-1">hr</span>
+                    {{ adminSummary.average_streak }}<span class="text-3xs text-orange-700 font-bold ml-1">hr</span>
                   </p>
                 </div>
                 <div class="rounded-xl bg-red-50 px-3 py-2">
                   <p class="text-3xs font-bold text-red-700 uppercase tracking-widest">Sepi</p>
-                  <p class="text-base font-black text-red-900 mt-0.5">{{ adminRingkasan.perlu_perhatian }}</p>
+                  <p class="text-base font-black text-red-900 mt-0.5">{{ adminSummary.needs_attention_count }}</p>
                 </div>
               </div>
-              <div v-if="adminRingkasan.top_tiga.length > 0">
+              <div v-if="adminSummary.top_three.length > 0">
                 <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest mb-2">Top minggu ini</p>
                 <ol class="space-y-1.5">
                   <li
-                    v-for="(t, i) in adminRingkasan.top_tiga"
+                    v-for="(t, i) in adminSummary.top_three"
                     :key="t.teacher_id"
                     class="flex items-center gap-3"
                   >
@@ -510,9 +510,9 @@ const financePct = computed(() =>
                     >
                       #{{ i + 1 }}
                     </span>
-                    <p class="flex-1 text-2xs font-bold text-slate-800 truncate">{{ t.nama }}</p>
+                    <p class="flex-1 text-2xs font-bold text-slate-800 truncate">{{ t.name }}</p>
                     <p class="text-2xs font-black text-slate-800">
-                      {{ t.poin }}<span class="text-3xs text-slate-500 font-bold ml-1">XP</span>
+                      {{ t.points }}<span class="text-3xs text-slate-500 font-bold ml-1">XP</span>
                     </p>
                   </li>
                 </ol>

@@ -12,11 +12,11 @@ import { computed, ref, watch } from 'vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const props = defineProps<{
-  /** Rows from AdminIndexPayload.data filtered to status === 'sepi'. */
-  sepiTeachers: Array<{
+  /** Rows from AdminIndexPayload.data filtered to status === 'silent'. */
+  silentTeachers: Array<{
     teacher_id: string;
-    nama: string;
-    terakhir_aktif: string | null;
+    name: string;
+    last_active_at: string | null;
   }>;
   /** Optional busy flag while the send is in-flight. */
   sending?: boolean;
@@ -28,12 +28,12 @@ const emit = defineEmits<{
 
 const selected = ref<string[]>([]);
 
-// Re-seed selection whenever the list of sepi teachers changes.
+// Re-seed selection whenever the list of silent teachers changes.
 // Preserves the "click one button, everyone gets the nudge" default.
 watch(
-  () => props.sepiTeachers.map((t) => t.teacher_id).join('|'),
+  () => props.silentTeachers.map((t) => t.teacher_id).join('|'),
   () => {
-    selected.value = props.sepiTeachers.map((t) => t.teacher_id);
+    selected.value = props.silentTeachers.map((t) => t.teacher_id);
   },
   { immediate: true },
 );
@@ -54,13 +54,13 @@ const daysAgo = (dateStr: string | null): string => {
 };
 
 const allSelected = computed(() =>
-  props.sepiTeachers.length > 0 && selected.value.length === props.sepiTeachers.length,
+  props.silentTeachers.length > 0 && selected.value.length === props.silentTeachers.length,
 );
 
 function toggleAll() {
   selected.value = allSelected.value
     ? []
-    : props.sepiTeachers.map((t) => t.teacher_id);
+    : props.silentTeachers.map((t) => t.teacher_id);
 }
 </script>
 
@@ -73,7 +73,7 @@ function toggleAll() {
       <div class="flex-1 min-w-0">
         <p class="text-3xs font-bold text-amber-700 uppercase tracking-widest">Perlu sapaan</p>
         <p class="text-sm font-black text-amber-900 leading-tight mt-1">
-          {{ sepiTeachers.length }} guru belum aktif 7+ hari
+          {{ silentTeachers.length }} guru belum aktif 7+ hari
         </p>
         <p class="text-2xs text-amber-800 mt-1">
           Kirim pengingat lembut lewat bell agar mereka kembali membuka aplikasi.
@@ -82,7 +82,7 @@ function toggleAll() {
     </header>
 
     <div
-      v-if="sepiTeachers.length === 0"
+      v-if="silentTeachers.length === 0"
       class="text-2xs text-amber-800 py-2 text-center"
     >
       Semua guru aktif minggu ini. 🎉
@@ -100,7 +100,7 @@ function toggleAll() {
       </label>
       <div class="max-h-56 overflow-y-auto space-y-1">
         <label
-          v-for="t in sepiTeachers"
+          v-for="t in silentTeachers"
           :key="t.teacher_id"
           class="flex items-center gap-2 bg-white/70 rounded-lg px-2 py-1.5 cursor-pointer"
         >
@@ -111,8 +111,8 @@ function toggleAll() {
             @change="toggle(t.teacher_id)"
           />
           <div class="min-w-0 flex-1">
-            <p class="text-2xs font-bold text-slate-800 truncate">{{ t.nama }}</p>
-            <p class="text-3xs text-slate-500">{{ daysAgo(t.terakhir_aktif) }}</p>
+            <p class="text-2xs font-bold text-slate-800 truncate">{{ t.name }}</p>
+            <p class="text-3xs text-slate-500">{{ daysAgo(t.last_active_at) }}</p>
           </div>
         </label>
       </div>

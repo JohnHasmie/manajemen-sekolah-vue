@@ -180,8 +180,8 @@ const ADMIN_NAV: NavSection[] = [
       // admin variant of the ability. Ability strips out when the
       // school loses the sub → nav item hidden automatically.
       {
-        to: '/admin/prestasi-guru',
-        labelKey: 'nav.prestasiGuru',
+        to: '/admin/teacher-engagement',
+        labelKey: 'nav.teacherEngagement',
         icon: 'medal',
         ability: 'gamification.admin.view',
       },
@@ -352,8 +352,8 @@ const TEACHER_NAV: NavSection[] = [
       // the teacher_gamification sub, so `abilityAny` here does
       // double duty as the module gate + role gate.
       {
-        to: '/teacher/prestasi',
-        labelKey: 'nav.prestasi',
+        to: '/teacher/gamification',
+        labelKey: 'nav.gamification',
         icon: 'medal',
         ability: 'gamification.view',
       },
@@ -466,8 +466,8 @@ const WALI_KELAS_NAV: NavSection[] = [
       // couldn't find their Prestasi hub from the sidebar (guru MTs SKA
       // report).
       {
-        to: '/teacher/prestasi',
-        labelKey: 'nav.prestasi',
+        to: '/teacher/gamification',
+        labelKey: 'nav.gamification',
         icon: 'medal',
         ability: 'gamification.view',
       },

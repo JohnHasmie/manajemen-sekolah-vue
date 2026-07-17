@@ -1,9 +1,9 @@
 <!--
-  TeacherProgressHub.vue — /teacher/prestasi
+  TeacherProgressHub.vue — /teacher/gamification
 
   3 tabs (Ringkasan / Badge / Peringkat) inside a shared shell.
 
-  Data flow: on mount fetch /teacher/prestasi/saya once → drives
+  Data flow: on mount fetch /teacher/gamification/me once → drives
   Ringkasan + Badge tab. Peringkat tab lazy-loads its own data (with
   a cohort dropdown) so a teacher never pays that query cost on the
   initial paint of the hub.
@@ -14,14 +14,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import LevelXpRing from '@/components/feature/prestasi/LevelXpRing.vue';
-import StreakFlameKpi from '@/components/feature/prestasi/StreakFlameKpi.vue';
-import WeeklyPointsChart from '@/components/feature/prestasi/WeeklyPointsChart.vue';
-import SignalSourceGrid from '@/components/feature/prestasi/SignalSourceGrid.vue';
-import BadgeTile from '@/components/feature/prestasi/BadgeTile.vue';
-import LeaderboardRow from '@/components/feature/prestasi/LeaderboardRow.vue';
-import CohortPillGroup from '@/components/feature/prestasi/CohortPillGroup.vue';
-import MilestoneHintCard from '@/components/feature/prestasi/MilestoneHintCard.vue';
+import LevelXpRing from '@/components/feature/gamification/LevelXpRing.vue';
+import StreakFlameKpi from '@/components/feature/gamification/StreakFlameKpi.vue';
+import WeeklyPointsChart from '@/components/feature/gamification/WeeklyPointsChart.vue';
+import SignalSourceGrid from '@/components/feature/gamification/SignalSourceGrid.vue';
+import BadgeTile from '@/components/feature/gamification/BadgeTile.vue';
+import LeaderboardRow from '@/components/feature/gamification/LeaderboardRow.vue';
+import CohortPillGroup from '@/components/feature/gamification/CohortPillGroup.vue';
+import MilestoneHintCard from '@/components/feature/gamification/MilestoneHintCard.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import {
   TeacherProgressService,
@@ -33,16 +33,21 @@ import { useToast } from '@/composables/useToast';
 
 const toast = useToast();
 
-type Tab = 'ringkasan' | 'badge' | 'peringkat';
-const activeTab = ref<Tab>('ringkasan');
+type Tab = 'summary' | 'badges' | 'leaderboard';
+const activeTab = ref<Tab>('summary');
+const TAB_LABELS: Record<Tab, string> = {
+  summary: 'Ringkasan',
+  badges: 'Badge',
+  leaderboard: 'Peringkat',
+};
 
 const personal = ref<PersonalPayload | null>(null);
 const personalError = ref<string | null>(null);
 
 const leaderboard = ref<LeaderboardResponse | null>(null);
 const leaderboardError = ref<string | null>(null);
-const cohort = ref<Cohort>('guru_baru');
-const periode = ref<'minggu' | 'bulan'>('minggu');
+const cohort = ref<Cohort>('general');
+const period = ref<'week' | 'month'>('week');
 
 const savingSetting = ref(false);
 
@@ -66,7 +71,7 @@ const ALL_BADGE_CODES: string[] = [
 async function loadPersonal() {
   personalError.value = null;
   try {
-    personal.value = await TeacherProgressService.getPersonal();
+    personal.value = await TeacherProgressService.getMe();
   } catch (e: any) {
     personalError.value = e?.response?.status === 402
       ? 'Modul Prestasi belum aktif untuk sekolah ini.'
@@ -78,8 +83,8 @@ async function loadLeaderboard() {
   leaderboardError.value = null;
   try {
     leaderboard.value = await TeacherProgressService.getLeaderboard({
-      periode: periode.value,
-      kelompok: cohort.value,
+      period: period.value,
+      cohort: cohort.value,
     });
   } catch (e: any) {
     leaderboardError.value = e?.response?.status === 402
@@ -90,12 +95,12 @@ async function loadLeaderboard() {
 
 async function toggleHide() {
   if (!personal.value) return;
-  const nextValue = !personal.value.sembunyi_dari_peringkat;
+  const nextValue = !personal.value.hide_from_leaderboard;
   savingSetting.value = true;
   try {
-    const res = await TeacherProgressService.updateSetting({ sembunyi_dari_peringkat: nextValue });
-    personal.value.sembunyi_dari_peringkat = res.sembunyi_dari_peringkat;
-    toast.success(res.sembunyi_dari_peringkat ? 'Nama disembunyikan dari peringkat.' : 'Nama tampil di peringkat.');
+    const res = await TeacherProgressService.updateSetting({ hide_from_leaderboard: nextValue });
+    personal.value.hide_from_leaderboard = res.hide_from_leaderboard;
+    toast.success(res.hide_from_leaderboard ? 'Nama disembunyikan dari peringkat.' : 'Nama tampil di peringkat.');
   } catch {
     toast.error('Gagal menyimpan pengaturan. Coba lagi.');
   } finally {
@@ -121,25 +126,25 @@ function badgeState(code: string): 'earned' | 'new' | 'locked' {
   return hit.is_new ? 'new' : 'earned';
 }
 
-// Choose which cohorts to show in the switcher — hide staf option
+// Choose which cohorts to show in the switcher — hide staff option
 // for teacher-shaped users; keep all otherwise.
-const availableCohorts = computed<Cohort[]>(() => ['guru_baru', 'guru_mapel', 'wali_kelas']);
+const availableCohorts = computed<Cohort[]>(() => ['general', 'subject', 'homeroom']);
 
-// Empty-state copy for the Peringkat tab — cohort-aware so a guru
-// baru sees a welcoming "kamu pertama" nudge and a wali kelas sees
+// Empty-state copy for the Peringkat tab — cohort-aware so a general
+// teacher sees a welcoming "kamu pertama" nudge and a wali kelas sees
 // a message oriented to their own week's activity. Keeps the plain
 // "belum ada" bare-string out of the UI (Wave 1 warm-empty pattern).
 const cohortEmptyTitle = computed<string>(() => {
-  if (cohort.value === 'guru_baru') return 'Belum ada peringkat minggu ini';
-  if (cohort.value === 'wali_kelas') return 'Belum ada wali kelas aktif minggu ini';
+  if (cohort.value === 'general') return 'Belum ada peringkat minggu ini';
+  if (cohort.value === 'homeroom') return 'Belum ada wali kelas aktif minggu ini';
   return 'Belum ada guru mapel aktif minggu ini';
 });
 
 const cohortEmptyHint = computed<string>(() => {
-  if (cohort.value === 'guru_baru') {
+  if (cohort.value === 'general') {
     return 'Absen tepat waktu besok pagi — kamu bisa jadi orang pertama yang tampil di sini.';
   }
-  if (periode.value === 'bulan') {
+  if (period.value === 'month') {
     return 'Coba lihat "Minggu ini" — periode bulanan baru mulai jalan begitu ada aktivitas cukup.';
   }
   return 'Peringkat dihitung dari poin minggu ini. Setelah kamu atau rekan sekelompok absen tepat waktu, peringkat akan otomatis tampil.';
@@ -147,7 +152,7 @@ const cohortEmptyHint = computed<string>(() => {
 
 function switchTab(tab: Tab) {
   activeTab.value = tab;
-  if (tab === 'peringkat' && !leaderboard.value) {
+  if (tab === 'leaderboard' && !leaderboard.value) {
     void loadLeaderboard();
   }
 }
@@ -185,23 +190,23 @@ onMounted(() => {
              a floating chip. -->
         <div class="flex bg-slate-100 rounded-xl p-1 w-full sm:w-auto sm:inline-flex">
           <button
-            v-for="tab in ['ringkasan', 'badge', 'peringkat'] as Tab[]"
+            v-for="tab in (['summary', 'badges', 'leaderboard'] as Tab[])"
             :key="tab"
             type="button"
-            class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold capitalize transition"
+            class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition"
             :class="activeTab === tab
               ? 'bg-white text-brand-cobalt shadow-sm'
               : 'text-slate-600 hover:text-slate-800'"
             @click="switchTab(tab)"
           >
-            {{ tab }}
+            {{ TAB_LABELS[tab] }}
           </button>
         </div>
 
         <!-- ─── Ringkasan tab ─── -->
-        <section v-if="activeTab === 'ringkasan'" class="space-y-6">
+        <section v-if="activeTab === 'summary'" class="space-y-6">
           <MilestoneHintCard
-            :sources="personal.sumber_terbuka"
+            :sources="personal.unlocked_sources"
             :current-streak="personal.streak_current"
           />
 
@@ -249,12 +254,12 @@ onMounted(() => {
           <!-- Sumber poin -->
           <div>
             <p class="text-2xs font-bold text-slate-700 uppercase tracking-widest mb-3">Sumber poin</p>
-            <SignalSourceGrid :sources="personal.sumber_terbuka" />
+            <SignalSourceGrid :sources="personal.unlocked_sources" />
           </div>
         </section>
 
         <!-- ─── Badge tab ─── -->
-        <section v-else-if="activeTab === 'badge'" class="space-y-6">
+        <section v-else-if="activeTab === 'badges'" class="space-y-6">
           <div>
             <p class="text-2xs font-bold text-slate-700 uppercase tracking-widest mb-3">
               Semua badge ({{ ALL_BADGE_CODES.length }})
@@ -274,7 +279,7 @@ onMounted(() => {
         </section>
 
         <!-- ─── Peringkat tab ─── -->
-        <section v-else-if="activeTab === 'peringkat'" class="space-y-4">
+        <section v-else-if="activeTab === 'leaderboard'" class="space-y-4">
           <div class="flex flex-wrap items-center gap-3">
             <CohortPillGroup
               v-model="cohort"
@@ -282,12 +287,12 @@ onMounted(() => {
               @update:modelValue="loadLeaderboard"
             />
             <select
-              v-model="periode"
+              v-model="period"
               class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-2xs font-bold text-slate-700"
               @change="loadLeaderboard"
             >
-              <option value="minggu">Minggu ini</option>
-              <option value="bulan">Bulan ini</option>
+              <option value="week">Minggu ini</option>
+              <option value="month">Bulan ini</option>
             </select>
           </div>
 
@@ -311,7 +316,7 @@ onMounted(() => {
               </p>
             </div>
             <div v-else class="space-y-1">
-              <LeaderboardRow v-for="entry in leaderboard.data" :key="entry.teacher_id ?? entry.user_id ?? entry.posisi" :entry="entry" />
+              <LeaderboardRow v-for="entry in leaderboard.data" :key="entry.teacher_id ?? entry.user_id ?? entry.position" :entry="entry" />
             </div>
           </div>
 
@@ -324,13 +329,13 @@ onMounted(() => {
             <button
               type="button"
               class="rounded-xl px-3 py-2 text-xs font-bold transition"
-              :class="personal.sembunyi_dari_peringkat
+              :class="personal.hide_from_leaderboard
                 ? 'bg-slate-800 text-white hover:bg-slate-700'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
               :disabled="savingSetting"
               @click="toggleHide"
             >
-              {{ personal.sembunyi_dari_peringkat ? 'Disembunyikan' : 'Tampil' }}
+              {{ personal.hide_from_leaderboard ? 'Disembunyikan' : 'Tampil' }}
             </button>
           </div>
         </section>

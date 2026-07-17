@@ -1,16 +1,16 @@
 <!--
   MilestoneHintCard.vue — the "Langkah berikutnya" copy at the top
   of the Prestasi hub. Backend can shape this later (endpoint TBD);
-  for now it derives directly from `sumber_terbuka` — count the
+  for now it derives directly from `unlocked_sources` — count the
   locked sources and craft an actionable message.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
-import type { SumberTerbukaEntry } from '@/services/teacher-progress.service';
+import type { UnlockedSourceEntry } from '@/services/teacher-progress.service';
 
 const props = defineProps<{
-  sources: Record<string, SumberTerbukaEntry>;
+  sources: Record<string, UnlockedSourceEntry>;
   currentStreak: number;
 }>();
 

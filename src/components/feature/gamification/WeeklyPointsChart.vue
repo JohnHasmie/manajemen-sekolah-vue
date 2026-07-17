@@ -46,7 +46,7 @@ const areaD = computed(() => {
       class="w-full h-32"
     >
       <defs>
-        <linearGradient id="prestasi-area" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="gamification-area" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.35" />
           <stop offset="100%" stop-color="#3B82F6" stop-opacity="0" />
         </linearGradient>
@@ -63,7 +63,7 @@ const areaD = computed(() => {
         stroke-width="1"
         stroke-dasharray="2 4"
       />
-      <path :d="areaD" fill="url(#prestasi-area)" />
+      <path :d="areaD" fill="url(#gamification-area)" />
       <polyline
         v-if="polylineD"
         :points="polylineD"

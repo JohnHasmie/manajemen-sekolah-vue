@@ -1,13 +1,14 @@
 /**
- * TeacherProgressService — /teacher/prestasi/* endpoint wrapper.
+ * TeacherProgressService — /teacher/gamification/* endpoint wrapper.
  *
- * Mirrors the four endpoints backend MR 5 ships:
- *   GET   /teacher/prestasi/sorotan     one Sorotan Prestasi state
- *   GET   /teacher/prestasi/saya        personal panel (level ring,
- *                                       streak, chart, sumber_terbuka,
- *                                       opt-out state)
- *   GET   /teacher/prestasi/peringkat   cohort-scoped leaderboard
- *   PATCH /teacher/prestasi/setting     toggle hide-from-leaderboard
+ * Mirrors the four endpoints backend MR 5 ships (renamed to English in
+ * the Scope-B rename, backend MR !474):
+ *   GET   /teacher/gamification/highlight    one Highlight state
+ *   GET   /teacher/gamification/me           personal panel (level ring,
+ *                                            streak, chart, unlocked_sources,
+ *                                            opt-out state)
+ *   GET   /teacher/gamification/leaderboard  cohort-scoped leaderboard
+ *   PATCH /teacher/gamification/setting      toggle hide-from-leaderboard
  *
  * All are gated by module:teacher_gamification + can:gamification.view
  * server-side, so a call from a school without the sub will 402 and
@@ -16,16 +17,16 @@
  */
 import { api } from '@/lib/http';
 
-export type SorotanState =
-  | 'badge_baru'
-  | 'naik_level'
+export type HighlightState =
+  | 'new_badge'
+  | 'level_up'
   | 'streak_milestone'
   | 'top_rank'
-  | 'delta_positif'
-  | 'sapaan_awal';
+  | 'positive_delta'
+  | 'welcome';
 
-export interface SorotanPayload {
-  state: SorotanState;
+export interface HighlightPayload {
+  state: HighlightState;
   eyebrow?: string;
   title: string;
   sub?: string;
@@ -39,9 +40,9 @@ export interface SorotanPayload {
   };
 }
 
-export type Cohort = 'guru_baru' | 'guru_mapel' | 'wali_kelas' | 'staf';
+export type Cohort = 'general' | 'subject' | 'homeroom' | 'staff';
 
-export interface SumberTerbukaEntry {
+export interface UnlockedSourceEntry {
   unlocked: boolean;
   reason: string | null;
 }
@@ -64,53 +65,53 @@ export interface PersonalPayload {
   last_active_date: string | null;
   xp_today: number;
   xp_this_week: number;
-  sumber_terbuka: Record<string, SumberTerbukaEntry>;
+  unlocked_sources: Record<string, UnlockedSourceEntry>;
   weekly_chart: { date: string; xp: number }[];
-  sembunyi_dari_peringkat: boolean;
+  hide_from_leaderboard: boolean;
   /** Backend MR 4b — absent = older backend, FE falls back to locked-only. */
   earned_badges?: EarnedBadge[];
 }
 
 export interface LeaderboardEntry {
-  posisi: number;
+  position: number;
   teacher_id: string | null;
   user_id: string | null;
-  nama: string;
-  foto_url: string | null;
-  poin: number;
-  hari_beruntun: number;
+  name: string;
+  photo_url: string | null;
+  points: number;
+  streak_days: number;
   level: number;
-  jumlah_badge: number;
-  kamu: boolean;
+  badge_count: number;
+  you: boolean;
 }
 
 export interface LeaderboardResponse {
   data: LeaderboardEntry[];
   meta: {
-    periode: 'minggu' | 'bulan';
-    kelompok: Cohort;
+    period: 'week' | 'month';
+    cohort: Cohort;
     you: LeaderboardEntry | null;
   };
 }
 
 export interface SettingUpdatePayload {
-  sembunyi_dari_peringkat: boolean;
+  hide_from_leaderboard: boolean;
 }
 
 // ─── Admin ─────────────────────────────────────────────────
 
-export interface AdminSorotanPayload {
-  guru_bulan_ini: {
-    state: 'guru_bulan_ini';
+export interface AdminHighlightPayload {
+  teacher_of_month: {
+    state: 'teacher_of_month';
     eyebrow?: string;
     title: string;
     sub?: string;
     cta_label: string;
     cta_target: string;
-    meta: null | { teacher_id: string; nama: string; poin: number };
+    meta: null | { teacher_id: string; name: string; points: number };
   };
-  perlu_sapaan: {
-    state: 'perlu_sapaan';
+  needs_attention: {
+    state: 'needs_attention';
     count: number;
     eyebrow?: string;
     title: string | null;
@@ -123,29 +124,29 @@ export interface AdminSorotanPayload {
 
 export interface AdminTopEntry {
   teacher_id: string;
-  nama: string;
-  foto_url: string | null;
-  poin: number;
+  name: string;
+  photo_url: string | null;
+  points: number;
 }
 
-export interface AdminRingkasanPayload {
-  total_guru: number;
-  aktif_minggu_ini: number;
-  rata_streak: number;
-  perlu_perhatian: number;
-  top_tiga: AdminTopEntry[];
+export interface AdminSummaryPayload {
+  total_teachers: number;
+  active_this_week: number;
+  average_streak: number;
+  needs_attention_count: number;
+  top_three: AdminTopEntry[];
 }
 
-export type TeacherRowStatus = 'aktif' | 'melambat' | 'sepi' | 'never';
+export type TeacherRowStatus = 'active' | 'slowing' | 'silent' | 'never';
 
 export interface AdminTeacherEngagementRow {
   teacher_id: string;
-  nama: string;
-  foto_url: string | null;
+  name: string;
+  photo_url: string | null;
   level: number;
-  hari_beruntun: number;
-  poin_7_hari: number;
-  terakhir_aktif: string | null;
+  streak_days: number;
+  points_7d: number;
+  last_active_at: string | null;
   status: TeacherRowStatus;
   /** 7-day XP sparkline; always length 7, oldest → newest. */
   sparkline: number[];
@@ -154,63 +155,63 @@ export interface AdminTeacherEngagementRow {
 export interface AdminIndexPayload {
   data: AdminTeacherEngagementRow[];
   meta: {
-    sorotan: AdminSorotanPayload;
-    kpi: AdminRingkasanPayload;
+    highlight: AdminHighlightPayload;
+    kpi: AdminSummaryPayload;
   };
 }
 
-export interface KirimPengingatResponse {
-  terkirim: number;
+export interface SendRemindersResponse {
+  sent: number;
   total_target: number;
 }
 
 export const TeacherProgressService = {
-  async getSorotan(): Promise<SorotanPayload> {
-    const res = await api.get('/teacher/prestasi/sorotan');
-    return (res.data?.data ?? res.data) as SorotanPayload;
+  async getHighlight(): Promise<HighlightPayload> {
+    const res = await api.get('/teacher/gamification/highlight');
+    return (res.data?.data ?? res.data) as HighlightPayload;
   },
 
-  async getPersonal(): Promise<PersonalPayload> {
-    const res = await api.get('/teacher/prestasi/saya');
+  async getMe(): Promise<PersonalPayload> {
+    const res = await api.get('/teacher/gamification/me');
     return (res.data?.data ?? res.data) as PersonalPayload;
   },
 
   async getLeaderboard(params: {
-    periode?: 'minggu' | 'bulan';
-    kelompok?: Cohort;
+    period?: 'week' | 'month';
+    cohort?: Cohort;
   } = {}): Promise<LeaderboardResponse> {
-    const res = await api.get('/teacher/prestasi/peringkat', { params });
+    const res = await api.get('/teacher/gamification/leaderboard', { params });
     // Response envelope on backend controllers is { data: [...], meta: {...} }
     // — pass through as-is because callers want both.
     return res.data as LeaderboardResponse;
   },
 
   async updateSetting(payload: SettingUpdatePayload): Promise<SettingUpdatePayload> {
-    const res = await api.patch('/teacher/prestasi/setting', payload);
+    const res = await api.patch('/teacher/gamification/setting', payload);
     return (res.data?.data ?? res.data) as SettingUpdatePayload;
   },
 
   // ─── Admin ─────────────────────────────────────────────
 
-  async getAdminSorotan(): Promise<AdminSorotanPayload> {
-    const res = await api.get('/admin/prestasi-guru/sorotan');
-    return (res.data?.data ?? res.data) as AdminSorotanPayload;
+  async getAdminHighlight(): Promise<AdminHighlightPayload> {
+    const res = await api.get('/admin/teacher-engagement/highlight');
+    return (res.data?.data ?? res.data) as AdminHighlightPayload;
   },
 
-  async getAdminRingkasan(): Promise<AdminRingkasanPayload> {
-    const res = await api.get('/admin/prestasi-guru/ringkasan');
-    return (res.data?.data ?? res.data) as AdminRingkasanPayload;
+  async getAdminSummary(): Promise<AdminSummaryPayload> {
+    const res = await api.get('/admin/teacher-engagement/summary');
+    return (res.data?.data ?? res.data) as AdminSummaryPayload;
   },
 
   async getAdminIndex(): Promise<AdminIndexPayload> {
-    const res = await api.get('/admin/prestasi-guru');
+    const res = await api.get('/admin/teacher-engagement');
     return res.data as AdminIndexPayload;
   },
 
-  async kirimPengingat(teacherIds: string[]): Promise<KirimPengingatResponse> {
-    const res = await api.post('/admin/prestasi-guru/kirim-pengingat', {
+  async sendReminders(teacherIds: string[]): Promise<SendRemindersResponse> {
+    const res = await api.post('/admin/teacher-engagement/send-reminders', {
       teacher_ids: teacherIds,
     });
-    return (res.data?.data ?? res.data) as KirimPengingatResponse;
+    return (res.data?.data ?? res.data) as SendRemindersResponse;
   },
 };

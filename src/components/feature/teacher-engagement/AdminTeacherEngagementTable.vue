@@ -1,10 +1,10 @@
 <!--
   AdminTeacherEngagementTable.vue — the main table on the admin
-  Prestasi page. One row per teacher, with a status dot, level chip,
-  streak, 7-day poin, sparkline, and last-active date.
+  teacher engagement page. One row per teacher, with a status dot,
+  level chip, streak, 7-day points, sparkline, and last-active date.
 
   Sort + search are host-driven; the table just renders the rows it
-  gets. Kepsek can click a row to see the teacher's own Prestasi
+  gets. Kepsek can click a row to see the teacher's own gamification
   view (deferred to MR 7b — for now the row is display-only).
 -->
 <script setup lang="ts">
@@ -14,7 +14,7 @@ import type { AdminTeacherEngagementRow, TeacherRowStatus } from '@/services/tea
 
 const props = defineProps<{
   rows: AdminTeacherEngagementRow[];
-  /** Optional filter — hosted search box. Case-insensitive substring on nama. */
+  /** Optional filter — hosted search box. Case-insensitive substring on name. */
   search?: string;
   /** Optional status filter. Empty = show all. */
   statusFilter?: TeacherRowStatus | '';
@@ -28,15 +28,15 @@ const filtered = computed(() => {
   const q = (props.search ?? '').trim().toLowerCase();
   return props.rows.filter((r) => {
     if (props.statusFilter && r.status !== props.statusFilter) return false;
-    if (q && !r.nama.toLowerCase().includes(q)) return false;
+    if (q && !r.name.toLowerCase().includes(q)) return false;
     return true;
   });
 });
 
 const STATUS_META: Record<TeacherRowStatus, { dot: string; label: string; tone: string }> = {
-  aktif: { dot: 'bg-emerald-500', label: 'Aktif', tone: 'text-emerald-700 bg-emerald-50' },
-  melambat: { dot: 'bg-amber-500', label: 'Melambat', tone: 'text-amber-700 bg-amber-50' },
-  sepi: { dot: 'bg-red-500', label: 'Sepi', tone: 'text-red-700 bg-red-50' },
+  active: { dot: 'bg-emerald-500', label: 'Aktif', tone: 'text-emerald-700 bg-emerald-50' },
+  slowing: { dot: 'bg-amber-500', label: 'Melambat', tone: 'text-amber-700 bg-amber-50' },
+  silent: { dot: 'bg-red-500', label: 'Sepi', tone: 'text-red-700 bg-red-50' },
   never: { dot: 'bg-slate-300', label: 'Belum aktif', tone: 'text-slate-500 bg-slate-100' },
 };
 
@@ -81,18 +81,18 @@ function daysAgo(dateStr: string | null): string {
             class="border-t border-slate-100 hover:bg-slate-50 cursor-pointer"
             @click="emit('select', row)"
           >
-            <!-- Guru cell (avatar + nama + status dot on mobile) -->
+            <!-- Guru cell (avatar + name + status dot on mobile) -->
             <td class="px-4 py-3">
               <div class="flex items-center gap-2 min-w-0">
                 <div
                   class="w-8 h-8 rounded-full flex-shrink-0 grid place-items-center overflow-hidden"
-                  :class="row.foto_url ? 'bg-slate-100' : 'bg-brand-cobalt/10 text-brand-cobalt text-3xs font-black'"
+                  :class="row.photo_url ? 'bg-slate-100' : 'bg-brand-cobalt/10 text-brand-cobalt text-3xs font-black'"
                 >
-                  <img v-if="row.foto_url" :src="row.foto_url" :alt="row.nama" class="w-full h-full object-cover" />
-                  <span v-else>{{ initials(row.nama) }}</span>
+                  <img v-if="row.photo_url" :src="row.photo_url" :alt="row.name" class="w-full h-full object-cover" />
+                  <span v-else>{{ initials(row.name) }}</span>
                 </div>
                 <div class="min-w-0">
-                  <p class="text-2xs font-bold text-slate-900 truncate">{{ row.nama }}</p>
+                  <p class="text-2xs font-bold text-slate-900 truncate">{{ row.name }}</p>
                   <p class="text-3xs text-slate-500 sm:hidden flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full" :class="STATUS_META[row.status].dot"></span>
                     {{ STATUS_META[row.status].label }}
@@ -113,16 +113,16 @@ function daysAgo(dateStr: string | null): string {
             <!-- Level -->
             <td class="px-2 py-3 text-right font-black text-slate-800">L{{ row.level }}</td>
             <!-- Streak -->
-            <td class="px-2 py-3 text-right font-bold text-slate-800">{{ row.hari_beruntun }}h</td>
+            <td class="px-2 py-3 text-right font-bold text-slate-800">{{ row.streak_days }}h</td>
             <!-- 7 hari poin -->
-            <td class="px-2 py-3 text-right font-black text-slate-800">{{ row.poin_7_hari }}</td>
+            <td class="px-2 py-3 text-right font-black text-slate-800">{{ row.points_7d }}</td>
             <!-- Sparkline -->
             <td class="px-4 py-3 hidden md:table-cell">
               <SparklineTinyBar :points="row.sparkline" />
             </td>
             <!-- Last active -->
             <td class="px-4 py-3 text-right text-slate-500 hidden lg:table-cell">
-              {{ daysAgo(row.terakhir_aktif) }}
+              {{ daysAgo(row.last_active_at) }}
             </td>
           </tr>
         </tbody>

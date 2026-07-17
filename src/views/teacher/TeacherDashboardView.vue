@@ -35,10 +35,10 @@ import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
 import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
 import WelcomeBanner from '@/components/ui/WelcomeBanner.vue';
-import SorotanPrestasiCard from '@/components/feature/prestasi/SorotanPrestasiCard.vue';
+import GamificationHighlightCard from '@/components/feature/gamification/GamificationHighlightCard.vue';
 import {
   TeacherProgressService,
-  type SorotanPayload,
+  type HighlightPayload,
 } from '@/services/teacher-progress.service';
 import { useMe } from '@/composables/useMe';
 import PinnedAnnouncementCarousel from '@/components/feature/PinnedAnnouncementCarousel.vue';
@@ -72,23 +72,23 @@ const inbox = ref<InboxResponse>({ items: [], counts: {} });
 const state = ref<AsyncState<StatsPayload>>({ status: 'loading' });
 const lastSync = ref(new Date());
 
-// Sorotan Prestasi hero — hidden entirely when the school hasn't
-// subscribed to teacher_gamification (ability is stripped
+// Gamification highlight hero — hidden entirely when the school
+// hasn't subscribed to teacher_gamification (ability is stripped
 // server-side, so `meApi.can` returns false). Fetched lazily and
-// silently — a 402/403 leaves `sorotan` null and the section is
+// silently — a 402/403 leaves `highlight` null and the section is
 // skipped by the v-if, so no error surface bleeds into the
 // dashboard.
-const sorotan = ref<SorotanPayload | null>(null);
+const highlight = ref<HighlightPayload | null>(null);
 const canSeePrestasi = computed(() => meApi.can('gamification.view'));
 
-async function loadSorotan() {
+async function loadHighlight() {
   if (!canSeePrestasi.value) return;
   try {
-    sorotan.value = await TeacherProgressService.getSorotan();
+    highlight.value = await TeacherProgressService.getHighlight();
   } catch {
     // Silent — a school losing the sub mid-session should not
     // interrupt the rest of the dashboard.
-    sorotan.value = null;
+    highlight.value = null;
   }
 }
 
@@ -378,7 +378,7 @@ async function loadAttendanceStatus() {
 onMounted(() => {
   load();
   startSlices();
-  void loadSorotan();
+  void loadHighlight();
 });
 
 onUnmounted(stopSlices);
@@ -642,23 +642,23 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
           <template #main>
           <div class="space-y-6">
 
-          <!-- Sorotan Prestasi — first thing the teacher sees when
+          <!-- Gamification highlight — first thing the teacher sees when
                they've subscribed to the module. The card picks its
-               own state (badge_baru, naik_level, ...) from the
+               own state (new_badge, level_up, ...) from the
                endpoint so the highlight rotates day-to-day. Skipped
                entirely when the ability is absent (school off the
                sub) or the fetch failed (silent). -->
-          <SorotanPrestasiCard
-            v-if="canSeePrestasi && sorotan"
-            :state="sorotan.state"
-            :eyebrow="sorotan.eyebrow"
-            :title="sorotan.title"
-            :sub="sorotan.sub"
-            :mini-badge="sorotan.mini_badge"
-            :cta-label="sorotan.cta_label"
-            :cta-target="sorotan.cta_target"
-            :meta="sorotan.meta"
-            @cta="router.push(sorotan.cta_target)"
+          <GamificationHighlightCard
+            v-if="canSeePrestasi && highlight"
+            :state="highlight.state"
+            :eyebrow="highlight.eyebrow"
+            :title="highlight.title"
+            :sub="highlight.sub"
+            :mini-badge="highlight.mini_badge"
+            :cta-label="highlight.cta_label"
+            :cta-target="highlight.cta_target"
+            :meta="highlight.meta"
+            @cta="router.push(highlight.cta_target)"
           />
 
           <!-- 3. Schedule hari ini (real schedule strip) -->

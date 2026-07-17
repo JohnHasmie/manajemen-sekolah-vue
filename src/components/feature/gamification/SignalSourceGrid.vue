@@ -12,10 +12,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
-import type { SumberTerbukaEntry } from '@/services/teacher-progress.service';
+import type { UnlockedSourceEntry } from '@/services/teacher-progress.service';
 
 const props = defineProps<{
-  sources: Record<string, SumberTerbukaEntry>;
+  sources: Record<string, UnlockedSourceEntry>;
 }>();
 
 // Static copy for each source — matches config('gamification.labels')
