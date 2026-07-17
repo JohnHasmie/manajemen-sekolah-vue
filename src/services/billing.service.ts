@@ -708,10 +708,23 @@ export const SubscriptionBillingService = {
   /**
    * GET /billing/modules/catalog — the sellable module list + bundles
    * + core prefixes. Feeds the subscribe wizard's module picker.
+   *
+   * `tenantType` is an optional hint for the wizard/signup flow, where
+   * no tenant row exists yet so the server can't infer scope from the
+   * X-Tenant-ID header. When the caller is already scoped to a tenant
+   * (embedded /admin/settings/modules, ManageModulesView), leaving it
+   * omitted lets the server auto-detect the scope from the header. The
+   * server strips bimbel-only modules for sekolah callers and vice
+   * versa — root-cause fix for MTs Muhammadiyah seeing "Manajemen Sesi
+   * & Peserta" in its own picker.
    */
-  async getModuleCatalog(): Promise<ModuleCatalog> {
+  async getModuleCatalog(
+    opts: { tenantType?: 'school' | 'tutoring' | 'sekolah' | 'bimbel' | 'all' } = {},
+  ): Promise<ModuleCatalog> {
     try {
-      const res = await api.get('/billing/modules/catalog');
+      const res = await api.get('/billing/modules/catalog', {
+        params: opts.tenantType ? { tenant_type: opts.tenantType } : {},
+      });
       const body = res.data?.data ?? res.data;
       return body as ModuleCatalog;
     } catch (e) {

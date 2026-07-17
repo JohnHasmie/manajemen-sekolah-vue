@@ -7,12 +7,22 @@
  *   DELETE /billing/admin/tenants/{schoolId}/modules/{moduleKey}?at_period_end=…
  */
 
+import type { ModuleTenantScope } from './subscription-billing';
+
 /** One row per OPTIONAL module in the catalog + whether this tenant holds it. */
 export interface AdminTenantModuleRow {
   module_key: string;
   label: string;
   group: string;
   entitled: boolean;
+  /**
+   * Tenant scope the module is filtered against on the server (see BE
+   * `fix/billing-module-catalog-tenant-scope`). Sekolah-only modules
+   * like `grades` report `tenant_scope: 'school'`; bimbel-only ones
+   * like `tutoring` report `'bimbel'`; shared ones report `'all'`.
+   * Optional so an older server response still deserialises.
+   */
+  tenant_scope?: ModuleTenantScope;
   /**
    * Where the entitlement comes from — only set when `entitled=true`.
    * An individual `subscription_modules` row wins over a bundle, so a

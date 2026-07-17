@@ -259,6 +259,17 @@ export interface SeatHardCapError {
  * `bundles` = preset bundles (Complete, Tutoring, AI) with flat rates.
  * `core_prefixes` = always-on permission prefixes (informational).
  */
+/**
+ * `tenant_scope` tells the client whether a module / bundle is meant
+ * for a sekolah tenant, a bimbel tenant, or both. The server (see BE
+ * `fix/billing-module-catalog-tenant-scope`) already strips out-of-scope
+ * rows so a sekolah admin never receives `tutoring` /
+ * `bundle_tutoring` — this field is a diagnostic + belt-and-suspenders
+ * label the picker can render as an outline pill on cross-tenant views
+ * (super-admin catalog browse without a tenant picked).
+ */
+export type ModuleTenantScope = 'all' | 'school' | 'bimbel';
+
 export interface ModuleCatalogItem {
   key: string;
   label: string;
@@ -269,6 +280,8 @@ export interface ModuleCatalogItem {
   pricing_seat: 'student' | 'staff';
   requires: string[];
   is_ai: boolean;
+  /** Optional — server only started shipping this Jul 2026. */
+  tenant_scope?: ModuleTenantScope;
 }
 
 export interface BundleCatalogItem {
@@ -277,12 +290,20 @@ export interface BundleCatalogItem {
   members: string[];
   price_per_student: number;
   price_per_staff: number;
+  /** Optional — server only started shipping this Jul 2026. */
+  tenant_scope?: ModuleTenantScope;
 }
 
 export interface ModuleCatalog {
   optional: Record<string, ModuleCatalogItem>;
   bundles: Record<string, BundleCatalogItem>;
   core_prefixes: string[];
+  /**
+   * Effective tenant scope the server applied to this response. Echoed
+   * so the client can label the picker or debug an unexpected filter.
+   * Optional for backwards-compat with older servers.
+   */
+  tenant_scope?: ModuleTenantScope;
 }
 
 /** Modular quote breakdown (POST /billing/quote with `modules[]`). */
