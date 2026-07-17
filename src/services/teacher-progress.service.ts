@@ -46,6 +46,13 @@ export interface SumberTerbukaEntry {
   reason: string | null;
 }
 
+export interface EarnedBadge {
+  code: string;
+  awarded_at: string | null;
+  is_new: boolean;
+  meta: Record<string, unknown> | null;
+}
+
 export interface PersonalPayload {
   total_xp: number;
   level: number;
@@ -60,6 +67,8 @@ export interface PersonalPayload {
   sumber_terbuka: Record<string, SumberTerbukaEntry>;
   weekly_chart: { date: string; xp: number }[];
   sembunyi_dari_peringkat: boolean;
+  /** Backend MR 4b — absent = older backend, FE falls back to locked-only. */
+  earned_badges?: EarnedBadge[];
 }
 
 export interface LeaderboardEntry {

@@ -34,6 +34,7 @@ const CATALOG: Record<string, { label: string; description: string; icon: string
   lima_puluh_koreksi: { label: '50 Koreksi', description: '50 tugas murid kamu koreksi dalam sebulan.', icon: 'check-circle' },
   level_5: { label: 'Level 5 Tercapai', description: 'Kamu mencapai Level 5 — Guru Bergerak.', icon: 'medal' },
   level_10: { label: 'Level 10 Tercapai', description: 'Kamu mencapai Level 10 — Guru Teladan.', icon: 'medal' },
+  wali_tuntas: { label: 'Wali Tuntas', description: 'Semua murid wali kelas punya ≥1 nilai bulan ini.', icon: 'users' },
 };
 
 const meta = computed(() => CATALOG[props.code] ?? { label: props.code, description: '', icon: 'trophy' });

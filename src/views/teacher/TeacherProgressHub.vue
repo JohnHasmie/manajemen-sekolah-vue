@@ -60,6 +60,7 @@ const ALL_BADGE_CODES: string[] = [
   'lima_puluh_koreksi',
   'level_5',
   'level_10',
+  'wali_tuntas',
 ];
 
 async function loadPersonal() {
@@ -102,16 +103,22 @@ async function toggleHide() {
   }
 }
 
-// earned badges = anything the backend has awarded. For MR 6 we
-// don't have a dedicated /badges endpoint — the presence of a
-// specific badge in the payload's metadata is not there yet either.
-// Simplest usable version: all locked, until MR 6b wires the
-// endpoint. FE renders the full catalog with locked state and the
-// backend adds the "earned" flag in a follow-up. This is honest —
-// showing anything as earned without server data would fabricate
-// state.
-function badgeState(_code: string): 'earned' | 'new' | 'locked' {
-  return 'locked';
+// earned badges — sourced from personal.earned_badges (backend MR 4b).
+// Absent key → all locked (older backends). Same catalog + rendering,
+// just gains the earned/new colouring when the backend delivers.
+const earnedByCode = computed<Record<string, { is_new: boolean }>>(() => {
+  const list = personal.value?.earned_badges ?? [];
+  const out: Record<string, { is_new: boolean }> = {};
+  for (const b of list) {
+    out[b.code] = { is_new: b.is_new };
+  }
+  return out;
+});
+
+function badgeState(code: string): 'earned' | 'new' | 'locked' {
+  const hit = earnedByCode.value[code];
+  if (!hit) return 'locked';
+  return hit.is_new ? 'new' : 'earned';
 }
 
 // Choose which cohorts to show in the switcher — hide staf option
@@ -236,7 +243,7 @@ onMounted(() => {
               />
             </div>
             <p class="text-2xs text-slate-500 mt-4">
-              Daftar badge yang kamu peroleh akan muncul di sini dengan warna aktif.
+              Badge terkunci akan tampil aktif begitu kamu memenuhi syaratnya. Yang bertanda "Baru!" adalah pencapaian dalam 48 jam terakhir.
             </p>
           </div>
         </section>
