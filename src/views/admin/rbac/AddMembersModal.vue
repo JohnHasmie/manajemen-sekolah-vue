@@ -41,7 +41,21 @@ const {
   pickerSelected,
   pickerLoading,
   pickerTotal,
+  pickerPage,
+  pickerLastPage,
 } = storeToRefs(rbac);
+
+// Whether we've rendered the tail — used to hide the "Muat lebih banyak"
+// button once the last page has been fetched. Fla report 2026-07-17:
+// modal said "255 USER" total but only page-1 (~20 rows) was scrollable
+// because the picker had no pagination affordance.
+const hasMore = computed(
+  () => pickerPage.value < pickerLastPage.value && !pickerLoading.value,
+);
+
+function loadMore() {
+  void rbac.loadMorePicker(props.schoolId, props.roleId);
+}
 
 // "+ Tambah staf baru" shortcut — jumps to Data Staf's create form with this
 // role pre-selected, for people who aren't in the system yet. Only shown to
@@ -199,6 +213,20 @@ const canSubmit = computed(() => pickerSelected.value.length > 0);
               :selected="pickerSelected.some((s) => s.user_id === u.user_id)"
               @toggle="rbac.togglePickerSelection(u)"
             />
+          </li>
+          <li v-if="hasMore" class="amm__load-more-wrap">
+            <button
+              type="button"
+              class="amm__load-more"
+              :disabled="pickerLoading"
+              @click="loadMore"
+            >
+              Muat lebih banyak
+              <span class="amm__load-more-count">({{ pickerResults.length }} / {{ pickerTotal }})</span>
+            </button>
+          </li>
+          <li v-else-if="pickerLoading" class="amm__load-more-wrap amm__load-more-wrap--busy">
+            Memuat…
           </li>
         </ul>
         <div v-else class="amm__empty">Tidak ada user yang cocok.</div>
@@ -417,6 +445,41 @@ const canSubmit = computed(() => pickerSelected.value.length > 0);
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+.amm__load-more-wrap {
+  padding: 8px 0 4px;
+  display: flex;
+  justify-content: center;
+}
+.amm__load-more-wrap--busy {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+.amm__load-more {
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.amm__load-more:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+.amm__load-more:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.amm__load-more-count {
+  color: #94a3b8;
+  font-weight: 500;
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
 }
 .amm__foot {
   display: grid;
