@@ -54,6 +54,15 @@ export const useRbacStore = defineStore('rbac', () => {
   const pickerSelected = ref<RbacMemberSummary[]>([]);
   const pickerLoading = ref(false);
   const pickerTotal = ref(0);
+  /** Page currently rendered in `pickerResults`. `runPickerSearch` resets
+   * to page 1; `loadMorePicker` appends the next page in place. */
+  const pickerPage = ref(1);
+  const pickerLastPage = ref(1);
+  /** Server-clamped per-page (max 50 backend-side; we ask for 50 to
+   * halve round-trips vs the old default of 20). Fla flagged 2026-07-17
+   * that the modal showed "255 USER" total but only ~21 rows scrollable
+   * because the picker rendered page 1 and had no way to walk the tail. */
+  const PICKER_PER_PAGE = 50;
   let pickerSearchSeq = 0;
   let pickerDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -298,13 +307,50 @@ export const useRbacStore = defineStore('rbac', () => {
   ): Promise<void> {
     const mySeq = ++pickerSearchSeq;
     pickerLoading.value = true;
+    pickerPage.value = 1;
     try {
       const page = await RbacService.searchMembers(schoolId, {
         search: pickerQuery.value,
         exclude_role_id: roleId,
+        page: 1,
+        per_page: PICKER_PER_PAGE,
       });
       if (mySeq !== pickerSearchSeq) return; // newer query in flight
       pickerResults.value = page.data;
+      pickerTotal.value = page.total;
+      pickerLastPage.value = page.last_page;
+    } finally {
+      if (mySeq === pickerSearchSeq) pickerLoading.value = false;
+    }
+  }
+
+  /**
+   * Fetch the next page and APPEND it to `pickerResults` (in-place —
+   * doesn't reset selection or scroll position). Guarded so a rapid
+   * click on the "Muat lebih banyak" button can't fire two overlapping
+   * requests. No-op when we're already on the last page or when a
+   * search-reset is in flight (that would clobber our page number).
+   */
+  async function loadMorePicker(
+    schoolId: string,
+    roleId: number,
+  ): Promise<void> {
+    if (pickerLoading.value) return;
+    if (pickerPage.value >= pickerLastPage.value) return;
+    const mySeq = pickerSearchSeq; // do NOT bump — this is an append, not a reset
+    const nextPage = pickerPage.value + 1;
+    pickerLoading.value = true;
+    try {
+      const page = await RbacService.searchMembers(schoolId, {
+        search: pickerQuery.value,
+        exclude_role_id: roleId,
+        page: nextPage,
+        per_page: PICKER_PER_PAGE,
+      });
+      if (mySeq !== pickerSearchSeq) return; // a fresh search started meanwhile
+      pickerResults.value = [...pickerResults.value, ...page.data];
+      pickerPage.value = page.current_page;
+      pickerLastPage.value = page.last_page;
       pickerTotal.value = page.total;
     } finally {
       if (mySeq === pickerSearchSeq) pickerLoading.value = false;
@@ -330,6 +376,8 @@ export const useRbacStore = defineStore('rbac', () => {
     pickerResults.value = [];
     pickerSelected.value = [];
     pickerTotal.value = 0;
+    pickerPage.value = 1;
+    pickerLastPage.value = 1;
   }
 
   async function submitPicker(
@@ -387,6 +435,8 @@ export const useRbacStore = defineStore('rbac', () => {
     pickerSelected,
     pickerLoading,
     pickerTotal,
+    pickerPage,
+    pickerLastPage,
     // derived
     filteredRoles,
     systemRoles,
@@ -412,6 +462,8 @@ export const useRbacStore = defineStore('rbac', () => {
     setMemberSearch,
     removeMember,
     setPickerQuery,
+    runPickerSearch,
+    loadMorePicker,
     togglePickerSelection,
     unselectPicker,
     resetPicker,
