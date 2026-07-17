@@ -146,7 +146,7 @@ onMounted(() => {
       meta="Lacak level, streak, badge, dan peringkat kamu."
     />
 
-    <div class="px-4 sm:px-6 -mt-6 relative z-10 space-y-6 max-w-4xl mx-auto">
+    <div class="px-4 sm:px-6 pt-6 relative z-10 space-y-6 max-w-4xl mx-auto">
       <!-- Empty / error state — full-width warm card. -->
       <div
         v-if="personalError"
@@ -157,16 +157,21 @@ onMounted(() => {
       </div>
 
       <template v-else-if="personal">
-        <!-- Tab strip -->
-        <div class="inline-flex bg-slate-100 rounded-xl p-1">
+        <!-- Tab strip — sits cleanly in the content area below the
+             brand header (previous `-mt-6` yanked it up into the
+             header's rounded bottom edge, producing a "colliding"
+             half-in / half-out visual on prod). Full-width pill row
+             so the tabs feel like a proper page control instead of
+             a floating chip. -->
+        <div class="flex bg-slate-100 rounded-xl p-1 w-full sm:w-auto sm:inline-flex">
           <button
             v-for="tab in ['ringkasan', 'badge', 'peringkat'] as Tab[]"
             :key="tab"
             type="button"
-            class="px-4 py-2 rounded-lg text-sm font-bold capitalize transition"
+            class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold capitalize transition"
             :class="activeTab === tab
               ? 'bg-white text-brand-cobalt shadow-sm'
-              : 'text-slate-600'"
+              : 'text-slate-600 hover:text-slate-800'"
             @click="switchTab(tab)"
           >
             {{ tab }}
