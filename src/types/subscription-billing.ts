@@ -329,6 +329,18 @@ export interface MySubscription {
    * they never render for a real, paying tenant.
    */
   is_demo: boolean;
+  /**
+   * Full monthly bill (before any applied discount) and the actual
+   * amount the tenant pays this cycle. Populated on !463+ backends —
+   * kept optional so a pre-fix backend response still validates.
+   */
+  monthly_amount?: number;
+  amount?: number;
+  /**
+   * Applied-discount snapshot; null when no code was in play. Absent
+   * on pre-!463 backends — treat missing as null.
+   */
+  applied_discount?: AppliedDiscountSnapshot | null;
 }
 
 /**
@@ -357,6 +369,27 @@ export interface MyModuleRow {
   monthly_amount: number;
 }
 
+/**
+ * Snapshot of the discount code applied at checkout — travels with the
+ * subscription so the "LANGGANAN ANDA" tile and "Tagihan bulan ini"
+ * summary can render a strike-through price + a "50% off · MTSMUHSKA ·
+ * 3 bln" badge. `code`/`description`/`type`/`value`/`duration_months`
+ * are nullable defensively: an admin who hard-deletes a discount code
+ * still leaves a redeemed subscription with `discount_amount` populated
+ * (the FK is loose so subs don't cascade), and we surface that as a
+ * discount object with just the Rp reduction rather than dropping the
+ * badge silently.
+ */
+export interface AppliedDiscountSnapshot {
+  code: string | null;
+  description: string | null;
+  type: 'percent' | 'nominal' | string | null;
+  value: number | null;
+  duration_months: number | null;
+  valid_until: string | null;
+  discount_amount: number;
+}
+
 export interface MyModulesSubscription {
   id: string;
   plan: BillingPeriod;
@@ -367,6 +400,24 @@ export interface MyModulesSubscription {
   staff_count: number;
   days_remaining: number;
   currency: string;
+  /**
+   * Full pre-discount monthly bill (sum of per-module unit_price ×
+   * seats). Server-computed; matches what the tenant would pay if no
+   * code was applied. Absent on pre-!463 backends — treat missing as
+   * fall-through to summing individual module rows.
+   */
+  monthly_amount?: number;
+  /**
+   * Actual amount the tenant pays after `applied_discount` is
+   * applied. When no code was applied, equals `monthly_amount`. Absent
+   * on pre-!463 backends.
+   */
+  amount?: number;
+  /**
+   * Discount code snapshot when active; null when no code was applied.
+   * Absent on pre-!463 backends — treat missing as null.
+   */
+  applied_discount?: AppliedDiscountSnapshot | null;
 }
 
 export interface MyModules {

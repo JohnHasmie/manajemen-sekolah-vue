@@ -576,6 +576,37 @@ export function shareTokenFromUrl(url: string | null | undefined): string | null
 }
 
 function parseMySubscription(raw: any): MySubscription {
+  // Pricing snapshot lives on the nested `subscription` object; the
+  // topbar/tile parsers read from BOTH the flat contract fields and
+  // the nested detail. Prefer the nested object for the money since
+  // that's where BillingController::mySubscription() emits monthly +
+  // amount + applied_discount together.
+  const nested = raw?.subscription ?? {};
+  const monthlyAmount =
+    typeof nested.monthly_amount === 'number' ? nested.monthly_amount : undefined;
+  const amount = typeof nested.amount === 'number' ? nested.amount : undefined;
+  const appliedDiscount =
+    nested.applied_discount && typeof nested.applied_discount === 'object'
+      ? {
+          code: nested.applied_discount.code ?? null,
+          description: nested.applied_discount.description ?? null,
+          type: nested.applied_discount.type ?? null,
+          value:
+            typeof nested.applied_discount.value === 'number'
+              ? nested.applied_discount.value
+              : null,
+          duration_months:
+            typeof nested.applied_discount.duration_months === 'number'
+              ? nested.applied_discount.duration_months
+              : null,
+          valid_until: nested.applied_discount.valid_until ?? null,
+          discount_amount:
+            typeof nested.applied_discount.discount_amount === 'number'
+              ? nested.applied_discount.discount_amount
+              : 0,
+        }
+      : null;
+
   return {
     has_subscription: Boolean(raw?.has_subscription),
     is_active: Boolean(raw?.is_active),
@@ -587,6 +618,9 @@ function parseMySubscription(raw: any): MySubscription {
     expires_at: raw?.expires_at ?? null,
     tenant_id: raw?.tenant_id ?? null,
     is_demo: Boolean(raw?.is_demo),
+    monthly_amount: monthlyAmount,
+    amount,
+    applied_discount: appliedDiscount,
   };
 }
 

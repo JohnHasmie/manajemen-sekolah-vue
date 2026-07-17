@@ -128,13 +128,77 @@ const availableCatalog = computed(() => {
     .map(([key, item]) => ({ key, item }));
 });
 
-const monthlyThisPeriod = computed<number>(() =>
+/**
+ * Sum of per-module `monthly_amount` for THIS period — the pre-discount
+ * total. Displayed as the strike-through when a discount is active, and
+ * as the plain price otherwise.
+ */
+const monthlyThisPeriodGross = computed<number>(() =>
   mine.value.modules.reduce((sum, r) => sum + r.monthly_amount, 0),
 );
+
+/**
+ * The actual amount billed this period — prefer the server-computed
+ * `subscription.amount` (discount-aware) over summing rows. Falls back
+ * to the row sum on pre-!463 backends that don't ship `amount`.
+ */
+const monthlyThisPeriod = computed<number>(() => {
+  const serverAmount = sub.value?.amount;
+  if (typeof serverAmount === 'number') return serverAmount;
+  return monthlyThisPeriodGross.value;
+});
 
 const monthlyNextPeriod = computed<number>(() =>
   activeRows.value.reduce((sum, r) => sum + r.monthly_amount, 0),
 );
+
+/**
+ * Applied-discount snapshot the server sends. Null when no code was
+ * applied at checkout — the "Tagihan bulan ini" card falls back to the
+ * plain total in that case.
+ */
+const appliedDiscount = computed(
+  () => sub.value?.applied_discount ?? null,
+);
+
+/**
+ * Show the strike-through pre-discount price only when a discount is
+ * active AND the gross total is strictly greater than what's billed.
+ */
+const showDiscountStrike = computed<boolean>(
+  () => appliedDiscount.value !== null
+    && monthlyThisPeriodGross.value > monthlyThisPeriod.value,
+);
+
+const discountBadgeLabel = computed<string>(() => {
+  const d = appliedDiscount.value;
+  if (!d) return '';
+  if (d.type === 'percent' && typeof d.value === 'number' && d.value > 0) {
+    return `Diskon ${d.value}%${d.code ? ` · ${d.code}` : ''}`;
+  }
+  if (d.discount_amount > 0) {
+    return `Hemat ${money(d.discount_amount)}/bln${d.code ? ` · ${d.code}` : ''}`;
+  }
+  return d.code ?? '';
+});
+
+const discountDurationLabel = computed<string>(() => {
+  const d = appliedDiscount.value;
+  if (!d) return '';
+  const bits: string[] = [];
+  if (typeof d.duration_months === 'number' && d.duration_months > 0) {
+    bits.push(`${d.duration_months} bulan`);
+  }
+  if (d.valid_until) {
+    const when = new Date(d.valid_until);
+    if (!isNaN(when.getTime())) {
+      bits.push(
+        `s/d ${when.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`,
+      );
+    }
+  }
+  return bits.join(' · ');
+});
 
 const monthlyDelta = computed<number>(
   () => monthlyNextPeriod.value - monthlyThisPeriod.value,
@@ -630,6 +694,23 @@ function formatDate(iso: string | null | undefined): string {
           <div class="side-card">
             <div class="side-kicker">Tagihan bulan ini</div>
             <div class="side-total">{{ money(monthlyThisPeriod) }}</div>
+            <!-- Strike-through pre-discount total + discount badge when
+                 an applied code is in play. Only rendered when the gross
+                 total is strictly greater than the billed amount so we
+                 don't strike through a number equal to itself. -->
+            <div v-if="showDiscountStrike" class="side-strike">
+              {{ money(monthlyThisPeriodGross) }}
+            </div>
+            <div v-if="appliedDiscount" class="side-discount">
+              <span class="side-discount-tag">
+                <i class="ti ti-sparkles" aria-hidden="true" />
+                {{ discountBadgeLabel }}
+              </span>
+              <span
+                v-if="discountDurationLabel"
+                class="side-discount-meta"
+              >{{ discountDurationLabel }}</span>
+            </div>
             <div class="side-total-sub">
               {{ mine.modules.length }} modul aktif · sudah dibayar {{ startsDate }}
             </div>
@@ -1041,6 +1122,39 @@ function formatDate(iso: string | null | undefined): string {
   font-size: 11px; color: #64748B;
   margin-top: 4px;
   line-height: 1.4;
+}
+/* Discount strike-through of the pre-discount monthly total. Kept
+   quiet (muted grey) so it doesn't compete with `.side-total`. */
+.side-strike {
+  font-size: 12px;
+  color: #94A3B8;
+  font-weight: 500;
+  text-decoration: line-through;
+  text-decoration-color: rgba(148, 163, 184, 0.7);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+/* Discount ribbon under the total — emerald so it echoes the
+   savings language elsewhere in this view (quote box + BundleStrip). */
+.side-discount {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #ECFDF5;
+  border: 0.5px solid #A7F3D0;
+  color: #065F46;
+  font-size: 11px;
+  line-height: 1.4;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.side-discount-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+}
+.side-discount-meta {
+  color: #047857;
+  font-weight: 500;
 }
 .side-preview { background: #F0F7FF; border-color: transparent; }
 .side-preview .side-total { font-size: 20px; }
