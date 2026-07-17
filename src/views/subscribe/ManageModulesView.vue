@@ -381,16 +381,27 @@ async function doAdd(): Promise<void> {
       module_key: confirmKey.value,
     });
     // Backend returns a share_url that ends in /subscribe/addon/transfer/{token}.
-    // Send the caller to the transfer confirmation page — same pattern as
-    // the seat top-up flow.
+    // Push the caller to the transfer confirmation page carrying the
+    // AddonCreated payload via history.state — the destination view
+    // reads it immediately without re-fetching (no public token
+    // endpoint exists yet). Same pattern as the seat top-up flow.
     const token = shareTokenFromShareUrl(created.share_url);
     if (token) {
-      router.push(`/subscribe/addon/transfer/${token}`);
+      // Close the confirm modal FIRST so the transition doesn't leave
+      // a dangling backdrop. confirmBusy must be cleared before
+      // closeModal (its guard blocks the close otherwise).
+      confirmBusy.value = false;
+      closeModal();
+      await router.push({
+        path: `/subscribe/addon/transfer/${token}`,
+        // Router 4 forwards the state option through history.state so
+        // the destination view can read `window.history.state.addon`.
+        state: { addon: created as unknown as Record<string, unknown> },
+      });
       return;
     }
     // Fallback: reload the module list; the pending addon shows up in
-    // ManageModulesView after admin approval anyway. Clear confirmBusy
-    // before closeModal() (its guard blocks the close otherwise).
+    // ManageModulesView after admin approval anyway.
     confirmBusy.value = false;
     closeModal();
     void loadAll();

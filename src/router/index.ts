@@ -202,6 +202,8 @@ const SubscribeNewWizardView = () =>
   import('@/views/subscribe/SubscribeNewWizardView.vue');
 const SubscribeAddonView = () =>
   import('@/views/subscribe/SubscribeAddonView.vue');
+const SubscribeAddonTransferView = () =>
+  import('@/views/subscribe/SubscribeAddonTransferView.vue');
 const ManageModulesView = () =>
   import('@/views/subscribe/ManageModulesView.vue');
 const TeacherMyAttendanceHub = () =>
@@ -346,6 +348,23 @@ const routes: RouteRecordRaw[] = [
     path: '/subscribe/addon',
     name: 'subscribe-addon',
     component: SubscribeAddonView,
+    meta: {
+      role: 'admin' satisfies Role,
+      abilityAny: ['school.settings.view', 'school.settings.manage'],
+    },
+  },
+  {
+    // Post-purchase transfer confirmation for module addons. The
+    // upstream `POST /billing/modules/add` returns a share_url pointing
+    // here; ManageModulesView pushes the AddonCreated payload into
+    // history.state before navigating so the view paints immediately
+    // with real transfer details (no re-fetch). Deep-link opens (paste
+    // URL later, WA-forwarded link) fall through to a warm empty state
+    // pointing back to Kelola Modul — public token lookup endpoint is
+    // still to be built.
+    path: '/subscribe/addon/transfer/:token',
+    name: 'subscribe-addon-transfer',
+    component: SubscribeAddonTransferView,
     meta: {
       role: 'admin' satisfies Role,
       abilityAny: ['school.settings.view', 'school.settings.manage'],
