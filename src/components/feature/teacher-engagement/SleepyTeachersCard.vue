@@ -65,7 +65,29 @@ function toggleAll() {
 </script>
 
 <template>
-  <div class="rounded-2xl bg-amber-50 border border-amber-200 p-4">
+  <!-- Positive state: nobody has gone quiet — no reminders to send. -->
+  <div
+    v-if="silentTeachers.length === 0"
+    class="rounded-2xl bg-emerald-50 border border-emerald-200 p-4"
+  >
+    <header class="flex items-start gap-3">
+      <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-700 grid place-items-center flex-shrink-0">
+        <NavIcon name="check-circle" :size="20" />
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-3xs font-bold text-emerald-700 uppercase tracking-widest">Semua aktif</p>
+        <p class="text-sm font-black text-emerald-900 leading-tight mt-1">
+          Semua guru aktif minggu ini
+        </p>
+        <p class="text-2xs text-emerald-800 mt-1">
+          Tidak ada guru yang perlu disapa lewat pengingat saat ini.
+        </p>
+      </div>
+    </header>
+  </div>
+
+  <!-- Attention state: surface silent teachers + batch reminder CTA. -->
+  <div v-else class="rounded-2xl bg-amber-50 border border-amber-200 p-4">
     <header class="flex items-start gap-3 mb-3">
       <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-700 grid place-items-center flex-shrink-0">
         <NavIcon name="bell" :size="20" />
@@ -81,14 +103,7 @@ function toggleAll() {
       </div>
     </header>
 
-    <div
-      v-if="silentTeachers.length === 0"
-      class="text-2xs text-amber-800 py-2 text-center"
-    >
-      Semua guru aktif minggu ini. 🎉
-    </div>
-
-    <div v-else class="space-y-2">
+    <div class="space-y-2">
       <label class="flex items-center gap-2 text-2xs font-bold text-amber-900 cursor-pointer">
         <input
           type="checkbox"

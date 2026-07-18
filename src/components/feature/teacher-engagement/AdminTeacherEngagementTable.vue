@@ -9,7 +9,7 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
-import SparklineTinyBar from './SparklineTinyBar.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
 import type { AdminTeacherEngagementRow, TeacherRowStatus } from '@/services/teacher-progress.service';
 
 const props = defineProps<{
@@ -57,21 +57,20 @@ function daysAgo(dateStr: string | null): string {
 <template>
   <div class="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="w-full text-2xs">
-        <thead class="bg-slate-50 text-slate-500">
+      <table class="w-full text-sm min-w-[42rem]">
+        <thead class="bg-slate-50 text-slate-500 text-xs">
           <tr>
             <th class="text-left font-bold uppercase tracking-widest px-4 py-3">Guru</th>
-            <th class="text-left font-bold uppercase tracking-widest px-2 py-3 hidden sm:table-cell">Status</th>
-            <th class="text-right font-bold uppercase tracking-widest px-2 py-3">Level</th>
-            <th class="text-right font-bold uppercase tracking-widest px-2 py-3">Beruntun</th>
-            <th class="text-right font-bold uppercase tracking-widest px-2 py-3">7 hari</th>
-            <th class="text-left font-bold uppercase tracking-widest px-4 py-3 hidden md:table-cell">Aktivitas</th>
+            <th class="text-left font-bold uppercase tracking-widest px-3 py-3 hidden sm:table-cell">Status</th>
+            <th class="text-right font-bold uppercase tracking-widest px-3 py-3">Level</th>
+            <th class="text-right font-bold uppercase tracking-widest px-3 py-3">Beruntun</th>
+            <th class="text-right font-bold uppercase tracking-widest px-3 py-3">7 hari</th>
             <th class="text-right font-bold uppercase tracking-widest px-4 py-3 hidden lg:table-cell">Terakhir</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="filtered.length === 0">
-            <td colspan="7" class="text-center text-slate-500 py-8">
+            <td colspan="6" class="text-center text-slate-500 py-8">
               Tidak ada guru yang cocok filter ini.
             </td>
           </tr>
@@ -82,17 +81,17 @@ function daysAgo(dateStr: string | null): string {
             @click="emit('select', row)"
           >
             <!-- Guru cell (avatar + name + status dot on mobile) -->
-            <td class="px-4 py-3">
-              <div class="flex items-center gap-2 min-w-0">
+            <td class="px-4 py-3.5">
+              <div class="flex items-center gap-2.5 min-w-0">
                 <div
-                  class="w-8 h-8 rounded-full flex-shrink-0 grid place-items-center overflow-hidden"
-                  :class="row.photo_url ? 'bg-slate-100' : 'bg-brand-cobalt/10 text-brand-cobalt text-3xs font-black'"
+                  class="w-9 h-9 rounded-full flex-shrink-0 grid place-items-center overflow-hidden"
+                  :class="row.photo_url ? 'bg-slate-100' : 'bg-brand-cobalt/10 text-brand-cobalt text-2xs font-black'"
                 >
                   <img v-if="row.photo_url" :src="row.photo_url" :alt="row.name" class="w-full h-full object-cover" />
                   <span v-else>{{ initials(row.name) }}</span>
                 </div>
                 <div class="min-w-0">
-                  <p class="text-2xs font-bold text-slate-900 truncate">{{ row.name }}</p>
+                  <p class="text-sm font-bold text-slate-900 truncate">{{ row.name }}</p>
                   <p class="text-3xs text-slate-500 sm:hidden flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full" :class="STATUS_META[row.status].dot"></span>
                     {{ STATUS_META[row.status].label }}
@@ -101,9 +100,9 @@ function daysAgo(dateStr: string | null): string {
               </div>
             </td>
             <!-- Status -->
-            <td class="px-2 py-3 hidden sm:table-cell">
+            <td class="px-3 py-3.5 hidden sm:table-cell">
               <span
-                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-3xs font-bold uppercase tracking-widest"
+                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-widest"
                 :class="STATUS_META[row.status].tone"
               >
                 <span class="w-1.5 h-1.5 rounded-full" :class="STATUS_META[row.status].dot"></span>
@@ -111,17 +110,24 @@ function daysAgo(dateStr: string | null): string {
               </span>
             </td>
             <!-- Level -->
-            <td class="px-2 py-3 text-right font-black text-slate-800">L{{ row.level }}</td>
+            <td class="px-3 py-3.5 text-right font-black text-slate-800">L{{ row.level }}</td>
             <!-- Streak -->
-            <td class="px-2 py-3 text-right font-bold text-slate-800">{{ row.streak_days }}h</td>
-            <!-- 7 hari poin -->
-            <td class="px-2 py-3 text-right font-black text-slate-800">{{ row.points_7d }}</td>
-            <!-- Sparkline -->
-            <td class="px-4 py-3 hidden md:table-cell">
-              <SparklineTinyBar :points="row.sparkline" />
+            <td class="px-3 py-3.5 text-right font-bold text-slate-800">{{ row.streak_days }}h</td>
+            <!-- 7 hari poin + honest trend chip (up when active this week, muted dash when quiet). -->
+            <td class="px-3 py-3.5 text-right">
+              <span class="inline-flex items-center justify-end gap-1.5">
+                <span class="text-sm font-black text-slate-900">{{ row.points_7d }}</span>
+                <NavIcon
+                  v-if="row.points_7d > 0"
+                  name="trending-up"
+                  :size="15"
+                  class="text-emerald-600 flex-shrink-0"
+                />
+                <span v-else class="text-slate-300 font-bold" aria-label="Tidak ada aktivitas">—</span>
+              </span>
             </td>
             <!-- Last active -->
-            <td class="px-4 py-3 text-right text-slate-500 hidden lg:table-cell">
+            <td class="px-4 py-3.5 text-right text-slate-500 hidden lg:table-cell">
               {{ daysAgo(row.last_active_at) }}
             </td>
           </tr>

@@ -152,11 +152,25 @@ export interface AdminTeacherEngagementRow {
   sparkline: number[];
 }
 
+/** One day of school-wide XP for the admin weekly-activity bar chart. */
+export interface WeeklyActivityPoint {
+  /** ISO date (YYYY-MM-DD). */
+  date: string;
+  /** Total XP the whole school earned that day. */
+  points: number;
+}
+
 export interface AdminIndexPayload {
   data: AdminTeacherEngagementRow[];
   meta: {
     highlight: AdminHighlightPayload;
     kpi: AdminSummaryPayload;
+    /**
+     * School-wide daily XP for the last 7 days (oldest → newest, 7
+     * entries, zero days included) — backend MR (Part A). Feeds the
+     * WeeklyActivityBars chart on the admin engagement page.
+     */
+    weekly_activity: WeeklyActivityPoint[];
   };
 }
 
