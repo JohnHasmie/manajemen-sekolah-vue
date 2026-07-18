@@ -208,6 +208,14 @@ function settingsFromJson(
     gate_qr_rotation_minutes: asInt(raw.gate_qr_rotation_minutes, 15),
     geofence_required_for_qr: asBool(raw.geofence_required_for_qr, false),
     issue_student_cards: asBool(raw.issue_student_cards, false),
+    workweek_days_bitmask:
+      raw.workweek_days_bitmask !== undefined
+        ? asInt(raw.workweek_days_bitmask, 62)
+        : undefined,
+    max_daily_shifts_per_person:
+      raw.max_daily_shifts_per_person !== undefined
+        ? asInt(raw.max_daily_shifts_per_person, 1)
+        : undefined,
   };
 }
 
