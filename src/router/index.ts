@@ -96,6 +96,8 @@ const AdminAttendanceDashboardView = () =>
   import('@/views/admin/AdminAttendanceDashboardView.vue');
 const AdminTeacherEngagementView = () =>
   import('@/views/admin/AdminTeacherEngagementView.vue');
+const AdminReadinessView = () =>
+  import('@/views/admin/AdminReadinessView.vue');
 const AdminAttendanceTingkatHeatmapView = () =>
   import('@/views/admin/AdminAttendanceTingkatHeatmapView.vue');
 const AdminAttendanceReportView = () =>
@@ -453,6 +455,23 @@ const routes: RouteRecordRaw[] = [
           isTutoringTenant() ? { name: 'admin.tutoring.dashboard' } : true,
       },
       {
+        // "Pusat Kendali Sekolah" — admin readiness command center.
+        // CORE feature: no `module:` middleware backend-side, gated
+        // only on the `readiness.view` RBAC ability (granted to every
+        // school admin regardless of paid subs). Sits second in the
+        // sidebar right after Dashboard.
+        path: 'admin/readiness',
+        name: 'admin.readiness',
+        component: AdminReadinessView,
+        meta: { role: 'admin' satisfies Role, ability: 'readiness.view' },
+      },
+      {
+        // Legacy "Perlu Perhatian" page — the standalone uncapped inbox.
+        // Kept for back-compat: bookmarks + the dashboard "view all"
+        // link still work while Pusat Kendali absorbs Lane B. When the
+        // habit-layer ships (BE-4) this can safely redirect into
+        // `admin.readiness`; for now it stays live so nothing breaks
+        // mid-rollout.
         path: 'admin/inbox',
         name: 'admin.inbox',
         component: PriorityInboxView,

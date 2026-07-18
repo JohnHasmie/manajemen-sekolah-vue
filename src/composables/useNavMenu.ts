@@ -85,6 +85,16 @@ const ADMIN_NAV: NavSection[] = [
     items: [
       // Dashboard is always available — every role home.
       { to: '/admin', labelKey: 'nav.dashboard', icon: 'home' },
+      // Pusat Kendali Sekolah — CORE feature (no `module:` gate on the
+      // endpoint), only the `readiness.view` ability is required. The
+      // ability seed grants it to every school admin, so this entry
+      // shows for admins by default.
+      {
+        to: '/admin/readiness',
+        labelKey: 'nav.readiness',
+        icon: 'gauge',
+        ability: 'readiness.view',
+      },
     ],
   },
   {

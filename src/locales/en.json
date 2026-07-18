@@ -89,6 +89,7 @@
     "delete": "Delete",
     "edit": "Edit",
     "add": "Add",
+    "fix": "Fix",
     "close": "Close",
     "back": "Back",
     "next": "Next",
@@ -403,7 +404,8 @@
     "attendanceQrSection": "QR attendance",
     "attendanceQrGate": "Gate QR",
     "attendanceQrCards": "Personnel QR cards",
-    "attendanceQrSettings": "Attendance settings"
+    "attendanceQrSettings": "Attendance settings",
+    "readiness": "Control Center"
   },
   "staffHome": {
     "title": "No self-service menu for staff yet",
@@ -442,6 +444,31 @@
     "passwordMismatch": "Password confirmation does not match."
   },
   "admin": {
+    "readiness": {
+      "title": "School Control Center",
+      "subtitle": "Complete & monitor your school data",
+      "scoreLabel": "Readiness",
+      "dimensionsHeader": "Completeness per dimension",
+      "laneA": "Needs completion",
+      "laneAHint": "affects the score",
+      "laneB": "Needs attention",
+      "laneBHint": "operational · does not affect the score",
+      "allClear": "Your school is 100% ready",
+      "allCalm": "All calm",
+      "unsupported": "Control Center is not yet available for this tenant.",
+      "tagCore": "core",
+      "tagModule": "module {module}",
+      "deltaWeek": "{pct}% from last week",
+      "teaserTitle": "Your school is {pct}% ready",
+      "teaserSubtitle": "{a} need completion · {b} need attention",
+      "teaserCta": "Open",
+      "dimensions": {
+        "structure": "Structure",
+        "staff": "Staff",
+        "students": "Students",
+        "academic": "Academic"
+      }
+    },
     "attendance": {
       "qrDisplay": {
         "kicker": "QR attendance",

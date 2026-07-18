@@ -89,6 +89,7 @@
     "delete": "Hapus",
     "edit": "Ubah",
     "add": "Tambah",
+    "fix": "Perbaiki",
     "close": "Tutup",
     "back": "Kembali",
     "next": "Selanjutnya",
@@ -403,7 +404,8 @@
     "attendanceQrSection": "Presensi QR",
     "attendanceQrGate": "QR Gerbang",
     "attendanceQrCards": "Kartu QR Personel",
-    "attendanceQrSettings": "Pengaturan Presensi"
+    "attendanceQrSettings": "Pengaturan Presensi",
+    "readiness": "Pusat Kendali"
   },
   "staffHome": {
     "title": "Belum ada menu mandiri untuk staf",
@@ -442,6 +444,31 @@
     "passwordMismatch": "Konfirmasi password tidak cocok."
   },
   "admin": {
+    "readiness": {
+      "title": "Pusat Kendali Sekolah",
+      "subtitle": "Lengkapi & pantau data sekolah Anda",
+      "scoreLabel": "Kesiapan",
+      "dimensionsHeader": "Kelengkapan per dimensi",
+      "laneA": "Perlu dilengkapi",
+      "laneAHint": "memengaruhi skor",
+      "laneB": "Perlu perhatian",
+      "laneBHint": "operasional · tidak memengaruhi skor",
+      "allClear": "Sekolah Anda 100% siap",
+      "allCalm": "Semua aman",
+      "unsupported": "Pusat Kendali belum tersedia untuk tenant ini.",
+      "tagCore": "inti",
+      "tagModule": "modul {module}",
+      "deltaWeek": "{pct}% dari minggu lalu",
+      "teaserTitle": "Sekolah Anda {pct}% siap",
+      "teaserSubtitle": "{a} perlu dilengkapi · {b} perlu perhatian",
+      "teaserCta": "Buka",
+      "dimensions": {
+        "structure": "Struktur",
+        "staff": "Guru & Staf",
+        "students": "Siswa",
+        "academic": "Akademik"
+      }
+    },
     "attendance": {
       "qrDisplay": {
         "kicker": "Presensi QR",

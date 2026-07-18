@@ -33,6 +33,7 @@ import {
   type AdminHighlightPayload,
   type AdminSummaryPayload,
 } from '@/services/teacher-progress.service';
+import { ReadinessService, type ReadinessPayload } from '@/services/readiness.service';
 import { useMe } from '@/composables/useMe';
 import { useTenant } from '@/composables/useTenant';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
@@ -57,6 +58,13 @@ const canSeePrestasi = computed(() => meApi.can('gamification.admin.view'));
 const adminHighlight = ref<AdminHighlightPayload | null>(null);
 const adminSummary = ref<AdminSummaryPayload | null>(null);
 
+// Readiness teaser — CORE feature, gated only on `readiness.view`. Uses
+// the same silent-on-failure pattern as `loadPrestasi()` above so a
+// mid-session ability strip / network hiccup drops the card without
+// disturbing the rest of the dashboard.
+const canSeeReadiness = computed(() => meApi.can('readiness.view'));
+const readinessPayload = ref<ReadinessPayload | null>(null);
+
 async function loadPrestasi() {
   if (!canSeePrestasi.value) return;
   try {
@@ -72,6 +80,20 @@ async function loadPrestasi() {
     adminHighlight.value = null;
     adminSummary.value = null;
   }
+}
+
+async function loadReadiness() {
+  if (!canSeeReadiness.value) return;
+  try {
+    readinessPayload.value = await ReadinessService.get();
+  } catch {
+    // Silent — teaser card v-if drops when this stays null.
+    readinessPayload.value = null;
+  }
+}
+
+function gotoReadiness() {
+  router.push({ name: 'admin.readiness' });
 }
 // A tutoring-center admin gets the bimbel dashboard; the school KPIs
 // below read zero for a bimbel. Reactive so it swaps in as soon as the
@@ -179,6 +201,7 @@ async function load() {
 onMounted(() => {
   void load();
   void loadPrestasi();
+  void loadReadiness();
 });
 
 // Refetch when the active academic year changes via the chip.
@@ -609,22 +632,66 @@ const financePct = computed(() =>
             </div>
           </section>
 
-          <!-- 3b. Perlu Perhatian — admin priority inbox -->
-          <section>
+          <!-- 3b. Pusat Kendali teaser — replaces the old "Perlu
+               Perhatian" inbox card. Both lanes now live inside
+               /admin/readiness (Lane B = the operational inbox); the
+               teaser summarises "score · a perlu dilengkapi · b perlu
+               perhatian" and deep-links there. Silent on ability strip
+               or fetch failure (mirrors the GamificationHighlightCard
+               pattern above): when `readinessPayload` stays null the
+               whole card drops, leaving no empty band. -->
+          <section
+            v-if="canSeeReadiness && readinessPayload && readinessPayload.supported"
+          >
+            <button
+              type="button"
+              class="w-full text-left rounded-2xl p-5 text-white shadow-lg transition-all hover:shadow-xl bg-role-admin-gradient flex items-start gap-4"
+              @click="gotoReadiness"
+            >
+              <span class="w-12 h-12 rounded-2xl bg-white/15 grid place-items-center flex-shrink-0">
+                <NavIcon name="gauge" :size="24" />
+              </span>
+              <div class="flex-1 min-w-0">
+                <p class="text-3xs font-bold text-white/75 uppercase tracking-widest">
+                  {{ t('admin.readiness.title') }}
+                </p>
+                <h3 class="text-lg font-black tracking-tight mt-0.5">
+                  {{ t('admin.readiness.teaserTitle', { pct: readinessPayload.score }) }}
+                </h3>
+                <p class="text-2xs text-white/85 font-bold mt-1">
+                  {{ t('admin.readiness.teaserSubtitle', {
+                    a: readinessPayload.completion_needed.length,
+                    b: readinessPayload.attention_needed.length,
+                  }) }}
+                </p>
+              </div>
+              <span
+                class="text-2xs font-black uppercase tracking-widest px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 transition-colors flex items-center gap-1 flex-shrink-0 self-center"
+              >
+                {{ t('admin.readiness.teaserCta') }}
+                <NavIcon name="arrow-right" :size="12" />
+              </span>
+            </button>
+          </section>
+
+          <!-- Fallback: when the readiness ability isn't granted (e.g.
+               a staff proxying into /admin, or an admin whose backend
+               seed hasn't rolled out yet), keep the old inbox card so
+               the "Perlu Perhatian" signal doesn't silently disappear.
+               Drops out entirely once every admin holds the ability. -->
+          <section v-else-if="priorityItems.length > 0">
             <header class="flex items-center justify-between gap-3 mb-3 px-1">
               <div class="flex items-center gap-2">
                 <h3 class="text-[12px] font-black text-slate-500 uppercase tracking-widest">
                   {{ t('admin.dashboard.needsAttention') }}
                 </h3>
                 <span
-                  v-if="priorityItems.length > 0"
                   class="text-3xs font-bold px-2 py-0.5 rounded-full bg-role-admin/10 text-role-admin"
                 >
                   {{ priorityHeaderLabel }}
                 </span>
               </div>
               <button
-                v-if="priorityItems.length > 0"
                 type="button"
                 class="text-2xs font-bold text-role-admin hover:underline inline-flex items-center gap-1"
                 @click="gotoAdminInbox"
