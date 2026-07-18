@@ -295,7 +295,6 @@ const financePct = computed(() =>
 <template>
   <AdminTutoringDashboardView v-if="isTutoringCenter" />
   <div v-else class="space-y-md">
-    <PinnedAnnouncementCarousel viewer-role="admin" />
     <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
       <template #default>
         <!-- Shared scaffold: fixed vertical rhythm + slot order across
@@ -437,6 +436,11 @@ const financePct = computed(() =>
                "Details" buttons. -->
           <template #main>
           <div class="space-y-md">
+
+          <!-- Pengumuman disematkan — sits at the TOP of #main so it
+               scrolls under the greeting + KPI strip like on mobile,
+               not above the whole dashboard. Self-hides when empty. -->
+          <PinnedAnnouncementCarousel viewer-role="admin" />
 
           <!-- Prestasi & Gamifikasi Guru — paid module. Renders 1 or
                2 highlight cards (teacher_of_month always, needs_attention

@@ -280,7 +280,6 @@ watch(sliceKey, () => {
 
 <template>
   <div class="space-y-md">
-    <PinnedAnnouncementCarousel viewer-role="parent" />
     <AsyncView
       :state="state"
       :empty-title="t('parent.dashboard.emptyTitle')"
@@ -432,6 +431,11 @@ watch(sliceKey, () => {
                shortcuts grid. Order preserved from the original view. -->
           <template #main>
           <div class="space-y-md">
+
+          <!-- Pengumuman disematkan — sits at the TOP of #main so it
+               scrolls under the greeting + KPI strip like on mobile,
+               not above the whole dashboard. Self-hides when empty. -->
+          <PinnedAnnouncementCarousel viewer-role="parent" />
 
           <!-- 3b. Perlu Perhatian — parent priority inbox -->
           <section>

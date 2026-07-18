@@ -94,12 +94,6 @@ const timeLabel = computed(() => {
   return formatRelative(ts) || formatDateShort(ts);
 });
 
-const validUntilLabel = computed(() => {
-  const until = current.value?.pinned_until;
-  if (!until) return '';
-  return t('announcements.validUntil', { date: formatDateShort(until) });
-});
-
 // Event countdown — "Hari ini" / "Besok" / "N hari lagi" / "Berlangsung".
 const countdown = computed(() => {
   const a = current.value;
@@ -174,52 +168,49 @@ onUnmounted(stop);
     @mouseleave="start"
   >
     <button type="button" class="pc-card" @click="openDetail(current)">
-      <span class="pc-rail" aria-hidden="true"></span>
-
+      <!-- ── chip row: tier badge (solid) + pin chip + timestamp ── -->
       <div class="pc-head">
-        <span class="pc-typeicon" aria-hidden="true">
-          <!-- PENTING: alert-triangle -->
-          <svg v-if="currentTier === 'penting'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <span class="pc-tier">
+          <svg v-if="currentTier === 'penting'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
             <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
-          <!-- ACARA: calendar -->
-          <svg v-else-if="currentTier === 'acara'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg v-else-if="currentTier === 'acara'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
           </svg>
-          <!-- UMUM: megaphone -->
-          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="m3 11 18-5v12L3 14v-3z" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
           </svg>
+          {{ badgeLabel }}
         </span>
-        <span class="pc-badge">{{ badgeLabel }}</span>
-        <span class="pc-pin" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <span class="pc-pinchip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 17v5" /><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
           </svg>
+          {{ t('announcements.pinnedLabel') }}
         </span>
         <span class="pc-spacer"></span>
-        <span v-if="validUntilLabel" class="pc-valid">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" /></svg>
-          {{ validUntilLabel }}
-        </span>
+        <span v-if="timeLabel" class="pc-time">{{ timeLabel }}</span>
       </div>
 
+      <!-- ── title ── -->
       <p class="pc-title">{{ current?.title || t('announcements.untitled') }}</p>
 
-      <!-- Event countdown replaces the snippet for ACARA -->
+      <!-- ── body or event countdown ── -->
       <div v-if="currentTier === 'acara' && countdown" class="pc-event">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
         <span class="pc-event-when">{{ eventWhen }}</span>
         <span class="pc-countdown">{{ countdown }}</span>
       </div>
       <p v-else-if="snippet" class="pc-snippet">{{ snippet }}</p>
 
+      <!-- ── divider + meta row ── -->
+      <div class="pc-divider" aria-hidden="true"></div>
       <div class="pc-meta">
         <span class="pc-avatar">{{ authorInitials }}</span>
         <span class="pc-author">{{ authorName }}</span>
-        <span class="pc-dot">·</span>
-        <span class="pc-time">{{ timeLabel }}</span>
         <span class="pc-spacer"></span>
 
         <span
@@ -228,12 +219,12 @@ onUnmounted(stop);
           role="button"
           @click.stop="acknowledge(current)"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
           {{ t('announcements.acknowledge') }}
         </span>
         <span v-else class="pc-readmore">
           {{ t('announcements.readMore') }}
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
         </span>
       </div>
     </button>
@@ -261,102 +252,88 @@ onUnmounted(stop);
 </template>
 
 <style scoped>
-/* Per-tier accent — one variable drives stripe, badge, icon, countdown. */
+/* Layered-chips redesign (Option D). Card is a plain slate-bordered white
+   surface; colour only lives in the tier chip, the PENTING avatar, and the
+   primary CTA. Per-tier accent still drives that one accent-carrying token. */
 .pinned-carousel {
   --accent: #b45309;
   --accent-bg: #fef3c7;
-  --accent-line: #fcd9a1;
 }
 .pinned-carousel.tier-penting {
   --accent: #dc2626;
   --accent-bg: #fee2e2;
-  --accent-line: #fecaca;
 }
 .pinned-carousel.tier-acara {
   --accent: #6d28d9;
   --accent-bg: #ede9fe;
-  --accent-line: #ddd6fe;
 }
 .pinned-carousel.tier-umum {
   --accent: #1b6fb8;
   --accent-bg: #e0edff;
-  --accent-line: #c7ddf7;
 }
 
 .pc-card {
-  position: relative;
   width: 100%;
   display: block;
   text-align: left;
   cursor: pointer;
-  border: 1px solid var(--accent-line);
-  border-radius: 16px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--accent-bg) 85%, transparent), transparent 60%),
-    #ffffff;
-  padding: 13px 15px 12px 18px;
-  box-shadow: 0 2px 10px rgba(11, 20, 45, 0.06);
-  transition: box-shadow 0.15s ease;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 14px;
+  box-shadow: 0 1px 2px rgba(15, 27, 48, 0.04);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
 .pc-card:hover {
-  box-shadow: 0 8px 22px rgba(11, 20, 45, 0.12);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 14px rgba(15, 27, 48, 0.08);
 }
 .pc-card:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.pc-rail {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
-  border-radius: 16px 0 0 16px;
-  background: var(--accent);
-}
 
+/* ── chip row: tier badge (solid) + pin chip (neutral) + timestamp ── */
 .pc-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
+  margin-bottom: 10px;
 }
-.pc-typeicon {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  background: var(--accent-bg);
-  color: var(--accent);
-}
-.pc-typeicon svg { width: 15px; height: 15px; }
-.pc-badge {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--accent);
-  background: var(--accent-bg);
-  padding: 3px 8px;
-  border-radius: 999px;
-}
-.pc-pin { color: var(--accent); display: inline-flex; }
-.pc-pin svg { width: 14px; height: 14px; }
-.pc-spacer { flex: 1; }
-.pc-valid {
+.pc-tier {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--accent);
+  font-size: 11px;
+  font-weight: 500;
+  color: #ffffff;
+  background: var(--accent);
+  padding: 3px 9px;
+  border-radius: 999px;
+  flex: 0 0 auto;
 }
-.pc-valid svg { width: 12px; height: 12px; }
+.pc-tier svg { width: 12px; height: 12px; flex: 0 0 auto; }
+.pc-pinchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 3px 9px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+.pc-pinchip svg { width: 12px; height: 12px; flex: 0 0 auto; }
+.pc-spacer { flex: 1; }
 
+/* ── title, body, event countdown ── */
 .pc-title {
   margin: 0;
   font-size: 15px;
-  font-weight: 800;
-  line-height: 1.28;
+  font-weight: 500;
+  line-height: 1.3;
   color: #0f172a;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -375,25 +352,30 @@ onUnmounted(stop);
 .pc-event {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 7px;
+  gap: 6px;
+  margin-top: 5px;
 }
-.pc-event svg { width: 15px; height: 15px; color: var(--accent); flex: 0 0 auto; }
-.pc-event-when { font-size: 12px; font-weight: 700; color: #334155; }
+.pc-event svg { width: 14px; height: 14px; color: var(--accent); flex: 0 0 auto; }
+.pc-event-when { font-size: 12px; font-weight: 500; color: #334155; }
 .pc-countdown {
-  font-size: 10.5px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 500;
   color: var(--accent);
   background: var(--accent-bg);
   padding: 2px 8px;
   border-radius: 999px;
 }
 
+/* ── divider + meta row ── */
+.pc-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 12px 0 10px;
+}
 .pc-meta {
   display: flex;
   align-items: center;
-  gap: 7px;
-  margin-top: 11px;
+  gap: 8px;
 }
 .pc-avatar {
   width: 24px;
@@ -401,29 +383,32 @@ onUnmounted(stop);
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 9.5px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 500;
   color: #ffffff;
-  background: var(--accent);
+  /* PENTING keeps the danger red for "school ops" tone; other tiers land
+     on the neutral teacher cobalt so the carousel doesn't repaint the
+     dashboard. */
+  background: #1b6fb8;
   flex: 0 0 auto;
 }
+.pinned-carousel.tier-penting .pc-avatar { background: var(--accent); }
 .pc-author {
   font-size: 12px;
-  font-weight: 700;
-  color: #334155;
+  font-weight: 500;
+  color: #35435f;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 40%;
+  max-width: 50%;
 }
-.pc-dot { color: #cbd5e1; }
 .pc-time { font-size: 11px; color: #94a3b8; flex: 0 0 auto; }
 .pc-readmore {
   display: inline-flex;
   align-items: center;
   gap: 3px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
   color: var(--accent);
   flex: 0 0 auto;
 }
@@ -433,15 +418,16 @@ onUnmounted(stop);
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
   color: #ffffff;
   background: var(--accent);
-  padding: 6px 12px;
-  border-radius: 9px;
+  padding: 7px 14px;
+  border-radius: 999px;
   flex: 0 0 auto;
 }
 .pc-ack svg { width: 13px; height: 13px; }
 
+/* ── dots ── */
 .pc-dots {
   display: flex;
   align-items: center;
@@ -455,7 +441,7 @@ onUnmounted(stop);
   border: 0;
   padding: 0;
   border-radius: 999px;
-  background: var(--accent-line);
+  background: #cbd5e1;
   cursor: pointer;
   transition: all 0.25s ease;
 }
@@ -465,16 +451,15 @@ onUnmounted(stop);
    class-driven via `.tutoring-dark` (tailwind darkMode: ['selector',
    '.tutoring-dark']), NOT the OS `prefers-color-scheme`. Scoping the dark
    styling to `.tutoring-dark` keeps the card LIGHT on every school dashboard
-   even when the viewer's OS is in dark mode (the earlier prefers-color-scheme
-   rule wrongly darkened it there). */
+   even when the viewer's OS is in dark mode. */
 .tutoring-dark .pc-card {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 60%),
-    #0f1a2e;
-  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: #0f1a2e;
+  border-color: #24324c;
 }
 .tutoring-dark .pc-title { color: #f1f5f9; }
 .tutoring-dark .pc-snippet { color: #94a3b8; }
 .tutoring-dark .pc-author,
 .tutoring-dark .pc-event-when { color: #cbd5e1; }
+.tutoring-dark .pc-pinchip { background: #1e293b; color: #cbd5e1; }
+.tutoring-dark .pc-divider { background: #24324c; }
 </style>

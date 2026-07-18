@@ -464,11 +464,6 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
 
 <template>
   <div class="space-y-6 pb-12">
-    <!-- First-run welcome — dismissible, keyed per-role so a re-designed
-         copy revision can invalidate the old sticker by bumping the
-         suffix. Renders above the AsyncView so it shows on cold boot
-         even before dashboard data has loaded. -->
-    <PinnedAnnouncementCarousel viewer-role="teacher" />
     <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
       <template #default>
         <!-- Shared scaffold: fixed vertical rhythm + slot order across
@@ -633,6 +628,11 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
                24px rhythm preserved via space-y-6. -->
           <template #main>
           <div class="space-y-6">
+
+          <!-- Pengumuman disematkan — sits at the TOP of #main so it
+               scrolls under the greeting + KPI strip like on mobile,
+               not above the whole dashboard. Self-hides when empty. -->
+          <PinnedAnnouncementCarousel viewer-role="teacher" />
 
           <!-- Gamification highlight — first thing the teacher sees when
                they've subscribed to the module. The card picks its
