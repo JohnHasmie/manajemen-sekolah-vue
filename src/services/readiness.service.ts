@@ -72,6 +72,32 @@ export interface ReadinessAttentionItem {
   target_params: Record<string, unknown>;
 }
 
+/**
+ * BE-5 badges slice — the endpoint ships the catalog + earned set on the
+ * same call so the FE renders "3 / 7 tercapai" with a single round-trip.
+ * Label + description come from the server (Indonesian), so the client
+ * needs NO local copy map — just render what the API returned.
+ */
+export interface ReadinessBadgeCatalogItem {
+  code: string;
+  label: string;
+  description: string;
+}
+
+export interface ReadinessBadgeEarned {
+  code: string;
+  meta: Record<string, unknown>;
+  /** ISO timestamp of the award. */
+  awarded_at: string;
+  /** True within a 48h server-side window — FE renders a "Baru!" ribbon. */
+  is_new: boolean;
+}
+
+export interface ReadinessBadges {
+  catalog: ReadinessBadgeCatalogItem[];
+  earned: ReadinessBadgeEarned[];
+}
+
 export interface ReadinessPayload {
   /** False when the tenant scope has no check catalog wired (e.g. bimbel MVP). */
   supported: boolean;
@@ -79,15 +105,20 @@ export interface ReadinessPayload {
   score: number;
   /** Week-over-week delta in percentage points, or null pre-snapshot. */
   delta_pct: number | null;
-  /** Admin habit level — null until BE-4 habit layer ships. */
+  /** Admin habit level — server-authoritative (BE-4). Null pre-visit. */
   level: number | null;
-  /** Admin habit streak in days — null until BE-4 habit layer ships. */
+  /** Admin habit streak in days — server-authoritative (BE-4). */
   streak: number | null;
   dimensions: ReadinessDimension[];
   /** Lane A — scored completeness gaps. */
   completion_needed: ReadinessCompletionItem[];
   /** Lane B — operational inbox items (unscored). */
   attention_needed: ReadinessAttentionItem[];
+  /**
+   * BE-5 achievement badges — catalog + earned set. Copy is server-side
+   * so the FE renders `label`/`description` directly (no client map).
+   */
+  badges: ReadinessBadges;
   /** ISO timestamp of the compute/cache moment. */
   generated_at: string;
 }

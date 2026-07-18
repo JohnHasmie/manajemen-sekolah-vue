@@ -572,6 +572,46 @@ defineProps<{
       <path d="m12 14 4-4" />
       <path d="M3.34 19a10 10 0 1 1 17.32 0" />
     </template>
+    <!-- ── Readiness habit-layer icons (FE-6) ───────────────────────
+         Chips (level/streak/delta) + admin badge tiles need the delta
+         "flat" state and per-badge cues. Keeping them here rather than
+         inline in the view mirrors the way `flame`/`medal` were added
+         earlier for BadgeTile.vue. ─────────────────────────────────── -->
+    <template v-else-if="name === 'minus'">
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </template>
+    <template v-else-if="name === 'landmark'">
+      <!-- lucide `landmark` — pillared building. Cues the "Fondasi
+           Kokoh" (foundation set) badge — structure of the school. -->
+      <line x1="3" y1="22" x2="21" y2="22" />
+      <line x1="6" y1="18" x2="6" y2="11" />
+      <line x1="10" y1="18" x2="10" y2="11" />
+      <line x1="14" y1="18" x2="14" y2="11" />
+      <line x1="18" y1="18" x2="18" y2="11" />
+      <polygon points="12 2 20 7 4 7" />
+    </template>
+    <template v-else-if="name === 'graduation-cap'">
+      <!-- lucide `graduation-cap` — mortarboard. Cues the "Kelas Terisi"
+           (students placed) badge. -->
+      <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+      <path d="M6 12v5c3 3 9 3 12 0v-5" />
+    </template>
+    <template v-else-if="name === 'calendar-check'">
+      <!-- lucide `calendar-check` — calendar with a checkmark. Cues the
+           "Jadwal Penuh" (schedule full) badge. -->
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <polyline points="9 16 11 18 15 14" />
+    </template>
+    <template v-else-if="name === 'wind'">
+      <!-- lucide `wind` — three flowing lines. Cues the "Rumah Bersih"
+           (clean house) badge — nothing needs completion. -->
+      <path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2" />
+      <path d="M9.6 4.6A2 2 0 1 1 11 8H2" />
+      <path d="M12.6 19.4A2 2 0 1 0 14 16H2" />
+    </template>
     <template v-else>
       <circle cx="12" cy="12" r="10" />
     </template>

@@ -32,12 +32,14 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import LevelXpRing from '@/components/feature/gamification/LevelXpRing.vue';
 import PriorityInbox, { type PriorityItem } from '@/components/feature/PriorityInbox.vue';
+import AdminBadgeTile from '@/components/feature/readiness/AdminBadgeTile.vue';
 import { useAuthStore } from '@/stores/auth';
 import {
   ReadinessService,
   type ReadinessPayload,
   type ReadinessCompletionItem,
   type ReadinessDimension,
+  type ReadinessBadgeCatalogItem,
 } from '@/services/readiness.service';
 
 const auth = useAuthStore();
@@ -130,6 +132,79 @@ function onCompletionTap(item: ReadinessCompletionItem) {
   router.push({ name, params: item.target_params as Record<string, string> });
 }
 
+// ── Habit-layer chip helpers (BE-4) ────────────────────────────────
+// All three fields are server-authoritative. Delta gets an extra layer
+// of formatting (sign + tone) because a signed integer alone reads as
+// noisy in the row of chips.
+
+const deltaTone = computed<'up' | 'down' | 'flat' | null>(() => {
+  const d = payload.value?.delta_pct;
+  if (d === null || d === undefined) return null;
+  if (d > 0) return 'up';
+  if (d < 0) return 'down';
+  return 'flat';
+});
+
+const deltaChipClass = computed(() => {
+  switch (deltaTone.value) {
+    case 'up':
+      return 'bg-emerald-100 text-emerald-700';
+    case 'down':
+      return 'bg-red-100 text-red-700';
+    case 'flat':
+      return 'bg-slate-100 text-slate-600';
+    default:
+      return '';
+  }
+});
+
+const deltaChipIcon = computed<string>(() => {
+  switch (deltaTone.value) {
+    case 'up':
+      return 'trending-up';
+    case 'down':
+      return 'trending-down';
+    default:
+      return 'minus';
+  }
+});
+
+/** Signed pct string, e.g. `+5`, `-3`, `0`. Consumed by the i18n arg. */
+const deltaPctSigned = computed<string>(() => {
+  const d = payload.value?.delta_pct ?? 0;
+  return d > 0 ? `+${d}` : String(d);
+});
+
+/** True when the whole habit chip row is empty (first-visit fresh school). */
+const habitRowEmpty = computed<boolean>(() => {
+  const p = payload.value;
+  if (!p) return true;
+  const noLevel = p.level === null;
+  const noStreak = p.streak === null || p.streak === 0;
+  const noDelta = p.delta_pct === null;
+  return noLevel && noStreak && noDelta;
+});
+
+// ── Badges (BE-5) ──────────────────────────────────────────────────
+// Server returns `{ catalog, earned }` on the same payload. Match each
+// catalog entry against earned by code — an entry appears in `earned`
+// with `is_new: true` for 48h post-award, else `earned`, else `locked`.
+
+function badgeStateFor(code: string): 'earned' | 'new' | 'locked' {
+  const earned = payload.value?.badges?.earned ?? [];
+  const hit = earned.find((b) => b.code === code);
+  if (!hit) return 'locked';
+  return hit.is_new ? 'new' : 'earned';
+}
+
+const badgeCatalog = computed<ReadinessBadgeCatalogItem[]>(
+  () => payload.value?.badges?.catalog ?? [],
+);
+
+const badgesEarnedCount = computed<number>(
+  () => payload.value?.badges?.earned?.length ?? 0,
+);
+
 function onAttentionTap(item: PriorityItem) {
   const name = mapRouteName(item.target_route);
   if (!name) {
@@ -201,35 +276,49 @@ onMounted(() => {
                   size="lg"
                 />
 
-                <!-- Habit chips (level + streak) — BE-4 fills these in;
-                     until then the payload sends null and the row hides. -->
+                <!-- Habit chips row — BE-4 fills level / streak / delta.
+                     Each chip renders independently: a first-visit fresh
+                     school with only `level=1` gets the level chip and
+                     nothing else, no empty band. When ALL three fall
+                     null, a soft hint replaces the row so the space
+                     doesn't read as "loading". -->
                 <div
-                  v-if="payload.level !== null || payload.streak !== null"
+                  v-if="!habitRowEmpty"
                   class="flex items-center gap-2 flex-wrap justify-center"
                 >
                   <span
                     v-if="payload.level !== null"
-                    class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-violet-50 text-violet-700 text-3xs font-bold"
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 text-3xs font-bold"
                   >
                     <NavIcon name="star" :size="12" />
-                    Lv {{ payload.level }}
+                    {{ t('admin.readiness.levelChip', { level: payload.level }) }}
                   </span>
                   <span
-                    v-if="payload.streak !== null"
-                    class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-orange-50 text-orange-700 text-3xs font-bold"
+                    v-if="payload.streak !== null && payload.streak > 0"
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 text-3xs font-bold"
                   >
                     <NavIcon name="flame" :size="12" />
-                    {{ payload.streak }}
+                    {{ t('admin.readiness.streakChip', { days: payload.streak }) }}
+                  </span>
+                  <span
+                    v-if="payload.delta_pct !== null"
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-3xs font-bold"
+                    :class="deltaChipClass"
+                  >
+                    <NavIcon :name="deltaChipIcon" :size="12" />
+                    {{ t('admin.readiness.deltaWeek', { pct: deltaPctSigned }) }}
                   </span>
                 </div>
 
-                <span
-                  v-if="payload.delta_pct !== null"
-                  class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-3xs font-bold"
+                <!-- First-visit hint — none of the three chips have
+                     signal yet. Server-side snapshotting kicks in on
+                     the next daily job; the hint sets that expectation. -->
+                <p
+                  v-else
+                  class="text-2xs text-slate-500 text-center leading-snug"
                 >
-                  <NavIcon name="trending-up" :size="12" />
-                  {{ t('admin.readiness.deltaWeek', { pct: payload.delta_pct }) }}
-                </span>
+                  {{ t('admin.readiness.habitHint') }}
+                </p>
               </div>
 
               <!-- Dimensions card -->
@@ -372,6 +461,39 @@ onMounted(() => {
                 :show-header="false"
                 @item-tap="onAttentionTap"
               />
+            </section>
+
+            <!-- Pencapaian (Badges) — BE-5. The catalog always renders
+                 in full (locked tiles for what isn't earned yet) so the
+                 admin sees the roadmap of what's still to unlock, not
+                 just a possibly-empty "earned" row on day 1. Server
+                 owns copy (label + description in payload.badges.catalog)
+                 so the FE only decides state + icon per code. -->
+            <section
+              v-if="badgeCatalog.length > 0"
+              class="rounded-2xl bg-white border border-slate-100 shadow-sm p-5 space-y-3"
+            >
+              <header class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">
+                  {{ t('admin.readiness.badgesHeader') }}
+                </h3>
+                <span class="text-3xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 ml-auto">
+                  {{ t('admin.readiness.badgesCounter', {
+                    earned: badgesEarnedCount,
+                    total: badgeCatalog.length,
+                  }) }}
+                </span>
+              </header>
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                <AdminBadgeTile
+                  v-for="item in badgeCatalog"
+                  :key="item.code"
+                  :code="item.code"
+                  :label="item.label"
+                  :description="item.description"
+                  :state="badgeStateFor(item.code)"
+                />
+              </div>
             </section>
           </template>
         </template>

@@ -664,6 +664,17 @@ const financePct = computed(() =>
                     b: readinessPayload.attention_needed.length,
                   }) }}
                 </p>
+                <!-- Streak chip — BE-4. Renders only when the admin
+                     has a live streak (>0 days). Uses lucide `flame`
+                     inside a white/15 pill so it reads against the
+                     admin gradient without shouting. -->
+                <span
+                  v-if="readinessPayload.streak !== null && readinessPayload.streak > 0"
+                  class="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-white/15 text-white text-3xs font-bold"
+                >
+                  <NavIcon name="flame" :size="12" />
+                  {{ t('admin.readiness.teaserStreakBadge', { days: readinessPayload.streak }) }}
+                </span>
               </div>
               <span
                 class="text-2xs font-black uppercase tracking-widest px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 transition-colors flex items-center gap-1 flex-shrink-0 self-center"
