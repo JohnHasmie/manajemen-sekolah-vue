@@ -39,7 +39,6 @@ import { useTenant } from '@/composables/useTenant';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
 import { usePriorityInbox } from '@/composables/usePriorityInbox';
-import WelcomeBanner from '@/components/ui/WelcomeBanner.vue';
 import PinnedAnnouncementCarousel from '@/components/feature/PinnedAnnouncementCarousel.vue';
 
 type StatsPayload = Record<string, any>;
@@ -296,13 +295,6 @@ const financePct = computed(() =>
 <template>
   <AdminTutoringDashboardView v-if="isTutoringCenter" />
   <div v-else class="space-y-md">
-    <WelcomeBanner
-      storage-key="kamiledu.welcome.admin.v1"
-      emoji="🏫"
-      title="Selamat datang, Admin!"
-      message="Data sekolah (siswa, guru, kelas, mapel) ada di menu Data. Keuangan dan pengaturan RBAC ada di menu masing-masing. Pengumuman ke wali murid bisa dikirim dari menu Komunikasi."
-      cta-label="Mengerti"
-    />
     <PinnedAnnouncementCarousel viewer-role="admin" />
     <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
       <template #default>

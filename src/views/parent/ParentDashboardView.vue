@@ -28,7 +28,6 @@ import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
 import { usePriorityInbox } from '@/composables/usePriorityInbox';
-import WelcomeBanner from '@/components/ui/WelcomeBanner.vue';
 import PinnedAnnouncementCarousel from '@/components/feature/PinnedAnnouncementCarousel.vue';
 
 type StatsPayload = Record<string, any>;
@@ -281,13 +280,6 @@ watch(sliceKey, () => {
 
 <template>
   <div class="space-y-md">
-    <WelcomeBanner
-      storage-key="kamiledu.welcome.wali.v1"
-      emoji="👋"
-      title="Selamat datang, Wali Murid!"
-      message="Di sini Anda bisa melihat nilai, absensi, dan tagihan anak Anda. Rapor semester tersedia setelah sekolah menerbitkannya. Ada beberapa anak? Ganti anak lewat chip di bagian atas."
-      cta-label="Mengerti"
-    />
     <PinnedAnnouncementCarousel viewer-role="parent" />
     <AsyncView
       :state="state"
