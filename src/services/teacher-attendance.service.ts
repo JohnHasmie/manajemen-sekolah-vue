@@ -29,6 +29,8 @@ import type {
   TeacherAttendanceAdminSummary,
   TeacherAttendanceAdminSummaryFilters,
   TeacherAttendanceConfig,
+  TeacherAttendanceEmployeeDeepDive,
+  TeacherAttendanceExportFilters,
   TeacherAttendanceGeofence,
   TeacherAttendanceGeofenceDraft,
   TeacherAttendanceHistoryFilters,
@@ -44,6 +46,8 @@ import type {
   TeacherAttendanceSummaryFilters,
   TeacherAttendanceSummaryRow,
   TeacherAttendanceSummaryTotals,
+  TeacherAttendanceTimeseries,
+  TeacherAttendanceTimeseriesFilters,
 } from '@/types/teacher-attendance';
 
 const Endpoints = {
@@ -63,6 +67,9 @@ const Endpoints = {
   rules: '/teacher-attendance/rules',
   report: '/teacher-attendance/report',
   reportSummary: '/teacher-attendance/report/summary',
+  reportTimeseries: '/teacher-attendance/report/timeseries',
+  reportEmployee: '/teacher-attendance/report/employee', // + /{personId}
+  reportExport: '/teacher-attendance/report/export',
   geofences: '/teacher-attendance/geofences',
 } as const;
 
@@ -691,6 +698,10 @@ export const TeacherAttendanceService = {
       if (filters.personnel_type && filters.personnel_type !== 'all') {
         params.personnel_type = filters.personnel_type;
       }
+      // Optional dominant-status narrowing (backend !492). Only present
+      // rows whose `status` matches are counted — matches the detail
+      // list filter so the two sections agree on the slice.
+      if (filters.status) params.status = filters.status;
       const res = await api.get(Endpoints.reportSummary, { params });
       const body = (res.data ?? {}) as {
         meta?: Record<string, unknown>;
@@ -699,14 +710,28 @@ export const TeacherAttendanceService = {
       };
       const statuses = statusKeysFromMeta(body.meta);
       const rawRows = Array.isArray(body.data) ? body.data : [];
-      const data: TeacherAttendanceSummaryRow[] = rawRows.map((r) => ({
-        ...statusCountsFromJson(r, statuses),
-        teacher_id: String(r.teacher_id ?? ''),
-        teacher_name: String(r.teacher_name ?? '-'),
-        employee_number: asStrOrNull(r.employee_number),
-        total: asInt(r.total, 0),
-        present_pct: asFloat(r.present_pct, 0),
-      }));
+      const data: TeacherAttendanceSummaryRow[] = rawRows.map((r) => {
+        // Server ships `person_id` as the stable per-person key on the
+        // unified teacher+staff rekap (staff rows have teacher_id=null).
+        // Fall back to teacher_id when person_id isn't set — older
+        // backends before the personnel unification used `teacher_id`
+        // as the key.
+        const rawPersonId = asStrOrNull(r.person_id) ?? asStrOrNull(r.teacher_id) ?? '';
+        const rawTeacherId = asStrOrNull(r.teacher_id);
+        const rawType = String(r.personnel_type ?? 'teacher');
+        return {
+          ...statusCountsFromJson(r, statuses),
+          person_id: rawPersonId,
+          personnel_type: (rawType === 'staff' ? 'staff' : 'teacher') as
+            | 'teacher'
+            | 'staff',
+          teacher_id: rawTeacherId,
+          teacher_name: String(r.teacher_name ?? '-'),
+          employee_number: asStrOrNull(r.employee_number),
+          total: asInt(r.total, 0),
+          present_pct: asFloat(r.present_pct, 0),
+        };
+      });
       const rawTotals = (body.totals ?? {}) as Record<string, unknown>;
       const totals: TeacherAttendanceSummaryTotals = {
         ...statusCountsFromJson(rawTotals, statuses),
@@ -725,6 +750,187 @@ export const TeacherAttendanceService = {
       };
     } catch (e) {
       throw new Error(humanError(e, 'Gagal memuat rekap presensi guru.'));
+    }
+  },
+
+  /**
+   * GET /teacher-attendance/report/timeseries — per-day school-wide
+   * totals over a date range (backend !492). Powers the tepat-waktu
+   * harian bar chart in the redesigned admin dashboard.
+   *
+   * Response is dense — non-workdays return `is_workday=false` and
+   * zero counts so the chart can render neutral bars for weekends /
+   * holidays without gaps. Date bounds default server-side to the
+   * trailing 7 workdays when omitted.
+   */
+  async adminTimeseries(
+    filters: TeacherAttendanceTimeseriesFilters = {},
+  ): Promise<TeacherAttendanceTimeseries> {
+    try {
+      const params: Record<string, unknown> = {};
+      if (filters.start_date) params.start_date = filters.start_date;
+      if (filters.end_date) params.end_date = filters.end_date;
+      if (filters.personnel_type && filters.personnel_type !== 'all') {
+        params.personnel_type = filters.personnel_type;
+      }
+      const res = await api.get(Endpoints.reportTimeseries, { params });
+      const body = (res.data ?? {}) as {
+        meta?: Record<string, unknown>;
+        data?: Record<string, unknown>[];
+      };
+      const rawDays = Array.isArray(body.data) ? body.data : [];
+      const meta = (body.meta ?? {}) as Record<string, unknown>;
+      const personnel = String(meta.personnel_type ?? 'all');
+      return {
+        meta: {
+          start_date: String(meta.start_date ?? ''),
+          end_date: String(meta.end_date ?? ''),
+          day_count: asInt(meta.day_count, rawDays.length),
+          personnel_type: (personnel === 'teacher' || personnel === 'staff'
+            ? personnel
+            : 'all') as TeacherAttendanceTimeseries['meta']['personnel_type'],
+        },
+        data: rawDays.map((d) => ({
+          date: String(d.date ?? ''),
+          is_workday: asBool(d.is_workday, true),
+          present_count: asInt(d.present_count, 0),
+          late_count: asInt(d.late_count, 0),
+          absent_count: asInt(d.absent_count, 0),
+          ontime_pct: asFloat(d.ontime_pct, 0),
+          overtime_minutes: asInt(d.overtime_minutes, 0),
+        })),
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat grafik harian presensi.'));
+    }
+  },
+
+  /**
+   * GET /teacher-attendance/report/employee/{personId} — per-person
+   * 30-day deep-dive (backend !492). Feeds the drill-down drawer opened
+   * from a rekap row: profile hero, KPI stat blocks, calendar heatmap,
+   * and the last N raw rows for the "Aktivitas terbaru" list.
+   *
+   * `personId` accepts a Teacher ID OR a User ID; the server resolves
+   * school-scoped, same as the detail-list `teacher_id` filter.
+   */
+  async adminEmployeeDeepDive(args: {
+    personId: string;
+    start_date?: string;
+    end_date?: string;
+  }): Promise<TeacherAttendanceEmployeeDeepDive> {
+    try {
+      const params: Record<string, unknown> = {};
+      if (args.start_date) params.start_date = args.start_date;
+      if (args.end_date) params.end_date = args.end_date;
+      const res = await api.get(
+        `${Endpoints.reportEmployee}/${encodeURIComponent(args.personId)}`,
+        { params },
+      );
+      const body = (res.data?.data ?? res.data ?? {}) as Record<string, unknown>;
+      const rawPerson = (body.person ?? {}) as Record<string, unknown>;
+      const rawPeriod = (body.period ?? {}) as Record<string, unknown>;
+      const rawKpi = (body.kpi ?? {}) as Record<string, unknown>;
+      const rawHeat = Array.isArray(body.heatmap) ? body.heatmap : [];
+      const rawRows = Array.isArray(body.recent_rows) ? body.recent_rows : [];
+      const personType = String(rawPerson.personnel_type ?? 'teacher');
+      return {
+        person: {
+          id: String(rawPerson.id ?? ''),
+          name: String(rawPerson.name ?? '-'),
+          personnel_type: (personType === 'staff'
+            ? 'staff'
+            : 'teacher') as TeacherAttendanceEmployeeDeepDive['person']['personnel_type'],
+          employee_number: asStrOrNull(rawPerson.employee_number),
+          role_label: asStrOrNull(rawPerson.role_label),
+        },
+        period: {
+          start_date: String(rawPeriod.start_date ?? ''),
+          end_date: String(rawPeriod.end_date ?? ''),
+          day_count: asInt(rawPeriod.day_count, rawHeat.length),
+        },
+        kpi: {
+          streak_days: asInt(rawKpi.streak_days, 0),
+          ontime_pct: asFloat(rawKpi.ontime_pct, 0),
+          present_days: asInt(rawKpi.present_days, 0),
+          late_days: asInt(rawKpi.late_days, 0),
+          absent_days: asInt(rawKpi.absent_days, 0),
+          overtime_minutes: asInt(rawKpi.overtime_minutes, 0),
+        },
+        heatmap: rawHeat.map((raw) => {
+          const c = raw as Record<string, unknown>;
+          const s = String(c.status ?? 'off');
+          const status = (
+            s === 'present' || s === 'late' || s === 'absent' || s === 'off'
+              ? s
+              : 'off'
+          ) as TeacherAttendanceEmployeeDeepDive['heatmap'][number]['status'];
+          return {
+            date: String(c.date ?? ''),
+            is_workday: asBool(c.is_workday, true),
+            status,
+            check_in_at: (c.check_in_at as string | null) ?? null,
+            check_out_at: (c.check_out_at as string | null) ?? null,
+          };
+        }),
+        recent_rows: rawRows as TeacherAttendanceRecord[],
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat detail kehadiran pegawai.'));
+    }
+  },
+
+  /**
+   * POST /teacher-attendance/report/export — server-generated XLSX
+   * download (backend !492). Two scopes:
+   *   · `summary` — aggregate per-person totals (mirrors adminSummary).
+   *   · `detail`  — one row per (person × day) with masuk/pulang times.
+   *
+   * Returns a Blob so the caller can prompt a save-as. Filename can be
+   * derived from the `Content-Disposition` header when the server sets
+   * one; otherwise the caller falls back to a canonical template.
+   */
+  async adminExport(
+    filters: TeacherAttendanceExportFilters,
+  ): Promise<{ blob: Blob; filename: string | null }> {
+    try {
+      const body: Record<string, unknown> = { scope: filters.scope };
+      if (filters.start_date) body.start_date = filters.start_date;
+      if (filters.end_date) body.end_date = filters.end_date;
+      if (filters.personnel_type && filters.personnel_type !== 'all') {
+        body.personnel_type = filters.personnel_type;
+      }
+      if (filters.teacher_id) body.teacher_id = filters.teacher_id;
+      if (filters.status) body.status = filters.status;
+      const res = await api.post(Endpoints.reportExport, body, {
+        responseType: 'blob',
+      });
+      const disposition = String(
+        (res.headers?.['content-disposition'] as string | undefined) ??
+          (res.headers?.['Content-Disposition'] as string | undefined) ??
+          '',
+      );
+      // RFC 6266: filename="..." OR filename*=UTF-8''...
+      let filename: string | null = null;
+      const starMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+      const plainMatch = disposition.match(/filename="?([^";]+)"?/i);
+      if (starMatch?.[1]) {
+        try {
+          filename = decodeURIComponent(starMatch[1].trim());
+        } catch {
+          filename = starMatch[1].trim();
+        }
+      } else if (plainMatch?.[1]) {
+        filename = plainMatch[1].trim();
+      }
+      const blob = new Blob([res.data as BlobPart], {
+        type:
+          (res.data as Blob)?.type ||
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      return { blob, filename };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal mengekspor laporan presensi.'));
     }
   },
 

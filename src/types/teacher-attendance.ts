@@ -632,4 +632,137 @@ export interface TeacherAttendanceAdminSummaryFilters
    * `nullable|in:teacher,staff,all`.
    */
   personnel_type?: TeacherAttendancePersonnelFilter;
+  /**
+   * Optional dominant-status narrowing (backend !492). Same values the
+   * detail list accepts — surfaced on the rekap so the KPI strip and
+   * the rekap card can agree on a slice ("only rows counted as late").
+   */
+  status?: TeacherAttendanceStatus;
+}
+
+// ───────────────────────────────────────────────────────────────────
+// TIMESERIES (backend !492)
+//
+// Per-day school-wide totals over a date range — powers the tepat-waktu
+// harian bar chart in the redesigned admin dashboard. Each entry
+// exposes: workday flag, presence counts, ontime %, overtime minutes.
+// The `data[]` is dense — non-workdays return `is_workday=false` and
+// zero counts so the chart can render neutral bars for weekends /
+// holidays without gaps.
+// ───────────────────────────────────────────────────────────────────
+
+/** One per-day bucket in the timeseries response. */
+export interface TeacherAttendanceTimeseriesDay {
+  /** YYYY-MM-DD. */
+  date: string;
+  /** From WorkdayCalendar — false = weekend or holiday. */
+  is_workday: boolean;
+  /** Count of teacher_attendances rows for that day (status=present + late). */
+  present_count: number;
+  /** Subset of present_count that is dominant status=late. */
+  late_count: number;
+  /** Rows with no check-in that day (workday only; server excludes staff on non-workdays). */
+  absent_count: number;
+  /** round(present / (present + absent) * 100, 1); 0 when no rows. */
+  ontime_pct: number;
+  /** Sum of overtime minutes across the day. */
+  overtime_minutes: number;
+}
+
+/** Meta echoed by the timeseries endpoint. */
+export interface TeacherAttendanceTimeseriesMeta {
+  start_date: string;
+  end_date: string;
+  day_count: number;
+  personnel_type: TeacherAttendancePersonnelFilter;
+}
+
+/** Full response body for /teacher-attendance/report/timeseries. */
+export interface TeacherAttendanceTimeseries {
+  meta: TeacherAttendanceTimeseriesMeta;
+  data: TeacherAttendanceTimeseriesDay[];
+}
+
+/** Filters accepted by the timeseries endpoint. */
+export interface TeacherAttendanceTimeseriesFilters {
+  start_date?: string;
+  end_date?: string;
+  personnel_type?: TeacherAttendancePersonnelFilter;
+}
+
+// ───────────────────────────────────────────────────────────────────
+// EMPLOYEE DEEP-DIVE (backend !492)
+//
+// Per-person 30-day breakdown for the drill-down drawer opened from a
+// rekap row: profile hero, KPI stat blocks, calendar heatmap, and the
+// last N raw rows so admins don't have to filter the master list.
+// ───────────────────────────────────────────────────────────────────
+
+/** Minimal person block on the deep-dive payload. */
+export interface TeacherAttendanceDeepDivePerson {
+  id: string;
+  name: string;
+  personnel_type: TeacherAttendancePersonnelType;
+  /** Teacher's NIP or null (staff have none). */
+  employee_number: string | null;
+  /** Extra label — subject for teacher (mapel), role for staff. */
+  role_label: string | null;
+}
+
+/** Period bounds actually used by the deep-dive computation. */
+export interface TeacherAttendanceDeepDivePeriod {
+  start_date: string;
+  end_date: string;
+  day_count: number;
+}
+
+/** KPI stat block for the deep-dive hero. */
+export interface TeacherAttendanceDeepDiveKpi {
+  /** Consecutive present days ending at end_date. */
+  streak_days: number;
+  ontime_pct: number;
+  present_days: number;
+  late_days: number;
+  absent_days: number;
+  overtime_minutes: number;
+}
+
+/** One cell on the 30-day heatmap grid. */
+export interface TeacherAttendanceHeatmapCell {
+  date: string;
+  is_workday: boolean;
+  /**
+   * present | late | absent | off — `off` renders as a neutral tile
+   * (weekend/holiday); `absent` only appears on workdays.
+   */
+  status: 'present' | 'late' | 'absent' | 'off';
+  check_in_at: string | null;
+  check_out_at: string | null;
+}
+
+/** GET /teacher-attendance/report/employee/{id} response body. */
+export interface TeacherAttendanceEmployeeDeepDive {
+  person: TeacherAttendanceDeepDivePerson;
+  period: TeacherAttendanceDeepDivePeriod;
+  kpi: TeacherAttendanceDeepDiveKpi;
+  heatmap: TeacherAttendanceHeatmapCell[];
+  /** Last N raw rows for the drawer's "Aktivitas terbaru" list. */
+  recent_rows: TeacherAttendanceRecord[];
+}
+
+// ───────────────────────────────────────────────────────────────────
+// EXPORT (backend !492)
+// ───────────────────────────────────────────────────────────────────
+
+/** Which slice the XLSX export ships (aggregate vs raw rows). */
+export type TeacherAttendanceExportScope = 'summary' | 'detail';
+
+/** POST /teacher-attendance/report/export request body. */
+export interface TeacherAttendanceExportFilters {
+  scope: TeacherAttendanceExportScope;
+  start_date?: string;
+  end_date?: string;
+  personnel_type?: TeacherAttendancePersonnelFilter;
+  teacher_id?: string;
+  status?: TeacherAttendanceStatus;
 }

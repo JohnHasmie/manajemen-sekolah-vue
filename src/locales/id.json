@@ -2872,7 +2872,10 @@
         "tab_rules": "Aturan Jam Pulang",
         "tab_report": "Laporan",
         "empty_title": "Belum ada rekap kehadiran",
-        "empty_description": "Tidak ada data kehadiran guru untuk periode ini."
+        "empty_description": "Tidak ada data kehadiran guru untuk periode ini.",
+        "empty_description_teacher": "Tidak ada data kehadiran guru untuk periode ini.",
+        "empty_description_staff": "Tidak ada data kehadiran staf untuk periode ini.",
+        "empty_description_all": "Tidak ada data kehadiran pegawai untuk periode ini."
       },
       "teacher_management": {
         "role_teacher": "Guru",
