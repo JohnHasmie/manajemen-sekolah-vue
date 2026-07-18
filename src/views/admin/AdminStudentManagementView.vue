@@ -14,6 +14,8 @@ import { useI18n } from 'vue-i18n';
 import { StudentService } from '@/services/students.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import { AdminDataExcelService } from '@/services/admin-data-excel.service';
+import { AttendanceQrService } from '@/services/attendance-qr.service';
+import { useMe } from '@/composables/useMe';
 import { useRoleHex } from '@/composables/useRoleHex';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
@@ -32,6 +34,7 @@ import FilterFacetPickerModal, {
   type FacetOption,
 } from '@/components/feature/FilterFacetPickerModal.vue';
 import AdminDataMenu from '@/components/feature/AdminDataMenu.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
 import AdminEntityDetailSheet, {
   type DetailSection,
 } from '@/components/feature/AdminEntityDetailSheet.vue';
@@ -49,6 +52,67 @@ const { t } = useI18n();
 const primaryColor = useRoleHex();
 const ayStore = useAcademicYearStore();
 const ayReadOnly = computed(() => ayStore.isReadOnly);
+const { can } = useMe();
+
+/** True when the current admin can issue/print QR cards. Gates the
+ *  header + detail-sheet + bulk "Cetak Kartu QR" entries so a member
+ *  who can browse siswa but not print cards doesn't see dead buttons. */
+const canPrintCards = computed(() => can('attendance.cards.issue'));
+
+/**
+ * Per-row + bulk "Cetak Kartu QR" — inline blob download, no
+ * navigation. Backend auto-issues any missing cards before rendering
+ * the PDF (idempotent), so the button label stays honest whether the
+ * siswa already has a card or not.
+ *
+ * Discoverability hook: admins looked for "print card" here on the
+ * roster before the Kartu QR manager tab, so we surface it inline
+ * even though the full manager is only one click away.
+ */
+const printingBulk = ref(false);
+const printingRow = ref(false);
+
+async function printCardsForStudents(studentIds: string[], label: string) {
+  if (studentIds.length === 0) return;
+  const single = studentIds.length === 1;
+  if (single) printingRow.value = true;
+  else printingBulk.value = true;
+  try {
+    const ts = new Date().toISOString().slice(0, 10);
+    const filename = single
+      ? `kartu-qr-${label
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')
+          .slice(0, 40) || 'siswa'}.pdf`
+      : `kartu-qr-siswa-${ts}.pdf`;
+    await AttendanceQrService.exportStudentCardsPdf(studentIds, filename);
+    toast.value = {
+      message: single
+        ? 'Kartu QR siswa terunduh.'
+        : `PDF ${studentIds.length} kartu siswa terunduh.`,
+      tone: 'success',
+    };
+  } catch (e) {
+    toast.value = { message: (e as Error).message, tone: 'error' };
+  } finally {
+    if (single) printingRow.value = false;
+    else printingBulk.value = false;
+  }
+}
+
+function printCardForCurrentDetail() {
+  if (!detailTarget.value || !canPrintCards.value) return;
+  void printCardsForStudents(
+    [detailTarget.value.id],
+    detailTarget.value.name || 'siswa',
+  );
+}
+
+function printCardsForSelection() {
+  if (selectedIds.value.size === 0 || !canPrintCards.value) return;
+  void printCardsForStudents(Array.from(selectedIds.value), 'siswa');
+}
 
 // ── Data state ─────────────────────────────────────────────────────
 const students = shallowRef<Student[]>([]);
@@ -702,6 +766,19 @@ function topMeta(s: Student): string {
     @retry="reload()"
   >
     <template #header-actions>
+      <!-- Kelola Kartu QR — deep-link to the Kartu QR manager pre-
+           selected on the Siswa tab. Admins looked for the print-card
+           entry here on Data Siswa before the manager tab; we surface
+           it as a discreet on-hero button so they don't miss it. Gated
+           on the same ability that guards the manager route. -->
+      <RouterLink
+        v-if="canPrintCards"
+        :to="{ name: 'admin.attendance.cards', query: { tab: 'siswa' } }"
+        class="inline-flex items-center gap-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white px-md py-sm text-sm font-semibold border border-white/30 transition-colors"
+      >
+        <NavIcon name="id-card" :size="14" />
+        Kelola Kartu QR
+      </RouterLink>
       <AdminDataMenu
         :read-only="ayReadOnly"
         @refresh="reload(pagination?.current_page ?? 1)"
@@ -806,6 +883,18 @@ function topMeta(s: Student): string {
       </Button>
       <Button variant="secondary" size="sm" @click="openBulkStatus">
         {{ t('admin.student.bulkStatusAction') }}
+      </Button>
+      <!-- Cetak Kartu QR — one-shot bulk print for the selected siswa.
+           Backend auto-issues any missing cards, so this stays a single
+           button (no separate "Terbitkan" step). -->
+      <Button
+        v-if="canPrintCards"
+        variant="secondary"
+        size="sm"
+        :loading="printingBulk"
+        @click="printCardsForSelection"
+      >
+        Cetak Kartu QR ({{ selectedIds.size }})
       </Button>
       <Button variant="danger" size="sm" @click="bulkDeleteOpen = true">
         {{ t('admin.student.bulkDeleteAction', { count: selectedIds.size }) }}
@@ -1067,10 +1156,13 @@ function topMeta(s: Student): string {
     :status-pill="statusPillFor(detailTarget)"
     :read-only="ayReadOnly"
     :reset-password-label="detailTarget.guardian_email ? 'Reset Password Wali' : undefined"
+    :print-card-label="canPrintCards ? 'Cetak Kartu QR' : undefined"
+    :print-card-loading="printingRow"
     @close="detailTarget = null"
     @edit="detailEdit"
     @delete="detailDelete"
     @reset-password="openResetPassword"
+    @print-card="printCardForCurrentDetail"
   />
 
   <ResetPasswordModal

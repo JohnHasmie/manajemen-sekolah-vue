@@ -47,6 +47,15 @@ defineProps<{
    * account (guru, wali) pass this; kelas/mapel omit it.
    */
   resetPasswordLabel?: string;
+  /**
+   * When set, renders a "Cetak Kartu QR" (or caller-supplied label)
+   * action above Edit/Hapus and emits `print-card`. Currently used by
+   * the Data Siswa detail sheet — one-shot inline print of a student's
+   * QR card without navigating to the full Kartu QR manager.
+   */
+  printCardLabel?: string;
+  /** Disable + spinner state for the print-card action (per-row export). */
+  printCardLoading?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -54,6 +63,7 @@ const emit = defineEmits<{
   edit: [];
   delete: [];
   'reset-password': [];
+  'print-card': [];
 }>();
 </script>
 
@@ -115,6 +125,16 @@ const emit = defineEmits<{
 
       <!-- Footer actions -->
       <section v-if="!readOnly" class="space-y-2 pt-2">
+        <Button
+          v-if="printCardLabel"
+          variant="secondary"
+          block
+          :loading="!!printCardLoading"
+          @click="emit('print-card')"
+        >
+          <NavIcon name="printer" :size="13" />
+          {{ printCardLabel }}
+        </Button>
         <Button
           v-if="resetPasswordLabel"
           variant="secondary"

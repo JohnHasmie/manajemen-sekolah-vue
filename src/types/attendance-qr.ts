@@ -115,3 +115,83 @@ export interface PersonnelCardListParams {
   page?: number;
   per_page?: number;
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Student cards (account-less siswa flow, backend MR !484).
+//
+// Distinct from the personnel-card contract above: students never have
+// a `users` account, so the roster is keyed on `students.id` (not
+// `users_schools.user_id`) and there's no RBAC role check. The endpoints
+// live under a different controller (`StudentCardController`) so the
+// working teacher/staff flow stays untouched. Gated on both
+// `attendance.cards.issue` AND the `issue_student_cards` opt-in flag in
+// `teacher_attendance_settings` (default off).
+// ─────────────────────────────────────────────────────────────────────
+
+/** card_status query filter — matches backend `card_status=issued|missing`. */
+export type StudentCardStatus = 'issued' | 'missing';
+
+/**
+ * Per-student result of POST /attendance/student-cards/issue.
+ *   - `issued`  → new card minted (also returns the `qr_token` + `card_id`)
+ *   - `exists`  → student already had an active card (idempotent re-issue)
+ *   - `skipped` → student not in this school (`reason='cross_tenant'`)
+ * Mirrors PersonnelCardIssueResult but with the student-scoped statuses.
+ */
+export interface StudentCardIssueResult {
+  student_id: string;
+  qr_token?: string;
+  card_id?: string;
+  status: 'issued' | 'exists' | 'skipped';
+  /** Human reason for skipped rows (e.g. 'cross_tenant'). */
+  reason?: string;
+}
+
+/**
+ * One row from GET /attendance/student-cards. Keyed on `student_id` —
+ * the same key used by the issue + PDF export endpoints. `class_id` /
+ * `class_label` may be null when the student has no enrollment in the
+ * requested academic year (backend uses a LEFT JOIN so unenrolled
+ * students still surface rather than silently disappearing).
+ */
+export interface StudentCardListRow {
+  student_id: string;
+  name: string;
+  student_number: string | null;
+  class_id: string | null;
+  class_label: string | null;
+  has_card: boolean;
+  /** Present when has_card=true — the card row's primary key (used for DELETE). */
+  card_id: string | null;
+  /** ISO-8601 timestamp when the current card was issued (null when has_card=false). */
+  card_issued_at: string | null;
+}
+
+/**
+ * Aggregate KPI counters shipped in the `meta` block of the list
+ * response. Total is computed against the SAME base query as the row
+ * list (school + class filter + search) but WITHOUT the `card_status`
+ * filter, so the issued/missing tallies are honest split-of-total
+ * numbers rather than the filtered slice count.
+ */
+export interface StudentCardListMeta {
+  total_students: number;
+  issued_count: number;
+  missing_count: number;
+}
+
+/**
+ * Query params for GET /attendance/student-cards. `academic_year_id` is
+ * required — the class filter joins against `student_classes` scoped to
+ * that AY (a student may be in different rombels across years). Accepts
+ * both the integer id and a year string (e.g. "2025/2026"), same helper
+ * as the rest of the AY-aware admin surface.
+ */
+export interface StudentCardListParams {
+  academic_year_id: string | number;
+  class_id?: string | null;
+  search?: string;
+  card_status?: StudentCardStatus;
+  page?: number;
+  per_page?: number;
+}

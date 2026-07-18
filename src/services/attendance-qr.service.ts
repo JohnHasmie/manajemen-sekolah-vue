@@ -28,6 +28,10 @@ import type {
   PersonnelCardListParams,
   PersonnelCardListRow,
   PersonnelRole,
+  StudentCardIssueResult,
+  StudentCardListMeta,
+  StudentCardListParams,
+  StudentCardListRow,
 } from '@/types/attendance-qr';
 
 const Endpoints = {
@@ -37,6 +41,13 @@ const Endpoints = {
   cardsIssue: '/attendance/personnel-cards/issue',
   cardsBase: '/attendance/personnel-cards',
   cardsExportPdf: '/attendance/personnel-cards/export.pdf',
+  // Student-card endpoints — separate controller because students are
+  // account-less (`students.user_id` points at the guardian, not the
+  // student). See StudentCardController on the backend (MR !484).
+  studentCardsList: '/attendance/student-cards',
+  studentCardsIssue: '/attendance/student-cards/issue',
+  studentCardsBase: '/attendance/student-cards',
+  studentCardsExportPdf: '/attendance/student-cards/export.pdf',
 } as const;
 
 /**
@@ -174,6 +185,64 @@ function paginationFromMeta(
 export interface PersonnelCardListResult {
   items: PersonnelCardListRow[];
   pagination: Pagination;
+}
+
+/**
+ * The student-list response bundles both the row-level pagination and
+ * the aggregate KPI counters (total / issued / missing) so the KPI
+ * strip stays honest even when the row list is filtered by card status.
+ * Kept as a single result object rather than two separate calls — one
+ * fetch, one paint.
+ */
+export interface StudentCardListResult {
+  items: StudentCardListRow[];
+  pagination: Pagination;
+  meta: StudentCardListMeta;
+}
+
+/**
+ * Coerce one student row from the wire into the FE shape. Same defensive
+ * shape as personnelRowFromJson — nulls become nulls (not empty strings)
+ * so the template's `class_label ?? '—'` fallback reads honestly.
+ */
+function studentRowFromJson(raw: unknown): StudentCardListRow {
+  const r = (raw as Record<string, unknown>) ?? {};
+  const studentNumber = r.student_number;
+  const classId = r.class_id;
+  const classLabel = r.class_label;
+  const cardId = r.card_id;
+  const cardIssuedAt = r.card_issued_at;
+  return {
+    student_id: String(r.student_id ?? ''),
+    name: String(r.name ?? ''),
+    student_number:
+      studentNumber == null || studentNumber === ''
+        ? null
+        : String(studentNumber),
+    class_id: classId == null || classId === '' ? null : String(classId),
+    class_label:
+      classLabel == null || classLabel === '' ? null : String(classLabel),
+    has_card: Boolean(r.has_card),
+    card_id: cardId == null || cardId === '' ? null : String(cardId),
+    card_issued_at:
+      cardIssuedAt == null || cardIssuedAt === ''
+        ? null
+        : String(cardIssuedAt),
+  };
+}
+
+/**
+ * Pull the student KPI counters out of the meta block. Defaults to
+ * zeros so the KPI strip renders three flat "0"s while the fetch is
+ * still pending rather than blanks or NaN.
+ */
+function studentMetaFromJson(raw: unknown): StudentCardListMeta {
+  const m = (raw as Record<string, unknown>) ?? {};
+  return {
+    total_students: Math.max(0, asInt(m.total_students, 0)),
+    issued_count: Math.max(0, asInt(m.issued_count, 0)),
+    missing_count: Math.max(0, asInt(m.missing_count, 0)),
+  };
 }
 
 export const AttendanceQrService = {
@@ -326,6 +395,151 @@ export const AttendanceQrService = {
       triggerBlobDownload(res.data as Blob, suggestedName);
     } catch (e) {
       throw new Error(humanError(e, 'Gagal mengunduh PDF kartu QR.'));
+    }
+  },
+
+  // ── Student cards (account-less siswa flow, backend MR !484) ──────
+
+  /**
+   * GET /attendance/student-cards — paginated roster of students in the
+   * active school with their current card state inline. Keyed on
+   * `student_id` (the *only* stable key — students never have a `users`
+   * row). Backend LEFT-JOINs `student_classes` for the requested AY so a
+   * student with no enrollment still appears (class_id / class_label
+   * come back null).
+   *
+   * The response also carries a `meta` block with total_students /
+   * issued_count / missing_count — those are computed against the base
+   * query BEFORE the `card_status` filter is applied, so the KPI strip
+   * stays honest even when the row list is narrowed to only-missing.
+   *
+   * NOT the same endpoint as /personnel-cards/list — the personnel path
+   * requires a `users_schools` membership + role, which every imported
+   * student would silently fail (that was exactly the "empty Siswa tab"
+   * bug the Kartu QR Personal redesign is fixing).
+   */
+  async listStudentCards(
+    params: StudentCardListParams,
+  ): Promise<StudentCardListResult> {
+    try {
+      const perPage = params.per_page ?? 25;
+      const res = await api.get(Endpoints.studentCardsList, {
+        params: {
+          // Cache-buster so the list refreshes after issue / revoke /
+          // export (which auto-issues) — same pattern as listPersonnelCards.
+          _t: Date.now(),
+          academic_year_id: params.academic_year_id,
+          page: params.page ?? 1,
+          per_page: perPage,
+          ...(params.class_id ? { class_id: params.class_id } : {}),
+          ...(params.search ? { search: params.search } : {}),
+          ...(params.card_status ? { card_status: params.card_status } : {}),
+        },
+      });
+      const body = (res.data ?? {}) as {
+        data?: unknown[];
+        meta?: Record<string, unknown>;
+      };
+      const rows = Array.isArray(body.data) ? body.data : [];
+      return {
+        items: rows.map(studentRowFromJson),
+        pagination: paginationFromMeta(body.meta, perPage),
+        meta: studentMetaFromJson(body.meta),
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat daftar kartu siswa.'));
+    }
+  },
+
+  /**
+   * POST /attendance/student-cards/issue — batch-issue cards for the
+   * given student ids. Idempotent: a student that already has an active
+   * card returns `status='exists'` (NOT an error) with the same
+   * `qr_token` — so re-clicking the button never blows up the roster.
+   * Cross-tenant ids return `status='skipped'` with reason='cross_tenant'.
+   *
+   * The server enforces `attendance.cards.issue` AND the
+   * `issue_student_cards` opt-in flag before minting anything.
+   */
+  async issueStudentCards(
+    studentIds: string[],
+  ): Promise<StudentCardIssueResult[]> {
+    try {
+      const res = await api.post(Endpoints.studentCardsIssue, {
+        student_ids: studentIds,
+      });
+      const body = (res.data ?? {}) as { data?: StudentCardIssueResult[] };
+      const rows = Array.isArray(body.data) ? body.data : [];
+      return rows.map((r) => ({
+        student_id: String(r.student_id ?? ''),
+        qr_token: r.qr_token ? String(r.qr_token) : undefined,
+        card_id: r.card_id ? String(r.card_id) : undefined,
+        status:
+          r.status === 'issued' || r.status === 'exists' || r.status === 'skipped'
+            ? r.status
+            : 'skipped',
+        reason: r.reason ? String(r.reason) : undefined,
+      }));
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menerbitkan kartu QR siswa.'));
+    }
+  },
+
+  /**
+   * DELETE /attendance/student-cards/{cardId} — revoke a single card.
+   * Server-side this sets `revoked_at`; the next scan of that QR is
+   * rejected at the gate. Re-issuing mints a fresh token.
+   */
+  async revokeStudentCard(
+    cardId: string,
+  ): Promise<{ id: string; revoked_at: string }> {
+    try {
+      const res = await api.delete(`${Endpoints.studentCardsBase}/${cardId}`);
+      const data = (res.data?.data ?? res.data ?? {}) as Record<
+        string,
+        unknown
+      >;
+      return {
+        id: String(data.id ?? cardId),
+        revoked_at: String(data.revoked_at ?? ''),
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal mencabut kartu QR siswa.'));
+    }
+  },
+
+  /**
+   * GET /attendance/student-cards/export.pdf?student_ids[]=… — download
+   * an A4 sheet of the requested students' cards. Backend auto-issues
+   * any missing cards for the listed students BEFORE rendering the PDF
+   * (idempotent), so the mockup's one-click "Terbitkan & Cetak" always
+   * lands a complete sheet — no separate issue-then-print two-step.
+   *
+   * Same blob-download dance as exportPersonnelCardsPdf; the anchor
+   * click + revoke is centralised in `triggerBlobDownload`.
+   */
+  async exportStudentCardsPdf(
+    studentIds: string[],
+    suggestedName?: string,
+  ): Promise<void> {
+    // Default filename `kartu-qr-siswa-YYYY-MM-DD.pdf` — matches the
+    // personnel-cards convention and gives the school a dated file
+    // without having to rename it after download.
+    const filename = suggestedName ??
+      `kartu-qr-siswa-${new Date().toISOString().slice(0, 10)}.pdf`;
+    try {
+      const res = await api.get(Endpoints.studentCardsExportPdf, {
+        params: { student_ids: studentIds },
+        // Same reason as personnel: Laravel's `array` validator only
+        // unpacks bracketed query keys.
+        paramsSerializer: {
+          indexes: false,
+        },
+        responseType: 'blob',
+      });
+      triggerBlobDownload(res.data as Blob, filename);
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal mengunduh PDF kartu QR siswa.'));
     }
   },
 };
