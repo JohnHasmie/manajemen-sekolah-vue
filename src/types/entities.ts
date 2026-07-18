@@ -144,6 +144,25 @@ function normaliseStudentStatus(
 }
 
 // ---- Teacher ----
+/**
+ * Compact subject reference emitted by the enriched `/teacher` list
+ * response. Includes `code` so cards can render chips as
+ * `[CODE · Name]` (e.g. "MTK · Matematika"). Deduped by the backend
+ * so the "Bahasa Inggris, Bahasa Inggris, Bahasa Inggris" repetition
+ * bug on the old admin cards is fixed at the source.
+ */
+export interface TeacherSubjectRef {
+  id: string;
+  name: string;
+  code?: string | null;
+}
+
+/** Compact class reference (id + display name). */
+export interface TeacherClassRef {
+  id: string;
+  name: string;
+}
+
 export interface Teacher {
   id: string;
   name: string;
@@ -159,6 +178,33 @@ export interface Teacher {
   homeroom_class_names?: string[];
   subject_ids?: string[];
   subject_names?: string[];
+  /**
+   * Structured, deduped subjects (id + name + optional code). Populated
+   * from the enriched backend response; the flat `subject_names` field
+   * is retained for compatibility with older list callers.
+   */
+  subjects?: TeacherSubjectRef[];
+  /**
+   * Classes this teacher actively teaches — the "KELAS YANG DIPEGANG"
+   * facet on the two-column card. Distinct from `homeroom_of` (below).
+   * Undefined when the backend has not shipped this field yet;
+   * consumers should render an empty state ("Belum diberi kelas").
+   */
+  teaching_classes?: TeacherClassRef[];
+  /**
+   * Homeroom class the teacher is currently wali of, if any. Newer
+   * name for the historical `homeroom_class_name`/`homeroom_class_id`
+   * scalar pair — consumers should prefer this when present and fall
+   * back to those two scalars otherwise.
+   */
+  homeroom_of?: TeacherClassRef | null;
+  /**
+   * Coarse status label computed by the backend so admin cards don't
+   * have to re-derive it inconsistently. Undefined against a legacy
+   * backend — cards should fall back to `is_active_this_year` +
+   * homeroom heuristics in that case.
+   */
+  teaching_status?: 'active' | 'no_class' | 'no_subject' | 'not_assigned' | null;
   user_id?: string | null;
   is_active_this_year?: boolean;
 }
@@ -178,6 +224,66 @@ export function teacherFromJson(raw: AnyRecord): Teacher {
         return n ?? '';
       })
     : undefined;
+
+  // Structured subject refs (deduped by id) with optional `code` for
+  // the "[CODE · Name]" chip on the two-column card. Legacy backends
+  // ship `subjects: [{id, name}]` without `code`; the chip helper
+  // falls back to just the name when `code` is absent.
+  let structuredSubjects: TeacherSubjectRef[] | undefined;
+  if (Array.isArray(subjects)) {
+    const seen = new Set<string>();
+    structuredSubjects = [];
+    for (const s of subjects) {
+      const id = String(s.id ?? '');
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      const name = (s.name as string) ?? (s.nama as string) ?? '';
+      const code = (s.code as string) ?? (s.kode as string) ?? null;
+      structuredSubjects.push({ id, name, code });
+    }
+  }
+
+  // Teaching classes — the classes this teacher actively teaches.
+  // Read `teaching_classes` from the enriched response; fall back to
+  // `classes`/`kelas_diampu` when older backend variants use those keys.
+  const teachingClassesRaw =
+    (r.teaching_classes as AnyRecord[] | undefined) ??
+    (r.classes as AnyRecord[] | undefined) ??
+    (r.kelas_diampu as AnyRecord[] | undefined);
+  const teachingClasses: TeacherClassRef[] | undefined = Array.isArray(
+    teachingClassesRaw,
+  )
+    ? teachingClassesRaw
+        .map((c) => ({
+          id: String(c?.id ?? c?.class_id ?? c?.kelas_id ?? ''),
+          name: String(c?.name ?? c?.nama ?? c?.class_name ?? ''),
+        }))
+        .filter((c) => c.id && c.name)
+    : undefined;
+
+  // Homeroom — prefer the structured `homeroom_of` object emitted by
+  // the enriched response; fall back to the flat scalar pair from the
+  // legacy shape so pre-deploy callers still see a wali chip.
+  let homeroomOf: TeacherClassRef | null | undefined;
+  const homeroomOfRaw = r.homeroom_of as AnyRecord | null | undefined;
+  if (homeroomOfRaw && typeof homeroomOfRaw === 'object') {
+    const id = String(homeroomOfRaw.id ?? '');
+    const name = String(homeroomOfRaw.name ?? homeroomOfRaw.nama ?? '');
+    homeroomOf = id && name ? { id, name } : null;
+  } else if (homeroomOfRaw === null) {
+    homeroomOf = null;
+  }
+  // If the enriched field wasn't in the payload at all, `homeroomOf`
+  // stays undefined and consumers fall through to homeroom_class_name.
+
+  const teachingStatusRaw = r.teaching_status as string | undefined;
+  const teachingStatus: Teacher['teaching_status'] =
+    teachingStatusRaw === 'active' ||
+    teachingStatusRaw === 'no_class' ||
+    teachingStatusRaw === 'no_subject' ||
+    teachingStatusRaw === 'not_assigned'
+      ? teachingStatusRaw
+      : undefined;
 
   return {
     id: String(r.id ?? ''),
@@ -216,6 +322,10 @@ export function teacherFromJson(raw: AnyRecord): Teacher {
           .map((h) => String(h.name ?? h.nama ?? ''))
           .filter(Boolean)
       : undefined,
+    subjects: structuredSubjects,
+    teaching_classes: teachingClasses,
+    homeroom_of: homeroomOf,
+    teaching_status: teachingStatus,
     user_id: (r.user_id as string) ?? (user?.id as string) ?? null,
     is_active_this_year: r.is_active_this_year === true,
   };

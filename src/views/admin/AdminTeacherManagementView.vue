@@ -19,8 +19,7 @@ import { normalizeGender } from '@/types/entities';
 import type { Teacher, Classroom, Subject } from '@/types/entities';
 import type { Pagination } from '@/types/api';
 import AdminCrudScaffold from '@/components/feature/AdminCrudScaffold.vue';
-import BrandListRow from '@/components/feature/BrandListRow.vue';
-import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
+import TeacherStructuredCard from './widgets/TeacherStructuredCard.vue';
 import PaginationView from '@/components/data/Pagination.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Button from '@/components/ui/Button.vue';
@@ -669,32 +668,10 @@ function onImportDone(res: {
   reload(1);
 }
 
-function topMeta(t: Teacher): string {
-  const role = t.role === 'wali_kelas'
-    ? $t('role.wali_kelas')
-    : $t('role.teacher');
-  const nip = t.employee_number;
-  return nip ? `${role} · ${$t('admin.teachers.rowPrefix', { nip })}` : role;
-}
-
-function statusFor(t: Teacher) {
-  if (t.homeroom_class_name) {
-    return {
-      tone: 'info' as const,
-      label: $t('admin.teachers.homeroomPrefix', { class: t.homeroom_class_name }),
-    };
-  }
-  if (t.is_active_this_year) {
-    return {
-      tone: 'success' as const,
-      label: $t('admin.teachers.statusActiveTeaching'),
-    };
-  }
-  return {
-    tone: 'neutral' as const,
-    label: $t('admin.teachers.statusNotAssigned'),
-  };
-}
+// The pre-redesign card rendered a compact `topMeta` string + a status
+// chip. Those are now handled inside TeacherStructuredCard (identity
+// column shows role/NIP; assignment grid shows homeroom + teaching
+// state), so no helper is needed here.
 </script>
 
 <template>
@@ -769,43 +746,18 @@ function statusFor(t: Teacher) {
       />
     </template>
 
-    <ul class="space-y-2">
+    <ul class="space-y-3">
       <li v-for="t in teachers" :key="t.id">
-        <BrandListRow
-          :title="t.name || $t('admin.shared.noName')"
-          :top-meta="topMeta(t)"
-          :status="statusFor(t)"
-          :trailing-action-label="selectedIds.has(t.id) ? '' : $t('admin.shared.detail')"
-          :trailing-action-color="primaryColor"
+        <TeacherStructuredCard
+          :teacher="t"
+          :accent-color="primaryColor"
           :selected="selectedIds.has(t.id)"
           bulk-selectable
           @click="selectedIds.size > 0 ? toggleSelect(t.id) : openDetail(t)"
           @long-press="toggleSelect(t.id)"
-        >
-          <template #leading>
-            <InitialsAvatar
-              :name="t.name || '?'"
-              :size="44"
-              :color="primaryColor"
-              :border-radius="12"
-            />
-          </template>
-          <div
-            v-if="selectedIds.size === 0"
-            class="mt-2 flex items-center gap-2 text-xs text-slate-500"
-          >
-            <span class="truncate flex-1">
-              {{ t.subject_names?.length ? t.subject_names.join(', ') : 'Belum ada mata pelajaran' }}
-            </span>
-            <button
-              type="button"
-              class="text-status-danger hover:underline"
-              @click.stop="deleteTarget = t"
-            >
-              Hapus
-            </button>
-          </div>
-        </BrandListRow>
+          @detail="openDetail(t)"
+          @delete="deleteTarget = t"
+        />
       </li>
     </ul>
 
