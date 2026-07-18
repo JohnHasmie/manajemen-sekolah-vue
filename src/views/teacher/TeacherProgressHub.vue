@@ -13,6 +13,8 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import LevelXpRing from '@/components/feature/gamification/LevelXpRing.vue';
 import StreakFlameKpi from '@/components/feature/gamification/StreakFlameKpi.vue';
@@ -28,10 +30,54 @@ import {
   type PersonalPayload,
   type LeaderboardResponse,
   type Cohort,
+  type TeacherAction,
 } from '@/services/teacher-progress.service';
 import { useToast } from '@/composables/useToast';
 
 const toast = useToast();
+const router = useRouter();
+const { t } = useI18n();
+
+// Backend Lane-A `target_route` hints are snake_case keys that don't
+// exist as literal Vue route names — the mapping is intentional so the
+// backend contract stays agnostic to the FE router shape. Mirrors the
+// same mapper used inside AdminReadinessView; the teacher slice deals
+// with a different set of routes (the ones each quest-earning inbox
+// item deep-links into), so the map lives here rather than being
+// pulled up into a shared helper for now.
+const ROUTE_MAP: Record<string, string> = {
+  teacher_attendance: 'teacher.attendance',
+  teacher_rpp: 'teacher.lesson-plans',
+  teacher_grade_input: 'teacher.grades',
+  teacher_report_cards: 'teacher.report-cards',
+  teacher_recommendations: 'teacher.recommendations',
+};
+
+function mapRouteName(key: string): string | null {
+  const mapped = ROUTE_MAP[key];
+  if (!mapped) {
+    // eslint-disable-next-line no-console
+    console.warn(`[TeacherProgressHub] Unmapped target_route: ${key}`);
+    return null;
+  }
+  return mapped;
+}
+
+// Icon glyph per action type — SVG lucide names already registered in
+// NavIcon.vue (file-clock was the one new addition in this slice). Any
+// action type the backend adds that isn't listed here falls back to
+// the neutral bell icon so the row still renders.
+const ACTION_ICONS: Record<string, string> = {
+  missed_presensi: 'calendar-check',
+  rpp_needs_revision: 'book',
+  grades_overdue: 'clipboard',
+  report_card_draft_deadline: 'file-clock',
+  recommendation_reply_unread: 'mail',
+};
+
+function actionIconName(type: string): string {
+  return ACTION_ICONS[type] ?? 'bell';
+}
 
 type Tab = 'summary' | 'badges' | 'leaderboard';
 const activeTab = ref<Tab>('summary');
@@ -106,6 +152,31 @@ async function toggleHide() {
   } finally {
     savingSetting.value = false;
   }
+}
+
+// Teacher-fusion follow-on: "Aksi hari ini" quest tiles on the
+// Ringkasan tab. Sourced from personal.actions (backend MR !487).
+// Absent key → older backend, `actionItems` stays empty and the whole
+// card renders its "Semua tuntas" state.
+const actionItems = computed<TeacherAction[]>(
+  () => personal.value?.actions ?? [],
+);
+
+const totalXpAvailable = computed<number>(() =>
+  actionItems.value.reduce(
+    (sum, action) =>
+      typeof action.xp_reward === 'number' ? sum + action.xp_reward : sum,
+    0,
+  ),
+);
+
+function onActionTap(action: TeacherAction): void {
+  const name = mapRouteName(action.target_route);
+  if (!name) return;
+  router.push({
+    name,
+    params: action.target_params as Record<string, string>,
+  });
 }
 
 // earned badges — sourced from personal.earned_badges (backend MR 4b).
@@ -205,6 +276,102 @@ onMounted(() => {
 
         <!-- ─── Ringkasan tab ─── -->
         <section v-if="activeTab === 'summary'" class="space-y-6">
+          <!-- Aksi hari ini — teacher-fusion follow-on. The quest lane
+               that mirrors the teacher priority inbox: each item that
+               maps to an XP-earning activity source shows its +XP
+               reward pill, unmapped ones render neutral. Tap → the
+               same deep-link the inbox uses. Empty state renders a
+               soft green tuntas tile so the section never looks
+               broken. -->
+          <div
+            class="rounded-2xl bg-white border border-slate-100 shadow-sm p-4 border-l-4 border-l-brand-cobalt"
+          >
+            <header class="flex items-start justify-between gap-3 mb-3">
+              <div class="flex items-center gap-2 min-w-0 flex-wrap">
+                <span
+                  class="w-2 h-2 rounded-full bg-brand-cobalt flex-shrink-0"
+                  aria-hidden="true"
+                ></span>
+                <h3 class="text-sm font-black text-slate-900 tracking-tight">
+                  {{ t('teacher.progress.actions.header') }}
+                </h3>
+                <span
+                  v-if="actionItems.length > 0"
+                  class="text-3xs font-black px-2 py-0.5 rounded-full bg-red-50 text-red-700"
+                >
+                  {{ actionItems.length }}
+                </span>
+                <p class="text-2xs text-slate-500 font-bold w-full sm:w-auto">
+                  {{ t('teacher.progress.actions.sub') }}
+                </p>
+              </div>
+              <span
+                v-if="totalXpAvailable > 0"
+                class="text-2xs font-black text-brand-cobalt flex-shrink-0 whitespace-nowrap"
+              >
+                {{ t('teacher.progress.actions.xpAvailable', { xp: totalXpAvailable }) }}
+              </span>
+            </header>
+
+            <div
+              v-if="actionItems.length === 0"
+              class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 flex items-center gap-3"
+            >
+              <span
+                class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 grid place-items-center flex-shrink-0"
+              >
+                <NavIcon name="check-circle" :size="18" />
+              </span>
+              <p class="text-sm font-bold text-emerald-800">
+                {{ t('teacher.progress.actions.allClear') }}
+              </p>
+            </div>
+
+            <ul v-else class="space-y-2.5">
+              <li
+                v-for="action in actionItems"
+                :key="action.id"
+                class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-brand-cobalt/30 hover:shadow-sm transition-all"
+              >
+                <span
+                  class="w-8 h-8 rounded-lg grid place-items-center flex-shrink-0"
+                  :class="action.xp_reward !== null
+                    ? 'bg-brand-cobalt/10 text-brand-cobalt'
+                    : 'bg-slate-100 text-slate-500'"
+                >
+                  <NavIcon :name="actionIconName(action.type)" :size="16" />
+                </span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-slate-900 truncate">
+                    {{ action.label }}
+                  </p>
+                  <p class="text-2xs text-slate-500 mt-0.5 line-clamp-1">
+                    {{ action.subtitle }}
+                  </p>
+                </div>
+                <span
+                  v-if="action.xp_reward !== null"
+                  class="inline-flex items-center gap-1 text-3xs font-black px-2 py-1 rounded-full bg-brand-cobalt/10 text-brand-cobalt flex-shrink-0 self-center"
+                >
+                  <NavIcon name="plus" :size="10" />
+                  {{ t('teacher.progress.actions.xpChip', { xp: action.xp_reward }) }}
+                </span>
+                <button
+                  type="button"
+                  class="text-2xs font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 flex-shrink-0 self-center"
+                  :class="mapRouteName(action.target_route)
+                    ? 'bg-brand-cobalt/10 text-brand-cobalt hover:bg-brand-cobalt/20'
+                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+                  :disabled="!mapRouteName(action.target_route)"
+                  @click="onActionTap(action)"
+                >
+                  {{ t('common.open') }}
+                  <NavIcon name="arrow-right" :size="12" />
+                </button>
+              </li>
+            </ul>
+          </div>
+
           <MilestoneHintCard
             :sources="personal.unlocked_sources"
             :current-streak="personal.streak_current"

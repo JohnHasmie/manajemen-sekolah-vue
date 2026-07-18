@@ -217,7 +217,8 @@
     "done": "Done",
     "lessonHour": "Hour {n}",
     "occupied": "Occupied",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "open": "Open"
   },
   "auth": {
     "signIn": "SIGN IN",
@@ -3053,6 +3054,20 @@
       "expired": "Expired",
       "titleContentRequired": "Title and content are required.",
       "selectClassRequired": "Select at least one target class."
+    },
+    "progress": {
+      "actions": {
+        "header": "Today's actions",
+        "sub": "complete to earn XP",
+        "xpAvailable": "+{xp} XP available",
+        "xpChip": "+{xp} XP",
+        "allClear": "All done · take a break"
+      },
+      "teaser": {
+        "title": "Level {level} · {streak}-day streak",
+        "sub": "{count} today's actions",
+        "cta": "Open"
+      }
     }
   },
   "parent": {

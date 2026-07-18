@@ -217,7 +217,8 @@
     "done": "Selesai",
     "lessonHour": "Jam ke-{n}",
     "occupied": "Terisi",
-    "refresh": "Muat ulang"
+    "refresh": "Muat ulang",
+    "open": "Buka"
   },
   "auth": {
     "signIn": "MASUK",
@@ -3053,6 +3054,20 @@
       "expired": "Kedaluwarsa",
       "titleContentRequired": "Judul dan isi wajib diisi.",
       "selectClassRequired": "Pilih minimal satu kelas tujuan."
+    },
+    "progress": {
+      "actions": {
+        "header": "Aksi hari ini",
+        "sub": "selesaikan untuk XP",
+        "xpAvailable": "+{xp} XP tersedia",
+        "xpChip": "+{xp} XP",
+        "allClear": "Semua tuntas · siap istirahat"
+      },
+      "teaser": {
+        "title": "Level {level} · {streak} hari beruntun",
+        "sub": "{count} aksi hari ini",
+        "cta": "Buka"
+      }
     }
   },
   "parent": {

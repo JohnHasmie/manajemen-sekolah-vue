@@ -38,6 +38,13 @@ export interface HighlightPayload {
     streak: number;
     badge_count: number;
   };
+  /**
+   * Teacher-fusion follow-on (backend MR !487): number of "Aksi hari ini"
+   * quest tiles a teacher currently has waiting on the Prestasi Saya
+   * Ringkasan tab. Powers the dashboard prestasi teaser subtitle
+   * ("N aksi hari ini"). Older backends omit the key — treat as 0.
+   */
+  action_count?: number;
 }
 
 export type Cohort = 'general' | 'subject' | 'homeroom' | 'staff';
@@ -52,6 +59,37 @@ export interface EarnedBadge {
   awarded_at: string | null;
   is_new: boolean;
   meta: Record<string, unknown> | null;
+}
+
+/**
+ * Teacher-fusion follow-on (backend MR !487): a single "Aksi hari ini"
+ * quest tile on the Prestasi Saya Ringkasan tab. Structurally identical
+ * to `PriorityInboxItem` — every item in the teacher priority inbox
+ * that maps to an XP-earning activity source (attendance session, RPP
+ * submit, grade input) is echoed here with its `xp_reward` filled in;
+ * items that don't map to an activity source (recommendation reply,
+ * report-card draft deadline) come through with `xp_reward: null` and
+ * render as neutral, no XP pill.
+ *
+ * `nature` mirrors the two-lane taxonomy the admin readiness surface
+ * uses: `operational` items are flow / "handle today" (matches most of
+ * the teacher inbox) and `completeness` are structural / "fix-once"
+ * (currently unused on the teacher side but declared for symmetry with
+ * the admin contract).
+ */
+export interface TeacherAction {
+  id: string;
+  type: string;
+  nature: 'operational' | 'completeness';
+  severity: 'critical' | 'warning' | 'info';
+  label: string;
+  subtitle: string;
+  count: number;
+  occurred_at: string;
+  target_route: string;
+  target_params: Record<string, unknown>;
+  activity_source: string | null;
+  xp_reward: number | null;
 }
 
 export interface PersonalPayload {
@@ -70,6 +108,12 @@ export interface PersonalPayload {
   hide_from_leaderboard: boolean;
   /** Backend MR 4b — absent = older backend, FE falls back to locked-only. */
   earned_badges?: EarnedBadge[];
+  /**
+   * Teacher-fusion follow-on (backend MR !487): quest tiles for the
+   * "Aksi hari ini" lane on the Ringkasan tab. Absent on older
+   * backends → FE falls back to the milestone hint card alone.
+   */
+  actions?: TeacherAction[];
 }
 
 export interface LeaderboardEntry {

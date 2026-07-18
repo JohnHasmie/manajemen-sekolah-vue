@@ -256,6 +256,12 @@ defineProps<{
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
     </template>
+    <template v-else-if="name === 'file-clock'">
+      <path d="M16 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8l6 6v4" />
+      <polyline points="14 2 14 8 20 8" />
+      <circle cx="16" cy="17" r="5" />
+      <polyline points="16 15 16 17 17.5 18.5" />
+    </template>
     <template v-else-if="name === 'menu'">
       <line x1="3" y1="6" x2="21" y2="6" />
       <line x1="3" y1="12" x2="21" y2="12" />

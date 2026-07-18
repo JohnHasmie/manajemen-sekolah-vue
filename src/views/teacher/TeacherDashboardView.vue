@@ -732,9 +732,51 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
           <!-- 4. Two-column main: Perlu Perhatian (left) + Aksi Cepat & Modul (right) -->
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-            <!-- Left: Perlu Perhatian -->
+            <!-- Left: Perlu Perhatian OR Prestasi teaser.
+                 Teacher-fusion follow-on: when the school owns the
+                 `teacher_gamification` module (ability
+                 `gamification.view` present because AbilityResolver
+                 strips it when the module is off), the quest surface
+                 has moved into /teacher/gamification's Ringkasan tab —
+                 the dashboard shows a compact prestasi teaser that
+                 deep-links there. When the module is OFF the ability
+                 is stripped, `highlight` stays null on 402/403, and
+                 the original PriorityInbox card renders unchanged. -->
             <section class="lg:col-span-8">
-              <div class="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
+              <button
+                v-if="canSeePrestasi && highlight"
+                type="button"
+                class="w-full text-left rounded-3xl p-5 text-white shadow-lg transition-all hover:shadow-xl bg-role-teacher-gradient flex items-start gap-4"
+                @click="router.push({ name: 'teacher.gamification' })"
+              >
+                <span class="w-12 h-12 rounded-2xl bg-white/15 grid place-items-center flex-shrink-0">
+                  <NavIcon name="sparkles" :size="24" />
+                </span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-3xs font-bold text-white/75 uppercase tracking-widest">
+                    {{ t('nav.gamification') }}
+                  </p>
+                  <h3 class="text-lg font-black tracking-tight mt-0.5">
+                    {{ t('teacher.progress.teaser.title', {
+                      level: highlight.meta.level,
+                      streak: highlight.meta.streak,
+                    }) }}
+                  </h3>
+                  <p class="text-2xs text-white/85 font-bold mt-1">
+                    {{ t('teacher.progress.teaser.sub', {
+                      count: highlight.action_count ?? 0,
+                    }) }}
+                  </p>
+                </div>
+                <span
+                  class="text-2xs font-black uppercase tracking-widest px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 transition-colors flex items-center gap-1 flex-shrink-0 self-center"
+                >
+                  {{ t('teacher.progress.teaser.cta') }}
+                  <NavIcon name="arrow-right" :size="12" />
+                </span>
+              </button>
+
+              <div v-else class="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
                 <header class="flex items-center justify-between mb-4 px-1">
                   <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 grid place-items-center">
