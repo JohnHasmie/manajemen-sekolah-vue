@@ -11,6 +11,31 @@ export interface StaffRole {
   role_type: string;
 }
 
+/**
+ * One entry in the RBAC-forward staff card's access panel. Corresponds to a
+ * top-level module (rbac, finance, academic, communication, …) the staff
+ * has at least one granted ability under. Backend derives `label` from the
+ * module registry so we can render it verbatim.
+ */
+export interface StaffRbacModule {
+  key: string;
+  label: string;
+}
+
+/**
+ * Summary attached to each staff record by the backend so the admin
+ * "Data Staf" card can render access at-a-glance without loading the
+ * detail sheet. `modules` is the list the staff currently has access to;
+ * `missing_expected` is any module that this person's `position` suggests
+ * they SHOULD have but that no granted ability covers yet — the card
+ * turns those into the "mungkin perlu tambah?" nudge.
+ */
+export interface StaffRbacSummary {
+  modules_count: number;
+  modules: StaffRbacModule[];
+  missing_expected: StaffRbacModule[];
+}
+
 export interface StaffMember {
   id: string;
   user_id: string;
@@ -25,6 +50,12 @@ export interface StaffMember {
   address: string | null;
   joined_at: string | null;
   roles: StaffRole[];
+  /**
+   * Access panel data for the RBAC-forward card. Optional so pre-deploy
+   * responses (and legacy fixtures) still parse; the card falls back to
+   * an "0 modul" empty state when it's absent.
+   */
+  rbac_summary?: StaffRbacSummary | null;
   created_at?: string | null;
   updated_at?: string | null;
 }

@@ -12,8 +12,6 @@ import type { Pagination } from '@/types/api';
 import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
 import AdminCrudScaffold from '@/components/feature/AdminCrudScaffold.vue';
-import BrandListRow from '@/components/feature/BrandListRow.vue';
-import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
 import PaginationView from '@/components/data/Pagination.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Modal from '@/components/ui/Modal.vue';
@@ -21,6 +19,7 @@ import Button from '@/components/ui/Button.vue';
 import Toast from '@/components/ui/Toast.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import StaffEditSheet from './widgets/StaffEditSheet.vue';
+import StaffRbacCard from './widgets/StaffRbacCard.vue';
 import AdminEntityDetailSheet, { type DetailSection } from '@/components/feature/AdminEntityDetailSheet.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import AdminDataMenu from '@/components/feature/AdminDataMenu.vue';
@@ -235,17 +234,6 @@ const activeFilterCount = computed(() => {
   return n;
 });
 
-function rowMeta(s: StaffMember): string {
-  return s.employee_number ? `${s.position} · ${s.employee_number}` : s.position;
-}
-
-function rowStatus(s: StaffMember) {
-  if (s.roles.length > 0) {
-    return { tone: 'info' as const, label: s.roles[0].label };
-  }
-  return { tone: 'neutral' as const, label: $t('admin.staff.noAccess') };
-}
-
 async function handleSave(payload: Record<string, unknown>) {
   isSaving.value = true;
   try {
@@ -403,28 +391,12 @@ const staffDeleteImpact = computed<string[]>(() => [ $t('admin.staff.deleteImpac
 
     <ul class="space-y-2">
       <li v-for="s in staff" :key="s.id">
-        <BrandListRow
-          :title="s.name || $t('admin.shared.noName')"
-          :top-meta="rowMeta(s)"
-          :status="rowStatus(s)"
-          :trailing-action-label="$t('admin.shared.detail')"
-          :trailing-action-color="primaryColor"
+        <StaffRbacCard
+          :staff="s"
+          :primary-color="primaryColor"
           @click="detailTarget = s"
-        >
-          <template #leading>
-            <InitialsAvatar :name="s.name || '?'" :size="44" :color="primaryColor" :border-radius="12" />
-          </template>
-          <div class="mt-2 flex items-center gap-2 text-xs text-slate-500">
-            <span class="truncate flex-1">{{ s.email || '—' }}</span>
-            <button
-              type="button"
-              class="text-status-danger hover:underline"
-              @click.stop="deleteTarget = s"
-            >
-              Hapus
-            </button>
-          </div>
-        </BrandListRow>
+          @delete="deleteTarget = s"
+        />
       </li>
     </ul>
 
