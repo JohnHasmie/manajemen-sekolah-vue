@@ -16,8 +16,6 @@ import { useAcademicYearStore } from '@/stores/academic-year';
 import type { Classroom, Teacher } from '@/types/entities';
 import type { Pagination } from '@/types/api';
 import AdminCrudScaffold from '@/components/feature/AdminCrudScaffold.vue';
-import BrandListRow from '@/components/feature/BrandListRow.vue';
-import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
 import PaginationView from '@/components/data/Pagination.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Button from '@/components/ui/Button.vue';
@@ -25,6 +23,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Toast from '@/components/ui/Toast.vue';
 import ClassroomEditSheet from './widgets/ClassroomEditSheet.vue';
 import ClassPromotionWizard from './widgets/ClassPromotionWizard.vue';
+import ClassRosterCard from './widgets/ClassRosterCard.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import FilterFacetPickerModal, {
   type FacetOption,
@@ -428,20 +427,9 @@ function onImportDone(res: {
   reload(1);
 }
 
-function topMeta(c: Classroom): string {
-  const level = $t('admin.classes.gradePrefix', { grade: c.grade_level ?? '-' });
-  return `${level} · ${$t('admin.classes.studentCount', { count: c.student_count })}`;
-}
-
-function statusFor(c: Classroom) {
-  if (c.homeroom_teacher_name) {
-    return {
-      tone: 'success' as const,
-      label: `${$t('admin.classes.waliPrefix')} ${c.homeroom_teacher_name}`,
-    };
-  }
-  return { tone: 'warning' as const, label: $t('admin.classes.statusNoHomeroom') };
-}
+// Legacy `topMeta`/`statusFor` helpers were removed with the switch
+// from BrandListRow → ClassRosterCard — the card renders the full
+// identity, capacity, roster, and mapel state internally now.
 </script>
 
 <template>
@@ -491,42 +479,26 @@ function statusFor(c: Classroom) {
       />
     </template>
 
-    <ul class="space-y-2">
-      <li v-for="c in classrooms" :key="c.id">
-        <BrandListRow
-          :title="c.name"
-          :top-meta="topMeta(c)"
-          :status="statusFor(c)"
-          :trailing-action-label="selectedIds.has(c.id) ? '' : $t('admin.shared.detail')"
-          :trailing-action-color="primaryColor"
-          :selected="selectedIds.has(c.id)"
-          bulk-selectable
-          @click="selectedIds.size > 0 ? toggleSelect(c.id) : openDetail(c)"
-          @long-press="toggleSelect(c.id)"
-        >
-          <template #leading>
-            <InitialsAvatar
-              :name="c.name || '?'"
-              :size="44"
-              :color="primaryColor"
-              :border-radius="12"
-            />
-          </template>
-          <div
-            v-if="selectedIds.size === 0"
-            class="mt-2 flex justify-end gap-2 text-xs"
-          >
-            <button
-              type="button"
-              class="text-status-danger hover:underline"
-              @click.stop="deleteTarget = c"
-            >
-              Hapus
-            </button>
-          </div>
-        </BrandListRow>
-      </li>
-    </ul>
+    <!--
+      Cards render in a responsive grid: single column on tablet /
+      mobile, two per row on desktop (≥1024px). Each card is ~600px
+      wide when paired — 3-per-row cramps the roster+chip body.
+    -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <ClassRosterCard
+        v-for="c in classrooms"
+        :key="c.id"
+        :classroom="c"
+        :academic-year-label="ayStore.yearLabel"
+        :accent-color="primaryColor"
+        :selected="selectedIds.has(c.id)"
+        bulk-selectable
+        @click="selectedIds.size > 0 ? toggleSelect(c.id) : openDetail(c)"
+        @long-press="toggleSelect(c.id)"
+        @detail="openDetail(c)"
+        @delete="deleteTarget = c"
+      />
+    </div>
 
     <PaginationView
       v-if="pagination && pagination.total_pages > 1"

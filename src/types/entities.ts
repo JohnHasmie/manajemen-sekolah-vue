@@ -332,6 +332,41 @@ export function teacherFromJson(raw: AnyRecord): Teacher {
 }
 
 // ---- Classroom ----
+/**
+ * Rich per-class preview payload emitted by GET /api/class as of the
+ * roster-preview-card series (Entitas 3 Opsi B). All fields are
+ * optional — the admin view falls back gracefully when a
+ * pre-deploy backend still returns the flat shape.
+ */
+export interface ClassroomStudentPreview {
+  id: string;
+  name: string;
+  gender: 'male' | 'female' | null;
+  avatar_initials: string;
+}
+
+export interface ClassroomCapacity {
+  current: number;
+  max: number;
+}
+
+export interface ClassroomSubjectPreview {
+  id: string;
+  code: string | null;
+  name: string;
+}
+
+export interface ClassroomWaliTeacher {
+  id: string;
+  name: string;
+  avatar_initials: string;
+}
+
+export interface ClassroomLocation {
+  floor: string | null;
+  room: string | null;
+}
+
 export interface Classroom {
   id: string;
   name: string;
@@ -340,6 +375,27 @@ export interface Classroom {
   student_count: number;
   grade_level?: string | null;
   academic_year_id?: string | null;
+  /** ≤5 student preview rows, sorted by name asc. */
+  students_preview?: ClassroomStudentPreview[];
+  /** {current, max}; max defaults to 36 when unknown. */
+  capacity?: ClassroomCapacity | null;
+  /** Up to 3 most-scheduled subjects for chips. */
+  subjects_top3?: ClassroomSubjectPreview[];
+  /** Total distinct subjects taught in this class. */
+  subjects_count?: number;
+  /** Enriched wali object; falls back to legacy flat scalars. */
+  wali_teacher?: ClassroomWaliTeacher | null;
+  /** {floor, room}; either side may be null. */
+  location?: ClassroomLocation | null;
+}
+
+function initialsFromName(name: string): string {
+  const trimmed = (name ?? '').trim();
+  if (!trimmed) return '?';
+  const parts = trimmed.split(/\s+/);
+  const first = parts[0]?.[0] ?? '';
+  const second = parts[1]?.[0] ?? '';
+  return (first + second).toUpperCase();
 }
 
 export function classroomFromJson(raw: AnyRecord): Classroom {
@@ -356,6 +412,73 @@ export function classroomFromJson(raw: AnyRecord): Classroom {
     homeroomName = (h.name as string) ?? (h.nama as string) ?? null;
     homeroomId = (h.id as string) ?? null;
   }
+
+  // ── Optional roster preview payload (new BE MR) ────────────────
+  const rawPreview = r.students_preview as AnyRecord[] | undefined;
+  const studentsPreview = Array.isArray(rawPreview)
+    ? rawPreview.map((s) => {
+        const sr = s as AnyRecord;
+        const name = (sr.name as string) ?? (sr.nama as string) ?? '';
+        const genderRaw = (sr.gender as string) ?? null;
+        const gender: 'male' | 'female' | null =
+          genderRaw === 'male' || genderRaw === 'female' ? genderRaw : null;
+        return {
+          id: String(sr.id ?? ''),
+          name,
+          gender,
+          avatar_initials:
+            (sr.avatar_initials as string) ?? initialsFromName(name),
+        };
+      })
+    : undefined;
+
+  const rawCapacity = r.capacity as AnyRecord | undefined;
+  const capacity: ClassroomCapacity | null = rawCapacity
+    ? {
+        current: Number(rawCapacity.current ?? 0),
+        max: Number(rawCapacity.max ?? 36) || 36,
+      }
+    : null;
+
+  const rawSubjects = r.subjects_top3 as AnyRecord[] | undefined;
+  const subjectsTop3 = Array.isArray(rawSubjects)
+    ? rawSubjects.map((s) => {
+        const sr = s as AnyRecord;
+        return {
+          id: String(sr.id ?? ''),
+          code: (sr.code as string) ?? (sr.kode as string) ?? null,
+          name: (sr.name as string) ?? (sr.nama as string) ?? '',
+        };
+      })
+    : undefined;
+
+  const rawWali = r.wali_teacher as AnyRecord | undefined;
+  let waliTeacher: ClassroomWaliTeacher | null = null;
+  if (rawWali && typeof rawWali === 'object') {
+    const wname = (rawWali.name as string) ?? (rawWali.nama as string) ?? '';
+    waliTeacher = {
+      id: String(rawWali.id ?? ''),
+      name: wname,
+      avatar_initials:
+        (rawWali.avatar_initials as string) ?? initialsFromName(wname),
+    };
+  } else if (homeroomName) {
+    // Legacy fallback — synthesise from flat homeroom scalars so the
+    // card still shows the wali avatar+name before the BE MR ships.
+    waliTeacher = {
+      id: homeroomId ?? '',
+      name: homeroomName,
+      avatar_initials: initialsFromName(homeroomName),
+    };
+  }
+
+  const rawLocation = r.location as AnyRecord | undefined;
+  const location: ClassroomLocation | null = rawLocation
+    ? {
+        floor: (rawLocation.floor as string) ?? null,
+        room: (rawLocation.room as string) ?? null,
+      }
+    : null;
 
   return {
     id: String(r.id ?? ''),
@@ -374,6 +497,15 @@ export function classroomFromJson(raw: AnyRecord): Classroom {
       0,
     grade_level: (r.grade_level as string) ?? (r.tingkat as string) ?? null,
     academic_year_id: (r.academic_year_id as string) ?? null,
+    students_preview: studentsPreview,
+    capacity,
+    subjects_top3: subjectsTop3,
+    subjects_count:
+      typeof r.subjects_count === 'number'
+        ? (r.subjects_count as number)
+        : subjectsTop3?.length,
+    wali_teacher: waliTeacher,
+    location,
   };
 }
 
