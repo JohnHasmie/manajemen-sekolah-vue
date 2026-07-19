@@ -650,6 +650,37 @@ export function classroomFromJson(raw: AnyRecord): Classroom {
 }
 
 // ---- Subject ----
+
+/** Compact teacher chip used on the "Data Mapel" curriculum-forward card. */
+export interface SubjectTeacherPreview {
+  id: string;
+  name: string;
+  avatar_initials: string;
+}
+
+/** Compact class reference on the "Diajarkan di …" strip of the card. */
+export interface SubjectClassRef {
+  id: string;
+  name: string;
+}
+
+/**
+ * Curriculum aggregate — only populated for LINKED subjects (i.e.
+ * `master_subject_id != null` on the backend). Drives the violet
+ * "Kurikulum · Semester 1" body of the SubjectCurriculumCard.
+ * `null` on the ORPHAN branch and on older backends that haven't
+ * shipped the aggregate yet — the card falls back to the amber
+ * "Rekap belum aktif" copy in either case.
+ */
+export interface SubjectCurriculumAggregate {
+  total_chapters: number;
+  chapters_completed: number;
+  assessment_count: number;
+  kkm_value: number;
+  /** Achievement rate in the [0, 1] range (backend rounds to 2 dp). */
+  kkm_achievement_rate: number;
+}
+
 export interface Subject {
   id: string;
   name: string;
@@ -661,6 +692,18 @@ export interface Subject {
   master_subject_name?: string | null;
   grade_level?: string | null;
   class_count?: number;
+  /**
+   * Enriched fields shipped by `feat/subject-list-curriculum-forward`
+   * (backend MR). All optional so older backend deploys still typecheck
+   * and the new admin card degrades to the "no teachers / no classes /
+   * ORPHAN" state gracefully.
+   */
+  teachers_preview?: SubjectTeacherPreview[];
+  teachers_count?: number;
+  classes_taught?: SubjectClassRef[];
+  is_linked?: boolean;
+  master_name?: string | null;
+  curriculum?: SubjectCurriculumAggregate | null;
 }
 
 export function subjectFromJson(raw: AnyRecord): Subject {
@@ -673,6 +716,82 @@ export function subjectFromJson(raw: AnyRecord): Subject {
   else if (statusRaw === 'inactive' || statusRaw === 'nonaktif') isActive = false;
   else if (statusRaw === 0 || statusRaw === '0') isActive = false;
   else if (statusRaw === 1 || statusRaw === '1') isActive = true;
+
+  const masterId =
+    (r.master_subject_id as string) ?? (ms?.id as string) ?? null;
+  const masterName =
+    (ms?.name as string) ??
+    (r.master_subject_name as string) ??
+    (r.master_name as string) ??
+    null;
+
+  // Enriched teachers_preview — trust the backend order (per-mapel
+  // pengampu ordered by created_at). Cap defensively to 3 on the client
+  // to protect the card layout in case a legacy payload ships the full
+  // list.
+  const rawTeachers = r.teachers_preview as AnyRecord[] | undefined;
+  const teachersPreview: SubjectTeacherPreview[] | undefined = Array.isArray(
+    rawTeachers,
+  )
+    ? rawTeachers
+        .slice(0, 3)
+        .map((t) => ({
+          id: String(t?.id ?? ''),
+          name: String(t?.name ?? t?.nama ?? ''),
+          avatar_initials: String(
+            t?.avatar_initials ?? t?.initials ?? '',
+          ),
+        }))
+        .filter((t) => t.id && t.name)
+    : undefined;
+
+  const rawTeachersCount = r.teachers_count as unknown;
+  const teachersCount =
+    typeof rawTeachersCount === 'number'
+      ? rawTeachersCount
+      : typeof rawTeachersCount === 'string' && rawTeachersCount !== ''
+        ? Number(rawTeachersCount)
+        : undefined;
+
+  const rawClasses = r.classes_taught as AnyRecord[] | undefined;
+  const classesTaught: SubjectClassRef[] | undefined = Array.isArray(rawClasses)
+    ? rawClasses
+        .map((c) => ({
+          id: String(c?.id ?? ''),
+          name: String(c?.name ?? c?.nama ?? c?.class_name ?? ''),
+        }))
+        .filter((c) => c.id && c.name)
+    : undefined;
+
+  // is_linked — trust the enriched flag if present, otherwise derive it
+  // from `master_subject_id` so older backends still route to the
+  // right violet/amber body.
+  const rawIsLinked = r.is_linked as unknown;
+  const isLinked =
+    typeof rawIsLinked === 'boolean'
+      ? rawIsLinked
+      : masterId != null && masterId !== ''
+        ? true
+        : undefined;
+
+  const rawCurriculum = r.curriculum as AnyRecord | null | undefined;
+  let curriculum: SubjectCurriculumAggregate | null | undefined;
+  if (rawCurriculum === null) {
+    curriculum = null;
+  } else if (rawCurriculum && typeof rawCurriculum === 'object') {
+    const rawRate = rawCurriculum.kkm_achievement_rate;
+    const rate =
+      typeof rawRate === 'number' && Number.isFinite(rawRate) ? rawRate : 0;
+    curriculum = {
+      total_chapters: Number(rawCurriculum.total_chapters ?? 0) || 0,
+      chapters_completed:
+        Number(rawCurriculum.chapters_completed ?? 0) || 0,
+      assessment_count: Number(rawCurriculum.assessment_count ?? 0) || 0,
+      kkm_value: Number(rawCurriculum.kkm_value ?? 0) || 0,
+      kkm_achievement_rate: Math.max(0, Math.min(1, rate)),
+    };
+  }
+
   return {
     id: String(r.id ?? ''),
     name: (r.name as string) ?? (r.nama as string) ?? '',
@@ -680,13 +799,18 @@ export function subjectFromJson(raw: AnyRecord): Subject {
     kkm: (r.kkm as number) ?? (r.minimum_score as number) ?? null,
     description: (r.description as string) ?? (r.deskripsi as string) ?? null,
     is_active: isActive,
-    master_subject_id:
-      (r.master_subject_id as string) ?? (ms?.id as string) ?? null,
-    master_subject_name:
-      (ms?.name as string) ?? (r.master_subject_name as string) ?? null,
+    master_subject_id: masterId,
+    master_subject_name: masterName,
     grade_level:
       (r.grade_level as string) ?? (r.tingkat as string) ?? null,
     class_count:
       (r.class_count as number) ?? (r.classes_count as number) ?? undefined,
+    teachers_preview: teachersPreview,
+    teachers_count:
+      teachersCount ?? (teachersPreview ? teachersPreview.length : undefined),
+    classes_taught: classesTaught,
+    is_linked: isLinked,
+    master_name: masterName,
+    curriculum,
   };
 }

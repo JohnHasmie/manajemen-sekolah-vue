@@ -15,13 +15,13 @@ import { useAcademicYearStore } from '@/stores/academic-year';
 import type { Subject } from '@/types/entities';
 import type { Pagination } from '@/types/api';
 import AdminCrudScaffold from '@/components/feature/AdminCrudScaffold.vue';
-import BrandListRow from '@/components/feature/BrandListRow.vue';
-import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
 import PaginationView from '@/components/data/Pagination.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Button from '@/components/ui/Button.vue';
 import Toast from '@/components/ui/Toast.vue';
+import LinkMasterPickerModal from '@/components/feature/LinkMasterPickerModal.vue';
 import SubjectEditSheet from './widgets/SubjectEditSheet.vue';
+import SubjectCurriculumCard from './widgets/SubjectCurriculumCard.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import FilterFacetPickerModal, {
   type FacetOption,
@@ -64,6 +64,7 @@ const selectedIds = ref<Set<string>>(new Set());
 
 const editTarget = ref<Subject | null | undefined>(undefined);
 const deleteTarget = ref<Subject | null>(null);
+const linkMasterTarget = ref<Subject | null>(null);
 const bulkDeleteOpen = ref(false);
 const showImport = ref(false);
 const isSaving = ref(false);
@@ -405,6 +406,23 @@ function openSubjectClasses(s: Subject) {
   });
 }
 
+// ── Link-master (ORPHAN card CTA) ─────────────────────────────────
+// The card emits `link-master` when the admin taps "Tautkan sekarang"
+// on the amber body. We open the shared LinkMasterPickerModal here so
+// the modal instance is owned by the view (matches CRUD modals) and a
+// successful link can trigger a full page reload.
+function onLinkMasterOpen(s: Subject) {
+  linkMasterTarget.value = s;
+}
+async function onMasterLinked() {
+  linkMasterTarget.value = null;
+  toast.value = {
+    message: $t('admin.subjects.linkMaster.success'),
+    tone: 'success',
+  };
+  await reload(pagination.value?.current_page ?? 1);
+}
+
 // ── Excel ──
 async function exportExcel() {
   try {
@@ -457,22 +475,6 @@ function onImportDone(res: {
   reload(1);
 }
 
-function statusFor(s: Subject) {
-  if (s.is_active === false) {
-    return { tone: 'warning' as const, label: $t('admin.subjects.statusInactive') };
-  }
-  if (s.kkm !== null && s.kkm !== undefined) {
-    return { tone: 'info' as const, label: `KKM: ${s.kkm}` };
-  }
-  return { tone: 'success' as const, label: $t('admin.subjects.statusActive') };
-}
-
-function topMeta(s: Subject): string {
-  const parts: string[] = [];
-  if (s.code) parts.push($t('admin.subjects.codePrefix', { code: s.code }));
-  if (s.class_count !== undefined && s.class_count > 0) parts.push(`${s.class_count} kelas`);
-  return parts.join(' · ') || '—';
-}
 </script>
 
 <template>
@@ -532,45 +534,17 @@ function topMeta(s: Subject): string {
 
     <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2">
       <li v-for="s in filteredSubjects" :key="s.id">
-        <BrandListRow
-          :title="s.name"
-          :top-meta="topMeta(s)"
-          :status="statusFor(s)"
-          :trailing-action-label="selectedIds.has(s.id) ? '' : $t('admin.subjects.kelasLink')"
-          :trailing-action-color="primaryColor"
+        <SubjectCurriculumCard
+          :subject="s"
+          :primary-color="primaryColor"
           :selected="selectedIds.has(s.id)"
-          bulk-selectable
-          @click="selectedIds.size > 0 ? toggleSelect(s.id) : openSubjectClasses(s)"
-          @long-press="toggleSelect(s.id)"
-        >
-          <template #leading>
-            <InitialsAvatar
-              :name="s.name || '?'"
-              :size="44"
-              :color="primaryColor"
-              :border-radius="12"
-            />
-          </template>
-          <div
-            v-if="selectedIds.size === 0"
-            class="mt-2 flex justify-end gap-2 text-xs"
-          >
-            <button
-              type="button"
-              class="text-slate-500 hover:text-role-admin"
-              @click.stop="editTarget = s"
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              class="text-status-danger hover:underline"
-              @click.stop="deleteTarget = s"
-            >
-              Hapus
-            </button>
-          </div>
-        </BrandListRow>
+          :read-only="ayReadOnly"
+          @select="toggleSelect(s.id)"
+          @open="selectedIds.size > 0 ? toggleSelect(s.id) : openSubjectClasses(s)"
+          @edit="editTarget = s"
+          @delete="deleteTarget = s"
+          @link-master="onLinkMasterOpen(s)"
+        />
       </li>
     </ul>
 
@@ -769,6 +743,22 @@ function topMeta(s: Subject): string {
       importDetails = [];
       importWarnings = [];
     "
+  />
+
+  <!--
+    Link-master picker — opened when the SubjectCurriculumCard emits
+    `link-master` from its ORPHAN body ("Tautkan sekarang" CTA). The
+    modal is a shared component with the LMS banner; on success we
+    close the modal and reload the current page so the card flips
+    LINKED (violet body) on the next paint.
+  -->
+  <LinkMasterPickerModal
+    v-if="linkMasterTarget"
+    :subject-id="linkMasterTarget.id"
+    :subject-name="linkMasterTarget.name"
+    :suggested-master-id="null"
+    @close="linkMasterTarget = null"
+    @linked="onMasterLinked"
   />
 
   <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />
