@@ -1090,6 +1090,18 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'teacher' satisfies Role, ability: 'gamification.view' },
       },
       {
+        // Staff-fusion (MR4): staff role gets its own Prestasi Saya
+        // entry point. Same component as teacher — the hub reads
+        // `auth.activeRole` and hides the Peringkat tab for staff so
+        // Ringkasan + Badge are the only visible tabs. BE contract
+        // is identical: the staff-branch of buildActions() fills
+        // `personal.actions[]` from the permission-driven quest map.
+        path: 'staff/gamification',
+        name: 'staff.gamification',
+        component: TeacherProgressHub,
+        meta: { role: 'staff' satisfies Role, ability: 'gamification.view' },
+      },
+      {
         path: 'teacher/attendance/detail',
         name: 'teacher.attendance.detail',
         component: TeacherAttendanceDetailView,

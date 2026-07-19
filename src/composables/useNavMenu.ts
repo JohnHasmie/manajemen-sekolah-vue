@@ -668,6 +668,21 @@ const STAFF_NAV: NavSection[] = [
         icon: 'clipboard-list',
         ability: 'attendance.self.view_own',
       },
+      // Staff-fusion (BE !494/!498/!499): Prestasi Saya reuses the
+      // teacher Prestasi hub — the `personal.actions[]` payload flows
+      // through the same fusion contract. The hub itself hides the
+      // Peringkat tab when the caller is staff (see
+      // TeacherProgressHub.vue), so a staff user sees Ringkasan +
+      // Badge tabs only. Gated on `gamification.view` — schools give
+      // Bendahara/TU access to their own Prestasi surface via the
+      // RBAC UI; Musyrifah/Penjaga can be added or not as the school
+      // chooses.
+      {
+        to: '/staff/gamification',
+        labelKey: 'nav.myPrestasi',
+        icon: 'trophy',
+        ability: 'gamification.view',
+      },
       { to: '/profile', labelKey: 'nav.account', icon: 'user' },
     ],
   },

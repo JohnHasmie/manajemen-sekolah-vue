@@ -15,6 +15,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { useAuthStore } from '@/stores/auth';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import LevelXpRing from '@/components/feature/gamification/LevelXpRing.vue';
 import StreakFlameKpi from '@/components/feature/gamification/StreakFlameKpi.vue';
@@ -37,6 +38,19 @@ import { useToast } from '@/composables/useToast';
 const toast = useToast();
 const router = useRouter();
 const { t } = useI18n();
+const auth = useAuthStore();
+
+// Staff-fusion: this hub is reused by the staff role via the
+// STAFF_NAV Prestasi entry (BE contract identical — BE staff branch
+// fills `personal.actions[]` from `staff_quest_map` filtered by the
+// caller's abilities). The Peringkat tab hides for staff because
+// staff cohorts are heterogeneous per school (a Bendahara adu poin
+// with a Penjaga isn't meaningful); see plan §"Peringkat cohort by
+// ability-signature" for the deferred follow-up.
+const isStaffViewer = computed(() => auth.activeRole === 'staff');
+const visibleTabs = computed<Tab[]>(() =>
+  isStaffViewer.value ? ['summary', 'badges'] : ['summary', 'badges', 'leaderboard'],
+);
 
 // Backend Lane-A `target_route` hints are snake_case keys that don't
 // exist as literal Vue route names — the mapping is intentional so the
@@ -222,6 +236,13 @@ const cohortEmptyHint = computed<string>(() => {
 });
 
 function switchTab(tab: Tab) {
+  // Staff callers never expose the Peringkat tab (see visibleTabs
+  // comment) — reject any programmatic attempt to jump there so a
+  // stale route or a keyboard shortcut can't land them on an empty
+  // leaderboard screen.
+  if (tab === 'leaderboard' && isStaffViewer.value) {
+    return;
+  }
   activeTab.value = tab;
   if (tab === 'leaderboard' && !leaderboard.value) {
     void loadLeaderboard();
@@ -261,7 +282,7 @@ onMounted(() => {
              a floating chip. -->
         <div class="flex bg-slate-100 rounded-xl p-1 w-full sm:w-auto sm:inline-flex">
           <button
-            v-for="tab in (['summary', 'badges', 'leaderboard'] as Tab[])"
+            v-for="tab in visibleTabs"
             :key="tab"
             type="button"
             class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition"
