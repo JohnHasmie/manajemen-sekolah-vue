@@ -6,6 +6,40 @@
 // handle so the Vue UI sees one canonical shape.
 
 // ---- Student ----
+/**
+ * Compact class reference emitted by the enriched `/student` list
+ * response. Same shape as TeacherClassRef but kept separate so the two
+ * feature areas can evolve independently.
+ */
+export interface StudentClassRef {
+  id: string;
+  name: string;
+}
+
+/**
+ * Compact academic-year reference — carries a human display name
+ * ("2025/2026") and, when the backend surfaces it, the current
+ * semester ("S1" / "S2"). Used by the two-column student card to
+ * render the "Tahun ajaran" facet.
+ */
+export interface StudentAcademicYearRef {
+  id?: string;
+  name: string;
+  semester?: string | null;
+}
+
+/**
+ * Structured wali (guardian) contact block. The pre-redesign shape
+ * dumped `guardian_name` + `phone_number` at the top level; the
+ * enriched response bundles them so the two-column card can render
+ * a labelled Wali/Ortu column alongside a Kontak wali column.
+ */
+export interface StudentGuardianContact {
+  name?: string | null;
+  phone?: string | null;
+  relationship?: string | null;
+}
+
 export interface Student {
   id: string;
   name: string;
@@ -26,6 +60,30 @@ export interface Student {
    * treats missing as `active` (matches the filter default).
    */
   status?: 'active' | 'inactive' | 'unverified' | null;
+  /**
+   * Structured wali (guardian) contact — { name, phone, relationship }.
+   * Undefined against a legacy backend; consumers should fall back to
+   * `guardian_name` + `phone_number` scalars at the top level.
+   */
+  wali_contact?: StudentGuardianContact | null;
+  /**
+   * Truncated address string suitable for the two-column card
+   * (typically "kecamatan, kabupaten"). Falls back to the full
+   * `address` scalar when the backend has not shipped this field.
+   */
+  address_short?: string | null;
+  /**
+   * Structured class reference — id + display name. Newer name for
+   * the historical `class_name`/`class_id` scalar pair. Consumers
+   * prefer this when present and fall back to `class_name` otherwise.
+   */
+  class_ref?: StudentClassRef | null;
+  /**
+   * Active academic year the student is currently enrolled in.
+   * Backend ships this alongside the class ref so the card can render
+   * "2025/2026 · S1" without another lookup.
+   */
+  academic_year?: StudentAcademicYearRef | null;
 }
 
 type AnyRecord = Record<string, unknown>;
@@ -94,6 +152,84 @@ function pickStudentClassId(json: AnyRecord): string | null {
 
 export function studentFromJson(raw: AnyRecord): Student {
   const r = raw;
+
+  // ── Enriched structured refs — prefer these over the flat scalars
+  //   when the backend has shipped them, but tolerate their absence so
+  //   the pre-deploy list response still parses cleanly. ────────────
+
+  const walContactRaw =
+    (r.wali_contact as AnyRecord | null | undefined) ??
+    (r.guardian_contact as AnyRecord | null | undefined);
+  let walContact: StudentGuardianContact | null | undefined;
+  if (walContactRaw && typeof walContactRaw === 'object') {
+    const name =
+      (walContactRaw.name as string) ??
+      (walContactRaw.nama as string) ??
+      null;
+    const phone =
+      (walContactRaw.phone as string) ??
+      (walContactRaw.phone_number as string) ??
+      (walContactRaw.no_hp as string) ??
+      null;
+    const relationship =
+      (walContactRaw.relationship as string) ??
+      (walContactRaw.hubungan as string) ??
+      null;
+    walContact =
+      name || phone ? { name, phone, relationship } : null;
+  } else if (walContactRaw === null) {
+    walContact = null;
+  }
+
+  const classRefRaw =
+    (r.class_ref as AnyRecord | null | undefined) ??
+    (r.current_class as AnyRecord | null | undefined);
+  let classRef: StudentClassRef | null | undefined;
+  if (classRefRaw && typeof classRefRaw === 'object') {
+    const id = String(classRefRaw.id ?? '');
+    const name = String(
+      classRefRaw.name ?? classRefRaw.nama ?? '',
+    );
+    classRef = id && name ? { id, name } : null;
+  } else if (classRefRaw === null) {
+    classRef = null;
+  }
+
+  const academicYearRaw =
+    (r.academic_year as AnyRecord | null | undefined) ??
+    (r.tahun_ajaran as AnyRecord | null | undefined);
+  let academicYear: StudentAcademicYearRef | null | undefined;
+  if (academicYearRaw && typeof academicYearRaw === 'object') {
+    const name = String(
+      academicYearRaw.name ??
+        academicYearRaw.label ??
+        academicYearRaw.year ??
+        '',
+    );
+    const idRaw = academicYearRaw.id;
+    const semesterRaw =
+      (academicYearRaw.semester as string | number | undefined) ??
+      (academicYearRaw.semester_label as string | undefined) ??
+      null;
+    academicYear = name
+      ? {
+          id: idRaw ? String(idRaw) : undefined,
+          name,
+          semester:
+            semesterRaw == null || semesterRaw === ''
+              ? null
+              : String(semesterRaw),
+        }
+      : null;
+  } else if (academicYearRaw === null) {
+    academicYear = null;
+  }
+
+  const addressShort =
+    (r.address_short as string) ??
+    (r.alamat_singkat as string) ??
+    undefined;
+
   return {
     id: String(r.id ?? ''),
     name: (r.name as string) ?? (r.nama as string) ?? '',
@@ -120,6 +256,10 @@ export function studentFromJson(raw: AnyRecord): Student {
     guardian_email:
       (r.guardian_email as string) ?? (r.email_wali as string) ?? null,
     status: normaliseStudentStatus(r.status ?? r.is_active),
+    wali_contact: walContact,
+    address_short: addressShort ?? null,
+    class_ref: classRef,
+    academic_year: academicYear,
   };
 }
 

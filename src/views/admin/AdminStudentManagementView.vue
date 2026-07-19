@@ -8,7 +8,7 @@
     - FilterFacetPickerModal per facet
 -->
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, shallowRef } from 'vue';
+import { computed, onMounted, reactive, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { StudentService } from '@/services/students.service';
@@ -19,16 +19,18 @@ import { useMe } from '@/composables/useMe';
 import { useRoleHex } from '@/composables/useRoleHex';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
+import { storage } from '@/lib/storage';
 import type { Student, Classroom } from '@/types/entities';
 import type { Pagination } from '@/types/api';
 import AdminCrudScaffold from '@/components/feature/AdminCrudScaffold.vue';
-import BrandListRow from '@/components/feature/BrandListRow.vue';
-import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
 import PaginationView from '@/components/data/Pagination.vue';
 import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
+import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import StudentEditSheet from './widgets/StudentEditSheet.vue';
+import StudentStructuredCard from './widgets/StudentStructuredCard.vue';
+import StudentCompactRow from './widgets/StudentCompactRow.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import FilterFacetPickerModal, {
   type FacetOption,
@@ -188,6 +190,27 @@ function pickGuardianSuggestion(name: string) {
 
 // ── Selection ──────────────────────────────────────────────────────
 const selectedIds = ref<Set<string>>(new Set());
+
+// ── View mode toggle (Kartu / Padat) ───────────────────────────────
+// Two layouts on the Data Siswa page:
+//   - "card"    → StudentStructuredCard (Opsi A, two-column with
+//                 identity block + 2×2 info grid; mirrors the just-
+//                 merged Data Guru two-column redesign).
+//   - "compact" → StudentCompactRow (Opsi B, single dense row so an
+//                 admin can eyeball a full page of ~15 students
+//                 without scrolling).
+// Persisted per-user in localStorage so a page reload lands the
+// admin back on the layout they left. Key is intentionally the
+// Indonesian `siswa_view_mode` because it's a wire key set by
+// product spec, not an identifier (identifiers stay English).
+type StudentViewMode = 'card' | 'compact';
+const STUDENT_VIEW_MODE_STORAGE_KEY = 'siswa_view_mode';
+const initialViewMode: StudentViewMode = (() => {
+  const raw = storage.get<string>(STUDENT_VIEW_MODE_STORAGE_KEY);
+  return raw === 'compact' || raw === 'card' ? raw : 'card';
+})();
+const viewMode = ref<StudentViewMode>(initialViewMode);
+watch(viewMode, (v) => storage.set(STUDENT_VIEW_MODE_STORAGE_KEY, v));
 
 // ── Sheet visibility ───────────────────────────────────────────────
 const editTarget = ref<Student | null | undefined>(undefined);
@@ -450,31 +473,18 @@ const studentBulkDeleteImpact = computed<string[]>(() => [
   ...STUDENT_DELETE_IMPACT.value,
 ]);
 
-// ── Row status pill — reflect real account status ──────────────────
-// Was hard-coded to {tone:'success', label:'Aktif'} for every row so
-// an inactive or unverified student was indistinguishable from an
-// active one at a glance. The BrandListRow status prop already exists
-// (used by teacher/subject/classroom views the same way); this maps
-// the canonical Student.status enum to a tone + label per row.
-function statusFor(s: Student): { tone: 'success' | 'warning' | 'neutral'; label: string } {
-  switch (s.status) {
-    case 'inactive':
-      return { tone: 'neutral', label: t('status.Inactive') };
-    case 'unverified':
-      return { tone: 'warning', label: t('admin.student.unverified') };
-    // active + null both render as Aktif — null preserves the old
-    // "assume active when the API forgot to send status" behaviour.
-    case 'active':
-    default:
-      return { tone: 'success', label: t('status.Active') };
-  }
-}
+// The pre-redesign row pill (statusFor → BrandListRow.status) is
+// gone: the new StudentStructuredCard renders its own status chip in
+// the identity column and StudentCompactRow renders a status dot, so
+// no wrapper mapping is needed for the list. `statusPillFor` below
+// still feeds the AdminEntityDetailSheet's status-pill prop.
 
 /**
  * Detail-sheet variant. AdminEntityDetailSheet uses a different tone
- * enum (green/amber/red/slate) from BrandListRow (success/warning/
- * danger/info/neutral), so we translate the status into the sheet's
- * shape here rather than push both palettes into the sheet.
+ * enum (green/amber/red/slate) than the retired BrandListRow status
+ * shape (success/warning/danger/info/neutral), so we translate the
+ * status into the sheet's shape here rather than push both palettes
+ * into the sheet.
  */
 function statusPillFor(s: Student): { tone: 'green' | 'amber' | 'red' | 'slate'; label: string } {
   switch (s.status) {
@@ -738,11 +748,10 @@ function onImportDone(res: {
   reload(1);
 }
 
-function topMeta(s: Student): string {
-  const cls = s.class_name || '-';
-  const nis = s.student_number;
-  return nis ? t('admin.student.rowPrefix', { class: cls, nis }) : cls;
-}
+// The pre-redesign list rendered a compact `topMeta` string
+// ("<kelas> · NIS ...") inside BrandListRow. The card view now
+// composes identity in StudentStructuredCard and the compact view in
+// StudentCompactRow, so this helper is retired.
 </script>
 
 <template>
@@ -766,6 +775,18 @@ function topMeta(s: Student): string {
     @retry="reload()"
   >
     <template #header-actions>
+      <!-- View mode toggle: Kartu (Opsi A structured 2-column card) /
+           Padat (Opsi B dense row). Persisted in localStorage under
+           `siswa_view_mode`. Sits next to the other header actions
+           so it feels like a first-class layout switch, not a filter. -->
+      <SegmentedControl
+        v-model="viewMode"
+        :options="[
+          { key: 'card', label: 'Kartu' },
+          { key: 'compact', label: 'Padat' },
+        ]"
+        size="sm"
+      />
       <!-- Kelola Kartu QR — deep-link to the Kartu QR manager pre-
            selected on the Siswa tab. Admins looked for the print-card
            entry here on Data Siswa before the manager tab; we surface
@@ -823,45 +844,30 @@ function topMeta(s: Student): string {
       />
     </template>
 
-    <ul class="space-y-2">
-      <li v-for="(s, idx) in students" :key="s.id">
-        <BrandListRow
-          :title="s.name || t('admin.student.noName')"
-          :top-meta="topMeta(s)"
-          :status="statusFor(s)"
-          :trailing-action-label="selectedIds.has(s.id) ? '' : t('admin.shared.detail')"
-          :trailing-action-color="primaryColor"
+    <ul :class="viewMode === 'card' ? 'space-y-3' : 'space-y-2'">
+      <li v-for="s in students" :key="s.id">
+        <StudentStructuredCard
+          v-if="viewMode === 'card'"
+          :student="s"
+          :accent-color="primaryColor"
           :selected="selectedIds.has(s.id)"
           bulk-selectable
           @click="selectedIds.size > 0 ? toggleSelect(s.id) : openDetail(s)"
           @long-press="toggleSelect(s.id)"
-        >
-          <template #leading>
-            <InitialsAvatar
-              :name="s.name || '?'"
-              :size="44"
-              :color="primaryColor"
-              :border-radius="12"
-            />
-          </template>
-
-          <div
-            v-if="selectedIds.size === 0"
-            class="mt-2 flex items-center gap-2 text-xs text-slate-500"
-          >
-            <span class="truncate">{{ s.guardian_name || t('admin.student.guardianNotFilled') }}</span>
-            <span v-if="s.phone_number" class="text-slate-300">·</span>
-            <span v-if="s.phone_number">{{ s.phone_number }}</span>
-            <button
-              type="button"
-              class="ml-auto text-status-danger hover:underline"
-              @click.stop="deleteTarget = s"
-            >
-              {{ t('common.delete') }}
-            </button>
-          </div>
-        </BrandListRow>
-        <span class="hidden">{{ idx }}</span>
+          @detail="openDetail(s)"
+          @delete="deleteTarget = s"
+        />
+        <StudentCompactRow
+          v-else
+          :student="s"
+          :accent-color="primaryColor"
+          :selected="selectedIds.has(s.id)"
+          bulk-selectable
+          @click="selectedIds.size > 0 ? toggleSelect(s.id) : openDetail(s)"
+          @long-press="toggleSelect(s.id)"
+          @detail="openDetail(s)"
+          @delete="deleteTarget = s"
+        />
       </li>
     </ul>
 
