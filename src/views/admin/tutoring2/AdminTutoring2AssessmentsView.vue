@@ -17,12 +17,14 @@ import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
   type BimbelAssessment,
 } from '@/services/tutoring-bimbel.service';
+import type { StatusBadgeTone } from '@/types/status-badge';
 
 const search = ref('');
 const kindFilter = ref<string>(''); // '' | 'tryout' | 'latihan' | 'kuis'
@@ -76,6 +78,14 @@ function formatShortDate(iso: string | null | undefined): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function publishedTone(publishedAt: string | null | undefined): StatusBadgeTone {
+  return publishedAt ? 'success' : 'warning';
+}
+
+function publishedLabel(publishedAt: string | null | undefined): string {
+  return publishedAt ? `Terbit ${formatShortDate(publishedAt)}` : 'Draft';
 }
 </script>
 
@@ -151,12 +161,7 @@ function formatShortDate(iso: string | null | undefined): string {
                 <td class="px-4 py-3 text-slate-600">{{ a.scores_count ?? 0 }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ a.max_score }}</td>
                 <td class="px-4 py-3">
-                  <span v-if="a.published_at" class="text-2xs font-bold text-success">
-                    ✓ {{ formatShortDate(a.published_at) }}
-                  </span>
-                  <span v-else class="rounded-full bg-warning-soft px-2 py-0.5 text-2xs font-bold text-warning">
-                    Draft
-                  </span>
+                  <StatusBadge :label="publishedLabel(a.published_at)" :tone="publishedTone(a.published_at)" uppercase />
                 </td>
               </tr>
             </tbody>
@@ -167,7 +172,7 @@ function formatShortDate(iso: string | null | undefined): string {
 
     <button
       type="button"
-      class="fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-brand-cobalt px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:brightness-110"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
       <span aria-hidden="true">+</span> Buat try-out
     </button>

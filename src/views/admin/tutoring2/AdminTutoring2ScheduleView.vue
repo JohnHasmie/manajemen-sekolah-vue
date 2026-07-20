@@ -20,12 +20,14 @@ import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
   type BimbelSession,
 } from '@/services/tutoring-bimbel.service';
+import type { StatusBadgeTone } from '@/types/status-badge';
 
 const search = ref('');
 const statusFilter = ref<string>(''); // '' | 'scheduled' | 'done' | 'cancelled'
@@ -66,12 +68,12 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
-function statusChipTone(status: BimbelSession['status']): string {
+function statusPillTone(status: BimbelSession['status']): StatusBadgeTone {
   switch (status) {
-    case 'scheduled': return 'bg-slate-100 text-slate-500';
-    case 'in_progress': return 'bg-warning-soft text-warning';
-    case 'done': return 'bg-success-soft text-success';
-    case 'cancelled': return 'bg-slate-100 text-slate-400 line-through';
+    case 'scheduled': return 'neutral';
+    case 'in_progress': return 'info';
+    case 'done': return 'success';
+    case 'cancelled': return 'danger';
   }
 }
 
@@ -160,9 +162,7 @@ function truncateId(id: string | null | undefined, len = 8): string {
                 <td class="px-4 py-3 text-slate-600">{{ truncateId(s.tutor_id) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ s.room ?? '—' }}</td>
                 <td class="px-4 py-3">
-                  <span class="inline-block rounded-full px-2 py-0.5 text-2xs font-bold uppercase tracking-wide" :class="statusChipTone(s.status)">
-                    {{ s.status_label ?? s.status }}
-                  </span>
+                  <StatusBadge :label="s.status_label ?? s.status" :tone="statusPillTone(s.status)" uppercase />
                 </td>
               </tr>
             </tbody>
@@ -173,7 +173,7 @@ function truncateId(id: string | null | undefined, len = 8): string {
 
     <button
       type="button"
-      class="fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-brand-cobalt px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:brightness-110"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
       <span aria-hidden="true">+</span> Buat sesi
     </button>

@@ -24,12 +24,14 @@ import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
   type BimbelEnrollment,
 } from '@/services/tutoring-bimbel.service';
+import type { StatusBadgeTone } from '@/types/status-badge';
 
 // TODO WEB-3+ swap to a proper /tutoring-v2/students endpoint once BE exposes it; for now derived from enrollments
 
@@ -121,13 +123,13 @@ const activeEnrollmentCount = computed(() => {
   return items.filter((e) => e.status === 'active').length;
 });
 
-function statusChipTone(status: BimbelEnrollment['status']): string {
+function statusPillTone(status: BimbelEnrollment['status']): StatusBadgeTone {
   switch (status) {
-    case 'active': return 'bg-success-soft text-success';
-    case 'trial': return 'bg-amber-100 text-amber-700';
-    case 'paused': return 'bg-slate-100 text-slate-500';
-    case 'graduated': return 'bg-brand-cobalt/10 text-brand-cobalt';
-    case 'withdrawn': return 'bg-slate-100 text-slate-400 line-through';
+    case 'active': return 'success';
+    case 'trial': return 'warning';
+    case 'paused': return 'neutral';
+    case 'graduated': return 'info';
+    case 'withdrawn': return 'neutral';
   }
 }
 
@@ -204,9 +206,7 @@ function shortId(id: string): string {
                 <td class="px-4 py-3 text-slate-600">{{ shortId(r.program_id) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ r.billing_mode_label ?? r.billing_mode }}</td>
                 <td class="px-4 py-3">
-                  <span class="inline-block rounded-full px-2 py-0.5 text-2xs font-bold uppercase tracking-wide" :class="statusChipTone(r.status)">
-                    {{ r.status_label ?? r.status }}
-                  </span>
+                  <StatusBadge :label="r.status_label ?? r.status" :tone="statusPillTone(r.status)" uppercase />
                 </td>
                 <td class="px-4 py-3 text-slate-600">
                   {{ r.remaining_sessions ?? '—' }}<span class="text-slate-400"> / {{ r.total_sessions_snapshot ?? '—' }}</span>
@@ -220,7 +220,7 @@ function shortId(id: string): string {
 
     <button
       type="button"
-      class="fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-brand-cobalt px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:brightness-110"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
       <span aria-hidden="true">+</span> Tambah siswa
     </button>

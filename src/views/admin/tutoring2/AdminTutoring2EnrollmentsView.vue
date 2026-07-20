@@ -17,12 +17,14 @@ import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
   type BimbelEnrollment,
 } from '@/services/tutoring-bimbel.service';
+import type { StatusBadgeTone } from '@/types/status-badge';
 
 const search = ref('');
 const statusFilter = ref<string>(''); // '' | 'trial' | 'active' | 'paused' | 'graduated' | 'withdrawn'
@@ -69,11 +71,14 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
-function statusChipTone(status: BimbelEnrollment['status']): string {
+function statusPillTone(status: BimbelEnrollment['status']): StatusBadgeTone {
   switch (status) {
-    case 'active': return 'bg-success-soft text-success';
-    case 'trial': return 'bg-warning-soft text-warning';
-    default: return 'bg-slate-100 text-slate-500';
+    case 'active': return 'success';
+    case 'trial': return 'warning';
+    case 'paused': return 'neutral';
+    case 'graduated': return 'neutral';
+    case 'withdrawn': return 'neutral';
+    default: return 'neutral';
   }
 }
 
@@ -157,9 +162,7 @@ function remainingQuota(e: BimbelEnrollment): string {
                 <td class="px-4 py-3 text-slate-600">{{ truncateId(e.program_id) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ e.billing_mode_label ?? e.billing_mode }}</td>
                 <td class="px-4 py-3">
-                  <span class="inline-block rounded-full px-2 py-0.5 text-2xs font-bold uppercase tracking-wide" :class="statusChipTone(e.status)">
-                    {{ e.status_label ?? e.status }}
-                  </span>
+                  <StatusBadge :label="e.status_label ?? e.status" :tone="statusPillTone(e.status)" uppercase />
                 </td>
                 <td class="px-4 py-3 text-slate-600">{{ remainingQuota(e) }}</td>
               </tr>
@@ -171,7 +174,7 @@ function remainingQuota(e: BimbelEnrollment): string {
 
     <button
       type="button"
-      class="fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-brand-cobalt px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:brightness-110"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
       <span aria-hidden="true">+</span> Daftarkan siswa
     </button>

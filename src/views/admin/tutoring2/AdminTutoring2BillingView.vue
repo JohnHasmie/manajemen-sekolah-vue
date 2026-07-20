@@ -16,12 +16,14 @@ import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
   type BimbelEnrollment,
 } from '@/services/tutoring-bimbel.service';
+import type { StatusBadgeTone } from '@/types/status-badge';
 
 // TODO WEB-3+ swap to a proper Finance-bill shape once
 // /tutoring-v2/bills lands. MVP renders directly off enrollments so
@@ -71,6 +73,17 @@ function truncateId(id: string | null | undefined): string {
 
 function formatRupiah(n: number | null | undefined): string {
   return n != null ? `Rp ${n.toLocaleString('id-ID')}` : '—';
+}
+
+// TODO WEB-3+ when /tutoring-v2/bills lands, extend to paid|unpaid|overdue.
+// active|paid → success, unpaid → warning, overdue → danger.
+function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): StatusBadgeTone {
+  switch (status) {
+    case 'active': return 'success';
+    case 'paid': return 'success';
+    case 'unpaid': return 'warning';
+    case 'overdue': return 'danger';
+  }
 }
 </script>
 
@@ -144,9 +157,7 @@ function formatRupiah(n: number | null | undefined): string {
                 </td>
                 <td class="px-4 py-3 text-slate-600">{{ formatRupiah(e.price_at_enrollment) }}</td>
                 <td class="px-4 py-3">
-                  <span class="inline-block rounded-full bg-success-soft px-2 py-0.5 text-2xs font-bold uppercase tracking-wide text-success">
-                    Aktif
-                  </span>
+                  <StatusBadge label="Aktif" :tone="billStatusTone('active')" uppercase />
                 </td>
               </tr>
             </tbody>
@@ -157,7 +168,7 @@ function formatRupiah(n: number | null | undefined): string {
 
     <button
       type="button"
-      class="fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-brand-cobalt px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:brightness-110"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
       <span aria-hidden="true">+</span> Buat tagihan
     </button>

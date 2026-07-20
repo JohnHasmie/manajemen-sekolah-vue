@@ -16,6 +16,8 @@ import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import StatusBadge from '@/components/ui/StatusBadge.vue';
+import type { StatusBadgeTone } from '@/types/status-badge';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
@@ -88,11 +90,11 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
-function statusChipTone(status: BimbelTermRow['status']): string {
+function statusPillTone(status: BimbelTermRow['status']): StatusBadgeTone {
   switch (status) {
-    case 'active': return 'bg-success-soft text-success';
-    case 'draft': return 'bg-slate-100 text-slate-500';
-    case 'closed': return 'bg-slate-100 text-slate-400 line-through';
+    case 'active': return 'success';
+    case 'draft': return 'neutral';
+    case 'closed': return 'neutral';
   }
 }
 
@@ -161,9 +163,7 @@ function formatDate(d: string | null): string {
                 <td class="px-4 py-3 text-slate-600">{{ formatDate(t.start_date) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ formatDate(t.end_date) }}</td>
                 <td class="px-4 py-3">
-                  <span class="inline-block rounded-full px-2 py-0.5 text-2xs font-bold uppercase tracking-wide" :class="statusChipTone(t.status)">
-                    {{ t.status_label }}
-                  </span>
+                  <StatusBadge :label="t.status_label" :tone="statusPillTone(t.status)" uppercase />
                 </td>
                 <td class="px-4 py-3 text-slate-600">{{ t.groups_count }} kelompok</td>
               </tr>
@@ -175,7 +175,7 @@ function formatDate(d: string | null): string {
 
     <button
       type="button"
-      class="fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-brand-cobalt px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:brightness-110"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
       <span aria-hidden="true">+</span> Term baru
     </button>
