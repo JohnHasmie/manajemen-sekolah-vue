@@ -203,7 +203,7 @@ const refreshedLabel = computed(() => {
     </template>
 
     <template v-else-if="activeTab === 'alert' && alerts">
-      <AlertsPanel :data="alerts" />
+      <AlertsPanel :data="alerts" @refresh="loadAll" />
     </template>
 
     <!-- Skeleton — mirrors the tab area layout so no reflow when data lands. -->

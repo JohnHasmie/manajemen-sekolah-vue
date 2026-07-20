@@ -297,12 +297,36 @@ export const MonitoringService = {
     });
   },
 
-  async testWebhook(): Promise<{ ok: boolean; error?: string }> {
+  /**
+   * Test a Slack webhook. Pass an ad-hoc URL to verify BEFORE saving —
+   * a typo caught here prevents the "save then wait for silent alerts"
+   * loop. Omit `webhook` to test the currently-stored URL.
+   */
+  async testWebhook(webhook?: string): Promise<{ ok: boolean; error?: string }> {
     try {
-      const res = await api.post(`${BASE}/alert-settings/test-webhook`);
+      const body: Record<string, string> = {};
+      if (webhook && webhook.trim() !== '') body.webhook = webhook.trim();
+      const res = await api.post(`${BASE}/alert-settings/test-webhook`, body);
       return res.data as { ok: boolean; error?: string };
     } catch (e: any) {
       return { ok: false, error: e?.response?.data?.error ?? 'network' };
+    }
+  },
+
+  /**
+   * Persist a Slack webhook (+ optional channel display name) to the
+   * `monitoring_settings` DB table. Empty webhook clears the row =>
+   * alerts fall silent. Server busts the cache so the next Horizon boot
+   * / alert eval picks up the new value on the next request.
+   */
+  async updateWebhook(webhook: string, channel?: string): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const body: Record<string, string> = { webhook };
+      if (channel && channel.trim() !== '') body.channel = channel.trim();
+      const res = await api.put(`${BASE}/alert-settings/webhook`, body);
+      return res.data as { ok: boolean; error?: string };
+    } catch (e: any) {
+      return { ok: false, error: e?.response?.data?.message ?? 'network' };
     }
   },
 };
