@@ -36,6 +36,12 @@ import Button from '@/components/ui/Button.vue';
 import OntimeHarianChart from '@/components/attendance/OntimeHarianChart.vue';
 import EmployeeAttendanceDeepDiveDrawer from '@/components/attendance/EmployeeAttendanceDeepDiveDrawer.vue';
 import AttendanceRowDetailDrawer from '@/components/attendance/AttendanceRowDetailDrawer.vue';
+// Pulang parity FU-1 — collapsible "Guru Sering Pulang Cepat" digest
+// under the Rekap tab. Backend endpoint is
+// `GET /teacher-attendance/report/pulang-cepat-summary` (!512). The
+// section defaults collapsed so it never pushes the primary rekap
+// below the fold on typical viewports.
+import PulangCepatDigestCard from '@/components/attendance/PulangCepatDigestCard.vue';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import { useToast } from '@/composables/useToast';
 import { useAcademicYearStore } from '@/stores/academic-year';
@@ -44,6 +50,7 @@ import type {
   TeacherAttendanceExportScope,
   TeacherAttendanceListResult,
   TeacherAttendancePersonnelFilter,
+  TeacherAttendancePulangCepatRow,
   TeacherAttendanceRecord,
   TeacherAttendanceSummaryRow,
   TeacherAttendanceTimeseries,
@@ -411,6 +418,17 @@ function closeDeepDive() {
   deepDivePersonName.value = null;
 }
 
+/**
+ * Bridge from the pulang-cepat digest row → the same deep-dive drawer
+ * the rekap list uses. The digest row carries `display_name` where the
+ * rekap row carries `teacher_name`; the drawer only needs the `id +
+ * name` pair for its header while it fetches its own detail payload.
+ */
+function openDeepDiveFromDigest(row: TeacherAttendancePulangCepatRow) {
+  deepDivePersonId.value = row.person_id;
+  deepDivePersonName.value = row.display_name;
+}
+
 const rowDetail = ref<TeacherAttendanceRecord | null>(null);
 const rowDetailOpen = computed(() => rowDetail.value !== null);
 function openRowDetail(row: TeacherAttendanceRecord) {
@@ -759,6 +777,20 @@ function pctChipClass(pct: number): string {
 
       <!-- Rekap tab -->
       <div v-if="activeTab === 'summary'">
+        <!--
+          Pulang parity FU-1 — collapsed by default so it never pushes
+          the primary rekap table below the fold. Lazy-fetches on first
+          expand (parent-driven filter changes reset its cache so the
+          section stays in lock-step with the surrounding period picker).
+        -->
+        <div class="p-3 border-b border-slate-100 bg-slate-50">
+          <PulangCepatDigestCard
+            :start-date="filterStartDate || undefined"
+            :end-date="filterEndDate || undefined"
+            :personnel-type="filterPersonnelType"
+            @open-person="openDeepDiveFromDigest"
+          />
+        </div>
         <AsyncView
           :state="summaryState"
           :empty-title="t('admin.sekolah.teacher_attendance.empty_title')"

@@ -784,6 +784,79 @@ export interface TeacherAttendanceEmployeeDeepDive {
 }
 
 // ───────────────────────────────────────────────────────────────────
+// PULANG CEPAT DIGEST (backend FU-1)
+//
+// Per-PERSON digest of frequent early-leavers over a date range —
+// counts BOTH `status='early_leave'` rows and `status='late'` rows
+// whose `secondary_flags.early_leave_secondary` is true (the "late
+// AND early" corner keeps dominant status as `late` so the main rekap
+// stays honest; this digest is where those rows resurface).
+//
+// Ordering: ratio DESC then early_leave_count DESC — worst offenders
+// first. `meta.school_policy` echoes the current early_leave_policy so
+// the FE can label the section eyebrow without a second /config
+// round-trip. `avg_minutes_early` is intentionally nullable — the
+// backend ships null in the first cut and populates it in a follow-up
+// MR; the FE renders "-" when null.
+// ───────────────────────────────────────────────────────────────────
+
+/** One row in the pulang-cepat digest response `data[]`. */
+export interface TeacherAttendancePulangCepatRow {
+  personnel_type: TeacherAttendancePersonnelType;
+  /** Stable per-person key — teacher_id for teachers, user_id for staff. */
+  person_id: string;
+  display_name: string;
+  /** NIP for teachers, null for staff (they don't carry one). */
+  employee_number: string | null;
+  /** "Guru <Mapel>" for teachers, staff.position for staff, null otherwise. */
+  subject_or_role: string | null;
+  /** Count of rows in the window flagged as early-leave (both branches). */
+  early_leave_count: number;
+  /**
+   * Attended-workday count for this person over the window. Falls back to
+   * meta.workday_count when the person has no persisted is_workday rows
+   * (older rows created before the backend backfill). Never zero — that
+   * would hide the row from the ratio-DESC sort.
+   */
+  workday_count: number;
+  /** round(early_leave_count / workday_count, 4). Zero when denom is 0. */
+  ratio: number;
+  /**
+   * Average minutes-below-threshold across the early-leave rows.
+   * Deferred to a follow-up MR — the field is present in the contract
+   * as null so the FE renders "-" today and swaps to the real number
+   * without a schema break when the follow-up ships.
+   */
+  avg_minutes_early: number | null;
+  /** YYYY-MM-DD of the most recent early-leave row in the window. */
+  last_early_leave_date: string;
+}
+
+/** Meta block for the pulang-cepat digest. */
+export interface TeacherAttendancePulangCepatMeta {
+  start_date: string;
+  end_date: string;
+  personnel_type: TeacherAttendancePersonnelFilter;
+  /** Calendar workdays in the window (per the school's workweek + holidays). */
+  workday_count: number;
+  /** Current school-wide `early_leave_policy` — for the section eyebrow. */
+  school_policy: TeacherAttendanceEarlyLeavePolicy;
+}
+
+/** GET /teacher-attendance/report/pulang-cepat-summary response body. */
+export interface TeacherAttendancePulangCepatSummary {
+  meta: TeacherAttendancePulangCepatMeta;
+  data: TeacherAttendancePulangCepatRow[];
+}
+
+/** Filters accepted by the pulang-cepat digest endpoint. */
+export interface TeacherAttendancePulangCepatFilters {
+  start_date?: string;
+  end_date?: string;
+  personnel_type?: TeacherAttendancePersonnelFilter;
+}
+
+// ───────────────────────────────────────────────────────────────────
 // EXPORT (backend !492)
 // ───────────────────────────────────────────────────────────────────
 

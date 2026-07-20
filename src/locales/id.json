@@ -2976,7 +2976,25 @@
           "confirm_field_delta": "Selisih",
           "confirm_field_status": "Status tercatat",
           "confirm_status_value": "Pulang cepat"
-        }
+        },
+        "pulang_cepat_section_title": "Guru Sering Pulang Cepat",
+        "pulang_cepat_section_subtitle": "{count} pegawai · periode {period}",
+        "pulang_cepat_section_expand": "Buka daftar",
+        "pulang_cepat_section_collapse": "Tutup daftar",
+        "pulang_cepat_policy_eyebrow": "Kebijakan sekolah: {policy}",
+        "pulang_cepat_policy_warn": "peringatan (tetap tercatat)",
+        "pulang_cepat_policy_none": "tidak diperiksa",
+        "pulang_cepat_policy_block": "tolak pulang cepat",
+        "pulang_cepat_empty": "Tidak ada guru yang tercatat pulang cepat pada periode ini.",
+        "pulang_cepat_ratio_hi": "Sering",
+        "pulang_cepat_ratio_mid": "Sedang",
+        "pulang_cepat_ratio_lo": "Jarang",
+        "pulang_cepat_count_line": "{count} dari {total} hari",
+        "pulang_cepat_avg_line": "rata-rata {min} menit lebih awal",
+        "pulang_cepat_avg_pending": "Rata-rata menit lebih awal belum tersedia",
+        "pulang_cepat_last_line": "Terakhir {date}",
+        "pulang_cepat_error_retry": "Gagal memuat daftar pulang cepat.",
+        "pulang_cepat_retry": "Coba lagi"
       },
       "teacher_management": {
         "role_teacher": "Guru",
