@@ -41,6 +41,10 @@ import type {
   TeacherAttendanceOwnSummary,
   TeacherAttendanceOwnSummaryTotals,
   TeacherAttendancePageMeta,
+  TeacherAttendancePulangCepatFilters,
+  TeacherAttendancePulangCepatMeta,
+  TeacherAttendancePulangCepatRow,
+  TeacherAttendancePulangCepatSummary,
   TeacherAttendanceRecord,
   TeacherAttendanceReminderScope,
   TeacherAttendanceReminderSettings,
@@ -78,6 +82,10 @@ const Endpoints = {
   reportTimeseries: '/teacher-attendance/report/timeseries',
   reportEmployee: '/teacher-attendance/report/employee', // + /{personId}
   reportExport: '/teacher-attendance/report/export',
+  // FU-1 — per-PERSON digest of frequent early-leavers (backend follow-up
+  // to the Pulang parity series). Consumed by the collapsible "Guru Sering
+  // Pulang Cepat" section on the admin Rekap tab.
+  reportPulangCepatSummary: '/teacher-attendance/report/pulang-cepat-summary',
   geofences: '/teacher-attendance/geofences',
 } as const;
 
@@ -901,6 +909,90 @@ export const TeacherAttendanceService = {
       };
     } catch (e) {
       throw new Error(humanError(e, 'Gagal memuat grafik harian presensi.'));
+    }
+  },
+
+  /**
+   * GET /teacher-attendance/report/pulang-cepat-summary — per-PERSON
+   * digest of frequent early-leavers over a date range (backend FU-1
+   * follow-up to the Pulang parity series).
+   *
+   * Two branches fold into ONE grouped SQL server-side:
+   *   1. `status='early_leave'` — dominant status for someone who left
+   *      early AND was on-time on arrival.
+   *   2. `status='late'` + `secondary_flags.early_leave_secondary=true`
+   *      — the "late AND early" corner where the dominant status stays
+   *      `late` for the main rekap. This digest counts them so the
+   *      "sering pulang cepat" list is complete.
+   *
+   * Rows are pre-sorted ratio DESC then early_leave_count DESC — the FE
+   * renders top-N as-is. `meta.school_policy` echoes the current
+   * `early_leave_policy` (warn / none / block) so the section eyebrow
+   * doesn't need a second /config call.
+   *
+   * `avg_minutes_early` is currently NULL on every row — the backend
+   * defers the per-row threshold resolution to a follow-up MR. The FE
+   * renders "-" when null; the field type is nullable so a future
+   * populated response is a non-breaking change.
+   */
+  async getPulangCepatSummary(
+    filters: TeacherAttendancePulangCepatFilters = {},
+  ): Promise<TeacherAttendancePulangCepatSummary> {
+    try {
+      const params: Record<string, unknown> = {};
+      if (filters.start_date) params.start_date = filters.start_date;
+      if (filters.end_date) params.end_date = filters.end_date;
+      // Same normalisation as adminTimeseries — `all` is the server's
+      // implicit default so we can omit it to keep the URL short.
+      if (filters.personnel_type && filters.personnel_type !== 'all') {
+        params.personnel_type = filters.personnel_type;
+      }
+      const res = await api.get(Endpoints.reportPulangCepatSummary, {
+        params,
+      });
+      const body = (res.data ?? {}) as {
+        meta?: Record<string, unknown>;
+        data?: Record<string, unknown>[];
+      };
+      const rawMeta = (body.meta ?? {}) as Record<string, unknown>;
+      const rawRows = Array.isArray(body.data) ? body.data : [];
+      const personnel = String(rawMeta.personnel_type ?? 'all');
+      const meta: TeacherAttendancePulangCepatMeta = {
+        start_date: String(rawMeta.start_date ?? ''),
+        end_date: String(rawMeta.end_date ?? ''),
+        personnel_type: (personnel === 'teacher' || personnel === 'staff'
+          ? personnel
+          : 'all') as TeacherAttendancePulangCepatMeta['personnel_type'],
+        workday_count: asInt(rawMeta.workday_count, 0),
+        school_policy: earlyLeavePolicyFromJson(rawMeta.school_policy),
+      };
+      const data: TeacherAttendancePulangCepatRow[] = rawRows.map((r) => {
+        const rawType = String(r.personnel_type ?? 'teacher');
+        const workdayCount = asInt(r.workday_count, 0);
+        const earlyLeaveCount = asInt(r.early_leave_count, 0);
+        return {
+          personnel_type: (rawType === 'staff' ? 'staff' : 'teacher') as
+            | 'teacher'
+            | 'staff',
+          person_id: asStrOrNull(r.person_id) ?? '',
+          display_name: String(r.display_name ?? '-'),
+          employee_number: asStrOrNull(r.employee_number),
+          subject_or_role: asStrOrNull(r.subject_or_role),
+          early_leave_count: earlyLeaveCount,
+          workday_count: workdayCount,
+          ratio: asFloat(r.ratio, 0),
+          // asNumOrNull preserves both an omitted field (undefined→null)
+          // and an explicit null from the server (deferred backend
+          // computation), landing us on the same "render '-'" branch.
+          avg_minutes_early: asNumOrNull(r.avg_minutes_early),
+          last_early_leave_date: String(r.last_early_leave_date ?? ''),
+        };
+      });
+      return { meta, data };
+    } catch (e) {
+      throw new Error(
+        humanError(e, 'Gagal memuat daftar guru sering pulang cepat.'),
+      );
     }
   },
 
