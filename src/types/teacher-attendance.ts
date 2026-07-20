@@ -784,7 +784,7 @@ export interface TeacherAttendanceEmployeeDeepDive {
 }
 
 // ───────────────────────────────────────────────────────────────────
-// PULANG CEPAT DIGEST (backend FU-1)
+// EARLY LEAVE DIGEST (backend FU-1)
 //
 // Per-PERSON digest of frequent early-leavers over a date range —
 // counts BOTH `status='early_leave'` rows and `status='late'` rows
@@ -800,8 +800,8 @@ export interface TeacherAttendanceEmployeeDeepDive {
 // MR; the FE renders "-" when null.
 // ───────────────────────────────────────────────────────────────────
 
-/** One row in the pulang-cepat digest response `data[]`. */
-export interface TeacherAttendancePulangCepatRow {
+/** One row in the early-leave digest response `data[]`. */
+export interface TeacherAttendanceEarlyLeaveRow {
   personnel_type: TeacherAttendancePersonnelType;
   /** Stable per-person key — teacher_id for teachers, user_id for staff. */
   person_id: string;
@@ -832,8 +832,8 @@ export interface TeacherAttendancePulangCepatRow {
   last_early_leave_date: string;
 }
 
-/** Meta block for the pulang-cepat digest. */
-export interface TeacherAttendancePulangCepatMeta {
+/** Meta block for the early-leave digest. */
+export interface TeacherAttendanceEarlyLeaveMeta {
   start_date: string;
   end_date: string;
   personnel_type: TeacherAttendancePersonnelFilter;
@@ -843,14 +843,14 @@ export interface TeacherAttendancePulangCepatMeta {
   school_policy: TeacherAttendanceEarlyLeavePolicy;
 }
 
-/** GET /teacher-attendance/report/pulang-cepat-summary response body. */
-export interface TeacherAttendancePulangCepatSummary {
-  meta: TeacherAttendancePulangCepatMeta;
-  data: TeacherAttendancePulangCepatRow[];
+/** GET /teacher-attendance/report/early-leave-summary response body. */
+export interface TeacherAttendanceEarlyLeaveSummary {
+  meta: TeacherAttendanceEarlyLeaveMeta;
+  data: TeacherAttendanceEarlyLeaveRow[];
 }
 
-/** Filters accepted by the pulang-cepat digest endpoint. */
-export interface TeacherAttendancePulangCepatFilters {
+/** Filters accepted by the early-leave digest endpoint. */
+export interface TeacherAttendanceEarlyLeaveFilters {
   start_date?: string;
   end_date?: string;
   personnel_type?: TeacherAttendancePersonnelFilter;

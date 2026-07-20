@@ -41,10 +41,10 @@ import type {
   TeacherAttendanceOwnSummary,
   TeacherAttendanceOwnSummaryTotals,
   TeacherAttendancePageMeta,
-  TeacherAttendancePulangCepatFilters,
-  TeacherAttendancePulangCepatMeta,
-  TeacherAttendancePulangCepatRow,
-  TeacherAttendancePulangCepatSummary,
+  TeacherAttendanceEarlyLeaveFilters,
+  TeacherAttendanceEarlyLeaveMeta,
+  TeacherAttendanceEarlyLeaveRow,
+  TeacherAttendanceEarlyLeaveSummary,
   TeacherAttendanceRecord,
   TeacherAttendanceReminderScope,
   TeacherAttendanceReminderSettings,
@@ -63,7 +63,7 @@ const Endpoints = {
   checkOut: '/teacher-attendance/check-out',
   // BE-2 !505: server-side preview of "would this check-out succeed
   // right now, and if so what status will it be stamped with?". Feeds
-  // the eyebrow chip + pulang-cepat confirmation on the self-service
+  // the eyebrow chip + early-leave confirmation on the self-service
   // Presensi Saya screen. Fetched ONCE on mount — do NOT poll.
   checkoutPreview: '/teacher-attendance/checkout-preview',
   // Caller-aware GATE-QR self check-in (backend QrCheckInController@store).
@@ -85,7 +85,7 @@ const Endpoints = {
   // FU-1 — per-PERSON digest of frequent early-leavers (backend follow-up
   // to the Pulang parity series). Consumed by the collapsible "Guru Sering
   // Pulang Cepat" section on the admin Rekap tab.
-  reportPulangCepatSummary: '/teacher-attendance/report/pulang-cepat-summary',
+  reportEarlyLeaveSummary: '/teacher-attendance/report/early-leave-summary',
   geofences: '/teacher-attendance/geofences',
   // FU-2 pulang-parity telemetry (backend !513). Fire-and-forget POST
   // the confirm modal hits after the guru picks Batal / Ya-tetap-pulang.
@@ -927,7 +927,7 @@ export const TeacherAttendanceService = {
   },
 
   /**
-   * GET /teacher-attendance/report/pulang-cepat-summary — per-PERSON
+   * GET /teacher-attendance/report/early-leave-summary — per-PERSON
    * digest of frequent early-leavers over a date range (backend FU-1
    * follow-up to the Pulang parity series).
    *
@@ -949,9 +949,9 @@ export const TeacherAttendanceService = {
    * renders "-" when null; the field type is nullable so a future
    * populated response is a non-breaking change.
    */
-  async getPulangCepatSummary(
-    filters: TeacherAttendancePulangCepatFilters = {},
-  ): Promise<TeacherAttendancePulangCepatSummary> {
+  async getEarlyLeaveSummary(
+    filters: TeacherAttendanceEarlyLeaveFilters = {},
+  ): Promise<TeacherAttendanceEarlyLeaveSummary> {
     try {
       const params: Record<string, unknown> = {};
       if (filters.start_date) params.start_date = filters.start_date;
@@ -961,7 +961,7 @@ export const TeacherAttendanceService = {
       if (filters.personnel_type && filters.personnel_type !== 'all') {
         params.personnel_type = filters.personnel_type;
       }
-      const res = await api.get(Endpoints.reportPulangCepatSummary, {
+      const res = await api.get(Endpoints.reportEarlyLeaveSummary, {
         params,
       });
       const body = (res.data ?? {}) as {
@@ -971,16 +971,16 @@ export const TeacherAttendanceService = {
       const rawMeta = (body.meta ?? {}) as Record<string, unknown>;
       const rawRows = Array.isArray(body.data) ? body.data : [];
       const personnel = String(rawMeta.personnel_type ?? 'all');
-      const meta: TeacherAttendancePulangCepatMeta = {
+      const meta: TeacherAttendanceEarlyLeaveMeta = {
         start_date: String(rawMeta.start_date ?? ''),
         end_date: String(rawMeta.end_date ?? ''),
         personnel_type: (personnel === 'teacher' || personnel === 'staff'
           ? personnel
-          : 'all') as TeacherAttendancePulangCepatMeta['personnel_type'],
+          : 'all') as TeacherAttendanceEarlyLeaveMeta['personnel_type'],
         workday_count: asInt(rawMeta.workday_count, 0),
         school_policy: earlyLeavePolicyFromJson(rawMeta.school_policy),
       };
-      const data: TeacherAttendancePulangCepatRow[] = rawRows.map((r) => {
+      const data: TeacherAttendanceEarlyLeaveRow[] = rawRows.map((r) => {
         const rawType = String(r.personnel_type ?? 'teacher');
         const workdayCount = asInt(r.workday_count, 0);
         const earlyLeaveCount = asInt(r.early_leave_count, 0);
