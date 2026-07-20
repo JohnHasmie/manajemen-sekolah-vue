@@ -11,7 +11,6 @@ import { useI18n } from 'vue-i18n';
 import { TeacherService, type TeacherFilterOptions } from '@/services/teachers.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SubjectService } from '@/services/subjects.service';
-import { AdminDataExcelService } from '@/services/admin-data-excel.service';
 import { useRoleHex } from '@/composables/useRoleHex';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
@@ -30,13 +29,10 @@ import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import FilterFacetPickerModal, {
   type FacetOption,
 } from '@/components/feature/FilterFacetPickerModal.vue';
-import AdminDataMenu from '@/components/feature/AdminDataMenu.vue';
+import AdminExcelToolbar from '@/components/feature/AdminExcelToolbar.vue';
 import AdminEntityDetailSheet, {
   type DetailSection,
 } from '@/components/feature/AdminEntityDetailSheet.vue';
-import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vue';
-import AdminImportResultModal from '@/components/feature/AdminImportResultModal.vue';
-import type { ImportDetailRow } from '@/services/admin-data-excel.service';
 import ResetPasswordModal from '@/components/feature/ResetPasswordModal.vue';
 import SubscriptionUsageBanner from '@/components/billing/SubscriptionUsageBanner.vue';
 import type { AsyncState } from '@/components/data/AsyncView.vue';
@@ -107,17 +103,6 @@ function onResetDone() {
     tone: 'success',
   };
 }
-const showImport = ref(false);
-// Per-row import result. When non-empty, the shared result dialog opens
-// listing EVERY processed row grouped by status (added / already there /
-// needs review / failed).
-const importDetails = ref<ImportDetailRow[]>([]);
-const importCounts = ref<{
-  imported?: number;
-  skipped?: number;
-  conflicts?: number;
-  failed?: number;
-}>({});
 const deleteTarget = ref<Teacher | null>(null);
 const bulkDeleteOpen = ref(false);
 const isSaving = ref(false);
@@ -614,59 +599,7 @@ async function confirmDelete() {
   }
 }
 
-// ── Excel ──
-async function exportExcel() {
-  try {
-    await AdminDataExcelService.exportExcel('teacher');
-    toast.value = { message: 'Excel terdownload.', tone: 'success' };
-  } catch (e) {
-    toast.value = { message: (e as Error).message, tone: 'error' };
-  }
-}
-async function downloadTemplate() {
-  try {
-    await AdminDataExcelService.downloadTemplate('teacher');
-    toast.value = { message: 'Template terdownload.', tone: 'success' };
-  } catch (e) {
-    toast.value = { message: (e as Error).message, tone: 'error' };
-  }
-}
-function onImportDone(res: {
-  imported: number;
-  failed: number;
-  skipped?: number;
-  conflicts?: number;
-  message?: string;
-  details?: ImportDetailRow[];
-}) {
-  // Surface EVERY processed row (not just conflicts/failures) so the admin
-  // sees exactly what happened to each entry in the shared result dialog.
-  importDetails.value = res.details ?? [];
-  importCounts.value = {
-    imported: res.imported,
-    skipped: res.skipped ?? 0,
-    conflicts: res.conflicts ?? 0,
-    failed: res.failed,
-  };
-  // Report the truth instead of lumping "already exists" into "gagal": a
-  // re-import of an existing roster now reads "0 ditambahkan · 18 sudah
-  // terdaftar", not "18 gagal".
-  const skipped = res.skipped ?? 0;
-  const conflicts = res.conflicts ?? 0;
-  const parts = [`${res.imported} guru ditambahkan`];
-  if (skipped > 0) parts.push(`${skipped} sudah terdaftar`);
-  if (conflicts > 0) parts.push(`${conflicts} perlu ditinjau`);
-  if (res.failed > 0) parts.push(`${res.failed} gagal`);
-
-  // "Sudah terdaftar" is a harmless no-op; only genuine failures or email
-  // conflicts that need admin attention colour the toast as an error.
-  const needsAttention = res.failed > 0 || conflicts > 0;
-  toast.value = {
-    message: `${parts.join(' · ')}.`,
-    tone: needsAttention ? 'error' : 'success',
-  };
-  reload(1);
-}
+// Excel export / import / template are handled by <AdminExcelToolbar>.
 
 // The pre-redesign card rendered a compact `topMeta` string + a status
 // chip. Those are now handled inside TeacherStructuredCard (identity
@@ -695,12 +628,13 @@ function onImportDone(res: {
     @retry="reload()"
   >
     <template #header-actions>
-      <AdminDataMenu
+      <AdminExcelToolbar
+        entity="teacher"
+        entity-label="guru"
+        :import-title="$t('admin.sekolah.teacher_management.import_title')"
         :read-only="ayReadOnly"
         @refresh="reload(pagination?.current_page ?? 1)"
-        @export-excel="exportExcel"
-        @import-excel="showImport = true"
-        @download-template="downloadTemplate"
+        @imported="reload(1)"
       />
     </template>
 
@@ -939,23 +873,6 @@ function onImportDone(res: {
       </div>
     </div>
   </Modal>
-
-  <AdminImportExcelModal
-    v-if="showImport"
-    entity="teacher"
-    :title="$t('admin.sekolah.teacher_management.import_title')"
-    @close="showImport = false"
-    @done="onImportDone"
-  />
-
-  <!-- Post-import result: EVERY processed guru grouped by status. -->
-  <AdminImportResultModal
-    v-if="importDetails.length > 0"
-    entity-label="guru"
-    :details="importDetails"
-    :counts="importCounts"
-    @close="importDetails = []"
-  />
 
   <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />
 </template>

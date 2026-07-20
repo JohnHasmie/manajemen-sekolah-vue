@@ -12,7 +12,7 @@
  */
 import { api } from '@/lib/http';
 
-export type AdminEntity = 'student' | 'teacher' | 'class' | 'subject';
+export type AdminEntity = 'student' | 'teacher' | 'class' | 'subject' | 'staff';
 
 /** One actionable import row (conflict or failure) the admin should review. */
 export interface ImportReviewRow {
@@ -58,6 +58,37 @@ export interface ImportWarningRow {
   message: string;
 }
 
+/**
+ * Normalised result of a bulk Excel import — the single shape
+ * {@link AdminDataExcelService.importExcel} resolves to, shared by the
+ * toolbar + any host that needs the raw buckets (e.g. subject import's
+ * orphan-resync follow-up).
+ */
+export interface AdminImportResult {
+  imported: number;
+  // Post-MR!516 subject import breaks `imported` into three buckets so the
+  // UI can reassure the admin a re-import didn't orphan schedules:
+  //   created  — brand-new rows
+  //   updated  — existing rows upserted in place (schedules stay linked)
+  //   restored — soft-deleted rows re-hydrated
+  // `imported` stays the grand total (created + updated + restored) for
+  // back-compat with the three importers that don't split it.
+  created: number;
+  updated: number;
+  restored: number;
+  failed: number;
+  skipped: number;
+  conflicts: number;
+  message?: string;
+  // Per-row detail for rows that need admin attention (conflicts + failures).
+  review: ImportReviewRow[];
+  // Per-row detail for EVERY processed row — the shared result dialog groups
+  // these by status. Empty for importers that don't report it.
+  details: ImportDetailRow[];
+  // Non-blocking per-row notes for rows that DID import but flag a follow-up.
+  warnings: ImportWarningRow[];
+}
+
 function humanError(e: unknown, fallback: string): string {
   const ax = e as any;
   if (ax?.response?.data) {
@@ -93,6 +124,7 @@ const LABELS: Record<AdminEntity, string> = {
   teacher: 'guru',
   class: 'kelas',
   subject: 'mata-pelajaran',
+  staff: 'staf',
 };
 
 export const AdminDataExcelService = {
@@ -122,35 +154,7 @@ export const AdminDataExcelService = {
   async importExcel(
     entity: AdminEntity,
     file: File,
-  ): Promise<{
-    imported: number;
-    // Post-MR!516 subject import breaks `imported` into three buckets so
-    // the UI can reassure the admin a re-import didn't orphan schedules:
-    //   created  — brand-new mapel rows
-    //   updated  — existing mapel upserted in place (schedules stay linked)
-    //   restored — soft-deleted mapel re-hydrated
-    // `imported` stays the grand total (created + updated + restored) for
-    // back-compat with the other three importers that don't split it.
-    created: number;
-    updated: number;
-    restored: number;
-    failed: number;
-    skipped: number;
-    conflicts: number;
-    message?: string;
-    // Per-row detail for the rows that need admin attention (conflicts +
-    // failures) — so the UI can name WHICH row and WHY. Empty for importers
-    // that don't report it.
-    review: ImportReviewRow[];
-    // Per-row detail for EVERY processed row (added / already there / needs
-    // review / failed) — the shared result dialog groups these by status.
-    // Empty for importers that don't report it.
-    details: ImportDetailRow[];
-    // Non-blocking per-row notes for rows that DID import but flag a
-    // follow-up (post-!453 subject import: unresolved Master name).
-    // Empty for importers that don't emit warnings.
-    warnings: ImportWarningRow[];
-  }> {
+  ): Promise<AdminImportResult> {
     try {
       const fd = new FormData();
       fd.append('file', file);

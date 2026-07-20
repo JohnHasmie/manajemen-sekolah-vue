@@ -13,7 +13,6 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { StudentService } from '@/services/students.service';
 import { ClassroomService } from '@/services/classrooms.service';
-import { AdminDataExcelService } from '@/services/admin-data-excel.service';
 import { AttendanceQrService } from '@/services/attendance-qr.service';
 import { useMe } from '@/composables/useMe';
 import { useRoleHex } from '@/composables/useRoleHex';
@@ -35,14 +34,11 @@ import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import FilterFacetPickerModal, {
   type FacetOption,
 } from '@/components/feature/FilterFacetPickerModal.vue';
-import AdminDataMenu from '@/components/feature/AdminDataMenu.vue';
+import AdminExcelToolbar from '@/components/feature/AdminExcelToolbar.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import AdminEntityDetailSheet, {
   type DetailSection,
 } from '@/components/feature/AdminEntityDetailSheet.vue';
-import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vue';
-import AdminImportResultModal from '@/components/feature/AdminImportResultModal.vue';
-import type { ImportDetailRow } from '@/services/admin-data-excel.service';
 import ResetPasswordModal from '@/components/feature/ResetPasswordModal.vue';
 import SubscriptionUsageBanner from '@/components/billing/SubscriptionUsageBanner.vue';
 import Toast from '@/components/ui/Toast.vue';
@@ -231,17 +227,7 @@ function onResetDone() {
   };
 }
 const bulkDeleteOpen = ref(false);
-const showImport = ref(false);
 const isSaving = ref(false);
-
-// Per-row import result — feeds the shared result dialog when non-empty.
-const importDetails = ref<ImportDetailRow[]>([]);
-const importCounts = ref<{
-  imported?: number;
-  skipped?: number;
-  conflicts?: number;
-  failed?: number;
-}>({});
 
 // Per-facet picker visibility
 const showStatusPicker = ref(false);
@@ -708,45 +694,7 @@ async function confirmDelete() {
   }
 }
 
-// ── Excel ──
-async function exportExcel() {
-  try {
-    await AdminDataExcelService.exportExcel('student');
-    toast.value = { message: 'Excel terdownload.', tone: 'success' };
-  } catch (e) {
-    toast.value = { message: (e as Error).message, tone: 'error' };
-  }
-}
-async function downloadTemplate() {
-  try {
-    await AdminDataExcelService.downloadTemplate('student');
-    toast.value = { message: 'Template terdownload.', tone: 'success' };
-  } catch (e) {
-    toast.value = { message: (e as Error).message, tone: 'error' };
-  }
-}
-function onImportDone(res: {
-  imported: number;
-  failed: number;
-  skipped?: number;
-  conflicts?: number;
-  details?: ImportDetailRow[];
-}) {
-  // Surface EVERY processed row grouped by status in the shared dialog.
-  importDetails.value = res.details ?? [];
-  importCounts.value = {
-    imported: res.imported,
-    skipped: res.skipped ?? 0,
-    conflicts: res.conflicts ?? 0,
-    failed: res.failed,
-  };
-  const note = res.failed > 0 ? ` · ${res.failed} gagal` : '';
-  toast.value = {
-    message: `${res.imported} siswa diimpor${note}.`,
-    tone: res.failed > 0 ? 'error' : 'success',
-  };
-  reload(1);
-}
+// Excel export / import / template are handled by <AdminExcelToolbar>.
 
 // The pre-redesign list rendered a compact `topMeta` string
 // ("<kelas> · NIS ...") inside BrandListRow. The card view now
@@ -800,12 +748,13 @@ function onImportDone(res: {
         <NavIcon name="id-card" :size="14" />
         Kelola Kartu QR
       </RouterLink>
-      <AdminDataMenu
+      <AdminExcelToolbar
+        entity="student"
+        entity-label="siswa"
+        :import-title="t('admin.student.importTitle')"
         :read-only="ayReadOnly"
         @refresh="reload(pagination?.current_page ?? 1)"
-        @export-excel="exportExcel"
-        @import-excel="showImport = true"
-        @download-template="downloadTemplate"
+        @imported="reload(1)"
       />
     </template>
 
@@ -1178,23 +1127,6 @@ function onImportDone(res: {
     :reset-fn="(pwd?: string) => StudentService.resetGuardianPassword(resetTarget!.id, pwd)"
     @close="resetTarget = null"
     @done="onResetDone"
-  />
-
-  <AdminImportExcelModal
-    v-if="showImport"
-    entity="student"
-    :title="t('admin.student.importTitle')"
-    @close="showImport = false"
-    @done="onImportDone"
-  />
-
-  <!-- Post-import result: EVERY processed siswa grouped by status. -->
-  <AdminImportResultModal
-    v-if="importDetails.length > 0"
-    entity-label="siswa"
-    :details="importDetails"
-    :counts="importCounts"
-    @close="importDetails = []"
   />
 
   <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />

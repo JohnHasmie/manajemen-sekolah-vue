@@ -82,6 +82,18 @@
     "switchToEn": "Ganti ke Bahasa Inggris"
   },
   "common": {
+    "excel": {
+      "refresh": "Refresh",
+      "downloadTemplate": "Unduh Template",
+      "exportExcel": "Export Excel",
+      "importExcel": "Import Excel",
+      "exported": "Excel terdownload.",
+      "templateDownloaded": "Template terdownload.",
+      "importedCount": "{count} {label} ditambahkan",
+      "skippedCount": "{count} sudah terdaftar",
+      "conflictsCount": "{count} perlu ditinjau",
+      "failedCount": "{count} gagal"
+    },
     "save": "Simpan",
     "saveChanges": "Simpan perubahan",
     "saving": "Menyimpan…",

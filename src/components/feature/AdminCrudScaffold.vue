@@ -10,7 +10,7 @@
     6. Floating + FAB anchored bottom-right
 
   Slots:
-    header-actions  — right of the gradient banner (AdminDataMenu, etc.)
+    header-actions  — right of the gradient banner (AdminExcelToolbar, etc.)
     filter-chips    — AppFilterChip buttons inside PageFilterToolbar #chips
     bulk-actions    — buttons inside the sticky bulk-action bar
     default         — the list/grid body
