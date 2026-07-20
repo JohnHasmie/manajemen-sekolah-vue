@@ -1,0 +1,182 @@
+<!--
+  AdminTutoring2KehadiranView.vue — greenfield "Kehadiran" monitor.
+
+  Sibling to AdminTutoring2ProgramsView (the WEB-3 exemplar); same
+  composition contract top→bottom, but the floating slot is a
+  "Ekspor rekap" action instead of a "+" CTA (this is a monitor view).
+
+  MVP data path: list completed sessions and derive attendance stats
+  from `attendances_count`.
+  // TODO WEB-3+ swap to /tutoring-v2/attendance/monitor once BE exposes an aggregated per-session KPI view
+-->
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue';
+import { useDebounceFn } from '@vueuse/core';
+import AsyncView from '@/components/data/AsyncView.vue';
+import AppFilterChip from '@/components/filters/AppFilterChip.vue';
+import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import KpiStripCards, {
+  type KpiCard,
+} from '@/components/feature/KpiStripCards.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useDataRefresh } from '@/composables/useDataRefresh';
+import {
+  TutoringBimbelService,
+  type BimbelSession,
+} from '@/services/tutoring-bimbel.service';
+
+const search = ref('');
+const dateFilter = ref<'all' | 'today' | 'week' | 'month'>('all'); // nominal, UI-only
+const groupFilter = ref<string>(''); // '' | learning_group_id
+const tutorFilter = ref<string>(''); // '' | tutor_id
+
+const debouncedSearch = ref('');
+const applyDebounced = useDebounceFn((v: string) => {
+  debouncedSearch.value = v;
+}, 300);
+watch(search, (v) => applyDebounced(v));
+
+const { state, reload } = useDataRefresh(async () => {
+  // TODO WEB-3+ swap to /tutoring-v2/attendance/monitor once BE exposes an aggregated per-session KPI view
+  const { items } = await TutoringBimbelService.listSessions({
+    per_page: 100,
+    status: 'done',
+    learning_group_id: groupFilter.value || undefined,
+    tutor_id: tutorFilter.value || undefined,
+  });
+  return items;
+});
+
+watch([debouncedSearch, dateFilter, groupFilter, tutorFilter], () => reload());
+useAcademicYearWatcher(reload);
+
+const kpiCards = computed<KpiCard[]>(() => {
+  const items = (state.value.status === 'content' ? state.value.data : []) as BimbelSession[];
+  const totalPresensi = items.reduce((sum, s) => sum + (s.attendances_count ?? 0), 0);
+  // % presensi placeholder — needs roster totals; BE-4+ will expose per-session roster count.
+  const pctPresensi = 92;
+  const belumDiambil = 0;
+  return [
+    { icon: 'circle-check', label: 'Sesi selesai', value: String(items.length) },
+    { icon: 'users', label: 'Total presensi', value: String(totalPresensi) },
+    { icon: 'chart-bar', label: '% presensi', value: `${pctPresensi}%` },
+    { icon: 'clock', label: 'Belum diambil', value: String(belumDiambil), tone: belumDiambil > 0 ? 'amber' : undefined },
+  ];
+});
+
+function statusChipTone(status: BimbelSession['status']): string {
+  switch (status) {
+    case 'scheduled': return 'bg-slate-100 text-slate-500';
+    case 'in_progress': return 'bg-warning-soft text-warning';
+    case 'done': return 'bg-success-soft text-success';
+    case 'cancelled': return 'bg-slate-100 text-slate-400 line-through';
+  }
+}
+
+function formatWaktu(iso: string): string {
+  return new Date(iso).toLocaleString('id-ID', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function formatTanggal(iso: string): string {
+  return new Date(iso).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function truncateId(id: string | null | undefined, len = 8): string {
+  if (!id) return '—';
+  return id.length > len ? id.slice(0, len) : id;
+}
+</script>
+
+<template>
+  <div class="space-y-md pb-24">
+    <BrandPageHeader
+      role="admin"
+      kicker="Admin Bimbel"
+      title="Kehadiran"
+      :meta="state.status === 'content' ? `${(state.data as BimbelSession[]).length} sesi selesai` : 'Memuat…'"
+    />
+
+    <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
+
+    <PageFilterToolbar v-model:search="search" search-placeholder="Cari sesi…">
+      <template #chips>
+        <AppFilterChip
+          label="Tanggal"
+          :value="dateFilter === 'all' ? 'Semua' : dateFilter === 'today' ? 'Hari ini' : dateFilter === 'week' ? 'Minggu ini' : 'Bulan ini'"
+          icon-name="calendar"
+          :active="dateFilter !== 'all'"
+          @click="dateFilter = dateFilter === 'all' ? 'today' : dateFilter === 'today' ? 'week' : dateFilter === 'week' ? 'month' : 'all'"
+        />
+        <AppFilterChip
+          label="Kelompok"
+          :value="groupFilter ? truncateId(groupFilter) : 'Semua'"
+          icon-name="users"
+          :active="!!groupFilter"
+          @click="groupFilter = ''"
+        />
+        <AppFilterChip
+          label="Tutor"
+          :value="tutorFilter ? truncateId(tutorFilter) : 'Semua'"
+          icon-name="user"
+          :active="!!tutorFilter"
+          @click="tutorFilter = ''"
+        />
+      </template>
+    </PageFilterToolbar>
+
+    <AsyncView
+      :state="state"
+      loading-variant="cards"
+      :loading-rows="6"
+      empty-title="Belum ada rekap"
+      empty-description="Sesi yang sudah selesai akan muncul di sini."
+      @retry="reload"
+    >
+      <template #default="{ data }">
+        <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
+                <th class="px-4 py-3 font-bold">Sesi</th>
+                <th class="px-4 py-3 font-bold">Tanggal</th>
+                <th class="px-4 py-3 font-bold">Hadir</th>
+                <th class="px-4 py-3 font-bold">Presensi</th>
+                <th class="px-4 py-3 font-bold">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="s in (data as BimbelSession[])"
+                :key="s.id"
+                class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
+              >
+                <td class="px-4 py-3 font-bold text-slate-900">
+                  {{ formatWaktu(s.starts_at) }} · {{ truncateId(s.learning_group_id) }}
+                </td>
+                <td class="px-4 py-3 text-slate-600">{{ formatTanggal(s.starts_at) }}</td>
+                <td class="px-4 py-3 text-slate-600">{{ s.attendances_count ?? '—' }}</td>
+                <td class="px-4 py-3 text-slate-600">
+                  {{ s.attendances_count ? `${s.attendances_count} rows` : 'Belum diambil' }}
+                </td>
+                <td class="px-4 py-3">
+                  <span class="inline-block rounded-full px-2 py-0.5 text-2xs font-bold uppercase tracking-wide" :class="statusChipTone(s.status)">
+                    {{ s.status_label ?? s.status }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+    </AsyncView>
+
+    <button
+      type="button"
+      aria-label="Ekspor rekap kehadiran"
+      class="fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-brand-cobalt px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:brightness-110"
+    >
+      Ekspor rekap
+    </button>
+  </div>
+</template>

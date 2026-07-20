@@ -1707,6 +1707,84 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/tutoring/AdminTutoringNotificationsView.vue'),
         meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
       },
+
+      // ────────────────────────────────────────────────────────────
+      // Greenfield bimbel admin (WEB-3). Under `admin.tutoring2.*` +
+      // `admin/tutoring2/*` to coexist with the legacy routes above;
+      // CLEAN-4 renames both after the teardown, matching the
+      // /api/tutoring-v2 → /api/tutoring rename on the backend.
+      // Every view here still contains `tutoring` in the route name so
+      // AppShell surface gating still applies the tutoring theme
+      // automatically. `needs: 'tutoring-module'` unchanged — same
+      // entitlement gate as legacy.
+      // ────────────────────────────────────────────────────────────
+      {
+        path: 'admin/tutoring2/programs',
+        name: 'admin.tutoring2.programs',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2ProgramsView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/kelompok',
+        name: 'admin.tutoring2.kelompok',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2KelompokView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/pendaftaran',
+        name: 'admin.tutoring2.pendaftaran',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2PendaftaranView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/siswa',
+        name: 'admin.tutoring2.siswa',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2SiswaView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/tutor',
+        name: 'admin.tutoring2.tutor',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2TutorView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/jadwal',
+        name: 'admin.tutoring2.jadwal',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2JadwalView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/kehadiran',
+        name: 'admin.tutoring2.kehadiran',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2KehadiranView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/nilai',
+        name: 'admin.tutoring2.nilai',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2NilaiView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/keuangan',
+        name: 'admin.tutoring2.keuangan',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2KeuanganView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/term',
+        name: 'admin.tutoring2.term',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2TermView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/pengaturan',
+        name: 'admin.tutoring2.pengaturan',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2PengaturanView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+
       {
         path: 'teacher/tutoring/class',
         name: 'teacher.tutoring.classes',
