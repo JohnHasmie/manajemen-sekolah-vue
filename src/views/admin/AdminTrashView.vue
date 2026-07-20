@@ -22,8 +22,18 @@ import Spinner from '@/components/ui/Spinner.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { formatRelative } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
-import { TrashService } from '@/services/trash.service';
-import type { TrashGroup, TrashImpact, TrashItem, TrashType } from '@/types/trash';
+import { ScheduleConflictError, TrashService } from '@/services/trash.service';
+import type {
+  DependencyCandidate,
+  ScheduleConflict,
+  ScheduleDependency,
+  ScheduleDependencyKind,
+  ScheduleResolution,
+  TrashGroup,
+  TrashImpact,
+  TrashItem,
+  TrashType,
+} from '@/types/trash';
 
 const { t } = useI18n();
 const auth = useAuthStore();
@@ -81,11 +91,14 @@ const typeChipClass: Record<TrashType, string> = {
   teacher: 'bg-violet-100 text-violet-700',
   student: 'bg-sky-100 text-sky-700',
   subject: 'bg-emerald-100 text-emerald-700',
+  // Schedule wears the admin navy so it reads as the structural/org type.
+  schedule: 'bg-indigo-100 text-indigo-700',
 };
 const typeAvatarColor: Record<TrashType, string> = {
   teacher: '#7c3aed',
   student: '#1b6fb8',
   subject: '#15803d',
+  schedule: '#143068', // role-admin navy
 };
 
 /** Whole days until the auto-purge cron force-deletes a row (null if unknown). */
@@ -167,6 +180,219 @@ async function confirmPurge(): Promise<void> {
   }
 }
 
+// ── schedule dependency-resolution modal ───────────────────────────────
+//
+// A trashed schedule may point at a subject/teacher/class that was ALSO
+// deleted. Restoring it then needs a per-dependency decision. For a single
+// schedule we fetch its real dependencies first; for "Pulihkan Semua" we show
+// one generic policy (per dependency KIND) that the backend applies to every
+// selected id.
+
+/** One editable dependency row in the resolution dialog. */
+interface DepRow {
+  dependency: ScheduleDependencyKind;
+  /** The trashed row's name — empty in bulk mode (policy is kind-wide). */
+  oldName: string;
+  candidates: DependencyCandidate[];
+  /** Restoring this row would collide with an active same-name row. */
+  hasConflict: boolean;
+  choice: 'restore' | 'repoint' | 'skip';
+  /** Selected candidate id when choice === 'repoint'. */
+  repointId: string;
+  /** Set after a 409 — restore is then off the table for this row. */
+  blocked: boolean;
+}
+
+type RestoreMode = 'single' | 'bulk';
+
+const restoreMode = ref<RestoreMode | null>(null); // null → dialog closed
+const restoreItem = ref<TrashItem | null>(null); // single target
+const restoreBulkIds = ref<string[]>([]); // bulk targets
+const restoreBinLabel = ref('');
+const restoreDeps = ref<DepRow[]>([]);
+const restoreProbing = ref<string | null>(null); // item id being dependency-checked
+const restoreSubmitting = ref(false);
+
+/** Bulk mode offers restore/skip only — a single repoint target across a whole
+ *  batch of different schedules is meaningless. */
+const BULK_KINDS: readonly ScheduleDependencyKind[] = ['subject', 'teacher', 'class'];
+
+function depI18nKey(dep: ScheduleDependencyKind): string {
+  const suffix = dep === 'subject' ? 'Subject' : dep === 'teacher' ? 'Teacher' : 'Class';
+  return `admin.trash.dep${suffix}`;
+}
+function depLabel(dep: ScheduleDependencyKind): string {
+  return t(depI18nKey(dep));
+}
+function depNoun(dep: ScheduleDependencyKind): string {
+  return depLabel(dep).toLowerCase();
+}
+
+/** Map a backend dependency into an editable row, defaulting away from a
+ *  known-conflicting "restore" so the admin isn't nudged into a guaranteed 409. */
+function depToRow(dep: ScheduleDependency): DepRow {
+  const hasCandidates = dep.active_candidates.length > 0;
+  let choice: DepRow['choice'] = 'restore';
+  if (dep.has_conflict) choice = hasCandidates ? 'repoint' : 'skip';
+  return {
+    dependency: dep.dependency,
+    oldName: dep.old_name,
+    candidates: dep.active_candidates,
+    hasConflict: dep.has_conflict,
+    choice,
+    repointId: hasCandidates ? dep.active_candidates[0].id : '',
+    blocked: false,
+  };
+}
+
+/** Serialise the rows into the wire resolution map. */
+function buildResolution(rows: DepRow[]): ScheduleResolution {
+  const out: ScheduleResolution = {};
+  for (const r of rows) {
+    const value =
+      r.choice === 'restore' ? 'restore' : r.choice === 'skip' ? 'skip' : `repoint:${r.repointId}`;
+    out[r.dependency] = value;
+  }
+  return out;
+}
+
+/** A row is unresolved when it wants to repoint but has no target selected. */
+const restoreReady = computed(() =>
+  restoreDeps.value.every((r) => r.choice !== 'repoint' || !!r.repointId),
+);
+
+function closeRestore(): void {
+  restoreMode.value = null;
+  restoreItem.value = null;
+  restoreBulkIds.value = [];
+  restoreBinLabel.value = '';
+  restoreDeps.value = [];
+  restoreSubmitting.value = false;
+}
+
+/** Dispatch: schedules go through the dependency flow, everything else is a
+ *  bare restore (unchanged behaviour). */
+function handleRestore(item: TrashItem): void {
+  if (item.type === 'schedule') void onRestoreSchedule(item);
+  else void onRestore(item);
+}
+
+/** Single schedule: probe dependencies, restore straight away when there are
+ *  none, otherwise open the resolution dialog. */
+async function onRestoreSchedule(item: TrashItem): Promise<void> {
+  if (busyId.value || restoreProbing.value) return;
+  restoreProbing.value = item.id;
+  try {
+    const res = await TrashService.scheduleDependencies(item.id);
+    if (res.dependencies.length === 0) {
+      await TrashService.restoreSchedule(item.id, {});
+      toast.value = {
+        message: t('admin.trash.toastRestored', { name: item.name }),
+        tone: 'success',
+      };
+      await reload();
+      return;
+    }
+    restoreItem.value = item;
+    restoreBulkIds.value = [];
+    restoreBinLabel.value = res.bin_label || item.name;
+    restoreDeps.value = res.dependencies.map(depToRow);
+    restoreMode.value = 'single';
+  } catch (e) {
+    toast.value = {
+      message: (e as Error).message || t('admin.trash.toastError'),
+      tone: 'error',
+    };
+  } finally {
+    restoreProbing.value = null;
+  }
+}
+
+/** "Pulihkan Semua" for the schedule group — open one blanket-policy dialog. */
+function onRestoreAll(group: TrashGroup): void {
+  if (busyId.value || restoreProbing.value) return;
+  restoreItem.value = null;
+  restoreBulkIds.value = group.items.map((i) => i.id);
+  restoreBinLabel.value = '';
+  restoreDeps.value = BULK_KINDS.map((dependency) => ({
+    dependency,
+    oldName: '',
+    candidates: [],
+    hasConflict: false,
+    choice: 'restore',
+    repointId: '',
+    blocked: false,
+  }));
+  restoreMode.value = 'bulk';
+}
+
+/** Mark the dependencies the server rejected as conflicting: block restore and
+ *  push them onto a repoint/skip so the admin can re-decide without another 409. */
+function applyServerConflicts(conflicts: ScheduleConflict[]): void {
+  for (const c of conflicts) {
+    const row = restoreDeps.value.find((r) => r.dependency === c.dependency);
+    if (!row) continue;
+    row.blocked = true;
+    row.hasConflict = true;
+    if (c.active_candidates?.length && row.candidates.length === 0) {
+      row.candidates = c.active_candidates;
+      row.repointId = c.active_candidates[0].id;
+    }
+    if (row.choice === 'restore') {
+      row.choice = row.candidates.length > 0 ? 'repoint' : 'skip';
+    }
+  }
+}
+
+async function applyRestore(): Promise<void> {
+  if (restoreSubmitting.value || !restoreReady.value) return;
+  restoreSubmitting.value = true;
+  try {
+    if (restoreMode.value === 'bulk') {
+      const res = await TrashService.restoreBulk(
+        'schedule',
+        restoreBulkIds.value,
+        buildResolution(restoreDeps.value),
+      );
+      const skipped = res.skipped.length;
+      toast.value = {
+        message:
+          skipped > 0
+            ? t('admin.trash.bulkResultSkipped', { restored: res.restored, skipped })
+            : t('admin.trash.bulkResult', { restored: res.restored }),
+        tone: 'success',
+      };
+      closeRestore();
+      await reload();
+      return;
+    }
+
+    const item = restoreItem.value;
+    if (!item) return;
+    await TrashService.restoreSchedule(item.id, buildResolution(restoreDeps.value));
+    toast.value = {
+      message: t('admin.trash.toastRestored', { name: item.name }),
+      tone: 'success',
+    };
+    closeRestore();
+    await reload();
+  } catch (e) {
+    if (e instanceof ScheduleConflictError) {
+      // Keep the dialog open, mark the conflicting rows, and let the admin
+      // repoint/skip them — the "decide" step for a name collision.
+      applyServerConflicts(e.conflicts);
+      toast.value = { message: t('admin.trash.conflictToast'), tone: 'error' };
+    } else {
+      toast.value = {
+        message: (e as Error).message || t('admin.trash.toastError'),
+        tone: 'error',
+      };
+    }
+  } finally {
+    restoreSubmitting.value = false;
+  }
+}
+
 onMounted(reload);
 </script>
 
@@ -217,9 +443,21 @@ onMounted(reload);
     >
       <div class="space-y-5">
         <section v-for="group in visibleGroups" :key="group.type" class="space-y-2">
-          <p class="text-3xs font-black uppercase tracking-widest text-slate-400">
-            {{ group.label }}
-          </p>
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-3xs font-black uppercase tracking-widest text-slate-400">
+              {{ group.label }}
+            </p>
+            <!-- Bulk restore is schedule-only (its endpoint + resolution flow
+                 are schedule-specific). Show it once the group is worth a
+                 blanket action rather than one-by-one. -->
+            <Button
+              v-if="canManage && group.type === 'schedule' && group.count > 1"
+              variant="secondary"
+              size="sm"
+              :disabled="!!busyId || !!restoreProbing || !!restoreMode"
+              @click="onRestoreAll(group)"
+            >{{ t('admin.trash.restoreAll') }}</Button>
+          </div>
           <ul class="space-y-2">
             <li
               v-for="item in group.items"
@@ -245,14 +483,14 @@ onMounted(reload);
                 <Button
                   variant="success"
                   size="sm"
-                  :loading="busyId === item.id"
-                  :disabled="!!busyId"
-                  @click="onRestore(item)"
+                  :loading="busyId === item.id || restoreProbing === item.id"
+                  :disabled="!!busyId || !!restoreProbing"
+                  @click="handleRestore(item)"
                 >{{ t('admin.trash.restore') }}</Button>
                 <Button
                   variant="danger"
                   size="sm"
-                  :disabled="!!busyId"
+                  :disabled="!!busyId || !!restoreProbing"
                   @click="openImpact(item)"
                 >{{ t('admin.trash.deleteShort') }}</Button>
               </div>
@@ -324,6 +562,132 @@ onMounted(reload);
             >{{ t('admin.trash.delete') }}</Button>
           </div>
         </template>
+      </div>
+    </Modal>
+
+    <!-- Schedule dependency-resolution modal (single restore + bulk policy) -->
+    <Modal
+      v-if="restoreMode"
+      size="lg"
+      :title="restoreMode === 'bulk' ? t('admin.trash.resolveBulkTitle') : t('admin.trash.resolveTitle')"
+      :subtitle="
+        restoreMode === 'bulk'
+          ? t('admin.trash.resolveBulkSubtitle', { count: restoreBulkIds.length })
+          : restoreBinLabel
+      "
+      @close="closeRestore"
+    >
+      <div class="space-y-4">
+        <div class="rounded-xl border border-indigo-200 bg-indigo-50 p-3">
+          <p class="text-sm leading-relaxed text-indigo-900">
+            {{
+              restoreMode === 'bulk'
+                ? t('admin.trash.resolveBulkIntro')
+                : t('admin.trash.resolveIntro')
+            }}
+          </p>
+        </div>
+
+        <ul class="space-y-3">
+          <li
+            v-for="dep in restoreDeps"
+            :key="dep.dependency"
+            class="rounded-2xl border border-slate-200 p-3"
+          >
+            <div class="mb-2 flex items-center gap-2">
+              <span
+                class="rounded-md px-1.5 py-0.5 text-3xs font-black uppercase tracking-wide"
+                :class="typeChipClass.schedule"
+              >{{ depLabel(dep.dependency) }}</span>
+              <span v-if="dep.oldName" class="truncate text-xs text-slate-500">
+                {{ t('admin.trash.depWas', { name: dep.oldName }) }}
+              </span>
+            </div>
+
+            <div class="space-y-1.5">
+              <!-- Restore the trashed row -->
+              <label
+                class="flex items-start gap-2 text-sm"
+                :class="dep.blocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'"
+              >
+                <input
+                  type="radio"
+                  class="mt-0.5"
+                  :name="`resolve-${dep.dependency}`"
+                  value="restore"
+                  :checked="dep.choice === 'restore'"
+                  :disabled="dep.blocked"
+                  @change="dep.choice = 'restore'"
+                />
+                <span class="flex-1 text-slate-700">
+                  {{ t('admin.trash.choiceRestore', { noun: depNoun(dep.dependency) }) }}
+                </span>
+              </label>
+              <p
+                v-if="dep.hasConflict || dep.blocked"
+                class="ml-6 text-xs font-semibold text-amber-600"
+              >
+                {{ t('admin.trash.conflictWarn', { noun: depNoun(dep.dependency) }) }}
+              </p>
+
+              <!-- Repoint to an active row (single mode only — a batch-wide
+                   single target is meaningless) -->
+              <label
+                v-if="dep.candidates.length > 0"
+                class="flex items-start gap-2 text-sm cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  class="mt-0.5"
+                  :name="`resolve-${dep.dependency}`"
+                  value="repoint"
+                  :checked="dep.choice === 'repoint'"
+                  @change="dep.choice = 'repoint'"
+                />
+                <span class="flex-1 text-slate-700">
+                  {{ t('admin.trash.choiceRepoint') }}
+                  <select
+                    v-model="dep.repointId"
+                    class="mt-1.5 block w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 disabled:opacity-50"
+                    :disabled="dep.choice !== 'repoint'"
+                    @focus="dep.choice = 'repoint'"
+                  >
+                    <option
+                      v-for="cand in dep.candidates"
+                      :key="cand.id"
+                      :value="cand.id"
+                    >{{ cand.name }}</option>
+                  </select>
+                </span>
+              </label>
+
+              <!-- Skip — leave the schedule pointing at the trashed row -->
+              <label class="flex items-start gap-2 text-sm cursor-pointer">
+                <input
+                  type="radio"
+                  class="mt-0.5"
+                  :name="`resolve-${dep.dependency}`"
+                  value="skip"
+                  :checked="dep.choice === 'skip'"
+                  @change="dep.choice = 'skip'"
+                />
+                <span class="flex-1 text-slate-700">{{ t('admin.trash.choiceSkip') }}</span>
+              </label>
+            </div>
+          </li>
+        </ul>
+
+        <div class="flex justify-end gap-2 pt-1">
+          <Button variant="secondary" :disabled="restoreSubmitting" @click="closeRestore">
+            {{ t('admin.trash.cancel') }}
+          </Button>
+          <Button
+            variant="success"
+            :disabled="!restoreReady"
+            :loading="restoreSubmitting"
+            @click="applyRestore"
+          >{{ t('admin.trash.restore') }}</Button>
+        </div>
       </div>
     </Modal>
 

@@ -3,7 +3,71 @@
  * TrashController payload (grouped soft-deleted rows + cascade impact).
  */
 
-export type TrashType = 'teacher' | 'student' | 'subject';
+export type TrashType = 'teacher' | 'student' | 'subject' | 'schedule';
+
+/**
+ * A trashed schedule can depend on a subject / teacher / class that was ALSO
+ * soft-deleted. Restoring the schedule then needs a per-dependency decision.
+ */
+export type ScheduleDependencyKind = 'subject' | 'teacher' | 'class';
+
+/** An active (non-trashed) row the admin can repoint a dependency to. */
+export interface DependencyCandidate {
+  id: string;
+  name: string;
+}
+
+/**
+ * One trashed dependency of a schedule. `active_candidates` are same-kind rows
+ * that are still live (repoint targets). `has_conflict` = restoring the trashed
+ * row would collide with an active row of the same name.
+ */
+export interface ScheduleDependency {
+  dependency: ScheduleDependencyKind;
+  old_id: string;
+  old_name: string;
+  active_candidates: DependencyCandidate[];
+  has_conflict: boolean;
+}
+
+/** GET /trash/schedule/{id}/dependencies. Empty `dependencies` → restore directly. */
+export interface ScheduleDependenciesResult {
+  schedule_id: string;
+  bin_label: string;
+  has_conflicts: boolean;
+  dependencies: ScheduleDependency[];
+}
+
+/**
+ * Per-dependency resolution sent on restore. Each value is one of
+ * `restore` | `repoint:<activeId>` | `skip`. Keyed by dependency kind.
+ */
+export interface ScheduleResolution {
+  subject?: string;
+  teacher?: string;
+  class?: string;
+}
+
+/** One conflict returned by a 409 on POST /trash/schedule/{id}/restore. */
+export interface ScheduleConflict {
+  dependency: ScheduleDependencyKind;
+  old_name: string;
+  active_candidates: DependencyCandidate[];
+}
+
+/** One schedule the bulk restore couldn't complete, with the reason. */
+export interface BulkRestoreSkipped {
+  id: string;
+  reason: string;
+  conflicts?: ScheduleConflict[];
+  message?: string;
+}
+
+/** POST /trash/schedule/restore-bulk → never aborts the batch. */
+export interface BulkRestoreResult {
+  restored: number;
+  skipped: BulkRestoreSkipped[];
+}
 
 /** One soft-deleted row awaiting restore or permanent delete. */
 export interface TrashItem {
