@@ -180,6 +180,13 @@ export interface AdminTopEntry {
   name: string;
   photo_url: string | null;
   points: number;
+  /**
+   * Current streak days for the dashboard-tile subtitle line
+   * ("N hari beruntun"). Backend adds this on the dashboard-summary
+   * endpoint since the tile shows it beneath the name; nullable for
+   * safety against older backends that predate the enrichment.
+   */
+  streak_days?: number;
 }
 
 export interface AdminSummaryPayload {
@@ -265,6 +272,13 @@ export interface AdminStaffTopEntry {
   name: string;
   photo_url: string | null;
   points: number;
+  /** See AdminTopEntry.streak_days — same contract, nullable for
+   *  backends that predate the dashboard-tile enrichment. */
+  streak_days?: number;
+  /** Peran chip on the tile subtitle. Values: "Bendahara" /
+   *  "Tata Usaha" / "Kehadiran" — same first-match derivation the
+   *  Admin Prestasi Staf table uses (StaffAbilityRoleTagger). */
+  ability_role_tag?: string;
 }
 
 export interface AdminStaffSummaryPayload {

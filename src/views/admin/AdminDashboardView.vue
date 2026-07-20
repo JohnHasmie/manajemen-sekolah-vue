@@ -28,6 +28,7 @@ import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
 import SubscriptionSummaryCard from '@/components/feature/SubscriptionSummaryCard.vue';
 import AdminTutoringDashboardView from '@/views/admin/tutoring/AdminTutoringDashboardView.vue';
 import GamificationHighlightCard from '@/components/feature/gamification/GamificationHighlightCard.vue';
+import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
 import {
   TeacherProgressService,
   type AdminHighlightPayload,
@@ -528,22 +529,35 @@ const financePct = computed(() =>
                   <p class="text-base font-black text-red-900 mt-0.5">{{ adminSummary.needs_attention_count }}</p>
                 </div>
               </div>
-              <div v-if="adminSummary.top_three.length > 0">
+              <div v-if="adminSummary.top_three.length > 0" class="pt-3 border-t border-slate-100">
                 <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest mb-2">Top minggu ini</p>
-                <ol class="space-y-1.5">
+                <ol class="space-y-2">
                   <li
                     v-for="(t, i) in adminSummary.top_three"
                     :key="t.teacher_id"
-                    class="flex items-center gap-3"
+                    class="flex items-center gap-2.5"
                   >
+                    <!-- Rank pill — colored disc, single glyph, keeps
+                         the medal semantic (gold/silver/bronze) without
+                         a full colored bg on the row. -->
                     <span
-                      class="w-5 text-2xs font-black text-center flex-shrink-0"
-                      :class="i === 0 ? 'text-amber-500' : i === 1 ? 'text-slate-500' : 'text-orange-500'"
-                    >
-                      #{{ i + 1 }}
-                    </span>
-                    <p class="flex-1 text-2xs font-bold text-slate-800 truncate">{{ t.name }}</p>
-                    <p class="text-2xs font-black text-slate-800">
+                      class="w-5 h-5 rounded-full text-3xs font-black text-white grid place-items-center flex-shrink-0"
+                      :class="i === 0 ? 'bg-amber-500' : i === 1 ? 'bg-slate-400' : 'bg-orange-400'"
+                    >{{ i + 1 }}</span>
+                    <InitialsAvatar
+                      :name="t.name"
+                      :image-url="t.photo_url"
+                      :size="28"
+                      color="#7C3AED"
+                      :border-radius="8"
+                    />
+                    <div class="flex-1 min-w-0">
+                      <p class="text-2xs font-bold text-slate-800 truncate leading-tight">{{ t.name }}</p>
+                      <p v-if="t.streak_days != null && t.streak_days > 0" class="text-3xs text-slate-500 leading-tight mt-0.5">
+                        {{ t.streak_days }} hari beruntun
+                      </p>
+                    </div>
+                    <p class="text-2xs font-black text-slate-800 flex-shrink-0">
                       {{ t.points }}<span class="text-3xs text-slate-500 font-bold ml-1">XP</span>
                     </p>
                   </li>
@@ -599,22 +613,34 @@ const financePct = computed(() =>
                   <p class="text-base font-black text-red-900 mt-0.5">{{ adminStaffSummary.needs_attention_count }}</p>
                 </div>
               </div>
-              <div v-if="adminStaffSummary.top_three.length > 0">
+              <div v-if="adminStaffSummary.top_three.length > 0" class="pt-3 border-t border-slate-100">
                 <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest mb-2">Top minggu ini</p>
-                <ol class="space-y-1.5">
+                <ol class="space-y-2">
                   <li
                     v-for="(t, i) in adminStaffSummary.top_three"
                     :key="t.user_id"
-                    class="flex items-center gap-3"
+                    class="flex items-center gap-2.5"
                   >
                     <span
-                      class="w-5 text-2xs font-black text-center flex-shrink-0"
-                      :class="i === 0 ? 'text-amber-500' : i === 1 ? 'text-slate-500' : 'text-orange-500'"
-                    >
-                      #{{ i + 1 }}
-                    </span>
-                    <p class="flex-1 text-2xs font-bold text-slate-800 truncate">{{ t.name }}</p>
-                    <p class="text-2xs font-black text-slate-800">
+                      class="w-5 h-5 rounded-full text-3xs font-black text-white grid place-items-center flex-shrink-0"
+                      :class="i === 0 ? 'bg-amber-500' : i === 1 ? 'bg-slate-400' : 'bg-orange-400'"
+                    >{{ i + 1 }}</span>
+                    <InitialsAvatar
+                      :name="t.name"
+                      :image-url="t.photo_url"
+                      :size="28"
+                      color="#1B6FB8"
+                      :border-radius="8"
+                    />
+                    <div class="flex-1 min-w-0">
+                      <p class="text-2xs font-bold text-slate-800 truncate leading-tight">{{ t.name }}</p>
+                      <p v-if="t.ability_role_tag || (t.streak_days != null && t.streak_days > 0)" class="text-3xs text-slate-500 leading-tight mt-0.5 truncate">
+                        <template v-if="t.ability_role_tag">{{ t.ability_role_tag }}</template>
+                        <template v-if="t.ability_role_tag && t.streak_days != null && t.streak_days > 0"> · </template>
+                        <template v-if="t.streak_days != null && t.streak_days > 0">{{ t.streak_days }} hari beruntun</template>
+                      </p>
+                    </div>
+                    <p class="text-2xs font-black text-slate-800 flex-shrink-0">
                       {{ t.points }}<span class="text-3xs text-slate-500 font-bold ml-1">XP</span>
                     </p>
                   </li>
