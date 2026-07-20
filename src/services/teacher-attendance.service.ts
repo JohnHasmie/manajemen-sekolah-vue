@@ -87,7 +87,21 @@ const Endpoints = {
   // Pulang Cepat" section on the admin Rekap tab.
   reportPulangCepatSummary: '/teacher-attendance/report/pulang-cepat-summary',
   geofences: '/teacher-attendance/geofences',
+  // FU-2 pulang-parity telemetry (backend !513). Fire-and-forget POST
+  // the confirm modal hits after the guru picks Batal / Ya-tetap-pulang.
+  // Returns 204 — clients ignore the response.
+  attendanceTelemetry: '/telemetry/attendance-events',
 } as const;
+
+/**
+ * Allowlisted telemetry event types under [Endpoints.attendanceTelemetry].
+ * Mirrors the backend's `RecordAttendanceTelemetryRequest::ALLOWED_TYPES`.
+ * Kept as a union so a typo in a caller is a compile error, not a silent
+ * 422 the modal swallows.
+ */
+export type AttendanceTelemetryEventType =
+  | 'pulang_cepat_confirmed'
+  | 'pulang_cepat_cancelled';
 
 /**
  * Pull a human Indonesian message out of a Laravel error. The backend
@@ -1122,6 +1136,42 @@ export const TeacherAttendanceService = {
       return { blob, filename };
     } catch (e) {
       throw new Error(humanError(e, 'Gagal mengekspor laporan presensi.'));
+    }
+  },
+
+  /**
+   * POST /telemetry/attendance-events — FU-2 pulang parity telemetry
+   * (backend !513). Records the guru's outcome on the "policy=warn +
+   * early_leave" confirm modal so analytics can compute conversion
+   * (warn shown -> actually confirmed vs cancelled).
+   *
+   * FIRE-AND-FORGET: this MUST NEVER block or fail the check-out flow.
+   * The confirm-modal handler awaits this only for ordering guarantees;
+   * network / server errors are swallowed to `console.warn` so a broken
+   * telemetry endpoint can never surface a toast to a guru who's just
+   * trying to check out.
+   *
+   * Backend gate is `auth + module:attendance_staff` — same as
+   * /teacher-attendance/check-out itself. The X-School-ID header rides
+   * the axios interceptor.
+   */
+  async recordAttendanceEvent(
+    type: AttendanceTelemetryEventType,
+    context: Record<string, unknown> = {},
+  ): Promise<void> {
+    try {
+      await api.post(Endpoints.attendanceTelemetry, {
+        type,
+        occurred_at: new Date().toISOString(),
+        context,
+      });
+    } catch (e) {
+      // Never rethrow — a telemetry failure must not surface to the user.
+      // Warn so it's visible in devtools during development / on a
+      // stitched Datadog RUM session for post-mortem, but the modal
+      // caller keeps moving.
+      // eslint-disable-next-line no-console
+      console.warn('[telemetry] attendance event failed', type, e);
     }
   },
 
