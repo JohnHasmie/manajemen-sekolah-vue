@@ -1055,11 +1055,15 @@ export const TeacherAttendanceService = {
           day_count: asInt(rawPeriod.day_count, rawHeat.length),
         },
         kpi: {
-          streak_days: asInt(rawKpi.streak_days, 0),
+          // Backend sends canonical `*_count` / `current_streak_days`;
+          // the `*_days` spellings are read as a fallback for an older API
+          // (which now also emits them as aliases). Reading the missing
+          // `*_days` keys was the "HARI HADIR 0" bug.
+          streak_days: asInt(rawKpi.current_streak_days ?? rawKpi.streak_days, 0),
           ontime_pct: asFloat(rawKpi.ontime_pct, 0),
-          present_days: asInt(rawKpi.present_days, 0),
-          late_days: asInt(rawKpi.late_days, 0),
-          absent_days: asInt(rawKpi.absent_days, 0),
+          present_days: asInt(rawKpi.present_count ?? rawKpi.present_days, 0),
+          late_days: asInt(rawKpi.late_count ?? rawKpi.late_days, 0),
+          absent_days: asInt(rawKpi.absent_count ?? rawKpi.absent_days, 0),
           overtime_minutes: asInt(rawKpi.overtime_minutes, 0),
         },
         heatmap: rawHeat.map((raw) => {
