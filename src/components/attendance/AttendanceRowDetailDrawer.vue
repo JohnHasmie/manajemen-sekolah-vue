@@ -3,22 +3,27 @@
   a Log Harian row on the pegawai attendance dashboard (MR-3 Opsi A).
 
   Right-side slide-over that shows one teacher_attendances row in
-  full: status pills, Masuk / Pulang photo + jam + jarak, mini map
-  with geofence circle + marker, and admin-only action buttons.
+  full: status pills, Masuk / Pulang photo + jam + jarak, an
+  interactive Leaflet/OSM mini-map with geofence circle + Masuk /
+  Pulang markers, and admin-only action buttons.
 
-  Map rendering — we deliberately do NOT pull in Leaflet for MR-3.
-  A hand-rolled SVG placeholder centred on the geofence with a marker
-  offset by the row's check-in distance/bearing is enough to give the
-  admin a spatial sense of the check-in. A follow-up MR can swap this
-  for a real Leaflet mini-map without changing the drawer's public
-  surface.
+  Map rendering — FU-3 of the Pulang parity series swapped the
+  original stylised SVG placeholder for a real Leaflet map (OSM
+  tiles) so the admin can pan/zoom and see the actual streets around
+  each check-in. The Leaflet setup mirrors GeofenceMapPicker.vue:
+  divIcon pins (no PNG marker assets → no Vite bundler pain), OSM
+  tile layer with attribution, and a green geofence circle at
+  settings.effective_geofence_lat/lng (falling back to the school
+  pin, and finally to the check-in coord if settings are unknown).
 
   The drawer is a "dumb" presentational component — the parent owns
   the open state and the row payload. On `close`, the parent clears
   its selection.
 -->
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import type {
   TeacherAttendanceRecord,
@@ -87,92 +92,17 @@ const durationLabel = computed<string | null>(() => {
   return `${h}j ${m}m`;
 });
 
-// ── Map placeholder geometry ──────────────────────────────────────
-// Compute a stylised bounding box centred on the geofence, with the
-// marker offset proportionally to the reported check-in distance.
-const MAP_VB = 180; // square viewBox
-const MAP_CENTRE = MAP_VB / 2;
-
 /**
  * Effective geofence radius in metres (falls back to a sensible
- * default so the SVG circle still renders when settings are missing).
+ * default so the Leaflet circle still renders when settings are missing).
  */
 const effectiveRadius = computed(() => {
   const r = Number(props.settings?.geofence_radius_m ?? 150);
   return Number.isFinite(r) && r > 0 ? r : 150;
 });
 
-/**
- * SVG radius for the geofence — 60% of the half-viewbox so the marker
- * has room to render outside the circle on `outside_geofence=true`
- * rows without escaping the panel.
- */
-const mapRadiusSvg = 0.55 * MAP_CENTRE;
-
-/**
- * Marker offset from the centre, scaled so that a distance equal to
- * the geofence radius lands on the circle edge. Anything larger clips
- * to 1.4× radius so the marker never leaves the panel entirely.
- */
-const markerOffsetSvg = computed(() => {
-  const d = Number(props.row?.check_in_distance_m ?? 0);
-  if (!Number.isFinite(d) || d <= 0) return 0;
-  const ratio = Math.min(1.4, d / effectiveRadius.value);
-  return ratio * mapRadiusSvg;
-});
-
-/** Deterministic bearing seeded off the row id so the marker doesn't
- *  jitter between renders. */
-const markerAngle = computed(() => {
-  const id = props.row?.id ?? '';
-  let seed = 0;
-  for (let i = 0; i < id.length; i++) seed = (seed * 31 + id.charCodeAt(i)) >>> 0;
-  return (seed % 360) * (Math.PI / 180);
-});
-
-const markerXY = computed(() => {
-  const offset = markerOffsetSvg.value;
-  return {
-    x: MAP_CENTRE + offset * Math.cos(markerAngle.value),
-    y: MAP_CENTRE + offset * Math.sin(markerAngle.value),
-  };
-});
-
-/**
- * Marker offset for the check-out point. Mirrors `markerOffsetSvg` but
- * reads `check_out_distance_m`. Zero (and therefore centre-of-map) when
- * the row has no check-out yet, so the caller must gate the render on
- * `hasCheckOutCoords`.
- */
-const checkOutMarkerOffsetSvg = computed(() => {
-  const d = Number(props.row?.check_out_distance_m ?? 0);
-  if (!Number.isFinite(d) || d <= 0) return 0;
-  const ratio = Math.min(1.4, d / effectiveRadius.value);
-  return ratio * mapRadiusSvg;
-});
-
-/**
- * Deterministic bearing for the check-out marker, seeded off the row id
- * with a fixed offset so the two markers don't overlap when the two
- * distances happen to be similar.
- */
-const checkOutMarkerAngle = computed(() => {
-  const id = props.row?.id ?? '';
-  let seed = 0;
-  for (let i = 0; i < id.length; i++) seed = (seed * 31 + id.charCodeAt(i)) >>> 0;
-  // Add a half-turn offset so masuk / pulang are visually separable.
-  return ((seed % 360) + 137) * (Math.PI / 180);
-});
-
-const checkOutMarkerXY = computed(() => {
-  const offset = checkOutMarkerOffsetSvg.value;
-  return {
-    x: MAP_CENTRE + offset * Math.cos(checkOutMarkerAngle.value),
-    y: MAP_CENTRE + offset * Math.sin(checkOutMarkerAngle.value),
-  };
-});
-
-const hasCoords = computed(() => {
+/** True when the row has usable check-in coordinates to plot. */
+const hasCheckInCoords = computed(() => {
   const r = props.row;
   return (
     r?.check_in_lat !== null &&
@@ -192,6 +122,268 @@ const hasCheckOutCoords = computed(() => {
     r?.check_out_lng !== undefined
   );
 });
+
+/**
+ * Effective geofence centre — settings override (geofence_lat/lng),
+ * falling back to the school pin (school_latitude/school_longitude)
+ * or the teacher config bootstrap alias (effective_geofence_lat/lng).
+ * `null` when none of them are set — the map will still render
+ * centred on a check-in/out coord, just without a geofence circle.
+ */
+const geofenceCentre = computed<[number, number] | null>(() => {
+  const s = props.settings;
+  if (!s) return null;
+  const lat =
+    s.geofence_lat ?? s.effective_geofence_lat ?? s.school_latitude ?? null;
+  const lng =
+    s.geofence_lng ?? s.effective_geofence_lng ?? s.school_longitude ?? null;
+  if (lat == null || lng == null) return null;
+  return [Number(lat), Number(lng)];
+});
+
+/**
+ * True when the drawer has enough coordinates to render a real map —
+ * either a check-in/out coord OR a known school geofence centre. When
+ * false, the map section falls back to the "koordinat tidak tercatat"
+ * caption so the drawer still opens cleanly on rows with no GPS.
+ */
+const canRenderMap = computed(
+  () =>
+    hasCheckInCoords.value ||
+    hasCheckOutCoords.value ||
+    geofenceCentre.value !== null,
+);
+
+// ── Leaflet lifecycle ─────────────────────────────────────────────
+// The drawer is re-mounted each time it opens (v-if on the aside),
+// but Vue keeps <script setup> state alive so any prior Leaflet
+// instance MUST be torn down before we re-init or the tile layer
+// leaks + the second setView call throws "Map container is already
+// initialized". We `remove()` the map before every rebuild.
+const mapContainer = ref<HTMLDivElement | null>(null);
+let leafletMap: L.Map | null = null;
+
+// divIcon helper — colored teardrop pin, mirrors GeofenceMapPicker.vue
+// to sidestep the well-known Leaflet-default-marker Vite asset bug.
+// `outside` swaps the fill for a red danger tint so out-of-geofence
+// check-ins stay visually consistent with the "Luar area" pill above.
+function makePinIcon(color: string, opts: { outside?: boolean } = {}): L.DivIcon {
+  const fill = opts.outside ? '#ef4444' : color;
+  return L.divIcon({
+    className: 'attendance-drawer-pin',
+    html:
+      `<div style="width:16px;height:16px;border-radius:50% 50% 50% 0;` +
+      `background:${fill};border:2px solid #fff;transform:rotate(-45deg);` +
+      `box-shadow:0 1px 4px rgba(0,0,0,.35)"></div>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+  });
+}
+
+const SCHOOL_PIN_COLOR = '#10b981'; // emerald — matches the geofence circle
+const CHECK_IN_PIN_COLOR = '#1b6fb8'; // blue — same as the Masuk pill
+const CHECK_OUT_PIN_COLOR = '#8b5cf6'; // violet — same as the Pulang pill
+
+/**
+ * Escape untrusted numeric/text bits before we inline them into a
+ * Leaflet popup HTML string. Row ids/dates are backend-controlled but
+ * `notes` is admin-authored, so we run the same escape unconditionally.
+ */
+function esc(s: string | number | null | undefined): string {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * Tear down the current Leaflet instance. Called on drawer close,
+ * before a rebuild, and on component unmount so we never leak DOM.
+ */
+function disposeMap(): void {
+  if (leafletMap) {
+    leafletMap.remove();
+    leafletMap = null;
+  }
+}
+
+/**
+ * Build (or rebuild) the Leaflet map for the currently-selected row.
+ * Safe to call multiple times — always disposes the prior instance
+ * first. Bails silently when there's nothing to plot.
+ */
+function buildMap(): void {
+  disposeMap();
+  if (!props.open || !props.row || !mapContainer.value) return;
+  if (!canRenderMap.value) return;
+
+  const row = props.row;
+  // Center priority: geofence centre → check-in → check-out.
+  const centre: [number, number] =
+    geofenceCentre.value ??
+    (hasCheckInCoords.value
+      ? [row.check_in_lat as number, row.check_in_lng as number]
+      : [row.check_out_lat as number, row.check_out_lng as number]);
+
+  leafletMap = L.map(mapContainer.value, {
+    zoomControl: true,
+    scrollWheelZoom: false, // don't hijack drawer scroll
+    doubleClickZoom: true,
+    boxZoom: false,
+    keyboard: false,
+    dragging: true, // pan yes, no marker editing though
+  }).setView(centre, 17);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors',
+  }).addTo(leafletMap);
+
+  const bounds = L.latLngBounds([centre]);
+
+  // Geofence circle + school centre pin (only when settings give us
+  // an actual coord — otherwise the drawer degrades to a marker-only
+  // map centred on the check-in).
+  if (geofenceCentre.value) {
+    L.circle(geofenceCentre.value, {
+      radius: effectiveRadius.value,
+      color: SCHOOL_PIN_COLOR,
+      weight: 2,
+      fillColor: SCHOOL_PIN_COLOR,
+      fillOpacity: 0.1,
+    }).addTo(leafletMap);
+    const schoolMarker = L.marker(geofenceCentre.value, {
+      icon: makePinIcon(SCHOOL_PIN_COLOR),
+      interactive: true,
+      keyboard: false,
+    }).addTo(leafletMap);
+    schoolMarker.bindPopup(
+      `<strong>Sekolah</strong><br/>Radius ${esc(effectiveRadius.value)} m`,
+    );
+    bounds.extend(geofenceCentre.value);
+  }
+
+  // Check-in marker — blue by default, red border via icon swap when
+  // the row was flagged outside geofence.
+  if (hasCheckInCoords.value) {
+    const p: [number, number] = [
+      row.check_in_lat as number,
+      row.check_in_lng as number,
+    ];
+    const marker = L.marker(p, {
+      icon: makePinIcon(CHECK_IN_PIN_COLOR, {
+        outside: row.check_in_outside_geofence,
+      }),
+      keyboard: false,
+    }).addTo(leafletMap);
+    const timeLabel = row.check_in_at
+      ? new Date(row.check_in_at).toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : '-';
+    const distLabel =
+      row.check_in_distance_m != null
+        ? `${Math.round(row.check_in_distance_m)} m dari sekolah`
+        : 'jarak tidak tercatat';
+    marker.bindPopup(
+      `<strong>Masuk ${esc(timeLabel)}</strong><br/>${esc(distLabel)}` +
+        (row.check_in_outside_geofence
+          ? '<br/><span style="color:#dc2626;font-weight:600">Luar area</span>'
+          : ''),
+    );
+    // Dashed connector from the geofence centre so the admin can see
+    // the visual "arrow" of where the person actually checked in.
+    if (geofenceCentre.value) {
+      L.polyline([geofenceCentre.value, p], {
+        color: row.check_in_outside_geofence ? '#ef4444' : CHECK_IN_PIN_COLOR,
+        weight: 1.5,
+        dashArray: '4 4',
+        opacity: 0.6,
+      }).addTo(leafletMap);
+    }
+    bounds.extend(p);
+  }
+
+  // Check-out marker — violet by default, red on outside_geofence.
+  if (hasCheckOutCoords.value) {
+    const p: [number, number] = [
+      row.check_out_lat as number,
+      row.check_out_lng as number,
+    ];
+    const marker = L.marker(p, {
+      icon: makePinIcon(CHECK_OUT_PIN_COLOR, {
+        outside: row.check_out_outside_geofence,
+      }),
+      keyboard: false,
+    }).addTo(leafletMap);
+    const timeLabel = row.check_out_at
+      ? new Date(row.check_out_at).toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : '-';
+    const distLabel =
+      row.check_out_distance_m != null
+        ? `${Math.round(row.check_out_distance_m)} m dari sekolah`
+        : 'jarak tidak tercatat';
+    marker.bindPopup(
+      `<strong>Pulang ${esc(timeLabel)}</strong><br/>${esc(distLabel)}` +
+        (row.check_out_outside_geofence
+          ? '<br/><span style="color:#dc2626;font-weight:600">Luar area</span>'
+          : ''),
+    );
+    if (geofenceCentre.value) {
+      L.polyline([geofenceCentre.value, p], {
+        color: row.check_out_outside_geofence
+          ? '#ef4444'
+          : CHECK_OUT_PIN_COLOR,
+        weight: 1.5,
+        dashArray: '4 4',
+        opacity: 0.6,
+      }).addTo(leafletMap);
+    }
+    bounds.extend(p);
+  }
+
+  // Fit all markers + a bit of padding so nothing hugs the edge. Skip
+  // when we only have one point (fitBounds on a single-point bounds
+  // zooms to Leaflet's `maxZoom`, which is jarring).
+  if (bounds.isValid()) {
+    const cornerCount =
+      (geofenceCentre.value ? 1 : 0) +
+      (hasCheckInCoords.value ? 1 : 0) +
+      (hasCheckOutCoords.value ? 1 : 0);
+    if (cornerCount > 1) {
+      leafletMap.fitBounds(bounds, { padding: [24, 24], maxZoom: 18 });
+    }
+  }
+
+  // The drawer slide-in animation means the container's final size
+  // isn't known on mount — nudge Leaflet to re-measure on the next
+  // frame so the tiles fill the box instead of ending up half-blank.
+  setTimeout(() => leafletMap?.invalidateSize(), 0);
+}
+
+// Rebuild whenever the drawer opens with a fresh row (or the settings
+// arrive after mount). `open=false` disposes so the map doesn't hang
+// around behind a hidden aside.
+watch(
+  () => [props.open, props.row?.id, props.settings?.geofence_lat, props.settings?.geofence_lng, props.settings?.school_latitude, props.settings?.school_longitude, props.settings?.geofence_radius_m] as const,
+  ([open]) => {
+    if (!open) {
+      disposeMap();
+      return;
+    }
+    // Wait for the aside + inner div to actually be in the DOM.
+    nextTick(() => buildMap());
+  },
+  { immediate: true },
+);
+
+onBeforeUnmount(() => disposeMap());
 </script>
 
 <template>
@@ -415,7 +607,7 @@ const hasCheckOutCoords = computed(() => {
             </section>
           </div>
 
-          <!-- Mini map placeholder (SVG, no external map lib) -->
+          <!-- Mini map — real Leaflet + OSM tiles (FU-3 pulang parity) -->
           <section
             class="rounded-2xl border border-slate-200 overflow-hidden bg-white"
           >
@@ -435,7 +627,7 @@ const hasCheckOutCoords = computed(() => {
                 </p>
               </div>
               <span
-                v-if="hasCoords"
+                v-if="geofenceCentre"
                 class="text-3xs font-bold text-slate-400"
               >
                 radius {{ effectiveRadius }} m
@@ -443,110 +635,36 @@ const hasCheckOutCoords = computed(() => {
             </header>
             <div class="p-3">
               <div
-                v-if="hasCoords"
+                v-if="canRenderMap"
                 class="rounded-xl bg-slate-50 border border-slate-100 overflow-hidden"
               >
-                <svg
-                  :viewBox="`0 0 ${MAP_VB} ${MAP_VB}`"
-                  class="w-full h-40"
+                <div
+                  ref="mapContainer"
+                  class="w-full h-40 relative z-0"
                   role="img"
-                  aria-label="Peta perkiraan geofence dan titik check-in dan check-out"
-                >
-                  <!-- Faux grid -->
-                  <defs>
-                    <pattern
-                      id="mapgrid"
-                      width="20"
-                      height="20"
-                      patternUnits="userSpaceOnUse"
-                    >
-                      <path
-                        d="M 20 0 L 0 0 0 20"
-                        fill="none"
-                        stroke="#e2e8f0"
-                        stroke-width="0.5"
-                      />
-                    </pattern>
-                  </defs>
-                  <rect
-                    :width="MAP_VB"
-                    :height="MAP_VB"
-                    fill="url(#mapgrid)"
-                  />
-                  <!-- Geofence circle -->
-                  <circle
-                    :cx="MAP_CENTRE"
-                    :cy="MAP_CENTRE"
-                    :r="mapRadiusSvg"
-                    fill="rgba(16,185,129,0.10)"
-                    stroke="#10b981"
-                    stroke-width="1.5"
-                    stroke-dasharray="4 3"
-                  />
-                  <!-- Centre pin -->
-                  <circle
-                    :cx="MAP_CENTRE"
-                    :cy="MAP_CENTRE"
-                    r="3"
-                    fill="#10b981"
-                  />
-                  <text
-                    :x="MAP_CENTRE + 6"
-                    :y="MAP_CENTRE + 4"
-                    font-size="8"
-                    fill="#0f766e"
-                    font-weight="600"
-                  >
-                    Sekolah
-                  </text>
-                  <!-- Marker + connector (check-out) — drawn BEFORE the
-                       check-in so the blue masuk pin sits on top when the
-                       two happen to overlap. -->
-                  <template v-if="hasCheckOutCoords">
-                    <line
-                      :x1="MAP_CENTRE"
-                      :y1="MAP_CENTRE"
-                      :x2="checkOutMarkerXY.x"
-                      :y2="checkOutMarkerXY.y"
-                      :stroke="row.check_out_outside_geofence ? '#ef4444' : '#8b5cf6'"
-                      stroke-width="1"
-                      stroke-dasharray="3 3"
-                      opacity="0.6"
-                    />
-                    <circle
-                      :cx="checkOutMarkerXY.x"
-                      :cy="checkOutMarkerXY.y"
-                      r="6"
-                      :fill="row.check_out_outside_geofence ? '#ef4444' : '#8b5cf6'"
-                      stroke="white"
-                      stroke-width="2"
-                    />
-                  </template>
-                  <!-- Marker (check-in) -->
-                  <line
-                    :x1="MAP_CENTRE"
-                    :y1="MAP_CENTRE"
-                    :x2="markerXY.x"
-                    :y2="markerXY.y"
-                    :stroke="row.check_in_outside_geofence ? '#ef4444' : '#1b6fb8'"
-                    stroke-width="1"
-                    stroke-dasharray="2 2"
-                    opacity="0.6"
-                  />
-                  <circle
-                    :cx="markerXY.x"
-                    :cy="markerXY.y"
-                    r="6"
-                    :fill="row.check_in_outside_geofence ? '#ef4444' : '#1b6fb8'"
-                    stroke="white"
-                    stroke-width="2"
-                  />
-                </svg>
-                <!-- Legend + placeholder disclaimer -->
+                  aria-label="Peta lokasi geofence dan titik check-in dan check-out"
+                ></div>
+                <!-- Legend — colored dots + labels for each pin currently on the map. -->
                 <div
                   class="px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-3xs text-slate-500"
                 >
-                  <span class="inline-flex items-center gap-1.5">
+                  <span
+                    v-if="geofenceCentre"
+                    class="inline-flex items-center gap-1.5"
+                  >
+                    <span
+                      class="w-2 h-2 rounded-full inline-block"
+                      style="background: #10b981"
+                      aria-hidden="true"
+                    />
+                    <span class="font-bold text-slate-600"
+                      >Sekolah ({{ effectiveRadius }} m)</span
+                    >
+                  </span>
+                  <span
+                    v-if="hasCheckInCoords"
+                    class="inline-flex items-center gap-1.5"
+                  >
                     <span
                       class="w-2 h-2 rounded-full inline-block"
                       style="background: #1b6fb8"
@@ -566,7 +684,7 @@ const hasCheckOutCoords = computed(() => {
                     <span class="font-bold text-slate-600">Pulang</span>
                   </span>
                   <span class="text-slate-400">
-                    · Visualisasi perkiraan (bukan peta sebenarnya).
+                    · Klik penanda untuk detail.
                   </span>
                 </div>
               </div>
@@ -574,7 +692,7 @@ const hasCheckOutCoords = computed(() => {
                 v-else
                 class="h-32 rounded-xl bg-slate-50 border border-dashed border-slate-200 grid place-items-center text-2xs text-slate-400"
               >
-                Koordinat check-in tidak tercatat.
+                Koordinat tidak tercatat.
               </div>
             </div>
           </section>
