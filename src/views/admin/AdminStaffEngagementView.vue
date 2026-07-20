@@ -96,7 +96,7 @@ onMounted(() => {
 <template>
   <div class="space-y-md pb-12">
     <BrandPageHeader
-      role="admin"
+      role="staff"
       kicker="Retensi Staf"
       title="Prestasi Staf"
       meta="Pantau engagement, apresiasi staf produktif, sapa yang tidur."
@@ -139,7 +139,7 @@ onMounted(() => {
 
       <div class="rounded-2xl bg-white border border-slate-100 shadow-sm p-4 sm:p-5">
         <div class="flex items-center gap-2 mb-3">
-          <span class="w-7 h-7 rounded-lg grid place-items-center bg-brand-cobalt/10 text-brand-cobalt">
+          <span class="w-7 h-7 rounded-lg grid place-items-center bg-role-staff-soft text-role-staff">
             <NavIcon name="bar-chart" :size="15" />
           </span>
           <p class="text-sm font-black text-slate-900">Aktivitas Staf Sekolah 7 Hari</p>

@@ -91,7 +91,7 @@ onMounted(() => {
 <template>
   <div class="space-y-md pb-12">
     <BrandPageHeader
-      role="admin"
+      role="teacher"
       kicker="Retensi Guru"
       title="Prestasi Guru"
       meta="Pantau engagement, apresiasi guru rajin, sapa yang tidur."
@@ -136,7 +136,7 @@ onMounted(() => {
       <!-- School-wide weekly activity — familiar bar chart. -->
       <div class="rounded-2xl bg-white border border-slate-100 shadow-sm p-4 sm:p-5">
         <div class="flex items-center gap-2 mb-3">
-          <span class="w-7 h-7 rounded-lg grid place-items-center bg-brand-cobalt/10 text-brand-cobalt">
+          <span class="w-7 h-7 rounded-lg grid place-items-center bg-role-teacher-soft text-role-teacher">
             <NavIcon name="bar-chart" :size="15" />
           </span>
           <p class="text-sm font-black text-slate-900">Aktivitas Sekolah 7 Hari</p>
