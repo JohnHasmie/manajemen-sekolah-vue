@@ -2963,7 +2963,20 @@
         "empty_description": "Tidak ada data kehadiran guru untuk periode ini.",
         "empty_description_teacher": "Tidak ada data kehadiran guru untuk periode ini.",
         "empty_description_staff": "Tidak ada data kehadiran staf untuk periode ini.",
-        "empty_description_all": "Tidak ada data kehadiran pegawai untuk periode ini."
+        "empty_description_all": "Tidak ada data kehadiran pegawai untuk periode ini.",
+        "self_checkout": {
+          "chip_warn": "Akan tercatat PULANG CEPAT — {delta} sebelum jam pulang {time}.",
+          "chip_block": "Belum waktunya pulang — tombol aktif mulai {time}.",
+          "chip_min_work": "Minimum jam kerja {min} menit belum tercapai (baru bekerja {worked} menit).",
+          "confirm_title": "Konfirmasi pulang cepat",
+          "confirm_body": "Riwayat kamu akan menandai hari ini sebagai pulang cepat. Kepala sekolah bisa melihat catatan ini.",
+          "confirm_cancel": "Batal",
+          "confirm_proceed": "Ya, tetap pulang",
+          "confirm_field_time": "Jam pulang",
+          "confirm_field_delta": "Selisih",
+          "confirm_field_status": "Status tercatat",
+          "confirm_status_value": "Pulang cepat"
+        }
       },
       "teacher_management": {
         "role_teacher": "Guru",

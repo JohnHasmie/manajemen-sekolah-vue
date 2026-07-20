@@ -799,3 +799,90 @@ export interface TeacherAttendanceExportFilters {
   teacher_id?: string;
   status?: TeacherAttendanceStatus;
 }
+
+// ───────────────────────────────────────────────────────────────────
+// CHECKOUT PREVIEW (backend !505, BE-2)
+// ───────────────────────────────────────────────────────────────────
+
+/**
+ * Per-school policy for pulang cepat (early-leave). Comes from the
+ * school's attendance config on the backend.
+ *   · none  — early leave is unmarked; the button always fires.
+ *   · warn  — the teacher may still checkout; the record is stamped
+ *             `early_leave` for the admin's rekap.
+ *   · block — the button is hard-disabled until the early-leave
+ *             boundary is reached server-side.
+ */
+export type TeacherAttendanceEarlyLeavePolicy = 'none' | 'warn' | 'block';
+
+/**
+ * The `data` block of GET /teacher-attendance/checkout-preview. Nullable
+ * `data` at the response level means the endpoint doesn't have anything
+ * to say (e.g. no check-in yet, or checkout disabled entirely — the
+ * response's top-level `data` is `null` in those cases).
+ */
+export interface TeacherAttendanceCheckoutPreview {
+  /**
+   * True when the server is prepared to accept a POST /check-out right
+   * now. Always false when checkout is disabled or the min-work rule
+   * hasn't been satisfied yet; may still be true when `early_leave` is
+   * true under a `warn` policy.
+   */
+  can_checkout: boolean;
+  /** Whether the school has checkout_enabled at all. */
+  checkout_enabled: boolean;
+  /**
+   * Machine-readable reject reason when `can_checkout=false`. Known
+   * values include 'disabled', 'min_work_not_met', 'blocked_early_leave'
+   * — the FE only branches on 'disabled' explicitly today.
+   */
+  reason: string | null;
+  /** School's configured pulang time as HH:mm. */
+  threshold_hh_mm: string;
+  /**
+   * Below this HH:mm the button is hard-disabled under a `block` policy.
+   * At or after this time the block flips off; between this and
+   * `threshold_hh_mm` the teacher will still be flagged `early_leave`.
+   */
+  early_leave_boundary_hh_mm: string;
+  /**
+   * True when a check-out fired right now would be recorded as
+   * `early_leave`. Server-side truth — respect it over any local clock.
+   */
+  early_leave: boolean;
+  /** The status that a check-out fired right now would be stamped with. */
+  would_be_status: string;
+  /**
+   * True when the teacher has already worked long enough that the
+   * min-work-minutes rule (if any) is satisfied.
+   */
+  min_work_ok: boolean;
+  /** Configured minimum work minutes (0 means no rule). */
+  min_work_minutes: number;
+  /** How many minutes the teacher has actually worked so far. */
+  worked_minutes: number;
+  /**
+   * Minutes until the early-leave threshold is reached. Zero once the
+   * threshold has passed. Feeds the `fmtDelta` label in the chip.
+   */
+  minutes_remaining: number;
+  /** Effective policy at rule-resolution time (school × personnel × role). */
+  policy: TeacherAttendanceEarlyLeavePolicy;
+  /**
+   * Effective grace window (minutes) already applied to the boundary
+   * computation. Present so future admin surfaces can explain "why is
+   * the boundary at 14:55 and not 15:00" without another endpoint.
+   */
+  grace_minutes_effective: number;
+  /**
+   * Where the grace window came from — e.g. 'school_default',
+   * 'personnel_override', 'role_override'. Debug-only for now.
+   */
+  grace_source: string;
+}
+
+/** GET /teacher-attendance/checkout-preview envelope. */
+export interface TeacherAttendanceCheckoutPreviewResponse {
+  success: boolean;
+  data: TeacherAttendanceCheckoutPreview | null;
+}

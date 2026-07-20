@@ -45,6 +45,7 @@ import { useQrScanner } from '@/composables/useQrScanner';
 import { useGeolocation } from '@/composables/useGeolocation';
 import { useToast } from '@/composables/useToast';
 import type {
+  TeacherAttendanceCheckoutPreview,
   TeacherAttendanceConfig,
   TeacherAttendanceRecord,
 } from '@/types/teacher-attendance';
@@ -56,6 +57,7 @@ import Button from '@/components/ui/Button.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import CheckInShiftPicker from '@/components/feature/CheckInShiftPicker.vue';
+import Modal from '@/components/ui/Modal.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -194,6 +196,80 @@ const hasCheckedIn = computed(() => state.value?.has_checked_in ?? false);
 const hasCheckedOut = computed(() => state.value?.has_checked_out ?? false);
 const canCheckOut = computed(() => state.value?.can_check_out ?? false);
 
+// ── Pulang parity (BE-2 !505): eyebrow chip + pulang-cepat confirmation
+//    ──────────────────────────────────────────────────────────────────
+// The `/teacher-attendance/checkout-preview` endpoint tells us, before
+// the teacher taps Pulang, what would happen server-side: is early-leave
+// active? Would the button be hard-blocked? Has the min-work rule been
+// satisfied? We fetch it ONCE when the check-out form is about to render
+// and use it to gate the button + show a contextual chip. The POST is
+// server-authoritative, so a stale hint isn't a correctness problem.
+const checkoutPreview = ref<TeacherAttendanceCheckoutPreview | null>(null);
+const checkoutPreviewLoading = ref(false);
+const showEarlyLeaveConfirm = ref(false);
+
+/**
+ * Format a "minutes remaining" delta as a compact Indonesian label —
+ * "45 m", "1 j", "1 j 15 m". Mirrors the mobile fmtDelta so both
+ * surfaces show the same string.
+ */
+function fmtDelta(minutes: number): string {
+  const total = Math.max(0, Math.floor(minutes));
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  if (h === 0) return `${m} m`;
+  if (m === 0) return `${h} j`;
+  return `${h} j ${m} m`;
+}
+
+/**
+ * Fetch the check-out preview once — no polling. Only meaningful when
+ * we're actually about to render the check-out form (i.e. the teacher
+ * has checked in and the school allows check-out). Failures are
+ * silently swallowed: a missing preview just means the eyebrow chip
+ * doesn't render, and the POST still enforces the correct policy.
+ */
+async function loadCheckoutPreview() {
+  // Reset first — moving from check-in to check-out flips the flow;
+  // any preview cached from a previous mount is stale.
+  checkoutPreview.value = null;
+  if (mode.value !== 'check-out') return;
+  if (!showCaptureForm.value) return;
+  checkoutPreviewLoading.value = true;
+  try {
+    const res = await TeacherAttendanceService.getCheckoutPreview();
+    checkoutPreview.value = res.data;
+  } catch {
+    // Ignore — no chip is safer than a wrong chip. The POST endpoint
+    // will still return the correct outcome.
+    checkoutPreview.value = null;
+  } finally {
+    checkoutPreviewLoading.value = false;
+  }
+}
+
+/**
+ * Dominant reason to hard-disable the Pulang button, or null when
+ * the button should stay tappable. Ordered by priority: the min-work
+ * rule is a hard reject at the backend level too, so it wins over
+ * the policy=block early-leave case.
+ */
+type CheckoutChipKind = 'min_work' | 'block' | 'warn' | null;
+const checkoutChipKind = computed<CheckoutChipKind>(() => {
+  const p = checkoutPreview.value;
+  if (!p) return null;
+  if (!p.min_work_ok) return 'min_work';
+  if (p.policy === 'block' && p.early_leave) return 'block';
+  if (p.policy === 'warn' && p.early_leave) return 'warn';
+  return null;
+});
+
+/** True when the preview says the server will hard-reject a POST. */
+const checkoutHardDisabled = computed(() => {
+  const kind = checkoutChipKind.value;
+  return kind === 'min_work' || kind === 'block';
+});
+
 /**
  * The active capture mode. Once checked-in, the page flips to the
  * check-out flow (when enabled). When fully done, no capture form.
@@ -313,7 +389,14 @@ const locationSatisfied = computed(
   () => !locationRequired.value || !!geo.position.value,
 );
 const canSubmit = computed(
-  () => photoSatisfied.value && locationSatisfied.value && !submitting.value,
+  () =>
+    photoSatisfied.value &&
+    locationSatisfied.value &&
+    !submitting.value &&
+    // Pulang parity: honour the server's preview. `min_work_ok=false` and
+    // policy=block are both hard-rejects on the backend, so grey out the
+    // button here to match — the chip explains why.
+    !(mode.value === 'check-out' && checkoutHardDisabled.value),
 );
 
 /** A short "why is the button disabled" hint under the submit button. */
@@ -466,6 +549,10 @@ async function reload() {
     } else {
       await startQrScanner();
     }
+    // Fetch the check-out preview once for the "am I about to be marked
+    // pulang cepat?" chip. Only relevant on the pulang leg; loader is a
+    // no-op when mode is check-in.
+    void loadCheckoutPreview();
   } catch (e) {
     loadError.value = (e as Error).message;
   } finally {
@@ -477,6 +564,13 @@ async function reload() {
 // refresh that flips state), make sure the auto kick-off has run.
 watch(showCaptureForm, (visible) => {
   if (visible && !autoStarted.value) void autoStartCapture();
+});
+
+// When the flow flips from check-in to check-out (or vice versa), refresh
+// the preview. This is the ONLY moment the preview reloads — no polling,
+// per the plan; the POST endpoint is authoritative for the actual verdict.
+watch(mode, () => {
+  void loadCheckoutPreview();
 });
 
 onMounted(() => {
@@ -512,7 +606,32 @@ async function captureLocation() {
 }
 
 // ── Submit (one-tap: snapshot live frame → post) ────────────────
+/**
+ * Tap handler for the primary submit button. On the check-out leg we
+ * detour through the pulang-cepat confirmation modal when the preview
+ * says `policy=warn && early_leave` — the actual POST fires from
+ * [confirmEarlyLeaveCheckOut]. Every other case falls straight through
+ * to [performSubmit] the way it always did.
+ */
 async function submit() {
+  if (
+    mode.value === 'check-out' &&
+    checkoutChipKind.value === 'warn' &&
+    !showEarlyLeaveConfirm.value
+  ) {
+    showEarlyLeaveConfirm.value = true;
+    return;
+  }
+  await performSubmit();
+}
+
+/** User confirmed the pulang-cepat modal — close it and POST. */
+async function confirmEarlyLeaveCheckOut() {
+  showEarlyLeaveConfirm.value = false;
+  await performSubmit();
+}
+
+async function performSubmit() {
   // Snapshot the live frame at submit time so the photo is fresh and the
   // flow stays one-tap. Reuse an already-captured still if present.
   let blob = photoBlob.value;
@@ -1134,6 +1253,54 @@ function gotoHistory() {
             :completed-shift-ids="completedShiftIds"
           />
 
+          <!-- ── Eyebrow chip (pulang parity BE-2 !505) ────────────────
+               Only rendered on the pulang leg, when the /checkout-preview
+               endpoint says there's something worth flagging. The chip is
+               server-driven — the FE never invents a status. Priority:
+                 · min_work_ok=false      → red (hard block, dominant)
+                 · policy=block+early    → red (hard block)
+                 · policy=warn+early     → amber (soft warn, taps to modal)
+               Anything else = no chip; the existing autoPhotoHint line is
+               the only sub-copy under the button. -->
+          <div
+            v-if="mode === 'check-out' && checkoutChipKind === 'min_work' && checkoutPreview"
+            role="status"
+            class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-2xs font-bold text-red-700 flex items-start gap-2"
+          >
+            <NavIcon name="lock" :size="13" class="flex-shrink-0 mt-px" />
+            <span>{{
+              t('teacher_attendance.self_checkout.chip_min_work', {
+                min: checkoutPreview.min_work_minutes,
+                worked: checkoutPreview.worked_minutes,
+              })
+            }}</span>
+          </div>
+          <div
+            v-else-if="mode === 'check-out' && checkoutChipKind === 'block' && checkoutPreview"
+            role="status"
+            class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-2xs font-bold text-red-700 flex items-start gap-2"
+          >
+            <NavIcon name="lock" :size="13" class="flex-shrink-0 mt-px" />
+            <span>{{
+              t('teacher_attendance.self_checkout.chip_block', {
+                time: checkoutPreview.early_leave_boundary_hh_mm,
+              })
+            }}</span>
+          </div>
+          <div
+            v-else-if="mode === 'check-out' && checkoutChipKind === 'warn' && checkoutPreview"
+            role="status"
+            class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-2xs font-bold text-amber-800 flex items-start gap-2"
+          >
+            <NavIcon name="alert-triangle" :size="13" class="flex-shrink-0 mt-px" />
+            <span>{{
+              t('teacher_attendance.self_checkout.chip_warn', {
+                delta: fmtDelta(checkoutPreview.minutes_remaining),
+                time: checkoutPreview.threshold_hh_mm,
+              })
+            }}</span>
+          </div>
+
           <!-- ── Single primary action (snapshot live frame + post) ── -->
           <Button
             variant="primary"
@@ -1319,5 +1486,73 @@ function gotoHistory() {
         <NavIcon name="arrow-right" :size="16" class="text-slate-300" />
       </button>
     </template>
+
+    <!-- ── Pulang cepat confirmation modal (BE-2 !505) ─────────────
+         Fires when the eyebrow chip is amber (policy=warn + early_leave)
+         and the teacher taps the primary Pulang button. The primary CTA
+         is AMBER — not the brand color — so the "you're about to be
+         flagged pulang cepat" tone reads before the tap. Cancelling
+         just closes the modal; the button is still tappable so the
+         teacher can pick a different action. -->
+    <Modal
+      v-if="showEarlyLeaveConfirm && checkoutPreview"
+      size="sm"
+      :title="t('teacher_attendance.self_checkout.confirm_title')"
+      @close="showEarlyLeaveConfirm = false"
+    >
+      <!-- Chip-style data list summarising the impending record. Tabular
+           numbers keep the two lines aligned when the delta grows past a
+           single digit. -->
+      <dl
+        class="rounded-xl border border-amber-200 bg-amber-50 divide-y divide-amber-100 text-[12.5px]"
+      >
+        <div class="flex items-center justify-between gap-3 px-3 py-2">
+          <dt class="font-bold text-amber-900">
+            {{ t('teacher_attendance.self_checkout.confirm_field_time') }}
+          </dt>
+          <dd class="font-black text-amber-900 tabular-nums">
+            {{ checkoutPreview.threshold_hh_mm }}
+          </dd>
+        </div>
+        <div class="flex items-center justify-between gap-3 px-3 py-2">
+          <dt class="font-bold text-amber-900">
+            {{ t('teacher_attendance.self_checkout.confirm_field_delta') }}
+          </dt>
+          <dd class="font-black text-amber-900 tabular-nums">
+            −{{ fmtDelta(checkoutPreview.minutes_remaining) }}
+          </dd>
+        </div>
+        <div class="flex items-center justify-between gap-3 px-3 py-2">
+          <dt class="font-bold text-amber-900">
+            {{ t('teacher_attendance.self_checkout.confirm_field_status') }}
+          </dt>
+          <dd class="font-black text-amber-900">
+            {{ t('teacher_attendance.self_checkout.confirm_status_value') }}
+          </dd>
+        </div>
+      </dl>
+      <p class="mt-md text-sm text-slate-600 leading-relaxed">
+        {{ t('teacher_attendance.self_checkout.confirm_body') }}
+      </p>
+      <div class="mt-md flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+        <button
+          type="button"
+          class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-md py-sm text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
+          :disabled="submitting"
+          @click="showEarlyLeaveConfirm = false"
+        >
+          {{ t('teacher_attendance.self_checkout.confirm_cancel') }}
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-md py-sm text-sm font-semibold text-white hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-60 disabled:cursor-not-allowed"
+          :disabled="submitting"
+          @click="confirmEarlyLeaveCheckOut"
+        >
+          <Spinner v-if="submitting" size="sm" />
+          {{ t('teacher_attendance.self_checkout.confirm_proceed') }}
+        </button>
+      </div>
+    </Modal>
   </div>
 </template>
