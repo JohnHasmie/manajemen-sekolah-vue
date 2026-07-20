@@ -247,6 +247,44 @@ export interface StudentHeatmapResponse {
   computed_at?: string;
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// STUDENT 7-DAY TIMESERIES
+//
+// Powers the "Minggu ini" bar chart on the admin dashboard's Kehadiran
+// card. Server-side the endpoint respects the per-school WorkdayCalendar
+// (workweek bitmask + attendance_holidays), so non-workdays come back
+// with `is_workday=false` and zeroed counts — the client renders them
+// as neutral placeholder bars with a "libur" pill.
+// ─────────────────────────────────────────────────────────────────────
+
+/** One per-day bucket in `/attendance/student-timeseries`. */
+export interface StudentAttendanceTimeseriesDay {
+  /** YYYY-MM-DD (local, school-timezone). */
+  date: string;
+  /** false = weekend or holiday; the chart renders these as muted bars. */
+  is_workday: boolean;
+  /** Count of student attendance rows marked hadir (present + late). */
+  present_count: number;
+  /** Rows marked absent (sakit + izin + alpa). */
+  absent_count: number;
+  /** present_count + absent_count — the eligible roster for that day. */
+  total: number;
+  /** round(present / total * 100, 1); 0 when total is 0. */
+  present_pct: number;
+  /** Optional server-supplied holiday name (surfaced as the pill label). */
+  holiday_name?: string | null;
+}
+
+/** Full response body for `/attendance/student-timeseries`. */
+export interface StudentAttendanceTimeseries {
+  meta: {
+    start_date: string;
+    end_date: string;
+    day_count: number;
+  };
+  data: StudentAttendanceTimeseriesDay[];
+}
+
 /** One row in the admin Laporan list (`/attendance/summary`). */
 export interface AdminAttendanceSummary {
   id: string;

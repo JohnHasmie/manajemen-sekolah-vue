@@ -700,6 +700,14 @@ export interface TeacherAttendanceTimeseriesDay {
   ontime_pct: number;
   /** Sum of overtime minutes across the day. */
   overtime_minutes: number;
+  /**
+   * Share of personnel HADIR that day (present + late) out of the eligible
+   * roster on a workday. Sibling of `ontime_pct` — `present_pct` counts
+   * "hadir apapun" (used by the 7-day dashboard bars), while `ontime_pct`
+   * only counts on-time arrivals (used by the tepat-waktu chart).
+   * Backend rounds to 1dp; 0 on non-workdays / no rows.
+   */
+  present_pct: number;
 }
 
 /** Meta echoed by the timeseries endpoint. */

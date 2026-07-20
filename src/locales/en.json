@@ -631,7 +631,19 @@
       "rateToday": "present today",
       "notYet": "no data yet",
       "perClass": "Student attendance per class",
-      "noRecordsToday": "No attendance recorded today"
+      "noRecordsToday": "No attendance recorded today",
+      "weekly": {
+        "eyebrow": "This week · {range}",
+        "average": "Average",
+        "effectiveDays": "Effective days",
+        "daysUnit": "{n} days",
+        "bestWorst": "Best / Worst",
+        "today": "TODAY",
+        "weekend": "Weekend",
+        "holiday": "Holiday",
+        "emptyEffective": "No effective days this week.",
+        "chartAria": "7-day attendance chart"
+      }
     },
     "announcement": {
       "allStatuses": "All statuses",

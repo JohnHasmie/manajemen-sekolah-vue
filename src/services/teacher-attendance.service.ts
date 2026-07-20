@@ -926,6 +926,11 @@ export const TeacherAttendanceService = {
           absent_count: asInt(d.absent_count, 0),
           ontime_pct: asFloat(d.ontime_pct, 0),
           overtime_minutes: asInt(d.overtime_minutes, 0),
+          // `present_pct` was added alongside the 7-day dashboard bars.
+          // Older backends may only surface `ontime_pct` — fall back to
+          // it so the chart still renders proportional bars during the
+          // deploy window.
+          present_pct: asFloat(d.present_pct, asFloat(d.ontime_pct, 0)),
         })),
       };
     } catch (e) {

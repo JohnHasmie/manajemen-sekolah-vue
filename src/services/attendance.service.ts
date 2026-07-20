@@ -22,9 +22,31 @@ import {
   type AttendanceStatus,
   type HeatmapCellState,
   type SessionReport,
+  type StudentAttendanceTimeseries,
+  type StudentAttendanceTimeseriesDay,
   type StudentHeatmapResponse,
   type TingkatTrend,
 } from '@/types/attendance';
+
+/** Coerce a wire value to a rounded integer, falling back on parse errors. */
+function toIntLoose(v: unknown, fallback: number): number {
+  if (typeof v === 'number' && Number.isFinite(v)) return Math.round(v);
+  if (typeof v === 'string') {
+    const n = Number.parseFloat(v);
+    return Number.isFinite(n) ? Math.round(n) : fallback;
+  }
+  return fallback;
+}
+
+/** Coerce a wire value to a float (1dp), falling back on parse errors. */
+function toFloatLoose(v: unknown, fallback: number): number {
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  if (typeof v === 'string') {
+    const n = Number.parseFloat(v);
+    return Number.isFinite(n) ? n : fallback;
+  }
+  return fallback;
+}
 
 interface RosterParams {
   class_id: string;
@@ -460,6 +482,81 @@ export const AttendanceService = {
       };
     } catch {
       return { items: [], total: 0, current_page: 1, last_page: 1 };
+    }
+  },
+
+  /**
+   * GET /attendance/student-timeseries
+   *
+   * Per-day school-wide student attendance totals across a date window.
+   * Feeds the "Minggu ini" bar chart on the admin dashboard's
+   * Kehadiran card. Backend respects the per-school WorkdayCalendar
+   * (workweek bitmask + attendance_holidays), so non-workdays come back
+   * as `{is_workday:false, present_count:0, absent_count:0, total:0,
+   * present_pct:0}` — the client draws them as neutral placeholder
+   * bars with a "libur" pill (never "0%").
+   *
+   * Fails soft: on network error / 403 / 404 (endpoint not yet
+   * deployed) we return an empty `data[]` so the chart shows the
+   * "belum ada data efektif" empty state instead of blowing up the
+   * whole dashboard.
+   */
+  async getStudentTimeseries(args: {
+    start_date: string;
+    end_date: string;
+    academic_year_id?: string;
+  }): Promise<StudentAttendanceTimeseries> {
+    try {
+      const params: Record<string, unknown> = {
+        start_date: args.start_date,
+        end_date: args.end_date,
+      };
+      if (args.academic_year_id) params.academic_year_id = args.academic_year_id;
+      const res = await api.get('/attendance/student-timeseries', { params });
+      const body = (res.data ?? {}) as {
+        meta?: Record<string, unknown>;
+        data?: Record<string, unknown>[];
+      };
+      const rawDays = Array.isArray(body.data) ? body.data : [];
+      const meta = (body.meta ?? {}) as Record<string, unknown>;
+      const data: StudentAttendanceTimeseriesDay[] = rawDays.map((d) => {
+        const present = toIntLoose(d.present_count, 0);
+        const absent = toIntLoose(d.absent_count, 0);
+        const total = toIntLoose(d.total, present + absent);
+        const pct = toFloatLoose(
+          d.present_pct,
+          total > 0 ? (present / total) * 100 : 0,
+        );
+        return {
+          date: String(d.date ?? ''),
+          is_workday: d.is_workday !== false,
+          present_count: present,
+          absent_count: absent,
+          total,
+          present_pct: pct,
+          holiday_name:
+            typeof d.holiday_name === 'string' && d.holiday_name.length > 0
+              ? d.holiday_name
+              : null,
+        };
+      });
+      return {
+        meta: {
+          start_date: String(meta.start_date ?? args.start_date),
+          end_date: String(meta.end_date ?? args.end_date),
+          day_count: toIntLoose(meta.day_count, data.length),
+        },
+        data,
+      };
+    } catch {
+      return {
+        meta: {
+          start_date: args.start_date,
+          end_date: args.end_date,
+          day_count: 0,
+        },
+        data: [],
+      };
     }
   },
 
