@@ -4099,7 +4099,8 @@
       "subscriptionApprovals": "Verifikasi Langganan",
       "discountCodes": "Kode Diskon",
       "incomplete": "Registrasi Belum Selesai",
-      "broadcast": "Fonnte Broadcast"
+      "broadcast": "Fonnte Broadcast",
+      "monitoring": "Pusat Kendali Sistem"
     },
     "overview": {
       "title": "Ringkasan Platform",

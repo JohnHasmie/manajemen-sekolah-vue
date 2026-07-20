@@ -1,0 +1,308 @@
+/**
+ * MonitoringService — client for the SuperAdmin monitoring dashboard.
+ * Mirrors `/api/super-admin/monitoring/*` (backend MR-3).
+ *
+ * One method per endpoint; each returns the shape the corresponding
+ * panel expects. Every method silently returns a shaped default on
+ * network error so the dashboard renders empty states instead of
+ * showing red banners for a transient blip.
+ */
+import { api } from '@/lib/http';
+
+// ── payload types ─────────────────────────────────────────────────
+
+export type HealthCheckStatus = 'up' | 'down' | 'warn';
+
+export interface HealthCheck {
+  status: HealthCheckStatus;
+  detail?: string;
+}
+
+export interface HealthStrip {
+  database: HealthCheck;
+  redis: HealthCheck;
+  queue: HealthCheck;
+  scheduler: HealthCheck;
+  worker: HealthCheck;
+  fcm_token: HealthCheck;
+}
+
+export interface OverviewKpi {
+  jobs_per_minute: number;
+  pending: number;
+  failed_24h: number;
+  fcm_delivered_today: number;
+}
+
+export interface OverviewPayload {
+  health: HealthStrip;
+  overview: {
+    kpi: OverviewKpi;
+    throughput_30m: Array<{ minute: string; jobs: number }>;
+    incident: null | {
+      type: string;
+      message: string;
+      action: string;
+    };
+  };
+}
+
+export interface QueueRow {
+  name: string;
+  pending: number;
+  wait_seconds: number;
+  processes: number;
+}
+
+export interface SupervisorRow {
+  name: string;
+  status: string;
+  processes: number;
+}
+
+export interface FailedJobRow {
+  id: string | null;
+  name: string;
+  queue: string;
+  failed_at: string | null;
+  exception: string | null;
+}
+
+export interface QueuePayload {
+  queues: QueueRow[];
+  supervisors: SupervisorRow[];
+  failed_jobs: FailedJobRow[];
+}
+
+export interface RedisPayload {
+  redis: {
+    memory: {
+      used: number;
+      used_human: string | null;
+      peak: number;
+      peak_human: string | null;
+    };
+    clients: number;
+    blocked_clients: number;
+    evicted_keys: number;
+    rejected_connections: number;
+    keys_db0: number;
+    keys_db1: number;
+    maxmemory_policy: string | null;
+  };
+  system: {
+    cpu: number | null;
+    ram: number | null;
+    disk: number | null;
+  };
+  maxmemory_warning: boolean;
+}
+
+export interface NotificationsPayload {
+  kpi: {
+    sent: number;
+    delivered: number;
+    failed: number;
+    deactivated_24h: number;
+    no_token: number;
+  };
+  tokens: {
+    active: number;
+    inactive: number;
+  };
+  users_without_token: Array<{
+    user_id: string;
+    name: string;
+    email: string;
+    reason: string;
+  }>;
+}
+
+export type FcmLogStatus = 'delivered' | 'failed' | 'deactivated' | 'no_token';
+
+export interface FcmLogRow {
+  id: string;
+  created_at: string;
+  user_id: string | null;
+  email: string | null;
+  name: string | null;
+  token_prefix: string | null;
+  device_type: string | null;
+  notification_type: string | null;
+  status: FcmLogStatus;
+  error_code: string | null;
+  error_message: string | null;
+  school_id: string | null;
+}
+
+export interface FcmLogsPayload {
+  data: FcmLogRow[];
+  meta: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+  };
+  summary: {
+    delivered: number;
+    failed: number;
+    deactivated: number;
+    no_token: number;
+  };
+}
+
+export interface FcmLogFilters {
+  email?: string;
+  token?: string;
+  status?: string;
+  type?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface ErrorsPayload {
+  exceptions: Array<{
+    uuid: string;
+    created_at: string;
+    class: string;
+    message: string;
+    file: string | null;
+    line: number | null;
+  }>;
+  slow_queries: Array<{
+    uuid: string;
+    created_at: string;
+    sql: string;
+    time_ms: number;
+    connection: string | null;
+  }>;
+}
+
+export interface AlertRule {
+  key: string;
+  label: string;
+  threshold: Record<string, unknown>;
+  enabled: boolean;
+  last_fired_at: string | null;
+}
+
+export interface AlertSettingsPayload {
+  channel: {
+    name: string;
+    webhook_masked: string;
+    configured: boolean;
+  };
+  rules: AlertRule[];
+}
+
+const BASE = '/super-admin/monitoring';
+
+async function safeGet<T>(url: string, params: Record<string, unknown> = {}, fallback: T): Promise<T> {
+  try {
+    const res = await api.get(url, { params });
+    return (res.data?.data ?? res.data) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+export const MonitoringService = {
+  async getHealthStrip(): Promise<HealthStrip> {
+    return safeGet<HealthStrip>(`${BASE}/health-strip`, {}, {
+      database: { status: 'down' },
+      redis: { status: 'down' },
+      queue: { status: 'down' },
+      scheduler: { status: 'down' },
+      worker: { status: 'down' },
+      fcm_token: { status: 'up' },
+    });
+  },
+
+  async getOverview(): Promise<OverviewPayload> {
+    return safeGet<OverviewPayload>(`${BASE}/overview`, {}, {
+      health: {
+        database: { status: 'down' },
+        redis: { status: 'down' },
+        queue: { status: 'down' },
+        scheduler: { status: 'down' },
+        worker: { status: 'down' },
+        fcm_token: { status: 'up' },
+      },
+      overview: {
+        kpi: { jobs_per_minute: 0, pending: 0, failed_24h: 0, fcm_delivered_today: 0 },
+        throughput_30m: [],
+        incident: null,
+      },
+    });
+  },
+
+  async getQueue(): Promise<QueuePayload> {
+    return safeGet<QueuePayload>(`${BASE}/queue`, {}, {
+      queues: [], supervisors: [], failed_jobs: [],
+    });
+  },
+
+  async getRedis(): Promise<RedisPayload> {
+    return safeGet<RedisPayload>(`${BASE}/redis`, {}, {
+      redis: {
+        memory: { used: 0, used_human: null, peak: 0, peak_human: null },
+        clients: 0, blocked_clients: 0, evicted_keys: 0, rejected_connections: 0,
+        keys_db0: 0, keys_db1: 0, maxmemory_policy: null,
+      },
+      system: { cpu: null, ram: null, disk: null },
+      maxmemory_warning: false,
+    });
+  },
+
+  async getNotifications(): Promise<NotificationsPayload> {
+    return safeGet<NotificationsPayload>(`${BASE}/notifications`, {}, {
+      kpi: { sent: 0, delivered: 0, failed: 0, deactivated_24h: 0, no_token: 0 },
+      tokens: { active: 0, inactive: 0 },
+      users_without_token: [],
+    });
+  },
+
+  /**
+   * `fcm-logs` uses a different envelope (paginated) so it doesn't
+   * unwrap `.data.data` — it returns the full paginator response.
+   */
+  async getFcmLogs(filters: FcmLogFilters = {}): Promise<FcmLogsPayload> {
+    const params = Object.fromEntries(
+      Object.entries(filters).filter(([, v]) => v !== undefined && v !== ''),
+    );
+    try {
+      const res = await api.get(`${BASE}/fcm-logs`, { params });
+      return res.data as FcmLogsPayload;
+    } catch {
+      return {
+        data: [],
+        meta: { current_page: 1, per_page: 50, total: 0, last_page: 1 },
+        summary: { delivered: 0, failed: 0, deactivated: 0, no_token: 0 },
+      };
+    }
+  },
+
+  async getErrors(): Promise<ErrorsPayload> {
+    return safeGet<ErrorsPayload>(`${BASE}/errors`, {}, {
+      exceptions: [], slow_queries: [],
+    });
+  },
+
+  async getAlertSettings(): Promise<AlertSettingsPayload> {
+    return safeGet<AlertSettingsPayload>(`${BASE}/alert-settings`, {}, {
+      channel: { name: '', webhook_masked: '', configured: false },
+      rules: [],
+    });
+  },
+
+  async testWebhook(): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const res = await api.post(`${BASE}/alert-settings/test-webhook`);
+      return res.data as { ok: boolean; error?: string };
+    } catch (e: any) {
+      return { ok: false, error: e?.response?.data?.error ?? 'network' };
+    }
+  },
+};

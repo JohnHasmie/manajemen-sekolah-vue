@@ -753,6 +753,15 @@ const SUPER_ADMIN_NAV: NavSection[] = [
         labelKey: 'superAdmin.nav.broadcast',
         icon: 'megaphone',
       },
+      {
+        // Pusat kendali sistem — dashboard SuperAdmin monitoring
+        // (Horizon queue + Redis + Telescope + FCM + alert settings)
+        // di satu tempat. Deep-link ke /horizon /pulse /telescope
+        // untuk drill-down mendalam. Auth: `super_admin` role.
+        to: '/super-admin/monitoring',
+        labelKey: 'superAdmin.nav.monitoring',
+        icon: 'activity',
+      },
     ],
   },
 ];

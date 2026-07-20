@@ -198,6 +198,8 @@ const SuperAdminTenantModulesView = () =>
   import('@/views/super-admin/SuperAdminTenantModulesView.vue');
 const SuperAdminBroadcastView = () =>
   import('@/views/super-admin/SuperAdminBroadcastView.vue');
+const SuperAdminMonitoringView = () =>
+  import('@/views/super-admin/SuperAdminMonitoringView.vue');
 const SuperAdminIncompleteRegistrationsView = () =>
   import('@/views/super-admin/SuperAdminIncompleteRegistrationsView.vue');
 const SuperAdminSubscriptionApprovalsView = () =>
@@ -1031,6 +1033,15 @@ const routes: RouteRecordRaw[] = [
         path: 'super-admin/broadcast',
         name: 'super-admin.broadcast',
         component: SuperAdminBroadcastView,
+        meta: { superAdmin: true },
+      },
+      {
+        // Pusat kendali sistem — single-pane-of-glass monitoring
+        // (Horizon queue, Redis, Telescope, FCM delivery, alert
+        // settings). Route + view added in MR-5; API layer in MR-3.
+        path: 'super-admin/monitoring',
+        name: 'super-admin.monitoring',
+        component: SuperAdminMonitoringView,
         meta: { superAdmin: true },
       },
       {

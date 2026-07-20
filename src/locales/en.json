@@ -4099,7 +4099,8 @@
       "subscriptionApprovals": "Subscription approvals",
       "discountCodes": "Discount codes",
       "incomplete": "Incomplete registrations",
-      "broadcast": "Fonnte Broadcast"
+      "broadcast": "Fonnte Broadcast",
+      "monitoring": "System monitoring"
     },
     "overview": {
       "title": "Platform overview",
