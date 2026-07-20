@@ -84,6 +84,8 @@ const AdminLessonPlanDetailView = () =>
   import('@/views/admin/AdminLessonPlanDetailView.vue');
 const AdminScheduleManagementView = () =>
   import('@/views/admin/AdminScheduleManagementView.vue');
+const AdminScheduleResyncView = () =>
+  import('@/views/admin/AdminScheduleResyncView.vue');
 const AdminLessonHourSettingsView = () =>
   import('@/views/admin/AdminLessonHourSettingsView.vue');
 const AdminAnnouncementsHub = () =>
@@ -583,6 +585,17 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/schedule/lesson-hours',
         name: 'admin.schedule.lesson-hours',
         component: AdminLessonHourSettingsView,
+        meta: { role: 'admin' satisfies Role, ability: 'academic.schedule.view' },
+      },
+      {
+        // "Sinkronkan Jadwal ke Mapel" — heal-forward resync of orphan
+        // schedule slots after a delete-then-reimport of mapel (Part A2).
+        // Reached from the Jadwal page button + the post-import toast CTA
+        // on the Mapel page (no standalone sidebar entry, same as the
+        // lesson-hours settings route above).
+        path: 'admin/schedule/resync',
+        name: 'admin.schedule.resync',
+        component: AdminScheduleResyncView,
         meta: { role: 'admin' satisfies Role, ability: 'academic.schedule.view' },
       },
       {

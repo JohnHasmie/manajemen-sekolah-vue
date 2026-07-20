@@ -65,6 +65,44 @@ export interface SubjectFilterOptions {
   grade_levels: string[];
 }
 
+/**
+ * One schedule slot still pointing at a subject the admin is trying to
+ * delete. Surfaced in the "subject in use" guard dialog so the admin can
+ * see WHICH classes/slots would lose their mapel before confirming.
+ * Mirrors the backend `affected[]` entries (MR!516, max 20 rows).
+ */
+export interface AffectedSchedule {
+  schedule_id: string;
+  class_name: string;
+  day_name: string;
+  hour_number: number;
+}
+
+/**
+ * Thrown by {@link SubjectService.remove} when the backend answers 409
+ * `subject_in_use` — the mapel is referenced by ≥1 active teaching
+ * schedule and the caller didn't pass `force`. Carries the impact
+ * payload so the view can render the guard dialog and offer a
+ * force-retry.
+ */
+export class SubjectInUseError extends Error {
+  readonly usedBySchedules: number;
+  readonly subject: { id: string; name: string } | null;
+  readonly affected: AffectedSchedule[];
+  constructor(
+    usedBySchedules: number,
+    subject: { id: string; name: string } | null,
+    affected: AffectedSchedule[],
+    message?: string,
+  ) {
+    super(message ?? 'subject_in_use');
+    this.name = 'SubjectInUseError';
+    this.usedBySchedules = usedBySchedules;
+    this.subject = subject;
+    this.affected = affected;
+  }
+}
+
 function unwrap(body: unknown) {
   if (body && typeof body === 'object') {
     const b = body as Record<string, unknown>;
@@ -139,8 +177,53 @@ export const SubjectService = {
     return subjectFromJson((body.data ?? body) as Record<string, unknown>);
   },
 
-  async remove(id: string): Promise<void> {
-    await api.delete(`/subject/${id}`);
+  /**
+   * DELETE /subject/{id} — soft-delete a mapel (recoverable from Data
+   * Terhapus for 30 days).
+   *
+   * Delete guard (MR!516): if the mapel is still referenced by ≥1 active
+   * teaching schedule, the backend answers 409 `subject_in_use` unless
+   * `force` is set. We translate that into a typed {@link SubjectInUseError}
+   * so the view can show the impact dialog + offer a force-retry. Pass
+   * `{ force: true }` on the confirmed retry to send `?force=true` and
+   * let the delete cascade (schedule slots keep their row but lose the
+   * mapel reference — also recoverable).
+   */
+  async remove(id: string, opts: { force?: boolean } = {}): Promise<void> {
+    try {
+      await api.delete(
+        `/subject/${id}`,
+        opts.force ? { params: { force: true } } : undefined,
+      );
+    } catch (e) {
+      const ax = e as {
+        response?: { status?: number; data?: Record<string, unknown> };
+      };
+      const data = ax?.response?.data;
+      if (ax?.response?.status === 409 && data?.error === 'subject_in_use') {
+        const rawSubject = data.subject as Record<string, unknown> | undefined;
+        const rawAffected = Array.isArray(data.affected)
+          ? (data.affected as Record<string, unknown>[])
+          : [];
+        throw new SubjectInUseError(
+          Number(data.used_by_schedules ?? rawAffected.length ?? 0),
+          rawSubject
+            ? {
+                id: String(rawSubject.id ?? id),
+                name: String(rawSubject.name ?? ''),
+              }
+            : null,
+          rawAffected.map((a) => ({
+            schedule_id: String(a.schedule_id ?? a.id ?? ''),
+            class_name: String(a.class_name ?? ''),
+            day_name: String(a.day_name ?? ''),
+            hour_number: Number(a.hour_number ?? 0),
+          })),
+          typeof data.message === 'string' ? data.message : undefined,
+        );
+      }
+      throw e;
+    }
   },
 
   /**

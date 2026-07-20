@@ -227,14 +227,29 @@ async function loadRows() {
   }
 }
 
+// A2 entry — how many active slots lost their mapel (orphaned by a
+// delete-then-reimport). Drives the "Sinkronkan Jadwal" header button,
+// which only appears when there's something to fix. Fail-safe to 0 so a
+// preview error never breaks the page chrome.
+const resyncOrphanCount = ref(0);
+async function loadResyncCount() {
+  try {
+    resyncOrphanCount.value = (await ScheduleService.resyncPreview()).total;
+  } catch {
+    resyncOrphanCount.value = 0;
+  }
+}
+
 onMounted(async () => {
   await Promise.all([loadFilterOptions(), loadLessonHours(), loadAllSubjects()]);
   await loadRows();
+  void loadResyncCount();
 });
 
 useAcademicYearWatcher(async () => {
   await Promise.all([loadFilterOptions(), loadLessonHours(), loadAllSubjects()]);
   await loadRows();
+  void loadResyncCount();
 });
 
 // No watchers on filter chips / search / viewMode — the computed
@@ -830,12 +845,22 @@ const deleteConfirmMessage = computed(() => {
   if (!row) return '';
   if (row.is_grouped && deleteScope.value === 'group') {
     const memberCount = row.grouped_class_names?.length ?? 2;
-    return $t('admin.schedule.combined.deleteGroupPrompt', {
-      count: memberCount,
-      subject: row.subject_name,
-    });
+    return (
+      $t('admin.schedule.combined.deleteGroupPrompt', {
+        count: memberCount,
+        subject: row.subject_name,
+      }) +
+      ' ' +
+      $t('admin.schedule.deleteRecoverableNote')
+    );
   }
-  return `Hapus ${row.subject_name} (${row.class_name}) di ${row.start_time}? Tindakan ini permanen dan tidak bisa dibatalkan.`;
+  // B4 — schedules are soft-deleted (Part A1 recycle bin), so the old
+  // "permanen dan tidak bisa dibatalkan" copy was both scary and wrong.
+  return $t('admin.schedule.deleteSingleMessage', {
+    subject: row.subject_name,
+    class: row.class_name,
+    time: row.start_time,
+  });
 });
 
 function onRescheduled(_: ScheduleRow) {
@@ -860,6 +885,23 @@ const showBulkDay = ref(false);
 const showBulkTeacher = ref(false);
 const showBulkDelete = ref(false);
 const isBulkDeleting = ref(false);
+
+// B2 — bulk-delete type-to-confirm guard. Deleting a large batch (the 45
+// -schedule incident that spawned this work) is easy to fat-finger, so at
+// ≥10 selected rows we require the admin to TYPE the exact count before
+// the delete button enables.
+const BULK_DELETE_TYPE_THRESHOLD = 10;
+const bulkDeleteConfirmText = ref('');
+const requiresTypedConfirm = computed(
+  () => selectedIds.value.size >= BULK_DELETE_TYPE_THRESHOLD,
+);
+const bulkDeleteTypedOk = computed(
+  () => bulkDeleteConfirmText.value.trim() === String(selectedIds.value.size),
+);
+function openBulkDelete() {
+  bulkDeleteConfirmText.value = '';
+  showBulkDelete.value = true;
+}
 
 function enterBulkMode() {
   bulkMode.value = true;
@@ -927,6 +969,10 @@ function onImportDone(res: ScheduleImportResults) {
 
 async function bulkDelete() {
   if (selectedIds.value.size === 0) return;
+  // B2 — belt-and-suspenders: never fire when the typed count is required
+  // but doesn't match (the button is already disabled, this guards
+  // programmatic calls / Enter-key edge cases).
+  if (requiresTypedConfirm.value && !bulkDeleteTypedOk.value) return;
   isBulkDeleting.value = true;
   try {
     const res = await ScheduleService.bulkDestroy(Array.from(selectedIds.value));
@@ -936,11 +982,15 @@ async function bulkDelete() {
     };
     exitBulkMode();
     await loadRows();
+    // A large bulk-delete can orphan nothing, but re-checking keeps the
+    // resync button honest if the deleted rows were the last references.
+    void loadResyncCount();
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
     isBulkDeleting.value = false;
     showBulkDelete.value = false;
+    bulkDeleteConfirmText.value = '';
   }
 }
 </script>
@@ -991,6 +1041,18 @@ async function bulkDelete() {
         >
           <NavIcon name="clock" :size="11" class="inline" />
           {{ $t('admin.schedule.lessonHours') }}
+        </button>
+        <!-- A2 — appears only when active slots have an orphaned mapel
+             (delete-then-reimport). Amber-tinted so it reads as an
+             attention item, not a routine action. -->
+        <button
+          v-if="resyncOrphanCount > 0"
+          type="button"
+          class="text-2xs font-bold text-white px-3 py-1.5 rounded-lg bg-amber-500/90 hover:bg-amber-500 transition-colors flex items-center gap-1.5"
+          @click="router.push({ name: 'admin.schedule.resync' })"
+        >
+          <NavIcon name="link" :size="11" />
+          {{ $t('admin.schedule.resync.headerButton', { count: resyncOrphanCount }) }}
         </button>
       </div>
     </BrandPageHeader>
@@ -1404,7 +1466,7 @@ async function bulkDelete() {
         <NavIcon name="user" :size="12" />
         {{ $t('admin.sekolah.schedule_management.change_teacher') }}
       </Button>
-      <Button variant="danger" size="sm" :disabled="selectedIds.size === 0" @click="showBulkDelete = true">
+      <Button variant="danger" size="sm" :disabled="selectedIds.size === 0" @click="openBulkDelete">
         <NavIcon name="trash-2" :size="12" />
         {{ $t('admin.sekolah.schedule_management.bulk_delete', { count: selectedIds.size }) }}
       </Button>
@@ -1625,6 +1687,10 @@ async function bulkDelete() {
               })
             }}
           </p>
+          <p class="text-2xs text-emerald-700 leading-relaxed flex items-start gap-1.5">
+            <NavIcon name="archive" :size="12" class="mt-0.5 flex-shrink-0" />
+            <span>{{ $t('admin.schedule.deleteRecoverableNote') }}</span>
+          </p>
           <div class="space-y-2">
             <label
               class="flex items-start gap-2.5 rounded-xl border p-3 cursor-pointer transition-colors"
@@ -1730,11 +1796,59 @@ async function bulkDelete() {
       @done="onBulkTeacherChanged"
     />
 
+    <!-- B2 — bulk delete. At ≥10 rows the admin must TYPE the exact count
+         (a fat-finger guard for large batches, the 45-schedule incident);
+         under that it's a plain confirm. Both note that deleted schedules
+         are recoverable from Data Terhapus. -->
+    <Modal
+      v-if="showBulkDelete && requiresTypedConfirm"
+      :title="$t('admin.sekolah.schedule_management.bulk_delete_type_title', { count: selectedIds.size })"
+      size="sm"
+      @close="showBulkDelete = false; bulkDeleteConfirmText = ''"
+    >
+      <div class="space-y-3">
+        <p class="text-sm text-slate-600 leading-relaxed">
+          {{ $t('admin.sekolah.schedule_management.bulk_delete_type_prompt', { count: selectedIds.size }) }}
+        </p>
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+          <p class="text-2xs text-emerald-800 leading-relaxed flex items-start gap-2">
+            <NavIcon name="archive" :size="13" class="mt-0.5 flex-shrink-0" />
+            <span>{{ $t('admin.schedule.deleteRecoverableNote') }}</span>
+          </p>
+        </div>
+        <input
+          v-model="bulkDeleteConfirmText"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          :placeholder="String(selectedIds.size)"
+          class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[15px] font-black text-slate-900 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 tabular-nums text-center"
+          @keyup.enter="bulkDeleteTypedOk && bulkDelete()"
+        />
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <Button variant="secondary" block @click="showBulkDelete = false; bulkDeleteConfirmText = ''">
+            {{ $t('common.cancel') }}
+          </Button>
+          <Button
+            variant="danger"
+            block
+            :loading="isBulkDeleting"
+            :disabled="!bulkDeleteTypedOk"
+            @click="bulkDelete"
+          >
+            {{ $t('admin.sekolah.schedule_management.bulk_delete', { count: selectedIds.size }) }}
+          </Button>
+        </div>
+      </div>
+    </Modal>
     <ConfirmationDialog
-      v-if="showBulkDelete"
-      title="Hapus Jadwal Massal"
-      :message="`Hapus ${selectedIds.size} jadwal terpilih? Tindakan ini akan men-soft-delete semua rownya.`"
-      confirm-label="Hapus semua"
+      v-else-if="showBulkDelete"
+      :title="$t('admin.sekolah.schedule_management.bulk_delete_title')"
+      :message="$t('admin.sekolah.schedule_management.bulk_delete_message', {
+        count: selectedIds.size,
+        note: $t('admin.schedule.deleteRecoverableNote'),
+      })"
+      :confirm-label="$t('admin.sekolah.schedule_management.bulk_delete_confirm')"
       danger
       :loading="isBulkDeleting"
       @close="showBulkDelete = false"

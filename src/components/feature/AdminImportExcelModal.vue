@@ -30,6 +30,12 @@ const emit = defineEmits<{
   close: [];
   done: [{
     imported: number;
+    // Subject import (MR!516) splits the total into these buckets so the
+    // host can reassure the admin a re-import upserted (updated) rather
+    // than duplicated. Other importers omit them.
+    created?: number;
+    updated?: number;
+    restored?: number;
     failed: number;
     // Teacher import also reports these; other entities omit them.
     skipped?: number;

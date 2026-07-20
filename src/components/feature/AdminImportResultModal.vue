@@ -27,6 +27,15 @@ const props = withDefaults(
     /** Summary counts (some importers only set a subset — missing = 0). */
     counts: {
       imported?: number;
+      /**
+       * Subject import (MR!516) splits its total into created / updated /
+       * restored so "Diperbarui" (upserted-in-place, schedules kept) is
+       * distinguishable from "Ditambahkan". The other three importers
+       * only send `imported`.
+       */
+      created?: number;
+      updated?: number;
+      restored?: number;
       skipped?: number;
       conflicts?: number;
       failed?: number;
@@ -66,6 +75,13 @@ const SECTIONS: Section[] = [
     statuses: ['created', 'restored'],
     card: 'border-emerald-200 bg-emerald-50',
     badge: 'bg-emerald-200 text-emerald-800',
+  },
+  {
+    key: 'updated',
+    title: 'Diperbarui',
+    statuses: ['updated'],
+    card: 'border-sky-200 bg-sky-50',
+    badge: 'bg-sky-200 text-sky-800',
   },
   {
     key: 'skipped',
@@ -112,14 +128,25 @@ const summary = computed(() => {
   const countBy = (statuses: ImportDetailRow['status'][]) =>
     props.details.filter((d) => statuses.includes(d.status)).length;
 
-  const imported = props.counts.imported ?? countBy(['created', 'restored']);
+  const created = props.counts.created ?? countBy(['created']);
+  const restored = props.counts.restored ?? countBy(['restored']);
+  const updated = props.counts.updated ?? countBy(['updated']);
   const skipped = props.counts.skipped ?? countBy(['skipped']);
   const conflicts = props.counts.conflicts ?? countBy(['conflict']);
   const failed = props.counts.failed ?? countBy(['failed']);
   const warningsCount = props.warnings?.length ?? 0;
 
+  // Back-compat: importers that only report a single `imported` total
+  // (teacher / siswa / kelas) collapse created + restored into it.
+  const addedSplit = created + restored;
+  const added =
+    addedSplit > 0
+      ? addedSplit
+      : props.counts.imported ?? countBy(['created', 'restored']);
+
   const parts: string[] = [];
-  if (imported > 0) parts.push(`${imported} ditambahkan`);
+  if (added > 0) parts.push(`${added} ditambahkan`);
+  if (updated > 0) parts.push(`${updated} diperbarui`);
   if (skipped > 0) parts.push(`${skipped} sudah terdaftar`);
   if (conflicts > 0) parts.push(`${conflicts} perlu ditinjau`);
   if (failed > 0) parts.push(`${failed} gagal`);

@@ -685,6 +685,68 @@ export interface TimetableMatrixQuery {
 }
 
 // ───────────────────────────────────────────────────────────────────
+// Schedule → subject resync (Part A2 heal-forward)
+// ───────────────────────────────────────────────────────────────────
+//
+// After a delete-then-reimport of mapel, active schedules can end up
+// pointing at a soft-deleted (orphan) subject — the slot survives but
+// its mapel name renders empty. The resync tool matches each orphan to
+// an active mapel by name+grade similarity so the admin can re-link them
+// in one pass instead of editing 45 rows by hand.
+//
+//   GET  /schedule/resync/preview  → orphans + suggested mapping + alts
+//   POST /schedule/resync/apply    → repoint {schedule_id → subject_id}
+
+/** One active-mapel candidate for an orphan slot, ranked by similarity. */
+export interface ResyncSubjectOption {
+  id: string;
+  name: string;
+  grade: string | number | null;
+  /** 0–100 name/grade similarity vs the orphan's old name. */
+  similarity: number;
+}
+
+/** One orphan schedule row that lost its mapel link. */
+export interface ResyncOrphan {
+  schedule_id: string;
+  /** Human label "Matematika · 7A · Senin JP2" for the left column. */
+  bin_label: string;
+  old_name: string;
+  old_grade: string | number | null;
+  /** Best-match active mapel (or null if nothing crossed the threshold). */
+  suggested: ResyncSubjectOption | null;
+  /** Other plausible active mapel the admin can pick instead. */
+  alternatives: ResyncSubjectOption[];
+}
+
+/** GET /schedule/resync/preview payload. */
+export interface ResyncPreview {
+  total: number;
+  orphans: ResyncOrphan[];
+}
+
+/** POST /schedule/resync/apply result — repointed count + per-row failures. */
+export interface ResyncApplyResult {
+  updated: number;
+  failed: Array<{ schedule_id: string; reason: string }>;
+}
+
+/** One mapping row sent to /schedule/resync/apply. */
+export interface ResyncMapping {
+  schedule_id: string;
+  target_subject_id: string;
+}
+
+function resyncOptionFromJson(raw: any): ResyncSubjectOption {
+  return {
+    id: asStr(raw?.id),
+    name: asStr(raw?.name ?? raw?.nama),
+    grade: raw?.grade ?? raw?.grade_level ?? null,
+    similarity: asNum(raw?.similarity),
+  };
+}
+
+// ───────────────────────────────────────────────────────────────────
 // Service
 // ───────────────────────────────────────────────────────────────────
 
@@ -1520,6 +1582,66 @@ export const ScheduleService = {
       }));
     } catch (e) {
       throw new Error(humanError(e, 'Gagal memuat guru yang tersedia.'));
+    }
+  },
+
+  /**
+   * GET /schedule/resync/preview — list active schedules whose mapel is
+   * orphaned (soft-deleted after a delete-then-reimport), each with a
+   * suggested + alternative active mapel to re-link to.
+   *
+   * Throws on failure so the resync view can render a real error state.
+   * Callers that only want the count for a gating badge should wrap this
+   * in try/catch and treat a throw as `total: 0`.
+   */
+  async resyncPreview(): Promise<ResyncPreview> {
+    try {
+      const res = await api.get('/schedule/resync/preview');
+      const body = (res.data?.data ?? res.data ?? {}) as Record<string, any>;
+      const orphans: ResyncOrphan[] = Array.isArray(body.orphans)
+        ? body.orphans.map((o: any) => ({
+            schedule_id: asStr(o?.schedule_id ?? o?.id),
+            bin_label: asStr(o?.bin_label),
+            old_name: asStr(o?.old_name),
+            old_grade: o?.old_grade ?? null,
+            suggested: o?.suggested
+              ? resyncOptionFromJson(o.suggested)
+              : null,
+            alternatives: Array.isArray(o?.alternatives)
+              ? o.alternatives.map(resyncOptionFromJson)
+              : [],
+          }))
+        : [];
+      return {
+        total: asNum(body.total ?? orphans.length),
+        orphans,
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat data sinkronisasi jadwal.'));
+    }
+  },
+
+  /**
+   * POST /schedule/resync/apply — repoint each mapped schedule to its
+   * chosen active mapel. Skipped orphans are simply omitted from
+   * `mappings` by the caller. Returns the repointed count + any per-row
+   * failures the backend couldn't apply (invalid target, tenant mismatch).
+   */
+  async resyncApply(mappings: ResyncMapping[]): Promise<ResyncApplyResult> {
+    try {
+      const res = await api.post('/schedule/resync/apply', { mappings });
+      const body = (res.data?.data ?? res.data ?? {}) as Record<string, any>;
+      return {
+        updated: asNum(body.updated),
+        failed: Array.isArray(body.failed)
+          ? body.failed.map((f: any) => ({
+              schedule_id: asStr(f?.schedule_id ?? f?.id),
+              reason: asStr(f?.reason, 'Gagal.'),
+            }))
+          : [],
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menyinkronkan jadwal.'));
     }
   },
 };

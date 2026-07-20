@@ -7,7 +7,12 @@
 import { computed, onMounted, reactive, ref, shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { SubjectService } from '@/services/subjects.service';
+import {
+  SubjectService,
+  SubjectInUseError,
+  type AffectedSchedule,
+} from '@/services/subjects.service';
+import { ScheduleService } from '@/services/schedule.service';
 import { AdminDataExcelService } from '@/services/admin-data-excel.service';
 import { useRoleHex } from '@/composables/useRoleHex';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
@@ -48,7 +53,13 @@ const subjects = shallowRef<Subject[]>([]);
 const pagination = ref<Pagination | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
+// `action: 'resync'` turns the toast into a CTA that deep-links to the
+// Sinkronkan Jadwal wizard (post-import orphan follow-up, B3).
+const toast = ref<{
+  message: string;
+  tone: 'success' | 'error';
+  action?: 'resync';
+} | null>(null);
 
 const search = ref('');
 const filters = reactive<{
@@ -64,6 +75,14 @@ const selectedIds = ref<Set<string>>(new Set());
 
 const editTarget = ref<Subject | null | undefined>(undefined);
 const deleteTarget = ref<Subject | null>(null);
+// B1 — delete guard: set when DELETE /subject/{id} answers 409
+// `subject_in_use`. Holds the impact payload so the guard dialog can show
+// which schedule slots would lose their mapel before the admin force-deletes.
+const inUseGuard = ref<{
+  subject: Subject;
+  usedBySchedules: number;
+  affected: AffectedSchedule[];
+} | null>(null);
 const linkMasterTarget = ref<Subject | null>(null);
 const bulkDeleteOpen = ref(false);
 const showImport = ref(false);
@@ -73,6 +92,9 @@ const isSaving = ref(false);
 const importDetails = ref<ImportDetailRow[]>([]);
 const importCounts = ref<{
   imported?: number;
+  created?: number;
+  updated?: number;
+  restored?: number;
   skipped?: number;
   conflicts?: number;
   failed?: number;
@@ -239,6 +261,30 @@ const SUBJECT_DELETE_IMPACT = computed<string[]>(() => [
   $t('admin.sekolah.subject_management.impact.reportCardKept'),
 ]);
 const subjectDeleteImpact = SUBJECT_DELETE_IMPACT;
+
+// B1 — the affected-slot lines for the in-use guard dialog. The backend
+// caps `affected` at 20 rows, so append a "+N lainnya" line when the
+// total used-by count exceeds what we can list.
+const inUseImpact = computed<string[]>(() => {
+  const guard = inUseGuard.value;
+  if (!guard) return [];
+  const lines = guard.affected.map((a) =>
+    $t('admin.sekolah.subject_management.in_use.affected_row', {
+      class: a.class_name,
+      day: a.day_name,
+      hour: a.hour_number,
+    }),
+  );
+  const overflow = guard.usedBySchedules - guard.affected.length;
+  if (overflow > 0) {
+    lines.push(
+      $t('admin.sekolah.subject_management.in_use.affected_more', {
+        count: overflow,
+      }),
+    );
+  }
+  return lines;
+});
 const subjectBulkDeleteImpact = computed<string[]>(() => [
   $t('admin.sekolah.subject_management.impact.bulkPrefix', {
     count: selectedIds.value.size,
@@ -386,11 +432,54 @@ async function handleSave(payload: Record<string, unknown>) {
 
 async function confirmDelete() {
   if (!deleteTarget.value) return;
+  const target = deleteTarget.value;
   isSaving.value = true;
   try {
-    await SubjectService.remove(deleteTarget.value.id);
+    await SubjectService.remove(target.id);
     deleteTarget.value = null;
     await reload(pagination.value?.current_page ?? 1);
+  } catch (e) {
+    // Delete guard (B1): the mapel is still used by ≥1 active schedule.
+    // Swap the plain confirm for the impact dialog so the admin sees
+    // which slots would lose their mapel before force-deleting.
+    if (e instanceof SubjectInUseError) {
+      deleteTarget.value = null;
+      inUseGuard.value = {
+        subject: target,
+        usedBySchedules: e.usedBySchedules,
+        affected: e.affected,
+      };
+    } else {
+      error.value = (e as Error).message;
+    }
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+/**
+ * B1 confirmed retry — the admin acknowledged the schedule impact and
+ * chose to delete anyway. Re-issues the delete with `?force=true` so the
+ * backend drops the mapel (the schedule slots keep their row but lose the
+ * mapel link; both are recoverable from Data Terhapus). After that the
+ * admin can re-link the orphaned slots via the resync wizard.
+ */
+async function forceDelete() {
+  if (!inUseGuard.value) return;
+  const { subject, usedBySchedules } = inUseGuard.value;
+  isSaving.value = true;
+  try {
+    await SubjectService.remove(subject.id, { force: true });
+    inUseGuard.value = null;
+    await reload(pagination.value?.current_page ?? 1);
+    toast.value = {
+      message: $t('admin.sekolah.subject_management.in_use.deleted_toast', {
+        name: subject.name,
+        count: usedBySchedules,
+      }),
+      tone: 'success',
+      action: 'resync',
+    };
   } catch (e) {
     error.value = (e as Error).message;
   } finally {
@@ -446,8 +535,11 @@ async function downloadTemplate() {
     toast.value = { message: (e as Error).message, tone: 'error' };
   }
 }
-function onImportDone(res: {
+async function onImportDone(res: {
   imported: number;
+  created?: number;
+  updated?: number;
+  restored?: number;
   failed: number;
   skipped?: number;
   conflicts?: number;
@@ -457,22 +549,90 @@ function onImportDone(res: {
   // Surface EVERY processed row grouped by status in the shared dialog.
   importDetails.value = res.details ?? [];
   importWarnings.value = res.warnings ?? [];
+  // Pass the split buckets through so the result dialog can render a
+  // dedicated "Diperbarui" section (upserts that kept schedules linked).
   importCounts.value = {
     imported: res.imported,
+    created: res.created ?? 0,
+    updated: res.updated ?? 0,
+    restored: res.restored ?? 0,
     skipped: res.skipped ?? 0,
     conflicts: res.conflicts ?? 0,
     failed: res.failed,
   };
-  const failPart = res.failed > 0 ? ` · ${res.failed} gagal` : '';
-  const warnPart =
-    importWarnings.value.length > 0
-      ? ` · ${importWarnings.value.length} perlu perhatian`
-      : '';
-  toast.value = {
-    message: `${res.imported} mapel diimpor${failPart}${warnPart}.`,
-    tone: res.failed > 0 ? 'error' : 'success',
-  };
-  reload(1);
+  await reload(1);
+
+  // B3 — orphan follow-up. A re-import that created many mapel but
+  // updated/restored none is the classic delete-then-reimport that
+  // orphans schedules. Rather than guess, ask the backend: if any active
+  // schedule slot lost its mapel, offer a one-tap CTA into the resync
+  // wizard instead of a plain success toast. Fail-safe: any preview
+  // error degrades to the normal toast.
+  let orphanCount = 0;
+  try {
+    orphanCount = (await ScheduleService.resyncPreview()).total;
+  } catch {
+    orphanCount = 0;
+  }
+
+  const created = res.created ?? res.imported;
+  const updated = res.updated ?? 0;
+  const restored = res.restored ?? 0;
+  const parts: string[] = [
+    $t('admin.sekolah.subject_management.import_summary.created', {
+      count: created,
+    }),
+  ];
+  if (updated > 0) {
+    parts.push(
+      $t('admin.sekolah.subject_management.import_summary.updated', {
+        count: updated,
+      }),
+    );
+  }
+  if (restored > 0) {
+    parts.push(
+      $t('admin.sekolah.subject_management.import_summary.restored', {
+        count: restored,
+      }),
+    );
+  }
+  if (res.failed > 0) {
+    parts.push(
+      $t('admin.sekolah.subject_management.import_summary.failed', {
+        count: res.failed,
+      }),
+    );
+  }
+  if (importWarnings.value.length > 0) {
+    parts.push(
+      $t('admin.sekolah.subject_management.import_summary.warned', {
+        count: importWarnings.value.length,
+      }),
+    );
+  }
+
+  if (orphanCount > 0) {
+    toast.value = {
+      message: $t('admin.sekolah.subject_management.import_summary.orphan_cta', {
+        summary: parts.join(' · '),
+        count: orphanCount,
+      }),
+      tone: 'error',
+      action: 'resync',
+    };
+  } else {
+    toast.value = {
+      message: `${parts.join(' · ')}.`,
+      tone: res.failed > 0 ? 'error' : 'success',
+    };
+  }
+}
+
+/** Deep-link into the Sinkronkan Jadwal wizard (B1/B3 toast CTA). */
+function goToResync() {
+  toast.value = null;
+  router.push({ name: 'admin.schedule.resync' });
 }
 
 </script>
@@ -761,5 +921,37 @@ function onImportDone(res: {
     @linked="onMasterLinked"
   />
 
-  <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />
+  <!--
+    B1 — subject-in-use delete guard. Opened when DELETE 409s with
+    `subject_in_use`. Shows the affected slots (kelas · hari · jam) so the
+    admin sees the concrete impact before force-deleting; confirm re-sends
+    the delete with `?force=true`.
+  -->
+  <ConfirmationDialog
+    v-if="inUseGuard"
+    :title="$t('admin.sekolah.subject_management.in_use.title', {
+      name: inUseGuard.subject.name,
+    })"
+    :message="$t('admin.sekolah.subject_management.in_use.message', {
+      name: inUseGuard.subject.name,
+      count: inUseGuard.usedBySchedules,
+    })"
+    :confirm-label="$t('admin.sekolah.subject_management.in_use.confirm')"
+    :impact="inUseImpact"
+    danger
+    :loading="isSaving"
+    @confirm="forceDelete"
+    @close="inUseGuard = null"
+  />
+
+  <Toast
+    v-if="toast"
+    :message="toast.message"
+    :tone="toast.tone"
+    :action-label="toast.action === 'resync'
+      ? $t('admin.sekolah.subject_management.import_summary.resync_action')
+      : undefined"
+    @action="toast.action === 'resync' ? goToResync() : undefined"
+    @close="toast = null"
+  />
 </template>

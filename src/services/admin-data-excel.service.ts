@@ -33,7 +33,14 @@ export interface ImportDetailRow {
   row: number;
   label: string;
   sublabel: string | null;
-  status: 'created' | 'restored' | 'skipped' | 'conflict' | 'failed';
+  /**
+   * `updated` (MR!516) — subject import now UPSERTS by (school, code):
+   * a matching mapel is updated in place instead of a duplicate being
+   * created, so the schedule slots that pointed at it stay linked. The
+   * result dialog surfaces these in their own "Diperbarui" section so
+   * the admin can see the re-import didn't orphan anything.
+   */
+  status: 'created' | 'updated' | 'restored' | 'skipped' | 'conflict' | 'failed';
   reason: string | null;
 }
 
@@ -117,6 +124,16 @@ export const AdminDataExcelService = {
     file: File,
   ): Promise<{
     imported: number;
+    // Post-MR!516 subject import breaks `imported` into three buckets so
+    // the UI can reassure the admin a re-import didn't orphan schedules:
+    //   created  — brand-new mapel rows
+    //   updated  — existing mapel upserted in place (schedules stay linked)
+    //   restored — soft-deleted mapel re-hydrated
+    // `imported` stays the grand total (created + updated + restored) for
+    // back-compat with the other three importers that don't split it.
+    created: number;
+    updated: number;
+    restored: number;
     failed: number;
     skipped: number;
     conflicts: number;
@@ -157,15 +174,28 @@ export const AdminDataExcelService = {
         for (const v of vals) if (v !== undefined && v !== null) return Number(v);
         return 0;
       };
+      const created = num(results.created, body.created);
+      const updated = num(results.updated, body.updated);
+      const restored = num(results.restored, body.restored);
+      // When the importer splits its total into buckets (subjects,
+      // post-MR!516) prefer their sum — `success`/`imported` may not
+      // count `updated`. Otherwise fall back to the universal count.
+      const splitTotal = created + updated + restored;
       return {
-        imported: num(
-          body.imported,
-          body.created,
-          body.success,
-          results.success,
-          results.imported,
-          results.created,
-        ),
+        imported:
+          splitTotal > 0
+            ? splitTotal
+            : num(
+                body.imported,
+                body.created,
+                body.success,
+                results.success,
+                results.imported,
+                results.created,
+              ),
+        created,
+        updated,
+        restored,
         failed: num(
           body.failed,
           body.errors_count,
