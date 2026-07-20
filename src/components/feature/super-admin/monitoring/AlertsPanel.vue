@@ -1,17 +1,19 @@
 <!--
   AlertsPanel.vue — Alert tab body.
-    · Webhook channel card — editable Slack webhook input + Tes ↗ +
-      Simpan (backed by `monitoring_settings` DB row in MR-7).
-    · Rule list with toggle per rule.
 
-  Design note (MR-7): the webhook was previously env-only (compose
-  HORIZON_SLACK_WEBHOOK, requiring a container recreate to rotate).
-  It now lives in the DB so ops rotates it from this input without
-  any SSH. `Tes ↗` optionally uses the *un-saved* value in the input,
-  so an operator verifies the URL BEFORE clicking Simpan — a typo
-  caught here prevents "save then wait for silent alerts".
+  Slack destination now supports TWO delivery lanes (MR-9 BE):
+    · Bot token (chat.postMessage) — preferred; one token, any channel
+      the bot is invited to, edit `channel` in DB to re-route
+    · Incoming webhook — legacy; one webhook = one channel
 
-  Rule toggle mutation is still deferred; visual switch only.
+  This panel exposes BOTH so the operator can pick whichever their
+  workspace has. If both are set, backend routes via bot token
+  (SlackAlertNotifier precedence). Active lane is surfaced in the
+  header chip so the operator always knows which channel is live.
+
+  Verify-before-save: the "Tes ↗" button sends whatever is in the
+  input fields (bot token + channel, or webhook) BEFORE Simpan, so a
+  typo is caught early instead of "save then wait for silent alerts".
 -->
 <script setup lang="ts">
 import { ref, watch } from 'vue';
@@ -21,57 +23,104 @@ import { MonitoringService, type AlertSettingsPayload } from '@/services/monitor
 const props = defineProps<{ data: AlertSettingsPayload }>();
 const emit = defineEmits<{ 'refresh': [] }>();
 
-// Editable webhook input — seeded with a placeholder-friendly empty
-// string. The server returns a *masked* preview (first 34 chars + …)
-// for security, so we cannot round-trip the actual stored value.
-// A save is treated as "operator typed a new webhook"; leaving empty
-// and hitting Simpan clears the stored row.
+// Editable input drafts. Server never returns the actual stored values
+// (they're secrets); the masked previews go in placeholders so the
+// operator sees "something is stored" without seeing the secret.
 const webhookDraft = ref('');
+const botTokenDraft = ref('');
 const channelDraft = ref(props.data.channel.name || '#kamil-edu-bugs');
+
 const testing = ref(false);
 const saving = ref(false);
-const testResult = ref<{ ok: boolean; message: string } | null>(null);
+const testResult = ref<{ ok: boolean; message: string; lane?: string } | null>(null);
 const saveResult = ref<{ ok: boolean; message: string } | null>(null);
 
-// If the parent refetches (e.g. after refresh poll), update the channel
-// draft in case the operator changed it elsewhere.
+// If the parent refetches (e.g. after refresh poll), sync channel draft
+// unless the operator has already edited it away from the stored value.
 watch(() => props.data.channel.name, (next) => {
   if (channelDraft.value === '' || channelDraft.value === '#kamil-edu-bugs') {
     channelDraft.value = next || '#kamil-edu-bugs';
   }
 });
 
+// Which lane will the backend actually use right now? Comes from the
+// GetAlertSettingsAction response — mirrors SlackAlertNotifier
+// precedence (bot_token > webhook > none).
+function laneLabel(): string {
+  if (props.data.channel.active_lane === 'bot_token') return 'Bot token';
+  if (props.data.channel.active_lane === 'webhook') return 'Webhook';
+  return 'belum di-set';
+}
+
+function laneChipClass(): string {
+  if (props.data.channel.active_lane === 'none') return 'bg-amber-100 text-amber-700';
+  return 'bg-emerald-100 text-emerald-700';
+}
+
 async function fireTest() {
   testing.value = true;
   testResult.value = null;
   saveResult.value = null;
   try {
-    // Test the CURRENT input if the operator typed one; otherwise fall
-    // back to the stored webhook. This is the "verify before save" flow.
-    const res = await MonitoringService.testWebhook(webhookDraft.value || undefined);
+    // Send drafts as overrides. Backend picks lane using same precedence
+    // as runtime notifier — bot_token wins if supplied.
+    const res = await MonitoringService.testWebhook({
+      bot_token: botTokenDraft.value || undefined,
+      channel: channelDraft.value || undefined,
+      webhook: webhookDraft.value || undefined,
+    });
     testResult.value = res.ok
-      ? { ok: true, message: 'Pesan uji terkirim ke Slack.' }
-      : { ok: false, message: res.error ?? 'Gagal kirim pesan uji.' };
+      ? {
+          ok: true,
+          message: `Pesan uji terkirim ke Slack (${res.lane === 'bot_token' ? 'bot token' : 'webhook'}).`,
+          lane: res.lane,
+        }
+      : {
+          ok: false,
+          message: res.error ?? 'Gagal kirim pesan uji.',
+        };
   } finally {
     testing.value = false;
   }
 }
 
-async function saveWebhook() {
+async function saveConfig() {
   saving.value = true;
   saveResult.value = null;
   testResult.value = null;
   try {
-    const res = await MonitoringService.updateWebhook(
-      webhookDraft.value,
-      channelDraft.value !== '' ? channelDraft.value : undefined,
-    );
+    const res = await MonitoringService.updateWebhook({
+      // Only send fields the operator touched to avoid clobbering stored
+      // values on empty inputs. The service treats undefined = skip.
+      webhook: webhookDraft.value !== '' ? webhookDraft.value : undefined,
+      bot_token: botTokenDraft.value !== '' ? botTokenDraft.value : undefined,
+      channel: channelDraft.value !== '' ? channelDraft.value : undefined,
+    });
     if (res.ok) {
-      saveResult.value = { ok: true, message: 'Webhook tersimpan.' };
+      saveResult.value = { ok: true, message: 'Konfigurasi tersimpan.' };
       webhookDraft.value = '';
+      botTokenDraft.value = '';
       emit('refresh');
     } else {
       saveResult.value = { ok: false, message: res.error ?? 'Gagal menyimpan.' };
+    }
+  } finally {
+    saving.value = false;
+  }
+}
+
+async function clearField(field: 'webhook' | 'bot_token') {
+  saving.value = true;
+  saveResult.value = null;
+  try {
+    const res = await MonitoringService.updateWebhook({
+      [field]: '',
+    });
+    if (res.ok) {
+      saveResult.value = { ok: true, message: field === 'bot_token' ? 'Bot token dihapus.' : 'Webhook dihapus.' };
+      emit('refresh');
+    } else {
+      saveResult.value = { ok: false, message: res.error ?? 'Gagal menghapus.' };
     }
   } finally {
     saving.value = false;
@@ -86,20 +135,18 @@ async function saveWebhook() {
       <div class="flex items-center justify-between">
         <p class="text-sm font-bold text-slate-900">Kirim alert ke Slack</p>
         <span
-          v-if="data.channel.configured"
-          class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 inline-flex items-center gap-1"
+          class="text-xs font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1"
+          :class="laneChipClass()"
         >
-          <NavIcon name="check" :size="12" /> aktif
-        </span>
-        <span
-          v-else
-          class="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 inline-flex items-center gap-1"
-        >
-          <NavIcon name="alert-circle" :size="12" /> belum di-set
+          <NavIcon
+            :name="data.channel.active_lane === 'none' ? 'alert-circle' : 'check'"
+            :size="12"
+          />
+          Lane: {{ laneLabel() }}
         </span>
       </div>
 
-      <!-- Channel display name (informational; the webhook itself binds a channel Slack-side). -->
+      <!-- Channel display -->
       <div class="flex items-center gap-2">
         <label class="text-xs text-slate-600 font-bold w-24 flex-none">Channel</label>
         <div class="relative flex-1">
@@ -117,24 +164,75 @@ async function saveWebhook() {
         </div>
       </div>
 
-      <!-- Webhook URL — editable, replaces the previous readonly display.
-           Placeholder shows the current masked value so the operator
-           knows a value exists without exposing it. -->
+      <!-- Bot token (preferred lane) -->
       <div class="flex items-start gap-2">
-        <label class="text-xs text-slate-600 font-bold w-24 flex-none pt-2.5">Webhook</label>
+        <label class="text-xs text-slate-600 font-bold w-24 flex-none pt-2.5">
+          Bot token
+          <span class="block font-normal text-slate-400">preferred</span>
+        </label>
         <div class="flex-1 space-y-1">
-          <input
-            v-model="webhookDraft"
-            type="text"
-            :placeholder="data.channel.webhook_masked || 'https://hooks.slack.com/services/...'"
-            class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none font-mono"
-          />
+          <div class="flex gap-2">
+            <input
+              v-model="botTokenDraft"
+              type="password"
+              :placeholder="data.channel.bot_token_masked || 'xoxb-...'"
+              class="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none font-mono"
+            />
+            <button
+              v-if="data.channel.bot_token_configured"
+              type="button"
+              :disabled="saving"
+              class="px-2 py-1.5 text-xs font-bold rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+              @click="clearField('bot_token')"
+              title="Hapus bot token tersimpan"
+            >
+              <NavIcon name="trash" :size="14" />
+            </button>
+          </div>
           <p class="text-xs text-slate-400">
-            <template v-if="data.channel.configured">
-              Nilai tersimpan disembunyikan. Kosongkan + Simpan untuk menghapus.
+            <template v-if="data.channel.bot_token_configured">
+              Token tersimpan. Bot harus jadi member di channel di atas
+              (undang via <code>/invite &#64;bot</code>).
             </template>
             <template v-else>
-              URL webhook Slack incoming untuk channel di atas.
+              Slack app OAuth Bot User token. Diprioritaskan di atas webhook —
+              flexible per-channel.
+            </template>
+          </p>
+        </div>
+      </div>
+
+      <!-- Webhook (legacy lane) -->
+      <div class="flex items-start gap-2">
+        <label class="text-xs text-slate-600 font-bold w-24 flex-none pt-2.5">
+          Webhook
+          <span class="block font-normal text-slate-400">alternatif</span>
+        </label>
+        <div class="flex-1 space-y-1">
+          <div class="flex gap-2">
+            <input
+              v-model="webhookDraft"
+              type="password"
+              :placeholder="data.channel.webhook_masked || 'https://hooks.slack.com/services/...'"
+              class="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none font-mono"
+            />
+            <button
+              v-if="data.channel.webhook_configured"
+              type="button"
+              :disabled="saving"
+              class="px-2 py-1.5 text-xs font-bold rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+              @click="clearField('webhook')"
+              title="Hapus webhook tersimpan"
+            >
+              <NavIcon name="trash" :size="14" />
+            </button>
+          </div>
+          <p class="text-xs text-slate-400">
+            <template v-if="data.channel.webhook_configured">
+              Webhook tersimpan. Channel di-fix di URL, dipakai kalau bot token kosong.
+            </template>
+            <template v-else>
+              Incoming webhook Slack — legacy, channel fixed ke URL.
             </template>
           </p>
         </div>
@@ -144,7 +242,11 @@ async function saveWebhook() {
       <div class="flex flex-wrap items-center gap-2 justify-end">
         <button
           type="button"
-          :disabled="testing || (webhookDraft === '' && !data.channel.configured)"
+          :disabled="testing || (
+            botTokenDraft === ''
+            && webhookDraft === ''
+            && !data.channel.configured
+          )"
           class="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           @click="fireTest"
         >
@@ -153,9 +255,9 @@ async function saveWebhook() {
         </button>
         <button
           type="button"
-          :disabled="saving"
+          :disabled="saving || (botTokenDraft === '' && webhookDraft === '' && channelDraft === (data.channel.name || '#kamil-edu-bugs'))"
           class="px-3 py-1.5 text-xs font-bold rounded-lg bg-brand-cobalt text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-          @click="saveWebhook"
+          @click="saveConfig"
         >
           <span v-if="saving">Menyimpan…</span>
           <span v-else>Simpan</span>

@@ -192,9 +192,28 @@ export interface AlertSettingsPayload {
   channel: {
     name: string;
     webhook_masked: string;
+    webhook_configured: boolean;
+    bot_token_masked: string;
+    bot_token_configured: boolean;
+    /** OR of the two — backward compat with MR-7 UI. */
     configured: boolean;
+    /** Which lane the notifier will use right now: bot_token > webhook > none. */
+    active_lane: 'bot_token' | 'webhook' | 'none';
   };
   rules: AlertRule[];
+}
+
+export interface SlackConfigDraft {
+  /** null = leave unchanged; '' = clear; string = set. */
+  webhook?: string | null;
+  bot_token?: string | null;
+  channel?: string | null;
+}
+
+export interface SlackTestDraft {
+  webhook?: string;
+  bot_token?: string;
+  channel?: string;
 }
 
 const BASE = '/super-admin/monitoring';
@@ -292,37 +311,57 @@ export const MonitoringService = {
 
   async getAlertSettings(): Promise<AlertSettingsPayload> {
     return safeGet<AlertSettingsPayload>(`${BASE}/alert-settings`, {}, {
-      channel: { name: '', webhook_masked: '', configured: false },
+      channel: {
+        name: '',
+        webhook_masked: '',
+        webhook_configured: false,
+        bot_token_masked: '',
+        bot_token_configured: false,
+        configured: false,
+        active_lane: 'none',
+      },
       rules: [],
     });
   },
 
   /**
-   * Test a Slack webhook. Pass an ad-hoc URL to verify BEFORE saving —
-   * a typo caught here prevents the "save then wait for silent alerts"
-   * loop. Omit `webhook` to test the currently-stored URL.
+   * Test a Slack destination. Pass ad-hoc `bot_token` + `channel` OR
+   * `webhook` to verify BEFORE saving — a typo caught here prevents the
+   * "save then wait for silent alerts" loop. Omit everything to test
+   * whatever is currently stored (bot_token wins over webhook).
    */
-  async testWebhook(webhook?: string): Promise<{ ok: boolean; error?: string }> {
+  async testWebhook(draft: SlackTestDraft = {}): Promise<{ ok: boolean; error?: string; lane?: string }> {
     try {
       const body: Record<string, string> = {};
-      if (webhook && webhook.trim() !== '') body.webhook = webhook.trim();
+      if (draft.webhook && draft.webhook.trim() !== '') body.webhook = draft.webhook.trim();
+      if (draft.bot_token && draft.bot_token.trim() !== '') body.bot_token = draft.bot_token.trim();
+      if (draft.channel && draft.channel.trim() !== '') body.channel = draft.channel.trim();
       const res = await api.post(`${BASE}/alert-settings/test-webhook`, body);
-      return res.data as { ok: boolean; error?: string };
+      return res.data as { ok: boolean; error?: string; lane?: string };
     } catch (e: any) {
       return { ok: false, error: e?.response?.data?.error ?? 'network' };
     }
   },
 
   /**
-   * Persist a Slack webhook (+ optional channel display name) to the
-   * `monitoring_settings` DB table. Empty webhook clears the row =>
-   * alerts fall silent. Server busts the cache so the next Horizon boot
-   * / alert eval picks up the new value on the next request.
+   * Persist Slack config to the `monitoring_settings` DB table.
+   * For each field: `undefined`/omit = leave unchanged; empty string =
+   * CLEAR the stored value; string = set. Server busts the cache so
+   * the next Horizon boot / alert eval picks up the new value on the
+   * next request.
    */
-  async updateWebhook(webhook: string, channel?: string): Promise<{ ok: boolean; error?: string }> {
+  async updateWebhook(draft: SlackConfigDraft): Promise<{ ok: boolean; error?: string }> {
     try {
-      const body: Record<string, string> = { webhook };
-      if (channel && channel.trim() !== '') body.channel = channel.trim();
+      const body: Record<string, string> = {};
+      if (draft.webhook !== undefined && draft.webhook !== null) {
+        body.webhook = draft.webhook.trim();
+      }
+      if (draft.bot_token !== undefined && draft.bot_token !== null) {
+        body.bot_token = draft.bot_token.trim();
+      }
+      if (draft.channel !== undefined && draft.channel !== null && draft.channel.trim() !== '') {
+        body.channel = draft.channel.trim();
+      }
       const res = await api.put(`${BASE}/alert-settings/webhook`, body);
       return res.data as { ok: boolean; error?: string };
     } catch (e: any) {
