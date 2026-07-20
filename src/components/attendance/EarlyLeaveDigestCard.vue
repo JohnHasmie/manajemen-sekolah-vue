@@ -1,7 +1,7 @@
 <!--
-  PulangCepatDigestCard.vue — collapsible "Guru Sering Pulang Cepat"
+  EarlyLeaveDigestCard.vue — collapsible "Guru Sering Pulang Cepat"
   section for the admin Rekap tab (Pulang parity FU-1, backend
-  !512 GET /teacher-attendance/report/pulang-cepat-summary).
+  !512 GET /teacher-attendance/report/early-leave-summary).
 
   Renders inside the existing Rekap-per-Pegawai section on
   AdminTeacherAttendanceView, defaulting to COLLAPSED so the digest
@@ -23,7 +23,7 @@
     · Local expand/collapse state (defaults collapsed).
     · Fetch orchestration for the digest (loading / error / retry).
     · Row rendering with a coloured ratio bar (red ≥50%, amber 20-49%,
-      green <20%) — matches the pulang-cepat truth table from the
+      green <20%) — matches the early-leave truth table from the
       Presensi Guru wireframes.
     · Empty-state copy in the caller's active locale.
 
@@ -51,9 +51,9 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import type {
   TeacherAttendanceEarlyLeavePolicy,
+  TeacherAttendanceEarlyLeaveRow,
+  TeacherAttendanceEarlyLeaveSummary,
   TeacherAttendancePersonnelFilter,
-  TeacherAttendancePulangCepatRow,
-  TeacherAttendancePulangCepatSummary,
 } from '@/types/teacher-attendance';
 
 const props = defineProps<{
@@ -79,7 +79,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   /** Row click — parent opens the shared EmployeeAttendanceDeepDiveDrawer. */
-  'open-person': [TeacherAttendancePulangCepatRow];
+  'open-person': [TeacherAttendanceEarlyLeaveRow];
 }>();
 
 const { t, locale } = useI18n();
@@ -100,7 +100,7 @@ function toggle() {
 // ─────────────────────────────────────────────────────────────────
 // Fetch
 // ─────────────────────────────────────────────────────────────────
-const summary = ref<TeacherAttendancePulangCepatSummary | null>(null);
+const summary = ref<TeacherAttendanceEarlyLeaveSummary | null>(null);
 const loading = ref(false);
 const err = ref<string | null>(null);
 
@@ -117,13 +117,13 @@ async function load() {
   loading.value = true;
   err.value = null;
   try {
-    summary.value = await TeacherAttendanceService.getPulangCepatSummary({
+    summary.value = await TeacherAttendanceService.getEarlyLeaveSummary({
       start_date: props.startDate!,
       end_date: props.endDate!,
       personnel_type: props.personnelType ?? 'all',
     });
   } catch (e) {
-    err.value = (e as Error).message || t('admin.sekolah.teacher_attendance.pulang_cepat_error_retry');
+    err.value = (e as Error).message || t('admin.sekolah.teacher_attendance.early_leave_error_retry');
   } finally {
     loading.value = false;
   }
@@ -146,12 +146,12 @@ watch(
 // ─────────────────────────────────────────────────────────────────
 // Derived: rows + state for AsyncView
 // ─────────────────────────────────────────────────────────────────
-const rows = computed<TeacherAttendancePulangCepatRow[]>(
+const rows = computed<TeacherAttendanceEarlyLeaveRow[]>(
   () => summary.value?.data ?? [],
 );
 const meta = computed(() => summary.value?.meta ?? null);
 
-const state = computed<AsyncState<TeacherAttendancePulangCepatRow[]>>(() => {
+const state = computed<AsyncState<TeacherAttendanceEarlyLeaveRow[]>>(() => {
   if (missingRange.value) return { status: 'empty' };
   if (loading.value && rows.value.length === 0) return { status: 'loading' };
   if (err.value) return { status: 'error', error: err.value };
@@ -172,22 +172,22 @@ const periodLabel = computed(() => {
 /** Localised label for the current school policy — powers the eyebrow. */
 function policyLabel(policy: TeacherAttendanceEarlyLeavePolicy): string {
   if (policy === 'warn')
-    return t('admin.sekolah.teacher_attendance.pulang_cepat_policy_warn');
+    return t('admin.sekolah.teacher_attendance.early_leave_policy_warn');
   if (policy === 'block')
-    return t('admin.sekolah.teacher_attendance.pulang_cepat_policy_block');
-  return t('admin.sekolah.teacher_attendance.pulang_cepat_policy_none');
+    return t('admin.sekolah.teacher_attendance.early_leave_policy_block');
+  return t('admin.sekolah.teacher_attendance.early_leave_policy_none');
 }
 
 const eyebrowText = computed(() => {
   if (!meta.value) return '';
-  return t('admin.sekolah.teacher_attendance.pulang_cepat_policy_eyebrow', {
+  return t('admin.sekolah.teacher_attendance.early_leave_policy_eyebrow', {
     policy: policyLabel(meta.value.school_policy),
   });
 });
 
 const headerSubtitle = computed(() => {
   if (rows.value.length === 0 || !periodLabel.value) return '';
-  return t('admin.sekolah.teacher_attendance.pulang_cepat_section_subtitle', {
+  return t('admin.sekolah.teacher_attendance.early_leave_section_subtitle', {
     count: rows.value.length,
     period: periodLabel.value,
   });
@@ -214,10 +214,10 @@ function ratioChipClass(ratio: number): string {
 function ratioLabel(ratio: number): string {
   const tone = ratioTone(ratio);
   if (tone === 'hi')
-    return t('admin.sekolah.teacher_attendance.pulang_cepat_ratio_hi');
+    return t('admin.sekolah.teacher_attendance.early_leave_ratio_hi');
   if (tone === 'mid')
-    return t('admin.sekolah.teacher_attendance.pulang_cepat_ratio_mid');
-  return t('admin.sekolah.teacher_attendance.pulang_cepat_ratio_lo');
+    return t('admin.sekolah.teacher_attendance.early_leave_ratio_mid');
+  return t('admin.sekolah.teacher_attendance.early_leave_ratio_lo');
 }
 function ratioPct(ratio: number): number {
   return Math.round(Math.max(0, Math.min(1, ratio)) * 100);
@@ -242,7 +242,7 @@ function fmtDate(iso: string | null | undefined): string {
   }
 }
 
-function subtitleFor(row: TeacherAttendancePulangCepatRow): string {
+function subtitleFor(row: TeacherAttendanceEarlyLeaveRow): string {
   // Prefer subject/role (contextual to the person); fall back to the NIP
   // (teachers) or a generic personnel-type label so the row never renders
   // with a blank subtitle line.
@@ -259,7 +259,7 @@ if (isOpen.value) load();
 <template>
   <section
     class="bg-white border border-slate-200 rounded-2xl overflow-hidden"
-    data-testid="pulang-cepat-digest-card"
+    data-testid="early-leave-digest-card"
   >
     <!-- Header — click to toggle. Aria-expanded reflects the state so
          screen readers announce the collapse correctly. -->
@@ -267,7 +267,7 @@ if (isOpen.value) load();
       type="button"
       class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors"
       :aria-expanded="isOpen"
-      aria-controls="pulang-cepat-digest-body"
+      aria-controls="early-leave-digest-body"
       @click="toggle"
     >
       <div
@@ -279,7 +279,7 @@ if (isOpen.value) load();
       <div class="flex-1 min-w-0">
         <div class="flex items-baseline gap-2 flex-wrap">
           <span class="text-[13px] font-bold text-slate-800">
-            {{ t('admin.sekolah.teacher_attendance.pulang_cepat_section_title') }}
+            {{ t('admin.sekolah.teacher_attendance.early_leave_section_title') }}
           </span>
           <span
             v-if="meta"
@@ -301,8 +301,8 @@ if (isOpen.value) load();
       <span class="sr-only">
         {{
           isOpen
-            ? t('admin.sekolah.teacher_attendance.pulang_cepat_section_collapse')
-            : t('admin.sekolah.teacher_attendance.pulang_cepat_section_expand')
+            ? t('admin.sekolah.teacher_attendance.early_leave_section_collapse')
+            : t('admin.sekolah.teacher_attendance.early_leave_section_expand')
         }}
       </span>
     </button>
@@ -311,13 +311,13 @@ if (isOpen.value) load();
          with no early-leavers who never expand the section. -->
     <div
       v-if="isOpen"
-      id="pulang-cepat-digest-body"
+      id="early-leave-digest-body"
       class="border-t border-slate-100"
     >
       <AsyncView
         :state="state"
-        :empty-title="t('admin.sekolah.teacher_attendance.pulang_cepat_section_title')"
-        :empty-description="t('admin.sekolah.teacher_attendance.pulang_cepat_empty')"
+        :empty-title="t('admin.sekolah.teacher_attendance.early_leave_section_title')"
+        :empty-description="t('admin.sekolah.teacher_attendance.early_leave_empty')"
         @retry="load"
       >
         <template #default>
@@ -359,7 +359,7 @@ if (isOpen.value) load();
                       <span class="text-slate-700 font-bold">
                         {{
                           t(
-                            'admin.sekolah.teacher_attendance.pulang_cepat_count_line',
+                            'admin.sekolah.teacher_attendance.early_leave_count_line',
                             {
                               count: row.early_leave_count,
                               total: row.workday_count,
@@ -373,7 +373,7 @@ if (isOpen.value) load();
                       >
                         {{
                           t(
-                            'admin.sekolah.teacher_attendance.pulang_cepat_avg_line',
+                            'admin.sekolah.teacher_attendance.early_leave_avg_line',
                             { min: row.avg_minutes_early },
                           )
                         }}
@@ -381,14 +381,14 @@ if (isOpen.value) load();
                       <span
                         v-else
                         class="text-slate-400 italic"
-                        :title="t('admin.sekolah.teacher_attendance.pulang_cepat_avg_pending')"
+                        :title="t('admin.sekolah.teacher_attendance.early_leave_avg_pending')"
                       >
                         -
                       </span>
                       <span class="text-3xs text-slate-400">
                         {{
                           t(
-                            'admin.sekolah.teacher_attendance.pulang_cepat_last_line',
+                            'admin.sekolah.teacher_attendance.early_leave_last_line',
                             { date: fmtDate(row.last_early_leave_date) },
                           )
                         }}
