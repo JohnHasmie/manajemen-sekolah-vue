@@ -734,12 +734,12 @@ export interface TeacherAttendanceTimeseriesFilters {
 /** Minimal person block on the deep-dive payload. */
 export interface TeacherAttendanceDeepDivePerson {
   id: string;
-  name: string;
+  display_name: string;
   personnel_type: TeacherAttendancePersonnelType;
   /** Teacher's NIP or null (staff have none). */
   employee_number: string | null;
   /** Extra label — subject for teacher (mapel), role for staff. */
-  role_label: string | null;
+  subject_or_role: string | null;
 }
 
 /** Period bounds actually used by the deep-dive computation. */

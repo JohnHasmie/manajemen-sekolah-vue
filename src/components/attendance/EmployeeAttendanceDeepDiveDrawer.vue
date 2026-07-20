@@ -176,7 +176,7 @@ const streakLabel = computed(() => {
               Rekap Pegawai
             </p>
             <h2 class="text-[15px] font-black text-slate-900 truncate mt-0.5">
-              {{ person?.name ?? personName ?? 'Detail Pegawai' }}
+              {{ person?.display_name ?? personName ?? 'Detail Pegawai' }}
             </h2>
             <p class="text-2xs text-slate-500 mt-0.5">
               Periode {{ fmtRange() || '-' }}
@@ -244,10 +244,10 @@ const streakLabel = computed(() => {
                   NIP {{ person.employee_number }}
                 </span>
                 <span
-                  v-if="person?.role_label"
+                  v-if="person?.subject_or_role"
                   class="text-2xs font-bold px-2 py-1 rounded-full bg-slate-100 text-slate-600"
                 >
-                  {{ person.role_label }}
+                  {{ person.subject_or_role }}
                 </span>
                 <span
                   class="text-2xs font-bold px-2 py-1 rounded-full bg-brand-cobalt/10 text-brand-cobalt inline-flex items-center gap-1"

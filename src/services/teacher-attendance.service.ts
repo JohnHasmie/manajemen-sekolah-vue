@@ -1042,12 +1042,20 @@ export const TeacherAttendanceService = {
       return {
         person: {
           id: String(rawPerson.id ?? ''),
-          name: String(rawPerson.name ?? '-'),
+          // BE returns `display_name` + `subject_or_role` (same shape as the
+          // digest list normalized above at line 992). Older FE readers used
+          // `name` / `role_label` — kept as fallbacks so a stale API build in
+          // dev doesn't render "-" for the drawer header.
+          display_name: String(
+            rawPerson.display_name ?? rawPerson.name ?? '-',
+          ),
           personnel_type: (personType === 'staff'
             ? 'staff'
             : 'teacher') as TeacherAttendanceEmployeeDeepDive['person']['personnel_type'],
           employee_number: asStrOrNull(rawPerson.employee_number),
-          role_label: asStrOrNull(rawPerson.role_label),
+          subject_or_role: asStrOrNull(
+            rawPerson.subject_or_role ?? rawPerson.role_label,
+          ),
         },
         period: {
           start_date: String(rawPeriod.start_date ?? ''),
