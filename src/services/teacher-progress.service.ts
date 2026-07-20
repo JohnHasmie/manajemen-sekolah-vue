@@ -126,6 +126,15 @@ export interface LeaderboardEntry {
   streak_days: number;
   level: number;
   badge_count: number;
+  /**
+   * Populated only on staff cohort entries (Staff MR12). Values:
+   * `'Bendahara' | 'Tata Usaha' | 'Kehadiran'` (Indonesian display
+   * strings) — same tag the Admin Prestasi Staf table uses so a
+   * viewer sees consistent role labelling across surfaces.
+   * `null` on non-staff cohorts + on older backends without the
+   * enrichment.
+   */
+  ability_role_tag: string | null;
   you: boolean;
 }
 

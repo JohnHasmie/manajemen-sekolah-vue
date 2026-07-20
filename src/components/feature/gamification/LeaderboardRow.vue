@@ -56,11 +56,28 @@ function initials(name: string): string {
       />
       <span v-else>{{ initials(entry.name) }}</span>
     </div>
-    <!-- Name + streak -->
+    <!-- Name + streak (staff cohort: role-tag chip inline with the name) -->
     <div class="min-w-0 flex-1">
-      <p class="text-sm font-bold text-slate-900 truncate">
-        {{ entry.name }}<span v-if="entry.you" class="ml-1 text-2xs font-bold text-brand-cobalt">(kamu)</span>
-      </p>
+      <div class="flex items-center gap-2 min-w-0">
+        <p class="text-sm font-bold text-slate-900 truncate">
+          {{ entry.name }}<span v-if="entry.you" class="ml-1 text-2xs font-bold text-brand-cobalt">(kamu)</span>
+        </p>
+        <!-- Staff MR13: peran chip. Only present on staff cohort rows;
+             derived server-side from ability intersection so a viewer
+             sees the same tag ("Bendahara" / "Tata Usaha" / "Kehadiran")
+             on this row that Admin Prestasi Staf shows in its table. -->
+        <span
+          v-if="entry.ability_role_tag"
+          class="flex-shrink-0 text-3xs font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+          :class="{
+            'bg-emerald-100 text-emerald-800': entry.ability_role_tag === 'Bendahara',
+            'bg-sky-100 text-sky-800': entry.ability_role_tag === 'Tata Usaha',
+            'bg-slate-100 text-slate-600': entry.ability_role_tag === 'Kehadiran',
+          }"
+        >
+          {{ entry.ability_role_tag }}
+        </span>
+      </div>
       <p class="text-3xs text-slate-500 mt-0.5 flex items-center gap-2">
         <span class="flex items-center gap-1">
           <NavIcon name="flame" :size="12" />

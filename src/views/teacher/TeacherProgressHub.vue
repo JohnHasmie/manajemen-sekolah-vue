@@ -43,14 +43,15 @@ const auth = useAuthStore();
 // Staff-fusion: this hub is reused by the staff role via the
 // STAFF_NAV Prestasi entry (BE contract identical — BE staff branch
 // fills `personal.actions[]` from `staff_quest_map` filtered by the
-// caller's abilities). The Peringkat tab hides for staff because
-// staff cohorts are heterogeneous per school (a Bendahara adu poin
-// with a Penjaga isn't meaningful); see plan §"Peringkat cohort by
-// ability-signature" for the deferred follow-up.
+// caller's abilities). Peringkat tab is now visible for staff too
+// (Staff MR12/MR13): each row on the staff cohort carries an
+// ability_role_tag ("Bendahara" / "Tata Usaha" / "Kehadiran") so
+// heterogeneous work is at least labelled — a Bendahara reading
+// their #2 next to a Penjaga's #1 has the role context to interpret
+// the ranking. Sub-cohort split by peran was considered and
+// rejected: small staff (1-6/school) would make sub-cohorts hollow.
 const isStaffViewer = computed(() => auth.activeRole === 'staff');
-const visibleTabs = computed<Tab[]>(() =>
-  isStaffViewer.value ? ['summary', 'badges'] : ['summary', 'badges', 'leaderboard'],
-);
+const visibleTabs = computed<Tab[]>(() => ['summary', 'badges', 'leaderboard']);
 
 // Backend Lane-A `target_route` hints are snake_case keys that don't
 // exist as literal Vue route names — the mapping is intentional so the
@@ -106,7 +107,10 @@ const personalError = ref<string | null>(null);
 
 const leaderboard = ref<LeaderboardResponse | null>(null);
 const leaderboardError = ref<string | null>(null);
-const cohort = ref<Cohort>('general');
+// Default cohort — teachers land on the general ranking, staff land
+// on their own cohort so the tab isn't opened empty just because the
+// general default cohort excluded them at server side.
+const cohort = ref<Cohort>(isStaffViewer.value ? 'staff' : 'general');
 const period = ref<'week' | 'month'>('week');
 
 const savingSetting = ref(false);
@@ -211,21 +215,30 @@ function badgeState(code: string): 'earned' | 'new' | 'locked' {
   return hit.is_new ? 'new' : 'earned';
 }
 
-// Choose which cohorts to show in the switcher — hide staff option
-// for teacher-shaped users; keep all otherwise.
-const availableCohorts = computed<Cohort[]>(() => ['general', 'subject', 'homeroom']);
+// Choose which cohorts to show in the switcher. Staff viewer sees
+// ONLY the `staff` cohort — they have no membership in the teacher
+// cohorts (general/subject/homeroom) so those pills would render an
+// empty leaderboard on tap. Teachers keep the 3-cohort switcher and
+// don't see the staff pill (their cohort classification excludes it).
+const availableCohorts = computed<Cohort[]>(() =>
+  isStaffViewer.value ? ['staff'] : ['general', 'subject', 'homeroom'],
+);
 
 // Empty-state copy for the Peringkat tab — cohort-aware so a general
 // teacher sees a welcoming "kamu pertama" nudge and a wali kelas sees
 // a message oriented to their own week's activity. Keeps the plain
 // "belum ada" bare-string out of the UI (Wave 1 warm-empty pattern).
 const cohortEmptyTitle = computed<string>(() => {
+  if (cohort.value === 'staff') return 'Belum ada staf aktif minggu ini';
   if (cohort.value === 'general') return 'Belum ada peringkat minggu ini';
   if (cohort.value === 'homeroom') return 'Belum ada wali kelas aktif minggu ini';
   return 'Belum ada guru mapel aktif minggu ini';
 });
 
 const cohortEmptyHint = computed<string>(() => {
+  if (cohort.value === 'staff') {
+    return 'Peringkat dihitung dari poin minggu ini. Selesaikan aksi hari ini di tab Ringkasan agar poin kamu masuk ke daftar.';
+  }
   if (cohort.value === 'general') {
     return 'Absen tepat waktu besok pagi — kamu bisa jadi orang pertama yang tampil di sini.';
   }
@@ -236,13 +249,6 @@ const cohortEmptyHint = computed<string>(() => {
 });
 
 function switchTab(tab: Tab) {
-  // Staff callers never expose the Peringkat tab (see visibleTabs
-  // comment) — reject any programmatic attempt to jump there so a
-  // stale route or a keyboard shortcut can't land them on an empty
-  // leaderboard screen.
-  if (tab === 'leaderboard' && isStaffViewer.value) {
-    return;
-  }
   activeTab.value = tab;
   if (tab === 'leaderboard' && !leaderboard.value) {
     void loadLeaderboard();
