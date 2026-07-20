@@ -1,24 +1,14 @@
 <!--
   AdminTutoring2ProgramsView.vue — greenfield "Program & Paket" list.
 
-  Reference implementation for the WEB-3 admin screens (agent fan-out
-  spawns 10 more against this shape). Composition contract, top → bottom:
-
-    1. `BrandPageHeader` — role="admin", gradient tier header.
-    2. `KpiStripCards` — 4 tiles, always 4.
-    3. `PageFilterToolbar` — search + `AppFilterChip`s.
-    4. `AsyncView` — state machine, feeds `SkeletonList` / `EmptyState`
-       / `ErrorState` from the shared data/ folder. Default slot
-       renders the loaded list.
-    5. Floating "+ Program baru" CTA.
-
-  Data path: `useDataRefresh(loader)` → `{ state, reload }`. Filters +
-  academic-year change trigger reload via `useAcademicYearWatcher` +
-  local `watch`. Search debounces at 300ms (`useDebounceFn` from
-  VueUse — the codebase's established pattern).
+  Reference implementation for the WEB-3 admin screens. Every literal
+  Indonesian string is fetched via `t('tutoring2.…')`; the display copy
+  lives only in the i18n locale files (id.json / en.json). Follow this
+  pattern in every other tutoring2/*View.vue.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -35,6 +25,8 @@ import {
   type BimbelProgram,
 } from '@/services/tutoring-bimbel.service';
 import type { StatusBadgeTone } from '@/types/status-badge';
+
+const { t } = useI18n();
 
 const search = ref('');
 const statusFilter = ref<string>(''); // '' | 'draft' | 'active' | 'archived'
@@ -68,10 +60,10 @@ const kpiCards = computed<KpiCard[]>(() => {
     return min == null || p.min_price < min ? p.min_price : min;
   }, null);
   return [
-    { icon: 'book', label: 'Program', value: String(items.length) },
-    { icon: 'package', label: 'Paket aktif', value: String(packages) },
-    { icon: 'tag', label: 'Termahal (mulai)', value: minPrice != null ? `Rp ${minPrice.toLocaleString('id-ID')}` : '—' },
-    { icon: 'file-pencil', label: 'Draft', value: String(draft), tone: draft > 0 ? 'amber' : undefined },
+    { icon: 'book', label: t('tutoring2.admin.programs.kpiActivePrograms'), value: String(items.length) },
+    { icon: 'package', label: t('tutoring2.admin.programs.kpiActivePackages'), value: String(packages) },
+    { icon: 'tag', label: t('tutoring2.admin.programs.kpiStartFrom'), value: minPrice != null ? formatRupiah(minPrice) : '—' },
+    { icon: 'file-pencil', label: t('tutoring2.admin.programs.kpiDrafts'), value: String(draft), tone: draft > 0 ? 'amber' : undefined },
   ];
 });
 
@@ -83,34 +75,42 @@ function statusPillTone(status: BimbelProgram['status']): StatusBadgeTone {
   }
 }
 
+function statusLabel(status: BimbelProgram['status']): string {
+  return t(`tutoring2.status.${status}`);
+}
+
 function formatRupiah(n: number | null | undefined): string {
   return n != null ? `Rp ${n.toLocaleString('id-ID')}` : '—';
 }
+
+const activeCount = computed(() =>
+  state.value.status === 'content' ? (state.value.data as BimbelProgram[]).length : 0,
+);
 </script>
 
 <template>
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="admin"
-      kicker="Admin Bimbel"
-      title="Program & Paket"
-      :meta="state.status === 'content' ? `${(state.data as BimbelProgram[]).length} program aktif` : 'Memuat…'"
+      :kicker="t('tutoring2.common.roleAdmin')"
+      :title="t('tutoring2.admin.programs.title')"
+      :meta="state.status === 'content' ? t('tutoring2.admin.programs.meta', { count: activeCount }) : t('tutoring2.common.loading')"
     />
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
-    <PageFilterToolbar v-model:search="search" search-placeholder="Cari program…">
+    <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.admin.programs.searchPh')">
       <template #chips>
         <AppFilterChip
-          label="Status"
-          :value="statusFilter || 'Semua'"
+          :label="t('tutoring2.common.status')"
+          :value="statusFilter || t('tutoring2.common.all')"
           icon-name="circle-check"
           :active="!!statusFilter"
           @click="statusFilter = statusFilter ? '' : 'active'"
         />
         <AppFilterChip
-          label="Jenjang"
-          :value="gradeLevelFilter || 'Semua'"
+          :label="t('tutoring2.common.gradeLevel')"
+          :value="gradeLevelFilter || t('tutoring2.common.all')"
           icon-name="stairs"
           :active="!!gradeLevelFilter"
           @click="gradeLevelFilter = gradeLevelFilter ? '' : 'SMA'"
@@ -122,8 +122,8 @@ function formatRupiah(n: number | null | undefined): string {
       :state="state"
       loading-variant="cards"
       :loading-rows="6"
-      empty-title="Belum ada program"
-      empty-description="Klik + untuk menambah program baru."
+      :empty-title="t('tutoring2.admin.programs.emptyTitle')"
+      :empty-description="t('tutoring2.admin.programs.emptyDesc')"
       @retry="reload"
     >
       <template #default="{ data }">
@@ -131,11 +131,11 @@ function formatRupiah(n: number | null | undefined): string {
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
-                <th class="px-4 py-3 font-bold">Program</th>
-                <th class="px-4 py-3 font-bold">Jenjang</th>
-                <th class="px-4 py-3 font-bold">Paket</th>
-                <th class="px-4 py-3 font-bold">Harga mulai</th>
-                <th class="px-4 py-3 font-bold">Status</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.program') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.gradeLevel') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.admin.programs.kpiActivePackages') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.startingPrice') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -146,10 +146,10 @@ function formatRupiah(n: number | null | undefined): string {
               >
                 <td class="px-4 py-3 font-bold text-slate-900">{{ p.name }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ p.grade_level ?? '—' }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ p.packages_count ?? 0 }} paket</td>
+                <td class="px-4 py-3 text-slate-600">{{ p.packages_count ?? 0 }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ formatRupiah(p.min_price) }}</td>
                 <td class="px-4 py-3">
-                  <StatusBadge :label="p.status_label ?? p.status" :tone="statusPillTone(p.status)" uppercase />
+                  <StatusBadge :label="p.status_label ?? statusLabel(p.status)" :tone="statusPillTone(p.status)" uppercase />
                 </td>
               </tr>
             </tbody>
@@ -162,7 +162,7 @@ function formatRupiah(n: number | null | undefined): string {
       type="button"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
-      <span aria-hidden="true">+</span> Program baru
+      <span aria-hidden="true">+</span> {{ t('tutoring2.admin.programs.newCta') }}
     </button>
   </div>
 </template>

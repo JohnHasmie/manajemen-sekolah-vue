@@ -507,96 +507,28 @@
       "subscribe": "Berlangganan"
     },
     "attendance": {
-      "qrDisplay": {
-        "kicker": "Presensi QR",
-        "title": "QR Gerbang",
-        "meta": "QR sekolah yang berputar otomatis — tampilkan di proyektor atau cetak sebagai poster.",
-        "rotateNow": "Rotasi sekarang",
-        "rotating": "Memutar…",
-        "rotated": "QR gerbang berhasil diputar.",
-        "rotateFail": "Gagal memutar QR gerbang.",
-        "print": "Cetak",
-        "rotatesIn": "Rotasi otomatis dalam",
-        "instructions": "Buka aplikasi KamilEdu di ponsel, pilih Presensi Saya → Scan QR Gerbang, lalu arahkan kamera ke kode ini.",
-        "posterKicker": "QR PRESENSI",
-        "loadFail": "Gagal memuat QR gerbang.",
-        "empty": "QR gerbang belum tersedia. Klik Rotasi sekarang untuk membuat yang baru.",
-        "fallbackSchool": "Sekolah"
-      },
-      "settings": {
-        "kicker": "Presensi QR",
-        "title": "Pengaturan Presensi",
-        "meta": "Atur metode presensi, rotasi QR gerbang, dan kartu personel.",
-        "loadFail": "Gagal memuat pengaturan presensi.",
-        "saveFail": "Gagal menyimpan pengaturan presensi.",
-        "saved": "Pengaturan presensi tersimpan.",
-        "save": "Simpan Pengaturan",
-        "method": {
-          "section": "Metode Presensi yang Diizinkan",
-          "sectionHint": "Pilih satu atau lebih metode. Guru hanya dapat menggunakan metode yang dicentang.",
-          "selfie": "Selfie",
-          "selfieDesc": "Foto selfie + GPS — metode lama.",
-          "gateQr": "QR Gerbang",
-          "gateQrDesc": "Pindai QR berputar di gerbang sekolah.",
-          "cardQr": "Kartu QR",
-          "cardQrDesc": "Pindai QR pada kartu cetak pribadi.",
-          "atLeastOne": "Minimal satu metode harus tetap aktif."
-        },
-        "rotation": {
-          "section": "Rotasi QR Gerbang",
-          "sectionHint": "Berapa sering QR gerbang berputar otomatis. Rotasi lebih cepat lebih aman dari foto-dan-replay.",
-          "minutes": "menit",
-          "hint": "Rentang 5–60 menit. Rekomendasi: 15 menit.",
-          "outOfRange": "Rotasi harus antara 5 dan 60 menit."
-        },
-        "flags": {
-          "section": "Opsi Tambahan",
-          "sectionHint": "Pengaturan halus untuk geofence QR dan kartu siswa.",
-          "geofenceQr": "Geofence wajib untuk presensi QR",
-          "geofenceQrHint": "Saat aktif, presensi via QR juga harus berada di radius geofence — bukan hanya selfie.",
-          "studentCards": "Terbitkan kartu QR siswa",
-          "studentCardsHint": "Aktifkan untuk mencetak kartu QR siswa (default: hanya guru/staf)."
-        }
-      },
-      "cards": {
-        "kicker": "Presensi QR",
-        "title": "Kartu QR Personel",
-        "meta": "Terbitkan, cabut, dan unduh kartu QR untuk guru dan staf.",
-        "entryTitle": "Kartu & QR Code Siswa/Guru/Staf",
-        "entryDesc": "Terbitkan & unduh kartu QR untuk siswa, guru, dan staf.",
-        "loadFail": "Gagal memuat daftar personel.",
-        "searchPh": "Cari nama, NIP, atau email…",
-        "roleAll": "Semua peran",
-        "roleTeacher": "Guru",
-        "roleStaff": "Staf",
-        "roleStudent": "Siswa",
-        "roleGuru": "Guru",
-        "roleWaliKelas": "Wali Kelas",
-        "hasCardAll": "Semua status kartu",
-        "hasCardYes": "Sudah punya kartu",
-        "hasCardNo": "Belum punya kartu",
-        "empty": "Tidak ada personel cocok",
-        "emptyHint": "Sesuaikan filter atau tambah guru dari halaman Manajemen Data.",
-        "selectAll": "Pilih semua di halaman ini",
-        "selectRow": "Pilih baris",
-        "colName": "Nama",
-        "colRole": "Peran",
-        "colEmail": "Email",
-        "colHasCard": "Sudah punya kartu?",
-        "colEmployeeNumber": "NIP",
-        "colActions": "Aksi",
-        "issue": "Terbitkan Kartu ({count})",
-        "issued": "{count} kartu diterbitkan",
-        "skipped": "{count} dilewati",
-        "errored": "{count} gagal",
-        "issueFail": "Gagal menerbitkan kartu.",
-        "exportPdf": "Unduh PDF",
-        "exported": "PDF kartu sedang diunduh.",
-        "exportFail": "Gagal mengunduh PDF kartu.",
-        "revoke": "Cabut",
-        "revoking": "Mencabut…",
-        "revoked": "Kartu {name} dicabut.",
-        "revokeFail": "Gagal mencabut kartu."
+      "title": "Kehadiran Sekolah",
+      "eyebrowToday": "Hari ini · {date}",
+      "detail": "Detail →",
+      "ringStudent": "Siswa",
+      "ringTeacher": "Guru",
+      "ringStaff": "Staf",
+      "presentOf": "{present}/{total} hadir",
+      "rateToday": "hadir hari ini",
+      "notYet": "belum ada",
+      "perClass": "Kehadiran siswa per kelas",
+      "noRecordsToday": "Belum ada catatan kehadiran hari ini",
+      "weekly": {
+        "eyebrow": "Minggu ini · {range}",
+        "average": "Rata-rata",
+        "effectiveDays": "Hari efektif",
+        "daysUnit": "{n} hari",
+        "bestWorst": "Terbaik / Terlemah",
+        "today": "HARI INI",
+        "weekend": "Akhir pekan",
+        "holiday": "Libur",
+        "emptyEffective": "Minggu ini tidak ada hari efektif.",
+        "chartAria": "Grafik kehadiran 7 hari"
       }
     },
     "dashboard": {
@@ -665,31 +597,6 @@
         "title": "Prestasi Guru & Staf",
         "sub": "Motivasi tim dengan streak, badge, papan skor & \"Guru Bulan Ini\". Coba 14 hari gratis.",
         "cta": "Aktifkan modul"
-      }
-    },
-    "attendance": {
-      "title": "Kehadiran Sekolah",
-      "eyebrowToday": "Hari ini · {date}",
-      "detail": "Detail →",
-      "ringStudent": "Siswa",
-      "ringTeacher": "Guru",
-      "ringStaff": "Staf",
-      "presentOf": "{present}/{total} hadir",
-      "rateToday": "hadir hari ini",
-      "notYet": "belum ada",
-      "perClass": "Kehadiran siswa per kelas",
-      "noRecordsToday": "Belum ada catatan kehadiran hari ini",
-      "weekly": {
-        "eyebrow": "Minggu ini · {range}",
-        "average": "Rata-rata",
-        "effectiveDays": "Hari efektif",
-        "daysUnit": "{n} hari",
-        "bestWorst": "Terbaik / Terlemah",
-        "today": "HARI INI",
-        "weekend": "Akhir pekan",
-        "holiday": "Libur",
-        "emptyEffective": "Minggu ini tidak ada hari efektif.",
-        "chartAria": "Grafik kehadiran 7 hari"
       }
     },
     "announcement": {
@@ -6862,6 +6769,287 @@
       "kicker": "Baru mau berlangganan?",
       "body": "Kami temani lewat 5 langkah singkat — mulai dari profil sekolah atau lembaga, kontak admin, sampai memilih paket yang pas. Isian Anda tersimpan sendiri, aman kalau harus lanjut nanti.",
       "action": "Mulai panduan"
+    }
+  },
+  "tutoring2": {
+    "common": {
+      "roleAdmin": "Admin Bimbel",
+      "roleTutor": "Tutor Bimbel",
+      "roleStudent": "Siswa",
+      "roleParent": "Wali",
+      "loading": "Memuat…",
+      "notAvailable": "Belum tersedia",
+      "save": "Simpan",
+      "cancel": "Batal",
+      "delete": "Hapus",
+      "back": "Kembali",
+      "detail": "Detail",
+      "all": "Semua",
+      "newLabel": "Baru",
+      "saved": "Tersimpan",
+      "searchStudents": "Cari nama / NIS…",
+      "seeAll": "Lihat semua",
+      "takeAttendance": "Ambil presensi",
+      "reschedule": "Reschedule",
+      "markDone": "Tandai selesai",
+      "noData": "Belum ada data",
+      "retry": "Coba lagi",
+      "status": "Status",
+      "program": "Program",
+      "tutor": "Tutor",
+      "group": "Kelompok",
+      "term": "Term",
+      "kind": "Jenis",
+      "gradeLevel": "Jenjang",
+      "billingMode": "Mode tagihan",
+      "startingPrice": "Harga mulai",
+      "date": "Tanggal",
+      "time": "Waktu",
+      "room": "Ruang",
+      "notes": "Catatan",
+      "name": "Nama",
+      "student": "Siswa",
+      "student_": "Wali",
+      "title": "Judul",
+      "capacity": "Kapasitas",
+      "remainingQuota": "Sisa kuota"
+    },
+    "status": {
+      "draft": "Draft",
+      "active": "Aktif",
+      "archived": "Arsip",
+      "trial": "Trial",
+      "paused": "Dijeda",
+      "graduated": "Lulus",
+      "withdrawn": "Keluar",
+      "scheduled": "Terjadwal",
+      "inProgress": "Berlangsung",
+      "done": "Selesai",
+      "cancelled": "Dibatalkan",
+      "published": "Terbit",
+      "champion": "Juara",
+      "paid": "Lunas",
+      "unpaid": "Belum lunas",
+      "overdue": "Menunggak"
+    },
+    "admin": {
+      "programs": {
+        "title": "Program & Paket",
+        "newCta": "Program baru",
+        "searchPh": "Cari program…",
+        "emptyTitle": "Belum ada program",
+        "emptyDesc": "Klik + untuk menambah program baru.",
+        "kpiActivePrograms": "Program",
+        "kpiActivePackages": "Paket aktif",
+        "kpiStartFrom": "Termahal (mulai)",
+        "kpiDrafts": "Draft",
+        "meta": "{count} program aktif"
+      },
+      "groups": {
+        "title": "Kelompok Belajar",
+        "newCta": "Kelompok baru",
+        "searchPh": "Cari kelompok…",
+        "emptyTitle": "Belum ada kelompok",
+        "emptyDesc": "Buat kelompok pertama untuk program aktif.",
+        "kpiGroups": "Kelompok",
+        "kpiPrivates": "1-on-1",
+        "kpiAvgUtilization": "Rata utilisasi",
+        "kpiFull": "Penuh"
+      },
+      "enrollments": {
+        "title": "Pendaftaran",
+        "newCta": "Daftarkan siswa",
+        "searchPh": "Cari nama siswa…",
+        "emptyTitle": "Belum ada pendaftaran",
+        "kpiActive": "Aktif",
+        "kpiTrial": "Trial",
+        "kpiGraduated": "Lulus/keluar",
+        "kpiThisMonth": "Bulan ini"
+      },
+      "students": {
+        "title": "Siswa",
+        "newCta": "Tambah siswa",
+        "searchPh": "Cari nama / NIS…",
+        "emptyTitle": "Belum ada siswa",
+        "kpiTotal": "Total siswa",
+        "kpiActive": "Aktif",
+        "kpiTrial": "Trial",
+        "kpiGraduated": "Lulus/keluar"
+      },
+      "tutors": {
+        "title": "Tutor & Staf",
+        "newCta": "Tambah tutor",
+        "searchPh": "Cari tutor…",
+        "emptyTitle": "Belum ada tutor",
+        "kpiTutors": "Tutor",
+        "kpiStaff": "Staf",
+        "kpiPresentToday": "Hadir hari ini",
+        "kpiOnLeave": "Cuti/izin"
+      },
+      "schedule": {
+        "title": "Jadwal",
+        "newCta": "Buat sesi",
+        "searchPh": "Cari sesi…",
+        "emptyTitle": "Belum ada sesi",
+        "kpiScheduled": "Terjadwal",
+        "kpiInProgress": "Berlangsung",
+        "kpiDone": "Selesai",
+        "kpiCancelled": "Dibatalkan"
+      },
+      "attendance": {
+        "title": "Kehadiran",
+        "exportCta": "Ekspor rekap",
+        "searchPh": "Cari sesi…",
+        "emptyTitle": "Belum ada sesi selesai",
+        "kpiCompleted": "Sesi selesai",
+        "kpiTotal": "Total presensi",
+        "kpiRate": "% presensi",
+        "kpiUnrecorded": "Belum diambil"
+      },
+      "assessments": {
+        "title": "Nilai & Try-out",
+        "newCta": "Buat try-out",
+        "searchPh": "Cari try-out…",
+        "emptyTitle": "Belum ada penilaian",
+        "kpiTryout": "Try-out",
+        "kpiLatihan": "Latihan",
+        "kpiKuis": "Kuis",
+        "kpiDrafts": "Belum dipublikasi"
+      },
+      "billing": {
+        "title": "Keuangan",
+        "newCta": "Buat tagihan",
+        "searchPh": "Cari siswa…",
+        "emptyTitle": "Belum ada tagihan",
+        "kpiBilled": "Tertagih",
+        "kpiPaid": "Terbayar",
+        "kpiOverdue": "Menunggak",
+        "kpiOverdueCount": "Overdue"
+      },
+      "term": {
+        "title": "Term / Batch",
+        "newCta": "Term baru",
+        "searchPh": "Cari term…",
+        "emptyTitle": "Belum ada term",
+        "kpiActive": "Aktif",
+        "kpiClosed": "Selesai",
+        "kpiDraft": "Draft",
+        "kpiGroupsTotal": "Total kelompok"
+      },
+      "settings": {
+        "title": "Pengaturan",
+        "meta": "Profil tenant & konfigurasi",
+        "billingModes": "Mode tagihan aktif",
+        "academic": "Struktur akademik",
+        "rbac": "Peran & hak akses (RBAC)",
+        "ai": "Fitur AI",
+        "profile": "Profil bimbel",
+        "appearance": "Tampilan",
+        "tenantConfigNote": "Disimpan di tenant_config. module:tutoring + ModuleCatalog scope=bimbel menentukan modul terbuka."
+      }
+    },
+    "tutor": {
+      "home": {
+        "title": "Halo, selamat datang",
+        "meta": "{count} sesi hari ini",
+        "emptyTitle": "Tidak ada sesi hari ini",
+        "emptyDesc": "Jadwal Anda kosong. Cek besok.",
+        "sectionToday": "Sesi hari ini",
+        "kpiSessionsToday": "Sesi hari ini",
+        "kpiAttendance": "Kehadiran",
+        "kpiScoresPending": "Nilai pending",
+        "kpiStudentsActive": "Siswa aktif"
+      },
+      "sessions": {
+        "title": "Sesi saya",
+        "meta": "{count} sesi",
+        "emptyTitle": "Tidak ada sesi",
+        "kpiTotal": "Total",
+        "kpiToday": "Hari ini",
+        "kpiDone": "Selesai",
+        "kpiUpcoming": "Akan datang"
+      },
+      "sessionDetail": {
+        "title": "Detail Sesi",
+        "info": "Informasi sesi"
+      },
+      "attendance": {
+        "title": "Presensi sesi",
+        "meta": "{count} siswa terdaftar",
+        "saved": "Presensi tersimpan ({count} siswa)",
+        "saveFailed": "Gagal menyimpan presensi: {msg}",
+        "emptyTitle": "Sesi belum punya siswa"
+      },
+      "assessments": {
+        "title": "Nilai & Try-out",
+        "newCta": "Buat try-out",
+        "meta": "{count} penilaian",
+        "actionScores": "Input skor",
+        "actionResult": "Hasil"
+      },
+      "assessmentCreate": {
+        "title": "Buat try-out",
+        "aiRow": "Generate soal dengan AI",
+        "aiOff": "AI belum aktif",
+        "saved": "Try-out dibuat"
+      },
+      "scores": {
+        "title": "Input skor",
+        "meta": "{count} siswa",
+        "saved": "Skor tersimpan",
+        "saveFailed": "Gagal menyimpan skor: {msg}"
+      },
+      "result": {
+        "title": "Hasil try-out",
+        "meta": "{count} peserta",
+        "kpiSubmitted": "Terisi",
+        "kpiAverage": "Rata",
+        "kpiHighest": "Tertinggi",
+        "shareCta": "Bagikan ke wali"
+      },
+      "materials": {
+        "title": "Materi",
+        "uploadCta": "Unggah materi",
+        "meta": "{count} materi",
+        "emptyTitle": "Belum ada materi",
+        "kpiTotal": "Total materi",
+        "kpiPdf": "PDF",
+        "kpiVideo": "Video",
+        "kpiOther": "Lainnya"
+      },
+      "materialUpload": {
+        "title": "Unggah materi",
+        "dropZone": "Seret berkas atau pilih",
+        "savedStub": "Materi diunggah (MVP — belum tersimpan)"
+      },
+      "students": {
+        "title": "Siswa saya",
+        "meta": "{count} siswa",
+        "emptyTitle": "Belum ada siswa",
+        "kpiTotal": "Total siswa",
+        "kpiActive": "Aktif",
+        "kpiTrial": "Trial",
+        "kpiOverdue": "Tunggakan"
+      },
+      "studentDetail": {
+        "title": "Detail Siswa",
+        "sectionEnrollments": "Pendaftaran",
+        "noteCta": "Kirim catatan ke wali"
+      },
+      "profile": {
+        "title": "Profil",
+        "subtitle": "Tutor Bimbel Cendekia",
+        "account": "Akun",
+        "accountDesc": "Ubah data pribadi & foto",
+        "notifications": "Notifikasi",
+        "notificationsDesc": "Preferensi push & email",
+        "language": "Bahasa",
+        "languageDesc": "Indonesia (default)",
+        "appearance": "Tampilan",
+        "appearanceDesc": "Auto light/dark (tutoring theme)",
+        "logout": "Keluar",
+        "logoutDesc": "Logout dari akun ini"
+      }
     }
   }
 }
