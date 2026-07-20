@@ -100,8 +100,8 @@ const Endpoints = {
  * 422 the modal swallows.
  */
 export type AttendanceTelemetryEventType =
-  | 'pulang_cepat_confirmed'
-  | 'pulang_cepat_cancelled';
+  | 'early_leave_confirmed'
+  | 'early_leave_cancelled';
 
 /**
  * Pull a human Indonesian message out of a Laravel error. The backend

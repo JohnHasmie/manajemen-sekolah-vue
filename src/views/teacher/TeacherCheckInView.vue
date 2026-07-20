@@ -648,8 +648,8 @@ function telemetryContext(): Record<string, unknown> {
 }
 
 /**
- * Batal handler for the pulang-cepat modal. Closes the modal AND fires
- * `pulang_cepat_cancelled` — that's the whole point of this modal from
+ * Batal handler for the early-leave modal. Closes the modal AND fires
+ * `early_leave_cancelled` — that's the whole point of this modal from
  * an analytics perspective (guru saw the warning, chose NOT to check
  * out early). Fire-and-forget: never blocks close, never surfaces
  * errors.
@@ -657,17 +657,17 @@ function telemetryContext(): Record<string, unknown> {
 function cancelEarlyLeaveCheckOut(): void {
   showEarlyLeaveConfirm.value = false;
   void TeacherAttendanceService.recordAttendanceEvent(
-    'pulang_cepat_cancelled',
+    'early_leave_cancelled',
     telemetryContext(),
   );
 }
 
-/** User confirmed the pulang-cepat modal — close it and POST. */
+/** User confirmed the early-leave modal — close it and POST. */
 async function confirmEarlyLeaveCheckOut() {
   // Snapshot the modal context BEFORE performSubmit() runs — the
   // subsequent reload() clears checkoutPreview (mode flips back to
   // check-in when the check-out lands), so a post-submit read would be
-  // null. Firing `pulang_cepat_confirmed` only when the POST landed
+  // null. Firing `early_leave_confirmed` only when the POST landed
   // keeps the analytics count honest: a mid-flight network drop counts
   // as neither confirmed nor cancelled (the guru still sees the error
   // toast + can retry from a fresh warn modal).
@@ -676,7 +676,7 @@ async function confirmEarlyLeaveCheckOut() {
   const ok = await performSubmit();
   if (ok) {
     void TeacherAttendanceService.recordAttendanceEvent(
-      'pulang_cepat_confirmed',
+      'early_leave_confirmed',
       context,
     );
   }
@@ -686,7 +686,7 @@ async function confirmEarlyLeaveCheckOut() {
  * Returns true iff the POST landed cleanly (or was skipped due to a
  * front-end validation guard — the caller distinguishes those via
  * `canSubmit` before calling). Confirmed-modal telemetry keys on this
- * so we only log `pulang_cepat_confirmed` for check-outs that actually
+ * so we only log `early_leave_confirmed` for check-outs that actually
  * persisted server-side.
  */
 async function performSubmit(): Promise<boolean> {
