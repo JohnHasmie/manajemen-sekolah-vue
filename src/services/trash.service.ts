@@ -13,6 +13,8 @@
 import { api } from '@/lib/http';
 import type {
   BulkRestoreResult,
+  RestoreConflictCandidate,
+  RestorePreview,
   ScheduleConflict,
   ScheduleDependenciesResult,
   ScheduleResolution,
@@ -36,6 +38,30 @@ export class ScheduleConflictError extends Error {
   }
 }
 
+/**
+ * Thrown when POST /trash/subject/{id}/restore returns 409 — restoring the
+ * subject would collide with a live namesake. Carries the fresh conflict so the
+ * caller can keep the dialog open and refresh the merge candidates (mirror of
+ * {@link ScheduleConflictError}).
+ */
+export class SubjectConflictError extends Error {
+  readonly name = 'SubjectConflictError';
+  readonly conflictName: string;
+  readonly grade: number | null;
+  readonly candidates: RestoreConflictCandidate[];
+  constructor(
+    message: string,
+    conflictName: string,
+    grade: number | null,
+    candidates: RestoreConflictCandidate[],
+  ) {
+    super(message);
+    this.conflictName = conflictName;
+    this.grade = grade;
+    this.candidates = candidates;
+  }
+}
+
 export const TrashService = {
   async list(): Promise<TrashListResult> {
     const res = await api.get('/trash');
@@ -54,6 +80,59 @@ export const TrashService = {
 
   async restore(type: TrashType, id: string): Promise<void> {
     await api.post(`/trash/${type}/${id}/restore`);
+  },
+
+  /**
+   * Preview what a restore will do before committing: which relations re-link,
+   * whether it re-takes a paid seat, and (subject only) any live-namesake
+   * conflict that must be resolved first. Drives the restore-confirmation dialog.
+   */
+  async restorePreview(type: string, id: string): Promise<RestorePreview> {
+    const res = await api.get(`/trash/${type}/${id}/restore-preview`);
+    return res.data as RestorePreview;
+  },
+
+  /**
+   * Restore a subject with an explicit conflict resolution:
+   *   ''                 → plain restore (no live namesake)
+   *   'restore'          → restore even though a namesake exists
+   *   'rename:<newName>' → restore under a new name
+   *   'merge:<liveId>'   → fold into the chosen active subject
+   * Re-throws a {@link SubjectConflictError} on 409 so the caller can keep the
+   * dialog open and refresh the merge candidates; a 422 (invalid rename/merge)
+   * surfaces its `error` message as-is.
+   */
+  async restoreSubject(id: string, resolution: string): Promise<void> {
+    try {
+      await api.post(`/trash/subject/${id}/restore`, { resolution });
+    } catch (e) {
+      const ax = e as {
+        response?: {
+          status?: number;
+          data?: {
+            error?: string;
+            conflict?: {
+              name: string;
+              grade: number | null;
+              active: RestoreConflictCandidate[];
+            };
+          };
+        };
+      };
+      const data = ax?.response?.data;
+      if (ax?.response?.status === 409 && data?.conflict) {
+        throw new SubjectConflictError(
+          data.error ?? 'conflict',
+          data.conflict.name,
+          data.conflict.grade,
+          data.conflict.active ?? [],
+        );
+      }
+      if (ax?.response?.status === 422 && data?.error) {
+        throw new Error(data.error);
+      }
+      throw e;
+    }
   },
 
   async purge(type: TrashType, id: string): Promise<void> {

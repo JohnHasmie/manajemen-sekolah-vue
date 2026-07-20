@@ -22,9 +22,15 @@ import Spinner from '@/components/ui/Spinner.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { formatRelative } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
-import { ScheduleConflictError, TrashService } from '@/services/trash.service';
+import {
+  ScheduleConflictError,
+  SubjectConflictError,
+  TrashService,
+} from '@/services/trash.service';
 import type {
   DependencyCandidate,
+  RestoreConflict,
+  RestorePreview,
   ScheduleConflict,
   ScheduleDependency,
   ScheduleDependencyKind,
@@ -57,6 +63,20 @@ const impact = ref<TrashImpact | null>(null);
 const impactLoading = ref(false);
 const confirmText = ref('');
 const isPurging = ref(false);
+
+// ── restore-confirmation modal ─────────────────────────────────────────
+//
+// Teacher/student/subject restores first fetch a preview (what re-links,
+// whether a seat is retaken, and for subjects any live-namesake conflict).
+// A trivial preview restores straight away; anything else opens this dialog.
+const restorePreviewTarget = ref<TrashItem | null>(null); // null → closed
+const restorePreviewData = ref<RestorePreview | null>(null);
+const restorePreviewSubmitting = ref(false);
+// Subject-conflict resolution. `cancel` closes the dialog; `merge`/`rename`
+// gate the confirm button until they carry a valid target/name.
+const restoreChoice = ref<'merge' | 'rename' | 'cancel' | null>(null);
+const restoreMergeId = ref(''); // selected active subject when choice === 'merge'
+const restoreRenameValue = ref(''); // new name when choice === 'rename'
 
 const state = computed<AsyncState<TrashGroup[]>>(() => {
   if (isLoading.value && groups.value.length === 0) return { status: 'loading' };
@@ -128,17 +148,137 @@ async function reload(): Promise<void> {
   }
 }
 
+/** True when confirming the restore is allowed. No conflict → always allowed
+ *  (it's a plain restore). With a conflict, merge needs a picked candidate and
+ *  rename needs a non-empty name that differs from the conflicting one. */
+const restorePreviewReady = computed(() => {
+  const preview = restorePreviewData.value;
+  if (!preview) return false;
+  if (!preview.conflict) return true;
+  if (restoreChoice.value === 'merge') return !!restoreMergeId.value;
+  if (restoreChoice.value === 'rename') {
+    const next = restoreRenameValue.value.trim();
+    return next.length > 0 && next !== (preview.conflict.name ?? '');
+  }
+  return false;
+});
+
+/** Serialise the subject-conflict choice into the wire resolution string. */
+function subjectResolution(): string {
+  if (restoreChoice.value === 'merge') return `merge:${restoreMergeId.value}`;
+  if (restoreChoice.value === 'rename') return `rename:${restoreRenameValue.value.trim()}`;
+  return '';
+}
+
+/** Teacher/student/subject restore: preview first. A trivial preview (no
+ *  relinks, no seat cost, no conflict) restores straight away exactly like
+ *  before; anything worth a heads-up opens the confirmation dialog. */
 async function onRestore(item: TrashItem): Promise<void> {
-  if (busyId.value) return;
+  if (busyId.value || restoreProbing.value) return;
   busyId.value = item.id;
   try {
-    await TrashService.restore(item.type, item.id);
-    toast.value = { message: t('admin.trash.toastRestored', { name: item.name }), tone: 'success' };
-    await reload();
+    const preview = await TrashService.restorePreview(item.type, item.id);
+    const trivial =
+      preview.conflict === null &&
+      preview.relinks.length === 0 &&
+      !preview.quota.occupies_seat;
+    if (trivial) {
+      if (item.type === 'subject') await TrashService.restoreSubject(item.id, '');
+      else await TrashService.restore(item.type, item.id);
+      toast.value = {
+        message: t('admin.trash.toastRestored', { name: item.name }),
+        tone: 'success',
+      };
+      await reload();
+      return;
+    }
+    openRestorePreview(item, preview);
   } catch (e) {
     toast.value = { message: (e as Error).message || t('admin.trash.toastError'), tone: 'error' };
   } finally {
     busyId.value = null;
+  }
+}
+
+/** Open the confirmation dialog, defaulting the conflict resolution toward a
+ *  merge when a live candidate exists, else a rename (prefilled with the
+ *  conflicting name so the admin must change it before confirming). */
+function openRestorePreview(item: TrashItem, preview: RestorePreview): void {
+  restorePreviewTarget.value = item;
+  restorePreviewData.value = preview;
+  restorePreviewSubmitting.value = false;
+  if (preview.conflict) {
+    const hasCandidate = preview.conflict.active.length > 0;
+    restoreChoice.value = hasCandidate ? 'merge' : 'rename';
+    restoreMergeId.value = hasCandidate ? preview.conflict.active[0].id : '';
+    restoreRenameValue.value = preview.conflict.name ?? '';
+  } else {
+    restoreChoice.value = null;
+    restoreMergeId.value = '';
+    restoreRenameValue.value = '';
+  }
+}
+
+function closeRestorePreview(): void {
+  restorePreviewTarget.value = null;
+  restorePreviewData.value = null;
+  restorePreviewSubmitting.value = false;
+  restoreChoice.value = null;
+  restoreMergeId.value = '';
+  restoreRenameValue.value = '';
+}
+
+/** After a 409, refresh the conflict with the server's fresh candidates and
+ *  keep the dialog open so the admin can re-decide (mirror of
+ *  applyServerConflicts for the schedule flow). */
+function applySubjectConflict(err: SubjectConflictError): void {
+  const preview = restorePreviewData.value;
+  if (!preview) return;
+  const conflict: RestoreConflict = {
+    name: err.conflictName,
+    grade: err.grade,
+    active: err.candidates,
+  };
+  preview.conflict = conflict;
+  if (conflict.active.length > 0) {
+    const stillValid = conflict.active.some((c) => c.id === restoreMergeId.value);
+    if (!stillValid) restoreMergeId.value = conflict.active[0].id;
+    if (restoreChoice.value !== 'rename') restoreChoice.value = 'merge';
+  } else {
+    restoreChoice.value = 'rename';
+    restoreMergeId.value = '';
+  }
+}
+
+async function confirmRestorePreview(): Promise<void> {
+  const item = restorePreviewTarget.value;
+  const preview = restorePreviewData.value;
+  if (!item || !preview || restorePreviewSubmitting.value || !restorePreviewReady.value) return;
+  restorePreviewSubmitting.value = true;
+  try {
+    if (item.type === 'subject') {
+      await TrashService.restoreSubject(item.id, preview.conflict ? subjectResolution() : '');
+    } else {
+      await TrashService.restore(item.type, item.id);
+    }
+    toast.value = {
+      message: t('admin.trash.toastRestored', { name: item.name }),
+      tone: 'success',
+    };
+    closeRestorePreview();
+    await reload();
+  } catch (e) {
+    if (e instanceof SubjectConflictError) {
+      applySubjectConflict(e);
+      toast.value = { message: t('admin.trash.conflictToast'), tone: 'error' };
+    } else {
+      toast.value = {
+        message: (e as Error).message || t('admin.trash.toastError'),
+        tone: 'error',
+      };
+    }
+  } finally {
+    restorePreviewSubmitting.value = false;
   }
 }
 
@@ -562,6 +702,145 @@ onMounted(reload);
             >{{ t('admin.trash.delete') }}</Button>
           </div>
         </template>
+      </div>
+    </Modal>
+
+    <!-- Restore-confirmation modal (relink preview + quota note + subject conflict) -->
+    <Modal
+      v-if="restorePreviewTarget && restorePreviewData"
+      size="md"
+      :title="t('admin.trash.restoreTitle', { name: restorePreviewTarget.name })"
+      :subtitle="t('admin.trash.restoreSubtitle')"
+      @close="closeRestorePreview"
+    >
+      <div class="space-y-4">
+        <!-- What comes back when this row is restored -->
+        <template v-if="restorePreviewData.relinks.length > 0">
+          <p class="text-sm text-slate-600">{{ t('admin.trash.restoreRelinkIntro') }}</p>
+          <ul class="space-y-1.5">
+            <li
+              v-for="(rel, idx) in restorePreviewData.relinks"
+              :key="idx"
+              class="flex items-center gap-2 text-sm text-slate-700"
+            >
+              <span
+                class="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-400"
+                aria-hidden="true"
+              />
+              <span class="flex-1">{{ rel.label }}</span>
+              <span class="font-black tabular-nums text-emerald-600">{{ rel.count }}</span>
+            </li>
+          </ul>
+        </template>
+
+        <!-- Seat cost — restoring a teacher/student re-occupies a paid seat -->
+        <div
+          v-if="restorePreviewData.quota.occupies_seat"
+          class="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3"
+        >
+          <span class="mt-0.5 flex-shrink-0 text-amber-600">
+            <NavIcon name="info" :size="16" />
+          </span>
+          <p class="text-sm leading-relaxed text-amber-900">
+            {{ restorePreviewData.quota.label || t('admin.trash.restoreQuotaNote') }}
+          </p>
+        </div>
+
+        <!-- Subject name conflict — a live namesake exists, so the admin must
+             merge into it or restore under a new name (or cancel) -->
+        <template v-if="restorePreviewData.conflict">
+          <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+            <p class="text-sm leading-relaxed text-amber-900">
+              {{ t('admin.trash.restoreConflictWarn', { name: restorePreviewData.conflict.name }) }}
+            </p>
+          </div>
+
+          <div class="space-y-2">
+            <!-- Merge into an existing active subject -->
+            <label
+              v-if="restorePreviewData.conflict.active.length > 0"
+              class="flex items-start gap-2 text-sm cursor-pointer"
+            >
+              <input
+                type="radio"
+                class="mt-0.5"
+                name="restore-resolution"
+                value="merge"
+                :checked="restoreChoice === 'merge'"
+                @change="restoreChoice = 'merge'"
+              />
+              <span class="flex-1 text-slate-700">
+                {{ t('admin.trash.restoreMergeChoice') }}
+                <select
+                  v-model="restoreMergeId"
+                  class="mt-1.5 block w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:opacity-50"
+                  :aria-label="t('admin.trash.restoreMergeSelectLabel')"
+                  :disabled="restoreChoice !== 'merge'"
+                  @focus="restoreChoice = 'merge'"
+                >
+                  <option
+                    v-for="cand in restorePreviewData.conflict.active"
+                    :key="cand.id"
+                    :value="cand.id"
+                  >{{ cand.name }}</option>
+                </select>
+              </span>
+            </label>
+
+            <!-- Restore under a new, non-colliding name -->
+            <label class="flex items-start gap-2 text-sm cursor-pointer">
+              <input
+                type="radio"
+                class="mt-0.5"
+                name="restore-resolution"
+                value="rename"
+                :checked="restoreChoice === 'rename'"
+                @change="restoreChoice = 'rename'"
+              />
+              <span class="flex-1 text-slate-700">
+                {{ t('admin.trash.restoreRenameChoice') }}
+                <input
+                  v-model="restoreRenameValue"
+                  type="text"
+                  autocomplete="off"
+                  class="mt-1.5 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:opacity-50"
+                  :aria-label="t('admin.trash.restoreRenameLabel')"
+                  :disabled="restoreChoice !== 'rename'"
+                  @focus="restoreChoice = 'rename'"
+                />
+              </span>
+            </label>
+
+            <!-- Abandon the restore entirely -->
+            <label class="flex items-start gap-2 text-sm cursor-pointer">
+              <input
+                type="radio"
+                class="mt-0.5"
+                name="restore-resolution"
+                value="cancel"
+                :checked="restoreChoice === 'cancel'"
+                @change="closeRestorePreview"
+              />
+              <span class="flex-1 text-slate-700">{{ t('admin.trash.restoreCancelChoice') }}</span>
+            </label>
+          </div>
+        </template>
+
+        <div class="flex justify-end gap-2 pt-1">
+          <Button
+            variant="secondary"
+            :disabled="restorePreviewSubmitting"
+            @click="closeRestorePreview"
+          >
+            {{ t('admin.trash.cancel') }}
+          </Button>
+          <Button
+            variant="success"
+            :disabled="!restorePreviewReady"
+            :loading="restorePreviewSubmitting"
+            @click="confirmRestorePreview"
+          >{{ t('admin.trash.restoreConfirm') }}</Button>
+        </div>
       </div>
     </Modal>
 

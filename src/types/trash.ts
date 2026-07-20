@@ -110,3 +110,47 @@ export interface TrashImpact {
   name: string;
   related: TrashImpactRelation[];
 }
+
+/**
+ * One line in the restore preview: a relation that will be re-linked when the
+ * row is restored (e.g. "Jadwal" × 3). Mirrors the impact relations, but points
+ * the other way — data that comes BACK rather than data that gets removed.
+ */
+export interface RestoreRelink {
+  label: string;
+  count: number;
+}
+
+/** An active (live) row that a restored subject could collide with or merge into. */
+export interface RestoreConflictCandidate {
+  id: string;
+  name: string | null;
+  grade: number | null;
+}
+
+/**
+ * Present only when restoring a subject whose name already exists among the
+ * active rows. The admin must resolve it (merge into an active row, or restore
+ * under a new name).
+ */
+export interface RestoreConflict {
+  name: string;
+  grade: number | null;
+  active: RestoreConflictCandidate[];
+}
+
+/**
+ * GET /trash/{type}/{id}/restore-preview. Drives the restore-confirmation
+ * dialog: what re-links, whether it re-takes a seat, and (subject only) any
+ * name conflict that needs resolving before restore.
+ */
+export interface RestorePreview {
+  type: string;
+  name: string;
+  relinks: RestoreRelink[];
+  quota: {
+    occupies_seat: boolean;
+    label: string | null;
+  };
+  conflict: RestoreConflict | null;
+}

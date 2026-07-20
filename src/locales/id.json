@@ -837,7 +837,18 @@
       "conflictWarn": "Sudah ada {noun} aktif dengan nama sama. Pilih Tautkan atau Lewati.",
       "conflictToast": "Ada data yang bentrok. Pilih Tautkan atau Lewati, lalu coba lagi.",
       "bulkResult": "{restored} jadwal dipulihkan.",
-      "bulkResultSkipped": "{restored} dipulihkan, {skipped} dilewati karena konflik."
+      "bulkResultSkipped": "{restored} dipulihkan, {skipped} dilewati karena konflik.",
+      "restoreTitle": "Pulihkan {name}?",
+      "restoreSubtitle": "Tinjau apa yang akan ditautkan kembali sebelum memulihkan.",
+      "restoreRelinkIntro": "Data berikut akan ditautkan kembali:",
+      "restoreQuotaNote": "Memulihkan data ini akan memakai kuota kursi langganan lagi.",
+      "restoreConflictWarn": "Sudah ada mapel aktif bernama \"{name}\". Pilih tindakan yang diinginkan.",
+      "restoreConfirm": "Pulihkan",
+      "restoreMergeChoice": "Gabungkan ke mapel aktif",
+      "restoreRenameChoice": "Pulihkan dengan nama baru",
+      "restoreCancelChoice": "Batalkan pemulihan",
+      "restoreRenameLabel": "Nama baru",
+      "restoreMergeSelectLabel": "Pilih mapel tujuan"
     },
     "staff": {
       "title": "Data Staf",

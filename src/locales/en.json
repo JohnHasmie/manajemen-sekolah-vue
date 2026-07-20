@@ -837,7 +837,18 @@
       "conflictWarn": "An active {noun} with the same name already exists. Choose Link or Skip.",
       "conflictToast": "Some data conflicts. Choose Link or Skip, then try again.",
       "bulkResult": "{restored} schedules restored.",
-      "bulkResultSkipped": "{restored} restored, {skipped} skipped due to conflicts."
+      "bulkResultSkipped": "{restored} restored, {skipped} skipped due to conflicts.",
+      "restoreTitle": "Restore {name}?",
+      "restoreSubtitle": "Review what will be re-linked before restoring.",
+      "restoreRelinkIntro": "The following data will be re-linked:",
+      "restoreQuotaNote": "Restoring this will take a subscription seat again.",
+      "restoreConflictWarn": "An active subject named \"{name}\" already exists. Choose what to do.",
+      "restoreConfirm": "Restore",
+      "restoreMergeChoice": "Merge into the active subject",
+      "restoreRenameChoice": "Restore with a new name",
+      "restoreCancelChoice": "Cancel restore",
+      "restoreRenameLabel": "New name",
+      "restoreMergeSelectLabel": "Choose the target subject"
     },
     "staff": {
       "title": "Staff",
