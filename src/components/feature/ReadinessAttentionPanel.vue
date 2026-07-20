@@ -154,7 +154,7 @@ function gotoReadiness() {
       <div v-if="completionRows.length > 0" class="flex flex-col gap-2">
         <p class="text-3xs font-bold text-slate-500 px-1 flex items-center gap-1.5">
           {{ t('admin.readiness.laneA') }}
-          <span class="text-3xs font-bold text-brand-cobalt normal-case">· {{ t('admin.readiness.laneAHint') }}</span>
+          <span class="text-3xs font-bold text-role-admin normal-case">· {{ t('admin.readiness.laneAHint') }}</span>
         </p>
         <button
           v-for="row in completionRows"
