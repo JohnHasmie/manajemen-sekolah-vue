@@ -625,13 +625,71 @@ async function submit() {
   await performSubmit();
 }
 
-/** User confirmed the pulang-cepat modal — close it and POST. */
-async function confirmEarlyLeaveCheckOut() {
-  showEarlyLeaveConfirm.value = false;
-  await performSubmit();
+/**
+ * Snapshot the amber-modal context at the moment the outcome is
+ * decided. Read from [checkoutPreview] so the fields match what the
+ * modal actually rendered — the preview is refreshed on mode flip and
+ * never polled, so it's stable across the confirm/cancel tap. Empty
+ * object is fine when the preview came back null (defensive; the modal
+ * couldn't have been shown in that case).
+ *
+ * FU-2 telemetry (backend !513) — schema matches the endpoint's context
+ * allowlist and mirrors the mobile companion for cross-platform join
+ * queries.
+ */
+function telemetryContext(): Record<string, unknown> {
+  const p = checkoutPreview.value;
+  if (!p) return {};
+  return {
+    threshold_hh_mm: p.threshold_hh_mm,
+    minutes_remaining: p.minutes_remaining,
+    policy: p.policy,
+  };
 }
 
-async function performSubmit() {
+/**
+ * Batal handler for the pulang-cepat modal. Closes the modal AND fires
+ * `pulang_cepat_cancelled` — that's the whole point of this modal from
+ * an analytics perspective (guru saw the warning, chose NOT to check
+ * out early). Fire-and-forget: never blocks close, never surfaces
+ * errors.
+ */
+function cancelEarlyLeaveCheckOut(): void {
+  showEarlyLeaveConfirm.value = false;
+  void TeacherAttendanceService.recordAttendanceEvent(
+    'pulang_cepat_cancelled',
+    telemetryContext(),
+  );
+}
+
+/** User confirmed the pulang-cepat modal — close it and POST. */
+async function confirmEarlyLeaveCheckOut() {
+  // Snapshot the modal context BEFORE performSubmit() runs — the
+  // subsequent reload() clears checkoutPreview (mode flips back to
+  // check-in when the check-out lands), so a post-submit read would be
+  // null. Firing `pulang_cepat_confirmed` only when the POST landed
+  // keeps the analytics count honest: a mid-flight network drop counts
+  // as neither confirmed nor cancelled (the guru still sees the error
+  // toast + can retry from a fresh warn modal).
+  const context = telemetryContext();
+  showEarlyLeaveConfirm.value = false;
+  const ok = await performSubmit();
+  if (ok) {
+    void TeacherAttendanceService.recordAttendanceEvent(
+      'pulang_cepat_confirmed',
+      context,
+    );
+  }
+}
+
+/**
+ * Returns true iff the POST landed cleanly (or was skipped due to a
+ * front-end validation guard — the caller distinguishes those via
+ * `canSubmit` before calling). Confirmed-modal telemetry keys on this
+ * so we only log `pulang_cepat_confirmed` for check-outs that actually
+ * persisted server-side.
+ */
+async function performSubmit(): Promise<boolean> {
   // Snapshot the live frame at submit time so the photo is fresh and the
   // flow stays one-tap. Reuse an already-captured still if present.
   let blob = photoBlob.value;
@@ -639,7 +697,7 @@ async function performSubmit() {
     blob = await cam.snapshot();
     if (!blob) {
       toast.error(t('tutor.sekolah.presensiTeacher.snapshotFailed'));
-      return;
+      return false;
     }
   }
 
@@ -647,7 +705,7 @@ async function performSubmit() {
     if (!photoSatisfied.value) toast.error(t('tutor.sekolah.presensiTeacher.toastEnableCamera'));
     else if (!locationSatisfied.value)
       toast.error(t('tutor.sekolah.presensiTeacher.toastGrabLocation'));
-    return;
+    return false;
   }
 
   submitting.value = true;
@@ -675,8 +733,10 @@ async function performSubmit() {
     // for the check-out leg if it's now enabled).
     resetForm();
     await reload();
+    return true;
   } catch (e) {
     toast.error((e as Error).message);
+    return false;
   } finally {
     submitting.value = false;
   }
@@ -1493,12 +1553,18 @@ function gotoHistory() {
          is AMBER — not the brand color — so the "you're about to be
          flagged pulang cepat" tone reads before the tap. Cancelling
          just closes the modal; the button is still tappable so the
-         teacher can pick a different action. -->
+         teacher can pick a different action.
+
+         FU-2 (backend !513): both close paths route through
+         cancelEarlyLeaveCheckOut() so telemetry captures the guru's
+         outcome — cancelled fires from Batal AND from the modal's
+         backdrop/esc close, confirmed fires only from performSubmit
+         landing cleanly. -->
     <Modal
       v-if="showEarlyLeaveConfirm && checkoutPreview"
       size="sm"
       :title="t('teacher_attendance.self_checkout.confirm_title')"
-      @close="showEarlyLeaveConfirm = false"
+      @close="cancelEarlyLeaveCheckOut"
     >
       <!-- Chip-style data list summarising the impending record. Tabular
            numbers keep the two lines aligned when the delta grows past a
@@ -1539,7 +1605,7 @@ function gotoHistory() {
           type="button"
           class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-md py-sm text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
           :disabled="submitting"
-          @click="showEarlyLeaveConfirm = false"
+          @click="cancelEarlyLeaveCheckOut"
         >
           {{ t('teacher_attendance.self_checkout.confirm_cancel') }}
         </button>
