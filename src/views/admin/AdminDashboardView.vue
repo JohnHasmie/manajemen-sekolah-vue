@@ -33,6 +33,7 @@ import {
   TeacherProgressService,
   type AdminHighlightPayload,
   type AdminSummaryPayload,
+  type AdminStaffHighlightPayload,
   type AdminStaffSummaryPayload,
 } from '@/services/teacher-progress.service';
 import { ReadinessService, type ReadinessPayload } from '@/services/readiness.service';
@@ -58,9 +59,11 @@ const { t } = useI18n();
 const canSeePrestasi = computed(() => meApi.can('gamification.admin.view'));
 const adminHighlight = ref<AdminHighlightPayload | null>(null);
 const adminSummary = ref<AdminSummaryPayload | null>(null);
-// Staff-side ringkasan tile (backend MR6 /admin/staff-engagement/summary).
-// Gated on the SAME ability as the teacher variant; hides silently when
-// zero staff so sekolah kecil see the guru tile alone.
+// Staff-side highlight + summary (BE MR6/7 /admin/staff-engagement/*).
+// Gated on the SAME ability as the teacher variant; both null when
+// the school owns no staff so the right column self-hides and the
+// dashboard degrades gracefully to guru-only for single-guru bimbel.
+const adminStaffHighlight = ref<AdminStaffHighlightPayload | null>(null);
 const adminStaffSummary = ref<AdminStaffSummaryPayload | null>(null);
 
 // Readiness teaser — CORE feature, gated only on `readiness.view`. Uses
@@ -85,12 +88,18 @@ async function loadPrestasi() {
     adminHighlight.value = null;
     adminSummary.value = null;
   }
-  // Staff summary fetched independently. A tenant may have zero staff
-  // rows (single-guru bimbel, for example) — the tile self-hides when
-  // `total_staff === 0`, so we still fetch to know that.
+  // Staff highlight + summary fetched independently. A tenant may have
+  // zero staff rows (single-guru bimbel) — the right column self-hides
+  // when `total_staff === 0`, so we still fetch to know that.
   try {
-    adminStaffSummary.value = await TeacherProgressService.getAdminStaffSummary();
+    const [sh, ss] = await Promise.all([
+      TeacherProgressService.getAdminStaffHighlight(),
+      TeacherProgressService.getAdminStaffSummary(),
+    ]);
+    adminStaffHighlight.value = sh;
+    adminStaffSummary.value = ss;
   } catch {
+    adminStaffHighlight.value = null;
     adminStaffSummary.value = null;
   }
 }
@@ -456,197 +465,210 @@ const financePct = computed(() =>
                not above the whole dashboard. Self-hides when empty. -->
           <PinnedAnnouncementCarousel viewer-role="admin" />
 
-          <!-- Prestasi & Gamifikasi Guru — paid module. Renders 1 or
-               2 highlight cards (teacher_of_month always, needs_attention
-               conditional) + a compact ringkasan tile with 4 KPI +
-               top 3. All hidden when the module is off (ability
-               stripped server-side). Silent on fetch failure. -->
+          <!-- Prestasi & Gamifikasi — paid module, ability-gated
+               server-side. Two-column grid: Guru stack (highlight +
+               engagement) on the left, Staf stack on the right. Each
+               stack collapses to full width on mobile. The Staf
+               column silently drops out when the school has zero staff
+               (single-guru bimbel) so the guru column takes the whole
+               width instead of leaving a blank second column.
+
+               Role-anchored palette per `useRoleColor`:
+                 · teacher = cobalt (#1B6FB8, `role-teacher`)
+                 · staff   = amber  (#B45309, `role-staff`)
+               Both the highlight card gradient (via
+               GamificationHighlightCard states `teacher_of_month` /
+               `staff_of_month`) and the tile header icon pick that
+               role's tint, so the two columns read as "guru world" vs
+               "staf world" at a glance without any explanatory copy. -->
           <template v-if="canSeePrestasi && adminHighlight">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
-              <GamificationHighlightCard
-                :state="adminHighlight.teacher_of_month.state"
-                :eyebrow="adminHighlight.teacher_of_month.eyebrow"
-                :title="adminHighlight.teacher_of_month.title"
-                :sub="adminHighlight.teacher_of_month.sub"
-                :cta-label="adminHighlight.teacher_of_month.cta_label"
-                :cta-target="adminHighlight.teacher_of_month.cta_target"
-                :meta="null"
-                @cta="router.push(adminHighlight.teacher_of_month.cta_target)"
-              />
-              <GamificationHighlightCard
-                v-if="adminHighlight.needs_attention.count > 0"
-                :state="adminHighlight.needs_attention.state"
-                :eyebrow="adminHighlight.needs_attention.eyebrow"
-                :title="adminHighlight.needs_attention.title ?? ''"
-                :sub="adminHighlight.needs_attention.sub"
-                :cta-label="adminHighlight.needs_attention.cta_label ?? 'Kirim pengingat'"
-                :cta-target="adminHighlight.needs_attention.cta_target ?? '/admin/teacher-engagement'"
-                :meta="null"
-                @cta="router.push('/admin/teacher-engagement')"
-              />
+            <div
+              class="grid grid-cols-1 gap-md"
+              :class="adminStaffSummary && adminStaffSummary.total_staff > 0 ? 'lg:grid-cols-2' : ''"
+            >
+              <!-- GURU COLUMN — highlight card on top, engagement tile below. -->
+              <div class="space-y-md min-w-0">
+                <GamificationHighlightCard
+                  :state="adminHighlight.teacher_of_month.state"
+                  :eyebrow="adminHighlight.teacher_of_month.eyebrow"
+                  :title="adminHighlight.teacher_of_month.title"
+                  :sub="adminHighlight.teacher_of_month.sub"
+                  :cta-label="adminHighlight.teacher_of_month.cta_label"
+                  :cta-target="adminHighlight.teacher_of_month.cta_target"
+                  :meta="null"
+                  @cta="router.push(adminHighlight.teacher_of_month.cta_target)"
+                />
+
+                <section
+                  v-if="adminSummary"
+                  class="bg-white border border-slate-200 rounded-2xl p-4"
+                >
+                  <header class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-8 h-8 rounded-xl bg-role-teacher-soft text-role-teacher grid place-items-center">
+                        <NavIcon name="medal" :size="16" />
+                      </div>
+                      <div>
+                        <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Retensi</p>
+                        <h3 class="text-sm font-black text-slate-900">Engagement Guru</h3>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      class="text-2xs font-bold text-role-teacher hover:underline"
+                      @click="router.push('/admin/teacher-engagement')"
+                    >
+                      Lihat detail →
+                    </button>
+                  </header>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                    <div class="rounded-xl bg-slate-50 px-3 py-2">
+                      <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Total</p>
+                      <p class="text-base font-black text-slate-900 mt-0.5">{{ adminSummary.total_teachers }}</p>
+                    </div>
+                    <div class="rounded-xl bg-emerald-50 px-3 py-2">
+                      <p class="text-3xs font-bold text-emerald-700 uppercase tracking-widest">Aktif</p>
+                      <p class="text-base font-black text-emerald-900 mt-0.5">{{ adminSummary.active_this_week }}</p>
+                    </div>
+                    <div class="rounded-xl bg-orange-50 px-3 py-2">
+                      <p class="text-3xs font-bold text-orange-700 uppercase tracking-widest">Streak</p>
+                      <p class="text-base font-black text-orange-900 mt-0.5">
+                        {{ adminSummary.average_streak }}<span class="text-3xs text-orange-700 font-bold ml-1">hr</span>
+                      </p>
+                    </div>
+                    <div class="rounded-xl bg-red-50 px-3 py-2">
+                      <p class="text-3xs font-bold text-red-700 uppercase tracking-widest">Sepi</p>
+                      <p class="text-base font-black text-red-900 mt-0.5">{{ adminSummary.needs_attention_count }}</p>
+                    </div>
+                  </div>
+                  <div v-if="adminSummary.top_three.length > 0" class="pt-3 border-t border-slate-100">
+                    <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest mb-2">Top minggu ini</p>
+                    <ol class="space-y-2">
+                      <li
+                        v-for="(t, i) in adminSummary.top_three"
+                        :key="t.teacher_id"
+                        class="flex items-center gap-2.5"
+                      >
+                        <span
+                          class="w-5 h-5 rounded-full text-3xs font-black text-white grid place-items-center flex-shrink-0"
+                          :class="i === 0 ? 'bg-amber-500' : i === 1 ? 'bg-slate-400' : 'bg-orange-400'"
+                        >{{ i + 1 }}</span>
+                        <InitialsAvatar
+                          :name="t.name"
+                          :image-url="t.photo_url"
+                          :size="28"
+                          color="#1B6FB8"
+                          :border-radius="8"
+                        />
+                        <div class="flex-1 min-w-0">
+                          <p class="text-2xs font-bold text-slate-800 truncate leading-tight">{{ t.name }}</p>
+                          <p v-if="t.streak_days != null && t.streak_days > 0" class="text-3xs text-slate-500 leading-tight mt-0.5">
+                            {{ t.streak_days }} hari beruntun
+                          </p>
+                        </div>
+                        <p class="text-2xs font-black text-slate-800 flex-shrink-0">
+                          {{ t.points }}<span class="text-3xs text-slate-500 font-bold ml-1">XP</span>
+                        </p>
+                      </li>
+                    </ol>
+                  </div>
+                </section>
+              </div>
+
+              <!-- STAF COLUMN — highlight card on top, engagement tile
+                   below. Whole column silent-drops when the school has
+                   no staff (see grid-cols toggle above). -->
+              <div
+                v-if="adminStaffSummary && adminStaffSummary.total_staff > 0"
+                class="space-y-md min-w-0"
+              >
+                <GamificationHighlightCard
+                  v-if="adminStaffHighlight"
+                  :state="adminStaffHighlight.staff_of_month.state"
+                  :eyebrow="adminStaffHighlight.staff_of_month.eyebrow"
+                  :title="adminStaffHighlight.staff_of_month.title"
+                  :sub="adminStaffHighlight.staff_of_month.sub"
+                  :cta-label="adminStaffHighlight.staff_of_month.cta_label"
+                  :cta-target="adminStaffHighlight.staff_of_month.cta_target"
+                  :meta="null"
+                  @cta="router.push(adminStaffHighlight.staff_of_month.cta_target)"
+                />
+
+                <section class="bg-white border border-slate-200 rounded-2xl p-4">
+                  <header class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-8 h-8 rounded-xl bg-role-staff-soft text-role-staff grid place-items-center">
+                        <NavIcon name="briefcase" :size="16" />
+                      </div>
+                      <div>
+                        <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Retensi</p>
+                        <h3 class="text-sm font-black text-slate-900">Engagement Staf</h3>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      class="text-2xs font-bold text-role-staff hover:underline"
+                      @click="router.push('/admin/staff-engagement')"
+                    >
+                      Lihat detail →
+                    </button>
+                  </header>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                    <div class="rounded-xl bg-slate-50 px-3 py-2">
+                      <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Total</p>
+                      <p class="text-base font-black text-slate-900 mt-0.5">{{ adminStaffSummary.total_staff }}</p>
+                    </div>
+                    <div class="rounded-xl bg-emerald-50 px-3 py-2">
+                      <p class="text-3xs font-bold text-emerald-700 uppercase tracking-widest">Aktif</p>
+                      <p class="text-base font-black text-emerald-900 mt-0.5">{{ adminStaffSummary.active_this_week }}</p>
+                    </div>
+                    <div class="rounded-xl bg-orange-50 px-3 py-2">
+                      <p class="text-3xs font-bold text-orange-700 uppercase tracking-widest">Streak</p>
+                      <p class="text-base font-black text-orange-900 mt-0.5">
+                        {{ adminStaffSummary.average_streak }}<span class="text-3xs text-orange-700 font-bold ml-1">hr</span>
+                      </p>
+                    </div>
+                    <div class="rounded-xl bg-red-50 px-3 py-2">
+                      <p class="text-3xs font-bold text-red-700 uppercase tracking-widest">Sepi</p>
+                      <p class="text-base font-black text-red-900 mt-0.5">{{ adminStaffSummary.needs_attention_count }}</p>
+                    </div>
+                  </div>
+                  <div v-if="adminStaffSummary.top_three.length > 0" class="pt-3 border-t border-slate-100">
+                    <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest mb-2">Top minggu ini</p>
+                    <ol class="space-y-2">
+                      <li
+                        v-for="(t, i) in adminStaffSummary.top_three"
+                        :key="t.user_id"
+                        class="flex items-center gap-2.5"
+                      >
+                        <span
+                          class="w-5 h-5 rounded-full text-3xs font-black text-white grid place-items-center flex-shrink-0"
+                          :class="i === 0 ? 'bg-amber-500' : i === 1 ? 'bg-slate-400' : 'bg-orange-400'"
+                        >{{ i + 1 }}</span>
+                        <InitialsAvatar
+                          :name="t.name"
+                          :image-url="t.photo_url"
+                          :size="28"
+                          color="#B45309"
+                          :border-radius="8"
+                        />
+                        <div class="flex-1 min-w-0">
+                          <p class="text-2xs font-bold text-slate-800 truncate leading-tight">{{ t.name }}</p>
+                          <p v-if="t.ability_role_tag || (t.streak_days != null && t.streak_days > 0)" class="text-3xs text-slate-500 leading-tight mt-0.5 truncate">
+                            <template v-if="t.ability_role_tag">{{ t.ability_role_tag }}</template>
+                            <template v-if="t.ability_role_tag && t.streak_days != null && t.streak_days > 0"> · </template>
+                            <template v-if="t.streak_days != null && t.streak_days > 0">{{ t.streak_days }} hari beruntun</template>
+                          </p>
+                        </div>
+                        <p class="text-2xs font-black text-slate-800 flex-shrink-0">
+                          {{ t.points }}<span class="text-3xs text-slate-500 font-bold ml-1">XP</span>
+                        </p>
+                      </li>
+                    </ol>
+                  </div>
+                </section>
+              </div>
             </div>
-
-            <!-- Compact summary tile — 4 KPI + top-3 preview, tap → full page. -->
-            <section
-              v-if="adminSummary"
-              class="bg-white border border-slate-200 rounded-2xl p-4"
-            >
-              <header class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-8 h-8 rounded-xl bg-violet-100 text-violet-700 grid place-items-center">
-                    <NavIcon name="medal" :size="16" />
-                  </div>
-                  <div>
-                    <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Retensi</p>
-                    <h3 class="text-sm font-black text-slate-900">Engagement Guru</h3>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  class="text-2xs font-bold text-brand-cobalt hover:underline"
-                  @click="router.push('/admin/teacher-engagement')"
-                >
-                  Lihat detail →
-                </button>
-              </header>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                <div class="rounded-xl bg-slate-50 px-3 py-2">
-                  <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Total</p>
-                  <p class="text-base font-black text-slate-900 mt-0.5">{{ adminSummary.total_teachers }}</p>
-                </div>
-                <div class="rounded-xl bg-emerald-50 px-3 py-2">
-                  <p class="text-3xs font-bold text-emerald-700 uppercase tracking-widest">Aktif</p>
-                  <p class="text-base font-black text-emerald-900 mt-0.5">{{ adminSummary.active_this_week }}</p>
-                </div>
-                <div class="rounded-xl bg-orange-50 px-3 py-2">
-                  <p class="text-3xs font-bold text-orange-700 uppercase tracking-widest">Streak</p>
-                  <p class="text-base font-black text-orange-900 mt-0.5">
-                    {{ adminSummary.average_streak }}<span class="text-3xs text-orange-700 font-bold ml-1">hr</span>
-                  </p>
-                </div>
-                <div class="rounded-xl bg-red-50 px-3 py-2">
-                  <p class="text-3xs font-bold text-red-700 uppercase tracking-widest">Sepi</p>
-                  <p class="text-base font-black text-red-900 mt-0.5">{{ adminSummary.needs_attention_count }}</p>
-                </div>
-              </div>
-              <div v-if="adminSummary.top_three.length > 0" class="pt-3 border-t border-slate-100">
-                <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest mb-2">Top minggu ini</p>
-                <ol class="space-y-2">
-                  <li
-                    v-for="(t, i) in adminSummary.top_three"
-                    :key="t.teacher_id"
-                    class="flex items-center gap-2.5"
-                  >
-                    <!-- Rank pill — colored disc, single glyph, keeps
-                         the medal semantic (gold/silver/bronze) without
-                         a full colored bg on the row. -->
-                    <span
-                      class="w-5 h-5 rounded-full text-3xs font-black text-white grid place-items-center flex-shrink-0"
-                      :class="i === 0 ? 'bg-amber-500' : i === 1 ? 'bg-slate-400' : 'bg-orange-400'"
-                    >{{ i + 1 }}</span>
-                    <InitialsAvatar
-                      :name="t.name"
-                      :image-url="t.photo_url"
-                      :size="28"
-                      color="#7C3AED"
-                      :border-radius="8"
-                    />
-                    <div class="flex-1 min-w-0">
-                      <p class="text-2xs font-bold text-slate-800 truncate leading-tight">{{ t.name }}</p>
-                      <p v-if="t.streak_days != null && t.streak_days > 0" class="text-3xs text-slate-500 leading-tight mt-0.5">
-                        {{ t.streak_days }} hari beruntun
-                      </p>
-                    </div>
-                    <p class="text-2xs font-black text-slate-800 flex-shrink-0">
-                      {{ t.points }}<span class="text-3xs text-slate-500 font-bold ml-1">XP</span>
-                    </p>
-                  </li>
-                </ol>
-              </div>
-            </section>
-
-            <!-- Engagement Staf — paired tile below Engagement Guru.
-                 Same 4-KPI + Top 3 pattern; distinct cobalt-briefcase
-                 tone so the two tiles read as related-but-distinct.
-                 Silent-hides when the school has zero staff rows
-                 (single-guru bimbel etc.), so the Wawasan Kinerja
-                 stack stays clean for tenants without staff. -->
-            <section
-              v-if="adminStaffSummary && adminStaffSummary.total_staff > 0"
-              class="bg-white border border-slate-200 rounded-2xl p-4"
-            >
-              <header class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-8 h-8 rounded-xl bg-brand-cobalt/10 text-brand-cobalt grid place-items-center">
-                    <NavIcon name="briefcase" :size="16" />
-                  </div>
-                  <div>
-                    <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Retensi</p>
-                    <h3 class="text-sm font-black text-slate-900">Engagement Staf</h3>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  class="text-2xs font-bold text-brand-cobalt hover:underline"
-                  @click="router.push('/admin/staff-engagement')"
-                >
-                  Lihat detail →
-                </button>
-              </header>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                <div class="rounded-xl bg-slate-50 px-3 py-2">
-                  <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Total</p>
-                  <p class="text-base font-black text-slate-900 mt-0.5">{{ adminStaffSummary.total_staff }}</p>
-                </div>
-                <div class="rounded-xl bg-emerald-50 px-3 py-2">
-                  <p class="text-3xs font-bold text-emerald-700 uppercase tracking-widest">Aktif</p>
-                  <p class="text-base font-black text-emerald-900 mt-0.5">{{ adminStaffSummary.active_this_week }}</p>
-                </div>
-                <div class="rounded-xl bg-orange-50 px-3 py-2">
-                  <p class="text-3xs font-bold text-orange-700 uppercase tracking-widest">Streak</p>
-                  <p class="text-base font-black text-orange-900 mt-0.5">
-                    {{ adminStaffSummary.average_streak }}<span class="text-3xs text-orange-700 font-bold ml-1">hr</span>
-                  </p>
-                </div>
-                <div class="rounded-xl bg-red-50 px-3 py-2">
-                  <p class="text-3xs font-bold text-red-700 uppercase tracking-widest">Sepi</p>
-                  <p class="text-base font-black text-red-900 mt-0.5">{{ adminStaffSummary.needs_attention_count }}</p>
-                </div>
-              </div>
-              <div v-if="adminStaffSummary.top_three.length > 0" class="pt-3 border-t border-slate-100">
-                <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest mb-2">Top minggu ini</p>
-                <ol class="space-y-2">
-                  <li
-                    v-for="(t, i) in adminStaffSummary.top_three"
-                    :key="t.user_id"
-                    class="flex items-center gap-2.5"
-                  >
-                    <span
-                      class="w-5 h-5 rounded-full text-3xs font-black text-white grid place-items-center flex-shrink-0"
-                      :class="i === 0 ? 'bg-amber-500' : i === 1 ? 'bg-slate-400' : 'bg-orange-400'"
-                    >{{ i + 1 }}</span>
-                    <InitialsAvatar
-                      :name="t.name"
-                      :image-url="t.photo_url"
-                      :size="28"
-                      color="#1B6FB8"
-                      :border-radius="8"
-                    />
-                    <div class="flex-1 min-w-0">
-                      <p class="text-2xs font-bold text-slate-800 truncate leading-tight">{{ t.name }}</p>
-                      <p v-if="t.ability_role_tag || (t.streak_days != null && t.streak_days > 0)" class="text-3xs text-slate-500 leading-tight mt-0.5 truncate">
-                        <template v-if="t.ability_role_tag">{{ t.ability_role_tag }}</template>
-                        <template v-if="t.ability_role_tag && t.streak_days != null && t.streak_days > 0"> · </template>
-                        <template v-if="t.streak_days != null && t.streak_days > 0">{{ t.streak_days }} hari beruntun</template>
-                      </p>
-                    </div>
-                    <p class="text-2xs font-black text-slate-800 flex-shrink-0">
-                      {{ t.points }}<span class="text-3xs text-slate-500 font-bold ml-1">XP</span>
-                    </p>
-                  </li>
-                </ol>
-              </div>
-            </section>
           </template>
 
           <section class="grid grid-cols-1 lg:grid-cols-3 gap-md">
