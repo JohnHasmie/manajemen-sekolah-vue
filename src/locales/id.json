@@ -7129,6 +7129,197 @@
         "logout": "Keluar",
         "logoutDesc": "Logout dari akun ini"
       }
+    },
+    "student": {
+      "home": {
+        "title": "Hai, selamat belajar",
+        "meta": "{count} sesi hari ini",
+        "emptyTitle": "Tidak ada sesi hari ini",
+        "emptyDesc": "Jadwalmu kosong. Cek besok.",
+        "sectionToday": "Sesi hari ini",
+        "kpiSessionsToday": "Sesi hari ini",
+        "kpiAttendance": "Kehadiran",
+        "kpiOutstanding": "Tagihan",
+        "kpiScoreAvg": "Rata nilai",
+        "joinSession": "Gabung sesi"
+      },
+      "schedule": {
+        "title": "Jadwal",
+        "meta": "{count} sesi mendatang",
+        "emptyTitle": "Belum ada jadwal",
+        "emptyDesc": "Jadwal kelas akan muncul di sini.",
+        "kpiToday": "Hari ini",
+        "kpiThisWeek": "Minggu ini",
+        "kpiUpcoming": "Akan datang",
+        "kpiCompleted": "Selesai"
+      },
+      "sessionDetail": {
+        "title": "Detail sesi",
+        "info": "Informasi sesi",
+        "materialsSection": "Materi terkait"
+      },
+      "assessments": {
+        "title": "Nilai & Try-out",
+        "meta": "{count} penilaian",
+        "emptyTitle": "Belum ada penilaian",
+        "emptyDesc": "Try-out yang tersedia akan muncul di sini.",
+        "kpiCompleted": "Dikerjakan",
+        "kpiPending": "Belum dikerjakan",
+        "kpiAverage": "Rata-rata",
+        "kpiRank": "Peringkat",
+        "doNow": "Kerjakan"
+      },
+      "takeAssessment": {
+        "title": "Kerjakan try-out",
+        "progress": "Soal {current} dari {total}",
+        "prev": "Sebelumnya",
+        "next": "Berikutnya",
+        "submit": "Kumpulkan",
+        "submitted": "Jawaban terkirim",
+        "submitFailed": "Gagal mengirim jawaban",
+        "optionLabel": "Pilihan"
+      },
+      "result": {
+        "title": "Hasil try-out",
+        "meta": "Skor kamu",
+        "kpiScore": "Skor",
+        "kpiRank": "Peringkat",
+        "kpiCorrect": "Benar",
+        "viewSolution": "Lihat pembahasan",
+        "viewLeaderboard": "Lihat leaderboard",
+        "emptyTitle": "Kamu belum mengerjakan"
+      },
+      "materials": {
+        "title": "Materi",
+        "meta": "{count} materi tersedia",
+        "emptyTitle": "Belum ada materi",
+        "emptyDesc": "Tutor akan membagikan materi di sini."
+      },
+      "bills": {
+        "title": "Tagihan",
+        "meta": "{count} belum dibayar",
+        "emptyTitle": "Tidak ada tagihan",
+        "emptyDesc": "Semua tagihanmu sudah lunas.",
+        "kpiOutstanding": "Belum lunas",
+        "kpiOverdue": "Menunggak",
+        "kpiTotal": "Total tagihan",
+        "kpiPaid": "Terbayar",
+        "payCta": "Bayar sekarang",
+        "receiptCta": "Unduh kwitansi",
+        "history": "Riwayat pembayaran",
+        "dueOn": "Jatuh tempo {date}"
+      },
+      "pay": {
+        "title": "Pembayaran",
+        "selectMethod": "Pilih metode pembayaran",
+        "methodVA": "Virtual Account",
+        "methodEwallet": "E-wallet",
+        "methodQris": "QRIS",
+        "methodTransfer": "Transfer bank",
+        "total": "Total bayar",
+        "adminFee": "Biaya admin",
+        "confirmCta": "Bayar Rp {amount}",
+        "stubToast": "Pembayaran belum tersedia (MVP)"
+      },
+      "profile": {
+        "title": "Profil",
+        "subtitle": "Siswa Bimbel Cendekia",
+        "account": "Akun",
+        "accountDesc": "Ubah data pribadi & foto",
+        "guardian": "Wali tertaut",
+        "guardianDesc": "Lihat wali yang terhubung",
+        "notifications": "Notifikasi",
+        "notificationsDesc": "Preferensi push & email",
+        "help": "Bantuan",
+        "helpDesc": "Panduan & pertanyaan umum",
+        "logout": "Keluar",
+        "logoutDesc": "Logout dari akun ini"
+      }
+    },
+    "parent": {
+      "home": {
+        "title": "Pantau anak",
+        "subtitle": "Wali · Monitoring",
+        "tenant": "Tenant",
+        "switchTenant": "Ganti",
+        "pickChild": "Pilih anak",
+        "emptyTitle": "Belum ada anak tertaut",
+        "emptyDesc": "Hubungkan akun anakmu di menu Profil.",
+        "kpiSessionsWeek": "Sesi minggu",
+        "kpiAttendance": "Kehadiran",
+        "kpiScoreAvg": "Rata nilai",
+        "kpiOutstanding": "Tagihan"
+      },
+      "pickChild": {
+        "title": "Pilih anak",
+        "emptyTitle": "Belum ada anak",
+        "emptyDesc": "Hubungkan akun anakmu terlebih dahulu."
+      },
+      "attendance": {
+        "title": "Kehadiran",
+        "meta": "{count} sesi periode ini",
+        "emptyTitle": "Belum ada rekap kehadiran",
+        "kpiPresent": "Hadir",
+        "kpiPermitted": "Izin",
+        "kpiSick": "Sakit",
+        "kpiAbsent": "Alpa"
+      },
+      "assessments": {
+        "title": "Nilai",
+        "meta": "Rata {avg} · {count} penilaian",
+        "emptyTitle": "Belum ada nilai",
+        "kpiAverage": "Rata-rata",
+        "kpiHighest": "Tertinggi",
+        "kpiCompleted": "Dikerjakan",
+        "kpiRank": "Peringkat",
+        "downloadReport": "Unduh rapor bimbel (PDF)"
+      },
+      "reportCard": {
+        "title": "Rapor bimbel",
+        "meta": "Batch {term}",
+        "emptyTitle": "Rapor belum tersedia",
+        "tutorNote": "Catatan tutor",
+        "downloadPdf": "Unduh PDF"
+      },
+      "pay": {
+        "title": "Pembayaran",
+        "meta": "{children} anak · {count} tagihan",
+        "emptyTitle": "Tidak ada tagihan",
+        "kpiOutstanding": "Belum lunas",
+        "kpiOverdue": "Menunggak",
+        "kpiPaidThisMonth": "Terbayar bulan ini",
+        "kpiTotalChildren": "Anak",
+        "payCta": "Bayar sekarang"
+      },
+      "history": {
+        "title": "Riwayat pembayaran",
+        "meta": "{count} transaksi",
+        "emptyTitle": "Belum ada riwayat",
+        "filterChild": "Anak",
+        "filterYear": "Tahun"
+      },
+      "notifications": {
+        "title": "Notifikasi",
+        "meta": "{count} baru",
+        "emptyTitle": "Belum ada notifikasi",
+        "markAllRead": "Tandai semua dibaca"
+      },
+      "profile": {
+        "title": "Profil",
+        "subtitle": "Wali · {name}",
+        "account": "Akun",
+        "accountDesc": "Ubah data pribadi & foto",
+        "linkedChildren": "Anak tertaut",
+        "linkedChildrenDesc": "Kelola akun anak yang terhubung",
+        "notifications": "Notifikasi",
+        "notificationsDesc": "Preferensi push & email",
+        "language": "Bahasa",
+        "languageDesc": "Indonesia (default)",
+        "help": "Bantuan",
+        "helpDesc": "Panduan & pertanyaan umum",
+        "logout": "Keluar",
+        "logoutDesc": "Logout dari akun ini"
+      }
     }
   }
 }

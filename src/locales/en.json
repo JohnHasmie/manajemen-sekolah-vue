@@ -7129,6 +7129,197 @@
         "logout": "Log out",
         "logoutDesc": "Log out of this account"
       }
+    },
+    "student": {
+      "home": {
+        "title": "Hi, welcome back",
+        "meta": "{count} sessions today",
+        "emptyTitle": "No sessions today",
+        "emptyDesc": "Your schedule is empty. Check tomorrow.",
+        "sectionToday": "Today’s sessions",
+        "kpiSessionsToday": "Sessions today",
+        "kpiAttendance": "Attendance",
+        "kpiOutstanding": "Outstanding",
+        "kpiScoreAvg": "Average score",
+        "joinSession": "Join session"
+      },
+      "schedule": {
+        "title": "Schedule",
+        "meta": "{count} upcoming sessions",
+        "emptyTitle": "No schedule yet",
+        "emptyDesc": "Your class schedule will appear here.",
+        "kpiToday": "Today",
+        "kpiThisWeek": "This week",
+        "kpiUpcoming": "Upcoming",
+        "kpiCompleted": "Completed"
+      },
+      "sessionDetail": {
+        "title": "Session detail",
+        "info": "Session info",
+        "materialsSection": "Related materials"
+      },
+      "assessments": {
+        "title": "Grades & Try-outs",
+        "meta": "{count} assessments",
+        "emptyTitle": "No assessments yet",
+        "emptyDesc": "Available try-outs will appear here.",
+        "kpiCompleted": "Completed",
+        "kpiPending": "Pending",
+        "kpiAverage": "Average",
+        "kpiRank": "Rank",
+        "doNow": "Start"
+      },
+      "takeAssessment": {
+        "title": "Take try-out",
+        "progress": "Question {current} of {total}",
+        "prev": "Previous",
+        "next": "Next",
+        "submit": "Submit",
+        "submitted": "Submitted",
+        "submitFailed": "Failed to submit",
+        "optionLabel": "Option"
+      },
+      "result": {
+        "title": "Try-out result",
+        "meta": "Your score",
+        "kpiScore": "Score",
+        "kpiRank": "Rank",
+        "kpiCorrect": "Correct",
+        "viewSolution": "View solution",
+        "viewLeaderboard": "View leaderboard",
+        "emptyTitle": "You haven’t taken this yet"
+      },
+      "materials": {
+        "title": "Materials",
+        "meta": "{count} materials available",
+        "emptyTitle": "No materials yet",
+        "emptyDesc": "Your tutor will share materials here."
+      },
+      "bills": {
+        "title": "Bills",
+        "meta": "{count} unpaid",
+        "emptyTitle": "No bills",
+        "emptyDesc": "All your bills are paid.",
+        "kpiOutstanding": "Outstanding",
+        "kpiOverdue": "Overdue",
+        "kpiTotal": "Total billed",
+        "kpiPaid": "Paid",
+        "payCta": "Pay now",
+        "receiptCta": "Download receipt",
+        "history": "Payment history",
+        "dueOn": "Due on {date}"
+      },
+      "pay": {
+        "title": "Payment",
+        "selectMethod": "Choose payment method",
+        "methodVA": "Virtual Account",
+        "methodEwallet": "E-wallet",
+        "methodQris": "QRIS",
+        "methodTransfer": "Bank transfer",
+        "total": "Total to pay",
+        "adminFee": "Admin fee",
+        "confirmCta": "Pay Rp {amount}",
+        "stubToast": "Payment not yet available (MVP)"
+      },
+      "profile": {
+        "title": "Profile",
+        "subtitle": "Bimbel Cendekia Student",
+        "account": "Account",
+        "accountDesc": "Edit personal data & photo",
+        "guardian": "Linked guardian",
+        "guardianDesc": "View linked guardian",
+        "notifications": "Notifications",
+        "notificationsDesc": "Push & email preferences",
+        "help": "Help",
+        "helpDesc": "Guide & FAQ",
+        "logout": "Log out",
+        "logoutDesc": "Log out of this account"
+      }
+    },
+    "parent": {
+      "home": {
+        "title": "Monitor your child",
+        "subtitle": "Parent · Monitoring",
+        "tenant": "Tenant",
+        "switchTenant": "Switch",
+        "pickChild": "Pick a child",
+        "emptyTitle": "No children linked yet",
+        "emptyDesc": "Link your child’s account from Profile.",
+        "kpiSessionsWeek": "Sessions/week",
+        "kpiAttendance": "Attendance",
+        "kpiScoreAvg": "Avg score",
+        "kpiOutstanding": "Outstanding"
+      },
+      "pickChild": {
+        "title": "Pick a child",
+        "emptyTitle": "No children",
+        "emptyDesc": "Link a child’s account first."
+      },
+      "attendance": {
+        "title": "Attendance",
+        "meta": "{count} sessions this period",
+        "emptyTitle": "No attendance records yet",
+        "kpiPresent": "Present",
+        "kpiPermitted": "Permitted",
+        "kpiSick": "Sick",
+        "kpiAbsent": "Absent"
+      },
+      "assessments": {
+        "title": "Grades",
+        "meta": "Avg {avg} · {count} assessments",
+        "emptyTitle": "No grades yet",
+        "kpiAverage": "Average",
+        "kpiHighest": "Highest",
+        "kpiCompleted": "Completed",
+        "kpiRank": "Rank",
+        "downloadReport": "Download bimbel report (PDF)"
+      },
+      "reportCard": {
+        "title": "Bimbel report",
+        "meta": "Batch {term}",
+        "emptyTitle": "Report not yet available",
+        "tutorNote": "Tutor note",
+        "downloadPdf": "Download PDF"
+      },
+      "pay": {
+        "title": "Payment",
+        "meta": "{children} children · {count} bills",
+        "emptyTitle": "No bills",
+        "kpiOutstanding": "Outstanding",
+        "kpiOverdue": "Overdue",
+        "kpiPaidThisMonth": "Paid this month",
+        "kpiTotalChildren": "Children",
+        "payCta": "Pay now"
+      },
+      "history": {
+        "title": "Payment history",
+        "meta": "{count} transactions",
+        "emptyTitle": "No history yet",
+        "filterChild": "Child",
+        "filterYear": "Year"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "meta": "{count} new",
+        "emptyTitle": "No notifications yet",
+        "markAllRead": "Mark all as read"
+      },
+      "profile": {
+        "title": "Profile",
+        "subtitle": "Parent · {name}",
+        "account": "Account",
+        "accountDesc": "Edit personal data & photo",
+        "linkedChildren": "Linked children",
+        "linkedChildrenDesc": "Manage linked child accounts",
+        "notifications": "Notifications",
+        "notificationsDesc": "Push & email preferences",
+        "language": "Language",
+        "languageDesc": "Indonesian (default)",
+        "help": "Help",
+        "helpDesc": "Guide & FAQ",
+        "logout": "Log out",
+        "logoutDesc": "Log out of this account"
+      }
     }
   }
 }
