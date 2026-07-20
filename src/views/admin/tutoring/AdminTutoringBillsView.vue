@@ -22,6 +22,7 @@ import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 import TutoringStatusPill from '@/components/feature/tutoring/TutoringStatusPill.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import BillDetailModal from '@/components/feature/tutoring/BillDetailModal.vue';
+import { toLocalYmd } from '@/lib/local-date';
 
 type Filter = 'all' | 'unpaid' | 'pending' | 'paid';
 
@@ -37,7 +38,10 @@ const openBillId = ref<string | null>(null);
 const markPaidBillId = ref<string | null>(null);
 const markPaidForm = ref({
   payment_method: 'bank_transfer',
-  payment_date: new Date().toISOString().slice(0, 10),
+  // Local calendar day — a UTC-slice default would silently record
+  // "yesterday" as the payment date for a Bendahara who marks a bill
+  // paid before 07:00 WIB. See lib/local-date.ts.
+  payment_date: toLocalYmd(),
   amount: undefined as number | undefined,
   admin_notes: '',
 });

@@ -11,6 +11,7 @@ import type { AdminAttendanceReport } from '@/types/tutoring';
 
 import TutorHomeHero from '@/components/feature/tutoring/TutorHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import { toLocalYmd } from '@/lib/local-date';
 
 const { t } = useI18n();
 
@@ -22,8 +23,11 @@ async function load() {
   loading.value = true;
   const now = new Date();
   const days = range.value === '30' ? 30 : range.value === '90' ? 90 : 180;
-  const from = new Date(now.getTime() - days * 86_400_000).toISOString().slice(0, 10);
-  const to = now.toISOString().slice(0, 10);
+  // Local-calendar YYYY-MM-DD — see lib/local-date.ts. Prior UTC-slice
+  // form would end the window at "yesterday" for WIB users opening the
+  // page before 07:00, silently hiding today's attendance.
+  const from = toLocalYmd(new Date(now.getTime() - days * 86_400_000));
+  const to = toLocalYmd(now);
   try { data.value = await TutoringService.getAdminAttendanceReport({ from, to }); }
   catch {/* non-fatal */}
   finally { loading.value = false; }

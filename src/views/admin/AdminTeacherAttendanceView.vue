@@ -45,6 +45,7 @@ import PulangCepatDigestCard from '@/components/attendance/PulangCepatDigestCard
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import { useToast } from '@/composables/useToast';
 import { useAcademicYearStore } from '@/stores/academic-year';
+import { toLocalYmd } from '@/lib/local-date';
 import type {
   TeacherAttendanceAdminSummary,
   TeacherAttendanceExportScope,
@@ -92,9 +93,11 @@ const filterEndDate = ref('');
  *  auto-reanchor when the AY picker flips. */
 const userTouchedDates = ref(false);
 
-function ymd(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
+// Local-calendar YYYY-MM-DD — MUST NOT use toISOString() here (that
+// formats in UTC and shifts the window by one day for WIB users
+// opening the app before 07:00). Prod incident MTs Muhammadiyah
+// Surakarta 2026-07-20 — see lib/local-date.ts docstring.
+const ymd = toLocalYmd;
 
 /** Compute the range for a quick preset. Returns null for `custom`
  *  (the caller opens the two pickers instead of firing a fetch). */

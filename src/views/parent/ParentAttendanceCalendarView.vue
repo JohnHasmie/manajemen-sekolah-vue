@@ -31,6 +31,7 @@ import ParentPageHeader from '@/components/layout/ParentPageHeader.vue';
 import AttendanceMiniKpi from '@/components/feature/AttendanceMiniKpi.vue';
 import AttendanceCalendarGrid from '@/components/feature/AttendanceCalendarGrid.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import { toLocalYmd } from '@/lib/local-date';
 
 const router = useRouter();
 const { t } = useI18n();
@@ -42,9 +43,12 @@ const allEntries = ref<ParentAttendanceEntry[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 
-// View state.
-const month = ref(new Date().toISOString().slice(0, 7));
-const selectedDate = ref<string>(new Date().toISOString().slice(0, 10));
+// View state — LOCAL calendar. toISOString-based defaults would land
+// on YESTERDAY for WIB users opening the calendar before 07:00,
+// selecting the wrong day + querying the wrong month. See
+// lib/local-date.ts.
+const month = ref(toLocalYmd().slice(0, 7));
+const selectedDate = ref<string>(toLocalYmd());
 
 async function reload(opts: { force?: boolean } = {}) {
   if (!activeChildId.value) {
