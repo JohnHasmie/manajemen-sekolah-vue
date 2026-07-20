@@ -229,6 +229,43 @@ function cellAt(dayId: string, hourNumber: number) {
   return matrix.value?.cells[`${dayId}:${hourNumber}`];
 }
 
+/**
+ * Group-cell lookup by hour_number: return the first cell at this
+ * hour that carries a `schedule_group_id`. The "⚭ GABUNG" virtual
+ * column shows one card per hour_number rather than one-per-day —
+ * a group is a slot × teacher × subject fanning across N classes,
+ * and per-class cells already share the same group_id, so any one
+ * of them is a valid representative.
+ *
+ * When the group's actual day differs from the day the row is
+ * rendered on (rare — the group typically lives in one slot), the
+ * timetable's own kolom-kelas rendering still shows the plain
+ * cell; the ⚭ column deliberately only surfaces groups whose day
+ * is one of the visible day columns.
+ */
+function groupCellAt(hourNumber: number) {
+  const cells = matrix.value?.cells;
+  if (!cells) return undefined;
+  for (const d of days.value) {
+    const cell = cells[`${d.id}:${hourNumber}`];
+    if (cell?.schedule_group_id) return cell;
+  }
+  return undefined;
+}
+
+/**
+ * True if the given (day, hour_number) cell belongs to a group.
+ * The class's own column suppresses the plain card in that case —
+ * the ⚭ virtual column renders the group card instead, so showing
+ * the row twice (once per column) would double-count the same
+ * slot to the reader.
+ */
+function isGroupMember(dayId: string, hourNumber: number): boolean {
+  const c = cellAt(dayId, hourNumber);
+  return !!c?.schedule_group_id;
+}
+
+
 // ── Click handlers ─────────────────────────────────────────────────
 function onCellClick(dayId: string, hourNumber: number) {
   const cell = cellAt(dayId, hourNumber);
@@ -250,6 +287,19 @@ function onCellClick(dayId: string, hourNumber: number) {
     semester_id: semesterId.value,
     academic_year_id: ayStore.selectedYearId ?? '',
   });
+}
+
+/**
+ * Click on the group card in the "⚭ GABUNG" virtual column —
+ * routes to `edit` with the group's schedule_id. The parent's edit
+ * handler pulls the row from cache; if it's grouped, the form modal
+ * opens in group-aware mode (chip picker pre-populated with
+ * `grouped_class_names`) so the admin can add/remove classes as a
+ * unit rather than editing one sibling in isolation.
+ */
+function onGroupCardClick(hourNumber: number) {
+  const cell = groupCellAt(hourNumber);
+  if (cell) emit('edit', cell.schedule_id);
 }
 
 // ── Counter ────────────────────────────────────────────────────────
@@ -412,6 +462,9 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
               <th v-for="i in 6" :key="i" class="min-w-[140px] px-2 py-3">
                 <div class="h-3 w-16 bg-slate-200 rounded animate-pulse mx-auto"></div>
               </th>
+              <th class="min-w-[180px] px-2 py-3 bg-violet-50">
+                <div class="h-3 w-20 bg-violet-200 rounded animate-pulse mx-auto"></div>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -422,6 +475,9 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
               </td>
               <td v-for="i in 6" :key="i" class="p-1">
                 <div class="h-14 rounded-lg bg-slate-100 animate-pulse"></div>
+              </td>
+              <td class="p-1 bg-violet-50/30">
+                <div class="h-14 rounded-lg bg-violet-100 animate-pulse"></div>
               </td>
             </tr>
           </tbody>
@@ -474,7 +530,14 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
       </div>
 
       <template v-else>
-        <!-- Grid — sticky left column, horizontal-scroll body. -->
+        <!-- Grid — sticky left column, horizontal-scroll body. The
+             final column "⚭ GABUNG" is virtual: it houses jadwal-
+             gabung entries so a group card doesn't fight for space
+             inside the class's own column. When a per-class cell is
+             part of a group, its column shows a subtle
+             "↗ lihat kolom gabung" placeholder instead of the plain
+             card so the reader isn't invited to click into a stale
+             per-class view. -->
         <div class="rounded-2xl border border-slate-200 bg-white overflow-x-auto">
           <table class="w-full text-2xs border-collapse">
             <thead>
@@ -490,6 +553,15 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                   class="text-4xs font-bold text-slate-500 uppercase tracking-widest px-2 py-3 min-w-[140px]"
                 >
                   {{ d.display_name || d.name }}
+                </th>
+                <!-- Virtual "⚭ GABUNG" column at the end. Violet header
+                     so it visually separates from the per-day columns
+                     without a heavy divider line. -->
+                <th
+                  class="text-4xs font-black text-violet-700 uppercase tracking-widest px-2 py-3 min-w-[180px] bg-violet-50 border-l-2 border-violet-200"
+                >
+                  <span class="mr-1">⚭</span>
+                  {{ t('admin.schedule.combined.gridColumnHeader') }}
                 </th>
               </tr>
             </thead>
@@ -517,7 +589,11 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                   :key="`${d.id}-${row.hour_number}`"
                   class="p-1 align-top"
                 >
-                  <template v-if="cellAt(d.id, row.hour_number)">
+                  <!-- Class-column plain cell — only rendered when the
+                       cell exists AND is NOT part of a group. Grouped
+                       cells route their render into the ⚭ column so we
+                       show a "lihat kolom gabung" placeholder here. -->
+                  <template v-if="cellAt(d.id, row.hour_number) && !isGroupMember(d.id, row.hour_number)">
                     <button
                       type="button"
                       class="w-full text-left rounded-lg p-2 bg-role-admin/5 border border-role-admin/20 hover:bg-role-admin/10 transition-all"
@@ -552,6 +628,25 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       </p>
                     </button>
                   </template>
+                  <!-- Group-member ghost placeholder — cell exists but
+                       lives in the ⚭ column. Clicking still routes to
+                       the group's edit so muscle memory doesn't miss. -->
+                  <template v-else-if="isGroupMember(d.id, row.hour_number)">
+                    <button
+                      type="button"
+                      class="w-full h-14 rounded-lg border border-dashed border-violet-300 bg-violet-50/40 hover:bg-violet-50 text-violet-600 hover:text-violet-800 transition-colors flex items-center justify-center gap-1 text-3xs font-bold"
+                      :aria-label="
+                        t('admin.schedule.combined.gridGhostAria', {
+                          day: d.display_name || d.name,
+                          hour: row.hour_number,
+                        })
+                      "
+                      @click="onCellClick(d.id, row.hour_number)"
+                    >
+                      <span>↗</span>
+                      <span>{{ t('admin.schedule.combined.gridGhostLabel') }}</span>
+                    </button>
+                  </template>
                   <template v-else>
                     <button
                       type="button"
@@ -567,6 +662,60 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       +
                     </button>
                   </template>
+                </td>
+                <!-- "⚭ GABUNG" virtual column cell. Renders the group
+                     card (2px violet border, chip row for members) OR
+                     an empty placeholder if this hour has no group. -->
+                <td class="p-1 align-top bg-violet-50/30 border-l-2 border-violet-200">
+                  <template v-if="groupCellAt(row.hour_number)">
+                    <button
+                      type="button"
+                      class="w-full text-left rounded-lg p-2 bg-white border-2 border-violet-400 hover:border-violet-500 hover:bg-violet-50 transition-all shadow-sm"
+                      :aria-label="
+                        t('admin.schedule.combined.gridCardAria', {
+                          subject: groupCellAt(row.hour_number)!.subject.name,
+                          hour: row.hour_number,
+                        })
+                      "
+                      @click="onGroupCardClick(row.hour_number)"
+                    >
+                      <p class="text-3xs font-bold text-slate-900 truncate flex items-center gap-1">
+                        <span class="text-violet-700">⚭</span>
+                        <span
+                          v-if="groupCellAt(row.hour_number)!.subject.code"
+                          class="text-violet-700"
+                        >
+                          [{{ groupCellAt(row.hour_number)!.subject.code }}]
+                        </span>
+                        <span class="truncate">
+                          {{ groupCellAt(row.hour_number)!.subject.name }}
+                        </span>
+                      </p>
+                      <p class="text-4xs text-slate-500 truncate">
+                        {{ groupCellAt(row.hour_number)!.teacher.name }}
+                      </p>
+                      <div class="mt-1 flex flex-wrap gap-1">
+                        <span
+                          v-for="m in groupCellAt(row.hour_number)!.grouped_class_names ?? []"
+                          :key="m.id"
+                          class="inline-flex items-center px-1.5 py-0 rounded bg-violet-100 text-violet-800 border border-violet-200 text-[10px] font-bold leading-tight"
+                        >
+                          {{ m.name }}
+                        </span>
+                      </div>
+                      <p
+                        v-if="groupCellAt(row.hour_number)!.room"
+                        class="text-4xs text-slate-400 truncate mt-0.5"
+                      >
+                        {{ groupCellAt(row.hour_number)!.room }}
+                      </p>
+                    </button>
+                  </template>
+                  <div
+                    v-else
+                    class="w-full h-14 rounded-lg border border-dashed border-violet-100"
+                    aria-hidden="true"
+                  />
                 </td>
               </tr>
             </tbody>

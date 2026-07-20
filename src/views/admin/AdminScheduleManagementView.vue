@@ -49,6 +49,7 @@ import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Toast from '@/components/ui/Toast.vue';
 import ScheduleFormModal from '@/components/feature/ScheduleFormModal.vue';
+import CreateCombinedScheduleWizard from '@/views/admin/schedule/CreateCombinedScheduleWizard.vue';
 import ScheduleTimetableGrid, {
   type TimetableCreatePayload,
 } from '@/components/feature/ScheduleTimetableGrid.vue';
@@ -367,6 +368,12 @@ const filteredRows = computed<ScheduleRow[]>(() => {
     if (filterDayId.value && r.day_id !== filterDayId.value) return false;
     if (filterSubjectId.value && r.subject_id !== filterSubjectId.value) return false;
     if (filterHourNumber.value !== '' && r.hour_number !== filterHourNumber.value) return false;
+    // Semua / Tunggal / Gabung — client-side filter for jadwal-gabung
+    // discoverability. `single` = plain slot, `group` = row belongs to
+    // a schedule_group. The pinned "Jadwal Gabung" section reads from
+    // this same predicate so switching to "Tunggal" collapses it too.
+    if (listFilter.value === 'single' && r.is_grouped) return false;
+    if (listFilter.value === 'group' && !r.is_grouped) return false;
     if (search.value.trim()) {
       const q = search.value.trim().toLowerCase();
       const haystack = [r.subject_name, r.class_name, r.teacher_name ?? '']
@@ -378,12 +385,117 @@ const filteredRows = computed<ScheduleRow[]>(() => {
   });
 });
 
+// ── Jadwal gabung — group aggregation for the pinned section ───
+// The list view surfaces a pinned "⚭ Jadwal Gabung" section above
+// the per-day groups, listing each group once (not once per member
+// class row). Aggregate here so both the pinned section and the KPI
+// counter chip read from the same source. Empty when the school has
+// no group entries.
+interface GroupedEntry {
+  group_id: string;
+  day: DayKey;
+  day_id: string | null;
+  day_name: string | null;
+  hour_number: number;
+  start_time: string;
+  end_time: string;
+  subject_name: string;
+  teacher_name: string | null;
+  room: string | null;
+  members: Array<{ id: string; name: string }>;
+  /** Primary row id — used by the click handler as an entry point
+   *  to open the detail sheet (which the modal then treats as a
+   *  group-scoped edit if the row is grouped). */
+  primary_row_id: string;
+}
+
+const groupedEntries = computed<GroupedEntry[]>(() => {
+  const byId = new Map<string, GroupedEntry>();
+  // Note: we walk `rows` (not `filteredRows`) so the pinned section
+  // always shows all group entries even if the list filter is set to
+  // "Tunggal". Chip filters (teacher/class/day/subject/hour) DO apply
+  // though — they scope the whole page.
+  for (const r of rows.value) {
+    if (!r.schedule_group_id) continue;
+    if (filterTeacherId.value && r.teacher_id !== filterTeacherId.value) continue;
+    if (filterDayId.value && r.day_id !== filterDayId.value) continue;
+    if (filterSubjectId.value && r.subject_id !== filterSubjectId.value) continue;
+    if (
+      filterHourNumber.value !== '' &&
+      r.hour_number !== filterHourNumber.value
+    )
+      continue;
+    // Class filter is intentionally NOT honoured — a group whose
+    // member set includes the filtered class should still appear
+    // even when another sibling row satisfies the same filter.
+    const existing = byId.get(r.schedule_group_id);
+    if (existing) {
+      if (!existing.members.some((m) => m.id === r.class_id)) {
+        existing.members.push({ id: r.class_id, name: r.class_name });
+      }
+    } else {
+      byId.set(r.schedule_group_id, {
+        group_id: r.schedule_group_id,
+        day: r.day,
+        day_id: r.day_id ?? null,
+        day_name: r.day_name ?? null,
+        hour_number: r.hour_number,
+        start_time: r.start_time,
+        end_time: r.end_time,
+        subject_name: r.subject_name,
+        teacher_name: r.teacher_name ?? null,
+        room: r.room ?? null,
+        members: [{ id: r.class_id, name: r.class_name }],
+        primary_row_id: r.id,
+      });
+    }
+  }
+  // Sort: day order → hour asc.
+  const out = Array.from(byId.values());
+  out.sort((a, b) => {
+    const da = DAY_ORDER.indexOf(a.day);
+    const db = DAY_ORDER.indexOf(b.day);
+    if (da !== db) return da - db;
+    return a.hour_number - b.hour_number;
+  });
+  return out;
+});
+
+/** Total number of unique group entries — used by the filter chip. */
+const groupedEntryCount = computed(() => groupedEntries.value.length);
+
+/**
+ * Per-day dedup: a group appears once at the group's primary_row_id
+ * in the day list, and sibling rows for the same group are hidden.
+ * This stops "PJOK 7A" + "PJOK 7B" from appearing as two adjacent
+ * rows in the day group — the pinned section already lists them once.
+ */
+const dedupedGroupIds = computed(() => {
+  const primary = new Set<string>();
+  for (const g of groupedEntries.value) primary.add(g.primary_row_id);
+  return primary;
+});
+
 // ── List grouping (sticky day) ──────────────────────────────────────
+//
+// Grouped rows are collapsed: only the "primary" sibling of each
+// jadwal-gabung group appears in the day list, tagged with an "⚭
+// (bareng 7B)" inline indicator. Other siblings are hidden — they
+// already read once in the pinned "⚭ Jadwal Gabung" section above.
+// This stops "PJOK 7A" + "PJOK 7B" from appearing as two adjacent
+// same-time rows, which would look like a duplication bug.
 const rowsByDay = computed<Record<DayKey, ScheduleRow[]>>(() => {
   const out: Record<DayKey, ScheduleRow[]> = {
     mon: [], tue: [], wed: [], thu: [], fri: [], sat: [],
   };
-  for (const r of filteredRows.value) out[r.day].push(r);
+  const primaryOfGroup = dedupedGroupIds.value;
+  for (const r of filteredRows.value) {
+    if (r.schedule_group_id && !primaryOfGroup.has(r.id)) {
+      // Non-primary sibling of a group — hide from day list.
+      continue;
+    }
+    out[r.day].push(r);
+  }
   for (const k of DAY_ORDER) {
     out[k].sort((a, b) => {
       if (a.hour_number !== b.hour_number) return a.hour_number - b.hour_number;
@@ -392,6 +504,21 @@ const rowsByDay = computed<Record<DayKey, ScheduleRow[]>>(() => {
   }
   return out;
 });
+
+/**
+ * Look up the sibling class names for a grouped primary row (used by
+ * the "⚭ (bareng 7B)" inline indicator). Returns [] for a non-grouped
+ * row. Reads from the groupedEntries aggregate so members are already
+ * deduped and consistent with the pinned section.
+ */
+function siblingsForGroupedRow(row: ScheduleRow): Array<{ id: string; name: string }> {
+  if (!row.schedule_group_id) return [];
+  const g = groupedEntries.value.find(
+    (gg) => gg.group_id === row.schedule_group_id,
+  );
+  if (!g) return [];
+  return g.members.filter((m) => m.id !== row.class_id);
+}
 
 // ── Client-side stats derivation ────────────────────────────────────
 //
@@ -480,6 +607,20 @@ const headerMeta = computed(() => {
 // CRUD modal state
 const showForm = ref(false);
 const editingRow = ref<ScheduleRow | null>(null);
+/**
+ * Jadwal gabung — dedicated 3-step wizard for creating a combined-
+ * class schedule. Second entry point alongside the in-place toggle
+ * on ScheduleFormModal; kept separate so a first-timer who's never
+ * done a jadwal gabung sees the guided flow rather than a form
+ * where the "combined" checkbox is easy to miss.
+ */
+const showCombinedWizard = ref(false);
+/** FAB dropdown open state. */
+const fabOpen = ref(false);
+/** List-view filter chip: Semua / Tunggal / Gabung (jadwal gabung
+ *  discoverability — pinned + inline options are complementary). */
+type ListFilter = 'all' | 'single' | 'group';
+const listFilter = ref<ListFilter>('all');
 
 // Detail sheet + per-row action modals
 const detailRow = ref<ScheduleRow | null>(null);
@@ -488,11 +629,52 @@ const changeTeacherRow = ref<ScheduleRow | null>(null);
 const deleteRow = ref<ScheduleRow | null>(null);
 const isDeleting = ref(false);
 
-function onAddClick() {
+/** FAB dropdown option: single-class schedule (existing flow). */
+function onFabAddSingle() {
+  fabOpen.value = false;
   editingRow.value = null;
   prefill.value = null;
   skipSetupForForm.value = false;
   showForm.value = true;
+}
+
+/** FAB dropdown option: jadwal gabung wizard. */
+function onFabAddCombined() {
+  fabOpen.value = false;
+  showCombinedWizard.value = true;
+}
+
+/** Backdrop click on the FAB dropdown — close the menu without opening
+ *  anything. Rendered as a full-viewport transparent capture div while
+ *  fabOpen is true. */
+function closeFabMenu() {
+  fabOpen.value = false;
+}
+
+/**
+ * Click on a row in the pinned "Jadwal Gabung" section — open the
+ * detail sheet for the group's primary row. The detail modal itself
+ * exposes edit/delete controls; when the underlying row carries a
+ * `schedule_group_id`, the form modal opens in group-aware mode and
+ * the delete confirmation offers the "hapus semua kelas dalam
+ * gabungan" cascade option.
+ */
+function onGroupEntryClick(g: { primary_row_id: string }) {
+  const row = rows.value.find((r) => r.id === g.primary_row_id);
+  if (row) detailRow.value = row;
+}
+
+/** Wizard save handler — mirrors onSaved's cache-refresh contract. */
+function onCombinedSaved(created: ScheduleRow[]) {
+  toast.value = {
+    message: $t('admin.schedule.combined.savedToast', {
+      count: created.length,
+    }),
+    tone: 'success',
+  };
+  showCombinedWizard.value = false;
+  void loadRows();
+  timetableGridRef.value?.refresh();
 }
 function onRowClick(row: ScheduleRow) {
   detailRow.value = row;
@@ -579,20 +761,54 @@ function detailDelete() {
   detailRow.value = null;
 }
 
+/**
+ * Delete scope for a group row — the confirmation dialog offers two
+ * outcomes:
+ *   'row'   → just this class (leaves siblings intact; back-compat
+ *             delete for a plain single-class schedule)
+ *   'group' → all classes in the gabungan (cascade siblings)
+ * A plain row (no schedule_group_id) always deletes as 'row'.
+ */
+const deleteScope = ref<'row' | 'group'>('row');
+
 async function confirmDelete() {
   if (!deleteRow.value) return;
   isDeleting.value = true;
   try {
-    await ScheduleService.destroy(deleteRow.value.id);
-    toast.value = { message: 'Jadwal dihapus.', tone: 'success' };
+    await ScheduleService.destroy(deleteRow.value.id, {
+      scope: deleteScope.value,
+    });
+    toast.value = {
+      message:
+        deleteScope.value === 'group'
+          ? $t('admin.schedule.combined.deletedGroupToast')
+          : 'Jadwal dihapus.',
+      tone: 'success',
+    };
     await loadRows();
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
     isDeleting.value = false;
     deleteRow.value = null;
+    deleteScope.value = 'row';
   }
 }
+
+/** Delete confirmation message — expands to a "N kelas dalam
+ *  gabungan" prompt when the row is grouped. */
+const deleteConfirmMessage = computed(() => {
+  const row = deleteRow.value;
+  if (!row) return '';
+  if (row.is_grouped && deleteScope.value === 'group') {
+    const memberCount = row.grouped_class_names?.length ?? 2;
+    return $t('admin.schedule.combined.deleteGroupPrompt', {
+      count: memberCount,
+      subject: row.subject_name,
+    });
+  }
+  return `Hapus ${row.subject_name} (${row.class_name}) di ${row.start_time}? Tindakan ini permanen dan tidak bisa dibatalkan.`;
+});
 
 function onRescheduled(_: ScheduleRow) {
   toast.value = { message: 'Slot dipindahkan.', tone: 'success' };
@@ -854,8 +1070,123 @@ async function bulkDelete() {
       @retry="loadRows"
     >
       <template #default>
-        <!-- LIST VIEW — sticky day groups -->
+        <!-- LIST VIEW — sticky day groups + pinned jadwal-gabung strip. -->
         <div class="space-y-4">
+          <!-- List-filter chip row — Semua / Tunggal / ⚭ Gabung.
+               Sits above the pinned section so the count is visible
+               even when the current filter hides the section (chip
+               reads "⚭ Gabung · 3" even when filter = "Tunggal"). -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              class="text-2xs font-bold px-3 py-1.5 rounded-lg border transition-colors"
+              :class="listFilter === 'all'
+                ? 'bg-role-admin/10 text-role-admin border-role-admin/30'
+                : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'"
+              @click="listFilter = 'all'"
+            >
+              {{ $t('admin.schedule.combined.filterAll') }}
+            </button>
+            <button
+              type="button"
+              class="text-2xs font-bold px-3 py-1.5 rounded-lg border transition-colors"
+              :class="listFilter === 'single'
+                ? 'bg-role-admin/10 text-role-admin border-role-admin/30'
+                : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'"
+              @click="listFilter = 'single'"
+            >
+              {{ $t('admin.schedule.combined.filterSingle') }}
+            </button>
+            <button
+              type="button"
+              class="text-2xs font-bold px-3 py-1.5 rounded-lg border transition-colors inline-flex items-center gap-1"
+              :class="listFilter === 'group'
+                ? 'bg-violet-100 text-violet-800 border-violet-300'
+                : 'bg-white text-violet-700 border-violet-200 hover:border-violet-300'"
+              @click="listFilter = 'group'"
+            >
+              <span class="text-sm leading-none">⚭</span>
+              {{ $t('admin.schedule.combined.filterGroup') }}
+              <span
+                v-if="groupedEntryCount > 0"
+                class="ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-violet-500 text-white text-3xs font-bold"
+              >
+                {{ groupedEntryCount }}
+              </span>
+            </button>
+          </div>
+
+          <!-- Pinned "⚭ Jadwal Gabung" section — always at the top,
+               reads from `groupedEntries` (deduped, one row per
+               group). Only shown when filter is 'all' or 'group' and
+               the school actually has group entries. -->
+          <section
+            v-if="listFilter !== 'single' && groupedEntries.length > 0"
+            class="space-y-2"
+          >
+            <header class="flex items-center justify-between sticky top-0 z-10 bg-violet-50 py-2 px-3 rounded-lg border border-violet-200">
+              <h3 class="text-2xs font-black text-violet-800 uppercase tracking-widest flex items-center gap-1.5">
+                <span class="text-sm leading-none">⚭</span>
+                {{
+                  $t('admin.schedule.combined.pinnedSectionTitle', {
+                    count: groupedEntries.length,
+                  })
+                }}
+              </h3>
+              <span class="text-3xs font-bold text-violet-600">
+                {{ $t('admin.schedule.combined.pinnedSectionMeta') }}
+              </span>
+            </header>
+            <div class="bg-white border-2 border-violet-200 rounded-2xl overflow-hidden">
+              <div
+                v-for="(g, idx) in groupedEntries"
+                :key="g.group_id"
+                class="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-violet-50/40 transition-colors cursor-pointer"
+                :class="idx > 0 ? 'border-t border-violet-100' : ''"
+                @click="onGroupEntryClick(g)"
+              >
+                <div class="w-12 text-center flex-shrink-0">
+                  <p class="text-3xs font-bold text-violet-500 uppercase tracking-widest">
+                    JP
+                  </p>
+                  <p class="text-[15px] font-black text-violet-700">
+                    {{ g.hour_number }}
+                  </p>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[13px] font-bold text-slate-900 truncate">
+                    <span class="text-violet-700 mr-1">⚭</span>
+                    {{ g.subject_name }} ·
+                    <span class="text-slate-600 font-normal">
+                      {{ g.teacher_name ?? 'Tanpa guru' }}
+                    </span>
+                  </p>
+                  <div class="mt-0.5 flex flex-wrap items-center gap-1">
+                    <span
+                      v-for="m in g.members"
+                      :key="m.id"
+                      class="inline-flex items-center px-1.5 py-0 rounded bg-violet-100 text-violet-800 border border-violet-200 text-[11px] font-bold"
+                    >
+                      {{ m.name }}
+                    </span>
+                    <span v-if="g.room" class="text-2xs text-slate-500 ml-1">
+                      · {{ g.room }}
+                    </span>
+                  </div>
+                </div>
+                <div class="text-right flex-shrink-0">
+                  <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
+                    {{ g.day_name ?? LOCALIZED_DAY_LABELS[g.day] }}
+                  </p>
+                  <p class="text-[12px] font-bold text-slate-900 tabular-nums">
+                    {{ g.start_time }}–{{ g.end_time }}
+                  </p>
+                </div>
+                <NavIcon name="chevron-right" :size="14" class="text-violet-300 ml-1" />
+              </div>
+            </div>
+          </section>
+
           <section
             v-for="d in DAY_ORDER"
             :key="d"
@@ -879,6 +1210,7 @@ async function bulkDelete() {
                   idx > 0 ? 'border-t border-slate-100' : '',
                   r.conflict_with && r.conflict_with.length > 0 ? 'bg-red-50/40' : '',
                   bulkMode && selectedIds.has(r.id) ? 'bg-role-admin/5' : '',
+                  r.is_grouped ? 'bg-violet-50/30' : '',
                 ]"
                 @click="bulkMode ? toggleSelect(r.id) : onRowClick(r)"
               >
@@ -895,11 +1227,28 @@ async function bulkDelete() {
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-[13px] font-bold text-slate-900 truncate">
+                    <!-- ⚭ marker for grouped rows so the per-day list
+                         echoes what the pinned section already said. -->
+                    <span v-if="r.is_grouped" class="text-violet-700 mr-1">⚭</span>
                     {{ r.subject_name }}
                     <span v-if="r.conflict_with && r.conflict_with.length > 0" class="text-red-600 ml-1">⚠ {{ $t('admin.schedule.conflictBadge') }}</span>
                   </p>
                   <p class="text-2xs text-slate-500 truncate">
-                    {{ r.class_name }} · {{ r.teacher_name ?? 'Tanpa guru' }}
+                    {{ r.class_name }}
+                    <template v-if="r.is_grouped">
+                      <!-- Inline "(bareng 7B, 7C)" indicator — collapses
+                           the group's other members into the same line
+                           so the admin sees why this slot is special
+                           without needing to scan the pinned section. -->
+                      <span class="text-violet-700 font-bold">
+                        · {{
+                          $t('admin.schedule.combined.inlineSiblingsLabel', {
+                            names: siblingsForGroupedRow(r).map((m) => m.name).join(', '),
+                          })
+                        }}
+                      </span>
+                    </template>
+                    · {{ r.teacher_name ?? 'Tanpa guru' }}
                     <span v-if="r.room"> · {{ r.room }}</span>
                   </p>
                 </div>
@@ -917,16 +1266,63 @@ async function bulkDelete() {
       </template>
     </AsyncView>
 
-    <!-- Floating Tambah CTA — hidden when in bulk mode -->
-    <Button
-      v-if="!bulkMode"
-      variant="primary"
-      class="fixed bottom-6 right-6 z-30 shadow-lg shadow-role-admin/30"
-      @click="onAddClick"
-    >
-      <NavIcon name="plus" :size="14" />
-      {{ $t('admin.schedule.addFab') }}
-    </Button>
+    <!-- Floating Tambah CTA — hidden when in bulk mode. Now a
+         dropdown with two entry points: single-class schedule (the
+         pre-jadwal-gabung flow) OR the combined-class wizard. Kept
+         a plain <button> stack because the shared <Button> primitive
+         has no built-in dropdown affordance and stacking two chips
+         above the FAB reads as a menu without any new component. -->
+    <div v-if="!bulkMode" class="fixed bottom-6 right-6 z-30">
+      <!-- Backdrop click-to-close capture — only rendered while the
+           menu is open so we don't intercept clicks otherwise. -->
+      <div
+        v-if="fabOpen"
+        class="fixed inset-0"
+        @click="closeFabMenu"
+      />
+      <div class="relative flex flex-col items-end gap-2">
+        <!-- Dropdown items appear above the FAB when open. -->
+        <transition
+          enter-active-class="transition duration-150"
+          enter-from-class="opacity-0 translate-y-1"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-100"
+          leave-from-class="opacity-100"
+          leave-to-class="opacity-0"
+        >
+          <div v-if="fabOpen" class="flex flex-col items-end gap-2">
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-xl bg-violet-600 text-white text-2xs font-bold px-4 py-2.5 shadow-lg shadow-violet-500/30 hover:bg-violet-700 transition-colors"
+              @click="onFabAddCombined"
+            >
+              <span class="text-sm leading-none">⚭</span>
+              {{ $t('admin.schedule.combined.fabAddCombined') }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-2xs font-bold px-4 py-2.5 shadow-lg hover:bg-slate-50 transition-colors"
+              @click="onFabAddSingle"
+            >
+              <NavIcon name="plus" :size="12" />
+              {{ $t('admin.schedule.combined.fabAddSingle') }}
+            </button>
+          </div>
+        </transition>
+
+        <!-- Primary FAB — toggles the dropdown. Kept the same visual
+             role-admin fill as before so muscle memory holds. -->
+        <Button
+          variant="primary"
+          class="shadow-lg shadow-role-admin/30"
+          :aria-expanded="fabOpen"
+          @click="fabOpen = !fabOpen"
+        >
+          <NavIcon :name="fabOpen ? 'x' : 'plus'" :size="14" />
+          {{ $t('admin.schedule.addFab') }}
+        </Button>
+      </div>
+    </div>
 
     <!-- Bulk action bar — sticky bottom when rows selected -->
     <section
@@ -1113,6 +1509,18 @@ async function bulkDelete() {
       @saved="onSaved"
     />
 
+    <!-- Jadwal gabung — dedicated wizard invoked from the FAB dropdown.
+         Kept as its own mount (not a mode of ScheduleFormModal) because
+         the 3-step progression + summary review don't fit inside the
+         single-form layout the modal was built around. -->
+    <CreateCombinedScheduleWizard
+      v-if="showCombinedWizard"
+      :filter-options="filterOptions"
+      :default-semester-id="filterOptions?.semesters?.[0]?.id"
+      @close="showCombinedWizard = false"
+      @saved="onCombinedSaved"
+    />
+
     <ScheduleDetailModal
       v-if="detailRow"
       :row="detailRow"
@@ -1140,16 +1548,115 @@ async function bulkDelete() {
       @done="onTeacherChanged"
     />
 
-    <ConfirmationDialog
-      v-if="deleteRow"
-      title="Hapus Jadwal"
-      :message="`Hapus ${deleteRow.subject_name} (${deleteRow.class_name}) di ${deleteRow.start_time}? Tindakan ini permanen dan tidak bisa dibatalkan.`"
-      confirm-label="Hapus"
-      danger
-      :loading="isDeleting"
-      @close="deleteRow = null"
-      @confirm="confirmDelete"
-    />
+    <!-- Delete confirmation. For a grouped row the dialog is preceded
+         by an inline scope picker (Hapus baris ini / Hapus semua kelas
+         dalam gabungan) — the dialog itself just carries the confirm
+         button, so we tuck the picker into a wrapper Modal that
+         forwards the confirmation to the same handler. -->
+    <template v-if="deleteRow">
+      <Modal
+        v-if="deleteRow.is_grouped"
+        :title="$t('admin.schedule.combined.deleteScopeTitle')"
+        size="sm"
+        @close="deleteRow = null; deleteScope = 'row'"
+      >
+        <div class="space-y-3">
+          <p class="text-2xs text-slate-600 leading-relaxed">
+            {{
+              $t('admin.schedule.combined.deleteScopeHint', {
+                subject: deleteRow.subject_name,
+                count: deleteRow.grouped_class_names?.length ?? 2,
+              })
+            }}
+          </p>
+          <div class="space-y-2">
+            <label
+              class="flex items-start gap-2.5 rounded-xl border p-3 cursor-pointer transition-colors"
+              :class="deleteScope === 'row'
+                ? 'border-role-admin bg-role-admin/5'
+                : 'border-slate-200 hover:border-slate-300'"
+            >
+              <input
+                v-model="deleteScope"
+                type="radio"
+                value="row"
+                name="deleteScope"
+                class="mt-1 accent-role-admin"
+              />
+              <div class="min-w-0 flex-1">
+                <p class="text-[13px] font-bold text-slate-900">
+                  {{ $t('admin.schedule.combined.deleteScopeRowTitle') }}
+                </p>
+                <p class="text-2xs text-slate-500 mt-0.5 leading-snug">
+                  {{
+                    $t('admin.schedule.combined.deleteScopeRowHint', {
+                      class: deleteRow.class_name,
+                    })
+                  }}
+                </p>
+              </div>
+            </label>
+            <label
+              class="flex items-start gap-2.5 rounded-xl border p-3 cursor-pointer transition-colors"
+              :class="deleteScope === 'group'
+                ? 'border-red-400 bg-red-50'
+                : 'border-slate-200 hover:border-slate-300'"
+            >
+              <input
+                v-model="deleteScope"
+                type="radio"
+                value="group"
+                name="deleteScope"
+                class="mt-1 accent-red-500"
+              />
+              <div class="min-w-0 flex-1">
+                <p class="text-[13px] font-bold text-slate-900">
+                  {{
+                    $t('admin.schedule.combined.deleteScopeGroupTitle', {
+                      count: deleteRow.grouped_class_names?.length ?? 2,
+                    })
+                  }}
+                </p>
+                <p class="text-2xs text-slate-500 mt-0.5 leading-snug">
+                  {{ $t('admin.schedule.combined.deleteScopeGroupHint') }}
+                </p>
+              </div>
+            </label>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-2">
+            <Button
+              variant="secondary"
+              block
+              @click="deleteRow = null; deleteScope = 'row'"
+            >
+              {{ $t('common.cancel') }}
+            </Button>
+            <Button
+              variant="danger"
+              block
+              :loading="isDeleting"
+              @click="confirmDelete"
+            >
+              {{
+                deleteScope === 'group'
+                  ? $t('admin.schedule.combined.deleteScopeGroupConfirm')
+                  : $t('admin.schedule.combined.deleteScopeRowConfirm')
+              }}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      <ConfirmationDialog
+        v-else
+        title="Hapus Jadwal"
+        :message="deleteConfirmMessage"
+        confirm-label="Hapus"
+        danger
+        :loading="isDeleting"
+        @close="deleteRow = null; deleteScope = 'row'"
+        @confirm="confirmDelete"
+      />
+    </template>
 
     <BulkDayPickerModal
       v-if="showBulkDay"

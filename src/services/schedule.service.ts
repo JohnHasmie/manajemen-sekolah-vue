@@ -59,6 +59,37 @@ function sanitize(obj: Record<string, unknown>): Record<string, unknown> {
   return out;
 }
 
+/**
+ * Fold a create payload's `class_id` (scalar, legacy) / `class_ids`
+ * (array, jadwal-gabung) into the single wire shape the backend sees.
+ * We always emit `class_ids: [...]`; the request validator accepts
+ * both shapes, but the network payload becomes predictable this way.
+ *
+ * If both are set, `class_ids` wins (caller-intent is explicit —
+ * they'd only pass an array when they mean to fan out to N classes).
+ * If neither is set the field is simply omitted and the backend
+ * returns its own validation error, which is the right behaviour —
+ * silently defaulting here would mask a caller bug.
+ */
+function normaliseCreatePayload(
+  payload: SchedulePayload,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...payload };
+  // If caller passed `class_ids` use it; otherwise wrap the legacy
+  // `class_id` scalar. `sanitize` strips empty arrays so a caller that
+  // passed neither still yields no `class_ids` on the wire (rather
+  // than sending `class_ids: []` which is a different validation
+  // error than "field missing").
+  if (Array.isArray(payload.class_ids) && payload.class_ids.length > 0) {
+    out.class_ids = payload.class_ids;
+    delete out.class_id;
+  } else if (payload.class_id) {
+    out.class_ids = [payload.class_id];
+    delete out.class_id;
+  }
+  return sanitize(out);
+}
+
 function humanError(e: unknown, fallback: string): string {
   const ax = e as any;
   if (ax?.response?.data) {
@@ -190,6 +221,14 @@ function sessionFromJson(raw: any): ScheduleSession {
   const lessonHourId =
     lessonHour?.id ?? raw.lesson_hour_id ?? raw.jam_pelajaran_id ?? null;
 
+  // ── Combined-class group fields ────────────────────────────────
+  // A pre-deploy backend never ships these; parse defensively so the
+  // UI treats a missing group_id as a plain single-class slot.
+  const groupId = raw.schedule_group_id ?? null;
+  const isGrouped =
+    typeof raw.is_grouped === 'boolean' ? raw.is_grouped : !!groupId;
+  const groupedNames = parseGroupedClassNames(raw.grouped_class_names);
+
   return {
     id: String(raw.id ?? ''),
     lesson_hour_id: lessonHourId ? String(lessonHourId) : null,
@@ -207,8 +246,35 @@ function sessionFromJson(raw: any): ScheduleSession {
     teacher_name: teacherName,
     semester_name: semesterName,
     academic_year: ay ?? raw.tahun_ajaran ?? null,
+    schedule_group_id: groupId ? String(groupId) : null,
+    is_grouped: isGrouped,
+    grouped_class_names: groupedNames,
   };
 }
+
+/**
+ * Normalise the `grouped_class_names` field — the backend ships an
+ * array of `{id, name}` refs for sibling classes in the same
+ * jadwal-gabung group. Missing/malformed input becomes `[]` so
+ * downstream code can always iterate.
+ */
+function parseGroupedClassNames(
+  raw: unknown,
+): Array<{ id: string; name: string }> {
+  if (!Array.isArray(raw)) return [];
+  const out: Array<{ id: string; name: string }> = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const e = entry as AnyRecordLoose;
+    const id = e.id ?? e.class_id ?? e.kelas_id;
+    const name = e.name ?? e.nama ?? e.class_name;
+    if (id == null || name == null) continue;
+    out.push({ id: String(id), name: String(name) });
+  }
+  return out;
+}
+
+type AnyRecordLoose = Record<string, unknown>;
 
 /** Full parser — admin CRUD row with UUID slot reference + day_id. */
 function rowFromJson(raw: any): ScheduleRow {
@@ -284,6 +350,15 @@ function rowFromJson(raw: any): ScheduleRow {
     conflict_with: Array.isArray(raw.conflict_with)
       ? raw.conflict_with.map(String)
       : null,
+    // ── Combined-class group fields (defensive against pre-deploy) ─
+    schedule_group_id: raw.schedule_group_id
+      ? String(raw.schedule_group_id)
+      : null,
+    is_grouped:
+      typeof raw.is_grouped === 'boolean'
+        ? raw.is_grouped
+        : !!raw.schedule_group_id,
+    grouped_class_names: parseGroupedClassNames(raw.grouped_class_names),
   };
 }
 
@@ -570,6 +645,16 @@ export interface TimetableCell {
   teacher: { id: string; name: string };
   subject: { id: string; name: string; code?: string | null };
   room?: string | null;
+  /**
+   * When the underlying row belongs to a jadwal-gabung group, the
+   * backend surfaces the group id here so the timetable grid can
+   * route the render into the "⚭ GABUNG" virtual column instead of
+   * the class's own column. `null`/`undefined` for a plain slot or
+   * a pre-deploy backend that hasn't shipped the field.
+   */
+  schedule_group_id?: string | null;
+  /** Sibling class refs for the group (empty for plain slots). */
+  grouped_class_names?: Array<{ id: string; name: string }>;
 }
 
 /** Matrix meta strip — counters + IDs surfaced under the grid. */
@@ -929,28 +1014,61 @@ export const ScheduleService = {
     }
   },
 
-  /** POST /teaching-schedule — create (with optional multi-day fan-out). */
+  /**
+   * POST /teaching-schedule — create (with optional multi-day AND
+   * multi-class fan-out).
+   *
+   * Payload normalisation:
+   * - Caller may pass either `class_id` (scalar, legacy single-class
+   *   flow) or `class_ids` (array, jadwal-gabung flow).
+   * - We always send `class_ids` on the wire — the backend's request
+   *   validator accepts both, but standardising here means the network
+   *   inspector shows a consistent shape and the field-order in the
+   *   payload never surprises the QA reviewer.
+   * - If both are set, `class_ids` wins (caller-intent explicit).
+   *
+   * A group of 2+ classes triggers backend to mint a shared
+   * `schedule_group_id`; a single class stays plain.
+   */
   async create(payload: SchedulePayload): Promise<ScheduleRow[]> {
     try {
-      const body = sanitize(payload as Record<string, unknown>);
+      const body = normaliseCreatePayload(payload);
       const res = await api.post('/teaching-schedule', body);
       const data = res.data?.data ?? res.data;
-      // Server may return single row or array (multi-day).
+      // Server may return single row, array (multi-day/multi-class),
+      // or a `{group_id, schedules: [...]}` envelope for jadwal gabung.
       if (Array.isArray(data)) return data.map(rowFromJson);
-      if (data && typeof data === 'object') return [rowFromJson(data)];
+      if (data && typeof data === 'object') {
+        const envelope = data as Record<string, unknown>;
+        if (Array.isArray(envelope.schedules)) {
+          return (envelope.schedules as unknown[]).map((r) =>
+            rowFromJson(r as any),
+          );
+        }
+        return [rowFromJson(data)];
+      }
       return [];
     } catch (e) {
       throw new Error(humanError(e, 'Gagal menyimpan jadwal.'));
     }
   },
 
-  /** PUT /teaching-schedule/{id} — update single row. */
+  /**
+   * PUT /teaching-schedule/{id} — update single row (or group scope).
+   *
+   * When editing a grouped row (`schedule_group_id != null`), passing
+   * `class_ids` sync-changes the group's class membership: siblings
+   * added, removed, or kept per the array. The backend keeps the
+   * shared `schedule_group_id` on any surviving sibling. Callers
+   * editing a plain single-class slot can keep sending `class_id`
+   * exactly as before — the payload normaliser handles both.
+   */
   async update(
     id: string,
     payload: Partial<SchedulePayload>,
   ): Promise<ScheduleRow> {
     try {
-      const body = sanitize(payload as Record<string, unknown>);
+      const body = normaliseCreatePayload(payload as SchedulePayload);
       const res = await api.put(`/teaching-schedule/${id}`, body);
       const data = res.data?.data ?? res.data;
       return rowFromJson(data);
@@ -959,10 +1077,25 @@ export const ScheduleService = {
     }
   },
 
-  /** DELETE /teaching-schedule/{id}. */
-  async destroy(id: string): Promise<void> {
+  /**
+   * DELETE /teaching-schedule/{id}.
+   *
+   * `scope: 'row'` (default) deletes only this row — safe for a plain
+   * single-class schedule and for pruning one member from a group.
+   * `scope: 'group'` cascades to every sibling row that shares the
+   * row's `schedule_group_id` — used when the admin confirms "hapus
+   * semua kelas dalam gabungan (N kelas)". Backend contract: query
+   * param `scope=group` opts into the cascade; anything else is a
+   * plain single-row delete.
+   */
+  async destroy(
+    id: string,
+    opts: { scope?: 'row' | 'group' } = {},
+  ): Promise<void> {
     try {
-      await api.delete(`/teaching-schedule/${id}`);
+      const config =
+        opts.scope === 'group' ? { params: { scope: 'group' } } : undefined;
+      await api.delete(`/teaching-schedule/${id}`, config);
     } catch (e) {
       throw new Error(humanError(e, 'Gagal menghapus jadwal.'));
     }
@@ -1330,6 +1463,12 @@ export const ScheduleService = {
               code: subject.code ?? subject.kode ?? null,
             },
             room: raw.room ?? null,
+            schedule_group_id: raw.schedule_group_id
+              ? String(raw.schedule_group_id)
+              : null,
+            grouped_class_names: parseGroupedClassNames(
+              raw.grouped_class_names,
+            ),
           };
         }
       }

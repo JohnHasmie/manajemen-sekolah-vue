@@ -122,6 +122,32 @@ const subjectId = ref<string>(props.row?.subject_id ?? '');
 const classId = ref<string>(
   props.row?.class_id ?? props.preFilledClassId ?? '',
 );
+
+// ── Jadwal gabung (combined-class) state ────────────────────────────
+//
+// The single-class picker above stays load-bearing for the plain flow.
+// When the admin toggles "Jadwalkan bareng kelas lain" ON, we widen
+// into `classIds` (multi-select chip picker) — the array is what the
+// submit path sends to the backend as `class_ids: [...]`. On edit of
+// an existing grouped row, we hydrate `classIds` from the row's
+// `grouped_class_names` so the same members show up as chips instead
+// of a single "primary" class + hidden siblings.
+const combinedMode = ref<boolean>(
+  Boolean(props.row?.is_grouped) ||
+    Boolean(
+      props.row?.grouped_class_names &&
+        props.row.grouped_class_names.length > 1,
+    ),
+);
+const classIds = ref<string[]>(
+  props.row?.grouped_class_names && props.row.grouped_class_names.length > 0
+    ? props.row.grouped_class_names.map((c) => c.id)
+    : props.row?.class_id
+      ? [props.row.class_id]
+      : props.preFilledClassId
+        ? [props.preFilledClassId]
+        : [],
+);
 const semesterId = ref<string>(
   props.row?.semester_id ?? props.defaultSemesterId ?? '',
 );
@@ -589,22 +615,64 @@ const subjectOptions = computed(() =>
   subjectsLoadFailed.value ? allSubjects.value : teacherSubjects.value,
 );
 
-const formValid = computed(
-  () =>
+/**
+ * Extra validity check for combined mode: at least 2 classes must be
+ * picked before the "Simpan" button un-disables. A 1-class group is a
+ * plain schedule wearing a hat — we short-circuit to the single flow
+ * rather than let the admin accidentally mint a 1-member group.
+ */
+const combinedClassesValid = computed(
+  () => !combinedMode.value || classIds.value.length >= 2,
+);
+
+const formValid = computed(() => {
+  const classSideValid = combinedMode.value
+    ? classIds.value.length > 0
+    : Boolean(classId.value);
+  return (
     teacherId.value &&
     subjectId.value &&
-    classId.value &&
+    classSideValid &&
     semesterId.value &&
     academicYearId.value &&
     dayId.value &&
-    lessonHourId.value,
-);
+    lessonHourId.value
+  );
+});
 
 const hasConflict = computed(() => conflicts.value.length > 0);
 const canSubmit = computed(() => {
   if (!formValid.value || isSaving.value) return false;
+  if (!combinedClassesValid.value) return false;
   if (hasConflict.value && !forceSave.value) return false;
   return true;
+});
+
+// ── Combined-mode derived options ──────────────────────────────────
+// Full class list minus the ones already added — the source list for
+// the "+ kelas" chip picker in combined mode.
+const combinedRemainingClasses = computed(() => {
+  const already = new Set(classIds.value);
+  return classes.value.filter((c) => !already.has(c.id));
+});
+
+// Chip labels for the picked-classes strip. Reads through
+// filterOptions.classes so we get the display name even for classes
+// that were pre-loaded on an edit-of-grouped-row path (backend sends
+// `grouped_class_names` with `{id, name}` so this is also a valid
+// fallback source when the class list is late-hydrating).
+const combinedPickedClasses = computed(() => {
+  return classIds.value.map((id) => {
+    const c = classes.value.find((cc) => cc.id === id);
+    if (c) return { id: c.id, name: c.name };
+    // Fallback for edit mode: the grouped_class_names ref may carry
+    // classes that aren't in the AY's active class list (edge case:
+    // class was archived after the group was created).
+    const fromRow = props.row?.grouped_class_names?.find(
+      (gc) => gc.id === id,
+    );
+    return { id, name: fromRow?.name ?? id };
+  });
 });
 
 // ── Save ───────────────────────────────────────────────────────────
@@ -616,11 +684,21 @@ async function save(opts: { continueAfter?: boolean } = {}) {
   isSaving.value = true;
   err.value = null;
   try {
+    // Combined mode always sends `class_ids` (jadwal-gabung backend
+    // fan-out); plain mode keeps sending the single `class_id` scalar
+    // — the service normaliser wraps either shape into `class_ids`
+    // for the wire but preserving the caller-intent shape here makes
+    // the payload readable in the network inspector.
+    const classPayload: { class_id?: string; class_ids?: string[] } =
+      combinedMode.value && classIds.value.length > 0
+        ? { class_ids: [...classIds.value] }
+        : { class_id: classId.value };
+
     if (isEdit.value && props.row?.id) {
       const updated = await ScheduleService.update(props.row.id, {
         teacher_id: teacherId.value,
         subject_id: subjectId.value,
-        class_id: classId.value,
+        ...classPayload,
         days_ids: [dayId.value],
         lesson_hour_id: lessonHourId.value,
         semester_id: semesterId.value,
@@ -634,7 +712,7 @@ async function save(opts: { continueAfter?: boolean } = {}) {
       const created = await ScheduleService.create({
         teacher_id: teacherId.value,
         subject_id: subjectId.value,
-        class_id: classId.value,
+        ...classPayload,
         days_ids: [dayId.value],
         lesson_hour_id: lessonHourId.value,
         semester_id: semesterId.value,
@@ -655,6 +733,58 @@ async function save(opts: { continueAfter?: boolean } = {}) {
     isSaving.value = false;
   }
 }
+
+// ── Combined-mode helpers ──────────────────────────────────────────
+// When the toggle flips ON, we seed the multi-picker with whatever the
+// single-class picker already had so the admin doesn't lose that pick.
+// When it flips OFF, we collapse back to the first class in the array
+// (or clear) so the single-picker again reads a valid value.
+function onToggleCombined(next: boolean) {
+  combinedMode.value = next;
+  if (next) {
+    // Seed multi-picker from single picker if empty (avoid duplicating
+    // an id that's already in the array — the toggle can be flipped
+    // repeatedly during a single edit).
+    if (
+      classId.value &&
+      !classIds.value.includes(classId.value)
+    ) {
+      classIds.value = [classId.value, ...classIds.value];
+    }
+  } else {
+    // Collapse to the first picked class so the plain single-select
+    // form stays consistent. If nothing was picked either way, leave
+    // both empty and let the admin start fresh.
+    if (classIds.value.length > 0) {
+      classId.value = classIds.value[0];
+    }
+    classIds.value = [];
+  }
+}
+
+/** Add a class to the multi-select group (chip picker "+ kelas"). */
+function addClassToGroup(newId: string) {
+  if (!newId) return;
+  if (classIds.value.includes(newId)) return;
+  classIds.value = [...classIds.value, newId];
+}
+
+/** Remove a class from the multi-select group (chip × click). */
+function removeClassFromGroup(removeId: string) {
+  classIds.value = classIds.value.filter((id) => id !== removeId);
+}
+
+// The single-picker `classId` stays load-bearing even in combined
+// mode: it drives grade-scoping (`selectedClassGrade`), room memory,
+// and the slot-filtered teacher lookup — all of which key on ONE
+// class at a time (the primary/anchor class). We mirror the first id
+// in `classIds` into `classId` so those computeds stay correct as
+// the admin adds/removes members.
+watch(classIds, (list) => {
+  if (!combinedMode.value) return;
+  const first = list[0] ?? '';
+  if (first !== classId.value) classId.value = first;
+});
 
 /**
  * "Buat + Tambah Lagi" tail: preserve Kelas + Semester + Slot day,
@@ -936,8 +1066,13 @@ const modalTitle = computed(() => {
   if (mode.value === 'setup' || mode.value === 'checking') {
     return t('admin.schedule.setup.modalTitle');
   }
-  return isEdit.value
-    ? t('admin.schedule.formB.editTitle')
+  if (isEdit.value) {
+    return combinedMode.value
+      ? t('admin.schedule.combined.editTitle')
+      : t('admin.schedule.formB.editTitle');
+  }
+  return combinedMode.value
+    ? t('admin.schedule.combined.createTitle')
     : t('admin.schedule.formB.createTitle');
 });
 
@@ -986,21 +1121,75 @@ const teacherPickerLocked = computed(
 
     <!-- ── Pola B reordered form ─────────────────────────────── -->
     <div v-else class="space-y-3">
-      <!-- Kelas + Semester -->
-      <div class="grid grid-cols-2 gap-3">
+      <!-- Kelas + Semester. In plain mode the Kelas picker is a
+           single-select alongside Semester (2-col grid). In combined
+           mode the Kelas picker widens to full width (chip strip)
+           and Semester drops to a full-width row below. -->
+      <div class="grid gap-3" :class="combinedMode ? 'grid-cols-1' : 'grid-cols-2'">
         <div>
           <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
-            {{ t('admin.schedule.formB.classLabel') }}
+            {{
+              combinedMode
+                ? t('admin.schedule.combined.classesLabel')
+                : t('admin.schedule.formB.classLabel')
+            }}
           </label>
+          <!-- Plain single-select — the pre-combined-toggle form. -->
           <select
+            v-if="!combinedMode"
             v-model="classId"
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
           >
             <option value="">{{ t('admin.schedule.formB.classPlaceholder') }}</option>
             <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
           </select>
+          <!-- Combined mode — chip strip: each picked class becomes a
+               violet chip with × to remove, plus a "+ kelas" dropdown
+               that appends the next class to the group. -->
+          <div v-else class="mt-1 flex flex-wrap items-center gap-1.5">
+            <span
+              v-for="c in combinedPickedClasses"
+              :key="c.id"
+              class="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-violet-100 text-violet-800 border border-violet-200 text-[12px] font-bold"
+            >
+              {{ c.name }}
+              <button
+                type="button"
+                class="w-4 h-4 rounded-full hover:bg-violet-200 text-violet-700 hover:text-violet-900 flex items-center justify-center leading-none"
+                :aria-label="
+                  t('admin.schedule.combined.removeClassAria', { name: c.name })
+                "
+                @click="removeClassFromGroup(c.id)"
+              >
+                <NavIcon name="x" :size="10" />
+              </button>
+            </span>
+            <select
+              v-if="combinedRemainingClasses.length > 0"
+              :value="''"
+              class="bg-white border border-dashed border-violet-300 rounded-full px-2.5 py-1 text-[12px] font-bold text-violet-700 outline-none focus:border-violet-500 cursor-pointer"
+              @change="(e) => { addClassToGroup((e.target as HTMLSelectElement).value); (e.target as HTMLSelectElement).value = ''; }"
+            >
+              <option value="" disabled>
+                {{ t('admin.schedule.combined.addClassPlaceholder') }}
+              </option>
+              <option
+                v-for="c in combinedRemainingClasses"
+                :key="c.id"
+                :value="c.id"
+              >
+                {{ c.name }}
+              </option>
+            </select>
+            <p
+              v-if="classIds.length === 0"
+              class="text-2xs text-violet-700 italic"
+            >
+              {{ t('admin.schedule.combined.pickAtLeastTwo') }}
+            </p>
+          </div>
         </div>
-        <div>
+        <div v-if="!combinedMode">
           <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             {{ t('admin.schedule.formB.semesterLabel') }}
           </label>
@@ -1012,6 +1201,47 @@ const teacherPickerLocked = computed(
             <option v-for="s in semesters" :key="s.id" :value="s.id">{{ semesterLabel(s.name) }}</option>
           </select>
         </div>
+      </div>
+
+      <!-- "Jadwalkan bareng kelas lain" toggle row. Violet-tint
+           background so it visually anchors the "extra thing" outside
+           the regular field grid. Rendered right after Kelas so the
+           toggle's effect (widening the picker above) is spatially
+           adjacent to its cause. -->
+      <label
+        class="flex items-start gap-3 rounded-xl border border-violet-200 bg-violet-50/50 hover:bg-violet-50 px-3 py-2.5 cursor-pointer transition-colors"
+      >
+        <input
+          type="checkbox"
+          class="mt-0.5 w-4 h-4 accent-violet-600 flex-shrink-0"
+          :checked="combinedMode"
+          @change="(e) => onToggleCombined((e.target as HTMLInputElement).checked)"
+        />
+        <div class="min-w-0 flex-1">
+          <p class="text-[13px] font-bold text-violet-900 leading-tight">
+            <span class="mr-1">⚭</span>
+            {{ t('admin.schedule.combined.toggleLabel') }}
+          </p>
+          <p class="text-2xs text-violet-700 mt-0.5 leading-snug">
+            {{ t('admin.schedule.combined.toggleHint') }}
+          </p>
+        </div>
+      </label>
+
+      <!-- Combined-mode: Semester falls out of the Kelas row and lives
+           on its own here so the layout stays two-line even when Kelas
+           expanded to full width. -->
+      <div v-if="combinedMode">
+        <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
+          {{ t('admin.schedule.formB.semesterLabel') }}
+        </label>
+        <select
+          v-model="semesterId"
+          class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
+        >
+          <option value="">{{ t('admin.schedule.formB.semesterPlaceholder') }}</option>
+          <option v-for="s in semesters" :key="s.id" :value="s.id">{{ semesterLabel(s.name) }}</option>
+        </select>
       </div>
 
       <!-- Slot (Hari × Jam Ke-) — always paired to make the "one slot"
@@ -1421,6 +1651,30 @@ const teacherPickerLocked = computed(
         <p class="text-3xs text-slate-500 mt-1">{{ t('admin.schedule.formB.roomHint') }}</p>
       </div>
 
+      <!-- Combined-mode info banner. Sits between the form fields and
+           the conflict preview so it reads as a "here's what will
+           happen" summary once the multi-select is populated. Only
+           surfaces when the group has 2+ classes — the "please pick
+           at least 2" hint above the chip picker covers the 0/1 case. -->
+      <div
+        v-if="combinedMode && classIds.length >= 2"
+        class="rounded-xl border border-violet-200 bg-violet-50 p-3 flex gap-2.5"
+      >
+        <NavIcon name="info" :size="14" class="flex-none mt-0.5 text-violet-700" />
+        <div class="min-w-0 flex-1 space-y-1">
+          <p class="text-2xs font-bold text-violet-900 leading-snug">
+            {{
+              t('admin.schedule.combined.infoBannerTitle', {
+                count: classIds.length,
+              })
+            }}
+          </p>
+          <p class="text-2xs text-violet-800 leading-snug">
+            {{ t('admin.schedule.combined.infoBannerHint') }}
+          </p>
+        </div>
+      </div>
+
       <!-- Conflict preview -->
       <div
         v-if="isProbingConflicts"
@@ -1476,7 +1730,11 @@ const teacherPickerLocked = computed(
           :disabled="!canSubmit"
           @click="save()"
         >
-          {{ t('admin.schedule.formB.primaryEdit') }}
+          {{
+            combinedMode
+              ? t('admin.schedule.combined.primaryEdit')
+              : t('admin.schedule.formB.primaryEdit')
+          }}
         </Button>
       </div>
       <div v-else class="grid grid-cols-6 gap-2 pt-2">
@@ -1489,7 +1747,13 @@ const teacherPickerLocked = computed(
           class="col-span-2"
           @click="save()"
         >
-          {{ t('admin.schedule.formB.primaryCreate') }}
+          {{
+            combinedMode
+              ? t('admin.schedule.combined.primaryCreate', {
+                  count: classIds.length,
+                })
+              : t('admin.schedule.formB.primaryCreate')
+          }}
         </Button>
         <Button
           variant="success"

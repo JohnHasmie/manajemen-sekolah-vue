@@ -48,6 +48,19 @@ export interface ScheduleSession {
   teacher_name?: string | null;
   semester_name?: string | null;
   academic_year?: string | null;
+  /**
+   * Combined-class group id — non-null when this session belongs to a
+   * "jadwal gabung" (multiple classes taught together in one slot).
+   * Backend fans out into N sibling rows sharing the same UUID.
+   * `undefined` for a pre-deploy response that hasn't shipped the field
+   * yet; parsers default to `null` + `is_grouped: false` so the UI
+   * treats the row as a plain single-class slot in that case.
+   */
+  schedule_group_id?: string | null;
+  /** Convenience flag mirroring `!!schedule_group_id`. */
+  is_grouped?: boolean;
+  /** Sibling class refs for the group (populated only when grouped). */
+  grouped_class_names?: Array<{ id: string; name: string }>;
 }
 
 // ───────────────────────────────────────────────────────────────────
@@ -93,6 +106,20 @@ export interface ScheduleRow {
 
   /** Backend may attach `conflict_with` IDs when /all is hit. */
   conflict_with?: string[] | null;
+
+  /**
+   * Combined-class group id — non-null when this row belongs to a
+   * "jadwal gabung". Sibling rows in the same group share this UUID
+   * and represent the same slot × teacher × subject taught to N
+   * classes simultaneously. `undefined` from a pre-deploy backend;
+   * parsers coerce to `null` + `is_grouped: false` in that case so
+   * every consumer can treat the row as a plain single-class slot.
+   */
+  schedule_group_id?: string | null;
+  /** Convenience flag mirroring `!!schedule_group_id`. */
+  is_grouped?: boolean;
+  /** Sibling class refs for the group (populated only when grouped). */
+  grouped_class_names?: Array<{ id: string; name: string }>;
 }
 
 // ───────────────────────────────────────────────────────────────────
@@ -203,7 +230,20 @@ export interface LessonHourCopyDayPayload {
 export interface SchedulePayload {
   teacher_id: string;
   subject_id: string;
-  class_id: string;
+  /**
+   * Single-class flow — pre-jadwal-gabung shape kept for callers that
+   * only ever handle one class at a time. New callers should prefer
+   * `class_ids` (multi-class fan-out) — the service normalises either
+   * shape into `class_ids` before hitting the wire.
+   */
+  class_id?: string;
+  /**
+   * Multi-class fan-out — jadwal gabung. Backend accepts 1..N ids and
+   * assigns a shared `schedule_group_id` when N > 1. Legacy callers
+   * pass a single-element array; the service also accepts a bare
+   * `class_id` scalar for back-compat.
+   */
+  class_ids?: string[];
   /** Multi-day fan-out — one create per day_id, all sharing the same
    * lesson_hour hour_number. Used in Frame D form. */
   days_ids?: string[];
