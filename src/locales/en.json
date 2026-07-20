@@ -597,6 +597,29 @@
         "revoking": "Revoking…",
         "revoked": "Card for {name} revoked.",
         "revokeFail": "Failed to revoke card."
+      },
+      "title": "School Attendance",
+      "eyebrowToday": "Today · {date}",
+      "detail": "Detail →",
+      "ringStudent": "Students",
+      "ringTeacher": "Teachers",
+      "ringStaff": "Staff",
+      "presentOf": "{present}/{total} present",
+      "rateToday": "present today",
+      "notYet": "no data yet",
+      "perClass": "Student attendance per class",
+      "noRecordsToday": "No attendance recorded today",
+      "weekly": {
+        "eyebrow": "This week · {range}",
+        "average": "Average",
+        "effectiveDays": "Effective days",
+        "daysUnit": "{n} days",
+        "bestWorst": "Best / Worst",
+        "today": "TODAY",
+        "weekend": "Weekend",
+        "holiday": "Holiday",
+        "emptyEffective": "No effective days this week.",
+        "chartAria": "7-day attendance chart"
       }
     },
     "dashboard": {
@@ -659,31 +682,6 @@
         "title": "Teacher & Staff Achievements",
         "sub": "Motivate your team with streaks, badges, leaderboards & \"Teacher of the Month\". Try 14 days free.",
         "cta": "Activate module"
-      }
-    },
-    "attendance": {
-      "title": "School Attendance",
-      "eyebrowToday": "Today · {date}",
-      "detail": "Detail →",
-      "ringStudent": "Students",
-      "ringTeacher": "Teachers",
-      "ringStaff": "Staff",
-      "presentOf": "{present}/{total} present",
-      "rateToday": "present today",
-      "notYet": "no data yet",
-      "perClass": "Student attendance per class",
-      "noRecordsToday": "No attendance recorded today",
-      "weekly": {
-        "eyebrow": "This week · {range}",
-        "average": "Average",
-        "effectiveDays": "Effective days",
-        "daysUnit": "{n} days",
-        "bestWorst": "Best / Worst",
-        "today": "TODAY",
-        "weekend": "Weekend",
-        "holiday": "Holiday",
-        "emptyEffective": "No effective days this week.",
-        "chartAria": "7-day attendance chart"
       }
     },
     "announcement": {
