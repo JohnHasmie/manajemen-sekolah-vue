@@ -21,6 +21,7 @@ import AdminStaffEngagementTable from '@/components/feature/staff-engagement/Adm
 import WeeklyActivityBars from '@/components/feature/teacher-engagement/WeeklyActivityBars.vue';
 import SleepyStaffCard from '@/components/feature/staff-engagement/SleepyStaffCard.vue';
 import GamificationHighlightCard from '@/components/feature/gamification/GamificationHighlightCard.vue';
+import AdminEngagementSkeleton from '@/components/feature/gamification/AdminEngagementSkeleton.vue';
 import { TeacherProgressService, type AdminStaffIndexPayload, type TeacherRowStatus } from '@/services/teacher-progress.service';
 import { useToast } from '@/composables/useToast';
 import { useRouter } from 'vue-router';
@@ -30,6 +31,7 @@ const router = useRouter();
 
 const payload = ref<AdminStaffIndexPayload | null>(null);
 const loadError = ref<string | null>(null);
+const loading = ref(true);
 const sending = ref(false);
 
 const search = ref('');
@@ -66,6 +68,7 @@ const kpiCards = computed<KpiCard[]>(() => {
 });
 
 async function load() {
+  loading.value = true;
   loadError.value = null;
   try {
     payload.value = await TeacherProgressService.getAdminStaffIndex();
@@ -73,6 +76,8 @@ async function load() {
     loadError.value = e?.response?.status === 402
       ? 'Modul Prestasi belum aktif untuk sekolah ini.'
       : 'Gagal memuat data engagement staf.';
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -102,8 +107,10 @@ onMounted(() => {
       meta="Pantau engagement, apresiasi staf produktif, sapa yang tidur."
     />
 
+    <AdminEngagementSkeleton v-if="loading" />
+
     <div
-      v-if="loadError"
+      v-else-if="loadError"
       class="rounded-2xl p-6 bg-amber-50 border border-amber-200 text-amber-800 flex items-start gap-3"
     >
       <NavIcon name="alert-circle" :size="20" />
