@@ -70,8 +70,7 @@ const kpiCards = computed<KpiCard[]>(() => {
   const latihan = items.filter((a) => a.kind === 'latihan').length;
   const draft = items.filter((a) => a.published_at == null).length;
   return [
-    // TODO i18n key: KPI label 'Total'
-    { icon: 'clipboard-list', label: 'Total', value: String(total) },
+    { icon: 'clipboard-list', label: t('tutoring2.common.total'), value: String(total) },
     { icon: 'award', label: t('tutoring2.admin.assessments.kpiTryout'), value: String(tryout), tone: 'violet' },
     { icon: 'edit', label: t('tutoring2.admin.assessments.kpiLatihan'), value: String(latihan), tone: 'brand' },
     {
@@ -137,8 +136,7 @@ function goResult(id: string) {
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
-    <!-- TODO i18n key: search-placeholder 'Cari penilaian…' -->
-    <PageFilterToolbar v-model:search="search" search-placeholder="Cari penilaian…">
+    <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.tutor.assessments.searchPh')">
       <template #chips>
         <AppFilterChip
           :label="t('tutoring2.common.kind')"
@@ -161,11 +159,10 @@ function goResult(id: string) {
       :state="state"
       loading-variant="list"
       :loading-rows="5"
-      empty-title="Belum ada penilaian"
-      empty-description="Ketuk tombol Buat try-out untuk membuat penilaian pertama."
+      :empty-title="t('tutoring2.admin.assessments.emptyTitle')"
+      :empty-description="t('tutoring2.tutor.assessments.emptyDesc')"
       @retry="reload"
     >
-      <!-- TODO i18n key: empty-title / empty-description for tutor assessments -->
       <template #default>
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm divide-y divide-slate-100">
           <div
@@ -190,8 +187,7 @@ function goResult(id: string) {
               <p class="text-2xs text-slate-500">
                 {{ formatShortDate(a.assessment_date) }}
                 <span class="mx-1 text-slate-300">•</span>
-                <!-- TODO i18n key: 'Peserta {count}' -->
-                Peserta {{ a.scores_count ?? 0 }}
+                {{ t('tutoring2.common.metaParticipants', { count: a.scores_count ?? 0 }) }}
               </p>
             </div>
 

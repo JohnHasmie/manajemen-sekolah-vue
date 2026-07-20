@@ -93,25 +93,23 @@ function sendNoteToParent() {
       :state="state"
       loading-variant="list"
       :loading-rows="4"
-      empty-title="Belum ada pendaftaran"
+      :empty-title="t('tutoring2.tutor.studentDetail.emptyTitle')"
       empty-description="Siswa ini belum terdaftar di program apapun."
       empty-icon="inbox"
       @retry="reload"
     >
-      <!-- TODO i18n key: empty-title 'Belum ada pendaftaran' / empty-description -->
+      <!-- TODO i18n key: empty-description "Siswa ini belum terdaftar di program apapun." -->
       <template #default>
         <!-- Info card -->
         <section class="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
-          <!-- TODO i18n key: 'ID siswa' label -->
           <p class="text-2xs font-bold uppercase tracking-widest text-slate-400">
-            ID siswa
+            {{ t('tutoring2.common.studentId') }}
           </p>
           <p class="mt-1 text-lg font-bold text-slate-900">
             {{ shortId(studentId) }}
           </p>
           <p class="mt-2 text-2xs text-slate-500">
-            <!-- TODO i18n key: '{count} pendaftaran aktif' -->
-            {{ activeEnrollmentCount }} pendaftaran aktif
+            {{ t('tutoring2.common.metaActiveEnrolls', { count: activeEnrollmentCount }) }}
           </p>
         </section>
 

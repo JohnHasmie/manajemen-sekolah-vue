@@ -238,9 +238,8 @@ const periodeChipValue = computed(() => {
           :active="!!statusFilter"
           @click="cycleStatus"
         />
-        <!-- TODO i18n key: chip label "Periode" -->
         <AppFilterChip
-          label="Periode"
+          :label="t('tutoring2.common.period')"
           :value="periodeChipValue"
           icon-name="calendar"
           :active="!!periodeFilter"
@@ -279,13 +278,11 @@ const periodeChipValue = computed(() => {
                     <span class="text-sm font-bold text-brand-cobalt">{{ formatTime(s.starts_at) }}</span>
                   </div>
                   <div class="min-w-0 flex-1">
-                    <!-- TODO i18n key: "Grup {short-id}" prefix noun -->
                     <p class="truncate text-sm font-bold text-slate-900">
                       {{ t('tutoring2.common.group') }} {{ s.learning_group_id.slice(0, 8) }}
                     </p>
-                    <!-- TODO i18n key: "Tanpa ruang" fallback -->
                     <p class="truncate text-2xs text-slate-500">
-                      {{ s.room ?? 'Tanpa ruang' }}
+                      {{ s.room ?? t('tutoring2.common.noRoom') }}
                     </p>
                   </div>
                   <StatusBadge

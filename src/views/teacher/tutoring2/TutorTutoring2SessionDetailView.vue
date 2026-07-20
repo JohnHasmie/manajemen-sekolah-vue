@@ -99,12 +99,10 @@ function rescheduleAction() {
 async function completeSession() {
   try {
     await TutoringBimbelService.completeSession(sessionId.value);
-    // TODO i18n key: 'Sesi ditandai selesai.'
-    toast.success('Sesi ditandai selesai.');
+    toast.success(t('tutoring2.tutor.sessionDetail.completed'));
     await reload();
   } catch (e) {
-    // TODO i18n key: 'Gagal menandai sesi selesai.'
-    toast.error((e as Error).message || 'Gagal menandai sesi selesai.');
+    toast.error((e as Error).message || t('tutoring2.tutor.sessionDetail.completeFailed'));
   }
 }
 
@@ -126,11 +124,10 @@ const metaText = computed(() =>
       :state="state"
       loading-variant="cards"
       :loading-rows="1"
-      empty-title="Sesi tidak ditemukan"
-      empty-description="Sesi ini mungkin sudah dihapus atau bukan milik Anda."
+      :empty-title="t('tutoring2.tutor.sessionDetail.notFound')"
+      :empty-description="t('tutoring2.tutor.sessionDetail.notFoundHint')"
       @retry="reload"
     >
-      <!-- TODO i18n key: empty-title "Sesi tidak ditemukan" / empty-description -->
       <template #default>
         <template v-if="session">
           <div class="rounded-3xl border border-slate-100 bg-white shadow-sm p-4 space-y-3">

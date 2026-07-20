@@ -116,17 +116,15 @@ function shortId(id: string): string {
 
     <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.admin.tutors.searchPh')">
       <template #chips>
-        <!-- TODO i18n key: chip label "Peran" -->
         <AppFilterChip
-          label="Peran"
+          :label="t('tutoring2.common.role')"
           :value="peranFilter || t('tutoring2.common.all')"
           icon-name="user"
           :active="!!peranFilter"
           @click="peranFilter = peranFilter ? '' : 'active'"
         />
-        <!-- TODO i18n key: chip label "Spesialisasi" -->
         <AppFilterChip
-          label="Spesialisasi"
+          :label="t('tutoring2.common.specialty')"
           :value="spesialisasiFilter || t('tutoring2.common.all')"
           icon-name="tag"
           :active="!!spesialisasiFilter"
@@ -135,13 +133,12 @@ function shortId(id: string): string {
       </template>
     </PageFilterToolbar>
 
-    <!-- TODO i18n key: empty-description literal below -->
     <AsyncView
       :state="state"
       loading-variant="cards"
       :loading-rows="6"
       :empty-title="t('tutoring2.admin.tutors.emptyTitle')"
-      empty-description="Klik + untuk menambah tutor baru."
+      :empty-description="t('tutoring2.admin.tutors.emptyDesc')"
       @retry="reload"
     >
       <template #default>
@@ -150,10 +147,10 @@ function shortId(id: string): string {
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.name') }}</th>
-                <th class="px-4 py-3 font-bold">Spesialisasi</th><!-- TODO i18n key -->
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.specialty') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.group') }}</th>
-                <th class="px-4 py-3 font-bold">Tarif</th><!-- TODO i18n key -->
-                <th class="px-4 py-3 font-bold">Kehadiran</th><!-- TODO i18n key -->
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.rate') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.presence') }}</th>
               </tr>
             </thead>
             <tbody>

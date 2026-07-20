@@ -107,7 +107,6 @@ function statusLabel(status: BimbelSession['status']): string {
                 <span class="text-sm font-bold text-brand-cobalt">{{ formatTime(s.starts_at) }}</span>
               </div>
               <div class="min-w-0 flex-1">
-                <!-- TODO i18n key: "Grup {short-id}" prefix noun -->
                 <p class="truncate text-sm font-bold text-slate-900">{{ t('tutoring2.common.group') }} {{ s.learning_group_id.slice(0, 8) }}</p>
                 <p class="truncate text-2xs text-slate-500">{{ s.room ?? '—' }}</p>
               </div>

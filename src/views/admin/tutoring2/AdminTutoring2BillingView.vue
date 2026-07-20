@@ -96,9 +96,8 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
       role="admin"
       :kicker="t('tutoring2.common.roleAdmin')"
       :title="t('tutoring2.admin.billing.title')"
-      :meta="state.status === 'content' ? `${(state.data as BimbelEnrollment[]).length} pendaftaran aktif` : t('tutoring2.common.loading')"
+      :meta="state.status === 'content' ? t('tutoring2.common.metaActiveEnrolls', { count: (state.data as BimbelEnrollment[]).length }) : t('tutoring2.common.loading')"
     />
-    <!-- TODO i18n key for meta '{count} pendaftaran aktif' -->
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
@@ -118,9 +117,8 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
           :active="!!statusFilter"
           @click="statusFilter = statusFilter ? '' : 'unpaid'"
         />
-        <!-- TODO i18n key for chip label 'Periode' -->
         <AppFilterChip
-          label="Periode"
+          :label="t('tutoring2.common.period')"
           :value="periodeFilter || t('tutoring2.common.all')"
           icon-name="calendar"
           :active="!!periodeFilter"
@@ -134,20 +132,18 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
       loading-variant="cards"
       :loading-rows="6"
       :empty-title="t('tutoring2.admin.billing.emptyTitle')"
-      empty-description="Klik + untuk membuat tagihan baru."
+      :empty-description="t('tutoring2.admin.billing.emptyDesc')"
       @retry="reload"
     >
-      <!-- TODO i18n key for empty-description 'Klik + untuk membuat tagihan baru.' -->
       <template #default="{ data }">
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.student') }}</th>
-                <!-- TODO i18n key for column headers 'Mode' / 'Periode' / 'Jumlah' -->
-                <th class="px-4 py-3 font-bold">Mode</th>
-                <th class="px-4 py-3 font-bold">Periode</th>
-                <th class="px-4 py-3 font-bold">Jumlah</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.mode') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.period') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.amount') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
               </tr>
             </thead>
@@ -160,8 +156,7 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
                 <td class="px-4 py-3 font-mono text-2xs text-slate-500">{{ truncateId(e.student_id) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ e.billing_mode_label ?? e.billing_mode }}</td>
                 <td class="px-4 py-3 text-slate-600">
-                  <!-- TODO i18n key for 'Tgl {day}' billing day label -->
-                  {{ e.billing_day_of_month ? `Tgl ${e.billing_day_of_month}` : '—' }}
+                  {{ e.billing_day_of_month ? t('tutoring2.admin.billing.dayPrefix', { day: e.billing_day_of_month }) : '—' }}
                 </td>
                 <td class="px-4 py-3 text-slate-600">{{ formatRupiah(e.price_at_enrollment) }}</td>
                 <td class="px-4 py-3">

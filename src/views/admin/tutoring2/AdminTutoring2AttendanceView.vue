@@ -104,18 +104,16 @@ function truncateId(id: string | null | undefined, len = 8): string {
       role="admin"
       :kicker="t('tutoring2.common.roleAdmin')"
       :title="t('tutoring2.admin.attendance.title')"
-      :meta="state.status === 'content' ? `${(state.data as BimbelSession[]).length} sesi selesai` : t('tutoring2.common.loading')"
+      :meta="state.status === 'content' ? t('tutoring2.common.metaSessionsDone', { count: (state.data as BimbelSession[]).length }) : t('tutoring2.common.loading')"
     />
-    <!-- TODO i18n key for meta '{count} sesi selesai' -->
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
     <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.admin.attendance.searchPh')">
       <template #chips>
-        <!-- TODO i18n key for date-range values 'Hari ini'/'Minggu ini'/'Bulan ini' -->
         <AppFilterChip
           :label="t('tutoring2.common.date')"
-          :value="dateFilter === 'all' ? t('tutoring2.common.all') : dateFilter === 'today' ? 'Hari ini' : dateFilter === 'week' ? 'Minggu ini' : 'Bulan ini'"
+          :value="dateFilter === 'all' ? t('tutoring2.common.all') : dateFilter === 'today' ? t('tutoring2.common.today') : dateFilter === 'week' ? t('tutoring2.common.thisWeek') : t('tutoring2.common.thisMonth')"
           icon-name="calendar"
           :active="dateFilter !== 'all'"
           @click="dateFilter = dateFilter === 'all' ? 'today' : dateFilter === 'today' ? 'week' : dateFilter === 'week' ? 'month' : 'all'"
@@ -142,20 +140,18 @@ function truncateId(id: string | null | undefined, len = 8): string {
       loading-variant="cards"
       :loading-rows="6"
       :empty-title="t('tutoring2.admin.attendance.emptyTitle')"
-      empty-description="Sesi yang sudah selesai akan muncul di sini."
+      :empty-description="t('tutoring2.admin.attendance.emptyDesc')"
       @retry="reload"
     >
-      <!-- TODO i18n key for empty-description 'Sesi yang sudah selesai akan muncul di sini.' -->
       <template #default="{ data }">
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
-                <!-- TODO i18n key for column header 'Sesi' -->
-                <th class="px-4 py-3 font-bold">Sesi</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.session') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.date') }}</th>
-                <!-- TODO i18n key for column headers 'Hadir' / 'Presensi' -->
-                <th class="px-4 py-3 font-bold">Hadir</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.attended') }}</th>
+                <!-- TODO i18n key for column header 'Presensi' -->
                 <th class="px-4 py-3 font-bold">Presensi</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
               </tr>

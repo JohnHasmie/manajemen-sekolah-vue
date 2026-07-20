@@ -100,9 +100,8 @@ function publishedLabel(publishedAt: string | null | undefined): string {
       role="admin"
       :kicker="t('tutoring2.common.roleAdmin')"
       :title="t('tutoring2.admin.assessments.title')"
-      :meta="state.status === 'content' ? `${(state.data as BimbelAssessment[]).length} penilaian` : t('tutoring2.common.loading')"
+      :meta="state.status === 'content' ? t('tutoring2.common.metaAssessments', { count: (state.data as BimbelAssessment[]).length }) : t('tutoring2.common.loading')"
     />
-    <!-- TODO i18n key for meta '{count} penilaian' -->
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
@@ -137,10 +136,9 @@ function publishedLabel(publishedAt: string | null | undefined): string {
       loading-variant="cards"
       :loading-rows="6"
       :empty-title="t('tutoring2.admin.assessments.emptyTitle')"
-      empty-description="Klik + untuk membuat try-out atau latihan baru."
+      :empty-description="t('tutoring2.admin.assessments.emptyDesc')"
       @retry="reload"
     >
-      <!-- TODO i18n key for empty-description 'Klik + untuk membuat try-out atau latihan baru.' -->
       <template #default="{ data }">
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <table class="w-full text-sm">
@@ -150,10 +148,9 @@ function publishedLabel(publishedAt: string | null | undefined): string {
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.kind') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.program') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.date') }}</th>
-                <!-- TODO i18n key for column headers 'Peserta' / 'Max' / 'Publikasi' -->
-                <th class="px-4 py-3 font-bold">Peserta</th>
-                <th class="px-4 py-3 font-bold">Max</th>
-                <th class="px-4 py-3 font-bold">Publikasi</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.participants') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.max') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.publication') }}</th>
               </tr>
             </thead>
             <tbody>

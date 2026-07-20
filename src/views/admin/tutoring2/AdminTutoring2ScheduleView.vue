@@ -101,9 +101,8 @@ function truncateId(id: string | null | undefined, len = 8): string {
       role="admin"
       :kicker="t('tutoring2.common.roleAdmin')"
       :title="t('tutoring2.admin.schedule.title')"
-      :meta="state.status === 'content' ? `${(state.data as BimbelSession[]).length} sesi minggu ini` : t('tutoring2.common.loading')"
+      :meta="state.status === 'content' ? t('tutoring2.common.metaSessionsWeek', { count: (state.data as BimbelSession[]).length }) : t('tutoring2.common.loading')"
     />
-    <!-- TODO i18n key for meta '{count} sesi minggu ini' -->
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
@@ -130,10 +129,9 @@ function truncateId(id: string | null | undefined, len = 8): string {
           :active="!!tutorFilter"
           @click="tutorFilter = ''"
         />
-        <!-- TODO i18n key for chip label 'Periode' and values 'Minggu ini'/'Bulan ini' -->
         <AppFilterChip
-          label="Periode"
-          :value="periodFilter === 'all' ? t('tutoring2.common.all') : periodFilter === 'week' ? 'Minggu ini' : 'Bulan ini'"
+          :label="t('tutoring2.common.period')"
+          :value="periodFilter === 'all' ? t('tutoring2.common.all') : periodFilter === 'week' ? t('tutoring2.common.thisWeek') : t('tutoring2.common.thisMonth')"
           icon-name="calendar"
           :active="periodFilter !== 'all'"
           @click="periodFilter = periodFilter === 'all' ? 'week' : periodFilter === 'week' ? 'month' : 'all'"
@@ -146,10 +144,9 @@ function truncateId(id: string | null | undefined, len = 8): string {
       loading-variant="cards"
       :loading-rows="6"
       :empty-title="t('tutoring2.admin.schedule.emptyTitle')"
-      empty-description="Klik + untuk membuat sesi baru."
+      :empty-description="t('tutoring2.admin.schedule.emptyDesc')"
       @retry="reload"
     >
-      <!-- TODO i18n key for empty-description 'Klik + untuk membuat sesi baru.' -->
       <template #default="{ data }">
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <table class="w-full text-sm">

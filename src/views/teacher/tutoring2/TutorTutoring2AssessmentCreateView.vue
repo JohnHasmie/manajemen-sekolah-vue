@@ -13,7 +13,7 @@
   Route: teacher/tutoring2/assessments/new
 -->
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
@@ -37,19 +37,17 @@ const kkm = ref<number | null>(null);
 const description = ref('');
 const saving = ref(false);
 
-// TODO i18n key: kind labels (Try-out / Latihan / Kuis)
-const KIND_OPTIONS: Array<{ value: 'tryout' | 'latihan' | 'kuis'; label: string }> = [
-  { value: 'tryout', label: 'Try-out' },
-  { value: 'latihan', label: 'Latihan' },
-  { value: 'kuis', label: 'Kuis' },
-];
+const KIND_OPTIONS = computed<Array<{ value: 'tryout' | 'latihan' | 'kuis'; label: string }>>(() => [
+  { value: 'tryout', label: t('tutoring2.common.kindTryout') },
+  { value: 'latihan', label: t('tutoring2.common.kindLatihan') },
+  { value: 'kuis', label: t('tutoring2.common.kindKuis') },
+]);
 
 // ─── Submit ───────────────────────────────────────────────────────
 async function submit() {
   if (saving.value) return;
   if (!title.value.trim() || !programId.value.trim() || !learningGroupId.value.trim()) {
-    // TODO i18n key: 'Judul, program, dan kelompok wajib diisi'
-    toast.error('Judul, program, dan kelompok wajib diisi');
+    toast.error(t('tutoring2.tutor.assessmentCreate.validationErr'));
     return;
   }
   saving.value = true;
@@ -67,8 +65,7 @@ async function submit() {
     toast.success(t('tutoring2.tutor.assessmentCreate.saved'));
     router.push({ name: 'teacher.tutoring2.assessments' });
   } catch (e) {
-    // TODO i18n key: 'Gagal membuat try-out'
-    toast.error((e as Error).message || 'Gagal membuat try-out');
+    toast.error((e as Error).message || t('tutoring2.tutor.assessmentCreate.saveError'));
   } finally {
     saving.value = false;
   }
@@ -97,9 +94,8 @@ function onAiClick() {
         <NavIcon name="sparkles" :size="16" />
       </span>
       <span class="flex-1 text-left">
-        <!-- TODO i18n key: 'AI generate soal' / helper copy -->
         <span class="block text-sm font-bold">{{ t('tutoring2.tutor.assessmentCreate.aiRow') }}</span>
-        <span class="block text-2xs text-brand-cobalt/70">Buat draft soal otomatis dari topik</span>
+        <span class="block text-2xs text-brand-cobalt/70">{{ t('tutoring2.tutor.assessmentCreate.aiHelper') }}</span>
       </span>
       <NavIcon name="chevron-right" :size="18" />
     </button>
@@ -118,8 +114,8 @@ function onAiClick() {
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div class="space-y-1.5">
-          <!-- TODO i18n key: 'Program ID' label + placeholder -->
-          <label for="assessment-program" class="text-xs font-bold text-slate-600 uppercase tracking-wider">Program ID</label>
+          <!-- TODO i18n key: placeholder "UUID program" -->
+          <label for="assessment-program" class="text-xs font-bold text-slate-600 uppercase tracking-wider">{{ t('tutoring2.common.programId') }}</label>
           <input
             id="assessment-program"
             v-model="programId"
@@ -129,8 +125,8 @@ function onAiClick() {
           />
         </div>
         <div class="space-y-1.5">
-          <!-- TODO i18n key: 'Kelompok ID' label + placeholder -->
-          <label for="assessment-group" class="text-xs font-bold text-slate-600 uppercase tracking-wider">Kelompok ID</label>
+          <!-- TODO i18n key: placeholder "UUID learning group" -->
+          <label for="assessment-group" class="text-xs font-bold text-slate-600 uppercase tracking-wider">{{ t('tutoring2.common.groupId') }}</label>
           <input
             id="assessment-group"
             v-model="learningGroupId"
@@ -168,8 +164,7 @@ function onAiClick() {
           />
         </div>
         <div class="space-y-1.5">
-          <!-- TODO i18n key: 'Skor maks' -->
-          <label for="assessment-max" class="text-xs font-bold text-slate-600 uppercase tracking-wider">Skor maks</label>
+          <label for="assessment-max" class="text-xs font-bold text-slate-600 uppercase tracking-wider">{{ t('tutoring2.common.maxScore') }}</label>
           <input
             id="assessment-max"
             v-model.number="maxScore"
@@ -179,8 +174,7 @@ function onAiClick() {
           />
         </div>
         <div class="space-y-1.5">
-          <!-- TODO i18n key: 'KKM (opsional)' -->
-          <label for="assessment-kkm" class="text-xs font-bold text-slate-600 uppercase tracking-wider">KKM (opsional)</label>
+          <label for="assessment-kkm" class="text-xs font-bold text-slate-600 uppercase tracking-wider">{{ t('tutoring2.common.kkm') }}</label>
           <input
             id="assessment-kkm"
             v-model.number="kkm"
@@ -193,8 +187,8 @@ function onAiClick() {
       </div>
 
       <div class="space-y-1.5">
-        <!-- TODO i18n key: 'Deskripsi' label + placeholder -->
-        <label for="assessment-desc" class="text-xs font-bold text-slate-600 uppercase tracking-wider">Deskripsi</label>
+        <!-- TODO i18n key: placeholder "Catatan singkat untuk peserta" -->
+        <label for="assessment-desc" class="text-xs font-bold text-slate-600 uppercase tracking-wider">{{ t('tutoring2.common.description') }}</label>
         <textarea
           id="assessment-desc"
           v-model="description"
@@ -206,8 +200,7 @@ function onAiClick() {
 
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
         <Button variant="secondary" size="md" type="button" @click="router.back()">{{ t('tutoring2.common.cancel') }}</Button>
-        <!-- TODO i18n key: 'Simpan try-out' — using common.save fallback -->
-        <Button variant="primary" size="md" type="submit" :loading="saving">{{ t('tutoring2.common.save') }}</Button>
+        <Button variant="primary" size="md" type="submit" :loading="saving">{{ t('tutoring2.tutor.assessmentCreate.saveCta') }}</Button>
       </div>
     </form>
   </div>

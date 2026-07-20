@@ -141,13 +141,12 @@ function remainingQuota(e: BimbelEnrollment): string {
       </template>
     </PageFilterToolbar>
 
-    <!-- TODO i18n key: empty-description literal below -->
     <AsyncView
       :state="state"
       loading-variant="cards"
       :loading-rows="6"
       :empty-title="t('tutoring2.admin.enrollments.emptyTitle')"
-      empty-description="Klik + untuk mendaftarkan siswa baru."
+      :empty-description="t('tutoring2.admin.enrollments.emptyDesc')"
       @retry="reload"
     >
       <template #default="{ data }">

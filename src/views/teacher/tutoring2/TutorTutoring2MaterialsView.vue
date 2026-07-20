@@ -203,9 +203,8 @@ function goUpload() {
           :active="!!programFilter"
           @click="programFilter = nextProgramFilter()"
         />
-        <!-- TODO i18n key: chip label 'Tipe' -->
         <AppFilterChip
-          label="Tipe"
+          :label="t('tutoring2.common.type')"
           :value="kindFilter ? kindFilter.toUpperCase() : t('tutoring2.common.all')"
           icon-name="filter"
           :active="!!kindFilter"

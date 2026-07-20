@@ -109,8 +109,8 @@ async function submit() {
       </label>
 
       <label class="block space-y-1.5">
-        <!-- TODO i18n key: 'Deskripsi' label + placeholder -->
-        <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">Deskripsi</span>
+        <!-- TODO i18n key: placeholder "Ringkas isi materi agar mudah ditemukan." -->
+        <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">{{ t('tutoring2.common.description') }}</span>
         <textarea
           v-model="description"
           rows="3"
@@ -130,8 +130,7 @@ async function submit() {
       </label>
 
       <div class="space-y-1.5">
-        <!-- TODO i18n key: 'Tipe' -->
-        <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">Tipe</span>
+        <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">{{ t('tutoring2.common.type') }}</span>
         <div class="inline-flex flex-wrap gap-2">
           <button
             v-for="opt in kindOptions"
@@ -147,8 +146,7 @@ async function submit() {
       </div>
 
       <div class="space-y-1.5">
-        <!-- TODO i18n key: 'Berkas' -->
-        <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">Berkas</span>
+        <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">{{ t('tutoring2.common.file') }}</span>
         <button
           type="button"
           class="flex w-full flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-brand-cobalt/40 bg-brand-cobalt/5 px-4 py-8 text-center transition-colors hover:bg-brand-cobalt/10"
@@ -176,20 +174,18 @@ async function submit() {
               <span v-if="sizeLabel">{{ sizeLabel }}</span>
             </p>
           </div>
-          <!-- TODO i18n key: 'Ganti' -->
           <button
             type="button"
             class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-2xs font-bold text-slate-600 hover:text-slate-900"
             @click="clearFile"
-          >Ganti</button>
+          >{{ t('tutoring2.common.replace') }}</button>
         </div>
       </div>
     </div>
 
     <div class="flex items-center justify-end gap-2">
       <Button variant="secondary" @click="router.back()">{{ t('tutoring2.common.cancel') }}</Button>
-      <!-- TODO i18n key: 'Unggah' primary button -->
-      <Button variant="primary" :loading="uploading" @click="submit">Unggah</Button>
+      <Button variant="primary" :loading="uploading" @click="submit">{{ t('tutoring2.common.upload') }}</Button>
     </div>
   </div>
 </template>

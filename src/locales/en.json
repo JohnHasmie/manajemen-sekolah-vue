@@ -6812,7 +6812,58 @@
       "student_": "Parent",
       "title": "Title",
       "capacity": "Capacity",
-      "remainingQuota": "Remaining quota"
+      "remainingQuota": "Remaining quota",
+      "role": "Role",
+      "specialty": "Specialty",
+      "rate": "Rate",
+      "presence": "Presence",
+      "period": "Period",
+      "session": "Session",
+      "sessions": "Sessions",
+      "classLabel": "Class",
+      "participants": "Participants",
+      "max": "Max",
+      "publication": "Publication",
+      "amount": "Amount",
+      "mode": "Mode",
+      "year": "Year",
+      "startDate": "Start",
+      "endDate": "End",
+      "description": "Description",
+      "maxScore": "Max score",
+      "kkm": "KKM (optional)",
+      "programId": "Program ID",
+      "groupId": "Group ID",
+      "type": "Type",
+      "file": "File",
+      "attended": "Attended",
+      "today": "Today",
+      "thisWeek": "This week",
+      "thisMonth": "This month",
+      "replace": "Replace",
+      "upload": "Upload",
+      "groups": "Groups",
+      "total": "Total",
+      "kindTryout": "Try-out",
+      "kindLatihan": "Practice",
+      "kindKuis": "Quiz",
+      "connected": "Connected",
+      "studentId": "Student ID",
+      "groupPrefix": "Group",
+      "noRoom": "No room",
+      "oneOnOne": "1-on-1",
+      "metaSessions": "{count} sessions",
+      "metaSessionsWeek": "{count} sessions this week",
+      "metaSessionsDone": "{count} completed sessions",
+      "metaAssessments": "{count} assessments",
+      "metaActiveEnrolls": "{count} active enrollments",
+      "metaEnrollments": "{count} enrollments",
+      "metaTermsDetected": "{count} terms detected",
+      "metaProgramsActive": "{count} programs",
+      "metaStudents": "{count} students",
+      "metaTutors": "{count} tutors",
+      "metaMaterials": "{count} materials",
+      "metaParticipants": "{count} participants"
     },
     "status": {
       "draft": "Draft",
@@ -6854,7 +6905,10 @@
         "kpiGroups": "Groups",
         "kpiPrivates": "1-on-1",
         "kpiAvgUtilization": "Avg utilization",
-        "kpiFull": "Full"
+        "kpiFull": "Full",
+        "emptyDescShort": "Click + to create a new group.",
+        "kindPrivate": "1-on-1",
+        "kindGroup": "Group"
       },
       "enrollments": {
         "title": "Enrollments",
@@ -6864,7 +6918,8 @@
         "kpiActive": "Active",
         "kpiTrial": "Trial",
         "kpiGraduated": "Graduated/withdrawn",
-        "kpiThisMonth": "This month"
+        "kpiThisMonth": "This month",
+        "emptyDesc": "Click + to enroll a new student."
       },
       "students": {
         "title": "Students",
@@ -6874,7 +6929,8 @@
         "kpiTotal": "Total students",
         "kpiActive": "Active",
         "kpiTrial": "Trial",
-        "kpiGraduated": "Graduated/withdrawn"
+        "kpiGraduated": "Graduated/withdrawn",
+        "emptyDesc": "Click + to enroll a new student."
       },
       "tutors": {
         "title": "Tutors & Staff",
@@ -6884,7 +6940,8 @@
         "kpiTutors": "Tutors",
         "kpiStaff": "Staff",
         "kpiPresentToday": "Present today",
-        "kpiOnLeave": "On leave"
+        "kpiOnLeave": "On leave",
+        "emptyDesc": "Click + to add a new tutor."
       },
       "schedule": {
         "title": "Schedule",
@@ -6894,7 +6951,8 @@
         "kpiScheduled": "Scheduled",
         "kpiInProgress": "In progress",
         "kpiDone": "Done",
-        "kpiCancelled": "Cancelled"
+        "kpiCancelled": "Cancelled",
+        "emptyDesc": "Click + to create a new session."
       },
       "attendance": {
         "title": "Attendance",
@@ -6904,7 +6962,8 @@
         "kpiCompleted": "Sessions completed",
         "kpiTotal": "Total attendances",
         "kpiRate": "Attendance rate",
-        "kpiUnrecorded": "Unrecorded"
+        "kpiUnrecorded": "Unrecorded",
+        "emptyDesc": "Completed sessions will appear here."
       },
       "assessments": {
         "title": "Grades & Try-outs",
@@ -6914,7 +6973,8 @@
         "kpiTryout": "Try-out",
         "kpiLatihan": "Practice",
         "kpiKuis": "Quiz",
-        "kpiDrafts": "Unpublished"
+        "kpiDrafts": "Unpublished",
+        "emptyDesc": "Click + to create a new try-out or practice."
       },
       "billing": {
         "title": "Billing",
@@ -6924,7 +6984,9 @@
         "kpiBilled": "Billed",
         "kpiPaid": "Paid",
         "kpiOverdue": "Overdue",
-        "kpiOverdueCount": "Overdue"
+        "kpiOverdueCount": "Overdue",
+        "emptyDesc": "Click + to create a new bill.",
+        "dayPrefix": "Day {day}"
       },
       "term": {
         "title": "Terms / Batches",
@@ -6934,7 +6996,8 @@
         "kpiActive": "Active",
         "kpiClosed": "Closed",
         "kpiDraft": "Draft",
-        "kpiGroupsTotal": "Total groups"
+        "kpiGroupsTotal": "Total groups",
+        "emptyDesc": "No terms detected from groups yet."
       },
       "settings": {
         "title": "Settings",
@@ -6971,7 +7034,11 @@
       },
       "sessionDetail": {
         "title": "Session detail",
-        "info": "Session info"
+        "info": "Session info",
+        "notFound": "Session not found",
+        "notFoundHint": "This session may have been deleted.",
+        "completed": "Session marked done",
+        "completeFailed": "Failed to mark done"
       },
       "attendance": {
         "title": "Session attendance",
@@ -6985,19 +7052,26 @@
         "newCta": "New try-out",
         "meta": "{count} assessments",
         "actionScores": "Input scores",
-        "actionResult": "Result"
+        "actionResult": "Result",
+        "emptyDesc": "Create your first try-out or practice.",
+        "searchPh": "Search assessments…"
       },
       "assessmentCreate": {
         "title": "New try-out",
         "aiRow": "Generate questions with AI",
         "aiOff": "AI is not enabled",
-        "saved": "Try-out created"
+        "saved": "Try-out created",
+        "saveCta": "Save try-out",
+        "aiHelper": "Auto-generate draft questions from a topic",
+        "validationErr": "Title, program, and group are required",
+        "saveError": "Failed to create try-out"
       },
       "scores": {
         "title": "Input scores",
         "meta": "{count} students",
         "saved": "Scores saved",
-        "saveFailed": "Failed to save scores: {msg}"
+        "saveFailed": "Failed to save scores: {msg}",
+        "emptyTitle": "No participants yet"
       },
       "result": {
         "title": "Try-out results",
@@ -7005,7 +7079,8 @@
         "kpiSubmitted": "Submitted",
         "kpiAverage": "Average",
         "kpiHighest": "Highest",
-        "shareCta": "Share with parents"
+        "shareCta": "Share with parents",
+        "emptyTitle": "No scores yet"
       },
       "materials": {
         "title": "Materials",
@@ -7020,7 +7095,9 @@
       "materialUpload": {
         "title": "Upload material",
         "dropZone": "Drop a file or choose",
-        "savedStub": "Material uploaded (MVP — not yet saved)"
+        "savedStub": "Material uploaded (MVP — not yet saved)",
+        "chooseFile": "Choose or drag a file here",
+        "selectedLabel": "Selected"
       },
       "students": {
         "title": "My students",
@@ -7029,12 +7106,14 @@
         "kpiTotal": "Total students",
         "kpiActive": "Active",
         "kpiTrial": "Trial",
-        "kpiOverdue": "Overdue"
+        "kpiOverdue": "Overdue",
+        "searchPh": "Search students…"
       },
       "studentDetail": {
         "title": "Student detail",
         "sectionEnrollments": "Enrollments",
-        "noteCta": "Send note to parent"
+        "noteCta": "Send note to parent",
+        "emptyTitle": "Student has no enrollments"
       },
       "profile": {
         "title": "Profile",

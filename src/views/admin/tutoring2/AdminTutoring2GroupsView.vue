@@ -146,7 +146,7 @@ function shortId(id: string | null | undefined): string {
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.group') }}</th>
-                <th class="px-4 py-3 font-bold">Kelas</th><!-- TODO i18n key -->
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.classLabel') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.program') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.capacity') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.tutor') }}</th>
@@ -160,8 +160,7 @@ function shortId(id: string | null | undefined): string {
                 class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
               >
                 <td class="px-4 py-3 font-bold text-slate-900">{{ g.name }}</td>
-                <!-- TODO i18n key: kind fallbacks '1-on-1' / 'Grup' -->
-                <td class="px-4 py-3 text-slate-600">{{ g.kind_label ?? (g.kind === 'private' ? '1-on-1' : 'Grup') }}</td>
+                <td class="px-4 py-3 text-slate-600">{{ g.kind_label ?? (g.kind === 'private' ? t('tutoring2.admin.groups.kindPrivate') : t('tutoring2.admin.groups.kindGroup')) }}</td>
                 <td class="px-4 py-3 font-mono text-2xs text-slate-500">{{ shortId(g.program_id) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ g.seated_count ?? 0 }} / {{ g.capacity }}</td>
                 <td class="px-4 py-3 font-mono text-2xs text-slate-500">{{ shortId(g.tutor_id) }}</td>

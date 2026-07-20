@@ -116,9 +116,8 @@ const termCount = computed(() =>
       role="admin"
       :kicker="t('tutoring2.common.roleAdmin')"
       :title="t('tutoring2.admin.term.title')"
-      :meta="state.status === 'content' ? `${termCount} term terdeteksi` : t('tutoring2.common.loading')"
+      :meta="state.status === 'content' ? t('tutoring2.common.metaTermsDetected', { count: termCount }) : t('tutoring2.common.loading')"
     />
-    <!-- TODO i18n key: `${count} term terdeteksi` meta -->
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
@@ -131,9 +130,8 @@ const termCount = computed(() =>
           :active="!!statusFilter"
           @click="statusFilter = statusFilter ? '' : 'active'"
         />
-        <!-- TODO i18n key: chip label "Tahun" -->
         <AppFilterChip
-          label="Tahun"
+          :label="t('tutoring2.common.year')"
           :value="yearFilter || t('tutoring2.common.all')"
           icon-name="calendar"
           :active="!!yearFilter"
@@ -157,10 +155,8 @@ const termCount = computed(() =>
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.term') }}</th>
-                <!-- TODO i18n key: column header "Mulai" -->
-                <th class="px-4 py-3 font-bold">Mulai</th>
-                <!-- TODO i18n key: column header "Selesai" (date range) -->
-                <th class="px-4 py-3 font-bold">Selesai</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.startDate') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.endDate') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.group') }}</th>
               </tr>
@@ -177,7 +173,6 @@ const termCount = computed(() =>
                 <td class="px-4 py-3">
                   <StatusBadge :label="row.status_label" :tone="statusPillTone(row.status)" uppercase />
                 </td>
-                <!-- TODO i18n key: "{count} kelompok" trailing noun -->
                 <td class="px-4 py-3 text-slate-600">{{ row.groups_count }} {{ t('tutoring2.common.group').toLowerCase() }}</td>
               </tr>
             </tbody>

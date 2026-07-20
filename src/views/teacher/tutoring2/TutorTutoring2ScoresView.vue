@@ -111,11 +111,11 @@ const metaLabel = computed(() =>
       :state="state"
       loading-variant="list"
       :loading-rows="6"
-      empty-title="Belum ada peserta"
+      :empty-title="t('tutoring2.tutor.scores.emptyTitle')"
       empty-description="Asesmen ini belum memiliki peserta yang bisa diberi skor."
       @retry="reload"
     >
-      <!-- TODO i18n key: empty-title 'Belum ada peserta' / empty-description -->
+      <!-- TODO i18n key: empty-description "Asesmen ini belum memiliki peserta yang bisa diberi skor." -->
       <template #default>
         <TutoringScoreEntryList
           :assessment-id="assessmentId"

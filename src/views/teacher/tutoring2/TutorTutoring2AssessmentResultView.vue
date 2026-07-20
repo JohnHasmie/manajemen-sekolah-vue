@@ -105,11 +105,11 @@ const metaLabel = computed(() =>
       :state="state"
       loading-variant="list"
       :loading-rows="6"
-      empty-title="Belum ada skor"
+      :empty-title="t('tutoring2.tutor.result.emptyTitle')"
       empty-description="Skor akan muncul di sini setelah tutor menginput nilai."
       @retry="reload"
     >
-      <!-- TODO i18n key: empty-title 'Belum ada skor' / empty-description -->
+      <!-- TODO i18n key: empty-description "Skor akan muncul di sini setelah tutor menginput nilai." -->
       <template #default>
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <ul class="divide-y divide-slate-100">

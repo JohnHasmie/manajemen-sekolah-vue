@@ -231,8 +231,7 @@ const headerMeta = computed(() =>
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
-    <!-- TODO i18n key: search-placeholder 'Cari siswa…' -->
-    <PageFilterToolbar v-model:search="search" search-placeholder="Cari siswa…">
+    <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.tutor.students.searchPh')">
       <template #chips>
         <AppFilterChip
           :label="t('tutoring2.common.status')"
@@ -241,10 +240,9 @@ const headerMeta = computed(() =>
           :active="!!statusFilter"
           @click="toggleStatus"
         />
-        <!-- TODO i18n key: chip value 'Tersambung' -->
         <AppFilterChip
           :label="t('tutoring2.common.program')"
-          :value="programFilter ? 'Tersambung' : t('tutoring2.common.all')"
+          :value="programFilter ? t('tutoring2.common.connected') : t('tutoring2.common.all')"
           icon-name="book"
           :active="!!programFilter"
           @click="toggleProgram"
@@ -282,8 +280,7 @@ const headerMeta = computed(() =>
                 {{ shortId(row.student_id) }}
               </p>
               <p class="text-2xs text-slate-500 mt-0.5">
-                <!-- TODO i18n key: '{count} program' -->
-                {{ row.program_count }} program
+                {{ t('tutoring2.common.metaProgramsActive', { count: row.program_count }) }}
               </p>
             </div>
             <StatusBadge

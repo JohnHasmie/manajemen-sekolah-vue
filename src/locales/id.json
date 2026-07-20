@@ -6812,7 +6812,58 @@
       "student_": "Wali",
       "title": "Judul",
       "capacity": "Kapasitas",
-      "remainingQuota": "Sisa kuota"
+      "remainingQuota": "Sisa kuota",
+      "role": "Peran",
+      "specialty": "Spesialisasi",
+      "rate": "Tarif",
+      "presence": "Kehadiran",
+      "period": "Periode",
+      "session": "Sesi",
+      "sessions": "Sesi",
+      "classLabel": "Kelas",
+      "participants": "Peserta",
+      "max": "Max",
+      "publication": "Publikasi",
+      "amount": "Jumlah",
+      "mode": "Mode",
+      "year": "Tahun",
+      "startDate": "Mulai",
+      "endDate": "Selesai",
+      "description": "Deskripsi",
+      "maxScore": "Skor maks",
+      "kkm": "KKM (opsional)",
+      "programId": "Program ID",
+      "groupId": "Kelompok ID",
+      "type": "Tipe",
+      "file": "Berkas",
+      "attended": "Hadir",
+      "today": "Hari ini",
+      "thisWeek": "Minggu ini",
+      "thisMonth": "Bulan ini",
+      "replace": "Ganti",
+      "upload": "Unggah",
+      "groups": "Kelompok",
+      "total": "Total",
+      "kindTryout": "Try-out",
+      "kindLatihan": "Latihan",
+      "kindKuis": "Kuis",
+      "connected": "Tersambung",
+      "studentId": "ID siswa",
+      "groupPrefix": "Grup",
+      "noRoom": "Tanpa ruang",
+      "oneOnOne": "1-on-1",
+      "metaSessions": "{count} sesi",
+      "metaSessionsWeek": "{count} sesi minggu ini",
+      "metaSessionsDone": "{count} sesi selesai",
+      "metaAssessments": "{count} penilaian",
+      "metaActiveEnrolls": "{count} pendaftaran aktif",
+      "metaEnrollments": "{count} pendaftaran",
+      "metaTermsDetected": "{count} term terdeteksi",
+      "metaProgramsActive": "{count} program",
+      "metaStudents": "{count} siswa",
+      "metaTutors": "{count} tutor",
+      "metaMaterials": "{count} materi",
+      "metaParticipants": "{count} peserta"
     },
     "status": {
       "draft": "Draft",
@@ -6854,7 +6905,10 @@
         "kpiGroups": "Kelompok",
         "kpiPrivates": "1-on-1",
         "kpiAvgUtilization": "Rata utilisasi",
-        "kpiFull": "Penuh"
+        "kpiFull": "Penuh",
+        "emptyDescShort": "Klik + untuk membuat kelompok baru.",
+        "kindPrivate": "1-on-1",
+        "kindGroup": "Grup"
       },
       "enrollments": {
         "title": "Pendaftaran",
@@ -6864,7 +6918,8 @@
         "kpiActive": "Aktif",
         "kpiTrial": "Trial",
         "kpiGraduated": "Lulus/keluar",
-        "kpiThisMonth": "Bulan ini"
+        "kpiThisMonth": "Bulan ini",
+        "emptyDesc": "Klik + untuk mendaftarkan siswa baru."
       },
       "students": {
         "title": "Siswa",
@@ -6874,7 +6929,8 @@
         "kpiTotal": "Total siswa",
         "kpiActive": "Aktif",
         "kpiTrial": "Trial",
-        "kpiGraduated": "Lulus/keluar"
+        "kpiGraduated": "Lulus/keluar",
+        "emptyDesc": "Klik + untuk mendaftarkan siswa baru."
       },
       "tutors": {
         "title": "Tutor & Staf",
@@ -6884,7 +6940,8 @@
         "kpiTutors": "Tutor",
         "kpiStaff": "Staf",
         "kpiPresentToday": "Hadir hari ini",
-        "kpiOnLeave": "Cuti/izin"
+        "kpiOnLeave": "Cuti/izin",
+        "emptyDesc": "Klik + untuk menambah tutor baru."
       },
       "schedule": {
         "title": "Jadwal",
@@ -6894,7 +6951,8 @@
         "kpiScheduled": "Terjadwal",
         "kpiInProgress": "Berlangsung",
         "kpiDone": "Selesai",
-        "kpiCancelled": "Dibatalkan"
+        "kpiCancelled": "Dibatalkan",
+        "emptyDesc": "Klik + untuk membuat sesi baru."
       },
       "attendance": {
         "title": "Kehadiran",
@@ -6904,7 +6962,8 @@
         "kpiCompleted": "Sesi selesai",
         "kpiTotal": "Total presensi",
         "kpiRate": "% presensi",
-        "kpiUnrecorded": "Belum diambil"
+        "kpiUnrecorded": "Belum diambil",
+        "emptyDesc": "Sesi yang sudah selesai akan muncul di sini."
       },
       "assessments": {
         "title": "Nilai & Try-out",
@@ -6914,7 +6973,8 @@
         "kpiTryout": "Try-out",
         "kpiLatihan": "Latihan",
         "kpiKuis": "Kuis",
-        "kpiDrafts": "Belum dipublikasi"
+        "kpiDrafts": "Belum dipublikasi",
+        "emptyDesc": "Klik + untuk membuat try-out atau latihan baru."
       },
       "billing": {
         "title": "Keuangan",
@@ -6924,7 +6984,9 @@
         "kpiBilled": "Tertagih",
         "kpiPaid": "Terbayar",
         "kpiOverdue": "Menunggak",
-        "kpiOverdueCount": "Overdue"
+        "kpiOverdueCount": "Overdue",
+        "emptyDesc": "Klik + untuk membuat tagihan baru.",
+        "dayPrefix": "Tgl {day}"
       },
       "term": {
         "title": "Term / Batch",
@@ -6934,7 +6996,8 @@
         "kpiActive": "Aktif",
         "kpiClosed": "Selesai",
         "kpiDraft": "Draft",
-        "kpiGroupsTotal": "Total kelompok"
+        "kpiGroupsTotal": "Total kelompok",
+        "emptyDesc": "Belum ada term terdeteksi dari kelompok."
       },
       "settings": {
         "title": "Pengaturan",
@@ -6971,7 +7034,11 @@
       },
       "sessionDetail": {
         "title": "Detail Sesi",
-        "info": "Informasi sesi"
+        "info": "Informasi sesi",
+        "notFound": "Sesi tidak ditemukan",
+        "notFoundHint": "Sesi ini mungkin sudah dihapus.",
+        "completed": "Sesi ditandai selesai",
+        "completeFailed": "Gagal menandai selesai"
       },
       "attendance": {
         "title": "Presensi sesi",
@@ -6985,19 +7052,26 @@
         "newCta": "Buat try-out",
         "meta": "{count} penilaian",
         "actionScores": "Input skor",
-        "actionResult": "Hasil"
+        "actionResult": "Hasil",
+        "emptyDesc": "Buat try-out atau latihan pertama.",
+        "searchPh": "Cari penilaian…"
       },
       "assessmentCreate": {
         "title": "Buat try-out",
         "aiRow": "Generate soal dengan AI",
         "aiOff": "AI belum aktif",
-        "saved": "Try-out dibuat"
+        "saved": "Try-out dibuat",
+        "saveCta": "Simpan try-out",
+        "aiHelper": "Buat draft soal otomatis dari topik",
+        "validationErr": "Judul, program, dan kelompok wajib diisi",
+        "saveError": "Gagal membuat try-out"
       },
       "scores": {
         "title": "Input skor",
         "meta": "{count} siswa",
         "saved": "Skor tersimpan",
-        "saveFailed": "Gagal menyimpan skor: {msg}"
+        "saveFailed": "Gagal menyimpan skor: {msg}",
+        "emptyTitle": "Belum ada peserta"
       },
       "result": {
         "title": "Hasil try-out",
@@ -7005,7 +7079,8 @@
         "kpiSubmitted": "Terisi",
         "kpiAverage": "Rata",
         "kpiHighest": "Tertinggi",
-        "shareCta": "Bagikan ke wali"
+        "shareCta": "Bagikan ke wali",
+        "emptyTitle": "Belum ada skor"
       },
       "materials": {
         "title": "Materi",
@@ -7020,7 +7095,9 @@
       "materialUpload": {
         "title": "Unggah materi",
         "dropZone": "Seret berkas atau pilih",
-        "savedStub": "Materi diunggah (MVP — belum tersimpan)"
+        "savedStub": "Materi diunggah (MVP — belum tersimpan)",
+        "chooseFile": "Pilih atau seret berkas ke sini",
+        "selectedLabel": "Terpilih"
       },
       "students": {
         "title": "Siswa saya",
@@ -7029,12 +7106,14 @@
         "kpiTotal": "Total siswa",
         "kpiActive": "Aktif",
         "kpiTrial": "Trial",
-        "kpiOverdue": "Tunggakan"
+        "kpiOverdue": "Tunggakan",
+        "searchPh": "Cari siswa…"
       },
       "studentDetail": {
         "title": "Detail Siswa",
         "sectionEnrollments": "Pendaftaran",
-        "noteCta": "Kirim catatan ke wali"
+        "noteCta": "Kirim catatan ke wali",
+        "emptyTitle": "Siswa belum punya pendaftaran"
       },
       "profile": {
         "title": "Profil",
