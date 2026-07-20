@@ -23,7 +23,7 @@
   the prior RoleHomeStub copy) rather than dangling a tile that 403s.
 -->
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
@@ -33,6 +33,11 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Card from '@/components/ui/Card.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import PinnedAnnouncementCarousel from '@/components/feature/PinnedAnnouncementCarousel.vue';
+import GamificationHighlightCard from '@/components/feature/gamification/GamificationHighlightCard.vue';
+import {
+  TeacherProgressService,
+  type HighlightPayload,
+} from '@/services/teacher-progress.service';
 import type { Role } from '@/types/auth';
 
 const auth = useAuthStore();
@@ -49,6 +54,32 @@ const roleLabel = computed(() => {
 // (me.can returns false pre-hydration) so we never flash a tile the staff
 // member can't actually use.
 const canSelfCheckIn = computed(() => me.can('attendance.self.view_own'));
+
+// Prestasi (gamification) highlight — mirrors the teacher dashboard. The
+// ability `gamification.view` is stripped server-side when the school
+// isn't subscribed to the module, so `me.can` returns false and the card
+// is skipped entirely. Fetched lazily and silently: a 402/403 (sub lost
+// mid-session) or any network error leaves `highlight` null and the
+// v-if hides the section without bleeding an error onto the dashboard.
+// GET /teacher/gamification/highlight is staff-aware server-side — it
+// resolves the caller by X-Active-Role, so a staff member receives their
+// own staff highlight state here.
+const highlight = ref<HighlightPayload | null>(null);
+const canSeePrestasi = computed(() => me.can('gamification.view'));
+
+async function loadHighlight() {
+  if (!canSeePrestasi.value) return;
+  try {
+    highlight.value = await TeacherProgressService.getHighlight();
+  } catch {
+    // Silent — never let the highlight fetch break the rest of the page.
+    highlight.value = null;
+  }
+}
+
+onMounted(() => {
+  void loadHighlight();
+});
 
 // A staff with admin RBAC (e.g. Bendahara → Keuangan) now gets real
 // module menus in the sidebar. Detect that from the SAME source of truth
@@ -106,6 +137,25 @@ function go(routeName: string) {
       :meta="t('staffHome.roleMeta', { role: roleLabel })"
     />
     <PinnedAnnouncementCarousel />
+
+    <!-- Prestasi highlight — surfaces the staff gamification page from the
+         dashboard, mirroring the teacher dashboard. Sits above the self-
+         service tiles so it shows regardless of `canSelfCheckIn`. Skipped
+         entirely when the ability is absent (school off the sub) or the
+         fetch failed (silent). CTA deep-links into the existing staff
+         Prestasi page (route `staff.gamification`). -->
+    <GamificationHighlightCard
+      v-if="canSeePrestasi && highlight"
+      :state="highlight.state"
+      :eyebrow="highlight.eyebrow"
+      :title="highlight.title"
+      :sub="highlight.sub"
+      :mini-badge="highlight.mini_badge"
+      :cta-label="highlight.cta_label"
+      :cta-target="highlight.cta_target"
+      :meta="highlight.meta"
+      @cta="router.push({ name: 'staff.gamification' })"
+    />
 
     <!-- Real self-service surface — only when the ability is granted. -->
     <template v-if="canSelfCheckIn">
