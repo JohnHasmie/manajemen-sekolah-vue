@@ -250,6 +250,6 @@ const grouped = computed(() => {
     </template>
 
     <!-- CALENDAR VIEW — shared SessionsCalendar (same as admin + tutor) -->
-    <SessionsCalendar v-else :sessions="visible" accent="wali" />
+    <SessionsCalendar v-else :sessions="visible" accent="parent" />
   </div>
 </template>

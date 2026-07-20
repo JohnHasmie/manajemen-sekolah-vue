@@ -467,7 +467,7 @@ const TEACHER_NAV: NavSection[] = [
  *
  * ── Runtime-role caveat (important) ──────────────────────────────────
  * `auth.activeRole` is NEVER the literal `'wali_kelas'` at runtime:
- * `normalizeRole()` in stores/auth.ts collapses `'wali_kelas'` → `'guru'`
+ * `normalizeRole()` in stores/auth.ts collapses `'wali_kelas'` → `'teacher'`
  * on every authenticated path. The homeroom identity is carried by
  * `auth.homeroomClasses` (populated from the teacher_profile). So this
  * nav is selected by `useNavMenu` on the `homeroomClasses.length > 0`
@@ -1113,7 +1113,7 @@ const MENUS: Partial<Record<Role, NavSection[]>> = {
   admin: ADMIN_NAV,
   teacher: TEACHER_NAV,
   // NOTE: `activeRole` is never literally 'wali_kelas' at runtime
-  // (normalizeRole collapses it to 'guru'), so this map entry is not the
+  // (normalizeRole collapses it to 'teacher'), so this map entry is not the
   // live selector. `useNavMenu` picks WALI_KELAS_NAV off the real
   // homeroom signal (`auth.homeroomClasses.length > 0`). Kept mapped for
   // Role-union exhaustiveness and so a future un-collapsed role still
@@ -1171,7 +1171,7 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
   const { isTutoringCenter } = useTenant();
   // useChildPicker exposes a module-singleton activeChildId that
   // updates reactively when the parent switches kid on the dashboard.
-  // `hasOverdueBills` rides the SAME getStats('wali') fetch the picker
+  // `hasOverdueBills` rides the SAME getStats('parent') fetch the picker
   // already makes — used to red-dot the parent Billing nav item.
   const { activeChildId, hasOverdueBills } = useChildPicker();
   return computed(() => {
@@ -1206,8 +1206,8 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
       }
     }
     // Homeroom-teacher (wali kelas) identity on the SCHOOL surface.
-    // `role` here is 'guru' even for a wali kelas — normalizeRole
-    // collapses 'wali_kelas' → 'guru' on every auth path, so the ONLY
+    // `role` here is 'teacher' even for a wali kelas — normalizeRole
+    // collapses 'wali_kelas' → 'teacher' on every auth path, so the ONLY
     // reliable runtime signal for "this teacher owns a homeroom" is
     // `auth.homeroomClasses` (populated from the teacher_profile). When
     // present, swap the plain teacher nav for the homeroom-first
@@ -1242,7 +1242,7 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
       tutoringCtx,
     );
     // School parent: red-dot the Billing item when there's an
-    // outstanding/overdue total. Signal comes from the getStats('wali')
+    // outstanding/overdue total. Signal comes from the getStats('parent')
     // response useChildPicker already loads — no extra fetch here.
     if (canonicalRole(role) === ROLE_PARENT && hasOverdueBills.value) {
       return decorateBillingDot(gated);

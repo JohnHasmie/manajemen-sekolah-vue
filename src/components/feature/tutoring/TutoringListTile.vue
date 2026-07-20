@@ -14,7 +14,7 @@ const props = withDefaults(
     subtitle?: string;
     /** When provided, the row becomes a button; default chevron appears. */
     to?: (() => void) | null;
-    accent?: 'admin' | 'tutor' | 'wali';
+    accent?: 'admin' | 'tutor' | 'parent';
   }>(),
   { accent: 'admin', to: null },
 );
@@ -37,7 +37,7 @@ function handle() {
       :class="{
         'bg-tutoring-accent-dim text-tutoring-accent': accent === 'admin',
         'bg-tutoring-accent-dim text-tutoring-accent': accent === 'tutor',
-        'bg-tutoring-accent-dim text-tutoring-accent': accent === 'wali',
+        'bg-tutoring-accent-dim text-tutoring-accent': accent === 'parent',
       }"
     >
       <NavIcon :name="icon" :size="18" />

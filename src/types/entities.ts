@@ -433,7 +433,7 @@ export function teacherFromJson(raw: AnyRecord): Teacher {
       (r.nama as string) ??
       '',
     email: (r.email as string) ?? (user?.email as string) ?? '',
-    role: (r.role as string) ?? 'guru',
+    role: (r.role as string) ?? 'teacher',
     employee_number:
       (r.employee_number as string) ??
       (r.nip as string) ??

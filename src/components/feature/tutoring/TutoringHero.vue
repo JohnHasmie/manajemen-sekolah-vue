@@ -19,7 +19,7 @@ withDefaults(
     /** Optional sub-line under the title. */
     subtitle?: string;
     /** Role accent token: 'admin' | 'tutor' | 'parent'. */
-    accent?: 'admin' | 'tutor' | 'wali';
+    accent?: 'admin' | 'tutor' | 'parent';
   }>(),
   { accent: 'admin' },
 );
@@ -34,7 +34,7 @@ withDefaults(
       :class="{
         'bg-tutoring-accent-dim text-tutoring-accent': accent === 'admin',
         'bg-tutoring-accent-dim text-tutoring-accent': accent === 'tutor',
-        'bg-tutoring-accent-dim text-tutoring-accent': accent === 'wali',
+        'bg-tutoring-accent-dim text-tutoring-accent': accent === 'parent',
       }"
     >
       <NavIcon :name="icon" :size="20" />
@@ -53,7 +53,7 @@ withDefaults(
           :class="{
             'text-tutoring-accent': accent === 'admin',
             'text-tutoring-accent': accent === 'tutor',
-            'text-tutoring-accent': accent === 'wali',
+            'text-tutoring-accent': accent === 'parent',
           }"
         >
           {{ accentName }}

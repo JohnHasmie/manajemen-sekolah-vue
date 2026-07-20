@@ -28,7 +28,7 @@ import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 const props = withDefaults(
   defineProps<{
     sessions: TutoringSession[];
-    accent?: 'admin' | 'tutor' | 'wali';
+    accent?: 'admin' | 'tutor' | 'parent';
     onOpen?: (s: TutoringSession) => void;
   }>(),
   { accent: 'tutor' },
@@ -129,17 +129,17 @@ watch(focusedMonth, ({ y, m }) => {
 const FOCUSED_BG = computed(() => ({
   admin: 'bg-tutoring-accent text-tutoring-ring',
   tutor: 'bg-role-teacher text-white',
-  wali: 'bg-role-parent text-white',
+  parent: 'bg-role-parent text-white',
 }[props.accent]));
 const TODAY_TEXT = computed(() => ({
   admin: 'bg-status-info-soft text-tutoring-accent',
   tutor: 'bg-status-info-soft text-tutoring-accent',
-  wali: 'bg-status-info-soft text-tutoring-accent',
+  parent: 'bg-status-info-soft text-tutoring-accent',
 }[props.accent]));
 const DOT_BG = computed(() => ({
   admin: 'bg-tutoring-accent',
   tutor: 'bg-role-teacher',
-  wali: 'bg-role-parent',
+  parent: 'bg-role-parent',
 }[props.accent]));
 </script>
 

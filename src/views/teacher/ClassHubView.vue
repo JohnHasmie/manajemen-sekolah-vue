@@ -20,7 +20,7 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Modal from '@/components/ui/Modal.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useRoleColor } from '@/composables/useRoleColor';
-import { canonicalRole, ROLE_ADMIN, ROLE_PARENT } from '@/utils/role';
+import { canonicalRole, ROLE_ADMIN, ROLE_PARENT, ROLE_TEACHER } from '@/utils/role';
 import type { Role } from '@/types/auth';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { ClassHubService } from '@/services/class-hub.service';
@@ -34,12 +34,13 @@ import { classHubAccent, classHubGradientCss } from '@/utils/classHubTheme';
 
 const props = withDefaults(
   defineProps<{ id: string; roleName?: string; studentId?: string }>(),
-  { roleName: 'guru', studentId: undefined },
+  { roleName: ROLE_TEACHER, studentId: undefined },
 );
 const { t } = useI18n();
-// Canonicalise `roleName` (a plain string prop that may still be the legacy
-// 'guru'/'wali' spelling) once, then thread it through the shared role-aware
-// components (useRoleColor / BrandPageHeader) and the back-target routing.
+// Canonicalise `roleName` (a plain string prop; accepts the canonical English
+// keys plus any straggling legacy Indonesian spelling from stale routes)
+// once, then thread it through the shared role-aware components
+// (useRoleColor / BrandPageHeader) and the back-target routing.
 const canonRole = computed(() => canonicalRole(props.roleName));
 const headerRole = computed<Role>(() => canonRole.value as Role);
 const role = useRoleColor(() => canonRole.value as Role);
@@ -64,11 +65,11 @@ const backTarget = computed<RouteLocationRaw>(() => {
 });
 
 // Deep-link a feed card to the underlying module, scoped to this class.
-// Guru-only — parent/admin hubs are read-only observers (mirrors the mobile
+// Teacher-only — parent/admin hubs are read-only observers (mirrors the mobile
 // ClassHubDetailScreen._feedTapFor). Returns null when the card isn't
-// actionable (nilai/unknown, or a non-guru viewer).
+// actionable (nilai/unknown, or a non-teacher viewer).
 function feedTarget(item: ClassFeedItem): RouteLocationRaw | null {
-  if (props.roleName !== 'guru') return null;
+  if (canonRole.value !== ROLE_TEACHER) return null;
   switch (item.type) {
     case 'tugas':
     case 'ujian':
@@ -81,7 +82,7 @@ function feedTarget(item: ClassFeedItem): RouteLocationRaw | null {
   }
 }
 
-// Inline grading: guru with a backlog can jump straight to the class-scoped
+// Inline grading: teacher with a backlog can jump straight to the class-scoped
 // class-activity list (where submissions are graded) — from the "Perlu
 // dinilai" KPI and the Tugas-tab banner. Parent/admin stay read-only.
 const gradingTarget: RouteLocationRaw = {
@@ -89,7 +90,7 @@ const gradingTarget: RouteLocationRaw = {
   query: { class_id: props.id },
 };
 const showGrading = computed(
-  () => props.roleName === 'guru' && (card.value?.needsGrading ?? 0) > 0,
+  () => canonRole.value === ROLE_TEACHER && (card.value?.needsGrading ?? 0) > 0,
 );
 
 type Tab = 'riwayat' | 'tugas' | 'anggota' | 'nilai';
@@ -117,8 +118,8 @@ async function load() {
         subjectId.value ? { subjectId: subjectId.value } : {},
       ),
       // Admin reads the header card from the school-wide oversight list;
-      // guru/parent from their own /classes/mine.
-      props.roleName === 'admin'
+      // teacher/parent from their own /classes/mine.
+      canonRole.value === ROLE_ADMIN
         ? ClassHubService.oversight()
         : ClassHubService.myClasses(props.studentId),
     ]);
@@ -379,11 +380,11 @@ function feedSubtitle(it: ClassFeedItem): string | null {
 const kicker = computed(() => {
   if (!isGeneral.value) {
     const subj = card.value?.subjectName ?? '';
-    return props.roleName === 'wali'
+    return canonRole.value === ROLE_PARENT
       ? subj
       : `${t('classHub.roleSubject')} · ${subj}`;
   }
-  return props.roleName === 'guru'
+  return canonRole.value === ROLE_TEACHER
     ? `${t('classHub.roleHomeroom')} · ${t('classHub.allSubjects')}`
     : t('classHub.allSubjects');
 });
