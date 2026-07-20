@@ -1,26 +1,45 @@
 <!--
-  StaffRbacCard.vue — RBAC-forward split card for the admin "Data Staf"
-  page. Wireframe: Entitas 2 · Opsi B.
+  StaffRbacCard.vue — admin "Data Staf" list card.
 
-  Layout (>= 720px):
-    ┌────────────────────────┬─────────────────────────────────┬─────────┐
-    │ [avatar] Nama          │ ┌ AKSES YANG DIMILIKI   N modul │ Detail →│
-    │          NIP           │ │ • Pengaturan RBAC             │         │
-    │          [pill jabatan]│ │ • Keuangan                    │         │
-    │          [pill status] │ │ • Akademik                    │         │
-    │          08xxx · email │ │ Belum punya akses ke modul … │  Hapus  │
-    │                        │ └───────────────────────────────│         │
-    └────────────────────────┴─────────────────────────────────┴─────────┘
+  Redesigned 2026-07-20 (Yahya feedback: "nama muncul truncated, panel
+  akses seperti kartu terpisah"). The prior 3-column split (identity |
+  access-panel | actions) with a tinted access panel forced nama into
+  a narrow 260px column that clipped anything past ~20 characters
+  ("Muchamad Zaenal Ari…") and made the access panel read as a second
+  card riding alongside.
 
-  Below 720px the three columns stack vertically and the action column
-  collapses into a right-aligned inline row (mirrors TeacherStructuredCard
-  breakpoints so the two admin pages feel consistent).
+  Now: one unified card, nama gets full width with word-wrap so long
+  names print entirely; akses becomes a compact chip cluster below
+  the meta strip.
 
-  Falls back gracefully to "0 modul · Belum ada akses" when the backend
-  hasn't rolled out `rbac_summary` yet — the card still renders.
+    ┌─────────────────────────────────────────────────────────┐
+    │ [MZ]  Muchamad Zaenal Arifin, S.Kom.    Detail →  [⋮]  │
+    │       [Penjaga]  NIP 46502800022                        │
+    │                                                          │
+    │  📞 08123371263    ✉ muza21@gmail.com                    │
+    │                                                          │
+    │  AKSES MODUL                                    8 aktif  │
+    │  [Sekolah & Personel] [Dashboard] [Akademik]            │
+    │  [Presensi] [Komunikasi] [Aktivitas Kelas] [AI]         │
+    │  [Prestasi Guru]                                         │
+    └─────────────────────────────────────────────────────────┘
+
+  Design locks:
+    * Name uses word-break: break-word — long names WRAP, never
+      truncate. This was the explicit ask from the redesign feedback.
+    * Role pill + NIP sit as meta line under the name (not stuffed
+      into a narrow 260px column that ate the name width).
+    * Modules become chip pills that wrap naturally — a Bendahara with
+      3 modules gets a tight row; the Sekolah user with 15 modules
+      wraps to 3-4 rows but every module is visible without a
+      dedicated tinted "panel" fighting for attention.
+    * Actions: `Detail →` inline link on the header + kebab (Hapus
+      inside). Hapus behind a kebab = anti-misclick on a destructive
+      admin action.
+    * Same props / emits as pre-redesign so caller doesn't change.
 -->
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import type { StaffMember, StaffRbacSummary } from '@/types/staff';
 import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
 
@@ -50,13 +69,6 @@ const summary = computed<StaffRbacSummary>(
     },
 );
 
-/**
- * Kepegawaian tone.
- * - permanent / tetap / active  → "ok" (green dot)
- * - contract / kontrak / temporary / honorer → "warn" (amber dot)
- * - everything else (blank, unknown) → "neutral" (slate dot)
- * Mapping mirrors the employmentOptions dict on AdminStaffManagementView.
- */
 const employmentTone = computed<'ok' | 'warn' | 'neutral'>(() => {
   const s = (props.staff.employment_status ?? '').toLowerCase();
   if (['permanent', 'tetap', 'active'].includes(s)) return 'ok';
@@ -84,350 +96,407 @@ const employmentLabel = computed<string>(() => {
   }
 });
 
-const contactLine = computed<string>(() => {
-  const parts: string[] = [];
-  if (props.staff.phone) parts.push(props.staff.phone);
-  if (props.staff.email) parts.push(props.staff.email);
-  return parts.join(' · ');
-});
-
 const missingHint = computed<string>(() => {
   const m = summary.value.missing_expected;
   if (m.length === 0) return '';
   const labels = m.map((x) => x.label).join(', ');
   return `Belum punya akses ke modul ${labels} — mungkin perlu tambah?`;
 });
+
+// ── Kebab menu ──────────────────────────────────────────────────
+const menuOpen = ref(false);
+function toggleMenu(e: Event) {
+  e.stopPropagation();
+  menuOpen.value = !menuOpen.value;
+}
+function onDelete(e: Event) {
+  e.stopPropagation();
+  menuOpen.value = false;
+  emit('delete');
+}
+function closeMenu() {
+  if (menuOpen.value) menuOpen.value = false;
+}
+
+function onCardClick(e: MouseEvent) {
+  if ((e.target as HTMLElement)?.closest?.('.staff-card__menu-wrap')) return;
+  closeMenu();
+  emit('click');
+}
 </script>
 
 <template>
   <div
-    class="rbac-card"
-    :style="{ '--rbac-card-accent': primaryColor }"
+    class="staff-card"
+    :style="{ '--staff-card-accent': primaryColor }"
     role="button"
     tabindex="0"
-    @click="emit('click')"
+    @click="onCardClick"
     @keydown.enter.prevent="emit('click')"
     @keydown.space.prevent="emit('click')"
   >
-    <!-- LEFT · Identity strip ---------------------------------- -->
-    <div class="side">
-      <div class="identity-row">
-        <InitialsAvatar
-          :name="staff.name || '?'"
-          :size="44"
-          :color="primaryColor"
-          :border-radius="10"
-        />
-        <div class="name-block">
-          <p class="name">{{ staff.name || 'Tanpa nama' }}</p>
-          <p v-if="staff.employee_number" class="nip">
+    <!-- Header: avatar · name+meta · detail link · kebab -->
+    <div class="staff-card__head">
+      <InitialsAvatar
+        :name="staff.name || '?'"
+        :size="44"
+        :color="primaryColor"
+        :border-radius="10"
+      />
+
+      <div class="staff-card__title">
+        <p class="staff-card__name">{{ staff.name || 'Tanpa nama' }}</p>
+        <div class="staff-card__meta">
+          <span
+            v-if="staff.position"
+            class="staff-card__pill"
+          >{{ staff.position }}</span>
+          <span
+            v-if="employmentLabel"
+            class="staff-card__pill staff-card__pill--dot"
+            :class="`staff-card__pill--tone-${employmentTone}`"
+          >
+            <span class="staff-card__pill-dot" aria-hidden="true" />
+            {{ employmentLabel }}
+          </span>
+          <span v-if="staff.employee_number" class="staff-card__nip">
             NIP {{ staff.employee_number }}
-          </p>
+          </span>
         </div>
       </div>
 
-      <div class="pills-row">
-        <span class="pill pill--brand">{{ staff.position || '—' }}</span>
-        <span
-          v-if="employmentLabel"
-          class="pill pill--dot"
-          :class="`pill--tone-${employmentTone}`"
+      <div class="staff-card__head-actions">
+        <button
+          type="button"
+          class="staff-card__detail"
+          :style="{ color: primaryColor }"
+          @click.stop="emit('click')"
         >
-          <span class="pill__dot" aria-hidden="true" />
-          {{ employmentLabel }}
-        </span>
-      </div>
-
-      <p v-if="contactLine" class="contact-row">{{ contactLine }}</p>
-    </div>
-
-    <!-- MIDDLE · Access panel ---------------------------------- -->
-    <div class="body">
-      <div class="access-panel">
-        <div class="head-row">
-          <span class="access-label">AKSES YANG DIMILIKI</span>
-          <span class="access-count">{{ summary.modules_count }} modul</span>
+          Detail
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </button>
+        <div class="staff-card__menu-wrap" @click.stop>
+          <button
+            type="button"
+            class="staff-card__menu-trigger"
+            aria-label="Menu"
+            :aria-expanded="menuOpen"
+            @click="toggleMenu"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+              <circle cx="12" cy="5" r="1" />
+              <circle cx="12" cy="12" r="1" />
+              <circle cx="12" cy="19" r="1" />
+            </svg>
+          </button>
+          <div v-if="menuOpen" class="staff-card__menu" role="menu">
+            <button type="button" role="menuitem" class="staff-card__menu-item staff-card__menu-item--danger" @click="onDelete">
+              Hapus staf
+            </button>
+          </div>
         </div>
-
-        <ul v-if="summary.modules.length > 0" class="access-list">
-          <li v-for="m in summary.modules" :key="m.key">{{ m.label }}</li>
-        </ul>
-        <p v-else class="empty-hint">Belum ada akses ke modul apapun.</p>
-
-        <p v-if="missingHint" class="missing-hint">{{ missingHint }}</p>
       </div>
     </div>
 
-    <!-- RIGHT · Actions column --------------------------------- -->
-    <div class="actions-col">
-      <button
-        type="button"
-        class="link-btn"
-        :style="{ color: primaryColor }"
-        @click.stop="emit('click')"
-      >
-        Detail →
-      </button>
-      <button
-        type="button"
-        class="link-btn link-btn--danger"
-        @click.stop="emit('delete')"
-      >
-        Hapus
-      </button>
+    <!-- Contact strip -->
+    <div v-if="staff.phone || staff.email" class="staff-card__contact">
+      <span v-if="staff.phone" class="staff-card__contact-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="12" height="12">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+        </svg>
+        {{ staff.phone }}
+      </span>
+      <span v-if="staff.email" class="staff-card__contact-item staff-card__contact-item--email">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="12" height="12">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+          <polyline points="22,6 12,13 2,6" />
+        </svg>
+        <span class="staff-card__email">{{ staff.email }}</span>
+      </span>
+    </div>
+
+    <!-- Access modules -->
+    <div class="staff-card__access">
+      <div class="staff-card__access-head">
+        <span class="staff-card__access-label">Akses modul</span>
+        <span class="staff-card__access-count">{{ summary.modules_count }} aktif</span>
+      </div>
+      <div v-if="summary.modules.length > 0" class="staff-card__chips">
+        <span
+          v-for="m in summary.modules"
+          :key="m.key"
+          class="staff-card__chip"
+        >{{ m.label }}</span>
+      </div>
+      <p v-else class="staff-card__access-empty">
+        Belum ada akses ke modul apapun.
+      </p>
+      <p v-if="missingHint" class="staff-card__missing-hint">{{ missingHint }}</p>
     </div>
   </div>
 </template>
 
 <style scoped>
 /*
- * Container — mirrors form-card (rounded-card, white surface, shadow-card)
- * plus the split-column grid described in the wireframe. Kept as scoped
- * bespoke CSS (same approach as TeacherStructuredCard.vue) so the RBAC
- * tokens don't leak into the global Tailwind space.
+ * Container — single flat card. No 3-column split, no tinted access
+ * panel. All rows use the same left/right margin (16px padding) so
+ * nothing reads as "a card riding inside another card".
  *
- * --rbac-card-accent is injected per-instance from the primaryColor prop so
- * the "AKSES YANG DIMILIKI" panel and the bullet dots pick up whatever the
- * caller's role color is (indigo for admin, staff amber for staff, …).
+ * --staff-card-accent injected per-instance from primaryColor.
  */
-.rbac-card {
-  display: grid;
-  grid-template-columns: 260px 1fr auto;
-  gap: 16px;
+.staff-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   padding: 16px;
   background: #fff;
-  border-radius: 16px;
-  border: 1px solid rgb(226 232 240);           /* slate-200 */
-  box-shadow:
-    0 1px 2px 0 rgb(0 0 0 / 0.04),
-    0 4px 16px -2px rgb(0 0 0 / 0.06);
+  border-radius: 12px;
+  border: 1px solid rgb(226 232 240);            /* slate-200 */
   cursor: pointer;
-  transition: box-shadow 150ms ease, border-color 150ms ease;
-  --rbac-card-accent: #4F46E5;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  --staff-card-accent: #4F46E5;
 }
-.rbac-card:hover {
-  box-shadow:
-    0 2px 4px 0 rgb(0 0 0 / 0.06),
-    0 8px 24px -4px rgb(0 0 0 / 0.08);
+.staff-card:hover {
+  border-color: rgb(203 213 225);                /* slate-300 */
+  box-shadow: 0 4px 12px -4px rgb(0 0 0 / 0.08);
 }
-.rbac-card:focus-visible {
-  outline: 2px solid var(--rbac-card-accent);
+.staff-card:focus-visible {
+  outline: 2px solid var(--staff-card-accent);
   outline-offset: 2px;
 }
 
-/* ── LEFT · Identity ─────────────────────────────────────────── */
-.side {
+/* ── Header ─────────────────────────────────────────────────── */
+.staff-card__head {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-right: 16px;
-  border-right: 1px dashed rgb(203 213 225);    /* slate-300 */
-  min-width: 0;
-}
-.identity-row {
-  display: flex;
-  gap: 12px;
   align-items: flex-start;
-}
-.name-block {
+  gap: 12px;
   min-width: 0;
-  flex: 1;
 }
-.name {
+.staff-card__title {
+  flex: 1;
+  min-width: 0;
+}
+.staff-card__name {
+  margin: 0;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   color: rgb(15 23 42);                          /* slate-900 */
   line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Long names wrap instead of getting truncated — the explicit
+     ask from the redesign feedback. */
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
-.nip {
-  margin-top: 2px;
-  font-size: 11px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: rgb(100 116 139);                       /* slate-500 */
-}
-.pills-row {
+.staff-card__meta {
+  margin-top: 6px;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  align-items: center;
 }
-.pill {
+.staff-card__pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
+  gap: 4px;
+  padding: 2px 8px;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-weight: 500;
+  line-height: 1.3;
+  background: color-mix(in srgb, var(--staff-card-accent) 10%, transparent);
+  color: var(--staff-card-accent);
 }
-.pill--brand {
-  background: color-mix(in srgb, var(--rbac-card-accent) 12%, transparent);
-  color: var(--rbac-card-accent);
-}
-.pill--dot .pill__dot {
-  width: 6px;
-  height: 6px;
+.staff-card__pill--dot .staff-card__pill-dot {
+  width: 5px;
+  height: 5px;
   border-radius: 999px;
   flex-shrink: 0;
 }
-.pill--tone-ok {
-  background: #ECFDF5;                           /* status-success-soft */
+.staff-card__pill--tone-ok {
+  background: #ECFDF5;                           /* emerald-50 */
   color: #047857;                                /* emerald-700 */
 }
-.pill--tone-ok .pill__dot {
-  background: #10B981;                           /* status-success */
+.staff-card__pill--tone-ok .staff-card__pill-dot {
+  background: #10B981;
 }
-.pill--tone-warn {
-  background: #FEF3C7;                           /* status-warning-soft */
+.staff-card__pill--tone-warn {
+  background: #FEF3C7;                           /* amber-100 */
   color: #B45309;                                /* amber-700 */
 }
-.pill--tone-warn .pill__dot {
-  background: #F59E0B;                           /* status-warning */
+.staff-card__pill--tone-warn .staff-card__pill-dot {
+  background: #F59E0B;
 }
-.pill--tone-neutral {
+.staff-card__pill--tone-neutral {
   background: rgb(241 245 249);                  /* slate-100 */
   color: rgb(71 85 105);                         /* slate-600 */
 }
-.pill--tone-neutral .pill__dot {
-  background: rgb(148 163 184);                  /* slate-400 */
+.staff-card__pill--tone-neutral .staff-card__pill-dot {
+  background: rgb(148 163 184);
 }
-.contact-row {
-  font-size: 12px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+.staff-card__nip {
+  font-size: 11px;
   color: rgb(100 116 139);                       /* slate-500 */
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ── Head actions ───────────────────────────────────────────── */
+.staff-card__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.staff-card__detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.staff-card__detail:hover {
+  background: rgb(248 250 252);                  /* slate-50 */
+}
+.staff-card__menu-wrap {
+  position: relative;
+}
+.staff-card__menu-trigger {
+  background: transparent;
+  border: none;
+  color: rgb(148 163 184);                       /* slate-400 */
+  cursor: pointer;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+}
+.staff-card__menu-trigger:hover {
+  background: rgb(241 245 249);
+  color: rgb(71 85 105);
+}
+.staff-card__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid rgb(226 232 240);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px -6px rgb(0 0 0 / 0.12);
+  padding: 4px;
+  z-index: 10;
+}
+.staff-card__menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  color: rgb(30 41 59);
+  cursor: pointer;
+  border-radius: 6px;
+}
+.staff-card__menu-item:hover {
+  background: rgb(248 250 252);
+}
+.staff-card__menu-item--danger {
+  color: #B91C1C;                                /* red-700 */
+}
+.staff-card__menu-item--danger:hover {
+  background: #FEF2F2;
+}
+
+/* ── Contact strip ──────────────────────────────────────────── */
+.staff-card__contact {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+  border-top: 1px solid rgb(241 245 249);        /* slate-100 */
+  border-bottom: 1px solid rgb(241 245 249);
+  font-size: 12px;
+  color: rgb(100 116 139);                       /* slate-500 */
+  flex-wrap: wrap;
+}
+.staff-card__contact-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.staff-card__contact-item--email {
+  min-width: 0;
+  flex: 1;
+}
+.staff-card__email {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
-/* ── MIDDLE · Access panel ───────────────────────────────────── */
-.body {
-  min-width: 0;
-  display: flex;
-}
-.access-panel {
-  flex: 1;
-  min-width: 0;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--rbac-card-accent) 8%, transparent);
+/* ── Access modules ─────────────────────────────────────────── */
+.staff-card__access {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.head-row {
+.staff-card__access-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
 }
-.access-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.staff-card__access-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--rbac-card-accent);
-}
-.access-count {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--rbac-card-accent);
-  font-variant-numeric: tabular-nums;
-}
-.access-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 4px 16px;
-}
-.access-list li {
-  position: relative;
-  padding-left: 12px;
-  font-size: 12.5px;
-  line-height: 1.4;
-  color: rgb(30 41 59);                          /* slate-800 */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.access-list li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 8px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--rbac-card-accent);
-}
-.empty-hint {
-  font-size: 12.5px;
-  font-style: italic;
   color: rgb(100 116 139);                       /* slate-500 */
 }
-.missing-hint {
-  font-size: 11.5px;
-  color: #B45309;                                /* amber-700 — brand-2 nudge tone */
-  line-height: 1.4;
-}
-
-/* ── RIGHT · Actions column ──────────────────────────────────── */
-.actions-col {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 12px;
-  padding-left: 12px;
-  min-width: 72px;
-}
-.link-btn {
-  font-size: 12.5px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  padding: 0;
-}
-.link-btn:hover {
-  text-decoration: underline;
-}
-.link-btn--danger {
+.staff-card__access-count {
   font-size: 12px;
   font-weight: 500;
-  color: rgb(239 68 68);                         /* status-danger */
+  color: rgb(71 85 105);                         /* slate-600 */
+  font-variant-numeric: tabular-nums;
 }
-
-/* ── Responsive: stack on narrow screens ─────────────────────── */
-@media (max-width: 720px) {
-  .rbac-card {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .side {
-    border-right: none;
-    border-bottom: 1px dashed rgb(203 213 225);
-    padding-right: 0;
-    padding-bottom: 12px;
-  }
-  .actions-col {
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    padding-left: 0;
-    padding-top: 8px;
-    border-top: 1px dashed rgb(203 213 225);
-    gap: 20px;
-  }
+.staff-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.staff-card__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgb(248 250 252);                  /* slate-50 */
+  border: 1px solid rgb(226 232 240);            /* slate-200 */
+  font-size: 11px;
+  color: rgb(30 41 59);                          /* slate-800 */
+  line-height: 1.4;
+}
+.staff-card__access-empty {
+  margin: 0;
+  font-size: 12px;
+  color: rgb(148 163 184);                       /* slate-400 */
+  font-style: italic;
+}
+.staff-card__missing-hint {
+  margin: 0;
+  font-size: 11.5px;
+  color: #B45309;                                /* amber-700 */
+  line-height: 1.4;
 }
 </style>

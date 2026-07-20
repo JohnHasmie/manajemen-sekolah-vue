@@ -1,24 +1,48 @@
 <!--
-  SubjectCurriculumCard.vue — the curriculum-forward card that replaces
-  the compact BrandListRow on the admin "Data Mapel" page. Wireframe:
-  Entitas 4 · Opsi B (split card with left identity strip + right
-  adaptive body).
+  SubjectCurriculumCard.vue — admin "Data Mapel" list card.
 
-  Two body states drive the tint:
-    * LINKED   → violet body: "Kurikulum · Semester 1" + progress bar
-                  + assessments / KKM summary
-    * ORPHAN   → amber body: "Rekap belum aktif" + explanatory copy
-                  + "Tautkan sekarang" CTA that opens the shared
-                  LinkMasterPickerModal (parent handles the modal — the
-                  card just emits `link-master`).
+  Redesigned 2026-07-20 (Yahya feedback: "kartu mapel terlalu berwarna,
+  kiri-kanan seperti kartu terpisah"). The prior split card (violet
+  body when linked · amber body when orphan) with the "REKAP BELUM
+  AKTIF" panel on the right made the warning read as a separate card
+  next to the subject itself.
 
-  Selection: long-press or a bulk-check toggle. When selected, the card
-  gains a colored ring + a check overlay on the avatar (mirrors
-  BrandListRow / TeacherStructuredCard so bulk-select feels consistent
-  across the admin surface).
+  Now: one unified card, warning becomes an inline pill next to the
+  name, CTA only when relevant.
+
+    ┌─────────────────────────────────────────────────────────┐
+    │ [AQ]  Al Qur'an Hadis   D-9                    [⋮]     │
+    │       ▲ Belum tertaut ke master                         │
+    │                                                          │
+    │  Pengampu 1 guru       Diajarkan di 0 kelas             │
+    │                                                          │
+    │  [Tautkan ke master]                             Edit ✎  │
+    └─────────────────────────────────────────────────────────┘
+
+  Linked state drops the warning pill + CTA:
+
+    ┌─────────────────────────────────────────────────────────┐
+    │ [BA]  Bahasa Arab       D-8                    [⋮]     │
+    │       ✓ Tertaut · Rekap Nilai aktif                     │
+    │                                                          │
+    │  Pengampu 3 guru       Diajarkan di 4 kelas             │
+    │  ▓▓▓▓▓▓░░░ 12/20 bab · KKM 78%                          │
+    │                                                                │
+    │                                                  Edit ✎  │
+    └─────────────────────────────────────────────────────────┘
+
+  Design locks:
+    * Warning tint stays a single amber pill (~180px), not a full
+      panel that owns half the card.
+    * CTA "Tautkan" ONLY shows for orphan state; linked state cleans
+      up to just the two mini-stats + optional curriculum progress.
+    * Actions collapse into kebab (Hapus) + inline Edit link; CTA
+      button when needed sits at the same footer level so tap targets
+      align.
+    * Same props / emits as pre-redesign so caller doesn't change.
 -->
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { Subject } from '@/types/entities';
 import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
@@ -50,9 +74,6 @@ const { t } = useI18n();
 
 // ── Derived values ────────────────────────────────────────────────
 
-// `is_linked` may be undefined on legacy backends — derive it from
-// master_subject_id in that case so the card still routes to the
-// right state.
 const isLinked = computed(() => {
   const flag = props.subject.is_linked;
   if (typeof flag === 'boolean') return flag;
@@ -64,30 +85,20 @@ const masterName = computed(
   () => props.subject.master_name ?? props.subject.master_subject_name ?? null,
 );
 
-const teachersPreview = computed(() => props.subject.teachers_preview ?? []);
 const teachersCount = computed(
-  () => props.subject.teachers_count ?? teachersPreview.value.length ?? 0,
-);
-const overflowTeachers = computed(() =>
-  Math.max(0, teachersCount.value - teachersPreview.value.length),
+  () => props.subject.teachers_count ?? props.subject.teachers_preview?.length ?? 0,
 );
 
-const classesTaughtLabel = computed(() => {
-  const list = props.subject.classes_taught ?? [];
-  if (list.length === 0) return null;
-  return list.map((c) => c.name).join(' · ');
-});
+const classesCount = computed(() => (props.subject.classes_taught ?? []).length);
 
-// ── Curriculum aggregate (LINKED body only) ───────────────────────
+// ── Curriculum aggregate (linked state only) ─────────────────────
 const curriculum = computed(() => props.subject.curriculum ?? null);
-
 const chapterPct = computed(() => {
   const c = curriculum.value;
   if (!c || !c.total_chapters || c.total_chapters <= 0) return 0;
   const raw = (c.chapters_completed / c.total_chapters) * 100;
   return Math.max(0, Math.min(100, Math.round(raw)));
 });
-
 const kkmPct = computed(() => {
   const c = curriculum.value;
   if (!c) return 0;
@@ -96,7 +107,22 @@ const kkmPct = computed(() => {
 
 const nameHeadingId = computed(() => `subject-card-name-${props.subject.id}`);
 
-// ── Long-press bulk-select (mirrors BrandListRow / TeacherStructuredCard)
+// ── Kebab menu ──────────────────────────────────────────────────
+const menuOpen = ref(false);
+function toggleMenu(e: Event) {
+  e.stopPropagation();
+  menuOpen.value = !menuOpen.value;
+}
+function onDelete(e: Event) {
+  e.stopPropagation();
+  menuOpen.value = false;
+  emit('delete');
+}
+function closeMenu() {
+  if (menuOpen.value) menuOpen.value = false;
+}
+
+// ── Long-press bulk-select (retained) ───────────────────────────
 let longPressTimer: ReturnType<typeof setTimeout> | null = null;
 function onPointerDown() {
   if (longPressTimer) clearTimeout(longPressTimer);
@@ -112,13 +138,11 @@ function onPointerUp() {
   }
 }
 
-// A card click either toggles selection (if we're already in bulk
-// mode) or opens the drill-in. The "in bulk mode" branch is decided
-// upstream via the `selected` prop + parent's `selectedIds.size`
-// state, so here we simply forward: if the card is already selected
-// or the parent said we're bulk-selecting, prefer `select`; otherwise
-// `open`. Parent resolves ambiguity by rendering the card differently.
-function onCardClick() {
+function onCardClick(e: MouseEvent) {
+  // Skip if the click came from inside the menu (already stopPropagation'd
+  // but this guards a stray keyboard toggle path).
+  if ((e.target as HTMLElement)?.closest?.('.subject-card__menu-wrap')) return;
+  closeMenu();
   if (props.selected) {
     emit('select');
   } else {
@@ -141,243 +165,179 @@ function onCardClick() {
     @pointerup="onPointerUp"
     @pointerleave="onPointerUp"
   >
-    <!-- LEFT · Identity strip ────────────────────────────────── -->
-    <div class="subject-card__identity">
-      <div class="subject-card__header">
-        <div class="subject-card__avatar-wrap">
-          <InitialsAvatar
-            :name="subject.name || '?'"
-            :size="40"
-            :color="primaryColor"
-            :border-radius="10"
-          />
+    <!-- Header: avatar · name+code+status · kebab -->
+    <div class="subject-card__head">
+      <div class="subject-card__avatar-wrap">
+        <InitialsAvatar
+          :name="subject.name || '?'"
+          :size="40"
+          :color="primaryColor"
+          :border-radius="10"
+        />
+        <span
+          v-if="selected"
+          class="subject-card__check"
+          :style="{ color: primaryColor }"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </span>
+      </div>
+
+      <div class="subject-card__title">
+        <div class="subject-card__title-row">
+          <h3 :id="nameHeadingId" class="subject-card__name">
+            {{ subject.name || '—' }}
+          </h3>
           <span
-            v-if="selected"
-            class="subject-card__check"
-            :style="{ color: primaryColor }"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="3"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="w-3.5 h-3.5"
-            >
+            v-if="subject.code"
+            class="subject-card__code"
+          >{{ subject.code }}</span>
+        </div>
+
+        <div class="subject-card__status">
+          <template v-if="isLinked">
+            <svg class="subject-card__status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="12" height="12">
               <polyline points="20 6 9 17 4 12" />
             </svg>
-          </span>
+            <span class="subject-card__status-text subject-card__status-text--ok">
+              {{ masterName ? `Tertaut · ${masterName}` : 'Tertaut ke master · Rekap Nilai aktif' }}
+            </span>
+          </template>
+          <template v-else>
+            <span class="subject-card__status-pill">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="11" height="11">
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              {{ t('admin.subjects.master_not_linked') }}
+            </span>
+          </template>
         </div>
-        <span
-          class="subject-card__code"
-          :style="{
-            color: primaryColor,
-            borderColor: primaryColor,
-          }"
-        >{{ subject.code || '—' }}</span>
       </div>
 
-      <h3 :id="nameHeadingId" class="subject-card__name">
-        {{ subject.name || '—' }}
-      </h3>
-
-      <p
-        class="subject-card__master"
-        :class="isLinked ? 'subject-card__master--linked' : 'subject-card__master--orphan'"
-      >
-        <span class="subject-card__master-prefix">{{ t('admin.subjects.linked_master_prefix') }}</span>
-        <template v-if="isLinked">
-          <span class="subject-card__master-name">{{ masterName || '—' }}</span>
-          <span class="subject-card__master-suffix">{{ t('admin.subjects.linked_master_suffix') }}</span>
-        </template>
-        <template v-else>
-          <span class="subject-card__master-name">{{ t('admin.subjects.master_not_linked') }}</span>
-        </template>
-      </p>
-
-      <div class="subject-card__teachers">
-        <p class="subject-card__label">
-          {{ t('admin.subjects.teachers_label') }} ({{ teachersCount }})
-        </p>
-        <div v-if="teachersPreview.length > 0" class="subject-card__teachers-row">
-          <InitialsAvatar
-            v-for="t in teachersPreview"
-            :key="t.id"
-            :name="t.name || t.avatar_initials || '?'"
-            :size="24"
-            :color="primaryColor"
-            :border-radius="8"
-          />
-          <span
-            v-if="overflowTeachers > 0"
-            class="subject-card__overflow"
-          >+{{ overflowTeachers }}</span>
-        </div>
-        <p v-else class="subject-card__empty">
-          {{ t('admin.subjects.no_teachers') }}
-        </p>
-      </div>
-
-      <div class="subject-card__classes">
-        <p class="subject-card__label">
-          {{ t('admin.subjects.classes_label') }}
-        </p>
-        <p v-if="classesTaughtLabel" class="subject-card__classes-value">
-          {{ classesTaughtLabel }}
-        </p>
-        <p v-else class="subject-card__empty">
-          {{ t('admin.subjects.no_classes') }}
-        </p>
-      </div>
-
-      <div
-        v-if="!readOnly && !selected"
-        class="subject-card__row-actions"
-      >
+      <div v-if="!readOnly" class="subject-card__menu-wrap" @click.stop>
         <button
           type="button"
-          class="subject-card__row-action"
-          @click.stop="emit('edit')"
-        >Edit</button>
-        <button
-          type="button"
-          class="subject-card__row-action subject-card__row-action--danger"
-          @click.stop="emit('delete')"
-        >Hapus</button>
+          class="subject-card__menu-trigger"
+          aria-label="Menu"
+          :aria-expanded="menuOpen"
+          @click="toggleMenu"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <circle cx="12" cy="5" r="1" />
+            <circle cx="12" cy="12" r="1" />
+            <circle cx="12" cy="19" r="1" />
+          </svg>
+        </button>
+        <div v-if="menuOpen" class="subject-card__menu" role="menu">
+          <button type="button" role="menuitem" class="subject-card__menu-item subject-card__menu-item--danger" @click="onDelete">
+            Hapus mata pelajaran
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- RIGHT · Adaptive body ─────────────────────────────────── -->
-    <div
-      class="subject-card__body"
-      :class="isLinked ? 'subject-card__body--linked' : 'subject-card__body--orphan'"
-    >
-      <template v-if="isLinked">
-        <p class="subject-card__body-heading subject-card__body-heading--linked">
-          {{ t('admin.subjects.curriculum_heading') }}
+    <!-- Stats row -->
+    <div class="subject-card__stats">
+      <div class="subject-card__stat">
+        <p class="subject-card__stat-label">Pengampu</p>
+        <p class="subject-card__stat-value">
+          {{ teachersCount }}<span class="subject-card__stat-unit"> guru</span>
         </p>
-
-        <template v-if="curriculum">
-          <p class="subject-card__progress-line">
-            {{ t('admin.subjects.chapters_progress', {
-              done: curriculum.chapters_completed,
-              total: curriculum.total_chapters,
-              pct: chapterPct,
-            }) }}
-          </p>
-          <div
-            class="subject-card__progress-bar"
-            role="progressbar"
-            :aria-valuenow="chapterPct"
-            aria-valuemin="0"
-            aria-valuemax="100"
-          >
-            <div
-              class="subject-card__progress-fill"
-              :style="{
-                width: `${chapterPct}%`,
-                backgroundColor: primaryColor,
-              }"
-            />
-          </div>
-          <p class="subject-card__assessments">
-            {{ t('admin.subjects.assessments_summary', {
-              n: curriculum.assessment_count,
-              pct: kkmPct,
-              kkm: curriculum.kkm_value,
-            }) }}
-          </p>
-        </template>
-
-        <template v-else>
-          <!--
-            Linked but backend hasn't shipped the curriculum aggregate
-            yet (older deploy). Show a muted placeholder instead of a
-            zero-progress bar so we don't imply "0% dituntaskan".
-          -->
-          <p class="subject-card__body-placeholder">
-            {{ t('admin.subjects.curriculum_heading') }}
-          </p>
-        </template>
-      </template>
-
-      <template v-else>
-        <p class="subject-card__body-heading subject-card__body-heading--orphan">
-          {{ t('admin.subjects.orphan_heading') }}
+      </div>
+      <div class="subject-card__stat">
+        <p class="subject-card__stat-label">Diajarkan di</p>
+        <p class="subject-card__stat-value">
+          {{ classesCount }}<span class="subject-card__stat-unit"> kelas</span>
         </p>
-        <p class="subject-card__body-copy">
-          {{ t('admin.subjects.orphan_body') }}
-        </p>
-        <button
-          type="button"
-          class="subject-card__cta"
-          @click.stop="emit('link-master')"
-        >{{ t('admin.subjects.link_now') }} →</button>
-      </template>
+      </div>
+    </div>
+
+    <!-- Curriculum progress (linked + curriculum aggregate present) -->
+    <div v-if="isLinked && curriculum" class="subject-card__curriculum">
+      <div class="subject-card__curriculum-head">
+        <span class="subject-card__curriculum-label">
+          Bab tuntas
+        </span>
+        <span class="subject-card__curriculum-count">
+          {{ curriculum.chapters_completed }}<span class="subject-card__curriculum-slash"> / {{ curriculum.total_chapters }}</span>
+          <span class="subject-card__curriculum-kkm"> · KKM {{ kkmPct }}%</span>
+        </span>
+      </div>
+      <div class="subject-card__bar">
+        <div
+          class="subject-card__bar-fill"
+          :style="{ width: `${chapterPct}%`, background: primaryColor }"
+        />
+      </div>
+    </div>
+
+    <!-- Footer: primary CTA (orphan only) + edit -->
+    <div v-if="!readOnly && !selected" class="subject-card__foot">
+      <button
+        v-if="!isLinked"
+        type="button"
+        class="subject-card__cta"
+        :style="{ background: primaryColor }"
+        @click.stop="emit('link-master')"
+      >
+        Tautkan ke master →
+      </button>
+      <span v-else class="subject-card__foot-spacer" aria-hidden="true"></span>
+      <button
+        type="button"
+        class="subject-card__edit"
+        :style="{ color: primaryColor }"
+        @click.stop="emit('edit')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="12" height="12">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+        </svg>
+        Edit
+      </button>
     </div>
   </article>
 </template>
 
 <style scoped>
 /*
- * Root — split card with a fixed 260px identity strip on md+ that
- * stacks vertically on narrow viewports. Kept scoped so the bespoke
- * violet/amber tints don't leak beyond the "Data Mapel" surface.
+ * Root — single flat card, no dashed vertical divider, no full-height
+ * body panel. Warning tint contained to a small inline pill (see
+ * .subject-card__status-pill). Scoped so the amber pill palette
+ * doesn't leak beyond the Data Mapel surface.
  */
 .subject-card {
+  position: relative;
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: #fff;
   border-radius: 12px;
   border: 1px solid rgb(226 232 240);            /* slate-200 */
-  background: #fff;
-  box-shadow:
-    0 1px 2px 0 rgb(0 0 0 / 0.04),
-    0 4px 16px -2px rgb(0 0 0 / 0.06);
   cursor: pointer;
-  overflow: hidden;
-  transition: box-shadow 150ms ease, border-color 150ms ease;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
   --subject-card-accent: #4F46E5;
 }
 .subject-card:hover {
-  box-shadow:
-    0 2px 4px 0 rgb(0 0 0 / 0.06),
-    0 8px 24px -4px rgb(0 0 0 / 0.08);
+  border-color: rgb(203 213 225);                /* slate-300 */
+  box-shadow: 0 4px 12px -4px rgb(0 0 0 / 0.08);
 }
 .subject-card--selected {
   border-color: var(--subject-card-accent);
-  box-shadow:
-    0 0 0 2px var(--subject-card-accent),
-    0 4px 16px -2px rgb(0 0 0 / 0.06);
+  box-shadow: 0 0 0 2px var(--subject-card-accent);
 }
 
-@media (min-width: 640px) {
-  .subject-card {
-    flex-direction: row;
-  }
-}
-
-/* ── LEFT identity strip ─────────────────────────────────────── */
-.subject-card__identity {
-  padding: 16px;
+/* ── Header ─────────────────────────────────────────────────── */
+.subject-card__head {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 12px;
   min-width: 0;
-}
-@media (min-width: 640px) {
-  .subject-card__identity {
-    width: 260px;
-    flex-shrink: 0;
-    border-right: 1px dashed rgb(226 232 240);   /* slate-200 */
-  }
-}
-
-.subject-card__header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 .subject-card__avatar-wrap {
   position: relative;
@@ -395,241 +355,237 @@ function onCardClick() {
   place-items: center;
   box-shadow: 0 0 0 2px currentColor;
 }
+.subject-card__title {
+  flex: 1;
+  min-width: 0;
+}
+.subject-card__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.subject-card__name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgb(15 23 42);                          /* slate-900 */
+  line-height: 1.3;
+  word-break: break-word;
+}
 .subject-card__code {
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid currentColor;
-  background: color-mix(in srgb, currentColor 10%, transparent);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-.subject-card__name {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: rgb(15 23 42);                          /* slate-900 */
-  line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  word-break: break-word;
-}
-
-.subject-card__master {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.4;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px;
-}
-.subject-card__master-prefix {
-  color: rgb(100 116 139);                       /* slate-500 */
-  font-weight: 600;
-}
-.subject-card__master-name {
-  font-weight: 700;
-}
-.subject-card__master--linked .subject-card__master-name,
-.subject-card__master--linked .subject-card__master-suffix {
-  color: rgb(109 40 217);                        /* violet-700 */
-}
-.subject-card__master--orphan .subject-card__master-name {
-  color: rgb(180 83 9);                          /* amber-700 */
-}
-.subject-card__master-suffix {
-  font-weight: 600;
-}
-
-.subject-card__label {
-  margin: 0 0 4px 0;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgb(100 116 139);                       /* slate-500 */
-}
-.subject-card__teachers-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-.subject-card__overflow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 6px;
-  border-radius: 8px;
+  border-radius: 6px;
   background: rgb(241 245 249);                  /* slate-100 */
   color: rgb(71 85 105);                         /* slate-600 */
   font-size: 11px;
-  font-weight: 700;
-}
-.subject-card__classes-value {
-  margin: 0;
-  font-size: 12.5px;
-  color: rgb(30 41 59);                          /* slate-800 */
-  line-height: 1.4;
-  word-break: break-word;
-}
-.subject-card__empty {
-  margin: 0;
-  font-size: 12px;
-  font-style: italic;
-  color: rgb(148 163 184);                       /* slate-400 */
+  font-weight: 500;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.02em;
 }
 
-.subject-card__row-actions {
+/* ── Status pill + text ─────────────────────────────────────── */
+.subject-card__status {
+  margin-top: 4px;
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-top: 4px;
-  margin-top: auto;
-  font-size: 12px;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
 }
-.subject-card__row-action {
+.subject-card__status-icon {
+  color: #047857;                                /* emerald-700 */
+  flex-shrink: 0;
+}
+.subject-card__status-text {
+  font-size: 12px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.subject-card__status-text--ok {
+  color: #047857;                                /* emerald-700 */
+}
+.subject-card__status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #FEF3C7;                           /* amber-100 */
+  color: #B45309;                                /* amber-700 */
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  max-width: 100%;
+}
+
+/* ── Kebab ──────────────────────────────────────────────────── */
+.subject-card__menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.subject-card__menu-trigger {
   background: transparent;
   border: none;
-  padding: 0;
+  color: rgb(148 163 184);                       /* slate-400 */
   cursor: pointer;
-  color: rgb(100 116 139);                       /* slate-500 */
-  font-weight: 500;
+  padding: 4px;
+  margin: -4px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
 }
-.subject-card__row-action:hover {
-  color: var(--subject-card-accent);
-  text-decoration: underline;
+.subject-card__menu-trigger:hover {
+  background: rgb(241 245 249);
+  color: rgb(71 85 105);
 }
-.subject-card__row-action--danger {
-  color: rgb(239 68 68);                         /* status-danger */
+.subject-card__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid rgb(226 232 240);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px -6px rgb(0 0 0 / 0.12);
+  padding: 4px;
+  z-index: 10;
 }
-.subject-card__row-action--danger:hover {
-  color: rgb(220 38 38);                         /* red-600 */
+.subject-card__menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  color: rgb(30 41 59);
+  cursor: pointer;
+  border-radius: 6px;
+}
+.subject-card__menu-item:hover {
+  background: rgb(248 250 252);
+}
+.subject-card__menu-item--danger {
+  color: #B91C1C;                                /* red-700 */
+}
+.subject-card__menu-item--danger:hover {
+  background: #FEF2F2;
 }
 
-/* ── RIGHT adaptive body ─────────────────────────────────────── */
-.subject-card__body {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 16px;
+/* ── Stats ──────────────────────────────────────────────────── */
+.subject-card__stats {
+  display: flex;
+  gap: 24px;
+  padding: 10px 12px;
+  background: rgb(248 250 252);                  /* slate-50 */
+  border-radius: 8px;
+}
+.subject-card__stat-label {
+  margin: 0;
+  font-size: 11px;
+  color: rgb(100 116 139);                       /* slate-500 */
+  line-height: 1.3;
+}
+.subject-card__stat-value {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgb(15 23 42);                          /* slate-900 */
+  line-height: 1.2;
+}
+.subject-card__stat-unit {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgb(100 116 139);
+}
+
+/* ── Curriculum ─────────────────────────────────────────────── */
+.subject-card__curriculum {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
-.subject-card__body--linked {
-  background: rgb(245 243 255);                  /* violet-50 */
-  border-top: 1px solid rgb(221 214 254);        /* violet-200 */
+.subject-card__curriculum-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
 }
-@media (min-width: 640px) {
-  .subject-card__body--linked {
-    border-top: none;
-    border-left: 3px solid rgb(139 92 246);      /* violet-500 */
-  }
+.subject-card__curriculum-label {
+  font-size: 12px;
+  color: rgb(100 116 139);                       /* slate-500 */
 }
-:global(.tutoring-dark) .subject-card__body--linked {
-  background: rgb(46 16 101 / 0.4);              /* violet-950/40 */
-  border-color: rgb(76 29 149);                  /* violet-900 */
+.subject-card__curriculum-count {
+  font-size: 12px;
+  color: rgb(15 23 42);                          /* slate-900 */
+  font-weight: 500;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
-
-.subject-card__body--orphan {
-  background: rgb(255 251 235);                  /* amber-50 */
-  border-top: 1px solid rgb(253 230 138);        /* amber-200 */
+.subject-card__curriculum-slash {
+  color: rgb(148 163 184);                       /* slate-400 */
+  font-weight: 400;
 }
-@media (min-width: 640px) {
-  .subject-card__body--orphan {
-    border-top: none;
-    border-left: 3px solid rgb(245 158 11);      /* amber-500 */
-  }
+.subject-card__curriculum-kkm {
+  color: rgb(100 116 139);
+  font-weight: 400;
 }
-:global(.tutoring-dark) .subject-card__body--orphan {
-  background: rgb(69 26 3 / 0.4);                /* amber-950/40 */
-  border-color: rgb(120 53 15);                  /* amber-900 */
-}
-
-.subject-card__body-heading {
-  margin: 0;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.subject-card__body-heading--linked {
-  color: rgb(109 40 217);                        /* violet-700 */
-}
-.subject-card__body-heading--orphan {
-  color: rgb(180 83 9);                          /* amber-700 */
-}
-
-.subject-card__progress-line {
-  margin: 4px 0 0 0;
-  font-size: 13px;
-  font-weight: 700;
-  color: rgb(30 41 59);                          /* slate-800 */
-  line-height: 1.35;
-}
-.subject-card__progress-bar {
-  width: 100%;
-  height: 6px;
+.subject-card__bar {
+  height: 4px;
   border-radius: 999px;
-  background: rgb(237 233 254);                  /* violet-100 */
+  background: rgb(226 232 240);                  /* slate-200 */
   overflow: hidden;
 }
-.subject-card__progress-fill {
+.subject-card__bar-fill {
   height: 100%;
   border-radius: 999px;
-  background: rgb(139 92 246);                   /* violet-500 fallback */
-  transition: width 200ms ease;
-}
-.subject-card__assessments {
-  margin: 4px 0 0 0;
-  font-size: 12px;
-  color: rgb(71 85 105);                         /* slate-600 */
-  line-height: 1.4;
+  transition: width 250ms ease;
 }
 
-.subject-card__body-placeholder {
-  margin: 0;
-  font-size: 12px;
-  color: rgb(148 163 184);                       /* slate-400 */
-  font-style: italic;
+/* ── Footer ─────────────────────────────────────────────────── */
+.subject-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+  border-top: 1px solid rgb(241 245 249);        /* slate-100 */
 }
-
-.subject-card__body-copy {
-  margin: 2px 0 4px 0;
-  font-size: 12.5px;
-  color: rgb(146 64 14);                         /* amber-800 */
-  line-height: 1.5;
+.subject-card__foot-spacer {
+  flex: 1;
 }
 .subject-card__cta {
-  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   padding: 6px 12px;
   border-radius: 8px;
-  background: rgb(217 119 6);                    /* amber-600 */
-  color: white;
+  color: #fff;
   font-size: 12.5px;
-  font-weight: 700;
+  font-weight: 500;
   border: none;
   cursor: pointer;
-  transition: background 120ms ease;
+  transition: filter 120ms ease;
 }
 .subject-card__cta:hover {
-  background: rgb(180 83 9);                     /* amber-700 */
+  filter: brightness(0.92);
 }
-.subject-card__cta:focus-visible {
-  outline: 2px solid rgb(217 119 6);
-  outline-offset: 2px;
+.subject-card__edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.subject-card__edit:hover {
+  background: rgb(248 250 252);                  /* slate-50 */
 }
 </style>

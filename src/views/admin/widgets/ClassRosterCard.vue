@@ -1,29 +1,44 @@
 <!--
-  ClassRosterCard.vue — the roster-preview card that replaces the
-  compact BrandListRow variant on the admin "Data Kelas" page.
-  Wireframe: Entitas 3 · Opsi B (Roster preview + capacity progress
-  + top-3 mapel chips).
+  ClassRosterCard.vue — admin "Data Kelas" list card.
 
-  Layout (>= lg / desktop):
-    ┌ IDENTITY (260px) ─────────┬ BODY (flex-1) ──────────────────┐
-    │ [Nama Kelas]              │ [current]/[max] siswa · [pct]%  │
-    │ Tingkat X · TA · Aktif    │ [progress bar]                  │
-    │                           │ [av][av][av][av][av] +[N-5]     │
-    │ 👤 [avatar] Wali kelas    │                                 │
-    │ 📍 Lantai · Ruangan       │ [count] MAPEL DIAJARKAN         │
-    │                           │ [MTK · Matematika] [+N lainnya] │
-    │ [Detail →] [Hapus]        │                                 │
-    └───────────────────────────┴─────────────────────────────────┘
+  Redesigned 2026-07-20 (Yahya feedback: "kartu kelas terlalu berwarna,
+  kiri-kanan seperti kartu terpisah, kurang user-friendly"). The prior
+  two-column split (identity strip · body strip) with a dashed vertical
+  divider read as two related-but-separate cards; the roster avatar
+  cluster + capacity bar + subject chips all competed for attention at
+  the same visual weight.
 
-  Below ~900px the two columns stack vertically; the identity dashed
-  divider becomes a bottom border.
+  Now: one unified card, single visual hierarchy.
 
-  Selection: long-press or bulk-check the card to toggle selection.
-  When selected, a check overlay lands on the class avatar chip and
-  the whole card gains an accent ring, mirroring TeacherStructuredCard.
+    ┌─────────────────────────────────────────────────────────┐
+    │ [avatar]  Kelas 7A                              [⋮]     │
+    │           Tingkat 7 · TP 2026/2027 · Aktif              │
+    │                                                          │
+    │ 👤 Wali kelas: Elyariza Devy A.F.                       │
+    │                                                          │
+    │ ┌ Siswa terdaftar                        9 / 36 ────┐   │
+    │ │ ▓▓▓░░░░░░░░░░░░░░░                                 │   │
+    │ └────────────────────────────────────────────────────┘   │
+    │                                                          │
+    │ 📖 8 mapel · 12 sesi/minggu              Detail →       │
+    └─────────────────────────────────────────────────────────┘
+
+  Design locks:
+    * Single accent per card (accentColor) — no palette derived from
+      initials; roster avatars removed entirely (surface via Detail).
+    * Meta is one text row (Tingkat · TP · status) instead of three
+      pills fighting for attention.
+    * Capacity gets its own compact strip with hairline progress bar;
+      color follows a single semantic ramp (safe → warn → full).
+    * Actions collapse into `Detail →` link + kebab menu (Hapus lives
+      inside the kebab so misclick risk drops).
+    * Layout is a stack — no 260px identity strip that stacked awkwardly
+      below 900px. Full-width elements read the same at every width.
+
+  Same props / emits as the pre-redesign card so callers don't change.
 -->
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import type { Classroom } from '@/types/entities';
 
 const props = withDefaults(
@@ -52,10 +67,10 @@ const emit = defineEmits<{
   delete: [];
 }>();
 
-// ── Roster preview + capacity ────────────────────────────────────
-// The BE MR ships `capacity: {current, max}` — fall back to the flat
-// `student_count` with a soft 36 max when the enriched payload is
-// missing so the bar still renders on a pre-deploy backend.
+// ── Capacity ─────────────────────────────────────────────────────
+// BE ships `capacity: {current, max}`; fall back to flat student_count
+// + soft 36 max when the enriched payload is missing so the bar still
+// renders on a pre-deploy backend.
 const capacityCurrent = computed(
   () => props.classroom.capacity?.current ?? props.classroom.student_count ?? 0,
 );
@@ -67,73 +82,58 @@ const capacityPct = computed(() => {
     Math.round((capacityCurrent.value / capacityMax.value) * 100),
   );
 });
+// Single semantic ramp — the color IS the message: 0-70% neutral
+// (using the card's accent so it reads as "part of the card"), 70-90%
+// amber (filling up), 90+ red (over-crowded). This is the ONLY hue
+// besides accent + slate on the card.
 const capacityBarColor = computed(() => {
   const pct = capacityPct.value;
-  if (pct >= 90) return '#ef4444'; // red — over-crowded
-  if (pct >= 70) return '#f59e0b'; // amber — filling up
-  return '#10b981'; // green — healthy
+  if (pct >= 90) return '#EF4444'; // status danger — over-crowded
+  if (pct >= 70) return '#F59E0B'; // status warning — filling up
+  return props.accentColor;
 });
-const isFull = computed(() => capacityPct.value >= 100);
 
-const previewStudents = computed(() => props.classroom.students_preview ?? []);
-const overflowCount = computed(() =>
-  Math.max(0, capacityCurrent.value - previewStudents.value.length),
-);
-
-// ── Subjects ─────────────────────────────────────────────────────
-const subjectChips = computed(() => {
-  const arr = props.classroom.subjects_top3 ?? [];
-  return arr.map((s) => ({
-    key: s.id || s.name,
-    label: s.code ? `${s.code} · ${s.name}` : s.name,
-  }));
-});
+// ── Subjects meta line ───────────────────────────────────────────
 const subjectsCount = computed(
-  () => props.classroom.subjects_count ?? subjectChips.value.length,
+  () => props.classroom.subjects_count ?? props.classroom.subjects_top3?.length ?? 0,
 );
-const subjectsOverflow = computed(
-  () => Math.max(0, subjectsCount.value - subjectChips.value.length),
-);
-
-// ── Wali + location ──────────────────────────────────────────────
-const wali = computed(() => props.classroom.wali_teacher ?? null);
-const location = computed(() => props.classroom.location ?? null);
-const locationText = computed(() => {
-  const loc = location.value;
-  if (!loc) return null;
-  const parts: string[] = [];
-  if (loc.floor) parts.push(loc.floor);
-  if (loc.room) parts.push(loc.room);
-  if (parts.length === 0) return null;
-  return parts.join(' · ');
+const subjectsMeta = computed<string | null>(() => {
+  if (subjectsCount.value === 0) return null;
+  return `${subjectsCount.value} mapel dijadwalkan`;
 });
 
-// ── Avatar background palette derived from initials ──────────────
-// Six soft brand-neutral tones — index = charCode(first letter) % 6.
-// White text on the darker three (blue/purple/teal), navy on the
-// lighter three (green/pink/amber).
-const AVATAR_PALETTE: Array<{ bg: string; fg: string }> = [
-  { bg: '#DBEAFE', fg: '#1E3A8A' }, // blue-100 / navy-800
-  { bg: '#DCFCE7', fg: '#166534' }, // green-100 / green-800
-  { bg: '#EDE9FE', fg: '#5B21B6' }, // violet-100 / violet-800
-  { bg: '#FCE7F3', fg: '#9D174D' }, // pink-100 / pink-800
-  { bg: '#FEF3C7', fg: '#92400E' }, // amber-100 / amber-800
-  { bg: '#CCFBF1', fg: '#115E59' }, // teal-100 / teal-800
-];
-function avatarStyle(initials: string): { background: string; color: string } {
-  const seed = (initials || '?').trim().charCodeAt(0) || 0;
-  const t = AVATAR_PALETTE[seed % AVATAR_PALETTE.length];
-  return { background: t.bg, color: t.fg };
-}
+// ── Wali kelas ──────────────────────────────────────────────────
+const wali = computed(() => props.classroom.wali_teacher ?? null);
+const waliName = computed(
+  () => wali.value?.name ?? props.classroom.homeroom_teacher_name ?? null,
+);
 
 // ── Grade label ──────────────────────────────────────────────────
 const gradeLabel = computed(() => {
   const g = props.classroom.grade_level;
-  if (!g) return null;
+  if (g === null || g === undefined) return null;
   return `Tingkat ${g}`;
 });
 
-// ── Long-press bulk-select (mirrors TeacherStructuredCard) ───────
+// ── Class code (avatar) ─────────────────────────────────────────
+const codeChars = computed(() => (props.classroom.name || '?').slice(0, 3).toUpperCase());
+
+// ── Kebab menu ──────────────────────────────────────────────────
+const menuOpen = ref(false);
+function toggleMenu(e: Event) {
+  e.stopPropagation();
+  menuOpen.value = !menuOpen.value;
+}
+function onDelete(e: Event) {
+  e.stopPropagation();
+  menuOpen.value = false;
+  emit('delete');
+}
+function closeMenu() {
+  if (menuOpen.value) menuOpen.value = false;
+}
+
+// ── Long-press bulk-select (retained for compat) ────────────────
 let longPressTimer: ReturnType<typeof setTimeout> | null = null;
 function onPointerDown() {
   if (!props.bulkSelectable) return;
@@ -155,389 +155,266 @@ function onPointerUp() {
   <div
     class="class-card"
     :class="{ 'class-card--selected': selected }"
-    :style="selected ? { '--class-card-accent': accentColor } : {}"
-    @click="emit('click', $event)"
+    :style="{ '--class-card-accent': accentColor }"
+    @click="(e) => { closeMenu(); emit('click', e); }"
     @pointerdown="onPointerDown"
     @pointerup="onPointerUp"
     @pointerleave="onPointerUp"
   >
-    <!-- LEFT · Identity -------------------------------------------- -->
-    <div class="class-card__identity">
-      <div class="class-card__identity-head">
-        <span
-          class="class-card__class-avatar"
-          :style="avatarStyle(classroom.name)"
+    <!-- Header row: avatar · name+meta · kebab -->
+    <div class="class-card__head">
+      <span class="class-card__avatar" aria-hidden="true">{{ codeChars }}</span>
+      <div class="class-card__title">
+        <p class="class-card__name">{{ classroom.name || '—' }}</p>
+        <p class="class-card__meta">
+          <template v-if="gradeLabel">{{ gradeLabel }}</template>
+          <template v-if="gradeLabel && academicYearLabel"> · </template>
+          <template v-if="academicYearLabel">TP {{ academicYearLabel }}</template>
+          <template v-if="gradeLabel || academicYearLabel"> · </template>
+          <span class="class-card__meta-status">Aktif</span>
+        </p>
+      </div>
+      <div class="class-card__menu-wrap" @click.stop>
+        <button
+          type="button"
+          class="class-card__menu-trigger"
+          aria-label="Menu"
+          :aria-expanded="menuOpen"
+          @click="toggleMenu"
         >
-          {{ (classroom.name || '?').slice(0, 2).toUpperCase() }}
-          <span
-            v-if="selected"
-            class="class-card__check"
-            :style="{ color: accentColor }"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="3"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="w-3 h-3"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </span>
-        </span>
-        <div class="class-card__identity-title">
-          <p class="class-card__name">{{ classroom.name || '—' }}</p>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+            <circle cx="12" cy="5" r="1" />
+            <circle cx="12" cy="12" r="1" />
+            <circle cx="12" cy="19" r="1" />
+          </svg>
+        </button>
+        <div v-if="menuOpen" class="class-card__menu" role="menu">
+          <button type="button" role="menuitem" class="class-card__menu-item class-card__menu-item--danger" @click="onDelete">
+            Hapus kelas
+          </button>
         </div>
-      </div>
-
-      <div class="class-card__meta-chips">
-        <span v-if="gradeLabel" class="class-card__meta-chip">
-          {{ gradeLabel }}
-        </span>
-        <span v-if="academicYearLabel" class="class-card__meta-chip">
-          {{ academicYearLabel }}
-        </span>
-        <span class="class-card__meta-chip class-card__meta-chip--status">
-          Aktif
-        </span>
-      </div>
-
-      <!-- Wali row — always shown; muted placeholder when unset. -->
-      <div class="class-card__row">
-        <span class="class-card__row-icon" aria-hidden="true">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="w-3.5 h-3.5"
-          >
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-        </span>
-        <template v-if="wali">
-          <span
-            class="class-card__wali-avatar"
-            :style="avatarStyle(wali.avatar_initials || wali.name)"
-          >
-            {{ wali.avatar_initials || (wali.name || '?').slice(0, 2).toUpperCase() }}
-          </span>
-          <span class="class-card__row-text">{{ wali.name }}</span>
-        </template>
-        <template v-else>
-          <span class="class-card__row-empty">Wali kelas belum ditetapkan</span>
-        </template>
-      </div>
-
-      <!-- Location row — hidden entirely when both floor + room are null. -->
-      <div v-if="locationText" class="class-card__row">
-        <span class="class-card__row-icon" aria-hidden="true">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="w-3.5 h-3.5"
-          >
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-        </span>
-        <span class="class-card__row-text">{{ locationText }}</span>
-      </div>
-
-      <!-- Identity-column footer actions — parity with the previous
-           BrandListRow trailing/inline actions on this view. -->
-      <div class="class-card__actions">
-        <button
-          type="button"
-          class="class-card__detail"
-          :style="{ color: accentColor }"
-          @click.stop="emit('detail')"
-        >Detail →</button>
-        <button
-          type="button"
-          class="class-card__delete"
-          @click.stop="emit('delete')"
-        >Hapus</button>
       </div>
     </div>
 
-    <!-- RIGHT · Body ---------------------------------------------- -->
-    <div class="class-card__body">
-      <!-- Capacity summary + progress -->
-      <div class="class-card__capacity">
-        <div class="class-card__capacity-head">
-          <span class="class-card__capacity-count">
-            <span class="class-card__capacity-current">{{ capacityCurrent }}</span>
-            <span class="class-card__capacity-slash">/</span>
-            <span class="class-card__capacity-max">{{ capacityMax }}</span>
-            <span class="class-card__capacity-word">siswa</span>
-          </span>
-          <span class="class-card__capacity-pct">· {{ capacityPct }}%</span>
-          <span
-            v-if="isFull"
-            class="class-card__full-pill"
-            :style="{ background: capacityBarColor }"
-          >PENUH</span>
-        </div>
-        <div class="class-card__bar">
-          <div
-            class="class-card__bar-fill"
-            :style="{
-              width: `${capacityPct}%`,
-              background: capacityBarColor,
-            }"
-          />
-        </div>
-      </div>
+    <!-- Wali kelas — always shown; muted placeholder when unset. -->
+    <div class="class-card__row">
+      <svg class="class-card__row-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="14" height="14">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+      <span class="class-card__row-label">Wali kelas:</span>
+      <span v-if="waliName" class="class-card__row-value">{{ waliName }}</span>
+      <span v-else class="class-card__row-empty">belum ditetapkan</span>
+    </div>
 
-      <!-- Roster avatars -->
-      <div class="class-card__roster">
-        <template v-if="previewStudents.length > 0">
-          <span
-            v-for="s in previewStudents"
-            :key="s.id"
-            class="class-card__student-avatar"
-            :style="avatarStyle(s.avatar_initials || s.name)"
-            :title="s.name"
-          >{{ s.avatar_initials || (s.name || '?').slice(0, 2).toUpperCase() }}</span>
-          <span
-            v-if="overflowCount > 0"
-            class="class-card__student-avatar class-card__student-avatar--overflow"
-            :title="`+${overflowCount} siswa lain`"
-          >+{{ overflowCount }}</span>
-        </template>
-        <span v-else class="class-card__row-empty">Belum ada siswa</span>
-      </div>
-
-      <!-- Subject chips + count -->
-      <div class="class-card__subjects">
-        <p class="class-card__subjects-label">
-          <template v-if="subjectsCount > 0">
-            {{ subjectsCount }} Mapel Diajarkan
-          </template>
-          <template v-else>
-            Mapel Diajarkan
-          </template>
-        </p>
-        <div v-if="subjectChips.length > 0" class="class-card__chips">
-          <span
-            v-for="s in subjectChips"
-            :key="s.key"
-            class="class-card__chip"
-          >{{ s.label }}</span>
-          <span
-            v-if="subjectsOverflow > 0"
-            class="class-card__chip class-card__chip--more"
-          >+{{ subjectsOverflow }} lainnya</span>
-        </div>
-        <span v-else class="class-card__row-empty">
-          Belum ada jadwal mapel
+    <!-- Capacity strip -->
+    <div class="class-card__capacity">
+      <div class="class-card__capacity-head">
+        <span class="class-card__capacity-label">Siswa terdaftar</span>
+        <span class="class-card__capacity-count">
+          <span class="class-card__capacity-current">{{ capacityCurrent }}</span>
+          <span class="class-card__capacity-slash"> / {{ capacityMax }}</span>
         </span>
       </div>
+      <div class="class-card__bar" :aria-label="`${capacityPct}% kapasitas`">
+        <div
+          class="class-card__bar-fill"
+          :style="{
+            width: `${capacityPct}%`,
+            background: capacityBarColor,
+          }"
+        />
+      </div>
+    </div>
+
+    <!-- Footer: mapel meta line + Detail link -->
+    <div class="class-card__foot">
+      <span class="class-card__foot-meta">
+        <svg class="class-card__foot-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="14" height="14">
+          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+        </svg>
+        <template v-if="subjectsMeta">{{ subjectsMeta }}</template>
+        <template v-else>Belum ada jadwal mapel</template>
+      </span>
+      <button
+        type="button"
+        class="class-card__detail"
+        :style="{ color: accentColor }"
+        @click.stop="emit('detail')"
+      >
+        Detail
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
 /*
- * Card container — mirrors TeacherStructuredCard's rounded/shadowed
- * surface but switches to a 260px identity split per the roster
- * wireframe (narrower than the teacher card so more chart real
- * estate lives in the right column).
+ * Container — flat white surface, 12px radius, hairline border.
+ * NO shadow-card at rest (only on hover) so a grid of cards doesn't
+ * flood the page with drop shadows.
  */
 .class-card {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   padding: 16px;
   background: #fff;
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid rgb(226 232 240);           /* slate-200 */
-  box-shadow:
-    0 1px 2px 0 rgb(0 0 0 / 0.04),
-    0 4px 16px -2px rgb(0 0 0 / 0.06);
   cursor: pointer;
-  transition: box-shadow 150ms ease, border-color 150ms ease;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
   --class-card-accent: #1B6FB8;
 }
 .class-card:hover {
-  box-shadow:
-    0 2px 4px 0 rgb(0 0 0 / 0.06),
-    0 8px 24px -4px rgb(0 0 0 / 0.08);
+  border-color: rgb(203 213 225);               /* slate-300 */
+  box-shadow: 0 4px 12px -4px rgb(0 0 0 / 0.08);
 }
 .class-card--selected {
   border-color: var(--class-card-accent);
-  box-shadow:
-    0 0 0 2px var(--class-card-accent),
-    0 4px 16px -2px rgb(0 0 0 / 0.06);
+  box-shadow: 0 0 0 2px var(--class-card-accent);
 }
 
-/* ── Identity column ─────────────────────────────────────────── */
-.class-card__identity {
+/* ── Header ─────────────────────────────────────────────────── */
+.class-card__head {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-right: 20px;
-  border-right: 1px dashed rgb(203 213 225);    /* slate-300 */
+  align-items: flex-start;
+  gap: 12px;
   min-width: 0;
 }
-.class-card__identity-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-.class-card__class-avatar {
-  position: relative;
-  width: 40px;
-  height: 40px;
+.class-card__avatar {
+  width: 44px;
+  height: 44px;
   border-radius: 10px;
+  background: color-mix(in srgb, var(--class-card-accent) 12%, transparent);
+  color: var(--class-card-accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
+  letter-spacing: 0.02em;
   flex-shrink: 0;
 }
-.class-card__check {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: #fff;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 0 0 2px currentColor;
-}
-.class-card__identity-title {
-  min-width: 0;
+.class-card__title {
   flex: 1;
+  min-width: 0;
 }
 .class-card__name {
-  font-size: 20px;
+  margin: 0;
+  font-size: 15px;
   font-weight: 600;
-  color: rgb(15 23 42);                         /* slate-900 */
-  line-height: 1.2;
+  color: rgb(15 23 42);                          /* slate-900 */
+  line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.class-card__meta-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.class-card__meta-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgb(241 245 249);                  /* slate-100 */
-  border: 1px solid rgb(226 232 240);            /* slate-200 */
-  font-size: 11px;
-  color: rgb(51 65 85);                          /* slate-700 */
-  font-weight: 500;
+.class-card__meta {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: rgb(100 116 139);                       /* slate-500 */
   line-height: 1.4;
 }
-.class-card__meta-chip--status {
-  background: #DCFCE7;                           /* green-100 */
-  border-color: #86EFAC;                         /* green-300 */
-  color: #166534;                                /* green-800 */
-  font-weight: 600;
+.class-card__meta-status {
+  color: #047857;                                /* emerald-700 — one green for "aktif" */
+  font-weight: 500;
 }
+
+/* ── Kebab ──────────────────────────────────────────────────── */
+.class-card__menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.class-card__menu-trigger {
+  background: transparent;
+  border: none;
+  color: rgb(148 163 184);                       /* slate-400 */
+  cursor: pointer;
+  padding: 4px;
+  margin: -4px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+}
+.class-card__menu-trigger:hover {
+  background: rgb(241 245 249);                  /* slate-100 */
+  color: rgb(71 85 105);                         /* slate-600 */
+}
+.class-card__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid rgb(226 232 240);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px -6px rgb(0 0 0 / 0.12);
+  padding: 4px;
+  z-index: 10;
+}
+.class-card__menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  color: rgb(30 41 59);                          /* slate-800 */
+  cursor: pointer;
+  border-radius: 6px;
+}
+.class-card__menu-item:hover {
+  background: rgb(248 250 252);                  /* slate-50 */
+}
+.class-card__menu-item--danger {
+  color: #B91C1C;                                /* red-700 — text-only; hover tint stays subtle */
+}
+.class-card__menu-item--danger:hover {
+  background: #FEF2F2;                           /* red-50 */
+}
+
+/* ── Info row (wali) ────────────────────────────────────────── */
 .class-card__row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
-  color: rgb(51 65 85);                          /* slate-700 */
   font-size: 12.5px;
+  color: rgb(71 85 105);                         /* slate-600 */
   line-height: 1.4;
 }
 .class-card__row-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  color: rgb(148 163 184);                       /* slate-400 */
+  flex-shrink: 0;
+}
+.class-card__row-label {
   color: rgb(100 116 139);                       /* slate-500 */
-  flex-shrink: 0;
 }
-.class-card__wali-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-.class-card__row-text {
+.class-card__row-value {
+  color: rgb(15 23 42);                          /* slate-900 */
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
 }
 .class-card__row-empty {
-  font-size: 12.5px;
-  font-style: italic;
   color: rgb(148 163 184);                       /* slate-400 */
-}
-.class-card__actions {
-  margin-top: auto;
-  padding-top: 8px;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: flex-start;
-}
-.class-card__detail {
-  font-size: 12.5px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  padding: 0;
-}
-.class-card__detail:hover {
-  text-decoration: underline;
-}
-.class-card__delete {
-  font-size: 12px;
-  font-weight: 500;
-  color: rgb(239 68 68);                         /* status-danger */
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  padding: 0;
-}
-.class-card__delete:hover {
-  text-decoration: underline;
+  font-style: italic;
 }
 
-/* ── Body column ─────────────────────────────────────────────── */
-.class-card__body {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  min-width: 0;
-}
+/* ── Capacity strip ─────────────────────────────────────────── */
 .class-card__capacity {
+  padding: 10px 12px;
+  background: rgb(248 250 252);                  /* slate-50 */
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -545,138 +422,74 @@ function onPointerUp() {
 .class-card__capacity-head {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+}
+.class-card__capacity-label {
+  font-size: 12px;
+  color: rgb(100 116 139);                       /* slate-500 */
 }
 .class-card__capacity-count {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 2px;
-  color: rgb(15 23 42);                          /* slate-900 */
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 .class-card__capacity-current {
-  font-size: 18px;
   font-weight: 700;
+  color: rgb(15 23 42);                          /* slate-900 */
 }
 .class-card__capacity-slash {
   color: rgb(148 163 184);                       /* slate-400 */
-  font-size: 15px;
-}
-.class-card__capacity-max {
-  font-size: 15px;
-  font-weight: 600;
-  color: rgb(71 85 105);                         /* slate-600 */
-}
-.class-card__capacity-word {
-  font-size: 12px;
-  color: rgb(100 116 139);                       /* slate-500 */
-  margin-left: 4px;
-}
-.class-card__capacity-pct {
-  font-size: 12px;
-  color: rgb(100 116 139);
-  font-weight: 500;
-}
-.class-card__full-pill {
-  display: inline-block;
-  margin-left: 4px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.04em;
+  font-weight: 400;
 }
 .class-card__bar {
-  height: 6px;
+  height: 4px;
   border-radius: 999px;
-  background: rgb(241 245 249);                  /* slate-100 */
+  background: rgb(226 232 240);                  /* slate-200 */
   overflow: hidden;
 }
 .class-card__bar-fill {
   height: 100%;
   border-radius: 999px;
-  transition: width 300ms ease, background 300ms ease;
+  transition: width 250ms ease, background 200ms ease;
 }
 
-/* ── Roster avatars ──────────────────────────────────────────── */
-.class-card__roster {
+/* ── Footer ─────────────────────────────────────────────────── */
+.class-card__foot {
   display: flex;
   align-items: center;
-  gap: -6px;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+  border-top: 1px solid rgb(241 245 249);        /* slate-100 */
 }
-.class-card__student-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
+.class-card__foot-meta {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  border: 2px solid #fff;
-  margin-left: -6px;
-  box-shadow: 0 0 0 1px rgb(226 232 240);
+  gap: 6px;
+  font-size: 12px;
+  color: rgb(100 116 139);                       /* slate-500 */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.class-card__foot-icon {
+  color: rgb(148 163 184);                       /* slate-400 */
   flex-shrink: 0;
 }
-.class-card__student-avatar:first-child {
-  margin-left: 0;
-}
-.class-card__student-avatar--overflow {
-  background: rgb(241 245 249);                  /* slate-100 */
-  color: rgb(71 85 105);                         /* slate-600 */
-}
-
-/* ── Subjects ────────────────────────────────────────────────── */
-.class-card__subjects {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.class-card__subjects-label {
-  font-size: 10.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgb(100 116 139);                       /* slate-500 */
-}
-.class-card__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.class-card__chip {
+.class-card__detail {
   display: inline-flex;
   align-items: center;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: rgb(248 250 252);                  /* slate-50 */
-  border: 1px solid rgb(226 232 240);            /* slate-200 */
-  font-size: 12px;
-  color: rgb(30 41 59);                          /* slate-800 */
-  line-height: 1.4;
-}
-.class-card__chip--more {
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
   background: transparent;
-  color: rgb(100 116 139);                       /* slate-500 */
-  font-style: italic;
-  border-style: dashed;
+  border: none;
+  padding: 4px 0;
 }
-
-/* ── Responsive: stack columns on narrow viewports ───────────── */
-@media (max-width: 900px) {
-  .class-card {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-  .class-card__identity {
-    padding-right: 0;
-    padding-bottom: 14px;
-    border-right: none;
-    border-bottom: 1px dashed rgb(203 213 225);
-  }
-  .class-card__actions {
-    margin-top: 4px;
-  }
+.class-card__detail:hover {
+  text-decoration: underline;
 }
 </style>
