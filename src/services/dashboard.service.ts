@@ -13,6 +13,43 @@ import type { Role } from '@/types/auth';
 
 type Payload = Record<string, unknown>;
 
+/**
+ * Documented shape of the admin `/dashboard/stats` payload. The service
+ * still returns the loose `Payload` type (see `getStats` below) because
+ * the JSON schema is role-shaped and evolves per-MR — this interface is
+ * a REFERENCE consumers can narrow against without breaking existing
+ * `Record<string, any>` reads.
+ *
+ * MR!523 (backend, edu_core) added the three attendance fields:
+ *   attendance_per_class      — null when the caller lacks
+ *                               `attendance.student.view` (panel hides);
+ *                               [] means the ability is granted but no
+ *                               class recorded attendance today.
+ *   teacher_attendance_today  — null when the caller lacks
+ *                               `attendance.staff.report.view`;
+ *                               `{total:0}` = granted but no data yet.
+ *   staff_attendance_today    — same gating as teacher_attendance_today.
+ */
+export interface AdminStatsAttendancePerClass {
+  class_id: string;
+  class_name: string;
+  present_pct: number;
+  total: number;
+  present: number;
+}
+export interface AdminStatsAttendanceSummaryToday {
+  present_pct: number;
+  total: number;
+  present: number;
+}
+export interface AdminStats {
+  attendance_rate_today?: number | string | null;
+  attendance_per_class?: AdminStatsAttendancePerClass[] | null;
+  teacher_attendance_today?: AdminStatsAttendanceSummaryToday | null;
+  staff_attendance_today?: AdminStatsAttendanceSummaryToday | null;
+  [key: string]: unknown;
+}
+
 export interface InboxResponse {
   items: Payload[];
   counts: Record<string, number>;

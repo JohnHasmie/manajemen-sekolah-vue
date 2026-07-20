@@ -620,6 +620,19 @@
       "needsAttention": "Needs attention",
       "schoolManagement": "School management"
     },
+    "attendance": {
+      "title": "School Attendance",
+      "eyebrowToday": "Today · {date}",
+      "detail": "Detail →",
+      "ringStudent": "Students",
+      "ringTeacher": "Teachers",
+      "ringStaff": "Staff",
+      "presentOf": "{present}/{total} present",
+      "rateToday": "present today",
+      "notYet": "no data yet",
+      "perClass": "Student attendance per class",
+      "noRecordsToday": "No attendance recorded today"
+    },
     "announcement": {
       "allStatuses": "All statuses",
       "scheduled": "Scheduled",

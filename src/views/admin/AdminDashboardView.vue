@@ -26,6 +26,7 @@ import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModa
 import PriorityInbox from '@/components/feature/PriorityInbox.vue';
 import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
 import AdminControlCenterCard from '@/components/feature/AdminControlCenterCard.vue';
+import AdminAttendanceOverviewCard from '@/components/feature/AdminAttendanceOverviewCard.vue';
 import SubscriptionMiniRow from '@/components/feature/SubscriptionMiniRow.vue';
 import AdminTutoringDashboardView from '@/views/admin/tutoring/AdminTutoringDashboardView.vue';
 import GamificationHighlightCard from '@/components/feature/gamification/GamificationHighlightCard.vue';
@@ -284,28 +285,6 @@ const quickActions = computed<QuickAction[]>(() => {
   return raw.filter((a) => !a.visible || a.visible());
 });
 
-// Heatmap data - reads stats.attendance_heatmap[] when backend supplies it,
-// otherwise synthesises a placeholder grid so the section is never empty.
-interface HeatmapRow { class_name: string; cells: number[] }
-const heatmap = computed<HeatmapRow[]>(() => {
-  const raw = stats.value.attendance_heatmap;
-  if (Array.isArray(raw)) return raw as HeatmapRow[];
-  // Synthesized placeholder so admin sees the shape on first connect.
-  const sample = ['7A', '7B', '8A', '8B', '9A'];
-  return sample.map((cls) => ({
-    class_name: cls,
-    cells: Array.from({ length: 10 }, () => 80 + Math.floor(Math.random() * 20)),
-  }));
-});
-
-function heatCellClass(pct: number): string {
-  if (pct < 75) return 'bg-red-200';
-  if (pct < 80) return 'bg-emerald-100';
-  if (pct < 90) return 'bg-emerald-300';
-  if (pct < 95) return 'bg-emerald-500';
-  return 'bg-emerald-700';
-}
-
 const financeReceived = computed(() => topLevelNum('finance_received'));
 const financeOutstanding = computed(() => topLevelNum('finance_outstanding'));
 const financeTotal = computed(() => financeReceived.value + financeOutstanding.value);
@@ -469,11 +448,11 @@ const financePct = computed(() =>
             </div>
           </template>
 
-          <!-- #main: heatmap + finance, then the priority inbox. Whole
-               cards hide when the tenant doesn't own the module — a
-               staff-only tenant sees zero empty cards instead of
-               Attendance/Finance panels with placeholder digits + dead
-               "Details" buttons. -->
+          <!-- #main: unified attendance overview + finance, then the
+               priority inbox. Whole cards hide when the tenant doesn't
+               own the module — a staff-only tenant sees zero empty
+               cards instead of Attendance/Finance panels with
+               placeholder digits + dead "Details" buttons. -->
           <template #main>
           <div class="space-y-md">
 
@@ -743,48 +722,13 @@ const financePct = computed(() =>
           </template>
 
           <section class="grid grid-cols-1 lg:grid-cols-3 gap-md">
-            <div
-              v-if="me.canAny(['attendance.student.view', 'attendance.student.export'])"
-              class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4"
-            >
-              <header class="flex items-center justify-between mb-3 px-1">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 grid place-items-center">
-                    <NavIcon name="activity" :size="16" />
-                  </div>
-                  <div>
-                    <h3 class="text-sm font-black text-slate-900 leading-none">
-                      {{ t('admin.dashboard.attendancePerDayClass') }}
-                    </h3>
-                    <p class="text-3xs text-slate-400 font-bold mt-0.5">{{ t('admin.dashboard.last10Days') }}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  class="text-2xs font-bold text-role-admin hover:underline"
-                  @click="router.push('/admin/student-attendance')"
-                >
-                  {{ t('admin.dashboard.details') }}
-                </button>
-              </header>
-              <div class="grid gap-1.5" style="grid-template-columns: 60px repeat(10, 1fr);">
-                <template v-for="(row, ri) in heatmap" :key="`${row.class_name}-${ri}`">
-                  <span class="text-3xs font-bold text-slate-400 uppercase tracking-wider self-center">{{ row.class_name }}</span>
-                  <span
-                    v-for="(pct, ci) in row.cells"
-                    :key="`${ri}-${ci}`"
-                    class="h-5 rounded"
-                    :class="heatCellClass(pct)"
-                    :title="`${row.class_name}: ${pct}%`"
-                  ></span>
-                </template>
-              </div>
-              <div class="flex items-center gap-3 mt-3 text-3xs text-slate-500 flex-wrap">
-                <span class="inline-flex items-center gap-1.5"><span class="w-3 h-2 rounded bg-emerald-100"></span>80%</span>
-                <span class="inline-flex items-center gap-1.5"><span class="w-3 h-2 rounded bg-emerald-500"></span>90%</span>
-                <span class="inline-flex items-center gap-1.5"><span class="w-3 h-2 rounded bg-emerald-700"></span>95%+</span>
-                <span class="inline-flex items-center gap-1.5"><span class="w-3 h-2 rounded bg-red-200"></span>&lt;75%</span>
-              </div>
+            <!-- Unified attendance overview (Opsi A) — replaces the
+                 old placeholder heatmap. Self-hides when the admin has
+                 no attendance ability at all; otherwise renders 3
+                 KPI rings + a per-class bar list from the MR!523
+                 payload fields. -->
+            <div class="lg:col-span-2">
+              <AdminAttendanceOverviewCard :stats="stats" />
             </div>
 
             <div

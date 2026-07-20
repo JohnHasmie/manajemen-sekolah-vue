@@ -620,6 +620,19 @@
       "needsAttention": "Perlu Perhatian",
       "schoolManagement": "Manajemen sekolah"
     },
+    "attendance": {
+      "title": "Kehadiran Sekolah",
+      "eyebrowToday": "Hari ini · {date}",
+      "detail": "Detail →",
+      "ringStudent": "Siswa",
+      "ringTeacher": "Guru",
+      "ringStaff": "Staf",
+      "presentOf": "{present}/{total} hadir",
+      "rateToday": "hadir hari ini",
+      "notYet": "belum ada",
+      "perClass": "Kehadiran siswa per kelas",
+      "noRecordsToday": "Belum ada catatan kehadiran hari ini"
+    },
     "announcement": {
       "allStatuses": "Semua status",
       "scheduled": "Terjadwal",
