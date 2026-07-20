@@ -96,6 +96,22 @@ const stateMeta = computed<{ gradient: string; icon: string; miniBadgeTone: stri
         icon: 'bell',
         miniBadgeTone: 'bg-white/25 text-white',
       };
+    // Staff variants — cobalt palette so the surface visually
+    // pairs with the teacher variants (violet + amber) without
+    // colliding. Icon-wise we use `briefcase` for the champion
+    // card to lean into the operational nature of staff work.
+    case 'staff_of_month':
+      return {
+        gradient: 'from-brand-cobalt to-slate-800',
+        icon: 'briefcase',
+        miniBadgeTone: 'bg-white/25 text-white',
+      };
+    case 'staff_needs_attention':
+      return {
+        gradient: 'from-amber-500 to-orange-600',
+        icon: 'bell',
+        miniBadgeTone: 'bg-white/25 text-white',
+      };
     default:
       return {
         gradient: 'from-slate-600 to-slate-800',

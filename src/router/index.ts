@@ -96,6 +96,8 @@ const AdminAttendanceDashboardView = () =>
   import('@/views/admin/AdminAttendanceDashboardView.vue');
 const AdminTeacherEngagementView = () =>
   import('@/views/admin/AdminTeacherEngagementView.vue');
+const AdminStaffEngagementView = () =>
+  import('@/views/admin/AdminStaffEngagementView.vue');
 const AdminReadinessView = () =>
   import('@/views/admin/AdminReadinessView.vue');
 const AdminAttendanceTingkatHeatmapView = () =>
@@ -894,6 +896,16 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/teacher-engagement',
         name: 'admin.teacher-engagement',
         component: AdminTeacherEngagementView,
+        meta: { role: 'admin' satisfies Role, ability: 'gamification.admin.view' },
+      },
+      {
+        // Prestasi Staf — staff-side mirror of teacher-engagement.
+        // Same paid module + same ability gate. Rows keyed on user_id
+        // (staff rows in teacher_activity_points carry personnel_type='staff'
+        // + user_id, never teacher_id).
+        path: 'admin/staff-engagement',
+        name: 'admin.staff-engagement',
+        component: AdminStaffEngagementView,
         meta: { role: 'admin' satisfies Role, ability: 'gamification.admin.view' },
       },
       {

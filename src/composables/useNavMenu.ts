@@ -186,13 +186,28 @@ const ADMIN_NAV: NavSection[] = [
         icon: 'camera',
         ability: 'attendance.staff.report.view',
       },
-      // Prestasi & Gamifikasi Guru — paid module, gated by the
-      // admin variant of the ability. Ability strips out when the
-      // school loses the sub → nav item hidden automatically.
+    ],
+  },
+  {
+    // ── WAWASAN KINERJA — retention & engagement pages that cut across
+    //    both Guru and Staf. Section only appears when the school owns
+    //    the teacher_gamification module (both items gate on the same
+    //    ability; the section falls out whole when neither survives).
+    //    Moved out of `sectionAttendance` in the staff-fusion MR so the
+    //    two Prestasi pages sit together instead of nested under a
+    //    presence-only header. ───────────
+    titleKey: 'nav.sectionWawasanKinerja',
+    items: [
       {
         to: '/admin/teacher-engagement',
         labelKey: 'nav.teacherEngagement',
         icon: 'medal',
+        ability: 'gamification.admin.view',
+      },
+      {
+        to: '/admin/staff-engagement',
+        labelKey: 'nav.staffEngagement',
+        icon: 'briefcase',
         ability: 'gamification.admin.view',
       },
     ],

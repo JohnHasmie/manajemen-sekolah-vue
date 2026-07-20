@@ -223,6 +223,78 @@ export interface SendRemindersResponse {
   total_target: number;
 }
 
+// ─── Admin · Staff variant ─────────────────────────────────
+// Mirror of the teacher admin shape but keyed on `user_id`
+// instead of `teacher_id`. Staff rows in teacher_activity_points
+// carry personnel_type='staff' + user_id; teacher_id is NULL.
+// Backend: MR6 `/admin/staff-engagement/*`.
+
+export interface AdminStaffHighlightPayload {
+  staff_of_month: {
+    state: 'staff_of_month';
+    eyebrow?: string;
+    title: string;
+    sub?: string;
+    cta_label: string;
+    cta_target: string;
+    meta: null | { user_id: string; name: string; points: number; current_month: boolean };
+  };
+  needs_attention: {
+    state: 'staff_needs_attention';
+    count: number;
+    eyebrow?: string;
+    title: string | null;
+    sub?: string;
+    cta_label?: string;
+    cta_target?: string;
+    meta: null | { user_ids: string[]; sample_names?: string[] };
+  };
+}
+
+export interface AdminStaffTopEntry {
+  user_id: string;
+  name: string;
+  photo_url: string | null;
+  points: number;
+}
+
+export interface AdminStaffSummaryPayload {
+  total_staff: number;
+  active_this_week: number;
+  average_streak: number;
+  needs_attention_count: number;
+  top_three: AdminStaffTopEntry[];
+}
+
+/**
+ * Derived server-side from intersect(user_abilities, staff_quest_map.keys).
+ * Values are Indonesian display strings (Bendahara / Tata Usaha / Kehadiran)
+ * that render directly in the peran filter chips + row subtitle.
+ */
+export type StaffAbilityRoleTag = 'Bendahara' | 'Tata Usaha' | 'Kehadiran' | string;
+
+export interface AdminStaffEngagementRow {
+  user_id: string;
+  name: string;
+  photo_url: string | null;
+  level: number;
+  streak_days: number;
+  points_7d: number;
+  last_active_at: string | null;
+  status: TeacherRowStatus;
+  sparkline: number[];
+  ability_role_tag: StaffAbilityRoleTag;
+}
+
+export interface AdminStaffIndexPayload {
+  data: AdminStaffEngagementRow[];
+  meta: {
+    highlight: AdminStaffHighlightPayload;
+    kpi: AdminStaffSummaryPayload;
+    weekly_activity: WeeklyActivityPoint[];
+  };
+}
+
 export const TeacherProgressService = {
   async getHighlight(): Promise<HighlightPayload> {
     const res = await api.get('/teacher/gamification/highlight');
@@ -269,6 +341,30 @@ export const TeacherProgressService = {
   async sendReminders(teacherIds: string[]): Promise<SendRemindersResponse> {
     const res = await api.post('/admin/teacher-engagement/send-reminders', {
       teacher_ids: teacherIds,
+    });
+    return (res.data?.data ?? res.data) as SendRemindersResponse;
+  },
+
+  // ─── Admin · Staff variant ─────────────────────────────
+
+  async getAdminStaffHighlight(): Promise<AdminStaffHighlightPayload> {
+    const res = await api.get('/admin/staff-engagement/highlight');
+    return (res.data?.data ?? res.data) as AdminStaffHighlightPayload;
+  },
+
+  async getAdminStaffSummary(): Promise<AdminStaffSummaryPayload> {
+    const res = await api.get('/admin/staff-engagement/summary');
+    return (res.data?.data ?? res.data) as AdminStaffSummaryPayload;
+  },
+
+  async getAdminStaffIndex(): Promise<AdminStaffIndexPayload> {
+    const res = await api.get('/admin/staff-engagement');
+    return res.data as AdminStaffIndexPayload;
+  },
+
+  async sendStaffReminders(userIds: string[]): Promise<SendRemindersResponse> {
+    const res = await api.post('/admin/staff-engagement/send-reminders', {
+      user_ids: userIds,
     });
     return (res.data?.data ?? res.data) as SendRemindersResponse;
   },
