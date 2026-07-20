@@ -53,6 +53,7 @@ import type {
   TeacherAttendancePersonnelFilter,
   TeacherAttendancePulangCepatRow,
   TeacherAttendanceRecord,
+  TeacherAttendanceSettings,
   TeacherAttendanceSummaryRow,
   TeacherAttendanceTimeseries,
 } from '@/types/teacher-attendance';
@@ -440,6 +441,21 @@ function openRowDetail(row: TeacherAttendanceRecord) {
 function closeRowDetail() {
   rowDetail.value = null;
 }
+
+// Pulang parity FU-3 — the row-detail drawer now renders a real
+// Leaflet map. Passing settings lets it draw the school geofence
+// circle at the canonical centre (settings.geofence_lat/lng, falling
+// back to school_latitude/longitude). Fetched once here so we don't
+// pay a round-trip on every drawer open. Failures are silent — the
+// drawer degrades to a marker-only map centred on the check-in coord.
+const attendanceSettings = ref<TeacherAttendanceSettings | null>(null);
+TeacherAttendanceService.getSettings()
+  .then((s) => {
+    attendanceSettings.value = s;
+  })
+  .catch(() => {
+    /* silent — the drawer falls back gracefully. */
+  });
 
 function handleRowNote(row: TeacherAttendanceRecord) {
   toast.info(`Catatan manual untuk ${teacherAttendancePersonName(row)} akan hadir di iterasi berikutnya.`);
@@ -1023,6 +1039,7 @@ function pctChipClass(pct: number): string {
     <AttendanceRowDetailDrawer
       :open="rowDetailOpen"
       :row="rowDetail"
+      :settings="attendanceSettings"
       @close="closeRowDetail"
       @note="handleRowNote"
       @verify="handleRowVerify"
