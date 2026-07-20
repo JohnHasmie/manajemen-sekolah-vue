@@ -138,6 +138,40 @@ const markerXY = computed(() => {
   };
 });
 
+/**
+ * Marker offset for the check-out point. Mirrors `markerOffsetSvg` but
+ * reads `check_out_distance_m`. Zero (and therefore centre-of-map) when
+ * the row has no check-out yet, so the caller must gate the render on
+ * `hasCheckOutCoords`.
+ */
+const checkOutMarkerOffsetSvg = computed(() => {
+  const d = Number(props.row?.check_out_distance_m ?? 0);
+  if (!Number.isFinite(d) || d <= 0) return 0;
+  const ratio = Math.min(1.4, d / effectiveRadius.value);
+  return ratio * mapRadiusSvg;
+});
+
+/**
+ * Deterministic bearing for the check-out marker, seeded off the row id
+ * with a fixed offset so the two markers don't overlap when the two
+ * distances happen to be similar.
+ */
+const checkOutMarkerAngle = computed(() => {
+  const id = props.row?.id ?? '';
+  let seed = 0;
+  for (let i = 0; i < id.length; i++) seed = (seed * 31 + id.charCodeAt(i)) >>> 0;
+  // Add a half-turn offset so masuk / pulang are visually separable.
+  return ((seed % 360) + 137) * (Math.PI / 180);
+});
+
+const checkOutMarkerXY = computed(() => {
+  const offset = checkOutMarkerOffsetSvg.value;
+  return {
+    x: MAP_CENTRE + offset * Math.cos(checkOutMarkerAngle.value),
+    y: MAP_CENTRE + offset * Math.sin(checkOutMarkerAngle.value),
+  };
+});
+
 const hasCoords = computed(() => {
   const r = props.row;
   return (
@@ -145,6 +179,17 @@ const hasCoords = computed(() => {
     r?.check_in_lat !== undefined &&
     r?.check_in_lng !== null &&
     r?.check_in_lng !== undefined
+  );
+});
+
+/** True when the row has usable check-out coordinates to plot. */
+const hasCheckOutCoords = computed(() => {
+  const r = props.row;
+  return (
+    r?.check_out_lat !== null &&
+    r?.check_out_lat !== undefined &&
+    r?.check_out_lng !== null &&
+    r?.check_out_lng !== undefined
   );
 });
 </script>
@@ -347,6 +392,15 @@ const hasCoords = computed(() => {
                 <p class="text-lg font-black text-slate-900 tabular-nums">
                   {{ fmtTime(row.check_out_at) }}
                 </p>
+                <p v-if="row.check_out_at" class="text-2xs text-slate-500">
+                  Jarak: <span class="font-bold text-slate-700">{{ fmtDistance(row.check_out_distance_m) }}</span>
+                  <span
+                    v-if="row.check_out_outside_geofence"
+                    class="ml-1.5 text-red-600 font-bold"
+                  >
+                    · Luar area
+                  </span>
+                </p>
                 <p class="text-2xs text-slate-500">
                   Durasi:
                   <span class="font-bold text-slate-700">{{ durationLabel ?? '-' }}</span>
@@ -396,7 +450,7 @@ const hasCoords = computed(() => {
                   :viewBox="`0 0 ${MAP_VB} ${MAP_VB}`"
                   class="w-full h-40"
                   role="img"
-                  aria-label="Peta perkiraan geofence dan titik check-in"
+                  aria-label="Peta perkiraan geofence dan titik check-in dan check-out"
                 >
                   <!-- Faux grid -->
                   <defs>
@@ -445,15 +499,30 @@ const hasCoords = computed(() => {
                   >
                     Sekolah
                   </text>
+                  <!-- Marker + connector (check-out) — drawn BEFORE the
+                       check-in so the blue masuk pin sits on top when the
+                       two happen to overlap. -->
+                  <template v-if="hasCheckOutCoords">
+                    <line
+                      :x1="MAP_CENTRE"
+                      :y1="MAP_CENTRE"
+                      :x2="checkOutMarkerXY.x"
+                      :y2="checkOutMarkerXY.y"
+                      :stroke="row.check_out_outside_geofence ? '#ef4444' : '#8b5cf6'"
+                      stroke-width="1"
+                      stroke-dasharray="3 3"
+                      opacity="0.6"
+                    />
+                    <circle
+                      :cx="checkOutMarkerXY.x"
+                      :cy="checkOutMarkerXY.y"
+                      r="6"
+                      :fill="row.check_out_outside_geofence ? '#ef4444' : '#8b5cf6'"
+                      stroke="white"
+                      stroke-width="2"
+                    />
+                  </template>
                   <!-- Marker (check-in) -->
-                  <circle
-                    :cx="markerXY.x"
-                    :cy="markerXY.y"
-                    r="6"
-                    :fill="row.check_in_outside_geofence ? '#ef4444' : '#1b6fb8'"
-                    stroke="white"
-                    stroke-width="2"
-                  />
                   <line
                     :x1="MAP_CENTRE"
                     :y1="MAP_CENTRE"
@@ -464,11 +533,42 @@ const hasCoords = computed(() => {
                     stroke-dasharray="2 2"
                     opacity="0.6"
                   />
+                  <circle
+                    :cx="markerXY.x"
+                    :cy="markerXY.y"
+                    r="6"
+                    :fill="row.check_in_outside_geofence ? '#ef4444' : '#1b6fb8'"
+                    stroke="white"
+                    stroke-width="2"
+                  />
                 </svg>
-                <p class="px-3 py-2 text-3xs text-slate-400">
-                  Visualisasi perkiraan (bukan peta sebenarnya). Peta interaktif
-                  hadir di iterasi berikutnya.
-                </p>
+                <!-- Legend + placeholder disclaimer -->
+                <div
+                  class="px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-3xs text-slate-500"
+                >
+                  <span class="inline-flex items-center gap-1.5">
+                    <span
+                      class="w-2 h-2 rounded-full inline-block"
+                      style="background: #1b6fb8"
+                      aria-hidden="true"
+                    />
+                    <span class="font-bold text-slate-600">Masuk</span>
+                  </span>
+                  <span
+                    v-if="hasCheckOutCoords"
+                    class="inline-flex items-center gap-1.5"
+                  >
+                    <span
+                      class="w-2 h-2 rounded-full inline-block"
+                      style="background: #8b5cf6"
+                      aria-hidden="true"
+                    />
+                    <span class="font-bold text-slate-600">Pulang</span>
+                  </span>
+                  <span class="text-slate-400">
+                    · Visualisasi perkiraan (bukan peta sebenarnya).
+                  </span>
+                </div>
               </div>
               <div
                 v-else

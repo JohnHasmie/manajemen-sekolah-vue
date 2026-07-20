@@ -28,7 +28,10 @@ import type {
   TeacherAttendanceAdminFilters,
   TeacherAttendanceAdminSummary,
   TeacherAttendanceAdminSummaryFilters,
+  TeacherAttendanceCheckoutPreview,
+  TeacherAttendanceCheckoutPreviewResponse,
   TeacherAttendanceConfig,
+  TeacherAttendanceEarlyLeavePolicy,
   TeacherAttendanceEmployeeDeepDive,
   TeacherAttendanceExportFilters,
   TeacherAttendanceGeofence,
@@ -54,6 +57,11 @@ const Endpoints = {
   config: '/teacher-attendance/config',
   checkIn: '/teacher-attendance/check-in',
   checkOut: '/teacher-attendance/check-out',
+  // BE-2 !505: server-side preview of "would this check-out succeed
+  // right now, and if so what status will it be stamped with?". Feeds
+  // the eyebrow chip + pulang-cepat confirmation on the self-service
+  // Presensi Saya screen. Fetched ONCE on mount — do NOT poll.
+  checkoutPreview: '/teacher-attendance/checkout-preview',
   // Caller-aware GATE-QR self check-in (backend QrCheckInController@store).
   // The SAME route the mobile app posts to — resolves teacher/staff/student
   // server-side, gated by `attendance.self.checkin` + `module:attendance_gate`.
@@ -397,6 +405,66 @@ export const TeacherAttendanceService = {
       return (res.data?.data ?? res.data) as TeacherAttendanceRecord;
     } catch (e) {
       throw new Error(humanError(e, 'Gagal melakukan presensi pulang.'));
+    }
+  },
+
+  /**
+   * GET /teacher-attendance/checkout-preview — pulang parity BE-2 (!505).
+   *
+   * Answers "if the teacher taps Pulang Sekarang RIGHT NOW, what will
+   * happen server-side?". Powers the eyebrow chip on the self-service
+   * Presensi Saya screen:
+   *   · policy=warn + early_leave → amber chip + confirmation modal
+   *   · policy=block + early_leave → red chip, button disabled
+   *   · min_work_ok=false        → red chip, button disabled (dominant)
+   *   · anything else            → no chip, no hint
+   *
+   * IMPORTANT: fetched ONCE on mount. The server is authoritative — the
+   * POST /check-out endpoint re-validates and returns the correct
+   * outcome even if the FE hint is stale by the time the teacher taps.
+   *
+   * The response is nullable at both levels: the wrapper's `data` may be
+   * `null` (e.g. before check-in, or when checkout is disabled for the
+   * school and there's nothing to preview). Callers must handle both a
+   * `null` block and a `success=false` response as "no chip".
+   */
+  async getCheckoutPreview(): Promise<TeacherAttendanceCheckoutPreviewResponse> {
+    try {
+      const res = await api.get(Endpoints.checkoutPreview);
+      const body = (res.data ?? {}) as {
+        success?: unknown;
+        data?: unknown;
+      };
+      const raw = body.data as Record<string, unknown> | null | undefined;
+      // Success flag defaults to true when the endpoint returns without
+      // erroring — some intermediary wrappers omit `success` even on
+      // 200s. `data` may be explicitly null on "nothing to say".
+      const success = body.success === undefined ? true : asBool(body.success, true);
+      if (!raw || typeof raw !== 'object') {
+        return { success, data: null };
+      }
+      const policyRaw = String(raw.policy ?? 'none');
+      const policy: TeacherAttendanceEarlyLeavePolicy =
+        policyRaw === 'warn' || policyRaw === 'block' ? policyRaw : 'none';
+      const data: TeacherAttendanceCheckoutPreview = {
+        can_checkout: asBool(raw.can_checkout, false),
+        checkout_enabled: asBool(raw.checkout_enabled, false),
+        reason: raw.reason == null ? null : String(raw.reason),
+        threshold_hh_mm: String(raw.threshold_hh_mm ?? ''),
+        early_leave_boundary_hh_mm: String(raw.early_leave_boundary_hh_mm ?? ''),
+        early_leave: asBool(raw.early_leave, false),
+        would_be_status: String(raw.would_be_status ?? ''),
+        min_work_ok: asBool(raw.min_work_ok, true),
+        min_work_minutes: asInt(raw.min_work_minutes, 0),
+        worked_minutes: asInt(raw.worked_minutes, 0),
+        minutes_remaining: asInt(raw.minutes_remaining, 0),
+        policy,
+        grace_minutes_effective: asInt(raw.grace_minutes_effective, 0),
+        grace_source: String(raw.grace_source ?? ''),
+      };
+      return { success, data };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat pratinjau presensi pulang.'));
     }
   },
 
