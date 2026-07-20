@@ -15,8 +15,12 @@ withDefaults(
     iconName?: string;
     tone?: 'brand' | 'amber' | 'violet' | 'green' | 'red' | 'slate';
     disabled?: boolean;
+    /** A concrete filter value is applied (not the "all" default). Gives
+     *  the chip a cobalt ring + role-admin-soft fill so an active filter
+     *  is legible at a glance without changing the chip's structure. */
+    active?: boolean;
   }>(),
-  { iconName: '', tone: 'brand', disabled: false },
+  { iconName: '', tone: 'brand', disabled: false, active: false },
 );
 
 defineEmits<{ click: [] }>();
@@ -29,7 +33,9 @@ defineEmits<{ click: [] }>();
     :class="[
       disabled
         ? 'bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed'
-        : 'bg-slate-50 border-slate-200 hover:bg-white hover:border-brand-cobalt text-slate-900',
+        : active
+          ? 'bg-role-admin-soft border-brand-cobalt ring-2 ring-brand-cobalt/30 text-slate-900'
+          : 'bg-slate-50 border-slate-200 hover:bg-white hover:border-brand-cobalt text-slate-900',
     ]"
     :disabled="disabled"
     @click="$emit('click')"

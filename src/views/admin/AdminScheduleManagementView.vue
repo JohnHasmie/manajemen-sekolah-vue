@@ -520,6 +520,28 @@ function siblingsForGroupedRow(row: ScheduleRow): Array<{ id: string; name: stri
   return g.members.filter((m) => m.id !== row.class_id);
 }
 
+/**
+ * Human slot length between two "HH:MM" clock strings — "40m" / "1j 20m".
+ * Powers the small duration hint under each list-row time anchor. Returns
+ * '' when either bound is missing / unparseable / non-positive so the
+ * template can hide it rather than print a nonsense "0m" / "-5m".
+ */
+function slotDuration(start: string, end: string): string {
+  const toMinutes = (clock: string): number | null => {
+    const m = /^(\d{1,2}):(\d{2})/.exec(clock ?? '');
+    if (!m) return null;
+    return Number(m[1]) * 60 + Number(m[2]);
+  };
+  const a = toMinutes(start);
+  const b = toMinutes(end);
+  if (a === null || b === null || b <= a) return '';
+  const total = b - a;
+  const hours = Math.floor(total / 60);
+  const minutes = total % 60;
+  if (hours > 0) return minutes > 0 ? `${hours}j ${minutes}m` : `${hours}j`;
+  return `${minutes}m`;
+}
+
 // ── Client-side stats derivation ────────────────────────────────────
 //
 // Replaces the /teaching-schedule/stats network call. Every field the
@@ -695,11 +717,16 @@ function onSaved(rows: ScheduleRow[]) {
 
 // ── Pola C timetable grid handlers ─────────────────────────────────
 //
-// The grid emits either an `edit` (schedule_id) or a `create`
-// (pre-fill payload). Both paths reuse ScheduleFormModal; the create
-// path also flips skipSetupForForm so the modal doesn't briefly show
-// the setup checklist for a school whose class + hours were just
-// visibly rendered as an empty cell.
+// The grid emits either an `edit` (a filled cell was tapped, schedule_id)
+// or a `create` (an empty cell was tapped, pre-fill payload).
+//
+// PARITY: a filled-cell tap opens the SAME ScheduleDetailModal the list
+// view uses — surfacing the full action set (Edit · Pindah Slot · Ganti
+// Guru · Duplikat · Hapus, plus the group-scope delete for jadwal
+// gabung). It previously jumped straight into the edit form, which left
+// the Timetable view with no way to delete / reschedule / duplicate /
+// change-teacher a slot. Routing through the detail modal closes that
+// gap with zero new endpoints — every action already exists.
 function onTimetableEdit(scheduleId: string) {
   const row = rows.value.find((r) => r.id === scheduleId);
   if (!row) {
@@ -713,10 +740,7 @@ function onTimetableEdit(scheduleId: string) {
     };
     return;
   }
-  editingRow.value = row;
-  prefill.value = null;
-  skipSetupForForm.value = false;
-  showForm.value = true;
+  detailRow.value = row;
 }
 
 function onTimetableCreate(payload: TimetableCreatePayload) {
@@ -786,6 +810,10 @@ async function confirmDelete() {
       tone: 'success',
     };
     await loadRows();
+    // Keep the timetable grid in sync — delete is now reachable from the
+    // Timetable view (filled cell → detail modal → Hapus), so its
+    // /matrix cache would otherwise still show the deleted cell.
+    timetableGridRef.value?.refresh();
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
@@ -812,11 +840,17 @@ const deleteConfirmMessage = computed(() => {
 
 function onRescheduled(_: ScheduleRow) {
   toast.value = { message: 'Slot dipindahkan.', tone: 'success' };
+  // Refresh BOTH backing stores — the list reads `rows`, the timetable
+  // grid reads its own /matrix cache. Since this action can now be
+  // launched from the Timetable view (via the detail modal), the grid
+  // must re-fetch too or the moved slot lingers in its old cell.
   void loadRows();
+  timetableGridRef.value?.refresh();
 }
 function onTeacherChanged(_: ScheduleRow) {
   toast.value = { message: 'Guru diganti.', tone: 'success' };
   void loadRows();
+  timetableGridRef.value?.refresh();
 }
 
 // ── Bulk select state ──────────────────────────────────────────────
@@ -927,21 +961,28 @@ async function bulkDelete() {
             { key: 'timetable', label: $t('admin.schedule.viewTimetable') },
           ]"
         />
+        <!-- Cetak / Import compressed to icon-only affordances so the
+             hero action cluster stays tidy; the label rides along as a
+             native tooltip + aria-label for accessibility. "Jam
+             Pelajaran" keeps its text label because it's the primary
+             setup entry point (a bare clock icon reads as ambiguous). -->
         <button
           type="button"
-          class="text-2xs font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          class="grid place-items-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 hover:text-white transition-colors"
+          :title="$t('admin.schedule.print')"
+          :aria-label="$t('admin.schedule.print')"
           @click="showPrint = true"
         >
-          <NavIcon name="download" :size="11" class="inline" />
-          {{ $t('admin.schedule.print') }}
+          <NavIcon name="download" :size="13" />
         </button>
         <button
           type="button"
-          class="text-2xs font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          class="grid place-items-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 hover:text-white transition-colors"
+          :title="$t('admin.schedule.import')"
+          :aria-label="$t('admin.schedule.import')"
           @click="showImport = true"
         >
-          <NavIcon name="upload" :size="11" class="inline" />
-          {{ $t('admin.schedule.import') }}
+          <NavIcon name="upload" :size="13" />
         </button>
         <button
           type="button"
@@ -992,6 +1033,7 @@ async function bulkDelete() {
           :label="$t('admin.schedule.filterTeacher')"
           :value="teacherChipValue"
           tone="violet"
+          :active="!!filterTeacherId"
           @click="showTeacherSheet = true"
         />
         <AppFilterChip
@@ -999,6 +1041,7 @@ async function bulkDelete() {
           :label="$t('admin.schedule.filterSubject')"
           :value="subjectChipValue"
           tone="brand"
+          :active="!!filterSubjectId"
           @click="showSubjectSheet = true"
         />
         <AppFilterChip
@@ -1006,6 +1049,7 @@ async function bulkDelete() {
           :label="$t('admin.schedule.filterDay')"
           :value="dayChipValue"
           tone="amber"
+          :active="!!filterDayId"
           @click="showDaySheet = true"
         />
         <AppFilterChip
@@ -1013,6 +1057,7 @@ async function bulkDelete() {
           :label="$t('admin.schedule.filterClass')"
           :value="classChipValue"
           tone="green"
+          :active="!!filterClassId"
           @click="showClassSheet = true"
         />
         <AppFilterChip
@@ -1020,6 +1065,7 @@ async function bulkDelete() {
           :label="$t('admin.schedule.filterHour')"
           :value="hourChipValue"
           tone="red"
+          :active="filterHourNumber !== ''"
           @click="showHourSheet = true"
         />
         <button
@@ -1221,9 +1267,18 @@ async function bulkDelete() {
                   :checked="selectedIds.has(r.id)"
                   @click.stop="toggleSelect(r.id)"
                 />
-                <div class="w-12 text-center flex-shrink-0">
-                  <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">JP</p>
-                  <p class="text-[15px] font-black text-role-admin">{{ r.hour_number }}</p>
+                <!-- Time anchor — the slot's clock time is the row's
+                     spine. Start reads large + bold; end, duration and
+                     the JP ordinal ride underneath it as quiet meta. -->
+                <div class="w-16 flex-shrink-0 leading-tight">
+                  <p class="text-[12px] font-bold text-slate-900 tabular-nums">{{ r.start_time }}</p>
+                  <p class="text-3xs text-slate-400 tabular-nums">– {{ r.end_time }}</p>
+                  <p class="text-4xs font-bold text-slate-400 uppercase tracking-wide mt-0.5">
+                    <template v-if="slotDuration(r.start_time, r.end_time)">
+                      {{ slotDuration(r.start_time, r.end_time) }} ·
+                    </template>
+                    {{ $t('admin.schedule.jpAbbrev') }}{{ r.hour_number }}
+                  </p>
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-[13px] font-bold text-slate-900 truncate">
@@ -1233,29 +1288,30 @@ async function bulkDelete() {
                     {{ r.subject_name }}
                     <span v-if="r.conflict_with && r.conflict_with.length > 0" class="text-red-600 ml-1">⚠ {{ $t('admin.schedule.conflictBadge') }}</span>
                   </p>
-                  <p class="text-2xs text-slate-500 truncate">
-                    {{ r.class_name }}
-                    <template v-if="r.is_grouped">
-                      <!-- Inline "(bareng 7B, 7C)" indicator — collapses
-                           the group's other members into the same line
-                           so the admin sees why this slot is special
-                           without needing to scan the pinned section. -->
-                      <span class="text-violet-700 font-bold">
-                        · {{
-                          $t('admin.schedule.combined.inlineSiblingsLabel', {
-                            names: siblingsForGroupedRow(r).map((m) => m.name).join(', '),
-                          })
-                        }}
-                      </span>
-                    </template>
-                    · {{ r.teacher_name ?? 'Tanpa guru' }}
-                    <span v-if="r.room"> · {{ r.room }}</span>
-                  </p>
-                </div>
-                <div class="text-right flex-shrink-0">
-                  <p class="text-[12px] font-bold text-slate-900 tabular-nums">
-                    {{ r.start_time }}–{{ r.end_time }}
-                  </p>
+                  <div class="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 min-w-0">
+                    <!-- Kelas as a cobalt chip — the class is the row's
+                         key secondary fact, so it earns a pill instead of
+                         hiding inside a run-on meta line. -->
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-brand-cobalt/10 text-brand-cobalt border border-brand-cobalt/20 text-[11px] font-bold leading-none">
+                      {{ r.class_name }}
+                    </span>
+                    <!-- Inline "bareng 7B, 7C" indicator — collapses the
+                         group's other members onto the same line so the
+                         admin sees why this slot is special without
+                         scanning the pinned section. -->
+                    <span
+                      v-if="r.is_grouped"
+                      class="text-2xs text-violet-700 font-bold"
+                    >
+                      {{
+                        $t('admin.schedule.combined.inlineSiblingsLabel', {
+                          names: siblingsForGroupedRow(r).map((m) => m.name).join(', '),
+                        })
+                      }}
+                    </span>
+                    <span class="text-2xs text-slate-500 truncate">{{ r.teacher_name ?? 'Tanpa guru' }}</span>
+                    <span v-if="r.room" class="text-2xs text-slate-400">· {{ r.room }}</span>
+                  </div>
                 </div>
                 <NavIcon name="chevron-right" :size="14" class="text-slate-300 ml-1" />
               </div>

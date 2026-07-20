@@ -341,7 +341,6 @@ function goToLessonHours() {
   void router.push({ name: 'admin.schedule.lesson-hours' });
 }
 
-const classPickerId = 'schedule-timetable-class-picker';
 const semesterPickerId = 'schedule-timetable-semester-picker';
 </script>
 
@@ -354,35 +353,49 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
          + a skeleton bar in place of the <select> so the admin sees
          "loading" rather than a disabled dropdown that reads like a
          dead state. -->
-    <div class="flex flex-wrap items-end gap-3">
-      <div class="min-w-[240px] flex-1">
-        <label
-          :for="classPickerId"
-          class="text-3xs font-bold text-slate-400 uppercase tracking-widest"
-        >
+    <div class="space-y-3">
+      <!-- Class tabs — colored, horizontally scrollable. Replaces the
+           one-by-one <select> so switching class is a single tap and the
+           active class reads at a glance (role-admin fill). Hidden
+           entirely when the school has no classes; the amber banner
+           below owns that case. -->
+      <div v-if="!hasNoClasses">
+        <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">
           {{ t('admin.schedule.timetable.classPickerLabel') }}
           <span class="text-red-500 ml-0.5">*</span>
-        </label>
+        </p>
+        <div v-if="isPickerSkeleton" class="flex gap-2" aria-hidden="true">
+          <div
+            v-for="i in 5"
+            :key="i"
+            class="h-9 w-20 rounded-xl bg-slate-100 animate-pulse flex-shrink-0"
+          />
+        </div>
         <div
-          v-if="isPickerSkeleton"
-          class="mt-1 h-10 w-full rounded-xl bg-slate-100 animate-pulse"
-          aria-hidden="true"
-        />
-        <select
           v-else
-          :id="classPickerId"
-          v-model="classId"
-          :disabled="hasNoClasses"
-          class="mt-1 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin disabled:opacity-50"
+          class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1"
+          role="tablist"
+          :aria-label="t('admin.schedule.timetable.classPickerLabel')"
         >
-          <option value="">
-            {{ t('admin.schedule.timetable.classPickerPlaceholder') }}
-          </option>
-          <option v-for="c in classes" :key="c.id" :value="c.id">
+          <button
+            v-for="c in classes"
+            :key="c.id"
+            type="button"
+            role="tab"
+            :aria-selected="classId === c.id"
+            class="flex-shrink-0 px-3.5 py-2 rounded-xl text-[13px] font-bold border transition-colors whitespace-nowrap"
+            :class="classId === c.id
+              ? 'bg-role-admin text-white border-role-admin shadow-sm shadow-role-admin/20'
+              : 'bg-white text-slate-700 border-slate-200 hover:border-brand-cobalt hover:text-brand-cobalt'"
+            @click="classId = c.id"
+          >
             {{ c.name }}
-          </option>
-        </select>
+          </button>
+        </div>
       </div>
+
+      <!-- Semester picker — compact select, hidden when the school runs
+           a single semester (the common case). -->
       <div v-if="!isPickerSkeleton && semesters.length > 1" class="min-w-[160px]">
         <label
           :for="semesterPickerId"
@@ -587,7 +600,7 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                 <td
                   v-for="d in days"
                   :key="`${d.id}-${row.hour_number}`"
-                  class="p-1 align-top"
+                  class="p-1 align-top relative group"
                 >
                   <!-- Class-column plain cell — only rendered when the
                        cell exists AND is NOT part of a group. Grouped
@@ -606,11 +619,11 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       "
                       @click="onCellClick(d.id, row.hour_number)"
                     >
-                      <p class="text-3xs font-bold text-slate-900 truncate">
-                        <span
-                          v-if="cellAt(d.id, row.hour_number)!.subject.code"
-                          class="text-role-admin"
-                        >
+                      <!-- Mapel is the headline: bold + role-admin so it
+                           reads as the cell's subject, with the teacher a
+                           quiet muted line under it. -->
+                      <p class="text-3xs font-bold text-role-admin truncate pr-4">
+                        <span v-if="cellAt(d.id, row.hour_number)!.subject.code">
                           [{{ cellAt(d.id, row.hour_number)!.subject.code }}]
                         </span>
                         <span>
@@ -626,6 +639,26 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       >
                         {{ cellAt(d.id, row.hour_number)!.room }}
                       </p>
+                    </button>
+                    <!-- Hover-kebab — an explicit "this slot has actions"
+                         affordance. Opens the same detail modal the cell
+                         click does (Edit · Pindah Slot · Ganti Guru ·
+                         Duplikat · Hapus), giving the Timetable view full
+                         action parity with the list. Sibling of the cell
+                         button (not nested) to keep valid HTML. -->
+                    <button
+                      type="button"
+                      class="absolute top-1.5 right-1.5 grid place-items-center w-5 h-5 rounded-md bg-white/90 border border-slate-200 text-slate-500 opacity-0 group-hover:opacity-100 hover:text-role-admin hover:border-role-admin/40 transition-opacity"
+                      :aria-label="
+                        t('admin.schedule.timetable.editCellAria', {
+                          subject: cellAt(d.id, row.hour_number)!.subject.name,
+                          day: d.display_name || d.name,
+                          hour: row.hour_number,
+                        })
+                      "
+                      @click.stop="onCellClick(d.id, row.hour_number)"
+                    >
+                      <span class="text-[13px] font-black leading-none -mt-1.5">⋯</span>
                     </button>
                   </template>
                   <!-- Group-member ghost placeholder — cell exists but
@@ -648,9 +681,13 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                     </button>
                   </template>
                   <template v-else>
+                    <!-- Empty slot — a soft dashed drop-zone. The "+"
+                         stays hidden until the row is hovered so the
+                         grid's filled cells aren't drowned out by a wall
+                         of plus signs; hovering reveals the add target. -->
                     <button
                       type="button"
-                      class="w-full h-14 rounded-lg border border-dashed border-slate-200 hover:border-role-admin hover:bg-role-admin/5 text-slate-300 hover:text-role-admin transition-colors text-lg font-bold flex items-center justify-center"
+                      class="w-full h-14 rounded-lg border border-dashed border-slate-200 hover:border-role-admin hover:bg-role-admin/5 text-role-admin transition-colors text-lg font-bold flex items-center justify-center"
                       :aria-label="
                         t('admin.schedule.timetable.createCellAria', {
                           day: d.display_name || d.name,
@@ -659,7 +696,7 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       "
                       @click="onCellClick(d.id, row.hour_number)"
                     >
-                      +
+                      <span class="opacity-0 group-hover:opacity-100 transition-opacity">+</span>
                     </button>
                   </template>
                 </td>
