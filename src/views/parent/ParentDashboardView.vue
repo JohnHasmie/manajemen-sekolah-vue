@@ -319,7 +319,7 @@ watch(sliceKey, () => {
             <div class="flex items-center gap-2 flex-wrap">
               <div v-if="sliceOptions.length > 1" class="flex items-center gap-2">
                 <span class="text-3xs font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">{{ t('parent.dashboard.childLabel') }}:</span>
-                <SegmentedControl v-model="sliceKey" :options="sliceOptions" size="sm" />
+                <SegmentedControl v-model="sliceKey" :options="sliceOptions" />
               </div>
               <AcademicYearChip
                 variant="light"

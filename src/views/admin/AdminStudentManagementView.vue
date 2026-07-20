@@ -733,7 +733,6 @@ async function confirmDelete() {
           { key: 'card', label: 'Kartu' },
           { key: 'compact', label: 'Padat' },
         ]"
-        size="sm"
       />
       <!-- Kelola Kartu QR — deep-link to the Kartu QR manager pre-
            selected on the Siswa tab. Admins looked for the print-card

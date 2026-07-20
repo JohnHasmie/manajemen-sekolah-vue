@@ -716,7 +716,6 @@ function pickAudience(k: AudienceFilter) {
               { key: 'event', label: t('admin.announcement.categoryEvent') },
               { key: 'info', label: t('admin.announcement.categoryInfo') },
             ]"
-            size="sm"
             @update:model-value="(v) => (form.category = v as AnnouncementCategory)"
           />
         </div>
@@ -731,7 +730,6 @@ function pickAudience(k: AudienceFilter) {
               { key: 'high', label: t('admin.announcement.important') },
               { key: 'urgent', label: t('admin.announcement.urgent') },
             ]"
-            size="sm"
             @update:model-value="(v) => (form.priority = v as AnnouncementPriority)"
           />
         </div>

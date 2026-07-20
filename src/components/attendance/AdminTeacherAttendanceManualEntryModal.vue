@@ -339,7 +339,6 @@ function close(): void {
           <SegmentedControl
             :model-value="status"
             :options="statusOptions"
-            size="sm"
             @update:model-value="(v) => (status = v as StatusKey)"
           />
         </div>

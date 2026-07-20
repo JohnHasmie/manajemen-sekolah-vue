@@ -1000,7 +1000,6 @@ function gotoHistory() {
           <SegmentedControl
             :model-value="method"
             :options="methodSegments"
-            size="md"
             @update:model-value="onMethodChange"
           />
         </div>

@@ -441,7 +441,6 @@ const activeSemesterLabel = computed(
           <SegmentedControl
             v-model="sortMode"
             :options="sortOptions"
-            size="sm"
             :aria-label="t('parent.grades.sortAria')"
           />
         </div>

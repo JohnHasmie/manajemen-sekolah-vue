@@ -175,7 +175,6 @@ const headerTitle = computed(() =>
       <SegmentedControl
         :model-value="String(days)"
         :options="DAYS_OPTIONS"
-        size="sm"
         @update:model-value="onDaysChange"
       />
     </BrandPageHeader>

@@ -452,7 +452,6 @@ const headerGradient = computed(() =>
       <SegmentedControl
         :model-value="tab"
         :options="tabOptions"
-        size="md"
         @update:model-value="tab = $event as Tab"
       />
     </div>

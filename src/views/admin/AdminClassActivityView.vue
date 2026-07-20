@@ -398,7 +398,6 @@ function exportCsv() {
       <SegmentedControl
         :model-value="typeFilter"
         :options="typeTabs"
-        size="sm"
         @update:model-value="typeFilter = $event as ActivityType | 'all'"
       />
     </div>
@@ -412,7 +411,6 @@ function exportCsv() {
       <SegmentedControl
         :model-value="periodFilter"
         :options="periodTabs"
-        size="sm"
         @update:model-value="periodFilter = $event as ActivityPeriod"
       />
     </div>

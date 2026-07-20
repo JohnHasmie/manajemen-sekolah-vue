@@ -1006,7 +1006,6 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
         <SegmentedControl
           :model-value="tabKey"
           :options="tabOptions"
-          size="sm"
           @update:model-value="(v) => (tabKey = v as 'all' | 'done' | 'todo')"
         />
       </template>
@@ -1420,7 +1419,6 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
             <SegmentedControl
               :model-value="detailTab"
               :options="detailTabOptions"
-              size="sm"
               @update:model-value="(v) => (detailTab = v as 'materi' | 'kuis' | 'referensi')"
             />
           </div>
