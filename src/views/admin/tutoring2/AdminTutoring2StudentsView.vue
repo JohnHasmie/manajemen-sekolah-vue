@@ -58,7 +58,7 @@ useAcademicYearWatcher(reload);
 
 // Derived: one row per unique student_id, keeping the most-recent enrollment
 // as the "primary" snapshot and counting how many active programs they have.
-interface SiswaRow {
+interface StudentRow {
   student_id: string;
   program_id: string;
   billing_mode: BimbelEnrollment['billing_mode'];
@@ -70,9 +70,9 @@ interface SiswaRow {
   active_programs: number;
 }
 
-const siswaRows = computed<SiswaRow[]>(() => {
+const studentRows = computed<StudentRow[]>(() => {
   const items = (state.value.status === 'content' ? state.value.data : []) as BimbelEnrollment[];
-  const byStudent = new Map<string, SiswaRow>();
+  const byStudent = new Map<string, StudentRow>();
   for (const e of items) {
     const existing = byStudent.get(e.student_id);
     if (!existing) {
@@ -195,7 +195,7 @@ function shortId(id: string): string {
             </thead>
             <tbody>
               <tr
-                v-for="r in siswaRows"
+                v-for="r in studentRows"
                 :key="r.student_id"
                 class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
               >
