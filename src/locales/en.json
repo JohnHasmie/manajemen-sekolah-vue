@@ -2963,7 +2963,20 @@
         "empty_description": "No teacher attendance data for this period.",
         "empty_description_teacher": "No teacher attendance data for this period.",
         "empty_description_staff": "No staff attendance data for this period.",
-        "empty_description_all": "No personnel attendance data for this period."
+        "empty_description_all": "No personnel attendance data for this period.",
+        "self_checkout": {
+          "chip_warn": "Will be logged as EARLY LEAVE — {delta} before check-out time {time}.",
+          "chip_block": "Not yet time to leave — button activates at {time}.",
+          "chip_min_work": "Minimum work duration {min} min not met (worked {worked} min so far).",
+          "confirm_title": "Confirm early leave",
+          "confirm_body": "Today's attendance will be marked as early leave. Your principal can see this record.",
+          "confirm_cancel": "Cancel",
+          "confirm_proceed": "Yes, leave now",
+          "confirm_field_time": "Check-out time",
+          "confirm_field_delta": "Difference",
+          "confirm_field_status": "Logged status",
+          "confirm_status_value": "Early leave"
+        }
       },
       "teacher_management": {
         "role_teacher": "Teacher",
