@@ -1,12 +1,23 @@
 <!--
-  AdminDashboardView.vue - admin home.
-  Mirrors Flutter's `admin_dashboard_body.dart` + mockup #1.
+  AdminDashboardView.vue — admin home ("Opsi A — Command Center").
 
-  Layout (no floating KPI overlap):
-    1. Compact greeting + tingkat tabs (slice carousel)
-    2. KPI strip (4 cards, inline) with progress strip per card
-    3. Two-column: Heatmap kelas x hari (left), Finance snapshot (right)
-    4. Quick-actions grid
+  Layout (top → bottom), mirrors the approved Opsi A mockup + Flutter:
+    1. Greeting header       — name + tingkat chips + Tahun Ajaran + REALTIME
+    2. Status band           — Pusat Kendali (readiness) LEFT · 2×2 KPI tiles RIGHT
+                               (Total Siswa · Total Guru · Total Staf · RPP Menunggu)
+    3. Hari ini band         — Kehadiran Sekolah (donuts + weekly chart) LEFT ·
+                               [Perlu Perhatian + Keuangan slim] rail RIGHT
+    4. Engagement band       — GATED on `canSeePrestasi` (gamification module):
+                                 · active  → merged EngagementToggleCard LEFT +
+                                             Akses cepat (4 tiles) rail RIGHT
+                                 · absent  → full-width Akses cepat (6 tiles) +
+                                             tasteful upsell strip
+    5. Langganan             — SubscriptionMiniRow, pinned to the BOTTOM
+
+  The old floating KPI strip, the duplicate "Kehadiran Hari Ini" KPI, the
+  four separate Prestasi/Engagement cards, and the "Manajemen Sekolah"
+  12-tile grid (which duplicated the left nav) are all gone — consolidated
+  into the bands above.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
@@ -15,22 +26,20 @@ import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useMeStore } from '@/stores/me';
 import { DashboardService } from '@/services/dashboard.service';
-import { formatNumber, formatRupiah } from '@/lib/format';
+import { formatNumber, formatDateLong } from '@/lib/format';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
-import StatSummaryCard from '@/components/feature/StatSummaryCard.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
-import PriorityInbox from '@/components/feature/PriorityInbox.vue';
 import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
 import AdminControlCenterCard from '@/components/feature/AdminControlCenterCard.vue';
 import AdminAttendanceOverviewCard from '@/components/feature/AdminAttendanceOverviewCard.vue';
 import SubscriptionMiniRow from '@/components/feature/SubscriptionMiniRow.vue';
 import AdminTutoringDashboardView from '@/views/admin/tutoring/AdminTutoringDashboardView.vue';
-import GamificationHighlightCard from '@/components/feature/gamification/GamificationHighlightCard.vue';
-import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
+import AttentionPanel, { type AttentionItem } from '@/components/feature/AttentionPanel.vue';
+import EngagementToggleCard from '@/components/feature/gamification/EngagementToggleCard.vue';
 import {
   TeacherProgressService,
   type AdminHighlightPayload,
@@ -43,7 +52,6 @@ import { useMe } from '@/composables/useMe';
 import { useTenant } from '@/composables/useTenant';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
-import { usePriorityInbox } from '@/composables/usePriorityInbox';
 import PinnedAnnouncementCarousel from '@/components/feature/PinnedAnnouncementCarousel.vue';
 
 type StatsPayload = Record<string, any>;
@@ -53,25 +61,22 @@ const auth = useAuthStore();
 const me = useMeStore();
 const meApi = useMe();
 const router = useRouter();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
-// Prestasi (paid module). Both `canSeePrestasi` and the payloads
-// stay null when the school hasn't subscribed — the ability strip
-// on the server side makes `meApi.can(...)` false so nothing renders.
+// Prestasi (paid module). `canSeePrestasi` is the SINGLE entitlement flag
+// that gates the whole engagement band + the upsell strip — reused exactly
+// as before (server ability strip flips it false when the school hasn't
+// subscribed to the gamification module).
 const canSeePrestasi = computed(() => meApi.can('gamification.admin.view'));
 const adminHighlight = ref<AdminHighlightPayload | null>(null);
 const adminSummary = ref<AdminSummaryPayload | null>(null);
 // Staff-side highlight + summary (BE MR6/7 /admin/staff-engagement/*).
-// Gated on the SAME ability as the teacher variant; both null when
-// the school owns no staff so the right column self-hides and the
-// dashboard degrades gracefully to guru-only for single-guru bimbel.
+// Both null when the school owns no staff so the merged card degrades to
+// guru-only (no toggle) for single-guru bimbel.
 const adminStaffHighlight = ref<AdminStaffHighlightPayload | null>(null);
 const adminStaffSummary = ref<AdminStaffSummaryPayload | null>(null);
 
-// Readiness teaser — CORE feature, gated only on `readiness.view`. Uses
-// the same silent-on-failure pattern as `loadPrestasi()` above so a
-// mid-session ability strip / network hiccup drops the card without
-// disturbing the rest of the dashboard.
+// Readiness teaser — CORE feature, gated only on `readiness.view`.
 const canSeeReadiness = computed(() => meApi.can('readiness.view'));
 const readinessPayload = ref<ReadinessPayload | null>(null);
 
@@ -85,14 +90,14 @@ async function loadPrestasi() {
     adminHighlight.value = s;
     adminSummary.value = r;
   } catch {
-    // Silent — a mid-session sub loss must not disrupt the rest
-    // of the dashboard. The v-if drops the section cleanly.
+    // Silent — a mid-session sub loss must not disrupt the rest of the
+    // dashboard. The v-if drops the band cleanly.
     adminHighlight.value = null;
     adminSummary.value = null;
   }
   // Staff highlight + summary fetched independently. A tenant may have
-  // zero staff rows (single-guru bimbel) — the right column self-hides
-  // when `total_staff === 0`, so we still fetch to know that.
+  // zero staff rows (single-guru bimbel) — the merged card self-hides the
+  // Staf toggle when `total_staff === 0`, so we still fetch to know that.
   try {
     const [sh, ss] = await Promise.all([
       TeacherProgressService.getAdminStaffHighlight(),
@@ -111,7 +116,7 @@ async function loadReadiness() {
   try {
     readinessPayload.value = await ReadinessService.get();
   } catch {
-    // Silent — teaser card v-if drops when this stays null.
+    // Silent — card degrades when this stays null.
     readinessPayload.value = null;
   }
 }
@@ -119,28 +124,16 @@ async function loadReadiness() {
 function gotoReadiness() {
   router.push({ name: 'admin.readiness' });
 }
+
 // A tutoring-center admin gets the bimbel dashboard; the school KPIs
 // below read zero for a bimbel. Reactive so it swaps in as soon as the
 // tenant resolves (the route redirect can race the schools fetch).
 const { isTutoringCenter } = useTenant();
 
 const showYearPicker = ref(false);
-const { mapToPriorityItems, handlePriorityTap, priorityCountLabel } =
-  usePriorityInbox('admin');
 
 const stats = ref<StatsPayload>({});
 const state = ref<AsyncState<StatsPayload>>({ status: 'loading' });
-const priorityRaw = ref<unknown>([]);
-const priorityTotal = ref<number>(0);
-
-const priorityItems = computed(() => mapToPriorityItems(priorityRaw.value));
-const priorityHeaderLabel = computed(() =>
-  priorityCountLabel(priorityItems.value.length, priorityTotal.value),
-);
-
-function gotoAdminInbox() {
-  router.push({ name: 'admin.inbox' });
-}
 
 // Slice (tingkat) carousel
 const sliceKey = ref<string>('all');
@@ -192,9 +185,6 @@ function topLevelNum(key: string): number {
   return asInt(stats.value[key]);
 }
 
-const sliceLabel = computed(() => String(current.value.label ?? ''));
-const sliceLabelMuted = computed(() => Boolean(current.value.is_aggregate));
-
 const greeting = computed(() => {
   const h = new Date().getHours();
   if (h < 11) return t('common.greetingMorning');
@@ -206,13 +196,8 @@ const greeting = computed(() => {
 async function load() {
   state.value = { status: 'loading' };
   try {
-    const [data, inbox] = await Promise.all([
-      DashboardService.getStats('admin'),
-      DashboardService.adminPriorityInbox(),
-    ]);
+    const data = await DashboardService.getStats('admin');
     stats.value = data;
-    priorityRaw.value = inbox.items;
-    priorityTotal.value = inbox.total;
     state.value = { status: 'content', data };
     if (sliceOptions.value.length > 0 && !sliceOptions.value.find((o) => o.key === sliceKey.value)) {
       sliceKey.value = sliceOptions.value[0].key;
@@ -231,31 +216,20 @@ onMounted(() => {
 // Refetch when the active academic year changes via the chip.
 useAcademicYearWatcher(() => load());
 
-// Re-fetch the server-localised priority inbox (+ stats) when the user
-// switches app language so "Perlu Perhatian" / "Needs Attention" labels
-// follow the new locale without a manual page reload.
+// Re-fetch the server-localised stats when the user switches app language.
 useLocaleWatcher(() => load());
 
 interface QuickAction {
   labelKey: string;
   icon: string;
   to: string;
-  /**
-   * Gate the action against the tenant's entitlement. Predicate
-   * evaluates once per computed refresh — the `visible` field on
-   * `quickActions` (see below) resolves it into a filter.
-   *
-   * `undefined` = ungated (Guru is always available; every tenant
-   *                       with attendance_staff needs the roster).
-   */
+  /** Gate the action against the tenant's entitlement (undefined = ungated). */
   visible?: () => boolean;
 }
 
-// Same mirror as `useNavMenu.ts` — siswa/kelas gate on
-// hasStudentContext (any student-touching module owned) and mapel on
-// hasAcademicContext (grades/report_cards/schedule/lms/class_activity).
-// Reports quick-actions gate on the same abilities the router now uses
-// so what the sidebar and dashboard grid show ALWAYS agree.
+// Same mirror as `useNavMenu.ts` — siswa/kelas gate on hasStudentContext
+// and mapel on hasAcademicContext. Reports quick-actions gate on the same
+// abilities the router uses so nav + dashboard always agree.
 const quickActions = computed<QuickAction[]>(() => {
   const raw: QuickAction[] = [
     { labelKey: 'nav.students', icon: 'users', to: '/admin/students',
@@ -285,6 +259,7 @@ const quickActions = computed<QuickAction[]>(() => {
   return raw.filter((a) => !a.visible || a.visible());
 });
 
+// ─── Finance ─────────────────────────────────────────────────────────
 const financeReceived = computed(() => topLevelNum('finance_received'));
 const financeOutstanding = computed(() => topLevelNum('finance_outstanding'));
 const financeTotal = computed(() => financeReceived.value + financeOutstanding.value);
@@ -293,6 +268,164 @@ const financePct = computed(() =>
     ? Math.round((financeReceived.value / financeTotal.value) * 100)
     : 0,
 );
+const financeMonthLabel = computed(() =>
+  new Intl.DateTimeFormat(locale.value, { month: 'long' }).format(new Date()),
+);
+
+// ─── KPI tiles (status band) ─────────────────────────────────────────
+// Total Staf uses the new MR!527 `total_staff` field; "—" when absent.
+const totalStaffDisplay = computed<string>(() => {
+  const v = stats.value.total_staff;
+  if (v == null) return '—';
+  return formatNumber(asInt(v));
+});
+const pendingLessonPlans = computed(
+  () => num('pending_lesson_plans') || topLevelNum('pending_lesson_plans'),
+);
+
+// ─── Header date ─────────────────────────────────────────────────────
+const todayLabel = computed(() => formatDateLong(new Date()));
+
+// ─── Perlu Perhatian — client-side, no new endpoint ──────────────────
+// Derived purely from data already on the dashboard payloads. Ordered by
+// severity (critical → warning → info); AttentionPanel renders the
+// "Semua aman" fallback when this is empty.
+const attentionItems = computed<AttentionItem[]>(() => {
+  const items: AttentionItem[] = [];
+
+  // 1. Staff attendance today < 100% → red.
+  const staffAtt = stats.value.staff_attendance_today as
+    | { present_pct: number; total: number; present: number }
+    | null
+    | undefined;
+  if (
+    staffAtt &&
+    typeof staffAtt === 'object' &&
+    staffAtt.total > 0 &&
+    staffAtt.present_pct < 100
+  ) {
+    const notYet = Math.max(0, staffAtt.total - staffAtt.present);
+    items.push({
+      key: 'staff-attendance',
+      severity: 'critical',
+      icon: 'briefcase',
+      title: t('admin.dashboard.attention.staffAttendanceTitle', {
+        pct: Math.round(staffAtt.present_pct),
+      }),
+      subtitle: t('admin.dashboard.attention.staffAttendanceSub', {
+        n: notYet,
+        total: staffAtt.total,
+      }),
+      route: '/admin/teacher-attendance/report',
+    });
+  }
+
+  // 2. Gamification active AND engagement "sepi" (quiet) staff > 0 → amber.
+  if (
+    canSeePrestasi.value &&
+    adminStaffSummary.value &&
+    adminStaffSummary.value.needs_attention_count > 0
+  ) {
+    items.push({
+      key: 'staff-quiet',
+      severity: 'warning',
+      icon: 'flame',
+      title: t('admin.dashboard.attention.staffQuietTitle', {
+        n: adminStaffSummary.value.needs_attention_count,
+      }),
+      subtitle: t('admin.dashboard.attention.staffQuietSub'),
+      route: '/admin/staff-engagement',
+    });
+  }
+
+  // 3. Lowest class attendance < 95% → info.
+  const perClass = stats.value.attendance_per_class as
+    | { class_id: string; class_name: string; present_pct: number }[]
+    | null
+    | undefined;
+  if (Array.isArray(perClass) && perClass.length > 0) {
+    const lowest = perClass.reduce((a, b) =>
+      b.present_pct < a.present_pct ? b : a,
+    );
+    if (lowest.present_pct < 95) {
+      items.push({
+        key: 'low-class',
+        severity: 'info',
+        icon: 'layers',
+        title: t('admin.dashboard.attention.lowClassTitle', {
+          name: lowest.class_name,
+          pct: Math.round(lowest.present_pct),
+        }),
+        subtitle: t('admin.dashboard.attention.lowClassSub'),
+        route: '/admin/student-attendance',
+      });
+    }
+  }
+
+  const rank: Record<AttentionItem['severity'], number> = {
+    critical: 0,
+    warning: 1,
+    info: 2,
+  };
+  return items.sort((a, b) => rank[a.severity] - rank[b.severity]);
+});
+
+// ─── Akses cepat (curated quick tiles) ───────────────────────────────
+interface QuickTile {
+  labelKey: string;
+  icon: string;
+  to: string;
+  tone: 'blue' | 'violet' | 'amber' | 'green';
+}
+const TILE_TONE: Record<string, QuickTile['tone']> = {
+  'nav.reportCards': 'blue',
+  'nav.gradeRecap': 'violet',
+  'nav.grades': 'amber',
+  'nav.finance': 'green',
+  'nav.announcements': 'amber',
+  'nav.schedule': 'blue',
+};
+const TILE_TINT: Record<QuickTile['tone'], string> = {
+  blue: 'bg-blue-50 text-blue-600',
+  violet: 'bg-violet-100 text-violet-600',
+  amber: 'bg-amber-100 text-amber-600',
+  green: 'bg-emerald-100 text-emerald-600',
+};
+function tileTintClass(tone: QuickTile['tone']): string {
+  return TILE_TINT[tone];
+}
+function pickTiles(keys: string[]): QuickTile[] {
+  return keys
+    .map((k) => {
+      const found = quickActions.value.find((a) => a.labelKey === k);
+      if (!found) return null;
+      return {
+        labelKey: found.labelKey,
+        icon: found.icon,
+        to: found.to,
+        tone: TILE_TONE[k] ?? 'blue',
+      } satisfies QuickTile;
+    })
+    .filter((x): x is QuickTile => x !== null);
+}
+// With gamification: compact 4-tile rail. Without: full-width 6 tiles.
+const quickTilesWithGami = computed(() =>
+  pickTiles(['nav.reportCards', 'nav.gradeRecap', 'nav.announcements', 'nav.finance']),
+);
+const quickTilesNoGami = computed(() =>
+  pickTiles([
+    'nav.reportCards',
+    'nav.gradeRecap',
+    'nav.grades',
+    'nav.finance',
+    'nav.announcements',
+    'nav.schedule',
+  ]),
+);
+
+function gotoModules() {
+  router.push('/admin/settings/modules');
+}
 </script>
 
 <template>
@@ -300,542 +433,270 @@ const financePct = computed(() =>
   <div v-else class="space-y-md">
     <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
       <template #default>
-        <!-- Shared scaffold: fixed vertical rhythm + slot order across
-             every role dashboard. Slots: greeting → kpis → hero → main →
-             quickActions. Content below is unchanged; only the outer
-             wrapper + section grouping moved into named slots. -->
         <DashboardLayout>
 
-          <!-- #greeting: compact greeting + slice tabs, then the bimbel
-               entry banner (kept directly under the greeting row exactly
-               as before, so nothing re-orders). -->
+          <!-- #greeting: compact greeting + slice tabs + AY chip + REALTIME,
+               then the bimbel entry banner (self-hides for schools). -->
           <template #greeting>
-          <section class="flex items-center justify-between gap-4 flex-wrap">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="w-10 h-10 rounded-2xl bg-role-admin/10 grid place-items-center text-role-admin flex-shrink-0">
-                <NavIcon name="sparkles" :size="20" />
+            <section class="flex items-center justify-between gap-4 flex-wrap">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-2xl bg-role-admin/10 grid place-items-center text-role-admin flex-shrink-0">
+                  <NavIcon name="sparkles" :size="20" />
+                </div>
+                <div class="min-w-0">
+                  <p class="text-3xs font-bold text-slate-400 tracking-widest uppercase">{{ greeting }}</p>
+                  <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                    {{ t('admin.sekolah.dashboard.greeting_prefix') }} <span class="text-role-admin">{{ auth.user?.name }}</span>
+                  </h1>
+                </div>
               </div>
-              <div class="min-w-0">
-                <p class="text-3xs font-bold text-slate-400 tracking-widest uppercase">{{ greeting }}</p>
-                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  {{ t('admin.sekolah.dashboard.greeting_prefix') }} <span class="text-role-admin">{{ auth.user?.name }}</span>
-                </h1>
+              <div class="flex items-center gap-2 flex-wrap">
+                <SegmentedControl
+                  v-if="sliceOptions.length > 1"
+                  v-model="sliceKey"
+                  :options="sliceOptions"
+                  size="sm"
+                />
+                <AcademicYearChip
+                  variant="light"
+                  :min-width="140"
+                  @open="showYearPicker = true"
+                />
+                <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-3xs font-bold uppercase tracking-widest">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  {{ t('admin.sekolah.dashboard.realtime') }}
+                </span>
               </div>
-            </div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <SegmentedControl
-                v-if="sliceOptions.length > 1"
-                v-model="sliceKey"
-                :options="sliceOptions"
-                size="sm"
-              />
-              <AcademicYearChip
-                variant="light"
-                :min-width="140"
-                @open="showYearPicker = true"
-              />
-              <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-3xs font-bold uppercase tracking-widest">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                {{ t('admin.sekolah.dashboard.realtime') }}
-              </span>
-            </div>
-          </section>
+            </section>
 
-          <!-- Bimbel entry — only for tutoring-center tenants. -->
-          <TutoringEntryBanner
-            :subtitle="t('admin.sekolah.dashboard.tutoring_banner_subtitle')"
-            @click="router.push({ name: 'admin.tutoring.programs' })"
-          />
+            <!-- Bimbel entry — only for tutoring-center tenants. -->
+            <TutoringEntryBanner
+              :subtitle="t('admin.sekolah.dashboard.tutoring_banner_subtitle')"
+              @click="router.push({ name: 'admin.tutoring.programs' })"
+            />
           </template>
 
-          <!-- #kpis: KPI strip (inline, no floating). Each card only
-               renders when its destination route is entitled — Students
-               hides when the tenant has no student-touching module,
-               Attendance hides without any attendance.student.* ability,
-               Pending Lesson Plans hides without academic.lesson_plan.view.
-               Guru card is unconditional (roster always available). -->
-          <template #kpis>
-          <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatSummaryCard
-              v-if="me.hasStudentContext"
-              :label="t('admin.dashboard.totalStudents')"
-              :value="formatNumber(num('total_students') || topLevelNum('total_students'))"
-              tone="brand"
-              icon-name="users"
-              :sublabel="`${num('total_classes') || topLevelNum('total_classes')} ${t('admin.dashboard.classCount')}`"
-              :slices="sliceOptions.length"
-              :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
-              :slice-progress="1"
-              :slice-label="sliceLabel"
-              :slice-label-muted="sliceLabelMuted"
-              @click="router.push('/admin/students')"
-            />
-            <StatSummaryCard
-              :label="t('admin.dashboard.totalTeachers')"
-              :value="formatNumber(num('total_teachers') || topLevelNum('total_teachers'))"
-              tone="info"
-              icon-name="user-check"
-              :sublabel="t('admin.dashboard.viewTeacherList')"
-              :slices="sliceOptions.length"
-              :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
-              :slice-progress="1"
-              :slice-label="sliceLabel"
-              :slice-label-muted="sliceLabelMuted"
-              @click="router.push('/admin/teachers')"
-            />
-            <StatSummaryCard
-              v-if="me.canAny(['attendance.student.view', 'attendance.student.export'])"
-              :label="t('admin.dashboard.attendanceToday')"
-              :value="`${num('attendance_rate') || topLevelNum('attendance_rate')}%`"
-              tone="success"
-              icon-name="check-circle"
-              :trend="
-                num('attendance_delta')
-                  ? {
-                      direction: num('attendance_delta') > 0 ? 'up' : 'down',
-                      label: `${num('attendance_delta') > 0 ? '+' : ''}${num('attendance_delta')}%`,
-                    }
-                  : null
-              "
-              :sublabel="t('admin.dashboard.vsYesterday')"
-              :slices="sliceOptions.length"
-              :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
-              :slice-progress="1"
-              :slice-label="sliceLabel"
-              :slice-label-muted="sliceLabelMuted"
-              @click="router.push('/admin/student-attendance')"
-            />
-            <StatSummaryCard
-              v-if="me.can('academic.lesson_plan.view')"
-              :label="t('admin.dashboard.pendingLessonPlans')"
-              :value="formatNumber(num('pending_lesson_plans') || topLevelNum('pending_lesson_plans'))"
-              tone="warning"
-              icon-name="clipboard-list"
-              :sublabel="`${topLevelNum('rpp_rejected')} ${t('admin.dashboard.needRevision')}`"
-              :slices="sliceOptions.length"
-              :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
-              :slice-progress="1"
-              :slice-label="sliceLabel"
-              :slice-label-muted="sliceLabelMuted"
-              @click="router.push('/admin/lesson-plans')"
-            />
-          </section>
-          </template>
-
-          <!-- #hero: Pusat Kendali — navy gradient card that surfaces
-               "score + streak" plus the top actionable alerts
-               (attention_needed + overdue_bills + pending_lesson_plans +
-               draft_announcements) as one-tap cards, then a chip strip
-               to the most-used quick actions. Subscription lives one
-               row below in the compact `SubscriptionMiniRow` so admin
-               still sees "modul aktif · tagihan / bln" without eating
-               hero real estate. -->
-          <template #hero>
-            <div class="space-y-3">
-              <AdminControlCenterCard
-                :readiness="canSeeReadiness ? readinessPayload : null"
-                :pending-lesson-plans="topLevelNum('pending_lesson_plans')"
-                :draft-announcements="topLevelNum('draft_announcements')"
-                :overdue-bills="topLevelNum('overdue_bills')"
-                :quick-actions="quickActions"
-                :show-enable-cta="
-                  canSeeReadiness &&
-                  (!readinessPayload || !readinessPayload.supported)
-                "
-                @enable-click="gotoReadiness"
-              />
-              <SubscriptionMiniRow />
-            </div>
-          </template>
-
-          <!-- #main: unified attendance overview + finance, then the
-               priority inbox. Whole cards hide when the tenant doesn't
-               own the module — a staff-only tenant sees zero empty
-               cards instead of Attendance/Finance panels with
-               placeholder digits + dead "Details" buttons. -->
+          <!-- #main: all bands, in fixed vertical order. -->
           <template #main>
           <div class="space-y-md">
 
-          <!-- Pengumuman disematkan — sits at the TOP of #main so it
-               scrolls under the greeting + KPI strip like on mobile,
-               not above the whole dashboard. Self-hides when empty. -->
-          <PinnedAnnouncementCarousel viewer-role="admin" />
+            <!-- Pengumuman disematkan — self-hides when empty. -->
+            <PinnedAnnouncementCarousel viewer-role="admin" />
 
-          <!-- Prestasi & Gamifikasi — paid module, ability-gated
-               server-side. Rendered as TWO paired rows so height
-               mismatch never surfaces:
-                 · Row 1 — highlight hero cards (Guru | Staf)
-                 · Row 2 — engagement tiles       (Guru | Staf)
-               Each row is `grid grid-cols-1 lg:grid-cols-2 items-stretch`,
-               so within a row the two cards always share height even
-               when the Guru title wraps two lines or the Staf top-3
-               has only one entry. If the tenant has zero staff
-               (single-guru bimbel) the second column silently drops
-               and both rows collapse to a single full-width column —
-               nothing empty ever shows.
-
-               Row 2 tiles always render THREE top-3 slots. Missing
-               ranks appear as dashed placeholders ("Belum ada
-               peringkat ke-N") so the two tiles line up row-for-row
-               instead of the taller one hovering above a shorter
-               neighbour.
-
-               Role-anchored palette per `useRoleColor`:
-                 · teacher = cobalt (#1B6FB8, `role-teacher`)
-                 · staff   = amber  (#B45309, `role-staff`)
-               Both the highlight card gradient (via
-               GamificationHighlightCard states `teacher_of_month` /
-               `staff_of_month`) and the tile header icon pick that
-               role's tint, so the two columns read as "guru world" vs
-               "staf world" at a glance without any explanatory copy. -->
-          <template v-if="canSeePrestasi && adminHighlight">
-            <!-- Row 1 — highlight hero cards, matched height via
-                 items-stretch + h-full merged onto the card root. -->
-            <div
-              class="grid grid-cols-1 gap-md items-stretch"
-              :class="adminStaffSummary && adminStaffSummary.total_staff > 0 ? 'lg:grid-cols-2' : ''"
-            >
-              <GamificationHighlightCard
-                class="h-full min-w-0"
-                :state="adminHighlight.teacher_of_month.state"
-                :eyebrow="adminHighlight.teacher_of_month.eyebrow"
-                :title="adminHighlight.teacher_of_month.title"
-                :sub="adminHighlight.teacher_of_month.sub"
-                :cta-label="adminHighlight.teacher_of_month.cta_label"
-                :cta-target="adminHighlight.teacher_of_month.cta_target"
-                :meta="null"
-                @cta="router.push(adminHighlight.teacher_of_month.cta_target)"
-              />
-              <GamificationHighlightCard
-                v-if="adminStaffSummary && adminStaffSummary.total_staff > 0 && adminStaffHighlight"
-                class="h-full min-w-0"
-                :state="adminStaffHighlight.staff_of_month.state"
-                :eyebrow="adminStaffHighlight.staff_of_month.eyebrow"
-                :title="adminStaffHighlight.staff_of_month.title"
-                :sub="adminStaffHighlight.staff_of_month.sub"
-                :cta-label="adminStaffHighlight.staff_of_month.cta_label"
-                :cta-target="adminStaffHighlight.staff_of_month.cta_target"
-                :meta="null"
-                @cta="router.push(adminStaffHighlight.staff_of_month.cta_target)"
-              />
-            </div>
-
-            <!-- Row 2 — engagement tiles, matched height. Each tile
-                 uses `flex flex-col` + `mt-auto` on the Top-3 block so
-                 whichever side is taller "wins", and the shorter side
-                 pushes its Top-3 to the bottom edge to fill the gap
-                 instead of leaving whitespace mid-card. -->
-            <div
-              class="grid grid-cols-1 gap-md items-stretch"
-              :class="adminStaffSummary && adminStaffSummary.total_staff > 0 ? 'lg:grid-cols-2' : ''"
-            >
-              <!-- GURU engagement tile -->
-              <section
-                v-if="adminSummary"
-                class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col h-full min-w-0"
-              >
-                <header class="flex items-center justify-between mb-3">
-                  <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-role-teacher-soft text-role-teacher grid place-items-center">
-                      <NavIcon name="medal" :size="16" />
-                    </div>
-                    <div>
-                      <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Retensi</p>
-                      <h3 class="text-sm font-black text-slate-900">Engagement Guru</h3>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    class="text-2xs font-bold text-role-teacher hover:underline"
-                    @click="router.push('/admin/teacher-engagement')"
-                  >
-                    Lihat detail →
-                  </button>
-                </header>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                  <div class="rounded-xl bg-slate-50 px-3 py-2">
-                    <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Total</p>
-                    <p class="text-base font-black text-slate-900 mt-0.5">{{ adminSummary.total_teachers }}</p>
-                  </div>
-                  <div class="rounded-xl bg-emerald-50 px-3 py-2">
-                    <p class="text-3xs font-bold text-emerald-700 uppercase tracking-widest">Aktif</p>
-                    <p class="text-base font-black text-emerald-900 mt-0.5">{{ adminSummary.active_this_week }}</p>
-                  </div>
-                  <div class="rounded-xl bg-orange-50 px-3 py-2">
-                    <p class="text-3xs font-bold text-orange-700 uppercase tracking-widest">Streak</p>
-                    <p class="text-base font-black text-orange-900 mt-0.5">
-                      {{ adminSummary.average_streak }}<span class="text-3xs text-orange-700 font-bold ml-1">hr</span>
-                    </p>
-                  </div>
-                  <div class="rounded-xl bg-red-50 px-3 py-2">
-                    <p class="text-3xs font-bold text-red-700 uppercase tracking-widest">Sepi</p>
-                    <p class="text-base font-black text-red-900 mt-0.5">{{ adminSummary.needs_attention_count }}</p>
-                  </div>
-                </div>
-                <div class="pt-3 border-t border-slate-100 mt-auto">
-                  <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest mb-2">Top minggu ini</p>
-                  <ol class="space-y-2">
-                    <!-- Real entries, iterated over the source array (keeps
-                         Vue-tsc's item-typing intact — nested `top_three[i]`
-                         inside a v-if wasn't narrowing). -->
-                    <li
-                      v-for="(t, i) in adminSummary.top_three"
-                      :key="t.teacher_id"
-                      class="flex items-center gap-2.5"
-                    >
-                      <span
-                        class="w-5 h-5 rounded-full text-3xs font-black text-white grid place-items-center flex-shrink-0"
-                        :class="i === 0 ? 'bg-amber-500' : i === 1 ? 'bg-slate-400' : 'bg-orange-400'"
-                      >{{ i + 1 }}</span>
-                      <InitialsAvatar
-                        :name="t.name"
-                        :image-url="t.photo_url"
-                        :size="28"
-                        color="#1B6FB8"
-                        :border-radius="8"
-                      />
-                      <div class="flex-1 min-w-0">
-                        <p class="text-2xs font-bold text-slate-800 truncate leading-tight">{{ t.name }}</p>
-                        <p v-if="t.streak_days != null && t.streak_days > 0" class="text-3xs text-slate-500 leading-tight mt-0.5">
-                          {{ t.streak_days }} hari beruntun
-                        </p>
-                      </div>
-                      <p class="text-2xs font-black text-slate-800 flex-shrink-0">
-                        {{ t.points }}<span class="text-3xs text-slate-500 font-bold ml-1">XP</span>
-                      </p>
-                    </li>
-                    <!-- Placeholder rows to pad up to 3 slots so this tile
-                         lines up row-for-row with the Staf tile next door. -->
-                    <li
-                      v-for="ph in Math.max(0, 3 - adminSummary.top_three.length)"
-                      :key="`teacher-placeholder-${ph}`"
-                      class="flex items-center gap-2.5 min-h-[28px]"
-                    >
-                      <span
-                        class="w-5 h-5 rounded-full bg-slate-300 text-3xs font-black text-white grid place-items-center flex-shrink-0"
-                      >{{ adminSummary.top_three.length + ph }}</span>
-                      <div class="flex-1 border-t border-dashed border-slate-300"></div>
-                      <span class="text-xs italic text-slate-400 flex-shrink-0">
-                        Belum ada peringkat ke-{{ adminSummary.top_three.length + ph }}
-                      </span>
-                    </li>
-                  </ol>
-                </div>
-              </section>
-
-              <!-- STAF engagement tile — silent-drops when the school has no staff. -->
-              <section
-                v-if="adminStaffSummary && adminStaffSummary.total_staff > 0"
-                class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col h-full min-w-0"
-              >
-                <header class="flex items-center justify-between mb-3">
-                  <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-role-staff-soft text-role-staff grid place-items-center">
-                      <NavIcon name="briefcase" :size="16" />
-                    </div>
-                    <div>
-                      <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Retensi</p>
-                      <h3 class="text-sm font-black text-slate-900">Engagement Staf</h3>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    class="text-2xs font-bold text-role-staff hover:underline"
-                    @click="router.push('/admin/staff-engagement')"
-                  >
-                    Lihat detail →
-                  </button>
-                </header>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                  <div class="rounded-xl bg-slate-50 px-3 py-2">
-                    <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Total</p>
-                    <p class="text-base font-black text-slate-900 mt-0.5">{{ adminStaffSummary.total_staff }}</p>
-                  </div>
-                  <div class="rounded-xl bg-emerald-50 px-3 py-2">
-                    <p class="text-3xs font-bold text-emerald-700 uppercase tracking-widest">Aktif</p>
-                    <p class="text-base font-black text-emerald-900 mt-0.5">{{ adminStaffSummary.active_this_week }}</p>
-                  </div>
-                  <div class="rounded-xl bg-orange-50 px-3 py-2">
-                    <p class="text-3xs font-bold text-orange-700 uppercase tracking-widest">Streak</p>
-                    <p class="text-base font-black text-orange-900 mt-0.5">
-                      {{ adminStaffSummary.average_streak }}<span class="text-3xs text-orange-700 font-bold ml-1">hr</span>
-                    </p>
-                  </div>
-                  <div class="rounded-xl bg-red-50 px-3 py-2">
-                    <p class="text-3xs font-bold text-red-700 uppercase tracking-widest">Sepi</p>
-                    <p class="text-base font-black text-red-900 mt-0.5">{{ adminStaffSummary.needs_attention_count }}</p>
-                  </div>
-                </div>
-                <div class="pt-3 border-t border-slate-100 mt-auto">
-                  <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest mb-2">Top minggu ini</p>
-                  <ol class="space-y-2">
-                    <!-- Real entries — see Guru tile above for the two-loop
-                         rationale (Vue-tsc narrowing on nested array
-                         indices doesn't reach v-if children). -->
-                    <li
-                      v-for="(t, i) in adminStaffSummary.top_three"
-                      :key="t.user_id"
-                      class="flex items-center gap-2.5"
-                    >
-                      <span
-                        class="w-5 h-5 rounded-full text-3xs font-black text-white grid place-items-center flex-shrink-0"
-                        :class="i === 0 ? 'bg-amber-500' : i === 1 ? 'bg-slate-400' : 'bg-orange-400'"
-                      >{{ i + 1 }}</span>
-                      <InitialsAvatar
-                        :name="t.name"
-                        :image-url="t.photo_url"
-                        :size="28"
-                        color="#B45309"
-                        :border-radius="8"
-                      />
-                      <div class="flex-1 min-w-0">
-                        <p class="text-2xs font-bold text-slate-800 truncate leading-tight">{{ t.name }}</p>
-                        <p v-if="t.ability_role_tag || (t.streak_days != null && t.streak_days > 0)" class="text-3xs text-slate-500 leading-tight mt-0.5 truncate">
-                          <template v-if="t.ability_role_tag">{{ t.ability_role_tag }}</template>
-                          <template v-if="t.ability_role_tag && t.streak_days != null && t.streak_days > 0"> · </template>
-                          <template v-if="t.streak_days != null && t.streak_days > 0">{{ t.streak_days }} hari beruntun</template>
-                        </p>
-                      </div>
-                      <p class="text-2xs font-black text-slate-800 flex-shrink-0">
-                        {{ t.points }}<span class="text-3xs text-slate-500 font-bold ml-1">XP</span>
-                      </p>
-                    </li>
-                    <!-- Placeholder rows pad up to 3 slots so this tile
-                         lines up row-for-row with the Guru tile beside it. -->
-                    <li
-                      v-for="ph in Math.max(0, 3 - adminStaffSummary.top_three.length)"
-                      :key="`staff-placeholder-${ph}`"
-                      class="flex items-center gap-2.5 min-h-[28px]"
-                    >
-                      <span
-                        class="w-5 h-5 rounded-full bg-slate-300 text-3xs font-black text-white grid place-items-center flex-shrink-0"
-                      >{{ adminStaffSummary.top_three.length + ph }}</span>
-                      <div class="flex-1 border-t border-dashed border-slate-300"></div>
-                      <span class="text-xs italic text-slate-400 flex-shrink-0">
-                        Belum ada peringkat ke-{{ adminStaffSummary.top_three.length + ph }}
-                      </span>
-                    </li>
-                  </ol>
-                </div>
-              </section>
-            </div>
-          </template>
-
-          <section class="grid grid-cols-1 lg:grid-cols-3 gap-md">
-            <!-- Unified attendance overview (Opsi A) — replaces the
-                 old placeholder heatmap. Self-hides when the admin has
-                 no attendance ability at all; otherwise renders 3
-                 KPI rings + a per-class bar list from the MR!523
-                 payload fields. -->
-            <div class="lg:col-span-2">
-              <AdminAttendanceOverviewCard :stats="stats" />
-            </div>
-
-            <div
-              v-if="me.can('finance.bill.view')"
-              class="bg-white border border-slate-200 rounded-2xl p-4"
-            >
-              <header class="flex items-center justify-between mb-3 px-1">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 grid place-items-center">
-                    <NavIcon name="wallet" :size="16" />
-                  </div>
-                  <div>
-                    <h3 class="text-sm font-black text-slate-900 leading-none">{{ t('admin.dashboard.financeThisMonth') }}</h3>
-                    <p class="text-3xs text-slate-400 font-bold mt-0.5">{{ t('admin.dashboard.receivedVsOutstanding') }}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  class="text-2xs font-bold text-role-admin hover:underline"
-                  @click="router.push('/admin/finance')"
-                >
-                  {{ t('admin.dashboard.details') }}
-                </button>
-              </header>
-              <div class="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.dashboard.received') }}</p>
-                  <p class="text-base font-black text-emerald-700">{{ formatRupiah(financeReceived) }}</p>
-                </div>
-                <div>
-                  <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.dashboard.outstanding') }}</p>
-                  <p class="text-base font-black text-red-700">{{ formatRupiah(financeOutstanding) }}</p>
-                </div>
-              </div>
-              <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  class="h-full bg-emerald-500 transition-all"
-                  :style="{ width: `${financePct}%` }"
-                ></div>
-              </div>
-              <p class="text-2xs text-slate-500 mt-2">
-                <b class="text-slate-900">{{ financePct }}%</b> {{ t('admin.dashboard.targetReached') }}
+            <!-- ── 1. Status band ─────────────────────────────────── -->
+            <div class="space-y-2.5">
+              <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest px-1">
+                {{ t('admin.dashboard.sectionStatus') }}
               </p>
-            </div>
-          </section>
+              <div class="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-md items-start">
+                <!-- LEFT: Pusat Kendali (readiness) -->
+                <AdminControlCenterCard
+                  :readiness="canSeeReadiness ? readinessPayload : null"
+                  :pending-lesson-plans="topLevelNum('pending_lesson_plans')"
+                  :draft-announcements="topLevelNum('draft_announcements')"
+                  :overdue-bills="topLevelNum('overdue_bills')"
+                  :quick-actions="quickActions"
+                  :show-enable-cta="
+                    canSeeReadiness &&
+                    (!readinessPayload || !readinessPayload.supported)
+                  "
+                  @enable-click="gotoReadiness"
+                />
 
-          <!-- Priority inbox fallback — only when the admin has NO
-               readiness ability (edge: a staff proxying into /admin or
-               a legacy seed). Once `readiness.view` is universal, the
-               new AdminControlCenterCard in the #hero slot owns the
-               "perlu perhatian" signal, so this section drops out
-               entirely. -->
-          <section v-if="!canSeeReadiness && priorityItems.length > 0">
-            <header class="flex items-center justify-between gap-3 mb-3 px-1">
-              <div class="flex items-center gap-2">
-                <h3 class="text-[12px] font-black text-slate-500 uppercase tracking-widest">
-                  {{ t('admin.dashboard.needsAttention') }}
-                </h3>
-                <span
-                  class="text-3xs font-bold px-2 py-0.5 rounded-full bg-role-admin/10 text-role-admin"
-                >
-                  {{ priorityHeaderLabel }}
-                </span>
+                <!-- RIGHT: 2×2 compact KPI tiles -->
+                <div class="grid grid-cols-2 gap-3">
+                  <button
+                    v-if="me.hasStudentContext"
+                    type="button"
+                    class="bg-white border border-slate-200 rounded-2xl p-3 text-left hover:border-role-admin hover:shadow-sm transition-all"
+                    @click="router.push('/admin/students')"
+                  >
+                    <span class="w-8 h-8 rounded-xl grid place-items-center bg-brand-cobalt/10 text-brand-cobalt">
+                      <NavIcon name="users" :size="16" />
+                    </span>
+                    <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mt-2">
+                      {{ t('admin.dashboard.totalStudents') }}
+                    </p>
+                    <p class="text-xl font-black text-slate-900 tabular-nums leading-none mt-0.5">
+                      {{ formatNumber(num('total_students') || topLevelNum('total_students')) }}
+                    </p>
+                    <p class="text-3xs text-slate-400 mt-1">
+                      {{ num('total_classes') || topLevelNum('total_classes') }} {{ t('admin.dashboard.classCount') }}
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="bg-white border border-slate-200 rounded-2xl p-3 text-left hover:border-role-admin hover:shadow-sm transition-all"
+                    @click="router.push('/admin/teachers')"
+                  >
+                    <span class="w-8 h-8 rounded-xl grid place-items-center bg-teal-50 text-teal-600">
+                      <NavIcon name="user-check" :size="16" />
+                    </span>
+                    <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mt-2">
+                      {{ t('admin.dashboard.totalTeachers') }}
+                    </p>
+                    <p class="text-xl font-black text-slate-900 tabular-nums leading-none mt-0.5">
+                      {{ formatNumber(num('total_teachers') || topLevelNum('total_teachers')) }}
+                    </p>
+                    <p class="text-3xs text-slate-400 mt-1">{{ t('admin.dashboard.teacherActive') }}</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="bg-white border border-slate-200 rounded-2xl p-3 text-left hover:border-role-admin hover:shadow-sm transition-all"
+                    @click="router.push('/admin/staff')"
+                  >
+                    <span class="w-8 h-8 rounded-xl grid place-items-center bg-violet-100 text-violet-600">
+                      <NavIcon name="briefcase" :size="16" />
+                    </span>
+                    <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mt-2">
+                      {{ t('admin.dashboard.totalStaff') }}
+                    </p>
+                    <p class="text-xl font-black text-slate-900 tabular-nums leading-none mt-0.5">
+                      {{ totalStaffDisplay }}
+                    </p>
+                    <p class="text-3xs text-slate-400 mt-1">{{ t('admin.dashboard.staffLabel') }}</p>
+                  </button>
+
+                  <button
+                    v-if="me.can('academic.lesson_plan.view')"
+                    type="button"
+                    class="bg-white border border-slate-200 rounded-2xl p-3 text-left hover:border-role-admin hover:shadow-sm transition-all"
+                    @click="router.push('/admin/lesson-plans')"
+                  >
+                    <span class="w-8 h-8 rounded-xl grid place-items-center bg-amber-100 text-amber-600">
+                      <NavIcon name="file-text" :size="16" />
+                    </span>
+                    <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mt-2">
+                      {{ t('admin.dashboard.pendingLessonPlans') }}
+                    </p>
+                    <p class="text-xl font-black text-slate-900 tabular-nums leading-none mt-0.5">
+                      {{ formatNumber(pendingLessonPlans) }}
+                    </p>
+                    <p class="text-3xs text-slate-400 mt-1">
+                      <template v-if="pendingLessonPlans === 0">{{ t('admin.dashboard.inboxClean') }}</template>
+                      <template v-else>{{ topLevelNum('rpp_rejected') }} {{ t('admin.dashboard.needRevision') }}</template>
+                    </p>
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                class="text-2xs font-bold text-role-admin hover:underline inline-flex items-center gap-1"
-                @click="gotoAdminInbox"
-              >
-                {{ t('common.viewAll') }}
-                <NavIcon name="chevron-right" :size="12" />
-              </button>
-            </header>
-            <PriorityInbox
-              :items="priorityItems"
-              :show-header="false"
-              @item-tap="handlePriorityTap"
-              @see-all="gotoAdminInbox"
-            />
-          </section>
-          </div>
-          </template>
-
-          <!-- #quickActions: school-management action grid. The `id`
-               anchor is targeted by AdminControlCenterCard's "Lainnya"
-               chip so the strip below the hero can scroll the admin
-               here without a route change. -->
-          <template #quickActions>
-          <section id="quick-actions-anchor">
-            <h3 class="text-[12px] font-black text-slate-500 uppercase tracking-widest mb-3 px-1">
-              {{ t('admin.dashboard.schoolManagement') }}
-            </h3>
-            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-              <button
-                v-for="a in quickActions"
-                :key="a.to"
-                type="button"
-                class="flex flex-col items-center gap-2.5 rounded-2xl border border-slate-200 bg-white hover:border-role-admin hover:shadow-md p-4 text-xs font-bold text-slate-600 transition-all group"
-                @click="router.push(a.to)"
-              >
-                <span class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-role-admin group-hover:text-white grid place-items-center transition-colors">
-                  <NavIcon :name="a.icon" :size="18" />
-                </span>
-                <span class="text-center leading-tight uppercase tracking-tight">{{ t(a.labelKey) }}</span>
-              </button>
             </div>
-          </section>
+
+            <!-- ── 2. Hari ini band ──────────────────────────────── -->
+            <div class="space-y-2.5">
+              <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest px-1">
+                {{ t('admin.dashboard.sectionToday') }} · {{ todayLabel }}
+              </p>
+              <div class="grid grid-cols-1 lg:grid-cols-[1.9fr_1fr] gap-md items-start">
+                <!-- LEFT: Kehadiran Sekolah (donuts + weekly chart) -->
+                <AdminAttendanceOverviewCard :stats="stats" />
+
+                <!-- RIGHT rail: Perlu Perhatian + Keuangan slim -->
+                <div class="flex flex-col gap-md">
+                  <AttentionPanel :items="attentionItems" />
+
+                  <button
+                    v-if="me.can('finance.bill.view')"
+                    type="button"
+                    class="bg-white border border-slate-200 rounded-2xl p-3.5 flex items-center gap-3 text-left hover:border-role-admin hover:shadow-sm transition-all"
+                    @click="router.push('/admin/finance')"
+                  >
+                    <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 grid place-items-center flex-shrink-0">
+                      <NavIcon name="wallet" :size="16" />
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block text-xs font-black text-slate-900 leading-tight">
+                        {{ t('admin.dashboard.financeSlimTitle', { month: financeMonthLabel }) }}
+                      </span>
+                      <span class="block text-3xs text-slate-500 leading-tight mt-0.5">
+                        <template v-if="financeTotal === 0">{{ t('admin.dashboard.financeNoBills') }}</template>
+                        <template v-else>{{ financePct }}% {{ t('admin.dashboard.targetReached') }}</template>
+                      </span>
+                    </span>
+                    <span class="text-2xs font-bold text-role-admin flex-shrink-0">{{ t('admin.dashboard.open') }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── 3a. Engagement band (gamification ACTIVE) ─────── -->
+            <div v-if="canSeePrestasi" class="space-y-2.5">
+              <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest px-1">
+                {{ t('admin.dashboard.sectionEngagement') }}
+              </p>
+              <div class="grid grid-cols-1 lg:grid-cols-[1.9fr_1fr] gap-md items-start">
+                <EngagementToggleCard
+                  :teacher-highlight="adminHighlight"
+                  :teacher-summary="adminSummary"
+                  :staff-highlight="adminStaffHighlight"
+                  :staff-summary="adminStaffSummary"
+                />
+                <div id="quick-actions-anchor" class="grid grid-cols-2 gap-3">
+                  <button
+                    v-for="tile in quickTilesWithGami"
+                    :key="tile.to"
+                    type="button"
+                    class="flex flex-col items-center gap-2.5 rounded-2xl border border-slate-200 bg-white hover:border-role-admin hover:shadow-md p-4 text-xs font-bold text-slate-600 transition-all"
+                    @click="router.push(tile.to)"
+                  >
+                    <span class="w-9 h-9 rounded-xl grid place-items-center" :class="tileTintClass(tile.tone)">
+                      <NavIcon :name="tile.icon" :size="18" />
+                    </span>
+                    <span class="text-center leading-tight uppercase tracking-tight">{{ t(tile.labelKey) }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── 3b. Akses cepat + upsell (gamification ABSENT) ── -->
+            <template v-else>
+              <div class="space-y-2.5">
+                <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest px-1">
+                  {{ t('admin.dashboard.sectionQuickAccess') }}
+                </p>
+                <div id="quick-actions-anchor" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                  <button
+                    v-for="tile in quickTilesNoGami"
+                    :key="tile.to"
+                    type="button"
+                    class="flex flex-col items-center gap-2.5 rounded-2xl border border-slate-200 bg-white hover:border-role-admin hover:shadow-md p-4 text-xs font-bold text-slate-600 transition-all"
+                    @click="router.push(tile.to)"
+                  >
+                    <span class="w-9 h-9 rounded-xl grid place-items-center" :class="tileTintClass(tile.tone)">
+                      <NavIcon :name="tile.icon" :size="18" />
+                    </span>
+                    <span class="text-center leading-tight uppercase tracking-tight">{{ t(tile.labelKey) }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tasteful upsell — activate the Prestasi module. -->
+              <button
+                type="button"
+                class="w-full flex items-center gap-4 p-4 rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 to-white hover:shadow-md transition-all text-left"
+                @click="gotoModules"
+              >
+                <span class="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 grid place-items-center flex-shrink-0">
+                  <NavIcon name="trophy" :size="20" />
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-3xs font-bold text-violet-600 uppercase tracking-widest">
+                    {{ t('admin.dashboard.upsell.eyebrow') }}
+                  </span>
+                  <span class="block text-sm font-black text-slate-900">{{ t('admin.dashboard.upsell.title') }}</span>
+                  <span class="block text-3xs text-slate-500 mt-0.5">{{ t('admin.dashboard.upsell.sub') }}</span>
+                </span>
+                <span class="inline-flex items-center gap-1.5 bg-violet-600 text-white rounded-xl px-4 py-2 text-2xs font-black flex-shrink-0 whitespace-nowrap">
+                  {{ t('admin.dashboard.upsell.cta') }}
+                  <NavIcon name="arrow-right" :size="13" />
+                </span>
+              </button>
+            </template>
+
+            <!-- ── 4. Langganan — pinned to the bottom. ──────────── -->
+            <SubscriptionMiniRow />
+          </div>
           </template>
 
         </DashboardLayout>

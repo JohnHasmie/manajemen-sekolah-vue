@@ -44,9 +44,21 @@ export interface AdminStatsAttendanceSummaryToday {
 }
 export interface AdminStats {
   attendance_rate_today?: number | string | null;
+  /**
+   * Day-over-day attendance delta in percentage points. MR!527 made this
+   * NULLABLE — a school with no prior-day baseline (first day, holiday
+   * yesterday) returns `null`, which the UI renders as "—" / hides the
+   * delta chip rather than showing a bogus "+97%".
+   */
+  attendance_delta_pct?: number | null;
   attendance_per_class?: AdminStatsAttendancePerClass[] | null;
   teacher_attendance_today?: AdminStatsAttendanceSummaryToday | null;
   staff_attendance_today?: AdminStatsAttendanceSummaryToday | null;
+  /**
+   * Total non-teaching staff headcount (MR!527). Absent on older
+   * backends — the dashboard KPI tile falls back to "—" when undefined.
+   */
+  total_staff?: number | null;
   [key: string]: unknown;
 }
 
