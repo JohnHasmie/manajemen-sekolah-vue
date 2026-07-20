@@ -6551,10 +6551,15 @@
     "usageBanner": {
       "graceTitle": "You're near your seat cap",
       "graceBody": "Your school has {live_student} students (paid {paid_student}) and {live_staff} teachers/staff (paid {paid_staff}). The first 5 seats over your cap are free — anything more will be billed at your next renewal.",
+      "graceBodyOne": "Your school has {live} {noun} (paid {paid}). The first 5 seats over your cap are free — anything more will be billed at your next renewal.",
       "overageTitle": "Seat cap exceeded",
       "overageBody": "{over_summary} above your cap. Top up now for the rest of the period, or the charge will appear automatically on your next renewal.",
+      "overageBodyOne": "{over} {noun} above your cap. Top up now for the rest of the period, or the charge will appear automatically on your next renewal.",
       "hardTitle": "Reached the 10 % hard cap over your paid seats",
       "hardBody": "You've hit the maximum ({hard_student} students · {hard_staff} teachers/staff). Top up to add more.",
+      "hardBodyOne": "You've hit the maximum ({hard} {noun}). Top up to add more.",
+      "nounStudent": "students",
+      "nounStaff": "teachers/staff",
       "topUpCta": "Top up now",
       "demoNotice": "This is a demo account — contact admin to subscribe and add more capacity."
     },

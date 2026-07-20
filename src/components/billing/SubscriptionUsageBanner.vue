@@ -24,6 +24,13 @@ import type { SeatUsage, SeatZone } from '@/types/subscription-billing';
 const props = defineProps<{
   /** Bump this from the parent to force a fresh usage fetch. */
   refreshKey?: number;
+  /**
+   * Scope the banner to a single seat dimension so it only surfaces on the
+   * page that owns it: `student` on Data Siswa, `staff` on Data Guru + Data
+   * Staf. When omitted, falls back to the legacy combined behavior (most
+   * severe of the two zones, both numbers in the copy).
+   */
+  dimension?: 'student' | 'staff';
 }>();
 
 const { t } = useI18n();
@@ -59,10 +66,20 @@ const ZONE_WEIGHT: Record<SeatZone, number> = {
 const effectiveZone = computed<SeatZone>(() => {
   const u = usage.value;
   if (!u) return 'normal';
+  // Scoped to one dimension → use only that dimension's zone.
+  if (props.dimension === 'student') return u.zone_student;
+  if (props.dimension === 'staff') return u.zone_staff;
+  // Legacy combined → most severe of the two.
   return ZONE_WEIGHT[u.zone_student] >= ZONE_WEIGHT[u.zone_staff]
     ? u.zone_student
     : u.zone_staff;
 });
+
+const dimNoun = computed(() =>
+  props.dimension === 'student'
+    ? t('subscribe.usageBanner.nounStudent')
+    : t('subscribe.usageBanner.nounStaff'),
+);
 
 const shouldRender = computed(() => {
   const u = usage.value;
@@ -73,6 +90,12 @@ const shouldRender = computed(() => {
 const overSummary = computed(() => {
   const u = usage.value;
   if (!u) return '';
+  if (props.dimension === 'student') {
+    return u.over_student > 0 ? `${u.over_student} ${dimNoun.value}` : '';
+  }
+  if (props.dimension === 'staff') {
+    return u.over_staff > 0 ? `${u.over_staff} ${dimNoun.value}` : '';
+  }
   const parts: string[] = [];
   if (u.over_student > 0) parts.push(`${u.over_student} siswa`);
   if (u.over_staff > 0) parts.push(`${u.over_staff} guru/staf`);
@@ -83,6 +106,31 @@ const bannerCopy = computed(() => {
   const u = usage.value;
   if (!u) return { title: '', body: '' };
   const zone = effectiveZone.value;
+
+  // Single-dimension copy — only this page's seat type, no "dan N guru/staf".
+  if (props.dimension) {
+    const live = props.dimension === 'student' ? u.live_student : u.live_staff;
+    const paid = props.dimension === 'student' ? u.paid_student : u.paid_staff;
+    const hard = props.dimension === 'student' ? u.hard_student : u.hard_staff;
+    const over = props.dimension === 'student' ? u.over_student : u.over_staff;
+    if (zone === 'grace') {
+      return {
+        title: t('subscribe.usageBanner.graceTitle'),
+        body: t('subscribe.usageBanner.graceBodyOne', { live, paid, noun: dimNoun.value }),
+      };
+    }
+    if (zone === 'overage') {
+      return {
+        title: t('subscribe.usageBanner.overageTitle'),
+        body: t('subscribe.usageBanner.overageBodyOne', { over, noun: dimNoun.value }),
+      };
+    }
+    return {
+      title: t('subscribe.usageBanner.hardTitle'),
+      body: t('subscribe.usageBanner.hardBodyOne', { hard, noun: dimNoun.value }),
+    };
+  }
+
   if (zone === 'grace') {
     return {
       title: t('subscribe.usageBanner.graceTitle'),

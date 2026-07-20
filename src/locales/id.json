@@ -6551,10 +6551,15 @@
     "usageBanner": {
       "graceTitle": "Anda hampir mencapai kuota",
       "graceBody": "Sekolah Anda punya {live_student} siswa (kuota bayar {paid_student}) dan {live_staff} guru/staf (kuota bayar {paid_staff}). Lima seat pertama di atas kuota masih gratis — sisanya akan ditagihkan di perpanjangan berikutnya.",
+      "graceBodyOne": "Sekolah Anda punya {live} {noun} (kuota bayar {paid}). Lima seat pertama di atas kuota masih gratis — sisanya akan ditagihkan di perpanjangan berikutnya.",
       "overageTitle": "Kuota terlampaui",
       "overageBody": "{over_summary} di atas kuota. Top up sekarang untuk sisa periode, atau tagihannya akan otomatis muncul di perpanjangan berikutnya.",
+      "overageBodyOne": "{over} {noun} di atas kuota. Top up sekarang untuk sisa periode, atau tagihannya akan otomatis muncul di perpanjangan berikutnya.",
       "hardTitle": "Kuota mencapai batas 10 % di atas kuota bayar",
       "hardBody": "Sudah mencapai batas maksimum ({hard_student} siswa · {hard_staff} guru/staf). Top up untuk menambah head baru.",
+      "hardBodyOne": "Sudah mencapai batas maksimum ({hard} {noun}). Top up untuk menambah head baru.",
+      "nounStudent": "siswa",
+      "nounStaff": "guru/staf",
       "topUpCta": "Top up sekarang",
       "demoNotice": "Ini akun demo — hubungi admin untuk berlangganan agar bisa menambah kapasitas."
     },

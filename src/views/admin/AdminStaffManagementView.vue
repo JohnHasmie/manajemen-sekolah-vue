@@ -20,6 +20,7 @@ import Toast from '@/components/ui/Toast.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import StaffEditSheet from './widgets/StaffEditSheet.vue';
 import StaffRbacCard from './widgets/StaffRbacCard.vue';
+import SubscriptionUsageBanner from '@/components/billing/SubscriptionUsageBanner.vue';
 import AdminEntityDetailSheet, { type DetailSection } from '@/components/feature/AdminEntityDetailSheet.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import AdminDataMenu from '@/components/feature/AdminDataMenu.vue';
@@ -356,6 +357,10 @@ const staffDeleteImpact = computed<string[]>(() => [ $t('admin.staff.deleteImpac
         @import-excel="showImport = true"
         @download-template="downloadTemplate"
       />
+    </template>
+
+    <template #banner>
+      <SubscriptionUsageBanner dimension="staff" />
     </template>
 
     <template #filter-chips>

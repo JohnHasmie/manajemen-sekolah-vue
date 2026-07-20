@@ -705,7 +705,7 @@ function onImportDone(res: {
     </template>
 
     <template #banner>
-      <SubscriptionUsageBanner />
+      <SubscriptionUsageBanner dimension="staff" />
     </template>
 
     <template #filter-chips>

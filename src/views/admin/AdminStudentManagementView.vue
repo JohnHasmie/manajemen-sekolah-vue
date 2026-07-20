@@ -810,7 +810,7 @@ function onImportDone(res: {
     </template>
 
     <template #banner>
-      <SubscriptionUsageBanner />
+      <SubscriptionUsageBanner dimension="student" />
     </template>
 
     <template #filter-chips>
