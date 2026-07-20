@@ -1,13 +1,19 @@
 <!--
-  ParentTabBar — 3-tab segmented toggle styled in the parent (azure)
-  palette. Used on Kelas detail page (Aliran / Session / Grade), Session
-  page (List / Kalender), Bill page (Aktif / Riwayat).
+  DEPRECATED shim (WEB-1). Renamed + moved to
+  `@/components/feature/TutoringTabBar.vue` — the "Parent" scope name
+  became stale once admin / tutor / student screens all landed on top
+  of the same tab bar in the bimbel rebuild.
+
+  I grep'd — nothing in the current tree imports this file. Kept as a
+  re-export shim in case a stale WIP branch merges in with an old
+  import; CLEAN-2 removes it once the rebuild lands.
 -->
 <script setup lang="ts">
+import TutoringTabBar from '@/components/feature/TutoringTabBar.vue';
+
 defineProps<{
   modelValue: string;
   tabs: Array<{ id: string; label: string }>;
-  /** Width modifier — full or fit-content. */
   fit?: boolean;
 }>();
 
@@ -15,23 +21,10 @@ defineEmits<{ (e: 'update:modelValue', v: string): void }>();
 </script>
 
 <template>
-  <div
-    class="flex gap-1 rounded-xl border border-tutoring-border-soft bg-tutoring-panel p-1"
-    :class="fit ? 'inline-flex' : 'w-full'"
-  >
-    <button
-      v-for="t in tabs"
-      :key="t.id"
-      type="button"
-      class="flex-1 rounded-lg px-3 py-1.5 text-[13px] font-bold tracking-tight transition"
-      :class="
-        modelValue === t.id
-          ? 'bg-[#21afe6] text-white shadow'
-          : 'text-tutoring-text-mid hover:text-tutoring-text-hi'
-      "
-      @click="$emit('update:modelValue', t.id)"
-    >
-      {{ t.label }}
-    </button>
-  </div>
+  <TutoringTabBar
+    :model-value="modelValue"
+    :tabs="tabs"
+    :fit="fit"
+    @update:model-value="(v) => $emit('update:modelValue', v)"
+  />
 </template>
