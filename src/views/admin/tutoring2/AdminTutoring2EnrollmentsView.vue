@@ -9,6 +9,7 @@
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -30,6 +31,8 @@ const search = ref('');
 const statusFilter = ref<string>(''); // '' | 'trial' | 'active' | 'paused' | 'graduated' | 'withdrawn'
 const programFilter = ref<string>(''); // '' | program uuid
 const billingModeFilter = ref<string>(''); // '' | 'prepaid' | 'monthly' | 'per_session'
+
+const { t } = useI18n();
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -64,10 +67,10 @@ const kpiCards = computed<KpiCard[]>(() => {
   const trial = items.filter((e) => e.status === 'trial').length;
   const exited = items.filter((e) => e.status === 'graduated' || e.status === 'withdrawn').length;
   return [
-    { icon: 'circle-check', label: 'Aktif', value: String(active), tone: 'green' },
-    { icon: 'sparkles', label: 'Trial', value: String(trial), tone: trial > 0 ? 'amber' : undefined },
-    { icon: 'log-out', label: 'Lulus/keluar', value: String(exited) },
-    { icon: 'calendar', label: 'Bulan ini', value: '+23' },
+    { icon: 'circle-check', label: t('tutoring2.admin.enrollments.kpiActive'), value: String(active), tone: 'green' },
+    { icon: 'sparkles', label: t('tutoring2.admin.enrollments.kpiTrial'), value: String(trial), tone: trial > 0 ? 'amber' : undefined },
+    { icon: 'log-out', label: t('tutoring2.admin.enrollments.kpiGraduated'), value: String(exited) },
+    { icon: 'calendar', label: t('tutoring2.admin.enrollments.kpiThisMonth'), value: '+23' },
   ];
 });
 
@@ -80,6 +83,10 @@ function statusPillTone(status: BimbelEnrollment['status']): StatusBadgeTone {
     case 'withdrawn': return 'neutral';
     default: return 'neutral';
   }
+}
+
+function statusLabel(status: BimbelEnrollment['status']): string {
+  return t(`tutoring2.status.${status}`);
 }
 
 function truncateId(id: string, len = 8): string {
@@ -99,32 +106,34 @@ function remainingQuota(e: BimbelEnrollment): string {
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="admin"
-      kicker="Admin Bimbel"
-      title="Pendaftaran"
-      :meta="state.status === 'content' ? `${(state.data as BimbelEnrollment[]).length} pendaftaran` : 'Memuat…'"
+      :kicker="t('tutoring2.common.roleAdmin')"
+      :title="t('tutoring2.admin.enrollments.title')"
+      :meta="state.status === 'content'
+        ? `${(state.data as BimbelEnrollment[]).length} ${t('tutoring2.admin.enrollments.title').toLowerCase()}`
+        : t('tutoring2.common.loading')"
     />
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
-    <PageFilterToolbar v-model:search="search" search-placeholder="Cari siswa / program…">
+    <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.admin.enrollments.searchPh')">
       <template #chips>
         <AppFilterChip
-          label="Status"
-          :value="statusFilter || 'Semua'"
+          :label="t('tutoring2.common.status')"
+          :value="statusFilter || t('tutoring2.common.all')"
           icon-name="circle-check"
           :active="!!statusFilter"
           @click="statusFilter = statusFilter ? '' : 'active'"
         />
         <AppFilterChip
-          label="Program"
-          :value="programFilter ? truncateId(programFilter) : 'Semua'"
+          :label="t('tutoring2.common.program')"
+          :value="programFilter ? truncateId(programFilter) : t('tutoring2.common.all')"
           icon-name="book"
           :active="!!programFilter"
           @click="programFilter = ''"
         />
         <AppFilterChip
-          label="Mode tagihan"
-          :value="billingModeFilter || 'Semua'"
+          :label="t('tutoring2.common.billingMode')"
+          :value="billingModeFilter || t('tutoring2.common.all')"
           icon-name="wallet"
           :active="!!billingModeFilter"
           @click="billingModeFilter = billingModeFilter ? '' : 'prepaid'"
@@ -132,11 +141,12 @@ function remainingQuota(e: BimbelEnrollment): string {
       </template>
     </PageFilterToolbar>
 
+    <!-- TODO i18n key: empty-description literal below -->
     <AsyncView
       :state="state"
       loading-variant="cards"
       :loading-rows="6"
-      empty-title="Belum ada pendaftaran"
+      :empty-title="t('tutoring2.admin.enrollments.emptyTitle')"
       empty-description="Klik + untuk mendaftarkan siswa baru."
       @retry="reload"
     >
@@ -145,11 +155,11 @@ function remainingQuota(e: BimbelEnrollment): string {
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
-                <th class="px-4 py-3 font-bold">Siswa</th>
-                <th class="px-4 py-3 font-bold">Program</th>
-                <th class="px-4 py-3 font-bold">Mode</th>
-                <th class="px-4 py-3 font-bold">Status</th>
-                <th class="px-4 py-3 font-bold">Sisa kuota</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.student') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.program') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.billingMode') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.remainingQuota') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -162,7 +172,7 @@ function remainingQuota(e: BimbelEnrollment): string {
                 <td class="px-4 py-3 text-slate-600">{{ truncateId(e.program_id) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ e.billing_mode_label ?? e.billing_mode }}</td>
                 <td class="px-4 py-3">
-                  <StatusBadge :label="e.status_label ?? e.status" :tone="statusPillTone(e.status)" uppercase />
+                  <StatusBadge :label="e.status_label ?? statusLabel(e.status)" :tone="statusPillTone(e.status)" uppercase />
                 </td>
                 <td class="px-4 py-3 text-slate-600">{{ remainingQuota(e) }}</td>
               </tr>
@@ -176,7 +186,7 @@ function remainingQuota(e: BimbelEnrollment): string {
       type="button"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
-      <span aria-hidden="true">+</span> Daftarkan siswa
+      <span aria-hidden="true">+</span> {{ t('tutoring2.admin.enrollments.newCta') }}
     </button>
   </div>
 </template>

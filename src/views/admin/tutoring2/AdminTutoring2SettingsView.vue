@@ -7,7 +7,11 @@
   a later agent wires up.
 -->
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+
+const { t } = useI18n();
 
 interface SettingCard {
   short: string;
@@ -15,23 +19,25 @@ interface SettingCard {
   subtitle: string;
 }
 
-const cards: SettingCard[] = [
-  { short: 'BIL', title: 'Mode tagihan aktif', subtitle: 'Prabayar · SPP bulanan · Per sesi' },
-  { short: 'AKA', title: 'Struktur akademik', subtitle: 'Program/Paket + Kelompok' },
-  { short: 'RBA', title: 'Peran & hak akses (RBAC)', subtitle: 'Admin · Tutor · Wali · Siswa' },
-  { short: 'AI', title: 'Fitur AI', subtitle: 'Generate soal & tryout aktif' },
-  { short: 'PRO', title: 'Profil bimbel', subtitle: 'Nama, logo, alamat, kontak' },
-  { short: 'TEM', title: 'Tampilan', subtitle: 'Auto light/dark (tutoring theme)' },
-];
+// TODO i18n key: per-card subtitle strings (Prabayar · SPP bulanan · Per sesi, Program/Paket + Kelompok,
+// Admin · Tutor · Wali · Siswa, Generate soal & tryout aktif, Nama, logo, alamat, kontak).
+const cards = computed<SettingCard[]>(() => [
+  { short: 'BIL', title: t('tutoring2.admin.settings.billingModes'), subtitle: 'Prabayar · SPP bulanan · Per sesi' },
+  { short: 'AKA', title: t('tutoring2.admin.settings.academic'), subtitle: 'Program/Paket + Kelompok' },
+  { short: 'RBA', title: t('tutoring2.admin.settings.rbac'), subtitle: 'Admin · Tutor · Wali · Siswa' },
+  { short: 'AI', title: t('tutoring2.admin.settings.ai'), subtitle: 'Generate soal & tryout aktif' },
+  { short: 'PRO', title: t('tutoring2.admin.settings.profile'), subtitle: 'Nama, logo, alamat, kontak' },
+  { short: 'TEM', title: t('tutoring2.admin.settings.appearance'), subtitle: t('tutoring2.tutor.profile.appearanceDesc') },
+]);
 </script>
 
 <template>
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="admin"
-      kicker="Admin Bimbel"
-      title="Pengaturan"
-      meta="Profil tenant & konfigurasi"
+      :kicker="t('tutoring2.common.roleAdmin')"
+      :title="t('tutoring2.admin.settings.title')"
+      :meta="t('tutoring2.admin.settings.meta')"
     />
 
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -52,6 +58,7 @@ const cards: SettingCard[] = [
       </button>
     </div>
 
+    <!-- TODO i18n key: tenantConfigNote contains inline <code> tags; tutoring2.admin.settings.tenantConfigNote is plain text -->
     <p class="text-2xs text-slate-400">
       Disimpan di <code>tenant_config</code>. <code>module:tutoring</code> + ModuleCatalog scope=bimbel menentukan modul terbuka.
     </p>

@@ -16,6 +16,7 @@
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -36,6 +37,8 @@ import {
 const search = ref('');
 const peranFilter = ref<string>(''); // '' | 'active' | 'staf'
 const spesialisasiFilter = ref<string>(''); // nominal for MVP
+
+const { t } = useI18n();
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -86,10 +89,10 @@ const uniqueTutorCount = computed(() => {
 
 const kpiCards = computed<KpiCard[]>(() => {
   return [
-    { icon: 'user', label: 'Total tutor', value: String(uniqueTutorCount.value) },
-    { icon: 'briefcase', label: 'Staf', value: '0' },
-    { icon: 'circle-check', label: 'Hadir hari ini', value: '0' },
-    { icon: 'coffee', label: 'Cuti/izin', value: '0' },
+    { icon: 'user', label: t('tutoring2.admin.tutors.kpiTutors'), value: String(uniqueTutorCount.value) },
+    { icon: 'briefcase', label: t('tutoring2.admin.tutors.kpiStaff'), value: '0' },
+    { icon: 'circle-check', label: t('tutoring2.admin.tutors.kpiPresentToday'), value: '0' },
+    { icon: 'coffee', label: t('tutoring2.admin.tutors.kpiOnLeave'), value: '0' },
   ];
 });
 
@@ -102,25 +105,29 @@ function shortId(id: string): string {
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="admin"
-      kicker="Admin Bimbel"
-      title="Tutor & Staf"
-      :meta="state.status === 'content' ? `${uniqueTutorCount} tutor` : 'Memuat…'"
+      :kicker="t('tutoring2.common.roleAdmin')"
+      :title="t('tutoring2.admin.tutors.title')"
+      :meta="state.status === 'content'
+        ? `${uniqueTutorCount} ${t('tutoring2.common.tutor').toLowerCase()}`
+        : t('tutoring2.common.loading')"
     />
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
-    <PageFilterToolbar v-model:search="search" search-placeholder="Cari tutor…">
+    <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.admin.tutors.searchPh')">
       <template #chips>
+        <!-- TODO i18n key: chip label "Peran" -->
         <AppFilterChip
           label="Peran"
-          :value="peranFilter || 'Semua'"
+          :value="peranFilter || t('tutoring2.common.all')"
           icon-name="user"
           :active="!!peranFilter"
           @click="peranFilter = peranFilter ? '' : 'active'"
         />
+        <!-- TODO i18n key: chip label "Spesialisasi" -->
         <AppFilterChip
           label="Spesialisasi"
-          :value="spesialisasiFilter || 'Semua'"
+          :value="spesialisasiFilter || t('tutoring2.common.all')"
           icon-name="tag"
           :active="!!spesialisasiFilter"
           @click="spesialisasiFilter = ''"
@@ -128,11 +135,12 @@ function shortId(id: string): string {
       </template>
     </PageFilterToolbar>
 
+    <!-- TODO i18n key: empty-description literal below -->
     <AsyncView
       :state="state"
       loading-variant="cards"
       :loading-rows="6"
-      empty-title="Belum ada tutor"
+      :empty-title="t('tutoring2.admin.tutors.emptyTitle')"
       empty-description="Klik + untuk menambah tutor baru."
       @retry="reload"
     >
@@ -141,11 +149,11 @@ function shortId(id: string): string {
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
-                <th class="px-4 py-3 font-bold">Nama</th>
-                <th class="px-4 py-3 font-bold">Spesialisasi</th>
-                <th class="px-4 py-3 font-bold">Kelompok</th>
-                <th class="px-4 py-3 font-bold">Tarif</th>
-                <th class="px-4 py-3 font-bold">Kehadiran</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.name') }}</th>
+                <th class="px-4 py-3 font-bold">Spesialisasi</th><!-- TODO i18n key -->
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.group') }}</th>
+                <th class="px-4 py-3 font-bold">Tarif</th><!-- TODO i18n key -->
+                <th class="px-4 py-3 font-bold">Kehadiran</th><!-- TODO i18n key -->
               </tr>
             </thead>
             <tbody>
@@ -157,7 +165,7 @@ function shortId(id: string): string {
                 <!-- TODO WEB-3+ join with teachers.name once /tutoring-v2/tutors exposes it -->
                 <td class="px-4 py-3 font-bold text-slate-900">{{ shortId(r.tutor_id) }}</td>
                 <td class="px-4 py-3 text-slate-400">—</td>
-                <td class="px-4 py-3 text-slate-600">{{ r.group_count }} kelompok</td>
+                <td class="px-4 py-3 text-slate-600">{{ r.group_count }} {{ t('tutoring2.common.group').toLowerCase() }}</td>
                 <td class="px-4 py-3 text-slate-400">—</td>
                 <td class="px-4 py-3 text-slate-400">—</td>
               </tr>
@@ -171,7 +179,7 @@ function shortId(id: string): string {
       type="button"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
-      <span aria-hidden="true">+</span> Tambah tutor
+      <span aria-hidden="true">+</span> {{ t('tutoring2.admin.tutors.newCta') }}
     </button>
   </div>
 </template>

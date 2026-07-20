@@ -5,10 +5,13 @@
   stubbed until BE-8+ wires the real preference endpoints.
 -->
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
 
+const { t } = useI18n();
 const toast = useToast();
 const auth = useAuthStore();
 
@@ -23,51 +26,52 @@ async function doLogout() {
   try {
     await auth.logout();
   } catch {
+    // TODO i18n key: 'logout' toast fallback
     toast.info('logout');
   }
 }
 
-const cards: SettingCard[] = [
+const cards = computed<SettingCard[]>(() => [
   {
     short: 'AKN',
-    title: 'Akun',
-    subtitle: 'Ubah data pribadi & foto',
-    action: () => toast.info('belum tersedia'),
+    title: t('tutoring2.tutor.profile.account'),
+    subtitle: t('tutoring2.tutor.profile.accountDesc'),
+    action: () => toast.info(t('tutoring2.common.notAvailable')),
   },
   {
     short: 'NTF',
-    title: 'Notifikasi',
-    subtitle: 'Preferensi push & email',
-    action: () => toast.info('belum tersedia'),
+    title: t('tutoring2.tutor.profile.notifications'),
+    subtitle: t('tutoring2.tutor.profile.notificationsDesc'),
+    action: () => toast.info(t('tutoring2.common.notAvailable')),
   },
   {
     short: 'BHS',
-    title: 'Bahasa',
-    subtitle: 'Indonesia (default)',
-    action: () => toast.info('belum tersedia'),
+    title: t('tutoring2.tutor.profile.language'),
+    subtitle: t('tutoring2.tutor.profile.languageDesc'),
+    action: () => toast.info(t('tutoring2.common.notAvailable')),
   },
   {
     short: 'TEM',
-    title: 'Tampilan',
-    subtitle: 'Auto light/dark (tutoring theme)',
-    action: () => toast.info('belum tersedia'),
+    title: t('tutoring2.tutor.profile.appearance'),
+    subtitle: t('tutoring2.tutor.profile.appearanceDesc'),
+    action: () => toast.info(t('tutoring2.common.notAvailable')),
   },
   {
     short: 'KLR',
-    title: 'Keluar',
-    subtitle: 'Logout dari akun ini',
+    title: t('tutoring2.tutor.profile.logout'),
+    subtitle: t('tutoring2.tutor.profile.logoutDesc'),
     action: doLogout,
   },
-];
+]);
 </script>
 
 <template>
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="teacher"
-      kicker="Tutor Bimbel"
-      title="Profil"
-      meta="Tutor Bimbel Cendekia"
+      :kicker="t('tutoring2.common.roleTutor')"
+      :title="t('tutoring2.tutor.profile.title')"
+      :meta="t('tutoring2.tutor.profile.subtitle')"
     />
 
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">

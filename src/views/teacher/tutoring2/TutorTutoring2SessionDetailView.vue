@@ -14,6 +14,7 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
@@ -28,6 +29,7 @@ import {
   type BimbelSession,
 } from '@/services/tutoring-bimbel.service';
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
@@ -62,6 +64,11 @@ function sessionTone(status: BimbelSession['status']): StatusBadgeTone {
   }
 }
 
+// Map backend status snake_case to the tutoring2.status.* camelCase keys.
+function sessionStatusKey(status: BimbelSession['status']): string {
+  return status === 'in_progress' ? 'inProgress' : status;
+}
+
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('id-ID', {
     weekday: 'long',
@@ -86,21 +93,23 @@ function ambilPresensi() {
 }
 
 function rescheduleAction() {
-  toast.info('Reschedule belum tersedia.');
+  toast.info(t('tutoring2.common.notAvailable'));
 }
 
 async function completeSession() {
   try {
     await TutoringBimbelService.completeSession(sessionId.value);
+    // TODO i18n key: 'Sesi ditandai selesai.'
     toast.success('Sesi ditandai selesai.');
     await reload();
   } catch (e) {
+    // TODO i18n key: 'Gagal menandai sesi selesai.'
     toast.error((e as Error).message || 'Gagal menandai sesi selesai.');
   }
 }
 
 const metaText = computed(() =>
-  session.value ? formatDateTime(session.value.starts_at) : 'Memuat…',
+  session.value ? formatDateTime(session.value.starts_at) : t('tutoring2.common.loading'),
 );
 </script>
 
@@ -108,8 +117,8 @@ const metaText = computed(() =>
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="teacher"
-      kicker="Tutor Bimbel"
-      title="Detail Sesi"
+      :kicker="t('tutoring2.common.roleTutor')"
+      :title="t('tutoring2.tutor.sessionDetail.title')"
       :meta="metaText"
     />
 
@@ -121,15 +130,16 @@ const metaText = computed(() =>
       empty-description="Sesi ini mungkin sudah dihapus atau bukan milik Anda."
       @retry="reload"
     >
+      <!-- TODO i18n key: empty-title "Sesi tidak ditemukan" / empty-description -->
       <template #default>
         <template v-if="session">
           <div class="rounded-3xl border border-slate-100 bg-white shadow-sm p-4 space-y-3">
             <div class="flex items-center justify-between gap-3">
               <div>
-                <p class="text-2xs font-bold uppercase tracking-wide text-slate-400">Status</p>
+                <p class="text-2xs font-bold uppercase tracking-wide text-slate-400">{{ t('tutoring2.common.status') }}</p>
                 <div class="mt-1">
                   <StatusBadge
-                    :label="session.status_label ?? session.status"
+                    :label="session.status_label ?? t(`tutoring2.status.${sessionStatusKey(session.status)}`)"
                     :tone="sessionTone(session.status)"
                     uppercase
                   />
@@ -139,37 +149,37 @@ const metaText = computed(() =>
 
             <dl class="divide-y divide-slate-100 border-t border-slate-100 pt-3 text-sm">
               <div class="flex items-start gap-3 py-2">
-                <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">Waktu</dt>
+                <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">{{ t('tutoring2.common.time') }}</dt>
                 <dd class="flex-1 text-slate-900">{{ formatTimeRange(session.starts_at, session.ends_at) }}</dd>
               </div>
               <div class="flex items-start gap-3 py-2">
-                <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">Kelompok</dt>
-                <dd class="flex-1 truncate text-slate-900">Grup {{ session.learning_group_id.slice(0, 8) }}</dd>
+                <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">{{ t('tutoring2.common.group') }}</dt>
+                <dd class="flex-1 truncate text-slate-900">{{ t('tutoring2.common.group') }} {{ session.learning_group_id.slice(0, 8) }}</dd>
               </div>
               <div class="flex items-start gap-3 py-2">
-                <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">Ruang</dt>
+                <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">{{ t('tutoring2.common.room') }}</dt>
                 <dd class="flex-1 text-slate-900">{{ session.room ?? '—' }}</dd>
               </div>
               <div class="flex items-start gap-3 py-2">
-                <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">Tutor</dt>
+                <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">{{ t('tutoring2.common.tutor') }}</dt>
                 <dd class="flex-1 truncate text-slate-900">{{ session.tutor_id ?? '—' }}</dd>
               </div>
               <div v-if="session.tutor_note" class="flex items-start gap-3 py-2">
-                <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">Catatan</dt>
+                <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">{{ t('tutoring2.common.notes') }}</dt>
                 <dd class="flex-1 text-slate-900">{{ session.tutor_note }}</dd>
               </div>
             </dl>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <Button variant="primary" @click="ambilPresensi">Ambil presensi</Button>
-            <Button variant="secondary" @click="rescheduleAction">Reschedule</Button>
+            <Button variant="primary" @click="ambilPresensi">{{ t('tutoring2.common.takeAttendance') }}</Button>
+            <Button variant="secondary" @click="rescheduleAction">{{ t('tutoring2.common.reschedule') }}</Button>
             <Button
               v-if="session.status === 'in_progress'"
               variant="success"
               @click="completeSession"
             >
-              Tandai selesai
+              {{ t('tutoring2.common.markDone') }}
             </Button>
           </div>
         </template>

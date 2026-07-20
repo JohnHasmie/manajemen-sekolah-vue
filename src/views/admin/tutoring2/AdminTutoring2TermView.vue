@@ -8,6 +8,7 @@
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -24,6 +25,8 @@ import {
   TutoringBimbelService,
   type BimbelLearningGroup,
 } from '@/services/tutoring-bimbel.service';
+
+const { t } = useI18n();
 
 // Local derived shape until BE-1 ships /tutoring-v2/terms.
 interface BimbelTermRow {
@@ -62,13 +65,13 @@ const { state, reload } = useDataRefresh(async () => {
     start_date: null,
     end_date: null,
     status: 'draft',
-    status_label: 'Draft',
+    status_label: t('tutoring2.status.draft'),
     groups_count: groups.length,
   }));
   const q = debouncedSearch.value.trim().toLowerCase();
-  let rows = q ? terms.filter((t) => t.name.toLowerCase().includes(q)) : terms;
+  let rows = q ? terms.filter((row) => row.name.toLowerCase().includes(q)) : terms;
   if (statusFilter.value) {
-    rows = rows.filter((t) => t.status === statusFilter.value);
+    rows = rows.filter((row) => row.status === statusFilter.value);
   }
   return rows;
 });
@@ -78,15 +81,15 @@ useAcademicYearWatcher(reload);
 
 const kpiCards = computed<KpiCard[]>(() => {
   const items = (state.value.status === 'content' ? state.value.data : []) as BimbelTermRow[];
-  const active = items.filter((t) => t.status === 'active').length;
-  const closed = items.filter((t) => t.status === 'closed').length;
-  const draft = items.filter((t) => t.status === 'draft').length;
-  const groupsTotal = items.reduce((sum, t) => sum + (t.groups_count ?? 0), 0);
+  const active = items.filter((row) => row.status === 'active').length;
+  const closed = items.filter((row) => row.status === 'closed').length;
+  const draft = items.filter((row) => row.status === 'draft').length;
+  const groupsTotal = items.reduce((sum, row) => sum + (row.groups_count ?? 0), 0);
   return [
-    { icon: 'circle-check', label: 'Term aktif', value: String(active) },
-    { icon: 'flag', label: 'Selesai', value: String(closed) },
-    { icon: 'file-pencil', label: 'Draft', value: String(draft), tone: draft > 0 ? 'amber' : undefined },
-    { icon: 'users', label: 'Total kelompok', value: String(groupsTotal) },
+    { icon: 'circle-check', label: t('tutoring2.admin.term.kpiActive'), value: String(active) },
+    { icon: 'flag', label: t('tutoring2.admin.term.kpiClosed'), value: String(closed) },
+    { icon: 'file-pencil', label: t('tutoring2.admin.term.kpiDraft'), value: String(draft), tone: draft > 0 ? 'amber' : undefined },
+    { icon: 'users', label: t('tutoring2.admin.term.kpiGroupsTotal'), value: String(groupsTotal) },
   ];
 });
 
@@ -101,31 +104,37 @@ function statusPillTone(status: BimbelTermRow['status']): StatusBadgeTone {
 function formatDate(d: string | null): string {
   return d ?? '—';
 }
+
+const termCount = computed(() =>
+  state.value.status === 'content' ? (state.value.data as BimbelTermRow[]).length : 0,
+);
 </script>
 
 <template>
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="admin"
-      kicker="Admin Bimbel"
-      title="Term & Batch"
-      :meta="state.status === 'content' ? `${(state.data as BimbelTermRow[]).length} term terdeteksi` : 'Memuat…'"
+      :kicker="t('tutoring2.common.roleAdmin')"
+      :title="t('tutoring2.admin.term.title')"
+      :meta="state.status === 'content' ? `${termCount} term terdeteksi` : t('tutoring2.common.loading')"
     />
+    <!-- TODO i18n key: `${count} term terdeteksi` meta -->
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
-    <PageFilterToolbar v-model:search="search" search-placeholder="Cari term…">
+    <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.admin.term.searchPh')">
       <template #chips>
         <AppFilterChip
-          label="Status"
-          :value="statusFilter || 'Semua'"
+          :label="t('tutoring2.common.status')"
+          :value="statusFilter || t('tutoring2.common.all')"
           icon-name="circle-check"
           :active="!!statusFilter"
           @click="statusFilter = statusFilter ? '' : 'active'"
         />
+        <!-- TODO i18n key: chip label "Tahun" -->
         <AppFilterChip
           label="Tahun"
-          :value="yearFilter || 'Semua'"
+          :value="yearFilter || t('tutoring2.common.all')"
           icon-name="calendar"
           :active="!!yearFilter"
           @click="yearFilter = yearFilter ? '' : String(new Date().getFullYear())"
@@ -137,35 +146,39 @@ function formatDate(d: string | null): string {
       :state="state"
       loading-variant="cards"
       :loading-rows="6"
-      empty-title="Belum ada term"
+      :empty-title="t('tutoring2.admin.term.emptyTitle')"
       empty-description="Klik + untuk membuat term baru — rombongan kelompok belajar per periode."
       @retry="reload"
     >
+      <!-- TODO i18n key: term empty-description -->
       <template #default="{ data }">
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
-                <th class="px-4 py-3 font-bold">Term</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.term') }}</th>
+                <!-- TODO i18n key: column header "Mulai" -->
                 <th class="px-4 py-3 font-bold">Mulai</th>
+                <!-- TODO i18n key: column header "Selesai" (date range) -->
                 <th class="px-4 py-3 font-bold">Selesai</th>
-                <th class="px-4 py-3 font-bold">Status</th>
-                <th class="px-4 py-3 font-bold">Kelompok</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.group') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr
-                v-for="t in (data as BimbelTermRow[])"
-                :key="t.id"
+                v-for="row in (data as BimbelTermRow[])"
+                :key="row.id"
                 class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
               >
-                <td class="px-4 py-3 font-bold text-slate-900">{{ t.name }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ formatDate(t.start_date) }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ formatDate(t.end_date) }}</td>
+                <td class="px-4 py-3 font-bold text-slate-900">{{ row.name }}</td>
+                <td class="px-4 py-3 text-slate-600">{{ formatDate(row.start_date) }}</td>
+                <td class="px-4 py-3 text-slate-600">{{ formatDate(row.end_date) }}</td>
                 <td class="px-4 py-3">
-                  <StatusBadge :label="t.status_label" :tone="statusPillTone(t.status)" uppercase />
+                  <StatusBadge :label="row.status_label" :tone="statusPillTone(row.status)" uppercase />
                 </td>
-                <td class="px-4 py-3 text-slate-600">{{ t.groups_count }} kelompok</td>
+                <!-- TODO i18n key: "{count} kelompok" trailing noun -->
+                <td class="px-4 py-3 text-slate-600">{{ row.groups_count }} {{ t('tutoring2.common.group').toLowerCase() }}</td>
               </tr>
             </tbody>
           </table>
@@ -177,7 +190,7 @@ function formatDate(d: string | null): string {
       type="button"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
-      <span aria-hidden="true">+</span> Term baru
+      <span aria-hidden="true">+</span> {{ t('tutoring2.admin.term.newCta') }}
     </button>
   </div>
 </template>

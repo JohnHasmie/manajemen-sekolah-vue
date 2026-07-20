@@ -14,6 +14,7 @@
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
@@ -33,6 +34,7 @@ import {
   type BimbelSession,
 } from '@/services/tutoring-bimbel.service';
 
+const { t } = useI18n();
 const router = useRouter();
 
 // ── Filters ───────────────────────────────────────────────────────
@@ -80,8 +82,8 @@ const filteredSessions = computed<BimbelSession[]>(() => {
       if (!hay.includes(q)) return false;
     }
     if (windowMs != null) {
-      const t = new Date(s.starts_at).getTime();
-      if (t < now.getTime() || t > now.getTime() + windowMs) return false;
+      const ts = new Date(s.starts_at).getTime();
+      if (ts < now.getTime() || ts > now.getTime() + windowMs) return false;
     }
     return true;
   });
@@ -95,10 +97,10 @@ const kpiCards = computed<KpiCard[]>(() => {
   const doneCount = items.filter((s) => s.status === 'done').length;
   const upcomingCount = items.filter((s) => s.status === 'scheduled').length;
   return [
-    { icon: 'calendar', label: 'Total', value: String(items.length) },
-    { icon: 'sun', label: 'Hari ini', value: String(todayCount), tone: 'brand' },
-    { icon: 'check-circle', label: 'Selesai', value: String(doneCount), tone: 'green' },
-    { icon: 'clock', label: 'Akan datang', value: String(upcomingCount), tone: 'amber' },
+    { icon: 'calendar', label: t('tutoring2.tutor.sessions.kpiTotal'), value: String(items.length) },
+    { icon: 'sun', label: t('tutoring2.tutor.sessions.kpiToday'), value: String(todayCount), tone: 'brand' },
+    { icon: 'check-circle', label: t('tutoring2.tutor.sessions.kpiDone'), value: String(doneCount), tone: 'green' },
+    { icon: 'clock', label: t('tutoring2.tutor.sessions.kpiUpcoming'), value: String(upcomingCount), tone: 'amber' },
   ];
 });
 
@@ -164,6 +166,10 @@ function sessionTone(status: BimbelSession['status']): StatusBadgeTone {
   }
 }
 
+function statusLabel(status: BimbelSession['status']): string {
+  return t(`tutoring2.status.${status === 'in_progress' ? 'inProgress' : status}`);
+}
+
 function openDetail(id: string) {
   router.push({ name: 'teacher.tutoring2.session-detail', params: { id } });
 }
@@ -188,16 +194,17 @@ function cyclePeriode() {
 const statusChipValue = computed(() => {
   switch (statusFilter.value) {
     case 'scheduled':
-      return 'Terjadwal';
+      return t('tutoring2.status.scheduled');
     case 'done':
-      return 'Selesai';
+      return t('tutoring2.status.done');
     case 'cancelled':
-      return 'Dibatalkan';
+      return t('tutoring2.status.cancelled');
     default:
-      return 'Semua';
+      return t('tutoring2.common.all');
   }
 });
 
+// TODO i18n key: periode chip values "7 hari" / "30 hari"
 const periodeChipValue = computed(() => {
   switch (periodeFilter.value) {
     case 'week':
@@ -205,7 +212,7 @@ const periodeChipValue = computed(() => {
     case 'month':
       return '30 hari';
     default:
-      return 'Semua';
+      return t('tutoring2.common.all');
   }
 });
 </script>
@@ -214,22 +221,24 @@ const periodeChipValue = computed(() => {
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="teacher"
-      kicker="Tutor Bimbel"
-      title="Sesi saya"
-      :meta="state.status === 'loading' ? 'Memuat…' : `${filteredSessions.length} sesi`"
+      :kicker="t('tutoring2.common.roleTutor')"
+      :title="t('tutoring2.tutor.sessions.title')"
+      :meta="state.status === 'loading' ? t('tutoring2.common.loading') : t('tutoring2.tutor.sessions.meta', { count: filteredSessions.length })"
     />
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
+    <!-- TODO i18n key: search placeholder "Cari grup, ruang, catatan…" -->
     <PageFilterToolbar v-model:search="search" search-placeholder="Cari grup, ruang, catatan…">
       <template #chips>
         <AppFilterChip
-          label="Status"
+          :label="t('tutoring2.common.status')"
           :value="statusChipValue"
           icon-name="circle-check"
           :active="!!statusFilter"
           @click="cycleStatus"
         />
+        <!-- TODO i18n key: chip label "Periode" -->
         <AppFilterChip
           label="Periode"
           :value="periodeChipValue"
@@ -244,11 +253,13 @@ const periodeChipValue = computed(() => {
       :state="state"
       loading-variant="cards"
       :loading-rows="4"
-      empty-title="Belum ada sesi"
+      :empty-title="t('tutoring2.tutor.sessions.emptyTitle')"
       empty-description="Sesi untuk Anda belum dijadwalkan. Hubungi admin bimbel."
       @retry="reload"
     >
+      <!-- TODO i18n key: sessions empty-description -->
       <template #default>
+        <!-- TODO i18n key: "Tidak ada sesi yang cocok dengan filter." -->
         <div v-if="grouped.length === 0" class="rounded-3xl border border-slate-100 bg-white p-6 text-center text-sm text-slate-500 shadow-sm">
           Tidak ada sesi yang cocok dengan filter.
         </div>
@@ -268,20 +279,22 @@ const periodeChipValue = computed(() => {
                     <span class="text-sm font-bold text-brand-cobalt">{{ formatTime(s.starts_at) }}</span>
                   </div>
                   <div class="min-w-0 flex-1">
+                    <!-- TODO i18n key: "Grup {short-id}" prefix noun -->
                     <p class="truncate text-sm font-bold text-slate-900">
-                      Grup {{ s.learning_group_id.slice(0, 8) }}
+                      {{ t('tutoring2.common.group') }} {{ s.learning_group_id.slice(0, 8) }}
                     </p>
+                    <!-- TODO i18n key: "Tanpa ruang" fallback -->
                     <p class="truncate text-2xs text-slate-500">
                       {{ s.room ?? 'Tanpa ruang' }}
                     </p>
                   </div>
                   <StatusBadge
-                    :label="s.status_label ?? s.status"
+                    :label="s.status_label ?? statusLabel(s.status)"
                     :tone="sessionTone(s.status)"
                     uppercase
                   />
                   <Button variant="secondary" size="sm" @click="openDetail(s.id)">
-                    Detail
+                    {{ t('tutoring2.common.detail') }}
                   </Button>
                 </li>
               </ul>

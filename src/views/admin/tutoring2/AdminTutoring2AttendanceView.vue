@@ -11,6 +11,7 @@
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -27,6 +28,8 @@ import {
   type BimbelSession,
 } from '@/services/tutoring-bimbel.service';
 import type { StatusBadgeTone } from '@/types/status-badge';
+
+const { t } = useI18n();
 
 const search = ref('');
 const dateFilter = ref<'all' | 'today' | 'week' | 'month'>('all'); // nominal, UI-only
@@ -60,12 +63,17 @@ const kpiCards = computed<KpiCard[]>(() => {
   const pctPresensi = 92;
   const belumDiambil = 0;
   return [
-    { icon: 'circle-check', label: 'Sesi selesai', value: String(items.length) },
-    { icon: 'users', label: 'Total presensi', value: String(totalPresensi) },
-    { icon: 'chart-bar', label: '% presensi', value: `${pctPresensi}%` },
-    { icon: 'clock', label: 'Belum diambil', value: String(belumDiambil), tone: belumDiambil > 0 ? 'amber' : undefined },
+    { icon: 'circle-check', label: t('tutoring2.admin.attendance.kpiCompleted'), value: String(items.length) },
+    { icon: 'users', label: t('tutoring2.admin.attendance.kpiTotal'), value: String(totalPresensi) },
+    { icon: 'chart-bar', label: t('tutoring2.admin.attendance.kpiRate'), value: `${pctPresensi}%` },
+    { icon: 'clock', label: t('tutoring2.admin.attendance.kpiUnrecorded'), value: String(belumDiambil), tone: belumDiambil > 0 ? 'amber' : undefined },
   ];
 });
+
+function statusLabel(status: BimbelSession['status']): string {
+  const key = status === 'in_progress' ? 'inProgress' : status;
+  return t(`tutoring2.status.${key}`);
+}
 
 function statusPillTone(status: BimbelSession['status']): StatusBadgeTone {
   switch (status) {
@@ -94,32 +102,34 @@ function truncateId(id: string | null | undefined, len = 8): string {
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="admin"
-      kicker="Admin Bimbel"
-      title="Kehadiran"
-      :meta="state.status === 'content' ? `${(state.data as BimbelSession[]).length} sesi selesai` : 'Memuat…'"
+      :kicker="t('tutoring2.common.roleAdmin')"
+      :title="t('tutoring2.admin.attendance.title')"
+      :meta="state.status === 'content' ? `${(state.data as BimbelSession[]).length} sesi selesai` : t('tutoring2.common.loading')"
     />
+    <!-- TODO i18n key for meta '{count} sesi selesai' -->
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
-    <PageFilterToolbar v-model:search="search" search-placeholder="Cari sesi…">
+    <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.admin.attendance.searchPh')">
       <template #chips>
+        <!-- TODO i18n key for date-range values 'Hari ini'/'Minggu ini'/'Bulan ini' -->
         <AppFilterChip
-          label="Tanggal"
-          :value="dateFilter === 'all' ? 'Semua' : dateFilter === 'today' ? 'Hari ini' : dateFilter === 'week' ? 'Minggu ini' : 'Bulan ini'"
+          :label="t('tutoring2.common.date')"
+          :value="dateFilter === 'all' ? t('tutoring2.common.all') : dateFilter === 'today' ? 'Hari ini' : dateFilter === 'week' ? 'Minggu ini' : 'Bulan ini'"
           icon-name="calendar"
           :active="dateFilter !== 'all'"
           @click="dateFilter = dateFilter === 'all' ? 'today' : dateFilter === 'today' ? 'week' : dateFilter === 'week' ? 'month' : 'all'"
         />
         <AppFilterChip
-          label="Kelompok"
-          :value="groupFilter ? truncateId(groupFilter) : 'Semua'"
+          :label="t('tutoring2.common.group')"
+          :value="groupFilter ? truncateId(groupFilter) : t('tutoring2.common.all')"
           icon-name="users"
           :active="!!groupFilter"
           @click="groupFilter = ''"
         />
         <AppFilterChip
-          label="Tutor"
-          :value="tutorFilter ? truncateId(tutorFilter) : 'Semua'"
+          :label="t('tutoring2.common.tutor')"
+          :value="tutorFilter ? truncateId(tutorFilter) : t('tutoring2.common.all')"
           icon-name="user"
           :active="!!tutorFilter"
           @click="tutorFilter = ''"
@@ -131,20 +141,23 @@ function truncateId(id: string | null | undefined, len = 8): string {
       :state="state"
       loading-variant="cards"
       :loading-rows="6"
-      empty-title="Belum ada rekap"
+      :empty-title="t('tutoring2.admin.attendance.emptyTitle')"
       empty-description="Sesi yang sudah selesai akan muncul di sini."
       @retry="reload"
     >
+      <!-- TODO i18n key for empty-description 'Sesi yang sudah selesai akan muncul di sini.' -->
       <template #default="{ data }">
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
+                <!-- TODO i18n key for column header 'Sesi' -->
                 <th class="px-4 py-3 font-bold">Sesi</th>
-                <th class="px-4 py-3 font-bold">Tanggal</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.date') }}</th>
+                <!-- TODO i18n key for column headers 'Hadir' / 'Presensi' -->
                 <th class="px-4 py-3 font-bold">Hadir</th>
                 <th class="px-4 py-3 font-bold">Presensi</th>
-                <th class="px-4 py-3 font-bold">Status</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -159,10 +172,10 @@ function truncateId(id: string | null | undefined, len = 8): string {
                 <td class="px-4 py-3 text-slate-600">{{ formatTanggal(s.starts_at) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ s.attendances_count ?? '—' }}</td>
                 <td class="px-4 py-3 text-slate-600">
-                  {{ s.attendances_count ? `${s.attendances_count} rows` : 'Belum diambil' }}
+                  {{ s.attendances_count ? `${s.attendances_count} rows` : t('tutoring2.admin.attendance.kpiUnrecorded') }}
                 </td>
                 <td class="px-4 py-3">
-                  <StatusBadge :label="s.status_label ?? s.status" :tone="statusPillTone(s.status)" uppercase />
+                  <StatusBadge :label="s.status_label ?? statusLabel(s.status)" :tone="statusPillTone(s.status)" uppercase />
                 </td>
               </tr>
             </tbody>
@@ -173,10 +186,10 @@ function truncateId(id: string | null | undefined, len = 8): string {
 
     <button
       type="button"
-      aria-label="Ekspor rekap kehadiran"
+      :aria-label="t('tutoring2.admin.attendance.exportCta')"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
-      Ekspor rekap
+      {{ t('tutoring2.admin.attendance.exportCta') }}
     </button>
   </div>
 </template>

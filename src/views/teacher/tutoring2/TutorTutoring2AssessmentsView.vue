@@ -11,6 +11,7 @@
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
@@ -30,6 +31,7 @@ import {
 } from '@/services/tutoring-bimbel.service';
 import type { StatusBadgeTone } from '@/types/status-badge';
 
+const { t } = useI18n();
 const router = useRouter();
 
 // ─── Filter state ─────────────────────────────────────────────────
@@ -68,12 +70,13 @@ const kpiCards = computed<KpiCard[]>(() => {
   const latihan = items.filter((a) => a.kind === 'latihan').length;
   const draft = items.filter((a) => a.published_at == null).length;
   return [
+    // TODO i18n key: KPI label 'Total'
     { icon: 'clipboard-list', label: 'Total', value: String(total) },
-    { icon: 'award', label: 'Try-out', value: String(tryout), tone: 'violet' },
-    { icon: 'edit', label: 'Latihan', value: String(latihan), tone: 'brand' },
+    { icon: 'award', label: t('tutoring2.admin.assessments.kpiTryout'), value: String(tryout), tone: 'violet' },
+    { icon: 'edit', label: t('tutoring2.admin.assessments.kpiLatihan'), value: String(latihan), tone: 'brand' },
     {
       icon: 'file-text',
-      label: 'Draft',
+      label: t('tutoring2.status.draft'),
       value: String(draft),
       tone: draft > 0 ? 'amber' : 'slate',
     },
@@ -93,14 +96,14 @@ function publishedTone(publishedAt: string | null | undefined): StatusBadgeTone 
 }
 
 function publishedLabel(publishedAt: string | null | undefined): string {
-  return publishedAt ? 'Terbit' : 'Draft';
+  return publishedAt ? t('tutoring2.status.published') : t('tutoring2.status.draft');
 }
 
 const metaLabel = computed(() => {
   if (state.value.status === 'content') {
-    return `${(state.value.data as BimbelAssessment[]).length} penilaian`;
+    return t('tutoring2.tutor.assessments.meta', { count: (state.value.data as BimbelAssessment[]).length });
   }
-  return 'Memuat…';
+  return t('tutoring2.common.loading');
 });
 
 // Client-side name filter — the backend contract for assessments
@@ -127,25 +130,26 @@ function goResult(id: string) {
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="teacher"
-      kicker="Tutor Bimbel"
-      title="Penilaian"
+      :kicker="t('tutoring2.common.roleTutor')"
+      :title="t('tutoring2.tutor.assessments.title')"
       :meta="metaLabel"
     />
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
+    <!-- TODO i18n key: search-placeholder 'Cari penilaian…' -->
     <PageFilterToolbar v-model:search="search" search-placeholder="Cari penilaian…">
       <template #chips>
         <AppFilterChip
-          label="Jenis"
-          :value="kindFilter ? kindFilter : 'Semua'"
+          :label="t('tutoring2.common.kind')"
+          :value="kindFilter ? kindFilter : t('tutoring2.common.all')"
           icon-name="clipboard-list"
           :active="!!kindFilter"
           @click="kindFilter = kindFilter === '' ? 'tryout' : kindFilter === 'tryout' ? 'latihan' : kindFilter === 'latihan' ? 'kuis' : ''"
         />
         <AppFilterChip
-          label="Status"
-          :value="statusFilter ? statusFilter : 'Semua'"
+          :label="t('tutoring2.common.status')"
+          :value="statusFilter ? statusFilter : t('tutoring2.common.all')"
           icon-name="check-circle"
           :active="!!statusFilter"
           @click="statusFilter = statusFilter === '' ? 'published' : statusFilter === 'published' ? 'draft' : ''"
@@ -161,6 +165,7 @@ function goResult(id: string) {
       empty-description="Ketuk tombol Buat try-out untuk membuat penilaian pertama."
       @retry="reload"
     >
+      <!-- TODO i18n key: empty-title / empty-description for tutor assessments -->
       <template #default>
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm divide-y divide-slate-100">
           <div
@@ -185,13 +190,14 @@ function goResult(id: string) {
               <p class="text-2xs text-slate-500">
                 {{ formatShortDate(a.assessment_date) }}
                 <span class="mx-1 text-slate-300">•</span>
+                <!-- TODO i18n key: 'Peserta {count}' -->
                 Peserta {{ a.scores_count ?? 0 }}
               </p>
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-              <Button variant="ghost" size="sm" @click="goResult(a.id)">Hasil</Button>
-              <Button variant="secondary" size="sm" @click="goScores(a.id)">Input skor</Button>
+              <Button variant="ghost" size="sm" @click="goResult(a.id)">{{ t('tutoring2.tutor.assessments.actionResult') }}</Button>
+              <Button variant="secondary" size="sm" @click="goScores(a.id)">{{ t('tutoring2.tutor.assessments.actionScores') }}</Button>
             </div>
           </div>
         </div>
@@ -202,7 +208,7 @@ function goResult(id: string) {
       :to="{ name: 'teacher.tutoring2.assessment-create' }"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
-      <span aria-hidden="true">+</span> Buat try-out
+      <span aria-hidden="true">+</span> {{ t('tutoring2.tutor.assessments.newCta') }}
     </router-link>
   </div>
 </template>

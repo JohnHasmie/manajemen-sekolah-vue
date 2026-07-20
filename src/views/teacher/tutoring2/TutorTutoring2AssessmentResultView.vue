@@ -17,6 +17,7 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import KpiStripCards, {
@@ -30,6 +31,7 @@ import { useToast } from '@/composables/useToast';
 import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
 import type { TutoringScoreRow } from '@/types/tutoring-bimbel';
 
+const { t } = useI18n();
 const route = useRoute();
 const toast = useToast();
 
@@ -65,9 +67,9 @@ const kpiCards = computed<KpiCard[]>(() => {
     ? Math.max(...scored.map((r) => r.score ?? 0))
     : 0;
   return [
-    { icon: 'clipboard', label: 'Terisi', value: String(scored.length), tone: 'brand' },
-    { icon: 'chart-bar', label: 'Rata', value: String(avg), tone: 'brand' },
-    { icon: 'trending-up', label: 'Tertinggi', value: String(max), tone: 'green' },
+    { icon: 'clipboard', label: t('tutoring2.tutor.result.kpiSubmitted'), value: String(scored.length), tone: 'brand' },
+    { icon: 'chart-bar', label: t('tutoring2.tutor.result.kpiAverage'), value: String(avg), tone: 'brand' },
+    { icon: 'trending-up', label: t('tutoring2.tutor.result.kpiHighest'), value: String(max), tone: 'green' },
   ];
 });
 
@@ -80,17 +82,21 @@ function truncateId(id: string, len = 8): string {
 }
 
 function onShare() {
-  toast.info('Fitur bagikan ke wali belum tersedia');
+  toast.info(t('tutoring2.common.notAvailable'));
 }
+
+const metaLabel = computed(() =>
+  t('tutoring2.tutor.result.meta', { count: allRows.value.length }),
+);
 </script>
 
 <template>
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="teacher"
-      kicker="Tutor Bimbel"
-      title="Hasil try-out"
-      :meta="`${allRows.length} peserta`"
+      :kicker="t('tutoring2.common.roleTutor')"
+      :title="t('tutoring2.tutor.result.title')"
+      :meta="metaLabel"
     />
 
     <KpiStripCards :cards="kpiCards" :lg-cols="3" :loading="state.status === 'loading'" />
@@ -103,6 +109,7 @@ function onShare() {
       empty-description="Skor akan muncul di sini setelah tutor menginput nilai."
       @retry="reload"
     >
+      <!-- TODO i18n key: empty-title 'Belum ada skor' / empty-description -->
       <template #default>
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <ul class="divide-y divide-slate-100">
@@ -121,7 +128,7 @@ function onShare() {
               </div>
               <StatusBadge
                 v-if="idx === 0 && row.score !== null"
-                label="Juara"
+                :label="t('tutoring2.status.champion')"
                 tone="success"
                 uppercase
               />
@@ -134,6 +141,6 @@ function onShare() {
       </template>
     </AsyncView>
 
-    <Button variant="secondary" block @click="onShare">Bagikan ke wali</Button>
+    <Button variant="secondary" block @click="onShare">{{ t('tutoring2.tutor.result.shareCta') }}</Button>
   </div>
 </template>

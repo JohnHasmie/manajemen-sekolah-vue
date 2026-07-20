@@ -17,7 +17,8 @@
   //   route state or a lightweight GET /assessments/:id).
 -->
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
@@ -28,6 +29,7 @@ import { useToast } from '@/composables/useToast';
 import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
 import type { TutoringScoreRow } from '@/types/tutoring-bimbel';
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
@@ -76,10 +78,10 @@ async function onSaveDirty(dirtyRows: TutoringScoreRow[]) {
         notes: r.notes ?? null,
       })),
     );
-    toast.success('Skor tersimpan');
+    toast.success(t('tutoring2.tutor.scores.saved'));
     reload();
   } catch (e) {
-    toast.error(`Gagal menyimpan skor: ${(e as Error).message}`);
+    toast.error(t('tutoring2.tutor.scores.saveFailed', { msg: (e as Error).message }));
   } finally {
     saving.value = false;
   }
@@ -88,18 +90,22 @@ async function onSaveDirty(dirtyRows: TutoringScoreRow[]) {
 function goBack() {
   router.push({ name: 'teacher.tutoring2.assessments' });
 }
+
+const metaLabel = computed(() =>
+  t('tutoring2.tutor.scores.meta', { count: rows.value.length }),
+);
 </script>
 
 <template>
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="teacher"
-      kicker="Tutor Bimbel"
-      title="Input skor"
-      :meta="`${rows.length} siswa`"
+      :kicker="t('tutoring2.common.roleTutor')"
+      :title="t('tutoring2.tutor.scores.title')"
+      :meta="metaLabel"
     />
 
-    <Button variant="ghost" size="sm" @click="goBack">← Kembali</Button>
+    <Button variant="ghost" size="sm" @click="goBack">← {{ t('tutoring2.common.back') }}</Button>
 
     <AsyncView
       :state="state"
@@ -109,6 +115,7 @@ function goBack() {
       empty-description="Asesmen ini belum memiliki peserta yang bisa diberi skor."
       @retry="reload"
     >
+      <!-- TODO i18n key: empty-title 'Belum ada peserta' / empty-description -->
       <template #default>
         <TutoringScoreEntryList
           :assessment-id="assessmentId"

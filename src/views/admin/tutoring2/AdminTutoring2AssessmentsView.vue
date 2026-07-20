@@ -9,6 +9,7 @@
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -25,6 +26,8 @@ import {
   type BimbelAssessment,
 } from '@/services/tutoring-bimbel.service';
 import type { StatusBadgeTone } from '@/types/status-badge';
+
+const { t } = useI18n();
 
 const search = ref('');
 const kindFilter = ref<string>(''); // '' | 'tryout' | 'latihan' | 'kuis'
@@ -61,10 +64,10 @@ const kpiCards = computed<KpiCard[]>(() => {
   const kuis = items.filter((a) => a.kind === 'kuis').length;
   const draft = items.filter((a) => a.published_at == null).length;
   return [
-    { icon: 'clipboard-list', label: 'Total tryout', value: String(tryout) },
-    { icon: 'pencil', label: 'Latihan', value: String(latihan) },
-    { icon: 'help-circle', label: 'Kuis', value: String(kuis) },
-    { icon: 'file-pencil', label: 'Belum dipublikasi', value: String(draft), tone: draft > 0 ? 'amber' : undefined },
+    { icon: 'clipboard-list', label: t('tutoring2.admin.assessments.kpiTryout'), value: String(tryout) },
+    { icon: 'pencil', label: t('tutoring2.admin.assessments.kpiLatihan'), value: String(latihan) },
+    { icon: 'help-circle', label: t('tutoring2.admin.assessments.kpiKuis'), value: String(kuis) },
+    { icon: 'file-pencil', label: t('tutoring2.admin.assessments.kpiDrafts'), value: String(draft), tone: draft > 0 ? 'amber' : undefined },
   ];
 });
 
@@ -85,7 +88,9 @@ function publishedTone(publishedAt: string | null | undefined): StatusBadgeTone 
 }
 
 function publishedLabel(publishedAt: string | null | undefined): string {
-  return publishedAt ? `Terbit ${formatShortDate(publishedAt)}` : 'Draft';
+  return publishedAt
+    ? `${t('tutoring2.status.published')} ${formatShortDate(publishedAt)}`
+    : t('tutoring2.status.draft');
 }
 </script>
 
@@ -93,32 +98,33 @@ function publishedLabel(publishedAt: string | null | undefined): string {
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="admin"
-      kicker="Admin Bimbel"
-      title="Nilai"
-      :meta="state.status === 'content' ? `${(state.data as BimbelAssessment[]).length} penilaian` : 'Memuat…'"
+      :kicker="t('tutoring2.common.roleAdmin')"
+      :title="t('tutoring2.admin.assessments.title')"
+      :meta="state.status === 'content' ? `${(state.data as BimbelAssessment[]).length} penilaian` : t('tutoring2.common.loading')"
     />
+    <!-- TODO i18n key for meta '{count} penilaian' -->
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
-    <PageFilterToolbar v-model:search="search" search-placeholder="Cari penilaian…">
+    <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.admin.assessments.searchPh')">
       <template #chips>
         <AppFilterChip
-          label="Jenis"
-          :value="kindFilter || 'Semua'"
+          :label="t('tutoring2.common.kind')"
+          :value="kindFilter || t('tutoring2.common.all')"
           icon-name="clipboard-list"
           :active="!!kindFilter"
           @click="kindFilter = kindFilter ? '' : 'tryout'"
         />
         <AppFilterChip
-          label="Program"
-          :value="programFilter ? truncateId(programFilter) : 'Semua'"
+          :label="t('tutoring2.common.program')"
+          :value="programFilter ? truncateId(programFilter) : t('tutoring2.common.all')"
           icon-name="book"
           :active="!!programFilter"
           @click="programFilter = ''"
         />
         <AppFilterChip
-          label="Status"
-          :value="statusFilter || 'Semua'"
+          :label="t('tutoring2.common.status')"
+          :value="statusFilter || t('tutoring2.common.all')"
           icon-name="circle-check"
           :active="!!statusFilter"
           @click="statusFilter = statusFilter ? '' : 'published'"
@@ -130,19 +136,21 @@ function publishedLabel(publishedAt: string | null | undefined): string {
       :state="state"
       loading-variant="cards"
       :loading-rows="6"
-      empty-title="Belum ada penilaian"
+      :empty-title="t('tutoring2.admin.assessments.emptyTitle')"
       empty-description="Klik + untuk membuat try-out atau latihan baru."
       @retry="reload"
     >
+      <!-- TODO i18n key for empty-description 'Klik + untuk membuat try-out atau latihan baru.' -->
       <template #default="{ data }">
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
-                <th class="px-4 py-3 font-bold">Judul</th>
-                <th class="px-4 py-3 font-bold">Jenis</th>
-                <th class="px-4 py-3 font-bold">Program</th>
-                <th class="px-4 py-3 font-bold">Tanggal</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.title') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.kind') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.program') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.date') }}</th>
+                <!-- TODO i18n key for column headers 'Peserta' / 'Max' / 'Publikasi' -->
                 <th class="px-4 py-3 font-bold">Peserta</th>
                 <th class="px-4 py-3 font-bold">Max</th>
                 <th class="px-4 py-3 font-bold">Publikasi</th>
@@ -174,7 +182,7 @@ function publishedLabel(publishedAt: string | null | undefined): string {
       type="button"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
-      <span aria-hidden="true">+</span> Buat try-out
+      <span aria-hidden="true">+</span> {{ t('tutoring2.admin.assessments.newCta') }}
     </button>
   </div>
 </template>

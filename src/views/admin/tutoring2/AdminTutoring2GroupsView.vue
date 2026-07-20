@@ -10,6 +10,7 @@
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -31,6 +32,8 @@ const search = ref('');
 const programFilter = ref<string>(''); // '' = Semua
 const termFilter = ref<string>(''); // '' = Semua
 const tutorFilter = ref<string>(''); // '' = Semua
+
+const { t } = useI18n();
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -65,10 +68,10 @@ const kpiCards = computed<KpiCard[]>(() => {
   const avgUtil = withCapacity > 0 ? Math.round((totalUtil / withCapacity) * 100) : 0;
   const fullCount = items.filter((g) => (g.seated_count ?? 0) >= (g.capacity ?? 0) && (g.capacity ?? 0) > 0).length;
   return [
-    { icon: 'users', label: 'Kelompok', value: String(items.length) },
-    { icon: 'user', label: '1-on-1', value: String(privateCount) },
-    { icon: 'chart-bar', label: 'Rata utilisasi', value: `${avgUtil}%` },
-    { icon: 'circle-check', label: 'Penuh', value: String(fullCount), tone: fullCount > 0 ? 'amber' : undefined },
+    { icon: 'users', label: t('tutoring2.admin.groups.kpiGroups'), value: String(items.length) },
+    { icon: 'user', label: t('tutoring2.admin.groups.kpiPrivates'), value: String(privateCount) },
+    { icon: 'chart-bar', label: t('tutoring2.admin.groups.kpiAvgUtilization'), value: `${avgUtil}%` },
+    { icon: 'circle-check', label: t('tutoring2.admin.groups.kpiFull'), value: String(fullCount), tone: fullCount > 0 ? 'amber' : undefined },
   ];
 });
 
@@ -78,6 +81,10 @@ function statusPillTone(status: BimbelLearningGroup['status']): StatusBadgeTone 
     case 'draft': return 'neutral';
     case 'closed': return 'neutral';
   }
+}
+
+function statusLabel(status: BimbelLearningGroup['status']): string {
+  return t(`tutoring2.status.${status}`);
 }
 
 function shortId(id: string | null | undefined): string {
@@ -90,34 +97,34 @@ function shortId(id: string | null | undefined): string {
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="admin"
-      kicker="Admin Bimbel"
-      title="Kelompok Belajar"
+      :kicker="t('tutoring2.common.roleAdmin')"
+      :title="t('tutoring2.admin.groups.title')"
       :meta="state.status === 'content'
-        ? `${(state.data as BimbelLearningGroup[]).length} kelompok · ${(state.data as BimbelLearningGroup[]).filter((g) => g.kind === 'private').length} privat`
-        : 'Memuat…'"
+        ? `${(state.data as BimbelLearningGroup[]).length} ${t('tutoring2.common.group').toLowerCase()} · ${(state.data as BimbelLearningGroup[]).filter((g) => g.kind === 'private').length} ${t('tutoring2.admin.groups.kpiPrivates').toLowerCase()}`
+        : t('tutoring2.common.loading')"
     />
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
-    <PageFilterToolbar v-model:search="search" search-placeholder="Cari kelompok…">
+    <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.admin.groups.searchPh')">
       <template #chips>
         <AppFilterChip
-          label="Program"
-          :value="programFilter ? shortId(programFilter) : 'Semua'"
+          :label="t('tutoring2.common.program')"
+          :value="programFilter ? shortId(programFilter) : t('tutoring2.common.all')"
           icon-name="book"
           :active="!!programFilter"
           @click="programFilter = ''"
         />
         <AppFilterChip
-          label="Term"
-          :value="termFilter ? shortId(termFilter) : 'Semua'"
+          :label="t('tutoring2.common.term')"
+          :value="termFilter ? shortId(termFilter) : t('tutoring2.common.all')"
           icon-name="calendar"
           :active="!!termFilter"
           @click="termFilter = ''"
         />
         <AppFilterChip
-          label="Tutor"
-          :value="tutorFilter ? shortId(tutorFilter) : 'Semua'"
+          :label="t('tutoring2.common.tutor')"
+          :value="tutorFilter ? shortId(tutorFilter) : t('tutoring2.common.all')"
           icon-name="user"
           :active="!!tutorFilter"
           @click="tutorFilter = ''"
@@ -129,8 +136,8 @@ function shortId(id: string | null | undefined): string {
       :state="state"
       loading-variant="cards"
       :loading-rows="6"
-      empty-title="Belum ada kelompok"
-      empty-description="Klik + untuk membuat kelompok belajar baru."
+      :empty-title="t('tutoring2.admin.groups.emptyTitle')"
+      :empty-description="t('tutoring2.admin.groups.emptyDesc')"
       @retry="reload"
     >
       <template #default="{ data }">
@@ -138,12 +145,12 @@ function shortId(id: string | null | undefined): string {
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
-                <th class="px-4 py-3 font-bold">Kelompok</th>
-                <th class="px-4 py-3 font-bold">Kelas</th>
-                <th class="px-4 py-3 font-bold">Program</th>
-                <th class="px-4 py-3 font-bold">Kapasitas</th>
-                <th class="px-4 py-3 font-bold">Tutor</th>
-                <th class="px-4 py-3 font-bold">Status</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.group') }}</th>
+                <th class="px-4 py-3 font-bold">Kelas</th><!-- TODO i18n key -->
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.program') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.capacity') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.tutor') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -153,12 +160,13 @@ function shortId(id: string | null | undefined): string {
                 class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
               >
                 <td class="px-4 py-3 font-bold text-slate-900">{{ g.name }}</td>
+                <!-- TODO i18n key: kind fallbacks '1-on-1' / 'Grup' -->
                 <td class="px-4 py-3 text-slate-600">{{ g.kind_label ?? (g.kind === 'private' ? '1-on-1' : 'Grup') }}</td>
                 <td class="px-4 py-3 font-mono text-2xs text-slate-500">{{ shortId(g.program_id) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ g.seated_count ?? 0 }} / {{ g.capacity }}</td>
                 <td class="px-4 py-3 font-mono text-2xs text-slate-500">{{ shortId(g.tutor_id) }}</td>
                 <td class="px-4 py-3">
-                  <StatusBadge :label="g.status_label ?? g.status" :tone="statusPillTone(g.status)" uppercase />
+                  <StatusBadge :label="g.status_label ?? statusLabel(g.status)" :tone="statusPillTone(g.status)" uppercase />
                 </td>
               </tr>
             </tbody>
@@ -171,7 +179,7 @@ function shortId(id: string | null | undefined): string {
       type="button"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
-      <span aria-hidden="true">+</span> Kelompok baru
+      <span aria-hidden="true">+</span> {{ t('tutoring2.admin.groups.newCta') }}
     </button>
   </div>
 </template>

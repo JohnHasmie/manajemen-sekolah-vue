@@ -16,6 +16,7 @@
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -39,6 +40,8 @@ const search = ref('');
 const statusFilter = ref<string>(''); // '' | 'active' | 'trial' | 'withdrawn'
 const programFilter = ref<string>(''); // '' | program_id
 const waliFilter = ref<string>(''); // nominal for MVP — '' | 'linked'
+
+const { t } = useI18n();
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -106,10 +109,10 @@ const kpiCards = computed<KpiCard[]>(() => {
   const trial = items.filter((e) => e.status === 'trial').length;
   const lulusKeluar = items.filter((e) => e.status === 'graduated' || e.status === 'withdrawn').length;
   return [
-    { icon: 'users', label: 'Total siswa', value: String(unique) },
-    { icon: 'circle-check', label: 'Aktif', value: String(aktif) },
-    { icon: 'sparkles', label: 'Trial', value: String(trial), tone: trial > 0 ? 'amber' : undefined },
-    { icon: 'log-out', label: 'Lulus/keluar', value: String(lulusKeluar) },
+    { icon: 'users', label: t('tutoring2.admin.students.kpiTotal'), value: String(unique) },
+    { icon: 'circle-check', label: t('tutoring2.admin.students.kpiActive'), value: String(aktif) },
+    { icon: 'sparkles', label: t('tutoring2.admin.students.kpiTrial'), value: String(trial), tone: trial > 0 ? 'amber' : undefined },
+    { icon: 'log-out', label: t('tutoring2.admin.students.kpiGraduated'), value: String(lulusKeluar) },
   ];
 });
 
@@ -133,6 +136,10 @@ function statusPillTone(status: BimbelEnrollment['status']): StatusBadgeTone {
   }
 }
 
+function statusLabel(status: BimbelEnrollment['status']): string {
+  return t(`tutoring2.status.${status}`);
+}
+
 function shortId(id: string): string {
   return id.length > 8 ? id.slice(0, 8) : id;
 }
@@ -142,32 +149,34 @@ function shortId(id: string): string {
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="admin"
-      kicker="Admin Bimbel"
-      title="Siswa"
-      :meta="state.status === 'content' ? `${uniqueStudentCount} siswa · ${activeEnrollmentCount} aktif` : 'Memuat…'"
+      :kicker="t('tutoring2.common.roleAdmin')"
+      :title="t('tutoring2.admin.students.title')"
+      :meta="state.status === 'content'
+        ? `${uniqueStudentCount} ${t('tutoring2.common.student').toLowerCase()} · ${activeEnrollmentCount} ${t('tutoring2.admin.students.kpiActive').toLowerCase()}`
+        : t('tutoring2.common.loading')"
     />
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
-    <PageFilterToolbar v-model:search="search" search-placeholder="Cari siswa…">
+    <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.admin.students.searchPh')">
       <template #chips>
         <AppFilterChip
-          label="Status"
-          :value="statusFilter || 'Semua'"
+          :label="t('tutoring2.common.status')"
+          :value="statusFilter || t('tutoring2.common.all')"
           icon-name="circle-check"
           :active="!!statusFilter"
           @click="statusFilter = statusFilter ? '' : 'active'"
         />
         <AppFilterChip
-          label="Program"
-          :value="programFilter ? shortId(programFilter) : 'Semua'"
+          :label="t('tutoring2.common.program')"
+          :value="programFilter ? shortId(programFilter) : t('tutoring2.common.all')"
           icon-name="book"
           :active="!!programFilter"
           @click="programFilter = ''"
         />
         <AppFilterChip
-          label="Wali"
-          :value="waliFilter || 'Semua'"
+          :label="t('tutoring2.common.student_')"
+          :value="waliFilter || t('tutoring2.common.all')"
           icon-name="user"
           :active="!!waliFilter"
           @click="waliFilter = waliFilter ? '' : 'linked'"
@@ -175,11 +184,12 @@ function shortId(id: string): string {
       </template>
     </PageFilterToolbar>
 
+    <!-- TODO i18n key: empty-description literal below -->
     <AsyncView
       :state="state"
       loading-variant="cards"
       :loading-rows="6"
-      empty-title="Belum ada siswa"
+      :empty-title="t('tutoring2.admin.students.emptyTitle')"
       empty-description="Klik + untuk mendaftarkan siswa baru."
       @retry="reload"
     >
@@ -188,11 +198,11 @@ function shortId(id: string): string {
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
-                <th class="px-4 py-3 font-bold">Nama</th>
-                <th class="px-4 py-3 font-bold">Program</th>
-                <th class="px-4 py-3 font-bold">Mode tagihan</th>
-                <th class="px-4 py-3 font-bold">Status</th>
-                <th class="px-4 py-3 font-bold">Sisa kuota</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.name') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.program') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.billingMode') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.remainingQuota') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -206,7 +216,7 @@ function shortId(id: string): string {
                 <td class="px-4 py-3 text-slate-600">{{ shortId(r.program_id) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ r.billing_mode_label ?? r.billing_mode }}</td>
                 <td class="px-4 py-3">
-                  <StatusBadge :label="r.status_label ?? r.status" :tone="statusPillTone(r.status)" uppercase />
+                  <StatusBadge :label="r.status_label ?? statusLabel(r.status)" :tone="statusPillTone(r.status)" uppercase />
                 </td>
                 <td class="px-4 py-3 text-slate-600">
                   {{ r.remaining_sessions ?? '—' }}<span class="text-slate-400"> / {{ r.total_sessions_snapshot ?? '—' }}</span>
@@ -222,7 +232,7 @@ function shortId(id: string): string {
       type="button"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
-      <span aria-hidden="true">+</span> Tambah siswa
+      <span aria-hidden="true">+</span> {{ t('tutoring2.admin.students.newCta') }}
     </button>
   </div>
 </template>

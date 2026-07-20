@@ -14,6 +14,7 @@
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useDebounceFn } from '@vueuse/core';
 
@@ -36,6 +37,7 @@ import type { StatusBadgeTone } from '@/types/status-badge';
 
 // TODO WEB-4+ swap to /tutoring-v2/tutor/students filtered to the tutor's own groups
 
+const { t } = useI18n();
 const router = useRouter();
 const toast = useToast();
 
@@ -129,15 +131,15 @@ const kpiCards = computed<KpiCard[]>(() => {
     items.filter((e) => e.status === 'trial').map((e) => e.student_id),
   );
   return [
-    { icon: 'users', label: 'Total siswa', value: String(unique.size), tone: 'brand' },
-    { icon: 'circle-check', label: 'Aktif', value: String(activeStudents.size), tone: 'green' },
+    { icon: 'users', label: t('tutoring2.tutor.students.kpiTotal'), value: String(unique.size), tone: 'brand' },
+    { icon: 'circle-check', label: t('tutoring2.tutor.students.kpiActive'), value: String(activeStudents.size), tone: 'green' },
     {
       icon: 'sparkles',
-      label: 'Trial',
+      label: t('tutoring2.tutor.students.kpiTrial'),
       value: String(trialStudents.size),
       tone: trialStudents.size > 0 ? 'amber' : 'slate',
     },
-    { icon: 'wallet', label: 'Tunggakan', value: '0', tone: 'slate' },
+    { icon: 'wallet', label: t('tutoring2.tutor.students.kpiOverdue'), value: '0', tone: 'slate' },
   ];
 });
 
@@ -157,9 +159,9 @@ function statusPillTone(row: StudentRow): StatusBadgeTone {
 }
 
 function statusPillLabel(row: StudentRow): string {
-  if (row.has_active) return 'Aktif';
-  if (row.has_trial) return 'Trial';
-  return row.primary_status_label ?? row.primary_status;
+  if (row.has_active) return t('tutoring2.status.active');
+  if (row.has_trial) return t('tutoring2.status.trial');
+  return row.primary_status_label ?? t(`tutoring2.status.${row.primary_status}`);
 }
 
 function shortId(id: string): string {
@@ -189,6 +191,7 @@ function toggleStatus() {
 function toggleProgram() {
   programFilter.value = programFilter.value ? '' : 'linked';
   if (programFilter.value === 'linked') {
+    // TODO i18n key: 'Filter program tersambung — MVP: nominal'
     toast.info('Filter program tersambung — MVP: nominal');
   }
 }
@@ -196,44 +199,52 @@ function toggleProgram() {
 const statusChipLabel = computed(() => {
   switch (statusFilter.value) {
     case 'active':
-      return 'Aktif';
+      return t('tutoring2.status.active');
     case 'trial':
-      return 'Trial';
+      return t('tutoring2.status.trial');
     case 'paused':
-      return 'Jeda';
+      return t('tutoring2.status.paused');
     case 'withdrawn':
-      return 'Keluar';
+      return t('tutoring2.status.withdrawn');
     case 'graduated':
-      return 'Lulus';
+      return t('tutoring2.status.graduated');
     default:
-      return 'Semua';
+      return t('tutoring2.common.all');
   }
 });
+
+const headerMeta = computed(() =>
+  state.value.status === 'content' || state.value.status === 'empty'
+    ? t('tutoring2.tutor.students.meta', { count: uniqueStudentCount.value })
+    : t('tutoring2.common.loading'),
+);
 </script>
 
 <template>
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="teacher"
-      kicker="Tutor Bimbel"
-      title="Siswa saya"
-      :meta="state.status === 'content' || state.status === 'empty' ? `${uniqueStudentCount} siswa` : 'Memuat…'"
+      :kicker="t('tutoring2.common.roleTutor')"
+      :title="t('tutoring2.tutor.students.title')"
+      :meta="headerMeta"
     />
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
+    <!-- TODO i18n key: search-placeholder 'Cari siswa…' -->
     <PageFilterToolbar v-model:search="search" search-placeholder="Cari siswa…">
       <template #chips>
         <AppFilterChip
-          label="Status"
+          :label="t('tutoring2.common.status')"
           :value="statusChipLabel"
           icon-name="circle-check"
           :active="!!statusFilter"
           @click="toggleStatus"
         />
+        <!-- TODO i18n key: chip value 'Tersambung' -->
         <AppFilterChip
-          label="Program"
-          :value="programFilter ? 'Tersambung' : 'Semua'"
+          :label="t('tutoring2.common.program')"
+          :value="programFilter ? 'Tersambung' : t('tutoring2.common.all')"
           icon-name="book"
           :active="!!programFilter"
           @click="toggleProgram"
@@ -245,11 +256,12 @@ const statusChipLabel = computed(() => {
       :state="state"
       loading-variant="list"
       :loading-rows="6"
-      empty-title="Belum ada siswa"
+      :empty-title="t('tutoring2.tutor.students.emptyTitle')"
       empty-description="Siswa akan muncul di sini setelah admin mendaftarkan mereka ke grup Anda."
       empty-icon="users"
       @retry="reload"
     >
+      <!-- TODO i18n key: empty-description for tutor students -->
       <template #default>
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm divide-y divide-slate-100">
           <button
@@ -270,6 +282,7 @@ const statusChipLabel = computed(() => {
                 {{ shortId(row.student_id) }}
               </p>
               <p class="text-2xs text-slate-500 mt-0.5">
+                <!-- TODO i18n key: '{count} program' -->
                 {{ row.program_count }} program
               </p>
             </div>

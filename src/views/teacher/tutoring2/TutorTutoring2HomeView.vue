@@ -3,6 +3,7 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import KpiStripCards, {
@@ -19,6 +20,7 @@ import {
   type BimbelSession,
 } from '@/services/tutoring-bimbel.service';
 
+const { t } = useI18n();
 const router = useRouter();
 
 const { state, reload } = useDataRefresh(async () => {
@@ -43,10 +45,10 @@ const kpiCards = computed<KpiCard[]>(() => {
   const done = sessions.filter((s) => s.status === 'done').length;
   const rate = sessions.length > 0 ? Math.round((done / sessions.length) * 100) : 0;
   return [
-    { icon: 'calendar', label: 'Sesi hari ini', value: String(sessions.length) },
-    { icon: 'user-check', label: 'Kehadiran', value: `${rate}%`, tone: rate >= 80 ? 'green' : 'amber' },
-    { icon: 'clipboard', label: 'Nilai pending', value: '0' },
-    { icon: 'users', label: 'Siswa aktif', value: '—' },
+    { icon: 'calendar', label: t('tutoring2.tutor.home.kpiSessionsToday'), value: String(sessions.length) },
+    { icon: 'user-check', label: t('tutoring2.tutor.home.kpiAttendance'), value: `${rate}%`, tone: rate >= 80 ? 'green' : 'amber' },
+    { icon: 'clipboard', label: t('tutoring2.tutor.home.kpiScoresPending'), value: '0' },
+    { icon: 'users', label: t('tutoring2.tutor.home.kpiStudentsActive'), value: '—' },
   ];
 });
 
@@ -66,15 +68,19 @@ function formatTime(iso: string): string {
 function openSession(id: string) {
   router.push({ name: 'teacher.tutoring2.session-detail', params: { id } });
 }
+
+function statusLabel(status: BimbelSession['status']): string {
+  return t(`tutoring2.status.${status === 'in_progress' ? 'inProgress' : status}`);
+}
 </script>
 
 <template>
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="teacher"
-      kicker="Tutor Bimbel"
-      title="Halo, selamat datang"
-      :meta="state.status === 'content' ? `${todaySessions.length} sesi hari ini` : 'Memuat…'"
+      :kicker="t('tutoring2.common.roleTutor')"
+      :title="t('tutoring2.tutor.home.title')"
+      :meta="state.status === 'content' ? t('tutoring2.tutor.home.meta', { count: todaySessions.length }) : t('tutoring2.common.loading')"
     />
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
@@ -83,16 +89,16 @@ function openSession(id: string) {
       :state="state"
       loading-variant="cards"
       :loading-rows="3"
-      empty-title="Tidak ada sesi hari ini"
-      empty-description="Jadwal Anda kosong. Cek besok."
+      :empty-title="t('tutoring2.tutor.home.emptyTitle')"
+      :empty-description="t('tutoring2.tutor.home.emptyDesc')"
       @retry="reload"
     >
       <template #default="{ data }">
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <header class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-            <h3 class="text-sm font-bold text-slate-900">Sesi hari ini</h3>
+            <h3 class="text-sm font-bold text-slate-900">{{ t('tutoring2.tutor.home.sectionToday') }}</h3>
             <button type="button" class="text-2xs font-bold text-brand-cobalt" @click="router.push({ name: 'teacher.tutoring2.sessions' })">
-              Lihat semua →
+              {{ t('tutoring2.common.seeAll') }} →
             </button>
           </header>
           <ul class="divide-y divide-slate-100">
@@ -101,16 +107,17 @@ function openSession(id: string) {
                 <span class="text-sm font-bold text-brand-cobalt">{{ formatTime(s.starts_at) }}</span>
               </div>
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-bold text-slate-900">Grup {{ s.learning_group_id.slice(0, 8) }}</p>
+                <!-- TODO i18n key: "Grup {short-id}" prefix noun -->
+                <p class="truncate text-sm font-bold text-slate-900">{{ t('tutoring2.common.group') }} {{ s.learning_group_id.slice(0, 8) }}</p>
                 <p class="truncate text-2xs text-slate-500">{{ s.room ?? '—' }}</p>
               </div>
-              <StatusBadge :label="s.status_label ?? s.status" :tone="sessionTone(s.status)" uppercase />
+              <StatusBadge :label="s.status_label ?? statusLabel(s.status)" :tone="sessionTone(s.status)" uppercase />
               <Button
                 v-if="s.status === 'in_progress' || s.status === 'scheduled'"
                 variant="primary"
                 size="sm"
                 @click="openSession(s.id)"
-              >Ambil presensi</Button>
+              >{{ t('tutoring2.common.takeAttendance') }}</Button>
             </li>
           </ul>
         </div>

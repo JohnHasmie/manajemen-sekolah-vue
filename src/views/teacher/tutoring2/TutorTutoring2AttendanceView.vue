@@ -5,6 +5,7 @@
 -->
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
@@ -15,6 +16,7 @@ import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
 import type { AttendanceStatus } from '@/types/attendance';
 import type { TutoringAttendanceRow } from '@/types/tutoring-bimbel';
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
@@ -59,10 +61,10 @@ async function onSave() {
         notes: r.notes,
       }));
     await TutoringBimbelService.markSessionAttendance(sessionId.value, marked);
-    toast.success(`Presensi tersimpan (${marked.length} siswa)`);
+    toast.success(t('tutoring2.tutor.attendance.saved', { count: marked.length }));
     reload();
   } catch (e) {
-    toast.error(`Gagal menyimpan presensi: ${(e as Error).message}`);
+    toast.error(t('tutoring2.tutor.attendance.saveFailed', { msg: (e as Error).message }));
   } finally {
     saving.value = false;
   }
@@ -73,12 +75,12 @@ async function onSave() {
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="teacher"
-      kicker="Tutor Bimbel"
-      title="Presensi sesi"
-      :meta="`${rows.length} siswa terdaftar`"
+      :kicker="t('tutoring2.common.roleTutor')"
+      :title="t('tutoring2.tutor.attendance.title')"
+      :meta="t('tutoring2.tutor.attendance.meta', { count: rows.length })"
     />
 
-    <AsyncView :state="state" loading-variant="list" :loading-rows="6" empty-title="Sesi belum punya siswa" @retry="reload">
+    <AsyncView :state="state" loading-variant="list" :loading-rows="6" :empty-title="t('tutoring2.tutor.attendance.emptyTitle')" @retry="reload">
       <template #default>
         <TutoringAttendanceRoster
           :rows="rows"

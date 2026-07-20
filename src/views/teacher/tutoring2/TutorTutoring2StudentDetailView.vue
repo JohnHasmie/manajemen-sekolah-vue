@@ -7,6 +7,7 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
 import AsyncView from '@/components/data/AsyncView.vue';
@@ -22,6 +23,7 @@ import {
 } from '@/services/tutoring-bimbel.service';
 import type { StatusBadgeTone } from '@/types/status-badge';
 
+const { t } = useI18n();
 const route = useRoute();
 const toast = useToast();
 
@@ -70,11 +72,11 @@ function statusPillTone(status: BimbelEnrollment['status']): StatusBadgeTone {
 }
 
 function openEnrollment(_e: BimbelEnrollment) {
-  toast.info('detail pendaftaran belum tersedia');
+  toast.info(t('tutoring2.common.notAvailable'));
 }
 
 function sendNoteToParent() {
-  toast.info('belum tersedia');
+  toast.info(t('tutoring2.common.notAvailable'));
 }
 </script>
 
@@ -82,8 +84,8 @@ function sendNoteToParent() {
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="teacher"
-      kicker="Tutor Bimbel"
-      title="Detail Siswa"
+      :kicker="t('tutoring2.common.roleTutor')"
+      :title="t('tutoring2.tutor.studentDetail.title')"
       :meta="shortId(studentId)"
     />
 
@@ -96,9 +98,11 @@ function sendNoteToParent() {
       empty-icon="inbox"
       @retry="reload"
     >
+      <!-- TODO i18n key: empty-title 'Belum ada pendaftaran' / empty-description -->
       <template #default>
         <!-- Info card -->
         <section class="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
+          <!-- TODO i18n key: 'ID siswa' label -->
           <p class="text-2xs font-bold uppercase tracking-widest text-slate-400">
             ID siswa
           </p>
@@ -106,6 +110,7 @@ function sendNoteToParent() {
             {{ shortId(studentId) }}
           </p>
           <p class="mt-2 text-2xs text-slate-500">
+            <!-- TODO i18n key: '{count} pendaftaran aktif' -->
             {{ activeEnrollmentCount }} pendaftaran aktif
           </p>
         </section>
@@ -113,7 +118,7 @@ function sendNoteToParent() {
         <!-- Pendaftaran list -->
         <section class="mt-md">
           <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">
-            Pendaftaran
+            {{ t('tutoring2.tutor.studentDetail.sectionEnrollments') }}
           </h2>
           <div class="rounded-3xl border border-slate-100 bg-white shadow-sm divide-y divide-slate-100">
             <button
@@ -138,7 +143,7 @@ function sendNoteToParent() {
                 </p>
               </div>
               <StatusBadge
-                :label="e.status_label ?? e.status"
+                :label="e.status_label ?? t(`tutoring2.status.${e.status}`)"
                 :tone="statusPillTone(e.status)"
               />
               <span class="text-slate-300 ml-1" aria-hidden="true">›</span>
@@ -149,7 +154,7 @@ function sendNoteToParent() {
         <!-- Footer CTA -->
         <div class="mt-md">
           <Button variant="secondary" block @click="sendNoteToParent">
-            Kirim catatan ke wali
+            {{ t('tutoring2.tutor.studentDetail.noteCta') }}
           </Button>
         </div>
       </template>

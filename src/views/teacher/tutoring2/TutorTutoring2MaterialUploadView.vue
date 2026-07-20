@@ -14,11 +14,13 @@
 // TODO WEB-4+ add TutoringBimbelService.{listMaterials,createMaterial,deleteMaterial}
 // once BE-8 exposes /tutoring-v2/materials. MVP renders a static sample.
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Button from '@/components/ui/Button.vue';
 import { useToast } from '@/composables/useToast';
 
+const { t } = useI18n();
 const router = useRouter();
 const toast = useToast();
 
@@ -38,6 +40,7 @@ interface SelectedFileMeta {
 const selectedFile = ref<SelectedFileMeta | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
+// TODO i18n key: kind labels PDF/Video/Dokumen/Gambar
 const kindOptions: Array<{ value: MaterialKind; label: string }> = [
   { value: 'PDF', label: 'PDF' },
   { value: 'VIDEO', label: 'Video' },
@@ -81,7 +84,7 @@ async function submit() {
   // Simulated latency so the loading spinner reads.
   await new Promise((r) => setTimeout(r, 250));
   uploading.value = false;
-  toast.success('Materi diunggah (MVP — belum tersimpan)');
+  toast.success(t('tutoring2.tutor.materialUpload.savedStub'));
   router.push({ name: 'teacher.tutoring2.materials' });
 }
 </script>
@@ -90,13 +93,13 @@ async function submit() {
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="teacher"
-      kicker="Tutor Bimbel"
-      title="Unggah materi"
+      :kicker="t('tutoring2.common.roleTutor')"
+      :title="t('tutoring2.tutor.materialUpload.title')"
     />
 
     <div class="rounded-3xl border border-slate-100 bg-white p-md shadow-sm space-y-md">
       <label class="block space-y-1.5">
-        <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">Judul</span>
+        <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">{{ t('tutoring2.common.title') }}</span>
         <input
           v-model="title"
           type="text"
@@ -106,6 +109,7 @@ async function submit() {
       </label>
 
       <label class="block space-y-1.5">
+        <!-- TODO i18n key: 'Deskripsi' label + placeholder -->
         <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">Deskripsi</span>
         <textarea
           v-model="description"
@@ -116,7 +120,7 @@ async function submit() {
       </label>
 
       <label class="block space-y-1.5">
-        <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">Program</span>
+        <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">{{ t('tutoring2.common.program') }}</span>
         <input
           v-model="programId"
           type="text"
@@ -126,6 +130,7 @@ async function submit() {
       </label>
 
       <div class="space-y-1.5">
+        <!-- TODO i18n key: 'Tipe' -->
         <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">Tipe</span>
         <div class="inline-flex flex-wrap gap-2">
           <button
@@ -142,13 +147,15 @@ async function submit() {
       </div>
 
       <div class="space-y-1.5">
+        <!-- TODO i18n key: 'Berkas' -->
         <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">Berkas</span>
         <button
           type="button"
           class="flex w-full flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-brand-cobalt/40 bg-brand-cobalt/5 px-4 py-8 text-center transition-colors hover:bg-brand-cobalt/10"
           @click="openFilePicker"
         >
-          <span class="text-sm font-bold text-brand-cobalt">Seret berkas atau pilih</span>
+          <span class="text-sm font-bold text-brand-cobalt">{{ t('tutoring2.tutor.materialUpload.dropZone') }}</span>
+          <!-- TODO i18n key: 'Klik untuk memilih dari perangkat' -->
           <span class="text-2xs text-slate-500">Klik untuk memilih dari perangkat</span>
         </button>
         <input
@@ -169,6 +176,7 @@ async function submit() {
               <span v-if="sizeLabel">{{ sizeLabel }}</span>
             </p>
           </div>
+          <!-- TODO i18n key: 'Ganti' -->
           <button
             type="button"
             class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-2xs font-bold text-slate-600 hover:text-slate-900"
@@ -179,7 +187,8 @@ async function submit() {
     </div>
 
     <div class="flex items-center justify-end gap-2">
-      <Button variant="secondary" @click="router.back()">Batal</Button>
+      <Button variant="secondary" @click="router.back()">{{ t('tutoring2.common.cancel') }}</Button>
+      <!-- TODO i18n key: 'Unggah' primary button -->
       <Button variant="primary" :loading="uploading" @click="submit">Unggah</Button>
     </div>
   </div>

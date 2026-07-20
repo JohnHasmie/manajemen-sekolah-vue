@@ -8,6 +8,7 @@
 <script setup lang="ts">
 // TODO WEB-3+ swap to /tutoring-v2/bills once BE exposes the Finance filtered view (source_type ∈ TUTORING_*, bimbel_enrollment_id NOT NULL). MVP derives one nominal bill per active enrollment so the screen isn't empty.
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -24,6 +25,8 @@ import {
   type BimbelEnrollment,
 } from '@/services/tutoring-bimbel.service';
 import type { StatusBadgeTone } from '@/types/status-badge';
+
+const { t } = useI18n();
 
 // TODO WEB-3+ swap to a proper Finance-bill shape once
 // /tutoring-v2/bills lands. MVP renders directly off enrollments so
@@ -59,10 +62,10 @@ const kpiCards = computed<KpiCard[]>(() => {
     .filter((e) => e.status === 'active')
     .reduce((sum, e) => sum + (e.price_at_enrollment ?? 0), 0);
   return [
-    { icon: 'file-text', label: 'Tertagih', value: `Rp ${tertagih.toLocaleString('id-ID')}` },
-    { icon: 'circle-check', label: 'Terbayar', value: 'Rp 0' },
-    { icon: 'alert-triangle', label: 'Menunggak', value: 'Rp 0' },
-    { icon: 'clock', label: 'Overdue', value: '0', tone: undefined },
+    { icon: 'file-text', label: t('tutoring2.admin.billing.kpiBilled'), value: `Rp ${tertagih.toLocaleString('id-ID')}` },
+    { icon: 'circle-check', label: t('tutoring2.admin.billing.kpiPaid'), value: 'Rp 0' },
+    { icon: 'alert-triangle', label: t('tutoring2.admin.billing.kpiOverdue'), value: 'Rp 0' },
+    { icon: 'clock', label: t('tutoring2.admin.billing.kpiOverdueCount'), value: '0', tone: undefined },
   ];
 });
 
@@ -91,32 +94,34 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="admin"
-      kicker="Admin Bimbel"
-      title="Keuangan"
-      :meta="state.status === 'content' ? `${(state.data as BimbelEnrollment[]).length} pendaftaran aktif` : 'Memuat…'"
+      :kicker="t('tutoring2.common.roleAdmin')"
+      :title="t('tutoring2.admin.billing.title')"
+      :meta="state.status === 'content' ? `${(state.data as BimbelEnrollment[]).length} pendaftaran aktif` : t('tutoring2.common.loading')"
     />
+    <!-- TODO i18n key for meta '{count} pendaftaran aktif' -->
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
-    <PageFilterToolbar v-model:search="search" search-placeholder="Cari tagihan…">
+    <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.admin.billing.searchPh')">
       <template #chips>
         <AppFilterChip
-          label="Mode"
-          :value="modeFilter || 'Semua'"
+          :label="t('tutoring2.common.billingMode')"
+          :value="modeFilter || t('tutoring2.common.all')"
           icon-name="credit-card"
           :active="!!modeFilter"
           @click="modeFilter = modeFilter ? '' : 'monthly'"
         />
         <AppFilterChip
-          label="Status"
-          :value="statusFilter || 'Semua'"
+          :label="t('tutoring2.common.status')"
+          :value="statusFilter || t('tutoring2.common.all')"
           icon-name="circle-check"
           :active="!!statusFilter"
           @click="statusFilter = statusFilter ? '' : 'unpaid'"
         />
+        <!-- TODO i18n key for chip label 'Periode' -->
         <AppFilterChip
           label="Periode"
-          :value="periodeFilter || 'Semua'"
+          :value="periodeFilter || t('tutoring2.common.all')"
           icon-name="calendar"
           :active="!!periodeFilter"
           @click="periodeFilter = periodeFilter ? '' : '2026-07'"
@@ -128,20 +133,22 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
       :state="state"
       loading-variant="cards"
       :loading-rows="6"
-      empty-title="Belum ada tagihan"
+      :empty-title="t('tutoring2.admin.billing.emptyTitle')"
       empty-description="Klik + untuk membuat tagihan baru."
       @retry="reload"
     >
+      <!-- TODO i18n key for empty-description 'Klik + untuk membuat tagihan baru.' -->
       <template #default="{ data }">
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
-                <th class="px-4 py-3 font-bold">Siswa</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.student') }}</th>
+                <!-- TODO i18n key for column headers 'Mode' / 'Periode' / 'Jumlah' -->
                 <th class="px-4 py-3 font-bold">Mode</th>
                 <th class="px-4 py-3 font-bold">Periode</th>
                 <th class="px-4 py-3 font-bold">Jumlah</th>
-                <th class="px-4 py-3 font-bold">Status</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -153,11 +160,12 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
                 <td class="px-4 py-3 font-mono text-2xs text-slate-500">{{ truncateId(e.student_id) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ e.billing_mode_label ?? e.billing_mode }}</td>
                 <td class="px-4 py-3 text-slate-600">
+                  <!-- TODO i18n key for 'Tgl {day}' billing day label -->
                   {{ e.billing_day_of_month ? `Tgl ${e.billing_day_of_month}` : '—' }}
                 </td>
                 <td class="px-4 py-3 text-slate-600">{{ formatRupiah(e.price_at_enrollment) }}</td>
                 <td class="px-4 py-3">
-                  <StatusBadge label="Aktif" :tone="billStatusTone('active')" uppercase />
+                  <StatusBadge :label="t('tutoring2.status.active')" :tone="billStatusTone('active')" uppercase />
                 </td>
               </tr>
             </tbody>
@@ -170,7 +178,7 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
       type="button"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
     >
-      <span aria-hidden="true">+</span> Buat tagihan
+      <span aria-hidden="true">+</span> {{ t('tutoring2.admin.billing.newCta') }}
     </button>
   </div>
 </template>

@@ -17,6 +17,7 @@
 // TODO WEB-4+ add TutoringBimbelService.{listMaterials,createMaterial,deleteMaterial}
 // once BE-8 exposes /tutoring-v2/materials. MVP renders a static sample.
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -30,6 +31,7 @@ import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
 import type { TutoringMaterial } from '@/services/tutoring-bimbel.service';
 
+const { t } = useI18n();
 const router = useRouter();
 const toast = useToast();
 
@@ -139,14 +141,16 @@ const kpiCards = computed<KpiCard[]>(() => {
   }).length;
   const otherCount = items.length - pdfCount - videoCount;
   return [
-    { icon: 'folder', label: 'Total materi', value: String(items.length) },
-    { icon: 'file-text', label: 'PDF', value: String(pdfCount), tone: 'brand' },
-    { icon: 'video', label: 'Video', value: String(videoCount), tone: 'violet' },
-    { icon: 'file', label: 'Lainnya', value: String(otherCount), tone: 'slate' },
+    { icon: 'folder', label: t('tutoring2.tutor.materials.kpiTotal'), value: String(items.length) },
+    { icon: 'file-text', label: t('tutoring2.tutor.materials.kpiPdf'), value: String(pdfCount), tone: 'brand' },
+    { icon: 'video', label: t('tutoring2.tutor.materials.kpiVideo'), value: String(videoCount), tone: 'violet' },
+    { icon: 'file', label: t('tutoring2.tutor.materials.kpiOther'), value: String(otherCount), tone: 'slate' },
   ];
 });
 
-const headerMeta = computed(() => `${contentItems.value.length} materi`);
+const headerMeta = computed(() =>
+  t('tutoring2.tutor.materials.meta', { count: contentItems.value.length }),
+);
 
 function nextProgramFilter(): string {
   // Cycle: '' → first program in the sample → '' again.
@@ -165,13 +169,13 @@ function nextKindFilter(): '' | 'pdf' | 'video' | 'doc' {
 }
 
 function onDownload(_material: TutoringMaterial) {
-  toast.info('Unduh materi belum tersedia');
+  toast.info(t('tutoring2.common.notAvailable'));
 }
 function onOpen(_material: TutoringMaterial) {
-  toast.info('Pratinjau materi belum tersedia');
+  toast.info(t('tutoring2.common.notAvailable'));
 }
 function onDelete(_material: TutoringMaterial) {
-  toast.info('Hapus materi belum tersedia');
+  toast.info(t('tutoring2.common.notAvailable'));
 }
 
 function goUpload() {
@@ -183,8 +187,8 @@ function goUpload() {
   <div class="space-y-md pb-24">
     <BrandPageHeader
       role="teacher"
-      kicker="Tutor Bimbel"
-      title="Materi"
+      :kicker="t('tutoring2.common.roleTutor')"
+      :title="t('tutoring2.tutor.materials.title')"
       :meta="headerMeta"
     />
 
@@ -193,15 +197,16 @@ function goUpload() {
     <PageFilterToolbar>
       <template #chips>
         <AppFilterChip
-          label="Program"
-          :value="programFilter || 'Semua'"
+          :label="t('tutoring2.common.program')"
+          :value="programFilter || t('tutoring2.common.all')"
           icon-name="book"
           :active="!!programFilter"
           @click="programFilter = nextProgramFilter()"
         />
+        <!-- TODO i18n key: chip label 'Tipe' -->
         <AppFilterChip
           label="Tipe"
-          :value="kindFilter ? kindFilter.toUpperCase() : 'Semua'"
+          :value="kindFilter ? kindFilter.toUpperCase() : t('tutoring2.common.all')"
           icon-name="filter"
           :active="!!kindFilter"
           @click="kindFilter = nextKindFilter()"
@@ -213,10 +218,11 @@ function goUpload() {
       :state="state"
       loading-variant="list"
       :loading-rows="4"
-      empty-title="Belum ada materi"
+      :empty-title="t('tutoring2.tutor.materials.emptyTitle')"
       empty-description="Unggah materi pertama lewat tombol di kanan bawah."
       @retry="reload"
     >
+      <!-- TODO i18n key: empty-description for tutor materials -->
       <template #default>
         <!-- TutoringMaterialRow already carries its own rounded surface,
              so the list is a plain stack — no outer wrapper card. -->
@@ -240,7 +246,7 @@ function goUpload() {
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
       @click="goUpload"
     >
-      <span aria-hidden="true">+</span> Unggah materi
+      <span aria-hidden="true">+</span> {{ t('tutoring2.tutor.materials.uploadCta') }}
     </button>
   </div>
 </template>
