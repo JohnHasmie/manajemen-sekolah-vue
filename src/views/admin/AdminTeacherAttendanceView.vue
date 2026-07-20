@@ -36,6 +36,7 @@ import Button from '@/components/ui/Button.vue';
 import OntimeHarianChart from '@/components/attendance/OntimeHarianChart.vue';
 import EmployeeAttendanceDeepDiveDrawer from '@/components/attendance/EmployeeAttendanceDeepDiveDrawer.vue';
 import AttendanceRowDetailDrawer from '@/components/attendance/AttendanceRowDetailDrawer.vue';
+import AdminTeacherAttendanceManualEntryModal from '@/components/attendance/AdminTeacherAttendanceManualEntryModal.vue';
 // Pulang parity FU-1 — collapsible "Guru Sering Pulang Cepat" digest
 // under the Rekap tab. Backend endpoint is
 // `GET /teacher-attendance/report/early-leave-summary` (!512). The
@@ -572,6 +573,23 @@ function pctChipClass(pct: number): string {
   if (pct >= 75) return 'bg-amber-100 text-amber-700';
   return 'bg-red-100 text-red-700';
 }
+
+// ─────────────────────────────────────────────────────────────────
+// "Catat Manual" modal wiring — replaces the iteration-stub toast
+// with the AdminTeacherAttendanceManualEntryModal component. On a
+// successful save we re-fetch the report (timeseries + summary +
+// log if visible) via the shared reloadAll orchestrator.
+// ─────────────────────────────────────────────────────────────────
+const showManualEntryModal = ref(false);
+function openManualEntry(): void {
+  showManualEntryModal.value = true;
+}
+function onManualEntryCreated(): void {
+  // The new row's date may or may not sit inside the current periode
+  // filter — if it's outside, the fresh reload just re-renders the
+  // same data. Cheaper than expanding the filter unilaterally.
+  reloadAll();
+}
 </script>
 
 <template>
@@ -614,12 +632,9 @@ function pctChipClass(pct: number): string {
             Excel (Detail per Baris)
           </button>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          @click="toast.info('Catat manual akan hadir di iterasi berikutnya.')"
-        >
-          <NavIcon name="plus" :size="13" />Catat Manual
+        <Button variant="primary" size="sm" @click="openManualEntry">
+          <NavIcon name="plus" :size="13" />
+          {{ t('admin.sekolah.teacher_attendance.manual.button') }}
         </Button>
       </div>
     </BrandPageHeader>
@@ -1043,6 +1058,13 @@ function pctChipClass(pct: number): string {
       @close="closeRowDetail"
       @note="handleRowNote"
       @verify="handleRowVerify"
+    />
+
+    <!-- Catat Manual modal — admin backfills a daily row for one pegawai. -->
+    <AdminTeacherAttendanceManualEntryModal
+      :open="showManualEntryModal"
+      @close="showManualEntryModal = false"
+      @created="onManualEntryCreated"
     />
   </div>
 </template>

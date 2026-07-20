@@ -91,6 +91,13 @@ const Endpoints = {
   // the confirm modal hits after the guru picks Batal / Ya-tetap-pulang.
   // Returns 204 — clients ignore the response.
   attendanceTelemetry: '/telemetry/attendance-events',
+  // Admin "Catat Manual" (backend feat/admin-teacher-attendance-manual-entry).
+  // Two endpoints powering the modal on the Kehadiran Pegawai page:
+  //   POST /manual                → backfills a daily row (bypasses camera/GPS).
+  //   GET  /personnel-search?q=…  → autocomplete for the Pegawai field.
+  // Both gated on `attendance.staff.settings.manage` server-side.
+  manual: '/teacher-attendance/manual',
+  personnelSearch: '/teacher-attendance/personnel-search',
 } as const;
 
 /**
@@ -1214,4 +1221,109 @@ export const TeacherAttendanceService = {
       throw new Error(humanError(e, 'Gagal memuat ringkasan presensi.'));
     }
   },
+
+  /**
+   * GET /teacher-attendance/personnel-search — the pegawai autocomplete
+   * behind the admin "Catat Manual" modal. Returns a merged teachers +
+   * staff list keyed by `user_id` (the shape the manual-entry POST
+   * expects). Empty q returns the first N alphabetical rows so the
+   * dropdown never opens blank.
+   */
+  async searchPersonnel(
+    query: string,
+    limit = 20,
+  ): Promise<ManualEntryPersonnelOption[]> {
+    try {
+      const res = await api.get(Endpoints.personnelSearch, {
+        params: { q: query, limit },
+      });
+      const raw = (res.data?.data ?? []) as unknown[];
+      return raw
+        .map((it) => {
+          const r = it as Record<string, unknown>;
+          const uid = r.user_id != null ? String(r.user_id) : '';
+          if (!uid) return null;
+          const type = String(r.personnel_type ?? 'teacher');
+          return {
+            user_id: uid,
+            personnel_type: type === 'staff' ? 'staff' : 'teacher',
+            name: String(r.name ?? '-'),
+            employee_number: asStrOrNull(r.employee_number),
+            position: asStrOrNull(r.position),
+          } satisfies ManualEntryPersonnelOption;
+        })
+        .filter((r): r is ManualEntryPersonnelOption => r !== null);
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat daftar pegawai.'));
+    }
+  },
+
+  /**
+   * POST /teacher-attendance/manual — the admin "Catat Manual" writer.
+   *
+   * Returns a discriminated result so the caller (modal) can render
+   * the 409 duplicate branch inline instead of surfacing it as a
+   * generic error toast. Every other error path (422, 403, network)
+   * still throws a humanised Error.
+   */
+  async storeManual(
+    payload: ManualEntryPayload,
+  ): Promise<ManualEntryResult> {
+    try {
+      const body: Record<string, unknown> = {
+        user_id: payload.user_id,
+        date: payload.date,
+        status: payload.status,
+      };
+      if (payload.check_in_at) body.check_in_at = payload.check_in_at;
+      if (payload.check_out_at) body.check_out_at = payload.check_out_at;
+      if (payload.reason) body.reason = payload.reason;
+      if (payload.note) body.note = payload.note;
+      const res = await api.post(Endpoints.manual, body);
+      return {
+        status: 'created',
+        record: (res.data?.data ?? res.data) as TeacherAttendanceRecord,
+      };
+    } catch (e) {
+      const ax = e as { response?: { status?: number; data?: { data?: TeacherAttendanceRecord; code?: string } } };
+      if (ax.response?.status === 409 && ax.response.data?.code === 'duplicate') {
+        return {
+          status: 'duplicate',
+          existing: ax.response.data.data as TeacherAttendanceRecord,
+        };
+      }
+      throw new Error(humanError(e, 'Gagal menyimpan kehadiran manual.'));
+    }
+  },
 };
+
+/** One row of the /personnel-search response used by the picker. */
+export interface ManualEntryPersonnelOption {
+  user_id: string;
+  personnel_type: 'teacher' | 'staff';
+  name: string;
+  employee_number: string | null;
+  position: string | null;
+}
+
+/** POST /teacher-attendance/manual request body (wire-level). */
+export interface ManualEntryPayload {
+  user_id: string;
+  /** ISO date YYYY-MM-DD (must be <= today). */
+  date: string;
+  /** Status wire label — matches the modal's segmented control. */
+  status: 'present' | 'permission' | 'sick' | 'absent';
+  /** HH:MM (or HH:MM:SS) — required only when status = 'present'. */
+  check_in_at?: string;
+  check_out_at?: string;
+  reason?: string;
+  note?: string;
+}
+
+/**
+ * Discriminated response — the 409 duplicate branch is a valid outcome
+ * the modal renders inline, not an error.
+ */
+export type ManualEntryResult =
+  | { status: 'created'; record: TeacherAttendanceRecord }
+  | { status: 'duplicate'; existing: TeacherAttendanceRecord };
