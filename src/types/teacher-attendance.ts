@@ -27,6 +27,15 @@ export type TeacherAttendanceStatus =
   | 'no_checkout';
 
 /**
+ * How the school treats a check-out that lands before the effective
+ * pulang threshold (Pulang parity BE-1, backend !504). Default `warn`.
+ *   · none  — pulang cepat is still recorded but no UI signal fires.
+ *   · warn  — teacher/staff sees a warning banner + can proceed.
+ *   · block — the button is disabled until the threshold passes.
+ */
+export type TeacherAttendanceEarlyLeavePolicy = 'none' | 'warn' | 'block';
+
+/**
  * Non-dominant status flags on the same row. Backend column is a
  * nullable JSON blob (`teacher_attendances.secondary_flags`). Populated
  * by check-out when the row was `late` at check-in AND the pulang time
@@ -72,6 +81,27 @@ export interface TeacherAttendanceSettings {
   reject_outside_geofence: boolean;
   /** Minutes after the first teaching start before "late" kicks in. */
   late_grace_minutes: number;
+  /**
+   * How pulang-cepat (check-out BEFORE the effective threshold) is
+   * treated (Pulang parity BE-1, backend !504). Default `warn`:
+   *   · none  — pulang cepat is still recorded but no UI signal fires.
+   *   · warn  — teacher/staff sees a warning banner + can proceed.
+   *   · block — the button is disabled until the threshold passes.
+   */
+  early_leave_policy: TeacherAttendanceEarlyLeavePolicy;
+  /**
+   * Minutes tolerance BEFORE the checkout threshold that still counts as
+   * "on time". `null` means the value falls through to the check-in
+   * `late_grace_minutes` (server-side inheritance in BE-2, !505).
+   */
+  early_leave_grace_minutes: number | null;
+  /**
+   * Minimum minutes elapsed since check-in before a person is allowed to
+   * check out. `0` disables the guard entirely — the historical behavior.
+   * When >0, `early_leave_policy=block` still governs the pulang-cepat
+   * cut-off; this is a separate "you just checked in" tripwire.
+   */
+  min_work_minutes: number;
   /**
    * Centre actually used for verification — settings coords, falling
    * back to the school pin. Present in the teacher config payload only.
@@ -202,6 +232,9 @@ export const DEFAULT_TEACHER_ATTENDANCE_SETTINGS: TeacherAttendanceSettings = {
   geofence_radius_m: 150,
   reject_outside_geofence: true,
   late_grace_minutes: 0,
+  early_leave_policy: 'warn',
+  early_leave_grace_minutes: null,
+  min_work_minutes: 0,
   effective_geofence_lat: null,
   effective_geofence_lng: null,
   school_latitude: null,

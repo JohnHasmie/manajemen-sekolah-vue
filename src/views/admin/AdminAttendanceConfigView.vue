@@ -29,6 +29,7 @@ import MultiGeofenceSettingsPanel from '@/components/feature/MultiGeofenceSettin
 import { useToast } from '@/composables/useToast';
 import { useConfirm } from '@/composables/useConfirm';
 import type {
+  TeacherAttendanceEarlyLeavePolicy,
   TeacherAttendanceReminderScope,
   TeacherAttendanceReminderSettings,
   TeacherAttendanceSettings,
@@ -80,13 +81,50 @@ const geofenceLngStr = ref('');
 const qrGateEnabled = ref(false);
 const qrCardEnabled = ref(false);
 
+/**
+ * `early_leave_grace_minutes` is nullable — null means "inherit
+ * `late_grace_minutes` server-side". We bind the field as a string
+ * so an empty value reads as null (rather than 0), mirroring the
+ * geofence lat/lng pattern.
+ */
+const earlyLeaveGraceStr = ref('');
+
+/** Ordered picker options for the pulang-cepat policy segmented control. */
+const EARLY_LEAVE_POLICIES: {
+  value: TeacherAttendanceEarlyLeavePolicy;
+  labelKey: string;
+}[] = [
+  { value: 'none', labelKey: 'admin.sekolah.attendance_config.pulang.policy_none' },
+  { value: 'warn', labelKey: 'admin.sekolah.attendance_config.pulang.policy_warn' },
+  { value: 'block', labelKey: 'admin.sekolah.attendance_config.pulang.policy_block' },
+];
+
 function syncFromSettings(s: TeacherAttendanceSettings) {
   geofenceLatStr.value = s.geofence_lat != null ? String(s.geofence_lat) : '';
   geofenceLngStr.value = s.geofence_lng != null ? String(s.geofence_lng) : '';
+  earlyLeaveGraceStr.value =
+    s.early_leave_grace_minutes != null
+      ? String(s.early_leave_grace_minutes)
+      : '';
   const methods = s.allowed_methods ?? ['SELFIE'];
   qrGateEnabled.value = methods.includes('QR_GATE');
   qrCardEnabled.value = methods.includes('QR_CARD');
 }
+
+/**
+ * i18n key for the preview text below the pulang form — matches the
+ * three policy branches. The `{time}` placeholder is filled with either
+ * the global checkout rule's time (when one exists) or a generic
+ * "jam pulang yang ditetapkan" fallback so the sentence always parses.
+ */
+const EARLY_LEAVE_PREVIEW_KEYS: Record<
+  TeacherAttendanceEarlyLeavePolicy,
+  string
+> = {
+  none: 'admin.sekolah.attendance_config.pulang.preview_none',
+  warn: 'admin.sekolah.attendance_config.pulang.preview_warn',
+  block: 'admin.sekolah.attendance_config.pulang.preview_block',
+};
 
 const schoolPinLabel = computed(() => {
   const lat = form.value.school_latitude;
@@ -155,6 +193,24 @@ async function saveSettings() {
     toast.error('Rotasi QR gerbang harus antara 1 dan 60 menit.');
     return;
   }
+  // ── Pulang parity BE-3 — validate the three new fields client-side
+  // for a friendly toast before the backend's 422. Grace bounds match
+  // BE-1 (0..120); min-work bounds match BE-2 (0..600). An empty grace
+  // string reads as null (inherit late_grace_minutes server-side).
+  const earlyGraceStr = earlyLeaveGraceStr.value.trim();
+  let earlyGrace: number | null = null;
+  if (earlyGraceStr !== '') {
+    const n = Number(earlyGraceStr);
+    if (!Number.isFinite(n) || n < 0 || n > 120) {
+      toast.error('Toleransi pulang cepat harus antara 0 dan 120 menit.');
+      return;
+    }
+    earlyGrace = Math.round(n);
+  }
+  if (form.value.min_work_minutes < 0 || form.value.min_work_minutes > 600) {
+    toast.error('Minimum durasi kerja harus antara 0 dan 600 menit.');
+    return;
+  }
 
   // Reconstruct the canonical `allowed_methods[]` array. Selfie is
   // always implied present today; the admin can flip off
@@ -181,6 +237,11 @@ async function saveSettings() {
       gate_qr_rotation_minutes: rot,
       geofence_required_for_qr: !!form.value.geofence_required_for_qr,
       issue_student_cards: !!form.value.issue_student_cards,
+      // Pulang parity BE-3 — three new fields govern how the checkout
+      // flow reacts to a pulang before the effective threshold.
+      early_leave_policy: form.value.early_leave_policy,
+      early_leave_grace_minutes: earlyGrace,
+      min_work_minutes: form.value.min_work_minutes,
     });
     form.value = { ...form.value, ...saved };
     syncFromSettings(form.value);
@@ -631,6 +692,11 @@ function getDayName(dayIndex: string): string {
 onMounted(() => {
   loadSettings();
   loadReminder();
+  // Load the checkout rules eagerly so the "Aturan Pulang" preview
+  // sentence on the Umum tab can substitute the concrete global
+  // checkout time. Without this eager fetch the preview stays on the
+  // generic fallback until the admin opens the Aturan Pulang tab.
+  loadRules();
 });
 
 // Panduan wizard — a 5-step guided overlay that walks admins through
@@ -655,10 +721,49 @@ const sectionJumps = computed<{ id: string; label: string }[]>(() => [
   { id: 'section-qr', label: 'QR Gerbang' },
   { id: 'section-waktu', label: 'Waktu' },
   {
+    id: 'section-pulang',
+    label: t('admin.sekolah.attendance_config.pulang.jump_label'),
+  },
+  {
     id: 'section-reminder',
     label: t('admin.sekolah.attendance_config.reminder.jump_label'),
   },
 ]);
+
+/**
+ * Effective pulang time shown in the preview sentence. When a GLOBAL
+ * checkout rule exists (scope_type='global', all_days), we surface its
+ * time so the admin sees the concrete cut-off. Otherwise fall back to
+ * a generic phrase — the actual enforcement still runs off the per-
+ * rule times server-side. Reads `checkoutRules` which is populated
+ * lazily when the admin opens the Aturan Pulang tab, so on first paint
+ * this falls through to the generic phrase (harmless — no wrong time).
+ */
+const effectiveCheckoutTime = computed<string>(() => {
+  const globalRule = checkoutRules.value.find(
+    (r) =>
+      r.scope_type === 'global' &&
+      r.checkout_time_validation_enabled &&
+      r.checkout_time_rule_type === 'all_days' &&
+      typeof r.checkout_time_all_days === 'string' &&
+      r.checkout_time_all_days.length >= 5,
+  );
+  if (globalRule) {
+    return String(globalRule.checkout_time_all_days).substring(0, 5);
+  }
+  return t('admin.sekolah.attendance_config.pulang.time_fallback');
+});
+
+/**
+ * The `{time}` placeholder inside the preview sentence. Kept as a
+ * separate computed so the template stays readable and translators
+ * can move the placeholder around inside the sentence per language.
+ */
+const earlyLeavePreviewMessage = computed<string>(() =>
+  t(EARLY_LEAVE_PREVIEW_KEYS[form.value.early_leave_policy], {
+    time: effectiveCheckoutTime.value,
+  }),
+);
 
 function jumpToSection(id: string): void {
   const el = document.getElementById(id);
@@ -1174,6 +1279,120 @@ function jumpToSection(id: string): void {
             />
             <p class="text-3xs text-slate-400 mt-1">
               Terlambat dihitung setelah jam mengajar pertama + toleransi.
+            </p>
+          </div>
+        </section>
+
+        <!-- Aturan Pulang — Pulang parity BE-3 (backend !504, !505). Three
+             fields govern how the checkout flow reacts when a person tries
+             to pulang before the configured threshold: policy (none/warn/
+             block), grace-in-minutes (null = inherit late_grace_minutes),
+             and minimum work minutes (0 = disabled). All three ride the
+             same Simpan below via updateSettings(). -->
+        <section
+          id="section-pulang"
+          class="bg-white border border-slate-200 rounded-2xl overflow-hidden scroll-mt-32"
+        >
+          <div class="px-4 py-3 border-b border-slate-100">
+            <h3 class="text-[13px] font-black text-slate-900">
+              {{ t('admin.sekolah.attendance_config.pulang.section_title') }}
+            </h3>
+            <p class="text-2xs text-slate-500 mt-0.5">
+              {{ t('admin.sekolah.attendance_config.pulang.section_subtitle') }}
+            </p>
+          </div>
+
+          <!-- Policy — segmented picker. Three buttons, one always
+               selected; `warn` is the default the backend seeds. -->
+          <div class="px-4 py-3">
+            <p
+              class="text-3xs font-bold text-slate-400 uppercase tracking-widest mb-2"
+            >
+              {{ t('admin.sekolah.attendance_config.pulang.policy_label') }}
+            </p>
+            <div
+              class="inline-flex gap-1 p-1 rounded-xl bg-slate-100 border border-slate-200 flex-wrap"
+              role="radiogroup"
+              :aria-label="
+                t('admin.sekolah.attendance_config.pulang.policy_label')
+              "
+            >
+              <button
+                v-for="opt in EARLY_LEAVE_POLICIES"
+                :key="opt.value"
+                type="button"
+                role="radio"
+                :aria-checked="form.early_leave_policy === opt.value"
+                :class="[
+                  'px-3 py-1.5 rounded-lg text-[12px] font-bold inline-flex items-center gap-1.5 transition-all',
+                  form.early_leave_policy === opt.value
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900',
+                ]"
+                @click="form.early_leave_policy = opt.value"
+              >
+                {{ t(opt.labelKey) }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Grace (nullable) — empty = inherit late_grace_minutes. -->
+          <div class="px-4 py-3 border-t border-slate-100">
+            <label
+              class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
+              for="field-early-leave-grace"
+            >
+              {{ t('admin.sekolah.attendance_config.pulang.grace_label') }}
+            </label>
+            <input
+              id="field-early-leave-grace"
+              v-model="earlyLeaveGraceStr"
+              type="number"
+              min="0"
+              max="120"
+              :placeholder="
+                t('admin.sekolah.attendance_config.pulang.grace_placeholder')
+              "
+              class="w-full sm:w-64 rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30"
+            />
+            <p class="text-3xs text-slate-400 mt-1">
+              {{
+                t('admin.sekolah.attendance_config.pulang.grace_helper', {
+                  minutes: form.late_grace_minutes,
+                })
+              }}
+            </p>
+          </div>
+
+          <!-- Minimum work minutes — 0 disables the guard. -->
+          <div class="px-4 py-3 border-t border-slate-100">
+            <label
+              class="text-3xs font-bold text-slate-400 uppercase tracking-widest block mb-1"
+              for="field-min-work"
+            >
+              {{ t('admin.sekolah.attendance_config.pulang.min_work_label') }}
+            </label>
+            <input
+              id="field-min-work"
+              v-model.number="form.min_work_minutes"
+              type="number"
+              min="0"
+              max="600"
+              class="w-full sm:w-64 rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-role-admin/30"
+            />
+            <p class="text-3xs text-slate-400 mt-1">
+              {{
+                t('admin.sekolah.attendance_config.pulang.min_work_helper')
+              }}
+            </p>
+          </div>
+
+          <!-- Live preview — dynamic sentence describing how the
+               chosen policy will behave at pulang time. Renders italic/
+               muted so it reads as a hint, not a control. -->
+          <div class="px-4 py-3 border-t border-slate-100 bg-slate-50/60">
+            <p class="text-[12px] italic text-slate-600 leading-relaxed">
+              {{ earlyLeavePreviewMessage }}
             </p>
           </div>
         </section>

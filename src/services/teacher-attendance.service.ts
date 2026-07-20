@@ -170,6 +170,24 @@ function statusCountsFromJson(
 const ALLOWED_METHOD_KEYS = ['SELFIE', 'QR_GATE', 'QR_CARD'] as const;
 
 /**
+ * Allowed early-leave policy keys (Pulang parity BE-1, backend !504).
+ * Anything else (including unknown strings or null) falls back to the
+ * server-side default of `warn`.
+ */
+const ALLOWED_EARLY_LEAVE_POLICIES = ['none', 'warn', 'block'] as const;
+
+/** Coerce a raw `early_leave_policy` field into the typed union. */
+function earlyLeavePolicyFromJson(
+  raw: unknown,
+): import('@/types/teacher-attendance').TeacherAttendanceEarlyLeavePolicy {
+  const k = String(raw ?? '').trim().toLowerCase();
+  if ((ALLOWED_EARLY_LEAVE_POLICIES as readonly string[]).includes(k)) {
+    return k as import('@/types/teacher-attendance').TeacherAttendanceEarlyLeavePolicy;
+  }
+  return 'warn';
+}
+
+/**
  * Coerce a raw `allowed_methods` field into a typed list. Accepts the
  * server's JSON array, a comma-separated string (in case the legacy
  * settings page serialised it that way), or null (treat as the default
@@ -207,6 +225,12 @@ function settingsFromJson(
     geofence_radius_m: asInt(raw.geofence_radius_m, 150),
     reject_outside_geofence: asBool(raw.reject_outside_geofence, true),
     late_grace_minutes: asInt(raw.late_grace_minutes, 0),
+    // Pulang parity BE-1/BE-2 (backend !504, !505). Grace defaults to
+    // null (= inherit late_grace_minutes server-side); min_work defaults
+    // to 0 (= disabled).
+    early_leave_policy: earlyLeavePolicyFromJson(raw.early_leave_policy),
+    early_leave_grace_minutes: asNumOrNull(raw.early_leave_grace_minutes),
+    min_work_minutes: asInt(raw.min_work_minutes, 0),
     effective_geofence_lat: asNumOrNull(raw.effective_geofence_lat),
     effective_geofence_lng: asNumOrNull(raw.effective_geofence_lng),
     school_latitude: asNumOrNull(raw.school_latitude),
@@ -497,6 +521,13 @@ export const TeacherAttendanceService = {
         'issue_student_cards',
         'workweek_days_bitmask',
         'max_daily_shifts_per_person',
+        // Pulang parity BE-1/BE-2 (backend !504, !505). Null on
+        // early_leave_grace_minutes is meaningful ("inherit late_grace")
+        // — pass it through so a clear-and-save writes null rather than
+        // being dropped by the `!== undefined` gate.
+        'early_leave_policy',
+        'early_leave_grace_minutes',
+        'min_work_minutes',
       ];
       for (const k of keys) {
         if (patch[k] !== undefined) body[k] = patch[k];
