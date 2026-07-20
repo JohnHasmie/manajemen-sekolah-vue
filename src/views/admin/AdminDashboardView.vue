@@ -25,7 +25,8 @@ import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
 import PriorityInbox from '@/components/feature/PriorityInbox.vue';
 import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
-import SubscriptionSummaryCard from '@/components/feature/SubscriptionSummaryCard.vue';
+import AdminControlCenterCard from '@/components/feature/AdminControlCenterCard.vue';
+import SubscriptionMiniRow from '@/components/feature/SubscriptionMiniRow.vue';
 import AdminTutoringDashboardView from '@/views/admin/tutoring/AdminTutoringDashboardView.vue';
 import GamificationHighlightCard from '@/components/feature/gamification/GamificationHighlightCard.vue';
 import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
@@ -442,14 +443,30 @@ const financePct = computed(() =>
           </section>
           </template>
 
-          <!-- #hero: Subscription summary — compact 1-row card that puts
-               "modul aktif · tagihan bulan ini · perpanjangan" one
-               scroll away from the KPI strip. Full detail + add/cancel
-               actions live at /subscribe/manage-modules; this card
-               is the sidebar-independent entry point so admin doesn't
-               have to hunt for it. -->
+          <!-- #hero: Pusat Kendali — navy gradient card that surfaces
+               "score + streak" plus the top actionable alerts
+               (attention_needed + overdue_bills + pending_lesson_plans +
+               draft_announcements) as one-tap cards, then a chip strip
+               to the most-used quick actions. Subscription lives one
+               row below in the compact `SubscriptionMiniRow` so admin
+               still sees "modul aktif · tagihan / bln" without eating
+               hero real estate. -->
           <template #hero>
-            <SubscriptionSummaryCard />
+            <div class="space-y-3">
+              <AdminControlCenterCard
+                :readiness="canSeeReadiness ? readinessPayload : null"
+                :pending-lesson-plans="topLevelNum('pending_lesson_plans')"
+                :draft-announcements="topLevelNum('draft_announcements')"
+                :overdue-bills="topLevelNum('overdue_bills')"
+                :quick-actions="quickActions"
+                :show-enable-cta="
+                  canSeeReadiness &&
+                  (!readinessPayload || !readinessPayload.supported)
+                "
+                @enable-click="gotoReadiness"
+              />
+              <SubscriptionMiniRow />
+            </div>
           </template>
 
           <!-- #main: heatmap + finance, then the priority inbox. Whole
@@ -814,65 +831,13 @@ const financePct = computed(() =>
             </div>
           </section>
 
-          <!-- 3b. Pusat Kendali teaser — replaces the old "Perlu
-               Perhatian" inbox card. Both lanes now live inside
-               /admin/readiness (Lane B = the operational inbox); the
-               teaser summarises "score · a perlu dilengkapi · b perlu
-               perhatian" and deep-links there. Silent on ability strip
-               or fetch failure (mirrors the GamificationHighlightCard
-               pattern above): when `readinessPayload` stays null the
-               whole card drops, leaving no empty band. -->
-          <section
-            v-if="canSeeReadiness && readinessPayload && readinessPayload.supported"
-          >
-            <button
-              type="button"
-              class="w-full text-left rounded-2xl p-5 text-white shadow-lg transition-all hover:shadow-xl bg-role-admin-gradient flex items-start gap-4"
-              @click="gotoReadiness"
-            >
-              <span class="w-12 h-12 rounded-2xl bg-white/15 grid place-items-center flex-shrink-0">
-                <NavIcon name="gauge" :size="24" />
-              </span>
-              <div class="flex-1 min-w-0">
-                <p class="text-3xs font-bold text-white/75 uppercase tracking-widest">
-                  {{ t('admin.readiness.title') }}
-                </p>
-                <h3 class="text-lg font-black tracking-tight mt-0.5">
-                  {{ t('admin.readiness.teaserTitle', { pct: readinessPayload.score }) }}
-                </h3>
-                <p class="text-2xs text-white/85 font-bold mt-1">
-                  {{ t('admin.readiness.teaserSubtitle', {
-                    a: readinessPayload.completion_needed.length,
-                    b: readinessPayload.attention_needed.length,
-                  }) }}
-                </p>
-                <!-- Streak chip — BE-4. Renders only when the admin
-                     has a live streak (>0 days). Uses lucide `flame`
-                     inside a white/15 pill so it reads against the
-                     admin gradient without shouting. -->
-                <span
-                  v-if="readinessPayload.streak !== null && readinessPayload.streak > 0"
-                  class="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-white/15 text-white text-3xs font-bold"
-                >
-                  <NavIcon name="flame" :size="12" />
-                  {{ t('admin.readiness.teaserStreakBadge', { days: readinessPayload.streak }) }}
-                </span>
-              </div>
-              <span
-                class="text-2xs font-black uppercase tracking-widest px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 transition-colors flex items-center gap-1 flex-shrink-0 self-center"
-              >
-                {{ t('admin.readiness.teaserCta') }}
-                <NavIcon name="arrow-right" :size="12" />
-              </span>
-            </button>
-          </section>
-
-          <!-- Fallback: when the readiness ability isn't granted (e.g.
-               a staff proxying into /admin, or an admin whose backend
-               seed hasn't rolled out yet), keep the old inbox card so
-               the "Perlu Perhatian" signal doesn't silently disappear.
-               Drops out entirely once every admin holds the ability. -->
-          <section v-else-if="priorityItems.length > 0">
+          <!-- Priority inbox fallback — only when the admin has NO
+               readiness ability (edge: a staff proxying into /admin or
+               a legacy seed). Once `readiness.view` is universal, the
+               new AdminControlCenterCard in the #hero slot owns the
+               "perlu perhatian" signal, so this section drops out
+               entirely. -->
+          <section v-if="!canSeeReadiness && priorityItems.length > 0">
             <header class="flex items-center justify-between gap-3 mb-3 px-1">
               <div class="flex items-center gap-2">
                 <h3 class="text-[12px] font-black text-slate-500 uppercase tracking-widest">
@@ -903,9 +868,12 @@ const financePct = computed(() =>
           </div>
           </template>
 
-          <!-- #quickActions: school-management action grid. -->
+          <!-- #quickActions: school-management action grid. The `id`
+               anchor is targeted by AdminControlCenterCard's "Lainnya"
+               chip so the strip below the hero can scroll the admin
+               here without a route change. -->
           <template #quickActions>
-          <section>
+          <section id="quick-actions-anchor">
             <h3 class="text-[12px] font-black text-slate-500 uppercase tracking-widest mb-3 px-1">
               {{ t('admin.dashboard.schoolManagement') }}
             </h3>

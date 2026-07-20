@@ -479,6 +479,33 @@
         "academic": "Academic"
       }
     },
+    "controlCenter": {
+      "eyebrow": "School Readiness",
+      "title": "Control Center",
+      "openFull": "Open Control Center",
+      "streakShort": "🔥 {days} days",
+      "enableCta": "Enable Control Center",
+      "allCalm": "All clear — nothing needs action right now.",
+      "moreActions": "More",
+      "alerts": {
+        "overdueBillsTitle": "Overdue bills",
+        "overdueBillsSub": "{n} bills awaiting follow-up.",
+        "pendingLpTitle": "Lesson plans pending approval",
+        "pendingLpSub": "{n} lesson plans awaiting approval.",
+        "draftAnnouncementsTitle": "Draft announcements",
+        "draftAnnouncementsSub": "{n} announcements ready to publish."
+      }
+    },
+    "subscription": {
+      "miniActive": "Active subscription · {n} modules · {amount}/mo",
+      "miniUpsellTitle": "Not subscribed",
+      "miniUpsellSub": "Activate paid modules to unlock the full feature set.",
+      "miniDiscountPercent": "{pct}% off",
+      "miniDiscountAmount": "Save {amount}/mo",
+      "miniDiscountUntil": "until {date}",
+      "manage": "Manage",
+      "subscribe": "Subscribe"
+    },
     "attendance": {
       "qrDisplay": {
         "kicker": "QR attendance",

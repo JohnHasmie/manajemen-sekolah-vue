@@ -479,6 +479,33 @@
         "academic": "Akademik"
       }
     },
+    "controlCenter": {
+      "eyebrow": "Kesiapan Sekolah",
+      "title": "Pusat Kendali",
+      "openFull": "Buka Pusat Kendali",
+      "streakShort": "🔥 {days} hari",
+      "enableCta": "Aktifkan Pusat Kendali",
+      "allCalm": "Semua aman — tidak ada yang perlu ditindaklanjuti.",
+      "moreActions": "Lainnya",
+      "alerts": {
+        "overdueBillsTitle": "Tagihan jatuh tempo",
+        "overdueBillsSub": "{n} tagihan menunggu tindak lanjut.",
+        "pendingLpTitle": "RPP menunggu persetujuan",
+        "pendingLpSub": "{n} RPP belum disetujui.",
+        "draftAnnouncementsTitle": "Pengumuman draft",
+        "draftAnnouncementsSub": "{n} pengumuman siap dipublikasikan."
+      }
+    },
+    "subscription": {
+      "miniActive": "Langganan aktif · {n} modul · {amount}/bln",
+      "miniUpsellTitle": "Belum berlangganan",
+      "miniUpsellSub": "Aktifkan modul berbayar untuk membuka fitur lengkap.",
+      "miniDiscountPercent": "Diskon {pct}%",
+      "miniDiscountAmount": "Hemat {amount}/bln",
+      "miniDiscountUntil": "s/d {date}",
+      "manage": "Kelola",
+      "subscribe": "Berlangganan"
+    },
     "attendance": {
       "qrDisplay": {
         "kicker": "Presensi QR",
