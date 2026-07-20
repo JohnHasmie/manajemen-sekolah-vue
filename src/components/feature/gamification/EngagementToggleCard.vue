@@ -15,9 +15,12 @@
   hides and only the Guru side shows. Payloads may be null while the
   fetch is in flight; the card shows a lightweight loading shell.
 
-  Palette: the engagement module reads as "violet" (header icon + toggle
-  + XP), matching the approved mockup. Winner medal stays amber; avatars
-  keep the role tint (teacher cobalt / staff amber) via InitialsAvatar.
+  Palette (admin-theme rationalisation): the card reads as ADMIN NAVY.
+  Violet survives ONLY as the small header trophy badge — a chip-sized
+  hint that this is the gamification module. Everything else (toggle,
+  winner hero, XP figures, the "see detail" link) is admin navy; the
+  emerald "Aktif" stat stays semantic (present/active); avatars keep the
+  role tint (teacher cobalt / staff amber) via InitialsAvatar.
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -59,6 +62,18 @@ const AVATAR_COLOR: Record<Role, string> = {
   staff: '#B45309', // role-staff amber
 };
 
+/**
+ * Strip any HTML the backend highlight resolver may wrap around a name
+ * (it emits `<b>Mar'atus…</b>` for the winner label). We render the
+ * winner as PLAIN text and lean on the existing `font-black` class for
+ * emphasis — NEVER `v-html`, which would be an XSS surface on
+ * server-influenced copy. Applied to both winner variants (Guru + Staf)
+ * and the Top-3 names for good measure.
+ */
+function stripHtml(s: string | null | undefined): string {
+  return (s ?? '').replace(/<[^>]*>/g, '');
+}
+
 // ─── Winner hero ─────────────────────────────────────────────────────
 interface Winner {
   eyebrow: string;
@@ -71,18 +86,22 @@ const winner = computed<Winner | null>(() => {
     const w = props.staffHighlight?.staff_of_month;
     if (!w) return null;
     return {
-      eyebrow: w.eyebrow ?? t('admin.dashboard.engagement.winnerStaffEyebrow'),
-      title: w.title,
-      sub: w.sub ?? '',
+      eyebrow: w.eyebrow
+        ? stripHtml(w.eyebrow)
+        : t('admin.dashboard.engagement.winnerStaffEyebrow'),
+      title: stripHtml(w.title),
+      sub: stripHtml(w.sub),
       points: w.meta?.points ?? null,
     };
   }
   const w = props.teacherHighlight?.teacher_of_month;
   if (!w) return null;
   return {
-    eyebrow: w.eyebrow ?? t('admin.dashboard.engagement.winnerTeacherEyebrow'),
-    title: w.title,
-    sub: w.sub ?? '',
+    eyebrow: w.eyebrow
+      ? stripHtml(w.eyebrow)
+      : t('admin.dashboard.engagement.winnerTeacherEyebrow'),
+    title: stripHtml(w.title),
+    sub: stripHtml(w.sub),
     points: w.meta?.points ?? null,
   };
 });
@@ -128,7 +147,7 @@ const topThree = computed<TopRow[]>(() => {
   if (effectiveRole.value === 'staff') {
     return (props.staffSummary?.top_three ?? []).map((e) => ({
       id: e.user_id,
-      name: e.name,
+      name: stripHtml(e.name),
       photoUrl: e.photo_url,
       points: e.points,
       streakDays: e.streak_days ?? null,
@@ -137,7 +156,7 @@ const topThree = computed<TopRow[]>(() => {
   }
   return (props.teacherSummary?.top_three ?? []).map((e) => ({
     id: e.teacher_id,
-    name: e.name,
+    name: stripHtml(e.name),
     photoUrl: e.photo_url,
     points: e.points,
     streakDays: e.streak_days ?? null,
@@ -176,7 +195,7 @@ function gotoDetail() {
       </div>
       <button
         type="button"
-        class="text-2xs font-bold text-violet-700 hover:underline flex-shrink-0"
+        class="text-2xs font-bold text-role-admin hover:underline flex-shrink-0"
         @click="gotoDetail"
       >
         {{ t('admin.dashboard.engagement.seeDetail') }}
@@ -194,7 +213,7 @@ function gotoDetail() {
         role="tab"
         :aria-selected="effectiveRole === 'teacher'"
         class="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-2xs font-bold transition"
-        :class="effectiveRole === 'teacher' ? 'bg-white shadow-sm text-violet-700' : 'text-slate-500 hover:text-slate-700'"
+        :class="effectiveRole === 'teacher' ? 'bg-white shadow-sm text-role-admin' : 'text-slate-500 hover:text-slate-700'"
         @click="activeRole = 'teacher'"
       >
         <NavIcon name="user" :size="13" />
@@ -205,7 +224,7 @@ function gotoDetail() {
         role="tab"
         :aria-selected="effectiveRole === 'staff'"
         class="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-2xs font-bold transition"
-        :class="effectiveRole === 'staff' ? 'bg-white shadow-sm text-violet-700' : 'text-slate-500 hover:text-slate-700'"
+        :class="effectiveRole === 'staff' ? 'bg-white shadow-sm text-role-admin' : 'text-slate-500 hover:text-slate-700'"
         @click="activeRole = 'staff'"
       >
         <NavIcon name="briefcase" :size="13" />
@@ -223,18 +242,18 @@ function gotoDetail() {
       <!-- Winner hero row -->
       <div
         v-if="winner"
-        class="flex items-center gap-3 rounded-xl px-3.5 py-3 bg-amber-50 border border-amber-200 mb-3"
+        class="flex items-center gap-3 rounded-xl px-3.5 py-3 bg-role-admin/5 border border-role-admin/15 mb-3"
       >
-        <div class="w-9 h-9 rounded-xl bg-amber-500 text-white grid place-items-center flex-shrink-0">
+        <div class="w-9 h-9 rounded-xl bg-role-admin text-white grid place-items-center flex-shrink-0">
           <NavIcon name="trophy" :size="18" />
         </div>
         <div class="min-w-0 flex-1">
-          <p class="text-3xs font-bold text-amber-700 uppercase tracking-widest">{{ winner.eyebrow }}</p>
+          <p class="text-3xs font-bold text-role-admin uppercase tracking-widest">{{ winner.eyebrow }}</p>
           <p class="text-sm font-black text-slate-900 truncate leading-tight">{{ winner.title }}</p>
           <p v-if="winner.sub" class="text-3xs text-slate-500 truncate">{{ winner.sub }}</p>
         </div>
         <div v-if="winner.points != null" class="text-right flex-shrink-0">
-          <p class="text-lg font-black text-amber-600 tabular-nums leading-none">{{ winner.points }}</p>
+          <p class="text-lg font-black text-role-admin tabular-nums leading-none">{{ winner.points }}</p>
           <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest mt-0.5">
             {{ t('admin.dashboard.engagement.xp') }}
           </p>
@@ -255,11 +274,11 @@ function gotoDetail() {
             {{ t('admin.dashboard.engagement.statActive') }}
           </p>
         </div>
-        <div class="rounded-xl bg-amber-50 px-3 py-2 text-center">
-          <p class="text-base font-black text-amber-700 tabular-nums">
+        <div class="rounded-xl bg-slate-50 px-3 py-2 text-center">
+          <p class="text-base font-black text-slate-900 tabular-nums">
             {{ stats.streak }}<span class="text-3xs font-bold ml-0.5">{{ t('admin.dashboard.engagement.streakUnit') }}</span>
           </p>
-          <p class="text-3xs font-bold text-amber-700 uppercase tracking-widest mt-0.5">
+          <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest mt-0.5">
             {{ t('admin.dashboard.engagement.statStreak') }}
           </p>
         </div>
@@ -306,7 +325,7 @@ function gotoDetail() {
                 </template>
               </p>
             </div>
-            <p class="text-2xs font-black text-violet-700 flex-shrink-0 tabular-nums">
+            <p class="text-2xs font-black text-role-admin flex-shrink-0 tabular-nums">
               {{ row.points }}<span class="text-3xs text-slate-500 font-bold ml-1">{{ t('admin.dashboard.engagement.xp') }}</span>
             </p>
           </li>

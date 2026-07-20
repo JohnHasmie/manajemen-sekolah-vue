@@ -41,6 +41,11 @@ import {
   type ReadinessDimension,
   type ReadinessBadgeCatalogItem,
 } from '@/services/readiness.service';
+// Backend Lane-A/B `target_route` hints are snake_case keys that don't
+// exist as literal Vue route names; the mapping lives in a shared helper
+// (also consumed by the dashboard panel + control-center chips) so the
+// three surfaces never drift.
+import { resolveReadinessRouteName as mapRouteName } from '@/lib/readiness-nav';
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -48,29 +53,6 @@ const { t } = useI18n();
 
 const state = ref<AsyncState<ReadinessPayload>>({ status: 'loading' });
 const payload = ref<ReadinessPayload | null>(null);
-
-// Backend Lane-A `target_route` hints are snake_case keys that don't
-// exist as literal Vue route names; the mapping is intentional so the
-// backend contract stays agnostic to the FE router shape.
-const ROUTE_MAP: Record<string, string> = {
-  admin_teacher_management: 'admin.teachers',
-  admin_class_management: 'admin.classes',
-  admin_student_management: 'admin.students',
-  admin_subject_management: 'admin.subjects',
-  admin_schedule_management: 'admin.schedule',
-  admin_academic_year: 'admin.settings.manage-academic-years',
-  admin_attendance: 'admin.student-attendance',
-};
-
-function mapRouteName(key: string): string | null {
-  const mapped = ROUTE_MAP[key];
-  if (!mapped) {
-    // eslint-disable-next-line no-console
-    console.warn(`[AdminReadinessView] Unmapped target_route: ${key}`);
-    return null;
-  }
-  return mapped;
-}
 
 const schoolName = computed<string>(
   () => auth.user?.school_name ?? auth.user?.name ?? 'Sekolah',

@@ -486,7 +486,7 @@
       "streakShort": "🔥 {days} hari",
       "enableCta": "Aktifkan Pusat Kendali",
       "allCalm": "Semua aman — tidak ada yang perlu ditindaklanjuti.",
-      "moreActions": "Lainnya",
+      "completionNeeded": "{n} hal perlu dilengkapi",
       "alerts": {
         "overdueBillsTitle": "Tagihan jatuh tempo",
         "overdueBillsSub": "{n} tagihan menunggu tindak lanjut.",
@@ -634,13 +634,7 @@
         "count": "{n} item",
         "allClearEyebrow": "Aman",
         "allClearTitle": "Semua aman",
-        "allClearSub": "Tidak ada yang perlu ditindaklanjuti",
-        "staffAttendanceTitle": "Staf hadir {pct}% hari ini",
-        "staffAttendanceSub": "{n} dari {total} belum presensi",
-        "staffQuietTitle": "{n} staf sepi minggu ini",
-        "staffQuietSub": "Engagement rendah",
-        "lowClassTitle": "Kelas {name} absensi {pct}%",
-        "lowClassSub": "Di bawah kelas lain"
+        "allClearSub": "Tidak ada yang perlu ditindaklanjuti"
       },
       "engagement": {
         "eyebrow": "Retensi",

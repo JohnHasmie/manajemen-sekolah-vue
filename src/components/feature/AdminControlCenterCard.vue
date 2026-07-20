@@ -18,10 +18,13 @@
                      click → route to the relevant page. Ability-gated
                      per alert so a card that can't be reached never
                      renders.
-    3. Quick-actions strip · 5-6 chips from the passed `quickActions`
-                             array (already ability-filtered by parent).
-                             "Semua" chip deep-links to the full grid
-                             below (#quickActions slot) via a scroll anchor.
+    3. Contextual chips · "jump to what's incomplete" — derived from the
+                          SCORED completion_needed gaps (mapped to routes
+                          via the shared readiness-nav helper, gated
+                          against the parent's ability-filtered
+                          quickActions). Falls back to a minimal
+                          Siswa/Guru/Kelas set when nothing is incomplete,
+                          so it never duplicates the "Akses cepat" tools.
 
   Fallback modes:
     - `!readiness || !readiness.supported`: header degrades to the icon +
@@ -35,7 +38,12 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useMeStore } from '@/stores/me';
 import NavIcon from '@/components/feature/NavIcon.vue';
-import type { ReadinessPayload, ReadinessAttentionItem } from '@/services/readiness.service';
+import type {
+  ReadinessPayload,
+  ReadinessAttentionItem,
+  ReadinessCompletionItem,
+} from '@/services/readiness.service';
+import { resolveReadinessTarget } from '@/lib/readiness-nav';
 
 interface QuickActionLike {
   labelKey: string;
@@ -80,6 +88,13 @@ const streak = computed<number | null>(
 const attentionItems = computed<ReadinessAttentionItem[]>(
   () => (supported.value ? (props.readiness?.attention_needed ?? []) : []),
 );
+// Lane A — scored completeness gaps. Drive both the "N perlu dilengkapi"
+// status strip (FIX: no more false "Semua aman" at 83%) and the
+// contextual chips below.
+const completionItems = computed<ReadinessCompletionItem[]>(
+  () => (supported.value ? (props.readiness?.completion_needed ?? []) : []),
+);
+const completionCount = computed<number>(() => completionItems.value.length);
 
 /**
  * Merged, prioritized alert list. Order:
@@ -165,6 +180,13 @@ const alerts = computed<AlertCard[]>(() => {
 
 const noAlerts = computed(() => alerts.value.length === 0);
 
+// "Semua aman" (green) is honest ONLY when BOTH lanes AND the operational
+// alerts are empty. A 83% score with 3 completion gaps is NOT all-clear —
+// the amber completion strip below owns that case instead.
+const trulyAllClear = computed(
+  () => noAlerts.value && completionCount.value === 0,
+);
+
 /**
  * Maps a backend route hint (e.g. `bills.list`) to a Vue router path.
  * Falls back to `/admin` if the hint isn't recognised so a
@@ -184,39 +206,53 @@ function mapAttentionRoute(target: string): string {
 }
 
 /**
- * Chips shown in the strip below alerts. We keep 5 most-recognisable
- * quick actions and append a "Lainnya" chip that scrolls the page to
- * the full quick-actions grid (marked by `#quick-actions-anchor` in the
- * parent view).
+ * Chips = "jump to what's incomplete". Derived from the SCORED
+ * completion gaps (Lane A) so a click moves the readiness score, not
+ * from a generic quick-action list that duplicated the "Akses cepat"
+ * tools grid below. Each completion item's backend `target_route` is
+ * mapped to a chip (label + icon + path) by the shared helper, then
+ * gated by intersecting with the parent's already-ability-filtered
+ * `quickActions` (so we never surface a destination the user can't
+ * reach). Deduped by path, capped at 4.
  */
-const featuredChips = computed(() => {
-  const priority = [
-    'nav.students',
-    'nav.teachers',
-    'nav.schedule',
-    'nav.attendance',
-    'nav.gradeRecap',
-    'nav.finance',
-    'nav.announcements',
-  ];
-  const picked: QuickActionLike[] = [];
-  for (const key of priority) {
-    if (picked.length >= 5) break;
-    const found = props.quickActions.find((a) => a.labelKey === key);
-    if (found) picked.push(found);
+interface Chip {
+  labelKey: string;
+  icon: string;
+  to: string;
+}
+
+const contextualChips = computed<Chip[]>(() => {
+  if (!supported.value) return [];
+  const visiblePaths = new Set(props.quickActions.map((a) => a.to));
+  const seen = new Set<string>();
+  const out: Chip[] = [];
+  for (const item of completionItems.value) {
+    const target = resolveReadinessTarget(item.target_route);
+    if (!target) continue;
+    if (!visiblePaths.has(target.path)) continue; // ability gate via parent
+    if (seen.has(target.path)) continue;
+    seen.add(target.path);
+    out.push({ labelKey: target.labelKey, icon: target.icon, to: target.path });
+    if (out.length >= 4) break;
   }
-  // If tenant lacks the "priority" set (e.g. staff-only bimbel), fill
-  // from whatever ability-filtered actions parent passed so the strip
-  // still has content.
-  if (picked.length === 0) {
-    picked.push(...props.quickActions.slice(0, 5));
-  }
-  return picked;
+  return out;
 });
 
-const showOverflowChip = computed(
-  () => props.quickActions.length > featuredChips.value.length,
-);
+// Nothing incomplete → fall back to a minimal set of core-management
+// shortcuts. Deliberately Siswa/Guru/Kelas so there is NO overlap with
+// the "Akses cepat" tools grid (Rapor/Rekap Nilai/Pengumuman/Keuangan).
+// Ability-filtered because we only pick from the parent's `quickActions`.
+const FALLBACK_CHIP_KEYS = ['nav.students', 'nav.teachers', 'nav.classes'];
+
+const chips = computed<Chip[]>(() => {
+  if (contextualChips.value.length > 0) return contextualChips.value;
+  const out: Chip[] = [];
+  for (const key of FALLBACK_CHIP_KEYS) {
+    const found = props.quickActions.find((a) => a.labelKey === key);
+    if (found) out.push({ labelKey: found.labelKey, icon: found.icon, to: found.to });
+  }
+  return out;
+});
 
 function goto(route: string) {
   router.push(route);
@@ -224,14 +260,6 @@ function goto(route: string) {
 
 function gotoReadiness() {
   router.push({ name: 'admin.readiness' });
-}
-
-function scrollToQuickActions() {
-  // Anchor id lives in the parent view (`#quick-actions-anchor`).
-  const el = document.getElementById('quick-actions-anchor');
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
 }
 </script>
 
@@ -306,19 +334,41 @@ function scrollToQuickActions() {
       </button>
     </div>
 
-    <!-- Empty state when supported=true but no active alerts: keep it
-         positive and encourage the deep-dive rather than showing an
-         empty band. -->
-    <div v-else-if="supported" class="acc-empty">
+    <!-- Scored completeness gaps remain → amber "N perlu dilengkapi"
+         strip. Renders even alongside the operational alerts above, so
+         the card can never read "Semua aman" while the score is < 100.
+         Click → the full Pusat Kendali page. -->
+    <button
+      v-if="supported && completionCount > 0"
+      type="button"
+      class="acc-completion"
+      @click="gotoReadiness"
+    >
+      <span class="acc-completion-icon" aria-hidden="true">
+        <NavIcon name="clipboard-list" :size="16" />
+      </span>
+      <span class="acc-completion-body">
+        <span class="acc-completion-title">
+          {{ t('admin.controlCenter.completionNeeded', { n: completionCount }) }}
+        </span>
+        <span class="acc-completion-sub">{{ t('admin.readiness.laneAHint') }}</span>
+      </span>
+      <NavIcon class="acc-completion-arrow" name="arrow-right" :size="14" />
+    </button>
+
+    <!-- Genuinely complete: both readiness lanes AND the operational
+         alerts are empty. Only here does the green "all clear" show. -->
+    <div v-else-if="supported && trulyAllClear" class="acc-empty">
       <NavIcon name="check-circle" :size="16" />
       <span>{{ t('admin.controlCenter.allCalm') }}</span>
     </div>
 
-    <!-- Quick-actions chip strip. Hidden when the parent passes zero
-         actions (tenant with no entitled destinations). -->
-    <div v-if="featuredChips.length > 0" class="acc-chips">
+    <!-- Contextual "jump to what's incomplete" chips (or a minimal
+         core-management fallback when nothing is incomplete). Hidden
+         only when the parent passes zero reachable destinations. -->
+    <div v-if="chips.length > 0" class="acc-chips">
       <button
-        v-for="c in featuredChips"
+        v-for="c in chips"
         :key="c.to"
         type="button"
         class="acc-chip"
@@ -326,15 +376,6 @@ function scrollToQuickActions() {
       >
         <NavIcon :name="c.icon" :size="14" />
         <span>{{ t(c.labelKey) }}</span>
-      </button>
-      <button
-        v-if="showOverflowChip"
-        type="button"
-        class="acc-chip acc-chip--more"
-        @click="scrollToQuickActions"
-      >
-        <NavIcon name="more-horizontal" :size="14" />
-        <span>{{ t('admin.controlCenter.moreActions') }}</span>
       </button>
     </div>
   </section>
@@ -605,6 +646,69 @@ function scrollToQuickActions() {
   align-self: flex-start;
 }
 
+/* Completion strip — amber "N perlu dilengkapi" on the navy card. Amber
+   here carries MEANING (scored gaps remain), not decoration. */
+.acc-completion {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 14px;
+  background: rgba(251, 191, 36, 0.16); /* amber-400 @ 16% */
+  border: 1px solid rgba(251, 191, 36, 0.42);
+  border-radius: 14px;
+  color: #FFFFFF;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.05s;
+}
+.acc-completion:hover {
+  background: rgba(251, 191, 36, 0.24);
+  border-color: rgba(251, 191, 36, 0.6);
+}
+.acc-completion:active {
+  transform: translateY(1px);
+}
+.acc-completion-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(251, 191, 36, 0.28);
+  color: #FCD34D; /* amber-300 */
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.acc-completion-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+.acc-completion-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.2;
+}
+.acc-completion-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.3;
+}
+.acc-completion-arrow {
+  color: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
+}
+.acc-completion:hover .acc-completion-arrow {
+  color: #FFFFFF;
+}
+
 /* ── Chip strip ────────────────────────────────────────────────── */
 .acc-chips {
   display: flex;
@@ -634,10 +738,6 @@ function scrollToQuickActions() {
 .acc-chip:hover {
   background: rgba(255, 255, 255, 0.22);
   border-color: rgba(255, 255, 255, 0.35);
-}
-.acc-chip--more {
-  background: rgba(255, 255, 255, 0.06);
-  border-style: dashed;
 }
 
 /* Enable-only fallback (readiness NOT supported + no alerts): shrink

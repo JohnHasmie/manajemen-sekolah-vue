@@ -38,7 +38,7 @@ import AdminControlCenterCard from '@/components/feature/AdminControlCenterCard.
 import AdminAttendanceOverviewCard from '@/components/feature/AdminAttendanceOverviewCard.vue';
 import SubscriptionMiniRow from '@/components/feature/SubscriptionMiniRow.vue';
 import AdminTutoringDashboardView from '@/views/admin/tutoring/AdminTutoringDashboardView.vue';
-import AttentionPanel, { type AttentionItem } from '@/components/feature/AttentionPanel.vue';
+import ReadinessAttentionPanel from '@/components/feature/ReadinessAttentionPanel.vue';
 import EngagementToggleCard from '@/components/feature/gamification/EngagementToggleCard.vue';
 import {
   TeacherProgressService,
@@ -227,14 +227,21 @@ interface QuickAction {
   visible?: () => boolean;
 }
 
-// Same mirror as `useNavMenu.ts` — siswa/kelas gate on hasStudentContext
-// and mapel on hasAcademicContext. Reports quick-actions gate on the same
-// abilities the router uses so nav + dashboard always agree.
+// Same mirror as `useNavMenu.ts`. Module entitlement is enforced by the
+// backend AbilityResolver STRIPPING module-locked abilities, so an
+// ability gate here IS the module gate (finance/communication/
+// gamification/grades/report_cards). The roster entries add the
+// student-/academic-context gate (`hasStudentContext` /
+// `hasAcademicContext`) exactly like the nav's `needs:` clause, PLUS the
+// same roster abilities the nav lists — so a context-owning tenant whose
+// user lacks the roster ability still can't reach a dead screen.
 const quickActions = computed<QuickAction[]>(() => {
   const raw: QuickAction[] = [
     { labelKey: 'nav.students', icon: 'users', to: '/admin/students',
-      visible: () => me.hasStudentContext },
-    { labelKey: 'nav.teachers', icon: 'user-check', to: '/admin/teachers' },
+      visible: () => me.hasStudentContext
+        && me.canAny(['school.student.view', 'school.student.manage']) },
+    { labelKey: 'nav.teachers', icon: 'user-check', to: '/admin/teachers',
+      visible: () => me.canAny(['school.teacher.view', 'school.teacher.manage']) },
     { labelKey: 'nav.classes', icon: 'layers', to: '/admin/classes',
       visible: () => me.hasStudentContext },
     { labelKey: 'nav.subjects', icon: 'book', to: '/admin/subjects',
@@ -286,141 +293,44 @@ const pendingLessonPlans = computed(
 // ─── Header date ─────────────────────────────────────────────────────
 const todayLabel = computed(() => formatDateLong(new Date()));
 
-// ─── Perlu Perhatian — client-side, no new endpoint ──────────────────
-// Derived purely from data already on the dashboard payloads. Ordered by
-// severity (critical → warning → info); AttentionPanel renders the
-// "Semua aman" fallback when this is empty.
-const attentionItems = computed<AttentionItem[]>(() => {
-  const items: AttentionItem[] = [];
-
-  // 1. Staff attendance today < 100% → red.
-  const staffAtt = stats.value.staff_attendance_today as
-    | { present_pct: number; total: number; present: number }
-    | null
-    | undefined;
-  if (
-    staffAtt &&
-    typeof staffAtt === 'object' &&
-    staffAtt.total > 0 &&
-    staffAtt.present_pct < 100
-  ) {
-    const notYet = Math.max(0, staffAtt.total - staffAtt.present);
-    items.push({
-      key: 'staff-attendance',
-      severity: 'critical',
-      icon: 'briefcase',
-      title: t('admin.dashboard.attention.staffAttendanceTitle', {
-        pct: Math.round(staffAtt.present_pct),
-      }),
-      subtitle: t('admin.dashboard.attention.staffAttendanceSub', {
-        n: notYet,
-        total: staffAtt.total,
-      }),
-      route: '/admin/teacher-attendance/report',
-    });
-  }
-
-  // 2. Gamification active AND engagement "sepi" (quiet) staff > 0 → amber.
-  if (
-    canSeePrestasi.value &&
-    adminStaffSummary.value &&
-    adminStaffSummary.value.needs_attention_count > 0
-  ) {
-    items.push({
-      key: 'staff-quiet',
-      severity: 'warning',
-      icon: 'flame',
-      title: t('admin.dashboard.attention.staffQuietTitle', {
-        n: adminStaffSummary.value.needs_attention_count,
-      }),
-      subtitle: t('admin.dashboard.attention.staffQuietSub'),
-      route: '/admin/staff-engagement',
-    });
-  }
-
-  // 3. Lowest class attendance < 95% → info.
-  const perClass = stats.value.attendance_per_class as
-    | { class_id: string; class_name: string; present_pct: number }[]
-    | null
-    | undefined;
-  if (Array.isArray(perClass) && perClass.length > 0) {
-    const lowest = perClass.reduce((a, b) =>
-      b.present_pct < a.present_pct ? b : a,
-    );
-    if (lowest.present_pct < 95) {
-      items.push({
-        key: 'low-class',
-        severity: 'info',
-        icon: 'layers',
-        title: t('admin.dashboard.attention.lowClassTitle', {
-          name: lowest.class_name,
-          pct: Math.round(lowest.present_pct),
-        }),
-        subtitle: t('admin.dashboard.attention.lowClassSub'),
-        route: '/admin/student-attendance',
-      });
-    }
-  }
-
-  const rank: Record<AttentionItem['severity'], number> = {
-    critical: 0,
-    warning: 1,
-    info: 2,
-  };
-  return items.sort((a, b) => rank[a.severity] - rank[b.severity]);
-});
+// ─── Perlu Perhatian ─────────────────────────────────────────────────
+// The dashboard panel is now a COMPACT MIRROR of the readiness engine —
+// it renders both lanes of the `/admin/readiness` payload directly (see
+// ReadinessAttentionPanel), so there is NO client-invented signal here.
+// The old staff-attendance / "staf sepi" / lowest-class heuristics were
+// removed: they disagreed with the Pusat Kendali page, and "staf sepi"
+// already lives in the Engagement card's "Sepi" stat.
 
 // ─── Akses cepat (curated quick tiles) ───────────────────────────────
+// GENERAL TOOLS ONLY — Rapor / Rekap Nilai / Pengumuman / Keuangan. The
+// former overlap with the control-center chips (Rekap Nilai lived in
+// both) is gone: those chips are now CONTEXTUAL (jump to what's
+// incomplete), so these four tools never duplicate them. Grades &
+// Jadwal were dropped from here — Jadwal can surface as a contextual
+// chip, and both stay reachable from the left nav.
+//
+// Each tile is ability-gated via `quickActions` (module entitlement is
+// enforced by the backend stripping module-locked abilities). Icons are
+// distinguished by GLYPH, not hue: every tile uses the admin-navy tint
+// so the dashboard reads as ONE theme instead of a rainbow.
 interface QuickTile {
   labelKey: string;
   icon: string;
   to: string;
-  tone: 'blue' | 'violet' | 'amber' | 'green';
 }
-const TILE_TONE: Record<string, QuickTile['tone']> = {
-  'nav.reportCards': 'blue',
-  'nav.gradeRecap': 'violet',
-  'nav.grades': 'amber',
-  'nav.finance': 'green',
-  'nav.announcements': 'amber',
-  'nav.schedule': 'blue',
-};
-const TILE_TINT: Record<QuickTile['tone'], string> = {
-  blue: 'bg-blue-50 text-blue-600',
-  violet: 'bg-violet-100 text-violet-600',
-  amber: 'bg-amber-100 text-amber-600',
-  green: 'bg-emerald-100 text-emerald-600',
-};
-function tileTintClass(tone: QuickTile['tone']): string {
-  return TILE_TINT[tone];
-}
-function pickTiles(keys: string[]): QuickTile[] {
-  return keys
-    .map((k) => {
-      const found = quickActions.value.find((a) => a.labelKey === k);
-      if (!found) return null;
-      return {
-        labelKey: found.labelKey,
-        icon: found.icon,
-        to: found.to,
-        tone: TILE_TONE[k] ?? 'blue',
-      } satisfies QuickTile;
-    })
-    .filter((x): x is QuickTile => x !== null);
-}
-// With gamification: compact 4-tile rail. Without: full-width 6 tiles.
-const quickTilesWithGami = computed(() =>
-  pickTiles(['nav.reportCards', 'nav.gradeRecap', 'nav.announcements', 'nav.finance']),
-);
-const quickTilesNoGami = computed(() =>
-  pickTiles([
-    'nav.reportCards',
-    'nav.gradeRecap',
-    'nav.grades',
-    'nav.finance',
-    'nav.announcements',
-    'nav.schedule',
-  ]),
+const TILE_ICON_CLASS = 'bg-role-admin/10 text-role-admin';
+const AKSES_CEPAT_KEYS = [
+  'nav.reportCards',
+  'nav.gradeRecap',
+  'nav.announcements',
+  'nav.finance',
+];
+const quickTiles = computed<QuickTile[]>(() =>
+  AKSES_CEPAT_KEYS.map((k) => {
+    const found = quickActions.value.find((a) => a.labelKey === k);
+    if (!found) return null;
+    return { labelKey: found.labelKey, icon: found.icon, to: found.to };
+  }).filter((x): x is QuickTile => x !== null),
 );
 
 function gotoModules() {
@@ -511,7 +421,7 @@ function gotoModules() {
                     class="bg-white border border-slate-200 rounded-2xl p-3 text-left hover:border-role-admin hover:shadow-sm transition-all"
                     @click="router.push('/admin/students')"
                   >
-                    <span class="w-8 h-8 rounded-xl grid place-items-center bg-brand-cobalt/10 text-brand-cobalt">
+                    <span class="w-8 h-8 rounded-xl grid place-items-center bg-role-admin/10 text-role-admin">
                       <NavIcon name="users" :size="16" />
                     </span>
                     <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mt-2">
@@ -530,7 +440,7 @@ function gotoModules() {
                     class="bg-white border border-slate-200 rounded-2xl p-3 text-left hover:border-role-admin hover:shadow-sm transition-all"
                     @click="router.push('/admin/teachers')"
                   >
-                    <span class="w-8 h-8 rounded-xl grid place-items-center bg-teal-50 text-teal-600">
+                    <span class="w-8 h-8 rounded-xl grid place-items-center bg-role-admin/10 text-role-admin">
                       <NavIcon name="user-check" :size="16" />
                     </span>
                     <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mt-2">
@@ -547,7 +457,7 @@ function gotoModules() {
                     class="bg-white border border-slate-200 rounded-2xl p-3 text-left hover:border-role-admin hover:shadow-sm transition-all"
                     @click="router.push('/admin/staff')"
                   >
-                    <span class="w-8 h-8 rounded-xl grid place-items-center bg-violet-100 text-violet-600">
+                    <span class="w-8 h-8 rounded-xl grid place-items-center bg-role-admin/10 text-role-admin">
                       <NavIcon name="briefcase" :size="16" />
                     </span>
                     <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mt-2">
@@ -565,7 +475,7 @@ function gotoModules() {
                     class="bg-white border border-slate-200 rounded-2xl p-3 text-left hover:border-role-admin hover:shadow-sm transition-all"
                     @click="router.push('/admin/lesson-plans')"
                   >
-                    <span class="w-8 h-8 rounded-xl grid place-items-center bg-amber-100 text-amber-600">
+                    <span class="w-8 h-8 rounded-xl grid place-items-center bg-role-admin/10 text-role-admin">
                       <NavIcon name="file-text" :size="16" />
                     </span>
                     <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest mt-2">
@@ -594,7 +504,9 @@ function gotoModules() {
 
                 <!-- RIGHT rail: Perlu Perhatian + Keuangan slim -->
                 <div class="flex flex-col gap-md">
-                  <AttentionPanel :items="attentionItems" />
+                  <ReadinessAttentionPanel
+                    :readiness="canSeeReadiness ? readinessPayload : null"
+                  />
 
                   <button
                     v-if="me.can('finance.bill.view')"
@@ -602,7 +514,7 @@ function gotoModules() {
                     class="bg-white border border-slate-200 rounded-2xl p-3.5 flex items-center gap-3 text-left hover:border-role-admin hover:shadow-sm transition-all"
                     @click="router.push('/admin/finance')"
                   >
-                    <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 grid place-items-center flex-shrink-0">
+                    <span class="w-8 h-8 rounded-xl bg-role-admin/10 text-role-admin grid place-items-center flex-shrink-0">
                       <NavIcon name="wallet" :size="16" />
                     </span>
                     <span class="min-w-0 flex-1">
@@ -634,13 +546,13 @@ function gotoModules() {
                 />
                 <div id="quick-actions-anchor" class="grid grid-cols-2 gap-3">
                   <button
-                    v-for="tile in quickTilesWithGami"
+                    v-for="tile in quickTiles"
                     :key="tile.to"
                     type="button"
                     class="flex flex-col items-center gap-2.5 rounded-2xl border border-slate-200 bg-white hover:border-role-admin hover:shadow-md p-4 text-xs font-bold text-slate-600 transition-all"
                     @click="router.push(tile.to)"
                   >
-                    <span class="w-9 h-9 rounded-xl grid place-items-center" :class="tileTintClass(tile.tone)">
+                    <span class="w-9 h-9 rounded-xl grid place-items-center" :class="TILE_ICON_CLASS">
                       <NavIcon :name="tile.icon" :size="18" />
                     </span>
                     <span class="text-center leading-tight uppercase tracking-tight">{{ t(tile.labelKey) }}</span>
@@ -655,15 +567,15 @@ function gotoModules() {
                 <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest px-1">
                   {{ t('admin.dashboard.sectionQuickAccess') }}
                 </p>
-                <div id="quick-actions-anchor" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div id="quick-actions-anchor" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <button
-                    v-for="tile in quickTilesNoGami"
+                    v-for="tile in quickTiles"
                     :key="tile.to"
                     type="button"
                     class="flex flex-col items-center gap-2.5 rounded-2xl border border-slate-200 bg-white hover:border-role-admin hover:shadow-md p-4 text-xs font-bold text-slate-600 transition-all"
                     @click="router.push(tile.to)"
                   >
-                    <span class="w-9 h-9 rounded-xl grid place-items-center" :class="tileTintClass(tile.tone)">
+                    <span class="w-9 h-9 rounded-xl grid place-items-center" :class="TILE_ICON_CLASS">
                       <NavIcon :name="tile.icon" :size="18" />
                     </span>
                     <span class="text-center leading-tight uppercase tracking-tight">{{ t(tile.labelKey) }}</span>
@@ -687,7 +599,7 @@ function gotoModules() {
                   <span class="block text-sm font-black text-slate-900">{{ t('admin.dashboard.upsell.title') }}</span>
                   <span class="block text-3xs text-slate-500 mt-0.5">{{ t('admin.dashboard.upsell.sub') }}</span>
                 </span>
-                <span class="inline-flex items-center gap-1.5 bg-violet-600 text-white rounded-xl px-4 py-2 text-2xs font-black flex-shrink-0 whitespace-nowrap">
+                <span class="inline-flex items-center gap-1.5 bg-role-admin text-white rounded-xl px-4 py-2 text-2xs font-black flex-shrink-0 whitespace-nowrap">
                   {{ t('admin.dashboard.upsell.cta') }}
                   <NavIcon name="arrow-right" :size="13" />
                 </span>

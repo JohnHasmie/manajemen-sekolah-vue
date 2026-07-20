@@ -486,7 +486,7 @@
       "streakShort": "🔥 {days} days",
       "enableCta": "Enable Control Center",
       "allCalm": "All clear — nothing needs action right now.",
-      "moreActions": "More",
+      "completionNeeded": "{n} items need completion",
       "alerts": {
         "overdueBillsTitle": "Overdue bills",
         "overdueBillsSub": "{n} bills awaiting follow-up.",
@@ -634,13 +634,7 @@
         "count": "{n} items",
         "allClearEyebrow": "Clear",
         "allClearTitle": "All clear",
-        "allClearSub": "Nothing needs your attention",
-        "staffAttendanceTitle": "Staff present {pct}% today",
-        "staffAttendanceSub": "{n} of {total} not yet checked in",
-        "staffQuietTitle": "{n} staff quiet this week",
-        "staffQuietSub": "Low engagement",
-        "lowClassTitle": "Class {name} attendance {pct}%",
-        "lowClassSub": "Below other classes"
+        "allClearSub": "Nothing needs your attention"
       },
       "engagement": {
         "eyebrow": "Retention",
