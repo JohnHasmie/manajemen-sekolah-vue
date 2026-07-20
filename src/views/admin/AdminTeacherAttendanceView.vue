@@ -584,15 +584,25 @@ function pctChipClass(pct: number): string {
     >
       <!-- Action cluster (export dropdown + manual entry stub) -->
       <div class="flex items-center gap-2 relative" @click.stop>
-        <Button
-          variant="secondary"
-          size="sm"
-          :loading="exporting"
+        <!--
+          NOT using `<Button variant="secondary">` here: that variant is
+          designed for card surfaces (border-slate-300 + text-slate-700)
+          and looks washed out on the navy hero header — Yahya flagged it
+          as unreadable 2026-07-20. Use the same glass-morphism recipe as
+          the tab switcher pattern elsewhere on this header
+          (bg-white/20 + white/25 border + white text + backdrop-blur) so
+          the affordance reads clearly against the navy backdrop while
+          still feeling secondary to the primary "Catat Manual" button.
+        -->
+        <button
+          type="button"
+          :disabled="exporting"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11.5px] font-bold text-white bg-white/20 border border-white/25 backdrop-blur-sm hover:bg-white/30 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           @click="toggleExportMenu"
         >
           <NavIcon name="download" :size="13" />Export
           <NavIcon name="chevron-down" :size="12" />
-        </Button>
+        </button>
         <div
           v-if="exportMenuOpen"
           class="absolute right-0 top-full mt-1 w-56 rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden z-30"
