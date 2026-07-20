@@ -32,6 +32,7 @@ import {
   TeacherProgressService,
   type AdminHighlightPayload,
   type AdminSummaryPayload,
+  type AdminStaffSummaryPayload,
 } from '@/services/teacher-progress.service';
 import { ReadinessService, type ReadinessPayload } from '@/services/readiness.service';
 import { useMe } from '@/composables/useMe';
@@ -56,6 +57,10 @@ const { t } = useI18n();
 const canSeePrestasi = computed(() => meApi.can('gamification.admin.view'));
 const adminHighlight = ref<AdminHighlightPayload | null>(null);
 const adminSummary = ref<AdminSummaryPayload | null>(null);
+// Staff-side ringkasan tile (backend MR6 /admin/staff-engagement/summary).
+// Gated on the SAME ability as the teacher variant; hides silently when
+// zero staff so sekolah kecil see the guru tile alone.
+const adminStaffSummary = ref<AdminStaffSummaryPayload | null>(null);
 
 // Readiness teaser — CORE feature, gated only on `readiness.view`. Uses
 // the same silent-on-failure pattern as `loadPrestasi()` above so a
@@ -78,6 +83,14 @@ async function loadPrestasi() {
     // of the dashboard. The v-if drops the section cleanly.
     adminHighlight.value = null;
     adminSummary.value = null;
+  }
+  // Staff summary fetched independently. A tenant may have zero staff
+  // rows (single-guru bimbel, for example) — the tile self-hides when
+  // `total_staff === 0`, so we still fetch to know that.
+  try {
+    adminStaffSummary.value = await TeacherProgressService.getAdminStaffSummary();
+  } catch {
+    adminStaffSummary.value = null;
   }
 }
 
@@ -521,6 +534,77 @@ const financePct = computed(() =>
                   <li
                     v-for="(t, i) in adminSummary.top_three"
                     :key="t.teacher_id"
+                    class="flex items-center gap-3"
+                  >
+                    <span
+                      class="w-5 text-2xs font-black text-center flex-shrink-0"
+                      :class="i === 0 ? 'text-amber-500' : i === 1 ? 'text-slate-500' : 'text-orange-500'"
+                    >
+                      #{{ i + 1 }}
+                    </span>
+                    <p class="flex-1 text-2xs font-bold text-slate-800 truncate">{{ t.name }}</p>
+                    <p class="text-2xs font-black text-slate-800">
+                      {{ t.points }}<span class="text-3xs text-slate-500 font-bold ml-1">XP</span>
+                    </p>
+                  </li>
+                </ol>
+              </div>
+            </section>
+
+            <!-- Engagement Staf — paired tile below Engagement Guru.
+                 Same 4-KPI + Top 3 pattern; distinct cobalt-briefcase
+                 tone so the two tiles read as related-but-distinct.
+                 Silent-hides when the school has zero staff rows
+                 (single-guru bimbel etc.), so the Wawasan Kinerja
+                 stack stays clean for tenants without staff. -->
+            <section
+              v-if="adminStaffSummary && adminStaffSummary.total_staff > 0"
+              class="bg-white border border-slate-200 rounded-2xl p-4"
+            >
+              <header class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-xl bg-brand-cobalt/10 text-brand-cobalt grid place-items-center">
+                    <NavIcon name="briefcase" :size="16" />
+                  </div>
+                  <div>
+                    <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Retensi</p>
+                    <h3 class="text-sm font-black text-slate-900">Engagement Staf</h3>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="text-2xs font-bold text-brand-cobalt hover:underline"
+                  @click="router.push('/admin/staff-engagement')"
+                >
+                  Lihat detail →
+                </button>
+              </header>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                <div class="rounded-xl bg-slate-50 px-3 py-2">
+                  <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest">Total</p>
+                  <p class="text-base font-black text-slate-900 mt-0.5">{{ adminStaffSummary.total_staff }}</p>
+                </div>
+                <div class="rounded-xl bg-emerald-50 px-3 py-2">
+                  <p class="text-3xs font-bold text-emerald-700 uppercase tracking-widest">Aktif</p>
+                  <p class="text-base font-black text-emerald-900 mt-0.5">{{ adminStaffSummary.active_this_week }}</p>
+                </div>
+                <div class="rounded-xl bg-orange-50 px-3 py-2">
+                  <p class="text-3xs font-bold text-orange-700 uppercase tracking-widest">Streak</p>
+                  <p class="text-base font-black text-orange-900 mt-0.5">
+                    {{ adminStaffSummary.average_streak }}<span class="text-3xs text-orange-700 font-bold ml-1">hr</span>
+                  </p>
+                </div>
+                <div class="rounded-xl bg-red-50 px-3 py-2">
+                  <p class="text-3xs font-bold text-red-700 uppercase tracking-widest">Sepi</p>
+                  <p class="text-base font-black text-red-900 mt-0.5">{{ adminStaffSummary.needs_attention_count }}</p>
+                </div>
+              </div>
+              <div v-if="adminStaffSummary.top_three.length > 0">
+                <p class="text-3xs font-bold text-slate-500 uppercase tracking-widest mb-2">Top minggu ini</p>
+                <ol class="space-y-1.5">
+                  <li
+                    v-for="(t, i) in adminStaffSummary.top_three"
+                    :key="t.user_id"
                     class="flex items-center gap-3"
                   >
                     <span
