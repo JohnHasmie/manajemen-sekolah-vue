@@ -42,9 +42,14 @@ const search = ref('');
 const statusFilter = ref<TeacherRowStatus | ''>('');
 const roleFilter = ref<string>('');
 
+// Include BOTH 'silent' (7+ days quiet) AND 'never' (has an account
+// but never earned a point). Both need a nudge; excluding `never`
+// caused the "Semua Aktif" positive card to render even when the
+// table showed several BELUM AKTIF rows — the backend
+// `needs_attention_count` already sums both statuses.
 const silentStaff = computed(() =>
   (payload.value?.data ?? [])
-    .filter((r) => r.status === 'silent')
+    .filter((r) => r.status === 'silent' || r.status === 'never')
     .map((r) => ({
       user_id: r.user_id,
       name: r.name,

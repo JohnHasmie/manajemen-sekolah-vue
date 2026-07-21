@@ -41,9 +41,13 @@ const sleepyTeachersCardRef = ref<HTMLElement | null>(null);
 const search = ref('');
 const statusFilter = ref<TeacherRowStatus | ''>('');
 
+// Include BOTH 'silent' (7+ days quiet) AND 'never' (has an account
+// but never earned a point). Backend's `needs_attention_count` sums
+// both; excluding `never` here made the sidebar say "Semua Aktif"
+// while the table showed BELUM AKTIF rows.
 const silentTeachers = computed(() =>
   (payload.value?.data ?? [])
-    .filter((r) => r.status === 'silent')
+    .filter((r) => r.status === 'silent' || r.status === 'never')
     .map((r) => ({
       teacher_id: r.teacher_id,
       name: r.name,
