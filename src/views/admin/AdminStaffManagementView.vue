@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { StaffService } from '@/services/staff.service';
 import { RbacService } from '@/services/rbac.service';
-import { AdminDataExcelService, type ImportDetailRow } from '@/services/admin-data-excel.service';
 import { useAuthStore } from '@/stores/auth';
 import { useRoleHex } from '@/composables/useRoleHex';
 import type { StaffMember, StaffRole } from '@/types/staff';
@@ -23,9 +22,7 @@ import StaffRbacCard from './widgets/StaffRbacCard.vue';
 import SubscriptionUsageBanner from '@/components/billing/SubscriptionUsageBanner.vue';
 import AdminEntityDetailSheet, { type DetailSection } from '@/components/feature/AdminEntityDetailSheet.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
-import AdminDataMenu from '@/components/feature/AdminDataMenu.vue';
-import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vue';
-import AdminImportResultModal from '@/components/feature/AdminImportResultModal.vue';
+import AdminExcelToolbar from '@/components/feature/AdminExcelToolbar.vue';
 import ResetPasswordModal from '@/components/feature/ResetPasswordModal.vue';
 
 const { t: $t } = useI18n();
@@ -44,6 +41,7 @@ const staff = shallowRef<StaffMember[]>([]);
 const roles = shallowRef<StaffRole[]>([]);
 const pagination = ref<Pagination | null>(null);
 const isLoading = ref(true);
+const forceSkeleton = ref(false);
 const error = ref<string | null>(null);
 
 const search = ref('');
@@ -64,10 +62,6 @@ const deleteTarget = ref<StaffMember | null>(null);
 const detailTarget = ref<StaffMember | null>(null);
 const resetTarget = ref<StaffMember | null>(null);
 
-const showImport = ref(false);
-const importDetails = ref<ImportDetailRow[]>([]);
-const importCounts = ref<{ imported?: number; skipped?: number; conflicts?: number; failed?: number }>({});
-
 const showRolePicker = ref(false);
 const showGenderPicker = ref(false);
 const showEmploymentPicker = ref(false);
@@ -77,7 +71,7 @@ const credential = ref<{ name: string; email: string; password: string } | null>
 const copied = ref(false);
 
 const state = computed<AsyncState<StaffMember[]>>(() => {
-  if (isLoading.value && staff.value.length === 0) return { status: 'loading' };
+  if (isLoading.value && (staff.value.length === 0 || forceSkeleton.value)) return { status: 'loading' };
   if (error.value) return { status: 'error', error: error.value };
   if (staff.value.length === 0) return { status: 'empty' };
   return { status: 'content', data: staff.value };
@@ -90,8 +84,9 @@ const kpiCards = computed<KpiCard[]>(() => [
   { icon: 'user', label: 'PEREMPUAN', value: kpis.value.female, tone: 'pink' },
 ]);
 
-async function reload(page = 1) {
+async function reload(page = 1, opts: { skeleton?: boolean } = {}) {
   isLoading.value = true;
+  forceSkeleton.value = opts.skeleton ?? false;
   error.value = null;
   try {
     const res = await StaffService.list({
@@ -111,6 +106,7 @@ async function reload(page = 1) {
     error.value = (e as Error).message;
   } finally {
     isLoading.value = false;
+    forceSkeleton.value = false;
   }
 }
 
@@ -288,38 +284,7 @@ function openResetPassword() {
 
 function onResetDone() { toast.value = { message: 'Password staf berhasil direset.', tone: 'success' }; }
 
-async function exportExcel() {
-  try {
-    await AdminDataExcelService.exportExcel('staff');
-    toast.value = { message: 'Excel terdownload.', tone: 'success' };
-  } catch (e) {
-    toast.value = { message: (e as Error).message, tone: 'error' };
-  }
-}
-
-async function downloadTemplate() {
-  try {
-    await AdminDataExcelService.downloadTemplate('staff');
-    toast.value = { message: 'Template terdownload.', tone: 'success' };
-  } catch (e) {
-    toast.value = { message: (e as Error).message, tone: 'error' };
-  }
-}
-
-function onImportDone(res: { imported: number; failed: number; skipped?: number; conflicts?: number; message?: string; details?: ImportDetailRow[] }) {
-  importDetails.value = res.details ?? [];
-  importCounts.value = { imported: res.imported, skipped: res.skipped ?? 0, conflicts: res.conflicts ?? 0, failed: res.failed };
-  const skipped = res.skipped ?? 0;
-  const conflicts = res.conflicts ?? 0;
-  const parts = [`${res.imported} staf ditambahkan`];
-  if (skipped > 0) parts.push(`${skipped} sudah terdaftar`);
-  if (conflicts > 0) parts.push(`${conflicts} perlu ditinjau`);
-  if (res.failed > 0) parts.push(`${res.failed} gagal`);
-
-  const needsAttention = res.failed > 0 || conflicts > 0;
-  toast.value = { message: `${parts.join(' · ')}.`, tone: needsAttention ? 'error' : 'success' };
-  reload(1);
-}
+// Excel export / import / template are handled by <AdminExcelToolbar>.
 
 async function copyPassword() {
   if (!credential.value) return;
@@ -351,11 +316,11 @@ const staffDeleteImpact = computed<string[]>(() => [ $t('admin.staff.deleteImpac
     @retry="reload()"
   >
     <template #header-actions>
-      <AdminDataMenu
-        @refresh="reload(pagination?.current_page ?? 1)"
-        @export-excel="exportExcel"
-        @import-excel="showImport = true"
-        @download-template="downloadTemplate"
+      <AdminExcelToolbar
+        entity="staff"
+        entity-label="staf"
+        @refresh="reload(pagination?.current_page ?? 1, { skeleton: true })"
+        @imported="reload(1)"
       />
     </template>
 
@@ -459,18 +424,6 @@ const staffDeleteImpact = computed<string[]>(() => [ $t('admin.staff.deleteImpac
     @done="onResetDone"
   />
 
-  <AdminImportExcelModal
-    v-if="showImport"
-    entity-type="staff"
-    @close="showImport = false"
-    @done="onImportDone"
-  />
-  <AdminImportResultModal
-    v-if="importDetails.length > 0"
-    :details="importDetails"
-    :counts="importCounts"
-    @close="importDetails = []"
-  />
 
   <Modal v-if="showRolePicker" title="Filter Role" size="sm" @close="showRolePicker = false">
     <div class="space-y-1">

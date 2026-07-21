@@ -28,7 +28,6 @@ import KpiStripCards, {
 } from '@/components/feature/KpiStripCards.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
-import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import Modal from '@/components/ui/Modal.vue';
 import BillCard from '@/components/feature/BillCard.vue';
 import Toast from '@/components/ui/Toast.vue';

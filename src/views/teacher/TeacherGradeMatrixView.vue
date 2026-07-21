@@ -999,7 +999,6 @@ function typeLabel(type: AssessmentType): string {
           <SegmentedControl
             :model-value="typeFilter"
             :options="typeOptions"
-            size="sm"
             @update:model-value="(v) => (typeFilter = v as AssessmentType | 'all')"
           />
         </div>
@@ -1420,7 +1419,6 @@ function typeLabel(type: AssessmentType): string {
               { key: 'final_exam', label: t('tutor.sekolah.gradebook.typeFinalExam') },
               { key: 'other', label: t('tutor.sekolah.gradebook.typeOther') },
             ]"
-            size="sm"
             @update:model-value="(v) => (addForm.type = v as AssessmentType)"
           />
         </div>
@@ -1494,7 +1492,6 @@ function typeLabel(type: AssessmentType): string {
               { key: 'final_exam', label: t('tutor.sekolah.gradebook.typeFinalExam') },
               { key: 'other', label: t('tutor.sekolah.gradebook.typeOther') },
             ]"
-            size="sm"
             @update:model-value="(v) => (editForm.type = v as AssessmentType)"
           />
         </div>

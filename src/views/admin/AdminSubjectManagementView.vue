@@ -13,7 +13,6 @@ import {
   type AffectedSchedule,
 } from '@/services/subjects.service';
 import { ScheduleService } from '@/services/schedule.service';
-import { AdminDataExcelService } from '@/services/admin-data-excel.service';
 import { useRoleHex } from '@/composables/useRoleHex';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
@@ -31,13 +30,8 @@ import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import FilterFacetPickerModal, {
   type FacetOption,
 } from '@/components/feature/FilterFacetPickerModal.vue';
-import AdminDataMenu from '@/components/feature/AdminDataMenu.vue';
-import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vue';
-import AdminImportResultModal from '@/components/feature/AdminImportResultModal.vue';
-import type {
-  ImportDetailRow,
-  ImportWarningRow,
-} from '@/services/admin-data-excel.service';
+import AdminExcelToolbar from '@/components/feature/AdminExcelToolbar.vue';
+import type { AdminImportResult } from '@/services/admin-data-excel.service';
 import Modal from '@/components/ui/Modal.vue';
 import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
@@ -52,6 +46,7 @@ const router = useRouter();
 const subjects = shallowRef<Subject[]>([]);
 const pagination = ref<Pagination | null>(null);
 const isLoading = ref(true);
+const forceSkeleton = ref(false);
 const error = ref<string | null>(null);
 // `action: 'resync'` turns the toast into a CTA that deep-links to the
 // Sinkronkan Jadwal wizard (post-import orphan follow-up, B3).
@@ -85,29 +80,14 @@ const inUseGuard = ref<{
 } | null>(null);
 const linkMasterTarget = ref<Subject | null>(null);
 const bulkDeleteOpen = ref(false);
-const showImport = ref(false);
 const isSaving = ref(false);
-
-// Per-row import result — feeds the shared result dialog when non-empty.
-const importDetails = ref<ImportDetailRow[]>([]);
-const importCounts = ref<{
-  imported?: number;
-  created?: number;
-  updated?: number;
-  restored?: number;
-  skipped?: number;
-  conflicts?: number;
-  failed?: number;
-}>({});
-// Non-blocking per-row warnings (post-!453: unresolved Master link).
-const importWarnings = ref<ImportWarningRow[]>([]);
 
 const showStatusPicker = ref(false);
 const showGradePicker = ref(false);
 const showClassesPicker = ref(false);
 
 const state = computed<AsyncState<Subject[]>>(() => {
-  if (isLoading.value && subjects.value.length === 0) return { status: 'loading' };
+  if (isLoading.value && (subjects.value.length === 0 || forceSkeleton.value)) return { status: 'loading' };
   if (error.value) return { status: 'error', error: error.value };
   if (filteredSubjects.value.length === 0) return { status: 'empty' };
   return { status: 'content', data: filteredSubjects.value };
@@ -165,8 +145,9 @@ const activeFilterCount = computed(() => {
   return n;
 });
 
-async function reload(page = 1) {
+async function reload(page = 1, opts: { skeleton?: boolean } = {}) {
   isLoading.value = true;
+  forceSkeleton.value = opts.skeleton ?? false;
   error.value = null;
   try {
     const res = await SubjectService.list({
@@ -182,6 +163,7 @@ async function reload(page = 1) {
     error.value = (e as Error).message;
   } finally {
     isLoading.value = false;
+    forceSkeleton.value = false;
   }
 }
 
@@ -512,54 +494,10 @@ async function onMasterLinked() {
   await reload(pagination.value?.current_page ?? 1);
 }
 
-// ── Excel ──
-async function exportExcel() {
-  try {
-    await AdminDataExcelService.exportExcel('subject');
-    toast.value = { message: 'Excel terdownload.', tone: 'success' };
-  } catch (e) {
-    toast.value = { message: (e as Error).message, tone: 'error' };
-  }
-}
-async function downloadTemplate() {
-  try {
-    await AdminDataExcelService.downloadTemplate('subject');
-    toast.value = {
-      // Post-!453 template gained 2 optional columns — call them out
-      // in the download-success toast so an admin who never opens the
-      // Petunjuk tab still knows what they are.
-      message: 'Template terdownload. Kolom baru: Kelas (1–12) & Master (opsional).',
-      tone: 'success',
-    };
-  } catch (e) {
-    toast.value = { message: (e as Error).message, tone: 'error' };
-  }
-}
-async function onImportDone(res: {
-  imported: number;
-  created?: number;
-  updated?: number;
-  restored?: number;
-  failed: number;
-  skipped?: number;
-  conflicts?: number;
-  details?: ImportDetailRow[];
-  warnings?: ImportWarningRow[];
-}) {
-  // Surface EVERY processed row grouped by status in the shared dialog.
-  importDetails.value = res.details ?? [];
-  importWarnings.value = res.warnings ?? [];
-  // Pass the split buckets through so the result dialog can render a
-  // dedicated "Diperbarui" section (upserts that kept schedules linked).
-  importCounts.value = {
-    imported: res.imported,
-    created: res.created ?? 0,
-    updated: res.updated ?? 0,
-    restored: res.restored ?? 0,
-    skipped: res.skipped ?? 0,
-    conflicts: res.conflicts ?? 0,
-    failed: res.failed,
-  };
+// Excel export / import / template + the result dialog are owned by
+// <AdminExcelToolbar>. This host only layers the subject-specific
+// orphan-resync follow-up on top of a successful import.
+async function onSubjectImported(res: AdminImportResult) {
   await reload(1);
 
   // B3 — orphan follow-up. A re-import that created many mapel but
@@ -604,10 +542,11 @@ async function onImportDone(res: {
       }),
     );
   }
-  if (importWarnings.value.length > 0) {
+  const warned = res.warnings?.length ?? 0;
+  if (warned > 0) {
     parts.push(
       $t('admin.sekolah.subject_management.import_summary.warned', {
-        count: importWarnings.value.length,
+        count: warned,
       }),
     );
   }
@@ -658,12 +597,14 @@ function goToResync() {
     @retry="reload()"
   >
     <template #header-actions>
-      <AdminDataMenu
+      <AdminExcelToolbar
+        entity="subject"
+        entity-label="mapel"
+        :import-title="$t('admin.sekolah.subject_management.import_title')"
         :read-only="ayReadOnly"
-        @refresh="reload(pagination?.current_page ?? 1)"
-        @export-excel="exportExcel"
-        @import-excel="showImport = true"
-        @download-template="downloadTemplate"
+        :show-summary-toast="false"
+        @refresh="reload(pagination?.current_page ?? 1, { skeleton: true })"
+        @imported="onSubjectImported"
       />
     </template>
 
@@ -879,31 +820,6 @@ function goToResync() {
       </div>
     </div>
   </Modal>
-
-  <AdminImportExcelModal
-    v-if="showImport"
-    entity="subject"
-    :title="$t('admin.sekolah.subject_management.import_title')"
-    @close="showImport = false"
-    @done="onImportDone"
-  />
-
-  <!--
-    Post-import result: EVERY processed mapel grouped by status, plus
-    the amber Peringatan section for non-blocking master-not-found
-    warnings (post-!453).
-  -->
-  <AdminImportResultModal
-    v-if="importDetails.length > 0 || importWarnings.length > 0"
-    entity-label="mapel"
-    :details="importDetails"
-    :counts="importCounts"
-    :warnings="importWarnings"
-    @close="
-      importDetails = [];
-      importWarnings = [];
-    "
-  />
 
   <!--
     Link-master picker — opened when the SubjectCurriculumCard emits

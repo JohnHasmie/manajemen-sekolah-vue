@@ -1011,28 +1011,25 @@ async function bulkDelete() {
             { key: 'timetable', label: $t('admin.schedule.viewTimetable') },
           ]"
         />
-        <!-- Cetak / Import compressed to icon-only affordances so the
-             hero action cluster stays tidy; the label rides along as a
-             native tooltip + aria-label for accessibility. "Jam
-             Pelajaran" keeps its text label because it's the primary
-             setup entry point (a bare clock icon reads as ambiguous). -->
+        <!-- Cetak / Import carry text labels (not bare icons) to match the
+             unified Excel toolbar on the other admin data pages. Jadwal
+             keeps its bespoke import flow (ScheduleImportModal) + Print-PDF
+             instead of an Excel export, so it isn't the shared toolbar. -->
         <button
           type="button"
-          class="grid place-items-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 hover:text-white transition-colors"
-          :title="$t('admin.schedule.print')"
-          :aria-label="$t('admin.schedule.print')"
+          class="text-2xs font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-1.5"
           @click="showPrint = true"
         >
-          <NavIcon name="download" :size="13" />
+          <NavIcon name="download" :size="12" />
+          {{ $t('admin.schedule.print') }}
         </button>
         <button
           type="button"
-          class="grid place-items-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 hover:text-white transition-colors"
-          :title="$t('admin.schedule.import')"
-          :aria-label="$t('admin.schedule.import')"
+          class="text-2xs font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-1.5"
           @click="showImport = true"
         >
-          <NavIcon name="upload" :size="13" />
+          <NavIcon name="upload" :size="12" />
+          {{ $t('admin.schedule.import') }}
         </button>
         <button
           type="button"

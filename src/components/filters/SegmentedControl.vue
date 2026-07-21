@@ -1,8 +1,10 @@
 <!--
   SegmentedControl.vue - iOS-style segmented buttons inside a slate container.
 
-  Used for Session selector (Session 1/2/3/4) and Asesmen type selector
-  (Semua / Tugas / UH / UTS / UAS).
+  The single canonical tab-switch across the app: Jadwal's List/Timetable,
+  the admin data-page view toggles (Kartu/Padat), session/asesmen/period
+  selectors, etc. One fixed size so every switch reads identically — the
+  old `size` variant was dropped so pages can't drift apart.
 
   Each option can carry an optional `meta` (e.g. start time, count) shown
   smaller after the main label.
@@ -17,7 +19,6 @@ export interface SegmentOption {
 defineProps<{
   modelValue: string;
   options: SegmentOption[];
-  size?: 'sm' | 'md';
 }>();
 
 defineEmits<{ 'update:modelValue': [string] }>();
@@ -25,8 +26,7 @@ defineEmits<{ 'update:modelValue': [string] }>();
 
 <template>
   <div
-    class="inline-flex gap-0.5 bg-slate-100 rounded-xl"
-    :class="size === 'sm' ? 'p-0.5' : 'p-1'"
+    class="inline-flex gap-0.5 bg-slate-100 rounded-xl p-1"
     role="tablist"
   >
     <button
@@ -35,19 +35,17 @@ defineEmits<{ 'update:modelValue': [string] }>();
       type="button"
       role="tab"
       :aria-selected="modelValue === opt.key"
-      class="rounded-lg font-bold transition-all"
-      :class="[
+      class="rounded-lg font-bold transition-all text-2xs px-3 py-1.5"
+      :class="
         modelValue === opt.key
           ? 'bg-white text-slate-900 shadow-sm'
-          : 'text-slate-500 hover:text-slate-900',
-        size === 'sm' ? 'text-3xs px-2.5 py-1' : 'text-2xs px-3 py-1.5',
-      ]"
+          : 'text-slate-500 hover:text-slate-900'
+      "
       @click="$emit('update:modelValue', opt.key)"
     >
       {{ opt.label }}<span
         v-if="opt.meta"
-        class="ml-1 font-bold opacity-60"
-        :class="size === 'sm' ? 'text-4xs' : 'text-3xs'"
+        class="ml-1 font-bold opacity-60 text-3xs"
       >· {{ opt.meta }}</span>
     </button>
   </div>

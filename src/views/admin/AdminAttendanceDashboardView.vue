@@ -247,7 +247,6 @@ function onWizardDone(payload: {
         <SegmentedControl
           :model-value="periodKey"
           :options="PERIOD_OPTIONS"
-          size="sm"
           @update:model-value="onPeriodChange"
         />
         <button

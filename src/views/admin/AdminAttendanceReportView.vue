@@ -476,7 +476,6 @@ async function processExport() {
         <SegmentedControl
           :model-value="viewMode"
           :options="VIEW_OPTIONS"
-          size="sm"
           @update:model-value="(v) => (viewMode = v as ViewMode)"
         />
         <button

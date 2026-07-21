@@ -233,7 +233,6 @@ function formatLongDate(d: string): string {
           { key: '90', label: '90 hari' },
           { key: 'ay', label: 'Tahun ajaran' },
         ]"
-        size="sm"
         @update:model-value="(v) => (range = v as '30' | '90' | 'ay')"
       />
       <span class="flex-1"></span>

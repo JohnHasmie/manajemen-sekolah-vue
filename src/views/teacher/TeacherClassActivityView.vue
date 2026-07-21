@@ -968,7 +968,7 @@ function pickSubject(id: string) {
           <span class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
             Rentang
           </span>
-          <SegmentedControl v-model="rangeKey" :options="rangeOptions" size="sm" />
+          <SegmentedControl v-model="rangeKey" :options="rangeOptions" />
         </div>
       </template>
     </PageFilterToolbar>
@@ -985,7 +985,6 @@ function pickSubject(id: string) {
       <SegmentedControl
         :model-value="typeFilter"
         :options="typeTabs"
-        size="sm"
         @update:model-value="typeFilter = $event as ActivityType | 'all'"
       />
     </div>

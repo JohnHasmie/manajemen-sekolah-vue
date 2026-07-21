@@ -524,7 +524,6 @@ function pickStatus(k: StatusFilter) {
               { key: 'event', label: 'Acara' },
               { key: 'info', label: 'Info' },
             ]"
-            size="sm"
             @update:model-value="(v) => (form.category = v as AnnouncementCategory)"
           />
         </div>

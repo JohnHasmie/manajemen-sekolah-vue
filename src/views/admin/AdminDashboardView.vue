@@ -365,7 +365,6 @@ function gotoModules() {
                   v-if="sliceOptions.length > 1"
                   v-model="sliceKey"
                   :options="sliceOptions"
-                  size="sm"
                 />
                 <AcademicYearChip
                   variant="light"

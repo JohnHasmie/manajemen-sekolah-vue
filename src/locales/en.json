@@ -82,6 +82,18 @@
     }
   },
   "common": {
+    "excel": {
+      "refresh": "Refresh",
+      "downloadTemplate": "Download Template",
+      "exportExcel": "Export Excel",
+      "importExcel": "Import Excel",
+      "exported": "Excel downloaded.",
+      "templateDownloaded": "Template downloaded.",
+      "importedCount": "{count} {label} added",
+      "skippedCount": "{count} already registered",
+      "conflictsCount": "{count} need review",
+      "failedCount": "{count} failed"
+    },
     "save": "Save",
     "saveChanges": "Save changes",
     "saving": "Saving…",

@@ -9,7 +9,6 @@ import { useI18n } from 'vue-i18n';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SettingsService } from '@/services/settings.service';
 import { TeacherService } from '@/services/teachers.service';
-import { AdminDataExcelService } from '@/services/admin-data-excel.service';
 import { useRoleHex } from '@/composables/useRoleHex';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
@@ -28,13 +27,10 @@ import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import FilterFacetPickerModal, {
   type FacetOption,
 } from '@/components/feature/FilterFacetPickerModal.vue';
-import AdminDataMenu from '@/components/feature/AdminDataMenu.vue';
+import AdminExcelToolbar from '@/components/feature/AdminExcelToolbar.vue';
 import AdminEntityDetailSheet, {
   type DetailSection,
 } from '@/components/feature/AdminEntityDetailSheet.vue';
-import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vue';
-import AdminImportResultModal from '@/components/feature/AdminImportResultModal.vue';
-import type { ImportDetailRow } from '@/services/admin-data-excel.service';
 import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
 
@@ -57,6 +53,7 @@ const teachers = shallowRef<Teacher[]>([]);
 const educationLevel = ref<string | null>(null);
 const pagination = ref<Pagination | null>(null);
 const isLoading = ref(true);
+const forceSkeleton = ref(false);
 const error = ref<string | null>(null);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
@@ -73,26 +70,16 @@ const selectedIds = ref<Set<string>>(new Set());
 const editTarget = ref<Classroom | null | undefined>(undefined);
 const detailTarget = ref<Classroom | null>(null);
 const showFab = ref(false);
-const showImport = ref(false);
 const showWizard = ref(false);
 const deleteTarget = ref<Classroom | null>(null);
 const bulkDeleteOpen = ref(false);
 const isSaving = ref(false);
 
-// Per-row import result — feeds the shared result dialog when non-empty.
-const importDetails = ref<ImportDetailRow[]>([]);
-const importCounts = ref<{
-  imported?: number;
-  skipped?: number;
-  conflicts?: number;
-  failed?: number;
-}>({});
-
 const showGradePicker = ref(false);
 const showHomeroomPicker = ref(false);
 
 const state = computed<AsyncState<Classroom[]>>(() => {
-  if (isLoading.value && classrooms.value.length === 0) return { status: 'loading' };
+  if (isLoading.value && (classrooms.value.length === 0 || forceSkeleton.value)) return { status: 'loading' };
   if (error.value) return { status: 'error', error: error.value };
   if (classrooms.value.length === 0) return { status: 'empty' };
   return { status: 'content', data: classrooms.value };
@@ -135,8 +122,9 @@ const activeFilterCount = computed(() => {
   return n;
 });
 
-async function reload(page = 1) {
+async function reload(page = 1, opts: { skeleton?: boolean } = {}) {
   isLoading.value = true;
+  forceSkeleton.value = opts.skeleton ?? false;
   error.value = null;
   try {
     const res = await ClassroomService.list({
@@ -152,6 +140,7 @@ async function reload(page = 1) {
     error.value = (e as Error).message;
   } finally {
     isLoading.value = false;
+    forceSkeleton.value = false;
   }
 }
 
@@ -386,46 +375,7 @@ function onPromoted(res: { promoted: number; failed: number }) {
   reload(pagination.value?.current_page ?? 1);
 }
 
-// ── Excel ──
-async function exportExcel() {
-  try {
-    await AdminDataExcelService.exportExcel('class');
-    toast.value = { message: $t('admin.sekolah.classroom_management.toast_excel_downloaded'), tone: 'success' };
-  } catch (e) {
-    toast.value = { message: (e as Error).message, tone: 'error' };
-  }
-}
-async function downloadTemplate() {
-  try {
-    await AdminDataExcelService.downloadTemplate('class');
-    toast.value = { message: $t('admin.sekolah.classroom_management.toast_template_downloaded'), tone: 'success' };
-  } catch (e) {
-    toast.value = { message: (e as Error).message, tone: 'error' };
-  }
-}
-function onImportDone(res: {
-  imported: number;
-  failed: number;
-  skipped?: number;
-  conflicts?: number;
-  details?: ImportDetailRow[];
-}) {
-  // Surface EVERY processed row grouped by status in the shared dialog.
-  importDetails.value = res.details ?? [];
-  importCounts.value = {
-    imported: res.imported,
-    skipped: res.skipped ?? 0,
-    conflicts: res.conflicts ?? 0,
-    failed: res.failed,
-  };
-  toast.value = {
-    message: res.failed > 0
-      ? $t('admin.sekolah.classroom_management.toast_imported_with_failed', { imported: res.imported, failed: res.failed })
-      : $t('admin.sekolah.classroom_management.toast_imported', { imported: res.imported }),
-    tone: res.failed > 0 ? 'error' : 'success',
-  };
-  reload(1);
-}
+// Excel export / import / template are handled by <AdminExcelToolbar>.
 
 // Legacy `topMeta`/`statusFor` helpers were removed with the switch
 // from BrandListRow → ClassRosterCard — the card renders the full
@@ -453,12 +403,13 @@ function onImportDone(res: {
     @retry="reload()"
   >
     <template #header-actions>
-      <AdminDataMenu
+      <AdminExcelToolbar
+        entity="class"
+        entity-label="kelas"
+        :import-title="$t('admin.sekolah.classroom_management.import_title')"
         :read-only="ayReadOnly"
-        @refresh="reload(pagination?.current_page ?? 1)"
-        @export-excel="exportExcel"
-        @import-excel="showImport = true"
-        @download-template="downloadTemplate"
+        @refresh="reload(pagination?.current_page ?? 1, { skeleton: true })"
+        @imported="reload(1)"
       />
     </template>
 
@@ -623,23 +574,6 @@ function onImportDone(res: {
     :loading="isSaving"
     @confirm="performBulkDelete"
     @close="bulkDeleteOpen = false"
-  />
-
-  <AdminImportExcelModal
-    v-if="showImport"
-    entity="class"
-    :title="$t('admin.sekolah.classroom_management.import_title')"
-    @close="showImport = false"
-    @done="onImportDone"
-  />
-
-  <!-- Post-import result: EVERY processed kelas grouped by status. -->
-  <AdminImportResultModal
-    v-if="importDetails.length > 0"
-    entity-label="kelas"
-    :details="importDetails"
-    :counts="importCounts"
-    @close="importDetails = []"
   />
 
   <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />

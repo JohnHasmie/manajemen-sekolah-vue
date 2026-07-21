@@ -47,7 +47,6 @@ import { ASSESSMENT_LABELS } from '@/types/grades';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
-import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import KpiStripCards, {
   type KpiCard,

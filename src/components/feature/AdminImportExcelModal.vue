@@ -12,9 +12,7 @@ import { computed } from 'vue';
 import {
   AdminDataExcelService,
   type AdminEntity,
-  type ImportReviewRow,
-  type ImportDetailRow,
-  type ImportWarningRow,
+  type AdminImportResult,
 } from '@/services/admin-data-excel.service';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
@@ -28,26 +26,10 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: [];
-  done: [{
-    imported: number;
-    // Subject import (MR!516) splits the total into these buckets so the
-    // host can reassure the admin a re-import upserted (updated) rather
-    // than duplicated. Other importers omit them.
-    created?: number;
-    updated?: number;
-    restored?: number;
-    failed: number;
-    // Teacher import also reports these; other entities omit them.
-    skipped?: number;
-    conflicts?: number;
-    message?: string;
-    review?: ImportReviewRow[];
-    // Per-row detail of EVERY processed row — feeds the shared result dialog.
-    details?: ImportDetailRow[];
-    // Non-blocking per-row annotations (post-!453 subject import). Empty
-    // for importers that don't emit warnings.
-    warnings?: ImportWarningRow[];
-  }];
+  // The normalised import result — the same shape the service resolves to.
+  // Buckets (created/updated/restored) let the host distinguish an upsert
+  // from a duplicate; review/details/warnings feed the shared result dialog.
+  done: [AdminImportResult];
 }>();
 
 /**
