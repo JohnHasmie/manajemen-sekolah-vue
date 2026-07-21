@@ -24,14 +24,16 @@ import {
   TutoringBimbelService,
   type BimbelEnrollment,
 } from '@/services/tutoring-bimbel.service';
+import { FinanceService } from '@/services/finance.service';
+import type { Bill } from '@/types/billing';
 import type { StatusBadgeTone } from '@/types/status-badge';
 
 const { t } = useI18n();
 
-// TODO WEB-3+ swap to a proper Finance-bill shape once
-// /tutoring-v2/bills lands. MVP renders directly off enrollments so
-// the screen isn't empty — the table columns already project the
-// fields we'll need (student, mode, amount, status).
+// TODO WEB-3+ swap the table to /tutoring-v2/bills once the BE exposes
+// a source_type-filtered Finance list. KPI counters below already pull
+// real bills via FinanceService.listBills (all tenant bills; a bimbel
+// tenant only has bimbel bills so the numbers land correct there).
 
 const search = ref('');
 const modeFilter = ref<string>(''); // '' | 'prepaid' | 'monthly' | 'per_session'
@@ -44,30 +46,48 @@ const applyDebounced = useDebounceFn((v: string) => {
 }, 300);
 watch(search, (v) => applyDebounced(v));
 
-const { state, reload } = useDataRefresh(async () => {
-  const { items } = await TutoringBimbelService.listEnrollments({
-    per_page: 200,
-    billing_mode: modeFilter.value || undefined,
-    // status/periode are nominal-only for MVP; drop from wire until bills endpoint exists.
-  });
-  return items;
+interface BillingBundle {
+  enrollments: BimbelEnrollment[];
+  bills: Bill[];
+}
+
+const { state, reload } = useDataRefresh<BillingBundle>(async () => {
+  // Parallel fetch — enrollments feeds the table (until /tutoring-v2/bills
+  // lands), bills feed the KPI aggregates so counters aren't stuck at 0.
+  const [enrollmentsRes, billsRes] = await Promise.all([
+    TutoringBimbelService.listEnrollments({
+      per_page: 200,
+      billing_mode: modeFilter.value || undefined,
+    }),
+    FinanceService.listBills({ per_page: 200 }),
+  ]);
+  return { enrollments: enrollmentsRes.items, bills: billsRes.items };
 });
 
 watch([debouncedSearch, modeFilter, statusFilter, periodeFilter], () => reload());
 useAcademicYearWatcher(reload);
 
 const kpiCards = computed<KpiCard[]>(() => {
-  const items = (state.value.status === 'content' ? state.value.data : []) as BimbelEnrollment[];
-  const tertagih = items
-    .filter((e) => e.status === 'active')
-    .reduce((sum, e) => sum + (e.price_at_enrollment ?? 0), 0);
+  const bundle = (state.value.status === 'content' ? state.value.data : { enrollments: [], bills: [] }) as BillingBundle;
+  const bills = bundle.bills;
+  // paid = raw_status covers both 'paid' and 'verified' (Finance uses either).
+  const isPaid = (b: Bill) => b.raw_status === 'paid' || b.raw_status === 'verified';
+  const tertagih = bills.reduce((s, b) => s + b.amount, 0);
+  const terbayar = bills.filter(isPaid).reduce((s, b) => s + b.amount, 0);
+  const overdueBills = bills.filter((b) => !isPaid(b) && b.is_overdue);
+  const menunggak = overdueBills.reduce((s, b) => s + b.amount, 0);
   return [
     { icon: 'file-text', label: t('tutoring2.admin.billing.kpiBilled'), value: `Rp ${tertagih.toLocaleString('id-ID')}` },
-    { icon: 'circle-check', label: t('tutoring2.admin.billing.kpiPaid'), value: 'Rp 0' },
-    { icon: 'alert-triangle', label: t('tutoring2.admin.billing.kpiOverdue'), value: 'Rp 0' },
-    { icon: 'clock', label: t('tutoring2.admin.billing.kpiOverdueCount'), value: '0', tone: undefined },
+    { icon: 'circle-check', label: t('tutoring2.admin.billing.kpiPaid'), value: `Rp ${terbayar.toLocaleString('id-ID')}`, tone: terbayar > 0 ? 'green' : undefined },
+    { icon: 'alert-triangle', label: t('tutoring2.admin.billing.kpiOverdue'), value: `Rp ${menunggak.toLocaleString('id-ID')}`, tone: menunggak > 0 ? 'red' : undefined },
+    { icon: 'clock', label: t('tutoring2.admin.billing.kpiOverdueCount'), value: String(overdueBills.length), tone: overdueBills.length > 0 ? 'amber' : undefined },
   ];
 });
+
+// Table still projects enrollment rows (see TODO). Extract once for reuse.
+const enrollmentsList = computed(() =>
+  state.value.status === 'content' ? (state.value.data as BillingBundle).enrollments : []
+);
 
 function truncateId(id: string | null | undefined): string {
   if (!id) return '—';
@@ -96,7 +116,7 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
       role="admin"
       :kicker="t('tutoring2.common.roleAdmin')"
       :title="t('tutoring2.admin.billing.title')"
-      :meta="state.status === 'content' ? t('tutoring2.common.metaActiveEnrolls', { count: (state.data as BimbelEnrollment[]).length }) : t('tutoring2.common.loading')"
+      :meta="state.status === 'content' ? t('tutoring2.common.metaActiveEnrolls', { count: enrollmentsList.length }) : t('tutoring2.common.loading')"
     />
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
@@ -135,7 +155,7 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
       :empty-description="t('tutoring2.admin.billing.emptyDesc')"
       @retry="reload"
     >
-      <template #default="{ data }">
+      <template #default>
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <table class="w-full text-sm">
             <thead>
@@ -149,7 +169,7 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
             </thead>
             <tbody>
               <tr
-                v-for="e in (data as BimbelEnrollment[])"
+                v-for="e in enrollmentsList"
                 :key="e.id"
                 class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
               >
