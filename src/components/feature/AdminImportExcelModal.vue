@@ -2,17 +2,23 @@
   AdminImportExcelModal.vue — shared Excel import modal for admin
   Manajemen Data pages.
 
-  Mirrors Flutter's `ImportExcelDialog`. Accepts a file (.xlsx/.xls/
-  .csv), POSTs to `/{entity}/import`, surfaces the import summary
-  with imported/failed counts.
+  Two-step, verify-first flow:
+    1. Upload — pick the .xlsx/.xls/.csv, then "Verifikasi".
+    2. Preview — a dry-run (server runs the importer in a rolled-back
+       transaction) shows exactly what WOULD happen per row — akan
+       ditambahkan / diperbarui / dilewati / perlu ditinjau / gagal —
+       WITHOUT persisting. "Konfirmasi & Impor" then commits.
+
+  So an admin can never be surprised by a bulk import: they always see
+  the outcome before anything is written.
 -->
 <script setup lang="ts">
-import { ref } from 'vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import {
   AdminDataExcelService,
   type AdminEntity,
   type AdminImportResult,
+  type ImportDetailRow,
 } from '@/services/admin-data-excel.service';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
@@ -26,18 +32,10 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: [];
-  // The normalised import result — the same shape the service resolves to.
-  // Buckets (created/updated/restored) let the host distinguish an upsert
-  // from a duplicate; review/details/warnings feed the shared result dialog.
+  // The committed import result — the same shape the service resolves to.
   done: [AdminImportResult];
 }>();
 
-/**
- * Per-entity guidance banner. Subject template gained two optional
- * columns after !453 (Kelas + Master) — most admins won't have read
- * the release note so we spell it out at the point-of-use rather than
- * hiding it in the .xlsx alone.
- */
 const entityGuidance = computed<string | null>(() => {
   switch (props.entity) {
     case 'subject':
@@ -52,8 +50,11 @@ const entityGuidance = computed<string | null>(() => {
   }
 });
 
+const step = ref<'upload' | 'preview'>('upload');
 const file = ref<File | null>(null);
-const isUploading = ref(false);
+const preview = ref<AdminImportResult | null>(null);
+const isVerifying = ref(false);
+const isCommitting = ref(false);
 const isDownloadingTpl = ref(false);
 const err = ref<string | null>(null);
 
@@ -89,9 +90,27 @@ async function downloadTemplate() {
   }
 }
 
-async function upload() {
+/** Step 1 → 2: dry-run preview, nothing is written yet. */
+async function verify() {
   if (!file.value) return;
-  isUploading.value = true;
+  isVerifying.value = true;
+  err.value = null;
+  try {
+    preview.value = await AdminDataExcelService.importExcel(props.entity, file.value, {
+      dryRun: true,
+    });
+    step.value = 'preview';
+  } catch (e) {
+    err.value = (e as Error).message;
+  } finally {
+    isVerifying.value = false;
+  }
+}
+
+/** Step 2: commit for real. */
+async function commit() {
+  if (!file.value) return;
+  isCommitting.value = true;
   err.value = null;
   try {
     const res = await AdminDataExcelService.importExcel(props.entity, file.value);
@@ -100,23 +119,80 @@ async function upload() {
   } catch (e) {
     err.value = (e as Error).message;
   } finally {
-    isUploading.value = false;
+    isCommitting.value = false;
   }
 }
+
+function back() {
+  step.value = 'upload';
+  preview.value = null;
+  err.value = null;
+}
+
+// ── Preview grouping (mirrors the post-import result dialog, phrased as
+// "akan …" since nothing is committed yet). ──────────────────────────────
+interface Section {
+  key: string;
+  title: string;
+  statuses: ImportDetailRow['status'][];
+  card: string;
+  badge: string;
+}
+const SECTIONS: Section[] = [
+  { key: 'added', title: 'Akan ditambahkan', statuses: ['created', 'restored'], card: 'border-emerald-200 bg-emerald-50', badge: 'bg-emerald-200 text-emerald-800' },
+  { key: 'updated', title: 'Akan diperbarui', statuses: ['updated'], card: 'border-sky-200 bg-sky-50', badge: 'bg-sky-200 text-sky-800' },
+  { key: 'skipped', title: 'Dilewati', statuses: ['skipped'], card: 'border-slate-200 bg-slate-50', badge: 'bg-slate-200 text-slate-700' },
+  { key: 'conflict', title: 'Perlu ditinjau', statuses: ['conflict'], card: 'border-amber-200 bg-amber-50', badge: 'bg-amber-200 text-amber-800' },
+  { key: 'failed', title: 'Gagal', statuses: ['failed'], card: 'border-red-200 bg-red-50', badge: 'bg-red-200 text-red-800' },
+];
+
+const groups = computed(() => {
+  const details = preview.value?.details ?? [];
+  return SECTIONS.map((s) => ({
+    ...s,
+    rows: details.filter((d) => s.statuses.includes(d.status)),
+  })).filter((s) => s.rows.length > 0);
+});
+
+const summary = computed(() => {
+  const details = preview.value?.details ?? [];
+  const countBy = (statuses: ImportDetailRow['status'][]) =>
+    details.filter((d) => statuses.includes(d.status)).length;
+  const parts: string[] = [];
+  const added = countBy(['created', 'restored']);
+  const updated = countBy(['updated']);
+  const skipped = countBy(['skipped']);
+  const conflicts = countBy(['conflict']);
+  const failed = countBy(['failed']);
+  if (added > 0) parts.push(`${added} akan ditambahkan`);
+  if (updated > 0) parts.push(`${updated} akan diperbarui`);
+  if (skipped > 0) parts.push(`${skipped} dilewati`);
+  if (conflicts > 0) parts.push(`${conflicts} perlu ditinjau`);
+  if (failed > 0) parts.push(`${failed} gagal`);
+  return parts.join(' · ');
+});
+
+/** Nothing importable → don't offer a commit that would be a no-op. */
+const hasImportable = computed(() => {
+  const details = preview.value?.details ?? [];
+  return details.some((d) => ['created', 'restored', 'updated'].includes(d.status));
+});
 </script>
 
 <template>
   <Modal
     :title="title ?? 'Import Data dari Excel'"
-    subtitle="Unduh template, isi, lalu unggah kembali"
+    :subtitle="step === 'preview' ? (summary || 'Pratinjau — belum disimpan') : 'Unduh template, isi, lalu verifikasi'"
     size="md"
     @close="emit('close')"
   >
-    <div class="space-y-3">
+    <!-- ── STEP 1: upload ─────────────────────────────────────────── -->
+    <div v-if="step === 'upload'" class="space-y-3">
       <section class="bg-slate-50 rounded-xl p-3 space-y-2">
         <p class="text-2xs text-slate-600 leading-relaxed">
-          Pastikan struktur kolom sesuai template. Kolom dengan ID akan
-          divalidasi terhadap data yang ada di sistem.
+          Template sudah berisi data yang ada sekarang (kolom ID tersembunyi).
+          Edit di tempat lalu verifikasi — kamu akan lihat perubahannya sebelum
+          disimpan.
         </p>
         <p
           v-if="entityGuidance"
@@ -124,12 +200,7 @@ async function upload() {
         >
           {{ entityGuidance }}
         </p>
-        <Button
-          variant="secondary"
-          size="sm"
-          :loading="isDownloadingTpl"
-          @click="downloadTemplate"
-        >
+        <Button variant="secondary" size="sm" :loading="isDownloadingTpl" @click="downloadTemplate">
           <NavIcon name="download" :size="12" />
           Unduh Template
         </Button>
@@ -156,9 +227,7 @@ async function upload() {
             <p class="text-[13px] font-bold text-slate-900 truncate">
               {{ file ? file.name : 'Pilih file Excel' }}
             </p>
-            <p class="text-2xs text-slate-500 mt-0.5">
-              XLSX / XLS / CSV · maks 10 MB
-            </p>
+            <p class="text-2xs text-slate-500 mt-0.5">XLSX / XLS / CSV · maks 10 MB</p>
           </div>
         </div>
       </label>
@@ -169,14 +238,49 @@ async function upload() {
 
       <div class="grid grid-cols-2 gap-2 pt-2">
         <Button variant="secondary" block @click="emit('close')">Batal</Button>
-        <Button
-          variant="primary"
-          block
-          :loading="isUploading"
-          :disabled="!file || isUploading"
-          @click="upload"
-        >
-          Import
+        <Button variant="primary" block :loading="isVerifying" :disabled="!file || isVerifying" @click="verify">
+          Verifikasi
+        </Button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: preview (dry-run) ──────────────────────────────── -->
+    <div v-else class="space-y-3">
+      <p class="text-2xs text-slate-500 leading-relaxed">
+        Ini pratinjau — <span class="font-bold">belum ada yang disimpan</span>.
+        Periksa lalu konfirmasi untuk menyimpan.
+      </p>
+
+      <div class="max-h-80 overflow-y-auto space-y-3 pr-0.5">
+        <section v-for="g in groups" :key="g.key" class="space-y-1.5">
+          <h3 class="text-2xs font-black uppercase tracking-wider text-slate-500">
+            {{ g.title }} ({{ g.rows.length }})
+          </h3>
+          <div v-for="r in g.rows" :key="`${g.key}-${r.row}`" class="rounded-lg border p-2.5" :class="g.card">
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-[12.5px] font-bold text-slate-900 truncate">{{ r.label || '—' }}</p>
+              <span class="text-4xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex-shrink-0" :class="g.badge">
+                {{ g.title }}
+              </span>
+            </div>
+            <p v-if="r.sublabel" class="text-2xs text-slate-500 mt-0.5">{{ r.sublabel }}</p>
+            <p v-if="r.reason" class="text-2xs text-slate-700 mt-1 leading-relaxed">{{ r.reason }}</p>
+          </div>
+        </section>
+
+        <p v-if="groups.length === 0" class="text-2xs text-slate-500 text-center py-4">
+          Tidak ada baris yang bisa diproses dari file ini.
+        </p>
+      </div>
+
+      <p v-if="err" class="text-2xs text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
+        {{ err }}
+      </p>
+
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <Button variant="secondary" block :disabled="isCommitting" @click="back">Kembali</Button>
+        <Button variant="primary" block :loading="isCommitting" :disabled="isCommitting || !hasImportable" @click="commit">
+          Konfirmasi & Impor
         </Button>
       </div>
     </div>
