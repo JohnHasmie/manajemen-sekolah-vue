@@ -102,6 +102,8 @@ const AdminStaffEngagementView = () =>
   import('@/views/admin/AdminStaffEngagementView.vue');
 const AdminReadinessView = () =>
   import('@/views/admin/AdminReadinessView.vue');
+const AdminMobileAppBroadcastView = () =>
+  import('@/views/admin/AdminMobileAppBroadcastView.vue');
 const AdminAttendanceTingkatHeatmapView = () =>
   import('@/views/admin/AdminAttendanceTingkatHeatmapView.vue');
 const AdminAttendanceReportView = () =>
@@ -469,6 +471,15 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/readiness',
         name: 'admin.readiness',
         component: AdminReadinessView,
+        meta: { role: 'admin' satisfies Role, ability: 'readiness.view' },
+      },
+      {
+        // WA blast trigger — remedial action from the "guru belum
+        // instal aplikasi mobile" readiness lane item (MR-A). Gated by
+        // the same `readiness.view` ability that surfaces the gap.
+        path: 'admin/mobile-app-broadcast',
+        name: 'admin.mobile-app-broadcast',
+        component: AdminMobileAppBroadcastView,
         meta: { role: 'admin' satisfies Role, ability: 'readiness.view' },
       },
       {

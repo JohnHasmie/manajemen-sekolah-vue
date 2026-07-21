@@ -26,6 +26,8 @@ import NotificationsPanel from '@/components/feature/super-admin/monitoring/Noti
 import FcmDeliveryLogView from '@/components/feature/super-admin/monitoring/FcmDeliveryLogView.vue';
 import ErrorsPanel from '@/components/feature/super-admin/monitoring/ErrorsPanel.vue';
 import AlertsPanel from '@/components/feature/super-admin/monitoring/AlertsPanel.vue';
+import WaBlastPanel from '@/components/feature/super-admin/monitoring/WaBlastPanel.vue';
+import WaBlastLogView from '@/components/feature/super-admin/monitoring/WaBlastLogView.vue';
 import {
   MonitoringService,
   type AlertSettingsPayload,
@@ -35,27 +37,33 @@ import {
   type OverviewPayload,
   type QueuePayload,
   type RedisPayload,
+  type WaBlastMetricsPayload,
 } from '@/services/monitoring.service';
 
-type Tab = 'overview' | 'queue' | 'redis' | 'notifikasi' | 'error' | 'alert';
+type Tab = 'overview' | 'queue' | 'redis' | 'notifikasi' | 'wa-blast' | 'error' | 'alert';
 
 const TABS: Array<{ key: Tab; label: string }> = [
   { key: 'overview', label: 'Overview' },
   { key: 'queue', label: 'Queue & jobs' },
   { key: 'redis', label: 'Redis & sistem' },
   { key: 'notifikasi', label: 'Notifikasi & FCM' },
+  { key: 'wa-blast', label: 'WA Blast' },
   { key: 'error', label: 'Error & log' },
   { key: 'alert', label: 'Alert' },
 ];
 
 const activeTab = ref<Tab>('overview');
 const showFcmLog = ref(false);
+const showWaBlastLog = ref(false);
+// When set, WaBlastLogView filters to just this batch. `null` = cross-batch view.
+const waBlastLogBatchId = ref<string | undefined>(undefined);
 
 const health = ref<HealthStripData | null>(null);
 const overview = ref<OverviewPayload | null>(null);
 const queue = ref<QueuePayload | null>(null);
 const redis = ref<RedisPayload | null>(null);
 const notifications = ref<NotificationsPayload | null>(null);
+const waBlasts = ref<WaBlastMetricsPayload | null>(null);
 const errors = ref<ErrorsPayload | null>(null);
 const alerts = ref<AlertSettingsPayload | null>(null);
 
@@ -68,12 +76,13 @@ async function loadAll() {
   loading.value = true;
   try {
     // The strip lives above the tab bar so it must always be fresh.
-    const [h, ov, q, r, n, e, a] = await Promise.all([
+    const [h, ov, q, r, n, wb, e, a] = await Promise.all([
       MonitoringService.getHealthStrip(),
       MonitoringService.getOverview(),
       MonitoringService.getQueue(),
       MonitoringService.getRedis(),
       MonitoringService.getNotifications(),
+      MonitoringService.getWaBlasts(),
       MonitoringService.getErrors(),
       MonitoringService.getAlertSettings(),
     ]);
@@ -82,6 +91,7 @@ async function loadAll() {
     queue.value = q;
     redis.value = r;
     notifications.value = n;
+    waBlasts.value = wb;
     errors.value = e;
     alerts.value = a;
     lastRefreshed.value = new Date();
@@ -118,7 +128,14 @@ function switchTab(next: Tab | string) {
   if (found) {
     activeTab.value = found.key;
     showFcmLog.value = false;
+    showWaBlastLog.value = false;
+    waBlastLogBatchId.value = undefined;
   }
+}
+
+function openWaBlastLog(batchId?: string) {
+  waBlastLogBatchId.value = batchId;
+  showWaBlastLog.value = true;
 }
 
 const refreshedLabel = computed(() => {
@@ -195,6 +212,19 @@ const refreshedLabel = computed(() => {
         v-else-if="notifications"
         :data="notifications"
         @open-log-view="showFcmLog = true"
+      />
+    </template>
+
+    <template v-else-if="activeTab === 'wa-blast'">
+      <WaBlastLogView
+        v-if="showWaBlastLog"
+        :batch-id="waBlastLogBatchId"
+        @back="showWaBlastLog = false; waBlastLogBatchId = undefined"
+      />
+      <WaBlastPanel
+        v-else-if="waBlasts"
+        :data="waBlasts"
+        @open-log-view="openWaBlastLog"
       />
     </template>
 

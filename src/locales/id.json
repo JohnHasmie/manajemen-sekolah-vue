@@ -477,6 +477,9 @@
         "staff": "Guru & Staf",
         "students": "Siswa",
         "academic": "Akademik"
+      },
+      "actions": {
+        "mobile_app_broadcast": "Kirim WA install app"
       }
     },
     "controlCenter": {

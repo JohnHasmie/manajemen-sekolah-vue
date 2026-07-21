@@ -75,6 +75,14 @@ export const READINESS_ROUTE_MAP: Record<string, ReadinessRouteTarget> = {
     labelKey: 'nav.attendance',
     icon: 'check-square',
   },
+  // WA blast trigger (MR-C) — jump-off from the "guru belum instal
+  // aplikasi mobile" readiness lane item (MR-A).
+  admin_mobile_app_broadcast: {
+    name: 'admin.mobile-app-broadcast',
+    path: '/admin/mobile-app-broadcast',
+    labelKey: 'readiness.actions.mobile_app_broadcast',
+    icon: 'brand-whatsapp',
+  },
 };
 
 /** Full target for a hint, or null when unmapped. */

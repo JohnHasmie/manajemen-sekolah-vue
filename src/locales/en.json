@@ -477,6 +477,9 @@
         "staff": "Staff",
         "students": "Students",
         "academic": "Academic"
+      },
+      "actions": {
+        "mobile_app_broadcast": "Send WA install prompt"
       }
     },
     "controlCenter": {

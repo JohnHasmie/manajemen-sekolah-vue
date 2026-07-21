@@ -180,6 +180,77 @@ export interface ErrorsPayload {
   }>;
 }
 
+export interface WaBlastKpi {
+  batches_24h: number;
+  delivered_24h: number;
+  failed_24h: number;
+  queued_24h: number;
+  unique_users_30d: number;
+}
+
+export interface WaBlastBatchSummary {
+  batch_id: string;
+  school_id: string | null;
+  school_name: string | null;
+  initiated_by_name: string | null;
+  started_at: string;
+  total: number;
+  delivered: number;
+  failed: number;
+  queued: number;
+}
+
+export interface WaBlastMetricsPayload {
+  kpi: WaBlastKpi;
+  recent_batches: WaBlastBatchSummary[];
+}
+
+export type WaBlastLogStatus = 'queued' | 'delivered' | 'failed';
+
+export interface WaBlastLogRow {
+  id: string;
+  batch_id: string;
+  created_at: string;
+  scheduled_at: string;
+  sent_at: string | null;
+  school_id: string | null;
+  school_name: string | null;
+  initiated_by_user_id: string | null;
+  initiated_by_name: string | null;
+  recipient_user_id: string | null;
+  recipient_name: string;
+  recipient_phone_masked: string;
+  notification_type: string;
+  status: WaBlastLogStatus;
+  error_message: string | null;
+}
+
+export interface WaBlastLogsPayload {
+  data: WaBlastLogRow[];
+  meta: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+  };
+  summary: {
+    delivered: number;
+    failed: number;
+    queued: number;
+  };
+}
+
+export interface WaBlastLogFilters {
+  school_id?: string;
+  batch_id?: string;
+  status?: string;
+  phone?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  per_page?: number;
+}
+
 export interface AlertRule {
   key: string;
   label: string;
@@ -330,6 +401,40 @@ export const MonitoringService = {
    * "save then wait for silent alerts" loop. Omit everything to test
    * whatever is currently stored (bot_token wins over webhook).
    */
+  /**
+   * WA Blast tab (SuperAdmin monitoring): KPI + recent batches
+   * cross-tenant. Graceful empty on network / table-not-migrated.
+   */
+  async getWaBlasts(): Promise<WaBlastMetricsPayload> {
+    return safeGet<WaBlastMetricsPayload>(`${BASE}/wa-blasts`, {}, {
+      kpi: {
+        batches_24h: 0, delivered_24h: 0, failed_24h: 0,
+        queued_24h: 0, unique_users_30d: 0,
+      },
+      recent_batches: [],
+    });
+  },
+
+  /**
+   * Paginated per-message WA blast drill-down. Filter shape mirrors
+   * getFcmLogs so the UI list component can be shared.
+   */
+  async getWaBlastLogs(filters: WaBlastLogFilters = {}): Promise<WaBlastLogsPayload> {
+    const params = Object.fromEntries(
+      Object.entries(filters).filter(([, v]) => v !== undefined && v !== ''),
+    );
+    try {
+      const res = await api.get(`${BASE}/wa-blasts/logs`, { params });
+      return res.data as WaBlastLogsPayload;
+    } catch {
+      return {
+        data: [],
+        meta: { current_page: 1, per_page: 50, total: 0, last_page: 1 },
+        summary: { delivered: 0, failed: 0, queued: 0 },
+      };
+    }
+  },
+
   async testWebhook(draft: SlackTestDraft = {}): Promise<{ ok: boolean; error?: string; lane?: string }> {
     try {
       const body: Record<string, string> = {};
