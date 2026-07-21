@@ -3,7 +3,8 @@
 
   Replaces the old kebab `AdminDataMenu` (Menu ▾) and the per-page
   icon-only affordances with ONE row of friendly, LABELLED buttons:
-    Refresh · Unduh Template · Export Excel · Import Excel
+    Refresh · Export Excel · Import Excel (template download lives inside
+    the Import dialog, so there's no separate header button for it)
 
   Self-contained: it owns the import + result dialogs and calls
   `AdminDataExcelService` directly, so a host page only writes
@@ -78,7 +79,6 @@ const { t } = useI18n();
 const toast = useToast();
 
 const isExporting = ref(false);
-const isDownloadingTpl = ref(false);
 
 // Import + result dialog state — owned here so host pages don't repeat it.
 const showImport = ref(false);
@@ -104,19 +104,6 @@ async function exportExcel() {
     toast.error((e as Error).message);
   } finally {
     isExporting.value = false;
-  }
-}
-
-async function downloadTemplate() {
-  if (isDownloadingTpl.value) return;
-  isDownloadingTpl.value = true;
-  try {
-    await AdminDataExcelService.downloadTemplate(props.entity);
-    toast.success(t('common.excel.templateDownloaded'));
-  } catch (e) {
-    toast.error((e as Error).message);
-  } finally {
-    isDownloadingTpl.value = false;
   }
 }
 
@@ -181,16 +168,6 @@ const btnSolid = `${btnBase} text-role-admin bg-white hover:bg-white/90 border b
     >
       <NavIcon name="refresh-cw" :size="12" />
       {{ t('common.excel.refresh') }}
-    </button>
-
-    <button
-      type="button"
-      :class="btnGlass"
-      :disabled="isDownloadingTpl"
-      @click="downloadTemplate"
-    >
-      <NavIcon name="file-text" :size="12" />
-      {{ t('common.excel.downloadTemplate') }}
     </button>
 
     <button
