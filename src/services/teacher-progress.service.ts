@@ -368,6 +368,17 @@ export const TeacherProgressService = {
     return (res.data?.data ?? res.data) as SendRemindersResponse;
   },
 
+  /**
+   * Publish pinned "Guru Bulan Ini" recognition (backend MR-J).
+   * Idempotent within a calendar month — a second click returns
+   * `already_announced` with the prior announcement id so the FE
+   * can surface "sudah diumumkan" instead of retrying.
+   */
+  async announceTeacherOfMonth(): Promise<AnnounceOfMonthResponse> {
+    const res = await api.post('/admin/teacher-engagement/announce-of-month');
+    return (res.data?.data ?? res.data) as AnnounceOfMonthResponse;
+  },
+
   // ─── Admin · Staff variant ─────────────────────────────
 
   async getAdminStaffHighlight(): Promise<AdminStaffHighlightPayload> {
@@ -391,4 +402,22 @@ export const TeacherProgressService = {
     });
     return (res.data?.data ?? res.data) as SendRemindersResponse;
   },
+
+  /**
+   * Staff mirror of {@link announceTeacherOfMonth}. Same idempotency
+   * shape — one per school per month.
+   */
+  async announceStaffOfMonth(): Promise<AnnounceOfMonthResponse> {
+    const res = await api.post('/admin/staff-engagement/announce-of-month');
+    return (res.data?.data ?? res.data) as AnnounceOfMonthResponse;
+  },
 };
+
+export type AnnounceOfMonthStatus = 'created' | 'already_announced' | 'no_winner';
+
+export interface AnnounceOfMonthResponse {
+  status: AnnounceOfMonthStatus;
+  announcement_id: string | null;
+  title: string | null;
+  message: string | null;
+}

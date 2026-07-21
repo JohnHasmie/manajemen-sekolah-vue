@@ -24,15 +24,19 @@ import GamificationHighlightCard from '@/components/feature/gamification/Gamific
 import AdminEngagementSkeleton from '@/components/feature/gamification/AdminEngagementSkeleton.vue';
 import { TeacherProgressService, type AdminStaffIndexPayload, type TeacherRowStatus } from '@/services/teacher-progress.service';
 import { useToast } from '@/composables/useToast';
-import { useRouter } from 'vue-router';
 
 const toast = useToast();
-const router = useRouter();
 
 const payload = ref<AdminStaffIndexPayload | null>(null);
 const loadError = ref<string | null>(null);
 const loading = ref(true);
 const sending = ref(false);
+const announcing = ref(false);
+
+// Ref on the SleepyStaffCard so the "Kirim pengingat" highlight-card
+// CTA scrolls the user straight to the send-reminder form instead of
+// bouncing them to a query-param that no consumer reads (MR-I).
+const sleepyStaffCardRef = ref<HTMLElement | null>(null);
 
 const search = ref('');
 const statusFilter = ref<TeacherRowStatus | ''>('');
@@ -93,6 +97,42 @@ async function onSendReminder(userIds: string[]) {
   }
 }
 
+// MR-I: highlight-card "Kirim pengingat" scrolls to the SleepyStaffCard
+// (which owns the actual send flow with per-target checkboxes).
+function focusSleepyCard() {
+  sleepyStaffCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// MR-J: highlight-card "Umumkan" POSTs to announce-of-month. Backend
+// idempotency guarantees a second click within the month returns
+// `already_announced` with the prior id — the toast wording reflects
+// that so admin knows they aren't spamming.
+async function onAnnounceOfMonth() {
+  if (announcing.value) return;
+  const winnerName = payload.value?.meta.highlight.staff_of_month.meta?.name;
+  const confirmed = window.confirm(
+    winnerName
+      ? `Umumkan ${winnerName} sebagai Staf Bulan Ini? Pengumuman akan dipin sampai akhir bulan.`
+      : 'Umumkan Staf Bulan Ini? Pengumuman akan dipin sampai akhir bulan.',
+  );
+  if (!confirmed) return;
+  announcing.value = true;
+  try {
+    const res = await TeacherProgressService.announceStaffOfMonth();
+    if (res.status === 'created') {
+      toast.success(res.title ?? 'Pengumuman terbit dan dipin sampai akhir bulan.');
+    } else if (res.status === 'already_announced') {
+      toast.success(res.message ?? 'Sudah diumumkan bulan ini.');
+    } else {
+      toast.error(res.message ?? 'Belum ada Staf Bulan Ini yang bisa diumumkan.');
+    }
+  } catch {
+    toast.error('Gagal mengumumkan. Coba lagi.');
+  } finally {
+    announcing.value = false;
+  }
+}
+
 onMounted(() => {
   void load();
 });
@@ -125,10 +165,10 @@ onMounted(() => {
           :eyebrow="payload.meta.highlight.staff_of_month.eyebrow"
           :title="payload.meta.highlight.staff_of_month.title"
           :sub="payload.meta.highlight.staff_of_month.sub"
-          :cta-label="payload.meta.highlight.staff_of_month.cta_label"
+          :cta-label="announcing ? 'Mengumumkan…' : payload.meta.highlight.staff_of_month.cta_label"
           :cta-target="payload.meta.highlight.staff_of_month.cta_target"
           :meta="null"
-          @cta="router.push(payload.meta.highlight.staff_of_month.cta_target)"
+          @cta="onAnnounceOfMonth"
         />
         <GamificationHighlightCard
           v-if="payload.meta.highlight.needs_attention.count > 0"
@@ -139,6 +179,7 @@ onMounted(() => {
           :cta-label="payload.meta.highlight.needs_attention.cta_label ?? 'Kirim pengingat'"
           :cta-target="payload.meta.highlight.needs_attention.cta_target ?? ''"
           :meta="null"
+          @cta="focusSleepyCard"
         />
       </div>
 
@@ -191,7 +232,7 @@ onMounted(() => {
           />
         </div>
 
-        <aside class="space-y-4 min-w-0">
+        <aside ref="sleepyStaffCardRef" class="space-y-4 min-w-0">
           <SleepyStaffCard
             :silent-staff="silentStaff"
             :sending="sending"
