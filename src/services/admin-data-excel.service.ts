@@ -154,10 +154,15 @@ export const AdminDataExcelService = {
   async importExcel(
     entity: AdminEntity,
     file: File,
+    opts: { dryRun?: boolean } = {},
   ): Promise<AdminImportResult> {
     try {
       const fd = new FormData();
       fd.append('file', file);
+      // Dry-run: the backend runs the importer in a rolled-back transaction
+      // and returns the same result shape WITHOUT persisting — feeds the
+      // pre-commit "Verifikasi" preview.
+      if (opts.dryRun) fd.append('dry_run', '1');
       const res = await api.post(`/${entity}/import`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
