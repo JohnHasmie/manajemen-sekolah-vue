@@ -1718,6 +1718,84 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/tutoring/AdminTutoringNotificationsView.vue'),
         meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
       },
+
+      // ────────────────────────────────────────────────────────────
+      // Greenfield bimbel admin (WEB-3). Under `admin.tutoring2.*` +
+      // `admin/tutoring2/*` to coexist with the legacy routes above;
+      // CLEAN-4 renames both after the teardown, matching the
+      // /api/tutoring-v2 → /api/tutoring rename on the backend.
+      // Every view here still contains `tutoring` in the route name so
+      // AppShell surface gating still applies the tutoring theme
+      // automatically. `needs: 'tutoring-module'` unchanged — same
+      // entitlement gate as legacy.
+      // ────────────────────────────────────────────────────────────
+      {
+        path: 'admin/tutoring2/programs',
+        name: 'admin.tutoring2.programs',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2ProgramsView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/groups',
+        name: 'admin.tutoring2.groups',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2GroupsView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/enrollments',
+        name: 'admin.tutoring2.enrollments',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2EnrollmentsView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/students',
+        name: 'admin.tutoring2.students',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2StudentsView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/tutors',
+        name: 'admin.tutoring2.tutors',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2TutorsView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/schedule',
+        name: 'admin.tutoring2.schedule',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2ScheduleView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/attendance',
+        name: 'admin.tutoring2.attendance',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2AttendanceView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/assessments',
+        name: 'admin.tutoring2.assessments',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2AssessmentsView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/billing',
+        name: 'admin.tutoring2.billing',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2BillingView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/term',
+        name: 'admin.tutoring2.term',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2TermView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/settings',
+        name: 'admin.tutoring2.settings',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2SettingsView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+
       {
         path: 'teacher/tutoring/class',
         name: 'teacher.tutoring.classes',
@@ -1843,6 +1921,219 @@ const routes: RouteRecordRaw[] = [
         name: 'teacher.tutoring.leaderboard',
         component: () => import('@/views/teacher/tutoring/TutorLeaderboardView.vue'),
         meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+
+      // ────────────────────────────────────────────────────────────
+      // Greenfield tutor bimbel (WEB-4). Same coexistence rule as
+      // WEB-3 admin: `teacher/tutoring2/*` + `teacher.tutoring2.*`,
+      // renamed to `teacher/tutoring/*` in CLEAN-4 after teardown.
+      // Route names still contain "tutoring" so AppShell surface
+      // gating applies the tutoring theme automatically.
+      // ────────────────────────────────────────────────────────────
+      {
+        path: 'teacher/tutoring2/home',
+        name: 'teacher.tutoring2.home',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2HomeView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/sessions',
+        name: 'teacher.tutoring2.sessions',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2SessionsView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/sessions/:id',
+        name: 'teacher.tutoring2.session-detail',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2SessionDetailView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/attendance/:sessionId',
+        name: 'teacher.tutoring2.attendance',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2AttendanceView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/assessments',
+        name: 'teacher.tutoring2.assessments',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2AssessmentsView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/assessments/new',
+        name: 'teacher.tutoring2.assessment-create',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2AssessmentCreateView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/assessments/:id/scores',
+        name: 'teacher.tutoring2.scores',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2ScoresView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/assessments/:id/result',
+        name: 'teacher.tutoring2.assessment-result',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2AssessmentResultView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/materials',
+        name: 'teacher.tutoring2.materials',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2MaterialsView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/materials/new',
+        name: 'teacher.tutoring2.material-upload',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2MaterialUploadView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/students',
+        name: 'teacher.tutoring2.students',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2StudentsView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/students/:id',
+        name: 'teacher.tutoring2.student-detail',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2StudentDetailView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/profile',
+        name: 'teacher.tutoring2.profile',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2ProfileView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+
+      // ────────────────────────────────────────────────────────────
+      // Greenfield student (siswa) bimbel (WEB-5). Same coexistence
+      // rule as WEB-3/4: `student/tutoring2/*` + `student.tutoring2.*`,
+      // renamed after teardown. Route names still contain "tutoring"
+      // so AppShell surface gating applies the tutoring theme.
+      // ────────────────────────────────────────────────────────────
+      {
+        path: 'student/tutoring2/home',
+        name: 'student.tutoring2.home',
+        component: () => import('@/views/student/tutoring2/StudentTutoring2HomeView.vue'),
+        meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'student/tutoring2/schedule',
+        name: 'student.tutoring2.schedule',
+        component: () => import('@/views/student/tutoring2/StudentTutoring2ScheduleView.vue'),
+        meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'student/tutoring2/sessions/:id',
+        name: 'student.tutoring2.session-detail',
+        component: () => import('@/views/student/tutoring2/StudentTutoring2SessionDetailView.vue'),
+        meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'student/tutoring2/assessments',
+        name: 'student.tutoring2.assessments',
+        component: () => import('@/views/student/tutoring2/StudentTutoring2AssessmentsView.vue'),
+        meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'student/tutoring2/assessments/:id/take',
+        name: 'student.tutoring2.take-assessment',
+        component: () => import('@/views/student/tutoring2/StudentTutoring2TakeAssessmentView.vue'),
+        meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'student/tutoring2/assessments/:id/result',
+        name: 'student.tutoring2.result',
+        component: () => import('@/views/student/tutoring2/StudentTutoring2ResultView.vue'),
+        meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'student/tutoring2/materials',
+        name: 'student.tutoring2.materials',
+        component: () => import('@/views/student/tutoring2/StudentTutoring2MaterialsView.vue'),
+        meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'student/tutoring2/bills',
+        name: 'student.tutoring2.bills',
+        component: () => import('@/views/student/tutoring2/StudentTutoring2BillsView.vue'),
+        meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'student/tutoring2/pay/:billId',
+        name: 'student.tutoring2.pay',
+        component: () => import('@/views/student/tutoring2/StudentTutoring2PayView.vue'),
+        meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'student/tutoring2/profile',
+        name: 'student.tutoring2.profile',
+        component: () => import('@/views/student/tutoring2/StudentTutoring2ProfileView.vue'),
+        meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
+      },
+
+      // ────────────────────────────────────────────────────────────
+      // Greenfield parent (wali) bimbel (WEB-5). Coexists with the
+      // legacy parent tutoring routes at `parent/tutoring/*`; CLEAN-4
+      // renames.
+      // ────────────────────────────────────────────────────────────
+      {
+        path: 'parent/tutoring2/home',
+        name: 'parent.tutoring2.home',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2HomeView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/children',
+        name: 'parent.tutoring2.pick-child',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2PickChildView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/attendance/:studentId',
+        name: 'parent.tutoring2.attendance',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2AttendanceView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/assessments/:studentId',
+        name: 'parent.tutoring2.assessments',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2AssessmentsView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/report-card/:studentId',
+        name: 'parent.tutoring2.report-card',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2ReportCardView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/pay',
+        name: 'parent.tutoring2.pay',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2PayView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/history',
+        name: 'parent.tutoring2.history',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2HistoryView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/notifications',
+        name: 'parent.tutoring2.notifications',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2NotificationsView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/profile',
+        name: 'parent.tutoring2.profile',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2ProfileView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
       },
 
       // Staff subtree (F3). The `staff` role now has a REAL web
