@@ -46,6 +46,7 @@ const router = useRouter();
 const subjects = shallowRef<Subject[]>([]);
 const pagination = ref<Pagination | null>(null);
 const isLoading = ref(true);
+const forceSkeleton = ref(false);
 const error = ref<string | null>(null);
 // `action: 'resync'` turns the toast into a CTA that deep-links to the
 // Sinkronkan Jadwal wizard (post-import orphan follow-up, B3).
@@ -86,7 +87,7 @@ const showGradePicker = ref(false);
 const showClassesPicker = ref(false);
 
 const state = computed<AsyncState<Subject[]>>(() => {
-  if (isLoading.value && subjects.value.length === 0) return { status: 'loading' };
+  if (isLoading.value && (subjects.value.length === 0 || forceSkeleton.value)) return { status: 'loading' };
   if (error.value) return { status: 'error', error: error.value };
   if (filteredSubjects.value.length === 0) return { status: 'empty' };
   return { status: 'content', data: filteredSubjects.value };
@@ -144,8 +145,9 @@ const activeFilterCount = computed(() => {
   return n;
 });
 
-async function reload(page = 1) {
+async function reload(page = 1, opts: { skeleton?: boolean } = {}) {
   isLoading.value = true;
+  forceSkeleton.value = opts.skeleton ?? false;
   error.value = null;
   try {
     const res = await SubjectService.list({
@@ -161,6 +163,7 @@ async function reload(page = 1) {
     error.value = (e as Error).message;
   } finally {
     isLoading.value = false;
+    forceSkeleton.value = false;
   }
 }
 
@@ -600,7 +603,7 @@ function goToResync() {
         :import-title="$t('admin.sekolah.subject_management.import_title')"
         :read-only="ayReadOnly"
         :show-summary-toast="false"
-        @refresh="reload(pagination?.current_page ?? 1)"
+        @refresh="reload(pagination?.current_page ?? 1, { skeleton: true })"
         @imported="onSubjectImported"
       />
     </template>

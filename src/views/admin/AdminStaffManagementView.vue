@@ -41,6 +41,7 @@ const staff = shallowRef<StaffMember[]>([]);
 const roles = shallowRef<StaffRole[]>([]);
 const pagination = ref<Pagination | null>(null);
 const isLoading = ref(true);
+const forceSkeleton = ref(false);
 const error = ref<string | null>(null);
 
 const search = ref('');
@@ -70,7 +71,7 @@ const credential = ref<{ name: string; email: string; password: string } | null>
 const copied = ref(false);
 
 const state = computed<AsyncState<StaffMember[]>>(() => {
-  if (isLoading.value && staff.value.length === 0) return { status: 'loading' };
+  if (isLoading.value && (staff.value.length === 0 || forceSkeleton.value)) return { status: 'loading' };
   if (error.value) return { status: 'error', error: error.value };
   if (staff.value.length === 0) return { status: 'empty' };
   return { status: 'content', data: staff.value };
@@ -83,8 +84,9 @@ const kpiCards = computed<KpiCard[]>(() => [
   { icon: 'user', label: 'PEREMPUAN', value: kpis.value.female, tone: 'pink' },
 ]);
 
-async function reload(page = 1) {
+async function reload(page = 1, opts: { skeleton?: boolean } = {}) {
   isLoading.value = true;
+  forceSkeleton.value = opts.skeleton ?? false;
   error.value = null;
   try {
     const res = await StaffService.list({
@@ -104,6 +106,7 @@ async function reload(page = 1) {
     error.value = (e as Error).message;
   } finally {
     isLoading.value = false;
+    forceSkeleton.value = false;
   }
 }
 
@@ -316,7 +319,7 @@ const staffDeleteImpact = computed<string[]>(() => [ $t('admin.staff.deleteImpac
       <AdminExcelToolbar
         entity="staff"
         entity-label="staf"
-        @refresh="reload(pagination?.current_page ?? 1)"
+        @refresh="reload(pagination?.current_page ?? 1, { skeleton: true })"
         @imported="reload(1)"
       />
     </template>

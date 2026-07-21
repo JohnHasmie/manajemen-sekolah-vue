@@ -53,6 +53,7 @@ const teachers = shallowRef<Teacher[]>([]);
 const educationLevel = ref<string | null>(null);
 const pagination = ref<Pagination | null>(null);
 const isLoading = ref(true);
+const forceSkeleton = ref(false);
 const error = ref<string | null>(null);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
@@ -78,7 +79,7 @@ const showGradePicker = ref(false);
 const showHomeroomPicker = ref(false);
 
 const state = computed<AsyncState<Classroom[]>>(() => {
-  if (isLoading.value && classrooms.value.length === 0) return { status: 'loading' };
+  if (isLoading.value && (classrooms.value.length === 0 || forceSkeleton.value)) return { status: 'loading' };
   if (error.value) return { status: 'error', error: error.value };
   if (classrooms.value.length === 0) return { status: 'empty' };
   return { status: 'content', data: classrooms.value };
@@ -121,8 +122,9 @@ const activeFilterCount = computed(() => {
   return n;
 });
 
-async function reload(page = 1) {
+async function reload(page = 1, opts: { skeleton?: boolean } = {}) {
   isLoading.value = true;
+  forceSkeleton.value = opts.skeleton ?? false;
   error.value = null;
   try {
     const res = await ClassroomService.list({
@@ -138,6 +140,7 @@ async function reload(page = 1) {
     error.value = (e as Error).message;
   } finally {
     isLoading.value = false;
+    forceSkeleton.value = false;
   }
 }
 
@@ -405,7 +408,7 @@ function onPromoted(res: { promoted: number; failed: number }) {
         entity-label="kelas"
         :import-title="$t('admin.sekolah.classroom_management.import_title')"
         :read-only="ayReadOnly"
-        @refresh="reload(pagination?.current_page ?? 1)"
+        @refresh="reload(pagination?.current_page ?? 1, { skeleton: true })"
         @imported="reload(1)"
       />
     </template>

@@ -117,6 +117,7 @@ const students = shallowRef<Student[]>([]);
 const classes = shallowRef<Classroom[]>([]);
 const pagination = ref<Pagination | null>(null);
 const isLoading = ref(true);
+const forceSkeleton = ref(false);
 const error = ref<string | null>(null);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
@@ -236,7 +237,7 @@ const showGenderPicker = ref(false);
 const showGuardianPicker = ref(false);
 
 const state = computed<AsyncState<Student[]>>(() => {
-  if (isLoading.value && students.value.length === 0) return { status: 'loading' };
+  if (isLoading.value && (students.value.length === 0 || forceSkeleton.value)) return { status: 'loading' };
   if (error.value) return { status: 'error', error: error.value };
   if (students.value.length === 0) return { status: 'empty' };
   return { status: 'content', data: students.value };
@@ -331,8 +332,9 @@ function clearGuardianFilter() {
 }
 
 // ── Loaders ────────────────────────────────────────────────────────
-async function reload(page = 1) {
+async function reload(page = 1, opts: { skeleton?: boolean } = {}) {
   isLoading.value = true;
+  forceSkeleton.value = opts.skeleton ?? false;
   error.value = null;
   try {
     const res = await StudentService.list({
@@ -350,6 +352,7 @@ async function reload(page = 1) {
     error.value = (e as Error).message;
   } finally {
     isLoading.value = false;
+    forceSkeleton.value = false;
   }
 }
 
@@ -752,7 +755,7 @@ async function confirmDelete() {
         entity-label="siswa"
         :import-title="t('admin.student.importTitle')"
         :read-only="ayReadOnly"
-        @refresh="reload(pagination?.current_page ?? 1)"
+        @refresh="reload(pagination?.current_page ?? 1, { skeleton: true })"
         @imported="reload(1)"
       />
     </template>
