@@ -10,7 +10,23 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
-import type { WaBlastMetricsPayload } from '@/services/monitoring.service';
+import type { WaBlastMetricsPayload, WaBlastRole } from '@/services/monitoring.service';
+
+const ROLE_LABEL: Record<WaBlastRole, string> = {
+  teacher: 'guru',
+  staff: 'staf',
+  parent: 'wali',
+};
+
+function perRoleChips(perRole?: Record<WaBlastRole, number>) {
+  if (!perRole) return [];
+  const out: { role: WaBlastRole; count: number }[] = [];
+  for (const role of ['teacher', 'staff', 'parent'] as const) {
+    const c = perRole[role] ?? 0;
+    if (c > 0) out.push({ role, count: c });
+  }
+  return out;
+}
 
 const props = defineProps<{ data: WaBlastMetricsPayload }>();
 const emit = defineEmits<{ 'open-log-view': [batchId?: string] }>();
@@ -101,6 +117,18 @@ function formatDateTime(iso: string): string {
                 {{ formatDateTime(b.started_at) }}
                 <template v-if="b.initiated_by_name">
                   · oleh {{ b.initiated_by_name }}
+                </template>
+              </p>
+              <p
+                v-if="perRoleChips(b.per_role).length > 0"
+                class="text-xs text-slate-500 mt-1"
+              >
+                <template
+                  v-for="(c, i) in perRoleChips(b.per_role)"
+                  :key="c.role"
+                >
+                  <span v-if="i > 0"> · </span>
+                  <b class="text-slate-700">{{ c.count }}</b> {{ ROLE_LABEL[c.role] }}
                 </template>
               </p>
             </div>

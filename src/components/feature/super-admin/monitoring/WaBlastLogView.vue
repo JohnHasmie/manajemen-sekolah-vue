@@ -12,7 +12,14 @@ import {
   type WaBlastLogFilters,
   type WaBlastLogRow,
   type WaBlastLogsPayload,
+  type WaBlastRole,
 } from '@/services/monitoring.service';
+
+const ROLE_LABEL: Record<WaBlastRole, string> = {
+  teacher: 'Guru',
+  staff: 'Staf',
+  parent: 'Wali',
+};
 
 const props = defineProps<{ batchId?: string }>();
 const emit = defineEmits<{ back: [] }>();
@@ -25,6 +32,7 @@ const payload = ref<WaBlastLogsPayload>({
 const loading = ref(false);
 const search = ref('');
 const statusFilter = ref<'all' | 'delivered' | 'failed'>('all');
+const roleFilter = ref<'all' | WaBlastRole>('all');
 const dateRange = ref<'today' | '7d' | '30d'>('today');
 
 async function load() {
@@ -36,6 +44,9 @@ async function load() {
     if (term) filters.phone = term;
     if (statusFilter.value !== 'all') {
       filters.status = statusFilter.value;
+    }
+    if (roleFilter.value !== 'all') {
+      filters.role = roleFilter.value;
     }
     // Date range is IGNORED when scoping to a single batch — the batch
     // is coherent regardless of when it was fired.
@@ -64,7 +75,7 @@ watch(search, () => {
   if (searchTimer) window.clearTimeout(searchTimer);
   searchTimer = window.setTimeout(() => void load(), 250);
 });
-watch([statusFilter, dateRange], () => void load());
+watch([statusFilter, roleFilter, dateRange], () => void load());
 watch(() => props.batchId, () => void load());
 
 function formatTime(iso: string): string {
@@ -157,6 +168,15 @@ const summary = computed(() => payload.value.summary);
         Gagal
       </button>
       <select
+        v-model="roleFilter"
+        class="px-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none"
+      >
+        <option value="all">Semua peran</option>
+        <option value="teacher">Guru</option>
+        <option value="staff">Staf</option>
+        <option value="parent">Wali</option>
+      </select>
+      <select
         v-if="!batchId"
         v-model="dateRange"
         class="px-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none"
@@ -207,6 +227,12 @@ const summary = computed(() => payload.value.summary);
             </p>
             <p class="text-xs text-slate-500 mt-0.5 font-mono">
               {{ row.school_name ?? '(tanpa sekolah)' }} · {{ row.notification_type }}
+              <span
+                v-if="row.recipient_role"
+                class="ml-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-sans font-bold text-[10px] uppercase"
+              >
+                {{ ROLE_LABEL[row.recipient_role] }}
+              </span>
             </p>
             <p
               v-if="row.error_message"

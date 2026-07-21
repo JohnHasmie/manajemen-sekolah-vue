@@ -188,6 +188,8 @@ export interface WaBlastKpi {
   unique_users_30d: number;
 }
 
+export type WaBlastRole = 'teacher' | 'staff' | 'parent';
+
 export interface WaBlastBatchSummary {
   batch_id: string;
   school_id: string | null;
@@ -198,6 +200,8 @@ export interface WaBlastBatchSummary {
   delivered: number;
   failed: number;
   queued: number;
+  /** Per-role slice — MR-H1 backend adds this; older batches carry all-0s. */
+  per_role?: Record<WaBlastRole, number>;
 }
 
 export interface WaBlastMetricsPayload {
@@ -219,6 +223,8 @@ export interface WaBlastLogRow {
   initiated_by_name: string | null;
   recipient_user_id: string | null;
   recipient_name: string;
+  /** MR-H1 backend surfaces the role; older rows may carry null. */
+  recipient_role: WaBlastRole | null;
   recipient_phone_masked: string;
   notification_type: string;
   status: WaBlastLogStatus;
@@ -244,6 +250,8 @@ export interface WaBlastLogFilters {
   school_id?: string;
   batch_id?: string;
   status?: string;
+  /** Comma-separated `teacher,staff,parent` — MR-H1 backend filter. */
+  role?: string;
   phone?: string;
   from?: string;
   to?: string;
