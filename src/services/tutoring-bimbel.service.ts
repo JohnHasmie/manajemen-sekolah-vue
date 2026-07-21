@@ -60,8 +60,11 @@ export interface BimbelPackage {
 export interface BimbelLearningGroup {
   id: string;
   program_id: string;
+  program_name?: string | null;
   term_id?: string | null;
+  term_name?: string | null;
   tutor_id?: string | null;
+  tutor_name?: string | null;
   name: string;
   kind: 'group' | 'private';
   kind_label?: string;
@@ -77,9 +80,14 @@ export interface BimbelLearningGroup {
 export interface BimbelEnrollment {
   id: string;
   student_id: string;
+  student_name?: string | null;
+  student_number?: string | null;
   program_id: string;
+  program_name?: string | null;
   learning_group_id?: string | null;
+  learning_group_name?: string | null;
   package_id?: string | null;
+  package_name?: string | null;
   billing_mode: 'prepaid' | 'monthly' | 'per_session';
   billing_mode_label?: string;
   status: 'trial' | 'active' | 'paused' | 'graduated' | 'withdrawn';
@@ -98,7 +106,9 @@ export interface BimbelEnrollment {
 export interface BimbelSession {
   id: string;
   learning_group_id: string;
+  learning_group_name?: string | null;
   tutor_id?: string | null;
+  tutor_name?: string | null;
   series_key?: string | null;
   starts_at: string;
   ends_at: string;

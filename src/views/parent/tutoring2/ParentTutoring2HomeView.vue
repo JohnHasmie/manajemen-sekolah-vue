@@ -36,6 +36,8 @@ useAcademicYearWatcher(reload);
 
 interface ChildRow {
   student_id: string;
+  student_name?: string | null;
+  student_number?: string | null;
   active_count: number;
   outstanding: number;
 }
@@ -44,7 +46,13 @@ const children = computed<ChildRow[]>(() => {
   const items = (state.value.status === 'content' ? state.value.data : []) as BimbelEnrollment[];
   const byStudent = new Map<string, ChildRow>();
   for (const e of items) {
-    const row = byStudent.get(e.student_id) ?? { student_id: e.student_id, active_count: 0, outstanding: 0 };
+    const row = byStudent.get(e.student_id) ?? {
+      student_id: e.student_id,
+      student_name: e.student_name,
+      student_number: e.student_number,
+      active_count: 0,
+      outstanding: 0,
+    };
     if (e.status === 'active' || e.status === 'trial') row.active_count += 1;
     byStudent.set(e.student_id, row);
   }
@@ -114,10 +122,10 @@ function openChild(id: string) {
               @click="openChild(c.student_id)"
             >
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-azure/10 text-xs font-bold uppercase text-brand-azure">
-                {{ c.student_id.slice(0, 2).toUpperCase() }}
+                {{ (c.student_name ?? c.student_id).slice(0, 2).toUpperCase() }}
               </div>
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-bold text-slate-900">{{ t('tutoring2.common.studentId') }} {{ shortId(c.student_id) }}</p>
+                <p class="truncate text-sm font-bold text-slate-900">{{ c.student_name ?? `${t('tutoring2.common.studentId')} ${shortId(c.student_id)}` }}</p>
                 <p class="truncate text-2xs text-slate-500">
                   {{ c.active_count }} {{ t('tutoring2.common.metaEnrollments', { count: c.active_count }).replace(String(c.active_count), '').trim() }}
                 </p>

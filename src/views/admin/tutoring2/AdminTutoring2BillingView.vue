@@ -153,7 +153,7 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
                 :key="e.id"
                 class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
               >
-                <td class="px-4 py-3 font-mono text-2xs text-slate-500">{{ truncateId(e.student_id) }}</td>
+                <td class="px-4 py-3 font-semibold text-slate-900">{{ e.student_name ?? truncateId(e.student_id) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ e.billing_mode_label ?? e.billing_mode }}</td>
                 <td class="px-4 py-3 text-slate-600">
                   {{ e.billing_day_of_month ? t('tutoring2.admin.billing.dayPrefix', { day: e.billing_day_of_month }) : '—' }}

@@ -51,8 +51,9 @@ const { state, reload } = useDataRefresh(async () => {
   if (!q) return items;
   return items.filter(
     (e) =>
-      e.student_id.toLowerCase().includes(q) ||
-      e.program_id.toLowerCase().includes(q),
+      (e.student_name ?? e.student_id).toLowerCase().includes(q) ||
+      (e.student_number ?? '').toLowerCase().includes(q) ||
+      (e.program_name ?? e.program_id).toLowerCase().includes(q),
   );
 });
 
@@ -167,8 +168,8 @@ function remainingQuota(e: BimbelEnrollment): string {
                 :key="e.id"
                 class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
               >
-                <td class="px-4 py-3 font-bold text-slate-900">{{ truncateId(e.student_id) }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ truncateId(e.program_id) }}</td>
+                <td class="px-4 py-3 font-bold text-slate-900">{{ e.student_name ?? truncateId(e.student_id) }}</td>
+                <td class="px-4 py-3 text-slate-600">{{ e.program_name ?? truncateId(e.program_id) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ e.billing_mode_label ?? e.billing_mode }}</td>
                 <td class="px-4 py-3">
                   <StatusBadge :label="e.status_label ?? statusLabel(e.status)" :tone="statusPillTone(e.status)" uppercase />
