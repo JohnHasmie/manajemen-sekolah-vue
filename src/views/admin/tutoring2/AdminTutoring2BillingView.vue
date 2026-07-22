@@ -1,12 +1,12 @@
 <!--
-  AdminTutoring2KeuanganView.vue — greenfield "Keuangan" (tagihan) list.
+  AdminTutoring2BillingView.vue — greenfield "Keuangan" (tagihan) list.
 
-  Sibling of AdminTutoring2ProgramsView; same composition contract:
-  BrandPageHeader → KpiStripCards → PageFilterToolbar → AsyncView →
-  white rounded-3xl table surface → floating "+" CTA.
+  Reads BOTH the KPI aggregate + the paginated bill list from
+  /api/tutoring-v2/bills* (BE-8). Drops the temporary
+  FinanceService.listBills bridge that was in place while the
+  greenfield endpoints didn't exist.
 -->
 <script setup lang="ts">
-// TODO WEB-3+ swap to /tutoring-v2/bills once BE exposes the Finance filtered view (source_type ∈ TUTORING_*, bimbel_enrollment_id NOT NULL). MVP derives one nominal bill per active enrollment so the screen isn't empty.
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
@@ -22,23 +22,17 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
-  type BimbelEnrollment,
+  type BimbelBill,
+  type BimbelBillsSummary,
 } from '@/services/tutoring-bimbel.service';
-import { FinanceService } from '@/services/finance.service';
-import type { Bill } from '@/types/billing';
 import type { StatusBadgeTone } from '@/types/status-badge';
 
 const { t } = useI18n();
 
-// TODO WEB-3+ swap the table to /tutoring-v2/bills once the BE exposes
-// a source_type-filtered Finance list. KPI counters below already pull
-// real bills via FinanceService.listBills (all tenant bills; a bimbel
-// tenant only has bimbel bills so the numbers land correct there).
-
 const search = ref('');
-const modeFilter = ref<string>(''); // '' | 'prepaid' | 'monthly' | 'per_session'
-const statusFilter = ref<string>(''); // '' | 'unpaid' | 'paid' — nominal (see TODO)
-const periodeFilter = ref<string>(''); // '' | '2026-07' | … — nominal (see TODO)
+const statusFilter = ref<string>(''); // '' | 'unpaid' | 'paid' | 'pending' | 'partial'
+const sourceFilter = ref<string>(''); // '' | 'TUTORING_PREPAID' | 'TUTORING_MONTHLY' | 'TUTORING_SESSION'
+const monthFilter = ref<string>(''); // '' | 'YYYY-MM'
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -47,47 +41,50 @@ const applyDebounced = useDebounceFn((v: string) => {
 watch(search, (v) => applyDebounced(v));
 
 interface BillingBundle {
-  enrollments: BimbelEnrollment[];
-  bills: Bill[];
+  bills: BimbelBill[];
+  summary: BimbelBillsSummary;
 }
 
 const { state, reload } = useDataRefresh<BillingBundle>(async () => {
-  // Parallel fetch — enrollments feeds the table (until /tutoring-v2/bills
-  // lands), bills feed the KPI aggregates so counters aren't stuck at 0.
-  const [enrollmentsRes, billsRes] = await Promise.all([
-    TutoringBimbelService.listEnrollments({
-      per_page: 200,
-      billing_mode: modeFilter.value || undefined,
+  const [billsRes, summaryRes] = await Promise.all([
+    TutoringBimbelService.listBills({
+      per_page: 100,
+      status: statusFilter.value || undefined,
+      source_type: sourceFilter.value || undefined,
+      month: monthFilter.value || undefined,
     }),
-    FinanceService.listBills({ per_page: 200 }),
+    TutoringBimbelService.getBillsSummary({
+      source_type: sourceFilter.value || undefined,
+      month: monthFilter.value || undefined,
+    }),
   ]);
-  return { enrollments: enrollmentsRes.items, bills: billsRes.items };
+  return { bills: billsRes.items, summary: summaryRes };
 });
 
-watch([debouncedSearch, modeFilter, statusFilter, periodeFilter], () => reload());
+watch([debouncedSearch, statusFilter, sourceFilter, monthFilter], () => reload());
 useAcademicYearWatcher(reload);
 
-const kpiCards = computed<KpiCard[]>(() => {
-  const bundle = (state.value.status === 'content' ? state.value.data : { enrollments: [], bills: [] }) as BillingBundle;
-  const bills = bundle.bills;
-  // paid = raw_status covers both 'paid' and 'verified' (Finance uses either).
-  const isPaid = (b: Bill) => b.raw_status === 'paid' || b.raw_status === 'verified';
-  const tertagih = bills.reduce((s, b) => s + b.amount, 0);
-  const terbayar = bills.filter(isPaid).reduce((s, b) => s + b.amount, 0);
-  const overdueBills = bills.filter((b) => !isPaid(b) && b.is_overdue);
-  const menunggak = overdueBills.reduce((s, b) => s + b.amount, 0);
-  return [
-    { icon: 'file-text', label: t('tutoring2.admin.billing.kpiBilled'), value: `Rp ${tertagih.toLocaleString('id-ID')}` },
-    { icon: 'circle-check', label: t('tutoring2.admin.billing.kpiPaid'), value: `Rp ${terbayar.toLocaleString('id-ID')}`, tone: terbayar > 0 ? 'green' : undefined },
-    { icon: 'alert-triangle', label: t('tutoring2.admin.billing.kpiOverdue'), value: `Rp ${menunggak.toLocaleString('id-ID')}`, tone: menunggak > 0 ? 'red' : undefined },
-    { icon: 'clock', label: t('tutoring2.admin.billing.kpiOverdueCount'), value: String(overdueBills.length), tone: overdueBills.length > 0 ? 'amber' : undefined },
-  ];
+const billsList = computed(() => {
+  const bundle = state.value.status === 'content' ? (state.value.data as BillingBundle) : null;
+  if (!bundle) return [];
+  const q = debouncedSearch.value.trim().toLowerCase();
+  if (!q) return bundle.bills;
+  return bundle.bills.filter((b) =>
+    (b.student_name ?? b.student_id).toLowerCase().includes(q)
+    || (b.student_number ?? '').toLowerCase().includes(q),
+  );
 });
 
-// Table still projects enrollment rows (see TODO). Extract once for reuse.
-const enrollmentsList = computed(() =>
-  state.value.status === 'content' ? (state.value.data as BillingBundle).enrollments : []
-);
+const kpiCards = computed<KpiCard[]>(() => {
+  const bundle = state.value.status === 'content' ? (state.value.data as BillingBundle) : null;
+  const s: BimbelBillsSummary = bundle?.summary ?? { tertagih: 0, terbayar: 0, menunggak: 0, overdue_count: 0 };
+  return [
+    { icon: 'file-text', label: t('tutoring2.admin.billing.kpiBilled'), value: `Rp ${s.tertagih.toLocaleString('id-ID')}` },
+    { icon: 'circle-check', label: t('tutoring2.admin.billing.kpiPaid'), value: `Rp ${s.terbayar.toLocaleString('id-ID')}`, tone: s.terbayar > 0 ? 'green' : undefined },
+    { icon: 'alert-triangle', label: t('tutoring2.admin.billing.kpiOverdue'), value: `Rp ${s.menunggak.toLocaleString('id-ID')}`, tone: s.menunggak > 0 ? 'red' : undefined },
+    { icon: 'clock', label: t('tutoring2.admin.billing.kpiOverdueCount'), value: String(s.overdue_count), tone: s.overdue_count > 0 ? 'amber' : undefined },
+  ];
+});
 
 function truncateId(id: string | null | undefined): string {
   if (!id) return '—';
@@ -98,15 +95,20 @@ function formatRupiah(n: number | null | undefined): string {
   return n != null ? `Rp ${n.toLocaleString('id-ID')}` : '—';
 }
 
-// TODO WEB-3+ when /tutoring-v2/bills lands, extend to paid|unpaid|overdue.
-// active|paid → success, unpaid → warning, overdue → danger.
-function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): StatusBadgeTone {
+function billStatusTone(status: string): StatusBadgeTone {
   switch (status) {
-    case 'active': return 'success';
     case 'paid': return 'success';
     case 'unpaid': return 'warning';
-    case 'overdue': return 'danger';
+    case 'pending': return 'warning';
+    case 'partial': return 'warning';
+    default: return 'neutral';
   }
+}
+
+function billStatusLabel(status: string): string {
+  // Keep raw values for now; upstream i18n mapping can happen in a
+  // future MR once product locks the copy.
+  return status.toUpperCase();
 }
 </script>
 
@@ -116,7 +118,7 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
       role="admin"
       :kicker="t('tutoring2.common.roleAdmin')"
       :title="t('tutoring2.admin.billing.title')"
-      :meta="state.status === 'content' ? t('tutoring2.common.metaActiveEnrolls', { count: enrollmentsList.length }) : t('tutoring2.common.loading')"
+      :meta="state.status === 'content' ? t('tutoring2.common.metaBills', { count: billsList.length }) : t('tutoring2.common.loading')"
     />
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
@@ -124,11 +126,11 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
     <PageFilterToolbar v-model:search="search" :search-placeholder="t('tutoring2.admin.billing.searchPh')">
       <template #chips>
         <AppFilterChip
-          :label="t('tutoring2.common.billingMode')"
-          :value="modeFilter || t('tutoring2.common.all')"
+          :label="t('tutoring2.common.source')"
+          :value="sourceFilter || t('tutoring2.common.all')"
           icon-name="credit-card"
-          :active="!!modeFilter"
-          @click="modeFilter = modeFilter ? '' : 'monthly'"
+          :active="!!sourceFilter"
+          @click="sourceFilter = sourceFilter ? '' : 'TUTORING_MONTHLY'"
         />
         <AppFilterChip
           :label="t('tutoring2.common.status')"
@@ -139,10 +141,10 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
         />
         <AppFilterChip
           :label="t('tutoring2.common.period')"
-          :value="periodeFilter || t('tutoring2.common.all')"
+          :value="monthFilter || t('tutoring2.common.all')"
           icon-name="calendar"
-          :active="!!periodeFilter"
-          @click="periodeFilter = periodeFilter ? '' : '2026-07'"
+          :active="!!monthFilter"
+          @click="monthFilter = monthFilter ? '' : new Date().toISOString().slice(0, 7)"
         />
       </template>
     </PageFilterToolbar>
@@ -161,26 +163,24 @@ function billStatusTone(status: 'active' | 'paid' | 'unpaid' | 'overdue'): Statu
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.student') }}</th>
-                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.mode') }}</th>
-                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.period') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.source') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.dueDate') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.amount') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr
-                v-for="e in enrollmentsList"
-                :key="e.id"
+                v-for="b in billsList"
+                :key="b.id"
                 class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
               >
-                <td class="px-4 py-3 font-semibold text-slate-900">{{ e.student_name ?? truncateId(e.student_id) }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ e.billing_mode_label ?? e.billing_mode }}</td>
-                <td class="px-4 py-3 text-slate-600">
-                  {{ e.billing_day_of_month ? t('tutoring2.admin.billing.dayPrefix', { day: e.billing_day_of_month }) : '—' }}
-                </td>
-                <td class="px-4 py-3 text-slate-600">{{ formatRupiah(e.price_at_enrollment) }}</td>
+                <td class="px-4 py-3 font-semibold text-slate-900">{{ b.student_name ?? truncateId(b.student_id) }}</td>
+                <td class="px-4 py-3 text-slate-600">{{ b.source_label ?? b.source_type }}</td>
+                <td class="px-4 py-3 text-slate-600">{{ b.due_date ?? '—' }}</td>
+                <td class="px-4 py-3 font-semibold text-slate-900">{{ formatRupiah(b.amount) }}</td>
                 <td class="px-4 py-3">
-                  <StatusBadge :label="t('tutoring2.status.active')" :tone="billStatusTone('active')" uppercase />
+                  <StatusBadge :label="billStatusLabel(b.status)" :tone="billStatusTone(b.status)" uppercase />
                 </td>
               </tr>
             </tbody>
