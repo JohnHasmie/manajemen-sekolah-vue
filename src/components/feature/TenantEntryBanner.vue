@@ -1,11 +1,18 @@
 <!--
-  TutoringEntryBanner — additive dashboard entry into the tutoring
-  (bimbel) surface. Renders ONLY when the active tenant is a tutoring
-  center (useTenant().isTutoringCenter); for a formal-school tenant it
-  renders nothing, so the school dashboards stay unchanged.
+  TenantEntryBanner (X-2, 2026-07-22) — additive dashboard entry into
+  the tutoring (bimbel) surface. Renders ONLY when the active tenant
+  is a tutoring center (useTenant().isTutoringCenter); for a
+  formal-school tenant it renders nothing, so the school dashboards
+  stay unchanged.
 
   Web mirror of the Flutter TutoringEntryBanner. The parent caller
   passes the destination via @click.
+
+  **Rename note (X-2):** was `TutoringEntryBanner.vue` under
+  `components/feature/`; renamed to `TenantEntryBanner.vue` because
+  the component isn't tutoring-owned — it's a tenant-agnostic banner
+  gated on tenant kind. Move preps for CLEAN-2 (legacy tutoring
+  teardown) so no non-legacy code imports out of legacy paths.
 -->
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
