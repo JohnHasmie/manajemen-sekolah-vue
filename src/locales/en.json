@@ -6904,6 +6904,9 @@
       "billingMode": "Billing mode",
       "startingPrice": "Starting price",
       "date": "Date",
+      "source": "Source",
+      "dueDate": "Due date",
+      "metaBills": "{count} bills",
       "time": "Time",
       "room": "Room",
       "notes": "Notes",
@@ -6982,6 +6985,17 @@
       "paid": "Paid",
       "unpaid": "Unpaid",
       "overdue": "Overdue"
+    },
+    "bills": {
+      "detail": {
+        "title": "Bill detail",
+        "meta": "Bill summary",
+        "emptyTitle": "Bill not found",
+        "emptyDesc": "This bill may have been removed.",
+        "viewCta": "View detail",
+        "paymentsSection": "Payment history",
+        "noPayments": "No payments yet"
+      }
     },
     "admin": {
       "programs": {
@@ -7389,14 +7403,17 @@
         "kpiOverdue": "Overdue",
         "kpiPaidThisMonth": "Paid this month",
         "kpiTotalChildren": "Children",
-        "payCta": "Pay now"
+        "payCta": "Pay now",
+        "payStubToast": "Payment processed (MVP stub)"
       },
       "history": {
         "title": "Payment history",
         "meta": "{count} transactions",
         "emptyTitle": "No history yet",
         "filterChild": "Child",
-        "filterYear": "Year"
+        "filterYear": "Year",
+        "kpiPaidThisYear": "Paid this year",
+        "kpiThisYearCount": "Bills this year"
       },
       "notifications": {
         "title": "Notifications",

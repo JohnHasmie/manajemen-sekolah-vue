@@ -6904,6 +6904,9 @@
       "billingMode": "Mode tagihan",
       "startingPrice": "Harga mulai",
       "date": "Tanggal",
+      "source": "Sumber",
+      "dueDate": "Jatuh tempo",
+      "metaBills": "{count} tagihan",
       "time": "Waktu",
       "room": "Ruang",
       "notes": "Catatan",
@@ -6982,6 +6985,17 @@
       "paid": "Lunas",
       "unpaid": "Belum lunas",
       "overdue": "Menunggak"
+    },
+    "bills": {
+      "detail": {
+        "title": "Detail tagihan",
+        "meta": "Ringkasan tagihan",
+        "emptyTitle": "Tagihan tidak ditemukan",
+        "emptyDesc": "Tagihan ini mungkin sudah dihapus.",
+        "viewCta": "Lihat detail",
+        "paymentsSection": "Riwayat pembayaran",
+        "noPayments": "Belum ada pembayaran"
+      }
     },
     "admin": {
       "programs": {
@@ -7389,14 +7403,17 @@
         "kpiOverdue": "Menunggak",
         "kpiPaidThisMonth": "Terbayar bulan ini",
         "kpiTotalChildren": "Anak",
-        "payCta": "Bayar sekarang"
+        "payCta": "Bayar sekarang",
+        "payStubToast": "Pembayaran diproses (MVP stub)"
       },
       "history": {
         "title": "Riwayat pembayaran",
         "meta": "{count} transaksi",
         "emptyTitle": "Belum ada riwayat",
         "filterChild": "Anak",
-        "filterYear": "Tahun"
+        "filterYear": "Tahun",
+        "kpiPaidThisYear": "Terbayar tahun ini",
+        "kpiThisYearCount": "Tagihan tahun ini"
       },
       "notifications": {
         "title": "Notifikasi",

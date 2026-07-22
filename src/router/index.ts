@@ -2064,6 +2064,15 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
       },
       {
+        // WEB-7: bill detail — hero + payment history + "Bayar sekarang".
+        // Sibling of `student.tutoring2.pay` (which is the actual checkout);
+        // this route is the read-only summary in between the list and pay.
+        path: 'student/tutoring2/bills/:id',
+        name: 'student.tutoring2.bill-detail',
+        component: () => import('@/views/student/tutoring2/StudentTutoring2BillDetailView.vue'),
+        meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
         path: 'student/tutoring2/pay/:billId',
         name: 'student.tutoring2.pay',
         component: () => import('@/views/student/tutoring2/StudentTutoring2PayView.vue'),
