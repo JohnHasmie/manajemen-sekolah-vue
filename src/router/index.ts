@@ -637,54 +637,52 @@ const routes: RouteRecordRaw[] = [
         ],
       },
       {
-        // Wave 4 IA merge — Kehadiran Siswa hub: "Ringkasan" (dashboard) +
-        // "Laporan" + "Detail" as sibling tabs under one parent. The three
-        // former standalone routes become children with their names preserved
-        // (report/detail cross-navigate via named routes + query params, which
-        // stay intact). The grade-level heatmap remains a standalone drill-down
-        // route below — it is a parametric :tingkat view, not a sibling tab.
+        // 3-tab hub — Harian (per-student per-day via QR), Per Mapel
+        // (session-per-row rekap), Rekap & Laporan (monthly grid + export).
+        // The old Ringkasan/Laporan children are gone; the hub renders its
+        // own tab body based on ?tab= (or the legacy route name for backwards
+        // compat with anywhere that pushed by name). Session-detail (edit
+        // roster of one class × mapel × JP) stays as its own route so the
+        // deep-link doesn't render the hub chrome around a fullscreen editor.
         path: 'admin/student-attendance',
+        name: 'admin.student-attendance',
         component: AdminStudentAttendanceHub,
         meta: {
           role: 'admin' satisfies Role,
           abilityAny: ['attendance.student.view', 'attendance.student.export'],
         },
-        children: [
-          {
-            path: '',
-            name: 'admin.student-attendance',
-            component: AdminAttendanceDashboardView,
-            meta: {
-              role: 'admin' satisfies Role,
-              abilityAny: ['attendance.student.view', 'attendance.student.export'],
-            },
-          },
-          {
-            path: 'report',
-            name: 'admin.student-attendance.report',
-            component: AdminAttendanceReportView,
-            meta: {
-              role: 'admin' satisfies Role,
-              abilityAny: ['attendance.student.view', 'attendance.student.export'],
-            },
-          },
-          {
-            path: 'detail',
-            name: 'admin.student-attendance.detail',
-            component: AdminAttendanceDetailView,
-            meta: {
-              role: 'admin' satisfies Role,
-              abilityAny: ['attendance.student.view', 'attendance.student.export'],
-            },
-          },
-        ],
       },
       {
-        // Grade-level heatmap — parametric drill-down (kept standalone, NOT a
-        // hub tab). Reached from the dashboard's tingkat cards.
+        // Legacy alias — old code pushes `admin.student-attendance.report` by
+        // name; the hub reads route.name and flips to Per Mapel automatically.
+        path: 'admin/student-attendance/report',
+        name: 'admin.student-attendance.report',
+        component: AdminStudentAttendanceHub,
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['attendance.student.view', 'attendance.student.export'],
+        },
+      },
+      {
+        // Session detail — deep view for editing one session's roster.
+        // Kept standalone: opens in its own chrome without the hub tab bar.
+        path: 'admin/student-attendance/detail',
+        name: 'admin.student-attendance.detail',
+        component: AdminAttendanceDetailView,
+        meta: {
+          role: 'admin' satisfies Role,
+          abilityAny: ['attendance.student.view', 'attendance.student.export'],
+        },
+      },
+      {
+        // Legacy grade-level heatmap — old dashboard cards pushed this by
+        // name. The 3-tab hub's Rekap tab supersedes it; keep the route so
+        // old bookmarks land on Rekap instead of 404. The :tingkat param
+        // isn't consumed by the hub yet — pre-selecting a grade is a
+        // follow-up nice-to-have.
         path: 'admin/student-attendance/grade-level/:tingkat',
         name: 'admin.student-attendance.grade-level',
-        component: AdminAttendanceTingkatHeatmapView,
+        component: AdminStudentAttendanceHub,
         meta: {
           role: 'admin' satisfies Role,
           abilityAny: ['attendance.student.view', 'attendance.student.export'],
