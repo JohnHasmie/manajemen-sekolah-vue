@@ -139,6 +139,44 @@ export interface BimbelAssessment {
   scores_count?: number;
 }
 
+// ─── Bills (BE-8) ───────────────────────────────────────────────────
+
+/** Wire shape for `/api/tutoring-v2/bills`. Fields optional where the
+ * BE resource omits them (whenLoaded / non-tutoring rows). */
+export interface BimbelBill {
+  id: string;
+  school_id: string;
+  student_id: string;
+  student_name?: string | null;
+  student_number?: string | null;
+  bimbel_enrollment_id?: string | null;
+  bimbel_session_id?: string | null;
+  enrollment?: {
+    id: string;
+    program_id: string;
+    billing_mode?: string | null;
+  } | null;
+  payment_type_id: string;
+  payment_type_name?: string | null;
+  amount: number;
+  status: 'unpaid' | 'pending' | 'partial' | 'paid' | string;
+  source_type: 'TUTORING_PREPAID' | 'TUTORING_MONTHLY' | 'TUTORING_SESSION' | string;
+  source_label?: string;
+  due_date?: string | null;
+  month?: string | null;
+  reminder_count?: number;
+  last_reminded_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BimbelBillsSummary {
+  tertagih: number;
+  terbayar: number;
+  menunggak: number;
+  overdue_count: number;
+}
+
 // ─── Envelopes ─────────────────────────────────────────────────────
 
 interface ListEnvelope<T> {
@@ -290,6 +328,42 @@ export const TutoringBimbelService = {
   },
   async upsertScores(assessmentId: string, rows: Array<{ enrollment_id: string; score: number | null; notes?: string | null }>) {
     const r = await api.post<ListEnvelope<TutoringScoreRow>>(`/tutoring-v2/assessments/${assessmentId}/scores`, { rows });
+    return r.data.data;
+  },
+
+  // ─── Bills (BE-8) ─────────────────────────────────────────────────
+  async listBills(params: { page?: number; per_page?: number; student_id?: string; status?: string; source_type?: string; month?: string } = {}) {
+    const r = await api.get<ListEnvelope<BimbelBill>>('/tutoring-v2/bills', { params });
+    return { items: r.data.data, pagination: r.data.meta };
+  },
+  async getBill(id: string) {
+    const r = await api.get<OneEnvelope<BimbelBill>>(`/tutoring-v2/bills/${id}`);
+    return r.data.data;
+  },
+  async getBillsSummary(params: { source_type?: string; month?: string } = {}) {
+    const r = await api.get<OneEnvelope<BimbelBillsSummary>>('/tutoring-v2/bills/summary', { params });
+    return r.data.data;
+  },
+  async createBill(payload: {
+    student_id: string;
+    bimbel_enrollment_id?: string | null;
+    bimbel_session_id?: string | null;
+    payment_type_id: string;
+    amount: number;
+    due_date: string;
+    source_type: string;
+    month?: string | null;
+    status?: string;
+  }) {
+    const r = await api.post<OneEnvelope<BimbelBill>>('/tutoring-v2/bills', payload);
+    return r.data.data;
+  },
+  async markBillPaid(id: string, payload: { amount?: number; payment_method?: string; payment_date?: string; admin_notes?: string } = {}) {
+    const r = await api.post<OneEnvelope<BimbelBill>>(`/tutoring-v2/bills/${id}/mark-paid`, payload);
+    return r.data.data;
+  },
+  async resendBill(id: string) {
+    const r = await api.post<OneEnvelope<BimbelBill>>(`/tutoring-v2/bills/${id}/resend`, {});
     return r.data.data;
   },
 };
