@@ -631,11 +631,15 @@ async function confirmDelete() {
     @retry="reload()"
   >
     <template #header-actions>
+      <!-- Teachers aren't scoped to an academic year (the teachers table has
+           no academic_year_id) — so we don't gate Import/Export on
+           ayReadOnly like AY-scoped entities (students, classes) do.
+           Fixes the attendance_staff-only tenant seeing Import disabled
+           just because they hadn't created an AY yet. -->
       <AdminExcelToolbar
         entity="teacher"
         entity-label="guru"
         :import-title="$t('admin.sekolah.teacher_management.import_title')"
-        :read-only="ayReadOnly"
         @refresh="reload(pagination?.current_page ?? 1, { skeleton: true })"
         @imported="reload(1)"
       />

@@ -551,18 +551,19 @@ const routes: RouteRecordRaw[] = [
       },
       {
         // Class-first read-only oversight (distinct from the class-management
-        // screen above, which stays at admin.classes / "Kelas").
+        // screen above, which stays at admin.classes / "Kelas"). Needs
+        // student-context so attendance_staff-only tenants can't URL-hop in.
         path: 'admin/class-oversight',
         name: 'admin.class-oversight',
         component: AdminClassOversightView,
-        meta: { role: 'admin' satisfies Role, ability: 'school.class.view' },
+        meta: { role: 'admin' satisfies Role, ability: 'school.class.view', needs: 'student-context' },
       },
       {
         path: 'admin/class-oversight/:id',
         name: 'admin.class-oversight.detail',
         component: ClassHubView,
         props: (route) => ({ id: route.params.id, roleName: 'admin' }),
-        meta: { role: 'admin' satisfies Role, ability: 'activity.view' },
+        meta: { role: 'admin' satisfies Role, ability: 'activity.view', needs: 'student-context' },
       },
       {
         path: 'admin/subjects',

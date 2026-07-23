@@ -142,12 +142,15 @@ const ADMIN_NAV: NavSection[] = [
         needs: 'student-context',
       },
       // Class-first read-only oversight (health + Perlu Perhatian), distinct
-      // from the class-management entry above.
+      // from the class-management entry above. Needs student-context — the
+      // oversight signals (needsGrading, isSilent) are attendance/grade
+      // driven and are meaningless for an attendance_staff-only tenant.
       {
         to: '/admin/class-oversight',
         labelKey: 'classHub.oversightTitle',
         icon: 'eye',
         ability: 'school.class.view',
+        needs: 'student-context',
       },
       {
         to: '/admin/subjects',
