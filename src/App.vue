@@ -47,6 +47,15 @@ function consumeGoogleRedirectFragment(): 'token_ok' | 'error' | 'none' {
   if (token) {
     try {
       storage.set(StorageKeys.token, token);
+
+      // The backend now sends routing flags alongside the token so we
+      // know BEFORE calling /me whether this user needs the demo wizard,
+      // school picker, etc.  Persist them as the sessionStorage flags
+      // that the existing onMounted routing logic already reads.
+      if (params.get('kg_dapat_buat_demo')) {
+        try { sessionStorage.setItem('demo_intent_v1', '1'); } catch { /* non-fatal */ }
+      }
+
       return 'token_ok';
     } catch {
       // storage full / private mode — surface as error
@@ -80,71 +89,55 @@ onMounted(async () => {
     if (token) {
       try {
         await auth.hydrateFromToken(token);
-        // Multi-tenant Google logins land here with step='school' —
-        // the picker lives on /login and reads auth.step. Route there
-        // so the user can pick which tenant they meant to open,
-        // instead of silently landing on whichever tenant was cached
-        // in local storage from a prior session (which for someone who
-        // just activated a NEW subscription is the wrong dashboard).
-        //
-        // Exception: when the sessionStorage `demo_intent_v1` flag is
-        // still set — meaning the user clicked "Buat Demo dengan
-        // Google" and hasn't been dispatched to /register-demo yet —
-        // send them straight to the demo wizard instead of forcing
-        // them to pick a tenant they don't care about. LoginView's
-        // onMounted handles the same case as a fallback, but a
-        // direct route here avoids a flash of the picker.
-        if (auth.step === 'school') {
-          // If Google brought us back to a self-serve marketing route
-          // (/subscribe, /subscribe/new, /register-demo, …), just stay
-          // put. Those pages handle their own multi-tenant flow — they
-          // don't need the /login picker. This is the ground-truth
-          // signal (we're literally on that URL right now) so it can't
-          // desync from sessionStorage flags or GIS state races.
-          const path = window.location.pathname;
-          const staysOnPage =
-            path === '/subscribe' ||
-            path.startsWith('/subscribe/') ||
-            path === '/register-demo' ||
-            path.startsWith('/register-demo/');
+        // If Google brought us back to a self-serve marketing route
+        // (/subscribe, /subscribe/new, /register-demo, …), just stay
+        // put. Those pages handle their own multi-tenant flow — they
+        // don't need the /login picker. This is the ground-truth
+        // signal (we're literally on that URL right now) so it can't
+        // desync from sessionStorage flags or GIS state races.
+        const path = window.location.pathname;
+        const staysOnPage =
+          path === '/subscribe' ||
+          path.startsWith('/subscribe/') ||
+          path === '/register-demo' ||
+          path.startsWith('/register-demo/');
 
-          if (staysOnPage) {
-            // Clear any lingering intent flags so a future visit to
-            // /login (fresh session) doesn't misroute on them.
+        if (staysOnPage) {
+          // Clear any lingering intent flags so a future visit to
+          // /login (fresh session) doesn't misroute on them.
+          try { sessionStorage.removeItem('demo_intent_v1'); } catch { /* non-fatal */ }
+          try { sessionStorage.removeItem('subscribe_intent_v1'); } catch { /* non-fatal */ }
+          // HARDENING: while user is at /subscribe/* or /register-demo/*, actively
+          // collapse the tenant-picker state that hydrateFromToken set to 'school'.
+          // The subscribe/register-demo pages don't need a picker — they onboard
+          // a NEW tenant. Leaving step='school' is a race hazard: any code path
+          // that reads `auth.step` (LoginView picker, ProfileMenu, etc.) or that
+          // navigates the user away from /subscribe/* (e.g. an unrelated router
+          // push) could then trigger the picker they never asked for. Clear the
+          // pending schools list too so no picker UI has data to render even if
+          // it briefly mounts.
+          if (auth.step === 'school' || auth.step === 'role') {
+            auth.step = 'done';
+            auth.schools = [];
+            auth.roles = [];
+          }
+        } else {
+          let demoIntent = false;
+          let subscribeIntent = false;
+          try {
+            demoIntent = sessionStorage.getItem('demo_intent_v1') === '1';
+            subscribeIntent = sessionStorage.getItem('subscribe_intent_v1') === '1';
+          } catch {
+            /* private mode — fall through */
+          }
+          if (demoIntent) {
             try { sessionStorage.removeItem('demo_intent_v1'); } catch { /* non-fatal */ }
+            await router.replace('/register-demo');
+          } else if (subscribeIntent) {
             try { sessionStorage.removeItem('subscribe_intent_v1'); } catch { /* non-fatal */ }
-            // HARDENING: while user is at /subscribe/* or /register-demo/*, actively
-            // collapse the tenant-picker state that hydrateFromToken set to 'school'.
-            // The subscribe/register-demo pages don't need a picker — they onboard
-            // a NEW tenant. Leaving step='school' is a race hazard: any code path
-            // that reads `auth.step` (LoginView picker, ProfileMenu, etc.) or that
-            // navigates the user away from /subscribe/* (e.g. an unrelated router
-            // push) could then trigger the picker they never asked for. Clear the
-            // pending schools list too so no picker UI has data to render even if
-            // it briefly mounts.
-            if (auth.step === 'school' || auth.step === 'role') {
-              auth.step = 'done';
-              auth.schools = [];
-              auth.roles = [];
-            }
-          } else {
-            let demoIntent = false;
-            let subscribeIntent = false;
-            try {
-              demoIntent = sessionStorage.getItem('demo_intent_v1') === '1';
-              subscribeIntent = sessionStorage.getItem('subscribe_intent_v1') === '1';
-            } catch {
-              /* private mode — fall through to picker */
-            }
-            if (demoIntent) {
-              try { sessionStorage.removeItem('demo_intent_v1'); } catch { /* non-fatal */ }
-              await router.replace('/register-demo');
-            } else if (subscribeIntent) {
-              try { sessionStorage.removeItem('subscribe_intent_v1'); } catch { /* non-fatal */ }
-              await router.replace('/subscribe');
-            } else {
-              await router.replace('/login');
-            }
+            await router.replace('/subscribe');
+          } else if (auth.step === 'school') {
+            await router.replace('/login');
           }
         }
       } catch (err) {
