@@ -24,6 +24,8 @@ import {
   type CheckExistingResult,
   type MasterSubject,
 } from '@/services/subjects.service';
+import { generateGradeLevels } from '@/services/classrooms.service';
+import { SettingsService } from '@/services/settings.service';
 import type { Subject } from '@/types/entities';
 
 const props = defineProps<{
@@ -60,13 +62,8 @@ const form = reactive<FormShape>({
   description: props.subject?.description ?? '',
   master_subject_id: props.subject?.master_subject_id ?? '',
   master_subject_name: props.subject?.master_subject_name ?? '',
-  // Per-school grade (nullable). Existing rows may carry it in either
-  // `grade` (post-migration) or `grade_level` (pre-migration string) —
-  // read both, coerce to int, drop invalid values.
   grade: (() => {
-    const raw = (props.subject as unknown as Record<string, unknown>)?.grade
-      ?? props.subject?.grade_level
-      ?? null;
+    const raw = props.subject?.grade ?? props.subject?.grade_level ?? null;
     if (raw === null || raw === undefined || raw === '') return null;
     const n = Number(raw);
     return Number.isFinite(n) && n >= 1 && n <= 12 ? n : null;
@@ -159,10 +156,24 @@ const isLoadingMasters = ref(false);
 const showMasterDropdown = ref(false);
 let masterTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Dynamic grades based on school jenjang. Fall back to 1-12.
+const gradeOptions = ref<number[]>([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+
 async function loadInitialMasters() {
   isLoadingMasters.value = true;
   try {
-    masterResults.value = await SubjectService.listMasterSubjects();
+    const [mastersRes, schoolRes] = await Promise.allSettled([
+      SubjectService.listMasterSubjects(),
+      SettingsService.getSchool(),
+    ]);
+
+    if (mastersRes.status === 'fulfilled') {
+      masterResults.value = mastersRes.value;
+    }
+    
+    if (schoolRes.status === 'fulfilled') {
+      gradeOptions.value = generateGradeLevels(schoolRes.value.education_level).map(g => Number(g));
+    }
   } finally {
     isLoadingMasters.value = false;
   }
@@ -447,7 +458,7 @@ async function submit() {
           class="w-full rounded-xl border border-slate-300 bg-white px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none disabled:bg-slate-50"
         >
           <option :value="null">{{ $t('admin.subjects.form.gradeAll') }}</option>
-          <option v-for="g in 12" :key="g" :value="g">
+          <option v-for="g in gradeOptions" :key="g" :value="g">
             {{ $t('admin.subjects.form.gradeItem', { grade: g }) }}
           </option>
         </select>
