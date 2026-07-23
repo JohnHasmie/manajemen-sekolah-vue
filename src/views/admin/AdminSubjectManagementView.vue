@@ -105,7 +105,8 @@ const filteredSubjects = computed(() => {
 const gradeLevelOptions = computed<FacetOption[]>(() => {
   const set = new Set<string>();
   for (const s of subjects.value) {
-    if (s.grade_level) set.add(String(s.grade_level));
+    const g = s.grade ?? s.grade_level;
+    if (g) set.add(String(g));
   }
   return Array.from(set)
     .sort()
