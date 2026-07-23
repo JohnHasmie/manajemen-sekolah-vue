@@ -610,10 +610,6 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <!-- Teachers aren't AY-scoped (no academic_year_id on teachers) — the
-       add-FAB should be available even when the tenant has no active
-       academic year. Fixes the attendance_staff-only trial where "Tambah
-       Guru" was hidden just because the school hadn't set up an AY yet. -->
   <AdminCrudScaffold
     :title="$t('admin.teachers.title')"
     :kicker="$t('admin.shared.kicker')"
