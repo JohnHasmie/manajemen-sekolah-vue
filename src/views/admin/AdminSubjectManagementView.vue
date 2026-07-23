@@ -18,6 +18,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
 import type { Subject } from '@/types/entities';
 import type { Pagination } from '@/types/api';
+import { formatDayName } from '@/lib/day-name';
 import AdminCrudScaffold from '@/components/feature/AdminCrudScaffold.vue';
 import PaginationView from '@/components/data/Pagination.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
@@ -253,7 +254,7 @@ const inUseImpact = computed<string[]>(() => {
   const lines = guard.affected.map((a) =>
     $t('admin.sekolah.subject_management.in_use.affected_row', {
       class: a.class_name,
-      day: a.day_name,
+      day: formatDayName(a.day_name),
       hour: a.hour_number,
     }),
   );

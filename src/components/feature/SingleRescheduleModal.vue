@@ -15,7 +15,7 @@ import type {
   ScheduleFilterOptions,
   ScheduleRow,
 } from '@/types/schedule';
-import { DAY_LABELS, normalizeDayKey } from '@/types/schedule';
+import { formatDayName } from '@/lib/day-name';
 import { useI18n } from 'vue-i18n';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
@@ -135,7 +135,7 @@ const dayLabel = computed(() => {
       <section class="bg-slate-50 rounded-xl p-3">
         <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">Slot sekarang</p>
         <p class="text-[13px] font-bold text-slate-900 mt-1">
-          {{ DAY_LABELS[normalizeDayKey(row.day_name)] }} ·
+          {{ formatDayName(row.day_name) }} ·
           {{ t('common.lessonHour', { n: row.hour_number }) }} · {{ row.start_time }}–{{ row.end_time }}
         </p>
       </section>
@@ -156,7 +156,7 @@ const dayLabel = computed(() => {
             "
             @click="dayId = d.id"
           >
-            {{ d.name }}
+            {{ formatDayName(d.name) }}
           </button>
         </div>
       </div>

@@ -24,6 +24,7 @@ import { ScheduleService } from '@/services/schedule.service';
 import { LessonHourService } from '@/services/lesson-hour.service';
 import { SubjectService } from '@/services/subjects.service';
 import { subjectLabel } from '@/lib/labels';
+import { formatDayName } from '@/lib/day-name';
 import type {
   AdminScheduleFilters,
 } from '@/services/schedule.service';
@@ -1281,7 +1282,7 @@ async function bulkDelete() {
                 </div>
                 <div class="text-right flex-shrink-0">
                   <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
-                    {{ g.day_name ?? LOCALIZED_DAY_LABELS[g.day] }}
+                    {{ g.day_name ? formatDayName(g.day_name) : LOCALIZED_DAY_LABELS[g.day] }}
                   </p>
                   <p class="text-[12px] font-bold text-slate-900 tabular-nums">
                     {{ g.start_time }}–{{ g.end_time }}
@@ -1550,7 +1551,7 @@ async function bulkDelete() {
           :class="filterDayId === d.id ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
           @click="filterDayId = d.id; showDaySheet = false"
         >
-          {{ d.name }}
+          {{ formatDayName(d.name) }}
         </button>
       </div>
     </Modal>

@@ -46,6 +46,7 @@ import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import { storage } from '@/lib/storage';
 import { semesterLabel } from '@/lib/labels';
+import { formatDayName } from '@/lib/day-name';
 
 /** Payload emitted when the admin clicks an empty cell. Feeds the
  *  ScheduleFormModal pre-fill props verbatim. */
@@ -565,7 +566,7 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                   :key="d.id"
                   class="text-4xs font-bold text-slate-500 uppercase tracking-widest px-2 py-3 min-w-[140px]"
                 >
-                  {{ d.display_name || d.name }}
+                  {{ d.display_name || formatDayName(d.name) }}
                 </th>
                 <!-- Virtual "⚭ GABUNG" column at the end. Violet header
                      so it visually separates from the per-day columns
@@ -613,7 +614,7 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       :aria-label="
                         t('admin.schedule.timetable.editCellAria', {
                           subject: cellAt(d.id, row.hour_number)!.subject.name,
-                          day: d.display_name || d.name,
+                          day: d.display_name || formatDayName(d.name),
                           hour: row.hour_number,
                         })
                       "
@@ -652,7 +653,7 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       :aria-label="
                         t('admin.schedule.timetable.editCellAria', {
                           subject: cellAt(d.id, row.hour_number)!.subject.name,
-                          day: d.display_name || d.name,
+                          day: d.display_name || formatDayName(d.name),
                           hour: row.hour_number,
                         })
                       "
@@ -670,7 +671,7 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       class="w-full h-14 rounded-lg border border-dashed border-violet-300 bg-violet-50/40 hover:bg-violet-50 text-violet-600 hover:text-violet-800 transition-colors flex items-center justify-center gap-1 text-3xs font-bold"
                       :aria-label="
                         t('admin.schedule.combined.gridGhostAria', {
-                          day: d.display_name || d.name,
+                          day: d.display_name || formatDayName(d.name),
                           hour: row.hour_number,
                         })
                       "
@@ -690,7 +691,7 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       class="w-full h-14 rounded-lg border border-dashed border-slate-200 hover:border-role-admin hover:bg-role-admin/5 text-role-admin transition-colors text-lg font-bold flex items-center justify-center"
                       :aria-label="
                         t('admin.schedule.timetable.createCellAria', {
-                          day: d.display_name || d.name,
+                          day: d.display_name || formatDayName(d.name),
                           hour: row.hour_number,
                         })
                       "
