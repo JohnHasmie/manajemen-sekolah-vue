@@ -43,7 +43,6 @@ import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
 const { t: $t } = useI18n();
 const primaryColor = useRoleHex();
 const ayStore = useAcademicYearStore();
-const ayReadOnly = computed(() => ayStore.isReadOnly);
 
 const teachers = shallowRef<Teacher[]>([]);
 const classes = shallowRef<Classroom[]>([]);
@@ -619,7 +618,11 @@ async function confirmDelete() {
     :state="state"
     :selected-count="selectedIds.size"
     :active-filter-count="activeFilterCount"
-    :hide-add-fab="ayReadOnly"
+    <!-- Teachers aren't AY-scoped (no academic_year_id on teachers) — the
+         add-FAB should be available even when the tenant has no active
+         academic year. Fixes the attendance_staff-only trial where "Tambah
+         Guru" was hidden just because the school hadn't set up an AY yet. -->
+    :hide-add-fab="false"
     :search-placeholder="$t('admin.teachers.searchPlaceholder')"
     :empty-title="$t('admin.teachers.emptyTitle')"
     :empty-description="$t('admin.teachers.emptyDesc')"
@@ -779,7 +782,7 @@ async function confirmDelete() {
     :avatar-name="detailTarget.name"
     :avatar-color="primaryColor"
     :sections="detailSections"
-    :read-only="ayReadOnly"
+    :read-only="false"
     reset-password-label="Reset Password Guru"
     @close="detailTarget = null"
     @edit="detailEdit"
