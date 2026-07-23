@@ -54,6 +54,7 @@ import type {
 import { useAcademicYearStore } from '@/stores/academic-year';
 import { storage } from '@/lib/storage';
 import { semesterLabel, subjectLabel } from '@/lib/labels';
+import { formatDayName } from '@/lib/day-name';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
@@ -1256,7 +1257,7 @@ const teacherPickerLocked = computed(
             class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
           >
             <option value="">{{ t('admin.schedule.formB.dayPlaceholder') }}</option>
-            <option v-for="d in days" :key="d.id" :value="d.id">{{ d.name }}</option>
+            <option v-for="d in days" :key="d.id" :value="d.id">{{ formatDayName(d.name) }}</option>
           </select>
 
           <!-- Jam Ke- — surfaces the same empty-hours guidance from the
@@ -1692,7 +1693,7 @@ const teacherPickerLocked = computed(
         </p>
         <ul class="text-2xs text-red-700 space-y-1">
           <li v-for="c in conflicts" :key="c.id" class="leading-relaxed">
-            <strong>{{ c.day_name }} · {{ c.start_time }}–{{ c.end_time }}</strong>:
+            <strong>{{ formatDayName(c.day_name) }} · {{ c.start_time }}–{{ c.end_time }}</strong>:
             {{ c.subject_name ?? 'Mapel' }}
             <span v-if="c.teacher_name"> · {{ c.teacher_name }}</span>
             <span v-if="c.class_name"> · {{ c.class_name }}</span>
