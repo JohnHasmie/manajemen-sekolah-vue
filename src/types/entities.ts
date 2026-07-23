@@ -691,7 +691,6 @@ export interface Subject {
   master_subject_id?: string | null;
   master_subject_name?: string | null;
   grade_level?: string | null;
-  grade?: number | null;
   class_count?: number;
   /**
    * Enriched fields shipped by `feat/subject-list-curriculum-forward`
@@ -804,7 +803,6 @@ export function subjectFromJson(raw: AnyRecord): Subject {
     master_subject_name: masterName,
     grade_level:
       (r.grade_level as string) ?? (r.tingkat as string) ?? null,
-    grade: typeof r.grade === 'number' ? r.grade : (r.grade ? Number(r.grade) : null),
     class_count:
       (r.class_count as number) ?? (r.classes_count as number) ?? undefined,
     teachers_preview: teachersPreview,

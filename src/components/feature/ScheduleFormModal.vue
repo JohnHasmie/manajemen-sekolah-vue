@@ -1502,12 +1502,12 @@ const teacherPickerLocked = computed(
                           {{ s.name }}
                         </div>
                         <div
-                          v-if="s.code || s.grade"
+                          v-if="s.code || (s as any).grade"
                           class="text-3xs text-slate-500 mt-0.5"
                         >
                           <span v-if="s.code">{{ s.code }}</span>
-                          <span v-if="s.code && s.grade"> · </span>
-                          <span v-if="s.grade">Kelas {{ s.grade }}</span>
+                          <span v-if="s.code && (s as any).grade"> · </span>
+                          <span v-if="(s as any).grade">Kelas {{ (s as any).grade }}</span>
                         </div>
                       </div>
                     </label>
