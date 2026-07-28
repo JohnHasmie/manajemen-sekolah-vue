@@ -59,8 +59,8 @@ const pendingRows = computed(() =>
   rows.value.filter((r) => r.percentage == null || (r.present === 0 && r.absent === 0)).slice(0, 4),
 );
 
-// Aggregate lowest-attendance mapels for the insight strip
-const lowestMapel = computed(() => {
+// Aggregate lowest-attendance subjects for the insight strip
+const lowestSubject = computed(() => {
   const bySubject = new Map<string, { name: string; total: number; sum: number }>();
   for (const r of rows.value) {
     if (r.percentage == null) continue;
@@ -236,10 +236,10 @@ useAcademicYearWatcher(() => void load());
             >
               <div class="flex items-center gap-3 min-w-0">
                 <span class="w-8.5 h-8.5 rounded-[10px] grid place-items-center font-bold text-[14px] shrink-0 bg-role-admin-soft text-role-admin" style="width:34px;height:34px">
-                  {{ row.subject_name.charAt(0).toUpperCase() }}
+                  {{ (row.subject_name || '?').charAt(0).toUpperCase() }}
                 </span>
                 <div class="min-w-0">
-                  <div class="font-semibold text-slate-900 truncate">{{ row.subject_name }}</div>
+                  <div class="font-semibold truncate" :class="row.subject_name ? 'text-slate-900' : 'text-slate-400 italic'">{{ row.subject_name || '(Mapel tidak diatur)' }}</div>
                   <div class="text-[10.5px] text-slate-400 font-semibold">{{ row.class_name }}</div>
                 </div>
               </div>
@@ -292,7 +292,7 @@ useAcademicYearWatcher(() => void load());
         </template>
       </div>
 
-      <!-- Right rail: pending reminder + lowest mapel insight -->
+      <!-- Right rail: pending reminder + lowest subject insight -->
       <div class="flex flex-col gap-4">
         <div class="rounded-2xl border border-amber-200 bg-white shadow-card p-4">
           <div class="flex items-center gap-2.5 mb-2.5">
@@ -330,11 +330,11 @@ useAcademicYearWatcher(() => void load());
             <span class="text-[11px] text-slate-400 font-semibold ml-auto">hari ini</span>
           </div>
           <div class="p-4">
-            <div v-if="lowestMapel.length === 0" class="text-center text-slate-400 text-[12px] py-3">
+            <div v-if="lowestSubject.length === 0" class="text-center text-slate-400 text-[12px] py-3">
               Belum ada data.
             </div>
             <div
-              v-for="x in lowestMapel"
+              v-for="x in lowestSubject"
               :key="x.name"
               class="flex items-center gap-2.5 text-[11.5px] mb-2"
             >

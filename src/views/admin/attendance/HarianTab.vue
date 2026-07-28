@@ -25,6 +25,7 @@ import { useMeStore } from '@/stores/me';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useToast } from '@/composables/useToast';
 
+import QrcodeVue from 'qrcode.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 
@@ -34,7 +35,7 @@ const toast = useToast();
 const date = ref<string>(new Date().toISOString().slice(0, 10));
 const search = ref('');
 const statusFilter = ref<'all' | 'recorded' | 'unrecorded'>('all');
-const tingkat = ref<'all' | number>('all');
+const gradeLevel = ref<'all' | number>('all');
 
 const loading = ref(false);
 const errorMsg = ref<string | null>(null);
@@ -60,7 +61,7 @@ const filteredRows = computed<DailyRosterRow[]>(() => {
   });
 });
 
-const belumAbsen = computed<DailyRosterRow[]>(
+const notRecorded = computed<DailyRosterRow[]>(
   () => (roster.value?.data ?? []).filter((r) => r.status === 'not_recorded'),
 );
 
@@ -90,7 +91,7 @@ async function load() {
   try {
     roster.value = await AttendanceDailyService.getDailyRoster({
       date: date.value,
-      tingkat: tingkat.value === 'all' ? undefined : tingkat.value,
+      gradeLevel: gradeLevel.value === 'all' ? undefined : gradeLevel.value,
     });
   } catch (e) {
     errorMsg.value = (e as Error)?.message ?? 'Gagal memuat data harian.';
@@ -125,7 +126,7 @@ async function rotateGate() {
 }
 
 async function remindAll() {
-  const ids = belumAbsen.value.map((r) => r.student_id);
+  const ids = notRecorded.value.map((r) => r.student_id);
   if (ids.length === 0) return;
   if (!canRemind.value) return;
   const res = await AttendanceDailyService.remindGuardians({ student_ids: ids });
@@ -214,7 +215,7 @@ onMounted(() => {
   void loadGate();
 });
 watch(date, () => void load());
-watch(tingkat, () => void load());
+watch(gradeLevel, () => void load());
 useAcademicYearWatcher(() => {
   void load();
 });
@@ -222,7 +223,7 @@ useAcademicYearWatcher(() => {
 
 <template>
   <div class="space-y-md pb-12">
-    <!-- Toolbar: date stepper + tingkat + search + status filter -->
+    <!-- Toolbar: date stepper + gradeLevel + search + status filter -->
     <div class="flex flex-wrap items-center gap-2">
       <div class="inline-flex rounded-lg border border-slate-200 bg-white overflow-hidden">
         <button
@@ -249,9 +250,9 @@ useAcademicYearWatcher(() => {
       </div>
 
       <SegmentedControl
-        v-model="tingkat as unknown as string"
+        v-model="gradeLevel as unknown as string"
         :options="[
-          { key: 'all', label: 'Semua tingkat' },
+          { key: 'all', label: 'Semua gradeLevel' },
           { key: '7', label: 'VII' },
           { key: '8', label: 'VIII' },
           { key: '9', label: 'IX' },
@@ -428,15 +429,9 @@ useAcademicYearWatcher(() => {
           <div class="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[.14em] text-sky-200">
             <NavIcon name="qr-code" :size="15" />QR Gerbang · aktif
           </div>
-          <div class="mt-3 mx-auto w-[150px] h-[150px] rounded-[14px] bg-white p-2.5">
-            <div v-if="gateQr" class="w-full h-full grid place-items-center text-navy-900 text-[11px] font-mono font-bold">
-              <!-- Real QR is drawn by qrcode.vue in GateQrDisplayView; the rail
-                   just shows a compact placeholder + the current token id -->
-              {{ gateQr.token.slice(0, 10) }}…
-            </div>
-            <div v-else class="w-full h-full grid place-items-center text-slate-400 text-[10px]">
-              Memuat…
-            </div>
+          <div class="mt-3 mx-auto w-[150px] h-[150px] rounded-[14px] bg-white p-2.5 grid place-items-center">
+            <QrcodeVue v-if="gateQr" :value="gateQr.token" :size="130" level="M" render-as="svg" />
+            <div v-else class="text-slate-400 text-[10px]">Memuat…</div>
           </div>
           <div class="text-center font-mono text-[12px] font-semibold tracking-[.14em] text-sky-100">
             {{ gateQr ? gateQr.token.slice(-10).toUpperCase() : '—' }}
@@ -510,19 +505,19 @@ useAcademicYearWatcher(() => {
         <div class="rounded-2xl border border-slate-200 bg-white shadow-card p-4">
           <div class="flex items-center gap-2.5 mb-2.5">
             <span class="w-9.5 h-9.5 rounded-[11px] bg-red-100 text-red-700 font-bold text-[14px] grid place-items-center" style="width:38px;height:38px">
-              {{ belumAbsen.length }}
+              {{ notRecorded.length }}
             </span>
             <div>
               <h4 class="text-[13px] font-bold text-slate-900">Belum absen</h4>
               <div class="text-[11px] text-slate-500 font-medium">
-                <span v-if="belumAbsen.length === 0">Semua siswa sudah tercatat 🎉</span>
-                <span v-else>{{ belumAbsen.length }} siswa belum scan</span>
+                <span v-if="notRecorded.length === 0">Semua siswa sudah tercatat 🎉</span>
+                <span v-else>{{ notRecorded.length }} siswa belum scan</span>
               </div>
             </div>
           </div>
-          <div v-if="belumAbsen.length > 0" class="flex flex-col gap-1 mb-3">
+          <div v-if="notRecorded.length > 0" class="flex flex-col gap-1 mb-3">
             <div
-              v-for="row in belumAbsen.slice(0, 3)"
+              v-for="row in notRecorded.slice(0, 3)"
               :key="row.student_id"
               class="flex items-center gap-2.5 text-[11.5px] py-1"
             >
@@ -533,21 +528,21 @@ useAcademicYearWatcher(() => {
               <span class="font-semibold text-slate-900 truncate flex-1">{{ row.student_name }}</span>
               <span class="text-[10px] text-slate-400 font-semibold">{{ row.class_name }}</span>
             </div>
-            <div v-if="belumAbsen.length > 3" class="text-[10.5px] text-slate-400 pl-8.5 font-semibold">
-              +{{ belumAbsen.length - 3 }} lainnya…
+            <div v-if="notRecorded.length > 3" class="text-[10.5px] text-slate-400 pl-8.5 font-semibold">
+              +{{ notRecorded.length - 3 }} lainnya…
             </div>
           </div>
           <button
-            v-if="belumAbsen.length > 0 && canRemind"
+            v-if="notRecorded.length > 0 && canRemind"
             type="button"
             class="w-full flex items-center justify-center gap-2 bg-role-admin text-white text-[12px] font-semibold py-2.5 rounded-lg hover:opacity-90 disabled:opacity-50"
             @click="remindAll"
           >
             <NavIcon name="message-circle" :size="15" />
-            Ingatkan wali ({{ belumAbsen.length }}) via WhatsApp
+            Ingatkan wali ({{ notRecorded.length }}) via WhatsApp
           </button>
           <div
-            v-else-if="belumAbsen.length > 0 && !canRemind"
+            v-else-if="notRecorded.length > 0 && !canRemind"
             class="w-full text-center text-[11px] text-slate-400 py-2 font-medium"
           >
             Hanya admin yang bisa mengirim pengingat wali.

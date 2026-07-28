@@ -11,6 +11,8 @@
  */
 import { computed, onMounted, ref, watch } from 'vue';
 import { AttendanceService } from '@/services/attendance.service';
+import { ClassroomService } from '@/services/classrooms.service';
+import type { Classroom } from '@/types/entities';
 import type { StudentHeatmapResponse, StudentHeatmapEntry, HeatmapCellState } from '@/types/attendance';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
@@ -32,13 +34,14 @@ const classId = ref<string>('');
 const search = ref('');
 const view = ref<'kalender' | 'heatmap'>('kalender');
 const scope = ref<'monthly' | 'daily' | 'per_mapel'>('monthly');
-const lingkup = ref<'class' | 'grade' | 'school'>('class');
+const granularity = ref<'class' | 'grade' | 'school'>('class');
 const format = ref<'xlsx' | 'pdf' | 'csv'>('xlsx');
 
 const loading = ref(false);
 const errorMsg = ref<string | null>(null);
 const heatmap = ref<StudentHeatmapResponse | null>(null);
 const exportBusy = ref(false);
+const classes = ref<Classroom[]>([]);
 
 // End-date of the selected month (or today if the month is the current one)
 const endDate = computed(() => {
@@ -86,14 +89,14 @@ const kpiAvg = computed(() => {
   const sum = arr.reduce((s, x) => s + x.monthly_pct, 0);
   return Math.round(sum / arr.length);
 });
-const kpiAlfa = computed(() => {
+const kpiAbsent = computed(() => {
   const arr = heatmap.value?.students ?? [];
   return arr.reduce((s, x) => s + Math.max(0, x.total_days - x.present_days), 0);
 });
-const kpiPerluPerhatian = computed(
+const kpiNeedAttention = computed(
   () => (heatmap.value?.students ?? []).filter((s) => s.total_days - s.present_days > 3).length,
 );
-const perluPerhatianList = computed(() =>
+const needAttentionList = computed(() =>
   (heatmap.value?.students ?? [])
     .map((s) => ({ ...s, alfa: s.total_days - s.present_days }))
     .filter((s) => s.alfa > 3)
@@ -187,7 +190,13 @@ function stepMonth(delta: number) {
   month.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-onMounted(() => void load());
+onMounted(async () => {
+  try {
+    const res = await ClassroomService.list({ per_page: 200 });
+    classes.value = res.items;
+  } catch { /* non-critical */ }
+  void load();
+});
 watch([month, classId], () => void load());
 useAcademicYearWatcher(() => void load());
 </script>
@@ -205,16 +214,24 @@ useAcademicYearWatcher(() => void load());
           <NavIcon name="chevron-right" :size="14" />
         </button>
       </div>
+      <select
+        v-model="classId"
+        class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-900 focus:outline-none min-w-[160px]"
+      >
+        <option value="">Semua kelas</option>
+        <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
+      </select>
       <label class="flex-1 min-w-[200px] flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[12px] text-slate-500">
         <NavIcon name="search" :size="14" />
         <input v-model="search" type="text" placeholder="Cari siswa / NIS…" class="flex-1 border-0 outline-none bg-transparent text-slate-900 placeholder:text-slate-400" />
       </label>
       <SegmentedControl
-        v-model="view as unknown as string"
+        :model-value="view"
         :options="[
           { key: 'kalender', label: 'Kalender siswa' },
           { key: 'heatmap', label: 'Heatmap kelas' },
         ]"
+        @update:model-value="view = $event as typeof view"
       />
     </div>
 
@@ -240,14 +257,14 @@ useAcademicYearWatcher(() => void load());
         <div class="text-[10px] font-bold uppercase tracking-[.08em] text-slate-400 flex items-center gap-1.5">
           <span class="inline-block w-2 h-2 rounded-sm bg-red-500" />Perlu perhatian
         </div>
-        <div class="text-[24px] font-bold text-red-700 tabular-nums">{{ kpiPerluPerhatian }}</div>
+        <div class="text-[24px] font-bold text-red-700 tabular-nums">{{ kpiNeedAttention }}</div>
         <div class="text-[11px] text-slate-500 mt-0.5">alfa &gt; 3 hari</div>
       </div>
       <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
         <div class="text-[10px] font-bold uppercase tracking-[.08em] text-slate-400 flex items-center gap-1.5">
           <span class="inline-block w-2 h-2 rounded-sm bg-amber-500" />Total alfa
         </div>
-        <div class="text-[24px] font-bold text-amber-700 tabular-nums">{{ kpiAlfa }}</div>
+        <div class="text-[24px] font-bold text-amber-700 tabular-nums">{{ kpiAbsent }}</div>
         <div class="text-[11px] text-slate-500 mt-0.5">se-kelas · bulan ini</div>
       </div>
     </div>
@@ -256,7 +273,9 @@ useAcademicYearWatcher(() => void load());
     <div class="grid grid-cols-1 lg:grid-cols-[1fr_336px] gap-4">
       <div class="rounded-2xl border border-slate-200 bg-white shadow-card overflow-hidden">
         <div class="flex items-center gap-2 px-4 py-3.5 border-b border-slate-100">
-          <h4 class="text-[13.5px] font-bold text-slate-900">Rekap kehadiran · {{ monthName }}</h4>
+          <h4 class="text-[13.5px] font-bold text-slate-900">
+            {{ view === 'kalender' ? 'Rekap kehadiran' : 'Heatmap kelas' }} · {{ monthName }}
+          </h4>
           <span class="text-[11px] text-slate-400 font-semibold">
             {{ filteredStudents.length }} siswa × {{ workdays }} hari
           </span>
@@ -266,7 +285,9 @@ useAcademicYearWatcher(() => void load());
         <div v-else-if="filteredStudents.length === 0" class="p-10 text-center text-slate-400 text-sm">
           Belum ada data — pilih kelas dan bulan.
         </div>
-        <template v-else>
+
+        <!-- Calendar view -->
+        <template v-else-if="view === 'kalender'">
           <div class="overflow-x-auto">
             <table class="w-full text-[11px] border-separate" style="border-spacing:0">
               <thead>
@@ -321,6 +342,33 @@ useAcademicYearWatcher(() => void load());
             <span class="inline-flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-sm bg-slate-200" />Libur / akhir pekan</span>
           </div>
         </template>
+
+        <!-- Heatmap view -->
+        <template v-else>
+          <div class="p-4 space-y-1">
+            <div
+              v-for="s in filteredStudents"
+              :key="`hm-${s.id}`"
+              class="flex items-center gap-3 py-1.5"
+            >
+              <div class="w-[130px] shrink-0 truncate text-[11px] font-semibold text-slate-900">{{ s.name }}</div>
+              <div class="flex-1 h-5 bg-slate-100 rounded-full overflow-hidden relative">
+                <div
+                  class="h-full rounded-full transition-all"
+                  :style="{ width: s.monthly_pct + '%', background: s.monthly_pct >= 80 ? '#059669' : s.monthly_pct >= 60 ? '#d97706' : '#dc2626' }"
+                />
+              </div>
+              <span class="w-[42px] text-right text-[11px] tabular-nums font-bold" :class="s.monthly_pct >= 80 ? 'text-emerald-700' : s.monthly_pct >= 60 ? 'text-amber-700' : 'text-red-700'">
+                {{ s.monthly_pct }}%
+              </span>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-3.5 px-4 py-3 border-t border-slate-100 text-[10.5px] text-slate-500 font-semibold">
+            <span class="inline-flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-sm bg-emerald-500" />&ge; 80%</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-sm bg-amber-500" />60–79%</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-sm bg-red-500" />&lt; 60%</span>
+          </div>
+        </template>
       </div>
 
       <!-- Right rail: export center + perlu perhatian -->
@@ -345,7 +393,7 @@ useAcademicYearWatcher(() => void load());
           <div class="mb-3">
             <div class="text-[9.5px] font-bold uppercase tracking-[.08em] text-slate-400 mb-1.5">Lingkup</div>
             <div class="flex gap-1.5 flex-wrap">
-              <button v-for="opt in [{k:'class',l:'Per kelas'},{k:'grade',l:'Per tingkat'},{k:'school',l:'Se-sekolah'}]" :key="opt.k" type="button" class="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border" :class="lingkup === opt.k ? 'bg-role-admin-soft text-role-admin border-transparent' : 'border-slate-200 text-slate-600'" @click="lingkup = opt.k as typeof lingkup">{{ opt.l }}</button>
+              <button v-for="opt in [{k:'class',l:'Per kelas'},{k:'grade',l:'Per tingkat'},{k:'school',l:'Se-sekolah'}]" :key="opt.k" type="button" class="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border" :class="granularity === opt.k ? 'bg-role-admin-soft text-role-admin border-transparent' : 'border-slate-200 text-slate-600'" @click="granularity = opt.k as typeof granularity">{{ opt.l }}</button>
             </div>
           </div>
           <div class="mb-3">
@@ -358,7 +406,7 @@ useAcademicYearWatcher(() => void load());
           <button
             type="button"
             class="w-full flex items-center justify-center gap-2 bg-role-admin text-white text-[12.5px] font-semibold py-2.5 rounded-lg disabled:opacity-50"
-            :disabled="!canExport || exportBusy || !classId"
+            :disabled="!canExport || exportBusy || (granularity === 'class' && !classId)"
             @click="exportReport"
           >
             <NavIcon name="download" :size="16" />
@@ -367,26 +415,26 @@ useAcademicYearWatcher(() => void load());
           <div v-if="!canExport" class="mt-1.5 text-center text-[10.5px] text-slate-400 font-medium">
             Hanya admin dengan izin export yang bisa mengunduh.
           </div>
-          <div v-else-if="!classId" class="mt-1.5 text-center text-[10.5px] text-slate-400 font-medium">
-            Pilih kelas dulu untuk export bulanan.
+          <div v-else-if="granularity === 'class' && !classId" class="mt-1.5 text-center text-[10.5px] text-slate-400 font-medium">
+            Pilih kelas dulu untuk export per kelas.
           </div>
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white shadow-card p-4">
           <div class="flex items-center gap-2.5 mb-2.5">
             <span class="w-9.5 h-9.5 rounded-[11px] bg-red-100 text-red-700 font-bold text-[14px] grid place-items-center" style="width:38px;height:38px">
-              {{ kpiPerluPerhatian }}
+              {{ kpiNeedAttention }}
             </span>
             <div>
               <h4 class="text-[13px] font-bold text-slate-900">Perlu perhatian</h4>
               <div class="text-[11px] text-slate-500 font-medium">alfa lebih dari 3 hari bulan ini</div>
             </div>
           </div>
-          <div v-if="perluPerhatianList.length === 0" class="text-center text-slate-400 text-[12px] py-3">
+          <div v-if="needAttentionList.length === 0" class="text-center text-slate-400 text-[12px] py-3">
             Belum ada siswa yang perlu perhatian 🎉
           </div>
           <div v-else class="flex flex-col gap-1">
-            <div v-for="s in perluPerhatianList" :key="s.id" class="flex items-center gap-2.5 text-[11.5px] py-1">
+            <div v-for="s in needAttentionList" :key="s.id" class="flex items-center gap-2.5 text-[11.5px] py-1">
               <span class="w-6.5 h-6.5 rounded-lg grid place-items-center bg-red-100 text-red-700 font-bold text-[10px]" style="width:26px;height:26px">
                 {{ s.name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase()).join('') }}
               </span>
