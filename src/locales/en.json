@@ -1256,7 +1256,16 @@
         "legendConflict": "Conflict",
         "legend": "Merged periods",
         "filterBlockHint": "Two consecutive periods as one session",
-        "mergeCta": "Merge with period {n}"
+        "mergeCta": "Merge with period {n}",
+        "detectHeaderButton": "Detect consecutive periods ({count})",
+        "detectTitle": "Consecutive periods that can be merged",
+        "detectIntro": "Found {count} consecutive pairs sharing subject, teacher, and class. Tick the ones that really are one long session.",
+        "detectSelectAll": "Select all",
+        "detectClear": "Clear",
+        "detectImpact": "After merging: teacher attendance becomes 1 session (not 2) and class activity only needs filling once. Reversible via Split periods.",
+        "detectApply": "Merge {n} pairs",
+        "detectApplied": "{n} pairs merged.",
+        "detectAppliedPartial": "{n} merged · {skipped} skipped (schedule changed)."
       },
       "combined": {
         "classCountBadge": "{n} classes",

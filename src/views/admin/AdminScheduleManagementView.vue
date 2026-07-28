@@ -27,6 +27,7 @@ import { subjectLabel } from '@/lib/labels';
 import { formatDayName } from '@/lib/day-name';
 import type {
   AdminScheduleFilters,
+  BlockCandidate,
 } from '@/services/schedule.service';
 import {
   DAY_ORDER,
@@ -241,10 +242,86 @@ async function loadResyncCount() {
   }
 }
 
+// ── "Deteksi jam berurutan" ────────────────────────────────────────
+//
+// Suggested consecutive-period pairs that could become one block. Drives
+// a header button that only appears when there IS something to suggest,
+// so a school with nothing to merge never sees it. Same fail-safe-to-0
+// contract as the resync badge above.
+const blockCandidates = ref<BlockCandidate[]>([]);
+const showDetectBlocks = ref(false);
+const detectSelectedIds = ref<Set<string>>(new Set());
+const isApplyingDetect = ref(false);
+
+async function loadBlockCandidates() {
+  blockCandidates.value = (
+    await ScheduleService.blockCandidates({
+      academicYearId: ayStore.selectedYearId ?? undefined,
+    })
+  ).candidates;
+}
+
+function openDetectBlocks() {
+  // Everything starts ticked: the admin opened this to merge, and
+  // un-ticking the odd exception is less work than ticking twenty rows.
+  detectSelectedIds.value = new Set(
+    blockCandidates.value.map((c) => c.schedule_id),
+  );
+  showDetectBlocks.value = true;
+}
+
+function toggleDetectSelection(id: string) {
+  const next = new Set(detectSelectedIds.value);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  detectSelectedIds.value = next;
+}
+
+/** Candidates grouped by day, preserving the backend's day ordering. */
+const candidatesByDay = computed(() => {
+  const out: Array<{ day: string; items: BlockCandidate[] }> = [];
+  for (const c of blockCandidates.value) {
+    const label = c.day_name ? formatDayName(c.day_name) : '—';
+    const bucket = out.find((b) => b.day === label);
+    if (bucket) bucket.items.push(c);
+    else out.push({ day: label, items: [c] });
+  }
+  return out;
+});
+
+async function applyDetectedBlocks() {
+  if (detectSelectedIds.value.size === 0) return;
+  isApplyingDetect.value = true;
+  try {
+    const res = await ScheduleService.mergeBlockBulk(
+      Array.from(detectSelectedIds.value),
+    );
+    // Report skips rather than silently merging fewer than asked — a
+    // stale suggestion is normal and the admin should see the shortfall.
+    toast.value = {
+      message: res.skipped.length
+        ? $t('admin.schedule.block.detectAppliedPartial', {
+            n: res.merged,
+            skipped: res.skipped.length,
+          })
+        : $t('admin.schedule.block.detectApplied', { n: res.merged }),
+      tone: res.skipped.length ? 'error' : 'success',
+    };
+    showDetectBlocks.value = false;
+    await loadRows();
+    await loadBlockCandidates();
+  } catch (e) {
+    toast.value = { message: (e as Error).message, tone: 'error' };
+  } finally {
+    isApplyingDetect.value = false;
+  }
+}
+
 onMounted(async () => {
   await Promise.all([loadFilterOptions(), loadLessonHours(), loadAllSubjects()]);
   await loadRows();
   void loadResyncCount();
+  void loadBlockCandidates();
 });
 
 useAcademicYearWatcher(async () => {
@@ -1207,6 +1284,19 @@ async function bulkDelete() {
           <NavIcon name="link" :size="11" />
           {{ $t('admin.schedule.resync.headerButton', { count: resyncOrphanCount }) }}
         </button>
+        <!-- Only surfaces when there IS something to suggest, so a school
+             with nothing mergeable never sees a dead button. Teal to match
+             the Gabung Jam family rather than the amber attention state —
+             this is an offer, not a problem to fix. -->
+        <button
+          v-if="blockCandidates.length > 0"
+          type="button"
+          class="text-2xs font-bold text-white px-3 py-1.5 rounded-lg bg-teal-500/90 hover:bg-teal-500 transition-colors flex items-center gap-1.5"
+          @click="openDetectBlocks"
+        >
+          <NavIcon name="link-down" :size="11" />
+          {{ $t('admin.schedule.block.detectHeaderButton', { count: blockCandidates.length }) }}
+        </button>
       </div>
     </BrandPageHeader>
 
@@ -2007,6 +2097,104 @@ async function bulkDelete() {
         <Button variant="primary" :disabled="isBlockBusy" @click="confirmMerge">
           <NavIcon name="link-down" :size="13" />
           {{ $t('admin.schedule.block.mergeConfirm') }}
+        </Button>
+      </template>
+    </Modal>
+
+    <!-- "Deteksi jam berurutan" — reviewable batch. Everything starts
+         ticked because the admin opened this intending to merge; the
+         checkboxes exist so the exception (two genuinely separate
+         lessons of the same subject) can be excluded before applying. -->
+    <Modal
+      v-if="showDetectBlocks"
+      :title="$t('admin.schedule.block.detectTitle')"
+      size="lg"
+      @close="showDetectBlocks = false"
+    >
+      <div class="space-y-3">
+        <p class="text-2xs text-slate-600 leading-relaxed">
+          {{ $t('admin.schedule.block.detectIntro', { count: blockCandidates.length }) }}
+        </p>
+
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="text-2xs font-bold text-role-admin hover:underline"
+            @click="detectSelectedIds = new Set(blockCandidates.map((c) => c.schedule_id))"
+          >
+            {{ $t('admin.schedule.block.detectSelectAll') }}
+          </button>
+          <span class="text-slate-300">·</span>
+          <button
+            type="button"
+            class="text-2xs font-bold text-slate-500 hover:underline"
+            @click="detectSelectedIds = new Set()"
+          >
+            {{ $t('admin.schedule.block.detectClear') }}
+          </button>
+        </div>
+
+        <div class="max-h-[420px] overflow-y-auto space-y-3 pr-1">
+          <section v-for="grp in candidatesByDay" :key="grp.day" class="space-y-1.5">
+            <h4 class="text-3xs font-black text-slate-500 uppercase tracking-widest">
+              {{ grp.day }}
+            </h4>
+            <label
+              v-for="c in grp.items"
+              :key="c.schedule_id"
+              class="flex items-start gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-colors"
+              :class="detectSelectedIds.has(c.schedule_id)
+                ? 'border-teal-300 bg-teal-50/60'
+                : 'border-slate-200 bg-white hover:border-slate-300'"
+            >
+              <input
+                type="checkbox"
+                class="mt-0.5 w-4 h-4 accent-teal-600 flex-shrink-0"
+                :checked="detectSelectedIds.has(c.schedule_id)"
+                @change="toggleDetectSelection(c.schedule_id)"
+              />
+              <div class="min-w-0 flex-1">
+                <p class="text-[13px] font-bold text-slate-900 truncate">
+                  {{ c.subject_name ?? '—' }}
+                </p>
+                <div class="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-brand-cobalt/10 text-brand-cobalt border border-brand-cobalt/20 text-[11px] font-bold leading-none">
+                    {{ c.class_name ?? '—' }}
+                  </span>
+                  <span class="text-2xs text-slate-500 truncate">
+                    {{ c.teacher_name ?? '—' }}
+                  </span>
+                </div>
+              </div>
+              <div class="text-right flex-shrink-0">
+                <p class="text-3xs font-bold text-teal-700">
+                  {{ $t('admin.schedule.jpAbbrev') }}{{ c.hour_number }}–{{ c.next_hour_number }}
+                </p>
+                <p class="text-[12px] font-bold text-slate-900 tabular-nums">
+                  {{ c.start_time }}–{{ c.end_time }}
+                </p>
+              </div>
+            </label>
+          </section>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <p class="text-2xs text-slate-600 leading-relaxed">
+            {{ $t('admin.schedule.block.detectImpact') }}
+          </p>
+        </div>
+      </div>
+      <template #footer>
+        <Button variant="secondary" @click="showDetectBlocks = false">
+          {{ $t('common.cancel') }}
+        </Button>
+        <Button
+          variant="primary"
+          :disabled="isApplyingDetect || detectSelectedIds.size === 0"
+          @click="applyDetectedBlocks"
+        >
+          <NavIcon name="link-down" :size="13" />
+          {{ $t('admin.schedule.block.detectApply', { n: detectSelectedIds.size }) }}
         </Button>
       </template>
     </Modal>

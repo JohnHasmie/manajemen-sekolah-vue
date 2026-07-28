@@ -1256,7 +1256,16 @@
         "legendConflict": "Bentrok",
         "legend": "Gabung Jam",
         "filterBlockHint": "2 jam berurutan jadi satu sesi",
-        "mergeCta": "Gabung dengan JP{n}"
+        "mergeCta": "Gabung dengan JP{n}",
+        "detectHeaderButton": "Deteksi Jam Berurutan ({count})",
+        "detectTitle": "Jam berurutan yang bisa digabung",
+        "detectIntro": "Ditemukan {count} pasang jam berurutan dengan mapel, guru, dan kelas yang sama. Centang yang memang satu sesi panjang.",
+        "detectSelectAll": "Pilih semua",
+        "detectClear": "Kosongkan",
+        "detectImpact": "Setelah digabung: presensi guru jadi 1 sesi (bukan 2) dan kegiatan kelas cukup diisi sekali. Bisa dibatalkan lewat Pisahkan Jam.",
+        "detectApply": "Gabungkan {n} pasang",
+        "detectApplied": "{n} pasang jam berhasil digabung.",
+        "detectAppliedPartial": "{n} digabung · {skipped} dilewati (jadwal sudah berubah)."
       },
       "combined": {
         "classCountBadge": "{n} kelas",

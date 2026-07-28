@@ -779,6 +779,42 @@ export interface ResyncPreview {
   orphans: ResyncOrphan[];
 }
 
+/**
+ * One suggested "gabung jam" pair — two consecutive periods sharing
+ * class + subject + teacher. `schedule_id` is the EARLIER period and is
+ * what gets posted back to apply the merge; `next_schedule_id` is carried
+ * only so the UI can describe the pair.
+ *
+ * `start_time` / `end_time` already describe the OUTER window the merged
+ * block would occupy, which is the thing the admin is deciding about.
+ */
+export interface BlockCandidate {
+  schedule_id: string;
+  next_schedule_id: string;
+  day_id: string;
+  day_name: string | null;
+  day_order: number;
+  hour_number: number;
+  next_hour_number: number;
+  start_time: string;
+  end_time: string;
+  subject_name: string | null;
+  class_name: string | null;
+  teacher_name: string | null;
+}
+
+/** GET /teaching-schedules/block-candidates payload. */
+export interface BlockCandidatesResult {
+  total: number;
+  candidates: BlockCandidate[];
+}
+
+/** POST /teaching-schedules/merge-block-bulk result. */
+export interface BlockBulkResult {
+  merged: number;
+  skipped: Array<{ schedule_id: string; reason: string }>;
+}
+
 /** POST /schedule/resync/apply result — repointed count + per-row failures. */
 export interface ResyncApplyResult {
   updated: number;
@@ -1258,6 +1294,77 @@ export const ScheduleService = {
       return Number(d.unlinked_count ?? 0);
     } catch (e) {
       throw new Error(humanError(e, 'Gagal memisahkan blok jam.'));
+    }
+  },
+
+  /**
+   * GET /teaching-schedules/block-candidates — consecutive-period pairs
+   * that COULD become one block. Read-only: nothing merges until the
+   * admin confirms via `mergeBlockBulk`.
+   *
+   * Swallows failures into `total: 0` because the only caller is a
+   * gating badge in the page header — a telemetry hiccup shouldn't
+   * surface an error banner on a page the admin came to do other work on.
+   */
+  async blockCandidates(params: {
+    semesterId?: string;
+    academicYearId?: string | number;
+  } = {}): Promise<BlockCandidatesResult> {
+    try {
+      const res = await api.get('/teaching-schedules/block-candidates', {
+        params: {
+          ...(params.semesterId ? { semester_id: params.semesterId } : {}),
+          ...(params.academicYearId != null
+            ? { academic_year_id: params.academicYearId }
+            : {}),
+        },
+      });
+      const body = (res.data?.data ?? res.data ?? {}) as Record<string, any>;
+      const candidates: BlockCandidate[] = Array.isArray(body.candidates)
+        ? body.candidates.map((c: any) => ({
+            schedule_id: asStr(c?.schedule_id),
+            next_schedule_id: asStr(c?.next_schedule_id),
+            day_id: asStr(c?.day_id),
+            day_name: c?.day_name ? asStr(c.day_name) : null,
+            day_order: asNum(c?.day_order),
+            hour_number: asNum(c?.hour_number),
+            next_hour_number: asNum(c?.next_hour_number),
+            start_time: asStr(c?.start_time),
+            end_time: asStr(c?.end_time),
+            subject_name: c?.subject_name ? asStr(c.subject_name) : null,
+            class_name: c?.class_name ? asStr(c.class_name) : null,
+            teacher_name: c?.teacher_name ? asStr(c.teacher_name) : null,
+          }))
+        : [];
+      return { total: asNum(body.total ?? candidates.length), candidates };
+    } catch {
+      return { total: 0, candidates: [] };
+    }
+  },
+
+  /**
+   * POST /teaching-schedules/merge-block-bulk — applies the pairs the
+   * admin ticked. Partial success is normal: a suggestion can go stale
+   * between listing and applying, so `skipped` carries a per-row reason
+   * instead of the whole batch failing.
+   */
+  async mergeBlockBulk(scheduleIds: string[]): Promise<BlockBulkResult> {
+    try {
+      const res = await api.post('/teaching-schedules/merge-block-bulk', {
+        schedule_ids: scheduleIds,
+      });
+      const d = (res.data?.data ?? res.data ?? {}) as Record<string, any>;
+      return {
+        merged: asNum(d.merged),
+        skipped: Array.isArray(d.skipped)
+          ? d.skipped.map((s: any) => ({
+              schedule_id: asStr(s?.schedule_id),
+              reason: asStr(s?.reason),
+            }))
+          : [],
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menggabungkan jam pelajaran.'));
     }
   },
 
