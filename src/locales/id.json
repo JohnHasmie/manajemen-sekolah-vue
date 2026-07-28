@@ -1223,7 +1223,8 @@
         "errorTitle": "Gagal memuat timetable",
         "slotsFilled": "{filled} dari {total} slot terisi",
         "editCellAria": "Edit {subject} di {day} jam ke-{hour}",
-        "createCellAria": "Tambah jadwal di {day} jam ke-{hour}"
+        "createCellAria": "Tambah jadwal di {day} jam ke-{hour}",
+        "legendSingle": "Tunggal"
       },
       "block": {
         "spanBadge": "{n} JP",
@@ -1252,7 +1253,8 @@
         "legendSingle": "Tunggal",
         "legendBlock": "Blok Jam",
         "legendGroup": "Gabung Kelas",
-        "legendConflict": "Bentrok"
+        "legendConflict": "Bentrok",
+        "legend": "Blok Jam"
       },
       "combined": {
         "classCountBadge": "{n} kelas",

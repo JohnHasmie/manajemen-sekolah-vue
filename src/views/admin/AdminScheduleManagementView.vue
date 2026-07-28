@@ -571,6 +571,15 @@ const rowsByDay = computed<Record<DayKey, ScheduleRow[]>>(() => {
 });
 
 /**
+ * Session count of the busiest day — the denominator for each day
+ * header's relative load bar. Zero when the list is empty, which the
+ * template uses to skip rendering the bar entirely (avoids /0).
+ */
+const busiestDayCount = computed(() =>
+  DAY_ORDER.reduce((max, d) => Math.max(max, rowsByDay.value[d].length), 0),
+);
+
+/**
  * Look up the sibling class names for a grouped primary row (used by
  * the "⚭ (bareng 7B)" inline indicator). Returns [] for a non-grouped
  * row. Reads from the groupedEntries aggregate so members are already
@@ -1446,11 +1455,27 @@ async function bulkDelete() {
             v-show="rowsByDay[d].length > 0"
             class="space-y-2"
           >
-            <header class="flex items-center justify-between sticky top-0 z-10 bg-slate-50 py-2 px-1 rounded-lg">
+            <header class="flex items-center gap-3 sticky top-0 z-10 bg-slate-50 py-2 px-1 rounded-lg">
               <h3 class="text-2xs font-black text-slate-700 uppercase tracking-widest">
                 {{ LOCALIZED_DAY_LABELS[d] }}
               </h3>
-              <span class="text-3xs font-bold text-slate-400">
+              <!-- Relative teaching-load bar. Deliberately NOT "filled of
+                   total slots": the list spans every class at once, so
+                   there is no single slot capacity to divide by. Instead
+                   the bar is scaled against the busiest day, which makes
+                   an unbalanced week (Rabu 27 sesi vs Senin 2) legible at
+                   a glance without inventing a denominator. -->
+              <div
+                v-if="busiestDayCount > 0"
+                class="hidden sm:block flex-1 max-w-[190px] h-1 rounded-full bg-slate-200 overflow-hidden"
+                role="presentation"
+              >
+                <span
+                  class="block h-full rounded-full bg-brand-cobalt transition-[width] duration-300"
+                  :style="{ width: `${(rowsByDay[d].length / busiestDayCount) * 100}%` }"
+                />
+              </div>
+              <span class="ml-auto text-3xs font-bold text-slate-400">
                 {{ $t('admin.schedule.sessionsCount', { count: rowsByDay[d].length }) }}
               </span>
             </header>

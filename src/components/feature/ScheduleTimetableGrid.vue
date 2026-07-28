@@ -629,6 +629,31 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
              "↗ lihat kolom gabung" placeholder instead of the plain
              card so the reader isn't invited to click into a stale
              per-class view. -->
+        <!-- Colour legend. The grid encodes four distinct states in cell
+             tint alone (plain / block / combined / conflict); without a
+             key the tints are decoration rather than information. -->
+        <div class="flex items-center gap-3 flex-wrap px-1 pb-2">
+          <span class="inline-flex items-center gap-1.5 text-3xs font-bold text-slate-500">
+            <i class="w-2.5 h-2.5 rounded border border-brand-cobalt/25 bg-brand-cobalt/10" />
+            {{ t('admin.schedule.timetable.legendSingle') }}
+          </span>
+          <span class="inline-flex items-center gap-1.5 text-3xs font-bold text-teal-700">
+            <i class="w-2.5 h-2.5 rounded border border-teal-200 bg-teal-50" />
+            <NavIcon name="link" :size="10" />
+            {{ t('admin.schedule.block.legend') }}
+          </span>
+          <span class="inline-flex items-center gap-1.5 text-3xs font-bold text-violet-700">
+            <i class="w-2.5 h-2.5 rounded border border-violet-200 bg-violet-50" />
+            <NavIcon name="git-merge" :size="10" />
+            {{ t('admin.schedule.combined.filterGroup') }}
+          </span>
+          <span class="inline-flex items-center gap-1.5 text-3xs font-bold text-red-600">
+            <i class="w-2.5 h-2.5 rounded border border-red-300 bg-red-50" />
+            <NavIcon name="alert-triangle" :size="10" />
+            {{ t('admin.schedule.conflictBadge') }}
+          </span>
+        </div>
+
         <div class="rounded-2xl border border-slate-200 bg-white overflow-x-auto">
           <table class="w-full text-2xs border-collapse">
             <thead>

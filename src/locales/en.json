@@ -1223,7 +1223,8 @@
         "errorTitle": "Failed to load timetable",
         "slotsFilled": "{filled} of {total} slots filled",
         "editCellAria": "Edit {subject} on {day} hour {hour}",
-        "createCellAria": "Add schedule on {day} hour {hour}"
+        "createCellAria": "Add schedule on {day} hour {hour}",
+        "legendSingle": "Single"
       },
       "block": {
         "spanBadge": "{n} JP",
@@ -1252,7 +1253,8 @@
         "legendSingle": "Single",
         "legendBlock": "Hour Block",
         "legendGroup": "Combined Class",
-        "legendConflict": "Conflict"
+        "legendConflict": "Conflict",
+        "legend": "Hour block"
       },
       "combined": {
         "classCountBadge": "{n} classes",
