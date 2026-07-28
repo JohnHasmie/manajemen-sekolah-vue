@@ -1230,7 +1230,7 @@
         "spanBadge": "{n} JP",
         "hourRange": "JP{from}–{to}",
         "durationMinutes": "{n} min",
-        "filterBlock": "Hour Block",
+        "filterBlock": "Merged periods",
         "pinnedSectionTitle": "Hour Blocks — {count} sessions",
         "pinnedSectionMeta": "Consecutive JP · one session",
         "mergeAction": "Merge with next hour",
@@ -1240,21 +1240,23 @@
         "mergeConfirm": "Merge",
         "merged": "Hours merged into a {n} JP block.",
         "mergeFailed": "Failed to merge lesson hours.",
-        "splitAction": "Split block",
+        "splitAction": "Split back into separate periods",
         "splitHint": "Turn {label} back into separate hours.",
         "splitConfirmTitle": "Split this block?",
         "splitConfirmBody": "Each JP becomes its own session again. Attendance & class journal split back too.",
         "splitConfirm": "Split",
         "split": "Block split into {n} lesson hours.",
         "splitFailed": "Failed to split the hour block.",
-        "mergeTooltip": "Merge with next JP",
+        "mergeTooltip": "Merge with the next period into one session",
         "candidateHint": "can be merged",
         "cellMergeCta": "Merge into JP{to}",
         "legendSingle": "Single",
         "legendBlock": "Hour Block",
         "legendGroup": "Combined Class",
         "legendConflict": "Conflict",
-        "legend": "Hour block"
+        "legend": "Merged periods",
+        "filterBlockHint": "Two consecutive periods as one session",
+        "mergeCta": "Merge with period {n}"
       },
       "combined": {
         "classCountBadge": "{n} classes",
@@ -1295,7 +1297,7 @@
         "inlineSiblingsLabel": "with {names}",
         "filterAll": "All",
         "filterSingle": "Single",
-        "filterGroup": "Combined",
+        "filterGroup": "Merged classes",
         "gridColumnHeader": "COMBINED",
         "gridCardAria": "Edit combined schedule {subject} at hour {hour}",
         "gridGhostLabel": "see combined column",
@@ -1309,7 +1311,8 @@
         "deleteScopeRowConfirm": "Delete row",
         "deleteScopeGroupConfirm": "Delete all",
         "deletedGroupToast": "All classes in the combined group deleted.",
-        "deleteGroupPrompt": "Delete {subject} with all {count} classes in the group? This is permanent."
+        "deleteGroupPrompt": "Delete {subject} with all {count} classes in the group? This is permanent.",
+        "filterGroupHint": "Two classes taught together in the same period"
       }
     },
     "attendanceDashboard": {

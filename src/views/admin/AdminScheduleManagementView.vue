@@ -526,8 +526,28 @@ function mergeCandidateFor(r: ScheduleRow): ScheduleRow | null {
   const idx = sameDay.findIndex((o) => o.id === r.id);
   if (idx === -1) return null;
   const next = sameDay[idx + 1];
-  return next ?? null;
+  if (!next) return null;
+  // Must be the IMMEDIATELY next period. Without this, a subject taught
+  // at JP2 and again at JP7 would offer a merge the backend then rejects
+  // with a 422 — the button would look broken rather than absent.
+  if (next.hour_number !== r.hour_number + 1) return null;
+  return next;
 }
+
+/**
+ * Row id → its merge partner, computed once per data change instead of
+ * on every render pass. The template used to call `mergeCandidateFor`
+ * directly inside `v-for`, which re-scanned the full row list for every
+ * row on every re-render.
+ */
+const mergeCandidateByRowId = computed<Record<string, ScheduleRow>>(() => {
+  const out: Record<string, ScheduleRow> = {};
+  for (const r of rows.value) {
+    const candidate = mergeCandidateFor(r);
+    if (candidate) out[r.id] = candidate;
+  }
+  return out;
+});
 
 /**
  * Per-day dedup: a group appears once at the group's primary_row_id
@@ -1348,6 +1368,7 @@ async function bulkDelete() {
               :class="listFilter === 'block'
                 ? 'bg-teal-100 text-teal-800 border-teal-300'
                 : 'bg-white text-teal-700 border-teal-200 hover:border-teal-300'"
+              :title="$t('admin.schedule.block.filterBlockHint')"
               @click="listFilter = 'block'"
             >
               <NavIcon name="link" :size="11" />
@@ -1365,6 +1386,7 @@ async function bulkDelete() {
               :class="listFilter === 'group'
                 ? 'bg-violet-100 text-violet-800 border-violet-300'
                 : 'bg-white text-violet-700 border-violet-200 hover:border-violet-300'"
+              :title="$t('admin.schedule.combined.filterGroupHint')"
               @click="listFilter = 'group'"
             >
               <NavIcon name="git-merge" :size="11" />
@@ -1617,9 +1639,16 @@ async function bulkDelete() {
                      already blocked), so the admin never hits an
                      avoidable 422. Hidden in bulk mode — the row is a
                      selection target there, not an action target. -->
+                <!-- Merge / split affordance. Deliberately NOT hover-gated:
+                     an invisible-until-pointer control is undiscoverable —
+                     admins reported the feature as "missing" because the
+                     button only appeared once the cursor happened to land
+                     on the row. The merge offer also carries its label, so
+                     what it will do is readable without hovering for a
+                     tooltip. -->
                 <div
                   v-if="!bulkMode"
-                  class="self-center flex items-center gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  class="self-center flex items-center gap-1.5 flex-shrink-0"
                 >
                   <button
                     v-if="r.is_block"
@@ -1631,13 +1660,20 @@ async function bulkDelete() {
                     <NavIcon name="unlink" :size="12" />
                   </button>
                   <button
-                    v-else-if="mergeCandidateFor(r)"
+                    v-else-if="mergeCandidateByRowId[r.id]"
                     type="button"
-                    class="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 grid place-items-center hover:border-teal-400 hover:text-teal-700 hover:bg-teal-50 transition-colors"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-teal-400 bg-teal-50/70 text-teal-800 px-2.5 py-1.5 text-3xs font-bold hover:bg-teal-100 transition-colors"
                     :title="$t('admin.schedule.block.mergeTooltip')"
                     @click.stop="askMerge(r)"
                   >
                     <NavIcon name="link-down" :size="12" />
+                    <span class="hidden sm:inline">
+                      {{
+                        $t('admin.schedule.block.mergeCta', {
+                          n: mergeCandidateByRowId[r.id].hour_number,
+                        })
+                      }}
+                    </span>
                   </button>
                 </div>
                 <NavIcon name="chevron-right" :size="14" class="text-slate-300 ml-1 self-center" />

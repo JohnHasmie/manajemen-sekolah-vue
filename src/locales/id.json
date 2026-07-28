@@ -1230,7 +1230,7 @@
         "spanBadge": "{n} JP",
         "hourRange": "JP{from}–{to}",
         "durationMinutes": "{n} menit",
-        "filterBlock": "Blok Jam",
+        "filterBlock": "Gabung Jam",
         "pinnedSectionTitle": "Blok Jam — {count} sesi",
         "pinnedSectionMeta": "JP berurutan · satu sesi",
         "mergeAction": "Gabung dengan jam berikutnya",
@@ -1240,21 +1240,23 @@
         "mergeConfirm": "Gabungkan",
         "merged": "JP digabung jadi satu blok {n} JP.",
         "mergeFailed": "Gagal menggabungkan jam pelajaran.",
-        "splitAction": "Pisahkan blok",
+        "splitAction": "Pisahkan jadi jam terpisah",
         "splitHint": "Kembalikan {label} jadi jam terpisah.",
         "splitConfirmTitle": "Pisahkan blok ini?",
         "splitConfirmBody": "Setiap JP kembali jadi sesi sendiri. Presensi & kegiatan kelas ikut terpisah lagi.",
         "splitConfirm": "Pisahkan",
         "split": "Blok dipisah jadi {n} jam pelajaran.",
         "splitFailed": "Gagal memisahkan blok jam.",
-        "mergeTooltip": "Gabung dengan JP berikutnya",
+        "mergeTooltip": "Gabungkan dengan jam berikutnya jadi satu sesi",
         "candidateHint": "bisa digabung",
         "cellMergeCta": "Gabung ke JP{to}",
         "legendSingle": "Tunggal",
         "legendBlock": "Blok Jam",
         "legendGroup": "Gabung Kelas",
         "legendConflict": "Bentrok",
-        "legend": "Blok Jam"
+        "legend": "Gabung Jam",
+        "filterBlockHint": "2 jam berurutan jadi satu sesi",
+        "mergeCta": "Gabung dengan JP{n}"
       },
       "combined": {
         "classCountBadge": "{n} kelas",
@@ -1295,7 +1297,7 @@
         "inlineSiblingsLabel": "bareng {names}",
         "filterAll": "Semua",
         "filterSingle": "Tunggal",
-        "filterGroup": "Gabung",
+        "filterGroup": "Gabung Kelas",
         "gridColumnHeader": "GABUNG",
         "gridCardAria": "Edit jadwal gabung {subject} di jam ke-{hour}",
         "gridGhostLabel": "lihat kolom gabung",
@@ -1309,7 +1311,8 @@
         "deleteScopeRowConfirm": "Hapus baris",
         "deleteScopeGroupConfirm": "Hapus semua",
         "deletedGroupToast": "Semua kelas dalam gabungan dihapus.",
-        "deleteGroupPrompt": "Hapus {subject} bareng {count} kelas dalam gabungan? Tindakan ini permanen."
+        "deleteGroupPrompt": "Hapus {subject} bareng {count} kelas dalam gabungan? Tindakan ini permanen.",
+        "filterGroupHint": "2 kelas belajar bareng di jam yang sama"
       }
     },
     "attendanceDashboard": {
