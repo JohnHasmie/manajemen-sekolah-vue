@@ -37,13 +37,28 @@ export interface DailyRosterRow {
 }
 
 export interface DailyKpi {
-  hadir: number;
-  terlambat: number;
-  izin: number;
-  sakit: number;
-  alfa: number;
-  belum_absen: number;
+  present: number;
+  late: number;
+  excused: number;
+  sick: number;
+  absent: number;
+  unrecorded: number;
   total: number;
+
+  /** @deprecated Indonesian alias — backend !565 still emits these for
+   * unpatched mobile builds. Read the English keys above; this block
+   * disappears when the backend drops the aliases. */
+  hadir?: number;
+  /** @deprecated use {@link DailyKpi.late} */
+  terlambat?: number;
+  /** @deprecated use {@link DailyKpi.excused} */
+  izin?: number;
+  /** @deprecated use {@link DailyKpi.sick} */
+  sakit?: number;
+  /** @deprecated use {@link DailyKpi.absent} */
+  alfa?: number;
+  /** @deprecated use {@link DailyKpi.unrecorded} */
+  belum_absen?: number;
 }
 
 export interface DailyMethodMix {

@@ -4,8 +4,13 @@
  * by the new `GET /attendance/students/daily` endpoint. Reads the
  * reconciled `student_daily_attendances` row (written by gate self-check-in
  * or admin manual entry), so every student in the school shows up as
- * exactly one row: hadir / terlambat / izin / sakit / alfa / belum-absen,
- * with the check-in time + method (QR_GATE / QR_CARD / SELFIE / MANUAL).
+ * exactly one row: present / late / excused / sick / absent /
+ * not_recorded, with the check-in time + method (QR_GATE / QR_CARD /
+ * SELFIE / MANUAL).
+ *
+ * KPI buckets are read under their English keys (backend !565). The
+ * endpoint still echoes the Indonesian aliases for unpatched mobile
+ * builds; nothing here reads them.
  *
  * Right rail shows the QR-gate live card, the method mix bars, the
  * live check-in feed, and the "belum absen" list with the WA
@@ -71,12 +76,12 @@ const feed = computed(() => roster.value?.recent_check_ins ?? []);
 const totalRecorded = computed(() => {
   const k = kpi.value;
   if (!k) return 0;
-  return k.hadir + k.terlambat + k.izin + k.sakit + k.alfa;
+  return k.present + k.late + k.excused + k.sick + k.absent;
 });
 const presencePct = computed(() => {
   const k = kpi.value;
   if (!k || k.total === 0) return 0;
-  return Math.round(((k.hadir + k.terlambat) / k.total) * 1000) / 10;
+  return Math.round(((k.present + k.late) / k.total) * 1000) / 10;
 });
 
 const mixMax = computed(() => {
@@ -294,39 +299,39 @@ useAcademicYearWatcher(() => {
           </span>
         </div>
         <div class="mt-2 h-2.5 rounded-md bg-slate-100 overflow-hidden flex" role="progressbar">
-          <span :style="{ width: `${((kpi?.hadir ?? 0) / (kpi?.total || 1)) * 100}%` }" class="bg-emerald-500" />
-          <span :style="{ width: `${((kpi?.terlambat ?? 0) / (kpi?.total || 1)) * 100}%` }" class="bg-amber-500" />
-          <span :style="{ width: `${(((kpi?.izin ?? 0) + (kpi?.sakit ?? 0)) / (kpi?.total || 1)) * 100}%` }" class="bg-sky-500" />
-          <span :style="{ width: `${((kpi?.alfa ?? 0) / (kpi?.total || 1)) * 100}%` }" class="bg-red-500" />
+          <span :style="{ width: `${((kpi?.present ?? 0) / (kpi?.total || 1)) * 100}%` }" class="bg-emerald-500" />
+          <span :style="{ width: `${((kpi?.late ?? 0) / (kpi?.total || 1)) * 100}%` }" class="bg-amber-500" />
+          <span :style="{ width: `${(((kpi?.excused ?? 0) + (kpi?.sick ?? 0)) / (kpi?.total || 1)) * 100}%` }" class="bg-sky-500" />
+          <span :style="{ width: `${((kpi?.absent ?? 0) / (kpi?.total || 1)) * 100}%` }" class="bg-red-500" />
         </div>
         <div class="mt-2 flex flex-wrap gap-3 text-[10.5px] font-semibold text-slate-500">
-          <span><b class="text-slate-900">{{ kpi?.hadir ?? 0 }}</b> Hadir</span>
-          <span><b class="text-slate-900">{{ kpi?.terlambat ?? 0 }}</b> Terlambat</span>
-          <span><b class="text-slate-900">{{ (kpi?.izin ?? 0) + (kpi?.sakit ?? 0) }}</b> Izin/Sakit</span>
-          <span><b class="text-slate-900">{{ kpi?.alfa ?? 0 }}</b> Alfa</span>
+          <span><b class="text-slate-900">{{ kpi?.present ?? 0 }}</b> Hadir</span>
+          <span><b class="text-slate-900">{{ kpi?.late ?? 0 }}</b> Terlambat</span>
+          <span><b class="text-slate-900">{{ (kpi?.excused ?? 0) + (kpi?.sick ?? 0) }}</b> Izin/Sakit</span>
+          <span><b class="text-slate-900">{{ kpi?.absent ?? 0 }}</b> Alfa</span>
         </div>
       </div>
       <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
         <div class="text-[10px] font-bold uppercase tracking-[.08em] text-slate-400 flex items-center gap-1.5">
           <span class="inline-block w-2 h-2 rounded-sm bg-emerald-500" />Hadir
         </div>
-        <div class="text-[24px] font-bold text-emerald-700 tabular-nums">{{ kpi?.hadir ?? '—' }}</div>
+        <div class="text-[24px] font-bold text-emerald-700 tabular-nums">{{ kpi?.present ?? '—' }}</div>
       </div>
       <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
         <div class="text-[10px] font-bold uppercase tracking-[.08em] text-slate-400 flex items-center gap-1.5">
           <span class="inline-block w-2 h-2 rounded-sm bg-amber-500" />Terlambat
         </div>
-        <div class="text-[24px] font-bold text-amber-700 tabular-nums">{{ kpi?.terlambat ?? '—' }}</div>
+        <div class="text-[24px] font-bold text-amber-700 tabular-nums">{{ kpi?.late ?? '—' }}</div>
       </div>
       <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
         <div class="text-[10px] font-bold uppercase tracking-[.08em] text-slate-400 flex items-center gap-1.5">
           <span class="inline-block w-2 h-2 rounded-sm bg-sky-500" />Izin · Sakit
         </div>
         <div class="text-[24px] font-bold text-sky-700 tabular-nums">
-          {{ (kpi?.izin ?? 0) + (kpi?.sakit ?? 0) }}
+          {{ (kpi?.excused ?? 0) + (kpi?.sick ?? 0) }}
         </div>
         <div class="text-[11px] text-slate-500 mt-0.5">
-          {{ kpi?.izin ?? 0 }} izin · {{ kpi?.sakit ?? 0 }} sakit
+          {{ kpi?.excused ?? 0 }} izin · {{ kpi?.sick ?? 0 }} sakit
         </div>
       </div>
     </div>
