@@ -61,6 +61,30 @@ export interface ScheduleSession {
   is_grouped?: boolean;
   /** Sibling class refs for the group (populated only when grouped). */
   grouped_class_names?: Array<{ id: string; name: string }>;
+
+  // ── Multi-hour block ("blok jam") ────────────────────────────────
+  // ORTHOGONAL to schedule_group_id above: that one groups across
+  // CLASSES at one hour, this one groups across HOURS for one class.
+  // Both can be set — 7A+7B Seni Budaya JP4–5 is 4 rows, 1 card.
+  /** Block id — non-null when this row is part of a multi-hour block. */
+  block_group_id?: string | null;
+  /** Convenience flag mirroring `!!block_group_id`. */
+  is_block?: boolean;
+  /** How many lesson hours the block spans (0 when not a block). */
+  block_span?: number;
+  /** e.g. [2, 3] so the UI can render "JP2–3". */
+  block_hour_numbers?: number[];
+  /** Clock time the whole block starts (first hour's start_time). */
+  block_start_time?: string | null;
+  /** Clock time the whole block ends (last hour's end_time). */
+  block_end_time?: string | null;
+  /**
+   * True only for the earliest row in a block — the UI renders ONE card
+   * per block off the anchor and drops the covered siblings. Non-blocked
+   * rows are trivially their own anchor, so filtering on this yields a
+   * complete listing.
+   */
+  is_block_anchor?: boolean;
 }
 
 // ───────────────────────────────────────────────────────────────────
@@ -120,6 +144,17 @@ export interface ScheduleRow {
   is_grouped?: boolean;
   /** Sibling class refs for the group (populated only when grouped). */
   grouped_class_names?: Array<{ id: string; name: string }>;
+
+  // ── Multi-hour block ("blok jam") — see ScheduleSession above for
+  //    why this is a separate axis from schedule_group_id.
+  block_group_id?: string | null;
+  is_block?: boolean;
+  block_span?: number;
+  block_hour_numbers?: number[];
+  block_start_time?: string | null;
+  block_end_time?: string | null;
+  /** True only for the earliest row in a block (see ScheduleSession). */
+  is_block_anchor?: boolean;
 }
 
 // ───────────────────────────────────────────────────────────────────

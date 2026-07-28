@@ -249,6 +249,45 @@ function sessionFromJson(raw: any): ScheduleSession {
     schedule_group_id: groupId ? String(groupId) : null,
     is_grouped: isGrouped,
     grouped_class_names: groupedNames,
+    ...parseBlockFields(raw),
+  };
+}
+
+/**
+ * Normalise the multi-hour block ("blok jam") fields.
+ *
+ * A pre-deploy backend ships none of these, so every consumer must be
+ * able to treat the row as a plain single-hour slot. `is_block_anchor`
+ * deliberately defaults to TRUE when absent — listings filter on it, and
+ * defaulting to false would make every row vanish against an old API.
+ */
+function parseBlockFields(raw: any): {
+  block_group_id: string | null;
+  is_block: boolean;
+  block_span: number;
+  block_hour_numbers: number[];
+  block_start_time: string | null;
+  block_end_time: string | null;
+  is_block_anchor: boolean;
+} {
+  const blockId = raw?.block_group_id ?? null;
+  return {
+    block_group_id: blockId ? String(blockId) : null,
+    is_block: typeof raw?.is_block === 'boolean' ? raw.is_block : !!blockId,
+    block_span: Number.isFinite(Number(raw?.block_span))
+      ? Number(raw.block_span)
+      : 0,
+    block_hour_numbers: Array.isArray(raw?.block_hour_numbers)
+      ? raw.block_hour_numbers.map(Number).filter((n: number) => Number.isFinite(n))
+      : [],
+    block_start_time: raw?.block_start_time
+      ? String(raw.block_start_time).slice(0, 5)
+      : null,
+    block_end_time: raw?.block_end_time
+      ? String(raw.block_end_time).slice(0, 5)
+      : null,
+    is_block_anchor:
+      typeof raw?.is_block_anchor === 'boolean' ? raw.is_block_anchor : true,
   };
 }
 
@@ -359,6 +398,7 @@ function rowFromJson(raw: any): ScheduleRow {
         ? raw.is_grouped
         : !!raw.schedule_group_id,
     grouped_class_names: parseGroupedClassNames(raw.grouped_class_names),
+    ...parseBlockFields(raw),
   };
 }
 
@@ -655,6 +695,20 @@ export interface TimetableCell {
   schedule_group_id?: string | null;
   /** Sibling class refs for the group (empty for plain slots). */
   grouped_class_names?: Array<{ id: string; name: string }>;
+
+  // ── Multi-hour block ("blok jam") ────────────────────────────────
+  // The grid renders ONE cell with `rowspan = block_span` on the anchor
+  // and skips the hours that span already covers, so it needs both the
+  // span and the anchor flag.
+  block_group_id?: string | null;
+  is_block?: boolean;
+  /** True only for the earliest hour in the block — the cell we render. */
+  is_block_anchor?: boolean;
+  /** Row count the anchor cell should span (0/1 → no rowspan). */
+  block_span?: number;
+  block_hour_numbers?: number[];
+  block_start_time?: string | null;
+  block_end_time?: string | null;
 }
 
 /** Matrix meta strip — counters + IDs surfaced under the grid. */
@@ -1164,6 +1218,50 @@ export const ScheduleService = {
   },
 
   /**
+   * POST /teaching-schedules/{id}/merge-next — "gabung jam".
+   *
+   * Merges this slot with the NEXT lesson hour into one multi-hour
+   * block. The backend answers 422 with a human-readable `message` when
+   * the next hour isn't an eligible partner (different subject/teacher,
+   * no next hour, already in another block) — surface it verbatim; it's
+   * written for the admin, not for a developer.
+   *
+   * When the slot is part of a jadwal-gabung group, the backend merges
+   * EVERY member class so the group stays symmetric.
+   */
+  async mergeNextHour(
+    id: string,
+  ): Promise<{ block_group_id: string; merged_ids: string[]; span: number }> {
+    try {
+      const res = await api.post(`/teaching-schedules/${id}/merge-next`);
+      const d = (res.data?.data ?? res.data ?? {}) as Record<string, any>;
+      return {
+        block_group_id: String(d.block_group_id ?? ''),
+        merged_ids: Array.isArray(d.merged_ids) ? d.merged_ids.map(String) : [],
+        span: Number(d.span ?? 0),
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menggabungkan jam pelajaran.'));
+    }
+  },
+
+  /**
+   * POST /teaching-schedules/{id}/split-block — "pisahkan blok".
+   *
+   * Clears the block from every row that shares it. Idempotent: calling
+   * it on an un-blocked row is a no-op that still resolves.
+   */
+  async splitBlock(id: string): Promise<number> {
+    try {
+      const res = await api.post(`/teaching-schedules/${id}/split-block`);
+      const d = (res.data?.data ?? res.data ?? {}) as Record<string, any>;
+      return Number(d.unlinked_count ?? 0);
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memisahkan blok jam.'));
+    }
+  },
+
+  /**
    * PATCH /teaching-schedule/{id}/reschedule — drag-drop reschedule.
    * Body: { lesson_hour_days_id, force? }
    * Throws an Error with a `.conflicts` annotation when the server
@@ -1531,6 +1629,7 @@ export const ScheduleService = {
             grouped_class_names: parseGroupedClassNames(
               raw.grouped_class_names,
             ),
+            ...parseBlockFields(raw),
           };
         }
       }
