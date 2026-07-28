@@ -1265,7 +1265,10 @@
         "detectImpact": "Setelah digabung: presensi guru jadi 1 sesi (bukan 2) dan kegiatan kelas cukup diisi sekali. Bisa dibatalkan lewat Pisahkan Jam.",
         "detectApply": "Gabungkan {n} pasang",
         "detectApplied": "{n} pasang jam berhasil digabung.",
-        "detectAppliedPartial": "{n} digabung · {skipped} dilewati (jadwal sudah berubah)."
+        "detectAppliedPartial": "{n} digabung · {skipped} dilewati (jadwal sudah berubah).",
+        "spanLabel": "Durasi",
+        "spanOption": "{n} JP",
+        "spanHint": "Akan dibuat {n} jam pelajaran berurutan sebagai satu sesi. Presensi guru dihitung 1 sesi."
       },
       "combined": {
         "classCountBadge": "{n} kelas",

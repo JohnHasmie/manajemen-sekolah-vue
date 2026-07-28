@@ -168,6 +168,17 @@ const lessonHourId = ref<string>(
 );
 const room = ref<string>(props.row?.room ?? '');
 
+/**
+ * How many consecutive periods this session occupies ("gabung jam"
+ * declared up-front). 1 is the ordinary single-period create.
+ *
+ * Capped at 4 rather than the backend's 6: four is already an unusual
+ * double-block, and a longer list of chips would crowd the row without
+ * serving a real case. The backend still validates independently.
+ */
+const SPAN_OPTIONS = [1, 2, 3, 4] as const;
+const span = ref<number>(1);
+
 // ── Loaded data ─────────────────────────────────────────────────────
 const teacherSubjects = ref<Array<{ id: string; name: string; code?: string | null }>>([]);
 const allSubjects = ref<Array<{ id: string; name: string; code?: string | null }>>([]);
@@ -713,6 +724,9 @@ async function save(opts: { continueAfter?: boolean } = {}) {
       const created = await ScheduleService.create({
         teacher_id: teacherId.value,
         subject_id: subjectId.value,
+        // Omitted entirely for a plain single-period create so the
+        // request stays byte-identical to the pre-span contract.
+        ...(span.value > 1 ? { span: span.value } : {}),
         ...classPayload,
         days_ids: [dayId.value],
         lesson_hour_id: lessonHourId.value,
@@ -1219,8 +1233,8 @@ const teacherPickerLocked = computed(
           @change="(e) => onToggleCombined((e.target as HTMLInputElement).checked)"
         />
         <div class="min-w-0 flex-1">
-          <p class="text-[13px] font-bold text-violet-900 leading-tight">
-            <span class="mr-1">⚭</span>
+          <p class="text-[13px] font-bold text-violet-900 leading-tight inline-flex items-center gap-1.5">
+            <NavIcon name="git-merge" :size="13" />
             {{ t('admin.schedule.combined.toggleLabel') }}
           </p>
           <p class="text-2xs text-violet-700 mt-0.5 leading-snug">
@@ -1313,6 +1327,38 @@ const teacherPickerLocked = computed(
             {{ t('admin.schedule.emptyLessonHours.cta') }}
           </button>
         </p>
+
+        <!-- Durasi (span) — creating a multi-period session up-front
+             instead of creating each period then merging. Sits directly
+             under the slot because it EXTENDS that slot; putting it
+             elsewhere would read as an unrelated setting.
+
+             Edit mode hides it: changing an existing row's span would
+             mean creating or deleting sibling periods, which is what
+             Gabung Jam / Pisahkan Jam on the row already do explicitly. -->
+        <div v-if="!isEdit" class="mt-2.5">
+          <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
+            {{ t('admin.schedule.block.spanLabel') }}
+          </label>
+          <div class="mt-1 flex items-center gap-1.5 flex-wrap">
+            <button
+              v-for="n in SPAN_OPTIONS"
+              :key="n"
+              type="button"
+              class="px-3 py-1.5 rounded-lg border text-2xs font-bold transition-colors inline-flex items-center gap-1.5"
+              :class="span === n
+                ? 'bg-teal-100 text-teal-800 border-teal-300'
+                : 'bg-white text-slate-600 border-slate-200 hover:border-teal-300'"
+              @click="span = n"
+            >
+              <NavIcon v-if="n > 1" name="link-down" :size="11" />
+              {{ t('admin.schedule.block.spanOption', { n }) }}
+            </button>
+          </div>
+          <p v-if="span > 1" class="text-2xs text-teal-700 mt-1.5 leading-relaxed">
+            {{ t('admin.schedule.block.spanHint', { n: span }) }}
+          </p>
+        </div>
       </div>
 
       <!-- Guru — slot-filtered. Locked until Kelas + Slot are set so

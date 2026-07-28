@@ -224,13 +224,18 @@ defineProps<{
       <line x1="16" y1="19" x2="16" y2="22" />
       <line x1="19" y1="16" x2="22" y2="16" />
     </template>
-    <!-- `link-down` — "Gabung dengan JP berikutnya". A chain link with a
-         downward arrow, so the affordance reads as "join the row below"
-         rather than a generic link. -->
+    <!-- `link-down` — "Gabung dengan JP berikutnya": two branches
+         converging downward into one stem, i.e. this period and the one
+         below becoming a single session.
+
+         Drawn with straight strokes on purpose. The previous version
+         used two overlapping chain arcs which collapsed into an
+         illegible squiggle at the 12px the merge pill renders it at. -->
     <template v-else-if="name === 'link-down'">
-      <path d="M9 7a4 4 0 0 1 6 0l2 2a4 4 0 0 1-5.66 5.66" />
-      <path d="M12 21v-6" />
-      <polyline points="9 18 12 21 15 18" />
+      <path d="M7 4v5l5 5" />
+      <path d="M17 4v5l-5 5" />
+      <path d="M12 14v6" />
+      <polyline points="9 17 12 20 15 17" />
     </template>
     <!-- `git-merge` — combined-class (jadwal gabung ⚭): two branches
          converging into one, which is exactly what N classes sharing one

@@ -1265,7 +1265,10 @@
         "detectImpact": "After merging: teacher attendance becomes 1 session (not 2) and class activity only needs filling once. Reversible via Split periods.",
         "detectApply": "Merge {n} pairs",
         "detectApplied": "{n} pairs merged.",
-        "detectAppliedPartial": "{n} merged · {skipped} skipped (schedule changed)."
+        "detectAppliedPartial": "{n} merged · {skipped} skipped (schedule changed).",
+        "spanLabel": "Duration",
+        "spanOption": "{n} periods",
+        "spanHint": "Creates {n} consecutive periods as one session. Teacher attendance counts as 1 session."
       },
       "combined": {
         "classCountBadge": "{n} classes",

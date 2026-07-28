@@ -291,6 +291,18 @@ export interface SchedulePayload {
   semester_id: string;
   academic_year_id: string | number;
   room?: string | null;
+  /**
+   * How many CONSECUTIVE periods this session occupies — "gabung jam"
+   * declared at create time instead of merged afterwards.
+   *
+   * Omit (or send 1) for an ordinary single-period create; the backend
+   * treats absence as 1, so the request stays identical to the
+   * pre-span contract. When > 1 the backend creates one row per period
+   * and stamps them with a shared `block_group_id` per class, and
+   * answers 422 `span_unavailable` if the span runs past the last
+   * period of that day.
+   */
+  span?: number;
 }
 
 // ───────────────────────────────────────────────────────────────────
