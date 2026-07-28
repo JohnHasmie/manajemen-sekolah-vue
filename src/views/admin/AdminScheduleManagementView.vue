@@ -388,8 +388,13 @@ const filteredRows = computed<ScheduleRow[]>(() => {
     // discoverability. `single` = plain slot, `group` = row belongs to
     // a schedule_group. The pinned "Jadwal Gabung" section reads from
     // this same predicate so switching to "Tunggal" collapses it too.
-    if (listFilter.value === 'single' && r.is_grouped) return false;
+    if (listFilter.value === 'single' && (r.is_grouped || r.is_block)) return false;
     if (listFilter.value === 'group' && !r.is_grouped) return false;
+    if (listFilter.value === 'block' && !r.is_block) return false;
+    // Collapse blocks to ONE row: the anchor carries the whole session,
+    // the covered hours would otherwise render as duplicate cards (the
+    // exact "Penjas twice in a row" complaint this feature fixes).
+    if (r.is_block && r.is_block_anchor === false) return false;
     if (search.value.trim()) {
       const q = search.value.trim().toLowerCase();
       const haystack = [r.subject_name, r.class_name, r.teacher_name ?? '']
@@ -479,6 +484,50 @@ const groupedEntries = computed<GroupedEntry[]>(() => {
 
 /** Total number of unique group entries — used by the filter chip. */
 const groupedEntryCount = computed(() => groupedEntries.value.length);
+
+/**
+ * Distinct multi-hour blocks across ALL rows (not just the filtered
+ * set) — the chip count has to stay honest while the admin is filtered
+ * to "Tunggal", same contract as `groupedEntryCount` above.
+ */
+const blockCount = computed(() => {
+  const ids = new Set<string>();
+  for (const r of rows.value) {
+    if (r.block_group_id) ids.add(r.block_group_id);
+  }
+  return ids.size;
+});
+
+/** "JP2–3" for a block row; null when it isn't one. */
+function blockHourLabel(r: ScheduleRow): string | null {
+  const hours = r.block_hour_numbers ?? [];
+  if (hours.length < 2) return null;
+  return `${$t('admin.schedule.jpAbbrev')}${hours[0]}–${hours[hours.length - 1]}`;
+}
+
+/**
+ * The row a "gabung dengan jam berikutnya" action would target — the
+ * next hour on the same day for the same class/subject/teacher, when
+ * neither side is already blocked. Mirrors the backend's eligibility
+ * rules so the affordance only appears where the merge would succeed.
+ */
+function mergeCandidateFor(r: ScheduleRow): ScheduleRow | null {
+  if (r.is_block) return null;
+  const sameDay = rows.value
+    .filter(
+      (o) =>
+        o.day === r.day &&
+        o.class_id === r.class_id &&
+        o.subject_id === r.subject_id &&
+        o.teacher_id === r.teacher_id &&
+        !o.is_block,
+    )
+    .sort((a, b) => a.hour_number - b.hour_number);
+  const idx = sameDay.findIndex((o) => o.id === r.id);
+  if (idx === -1) return null;
+  const next = sameDay[idx + 1];
+  return next ?? null;
+}
 
 /**
  * Per-day dedup: a group appears once at the group's primary_row_id
@@ -655,9 +704,11 @@ const editingRow = ref<ScheduleRow | null>(null);
 const showCombinedWizard = ref(false);
 /** FAB dropdown open state. */
 const fabOpen = ref(false);
-/** List-view filter chip: Semua / Tunggal / Gabung (jadwal gabung
- *  discoverability — pinned + inline options are complementary). */
-type ListFilter = 'all' | 'single' | 'group';
+/** List-view filter chip: Semua / Tunggal / Blok Jam / Gabung Kelas.
+ *  `group` = combined CLASSES (schedule_group_id, across classes at one
+ *  hour); `block` = combined HOURS (block_group_id, across hours for one
+ *  class). Two orthogonal axes, so a row can match both. */
+type ListFilter = 'all' | 'single' | 'block' | 'group';
 const listFilter = ref<ListFilter>('all');
 
 // Detail sheet + per-row action modals
@@ -770,6 +821,81 @@ function onFormClose() {
   showForm.value = false;
   prefill.value = null;
   skipSetupForForm.value = false;
+}
+
+// ── Blok jam (gabung jam) ──────────────────────────────────────────
+//
+// Confirmation is required because merging changes DOWNSTREAM
+// behaviour, not just the layout: after a merge the teacher's Presensi
+// shows one session instead of two, and Kegiatan Kelas expects one
+// journal. The dialog says so explicitly rather than asking a bare
+// "yakin?".
+
+/** Row awaiting merge confirmation, plus the hour it would absorb. */
+const mergeTarget = ref<{ row: ScheduleRow; next: ScheduleRow } | null>(null);
+/** Row awaiting split confirmation. */
+const splitTarget = ref<ScheduleRow | null>(null);
+const isBlockBusy = ref(false);
+
+function askMerge(row: ScheduleRow) {
+  const next = mergeCandidateFor(row);
+  if (!next) return;
+  mergeTarget.value = { row, next };
+  detailRow.value = null;
+}
+
+function askSplit(row: ScheduleRow) {
+  if (!row.is_block) return;
+  splitTarget.value = row;
+  detailRow.value = null;
+}
+
+async function confirmMerge() {
+  if (!mergeTarget.value || isBlockBusy.value) return;
+  isBlockBusy.value = true;
+  try {
+    const res = await ScheduleService.mergeNextHour(mergeTarget.value.row.id);
+    toast.value = {
+      message: $t('admin.schedule.block.merged', { n: res.span }),
+      tone: 'success',
+    };
+    mergeTarget.value = null;
+    await loadRows();
+    // The timetable owns its own /matrix fetch, so a list-only reload
+    // would leave the grid showing the pre-merge shape.
+    timetableGridRef.value?.refresh?.();
+  } catch (e) {
+    // The backend's 422 message is written for the admin (e.g. "Jam
+    // berikutnya bukan mapel & guru yang sama") — surface it verbatim.
+    toast.value = { message: (e as Error).message, tone: 'error' };
+  } finally {
+    isBlockBusy.value = false;
+  }
+}
+
+async function confirmSplit() {
+  if (!splitTarget.value || isBlockBusy.value) return;
+  isBlockBusy.value = true;
+  try {
+    const n = await ScheduleService.splitBlock(splitTarget.value.id);
+    toast.value = {
+      message: $t('admin.schedule.block.split', { n }),
+      tone: 'success',
+    };
+    splitTarget.value = null;
+    await loadRows();
+    timetableGridRef.value?.refresh?.();
+  } catch (e) {
+    toast.value = { message: (e as Error).message, tone: 'error' };
+  } finally {
+    isBlockBusy.value = false;
+  }
+}
+
+/** Timetable hover-pill → same confirmation path as the list. */
+function onTimetableMergeNext(p: { schedule_id: string; from_hour: number; to_hour: number }) {
+  const row = rows.value.find((r) => r.id === p.schedule_id);
+  if (row) askMerge(row);
 }
 
 // Detail action handlers
@@ -1164,6 +1290,7 @@ async function bulkDelete() {
       :default-semester-id="filterOptions?.semesters?.[0]?.id"
       :options-loading="filterOptions === null"
       @edit="onTimetableEdit"
+      @merge-next="onTimetableMergeNext"
       @create="onTimetableCreate"
     />
 
@@ -1203,6 +1330,26 @@ async function bulkDelete() {
             >
               {{ $t('admin.schedule.combined.filterSingle') }}
             </button>
+            <!-- Blok Jam (teal) — hours merged within ONE class. Distinct
+                 axis from Gabung Kelas (violet) beside it, so the two get
+                 different colours and different icons on purpose. -->
+            <button
+              type="button"
+              class="text-2xs font-bold px-3 py-1.5 rounded-lg border transition-colors inline-flex items-center gap-1"
+              :class="listFilter === 'block'
+                ? 'bg-teal-100 text-teal-800 border-teal-300'
+                : 'bg-white text-teal-700 border-teal-200 hover:border-teal-300'"
+              @click="listFilter = 'block'"
+            >
+              <NavIcon name="link" :size="11" />
+              {{ $t('admin.schedule.block.filterBlock') }}
+              <span
+                v-if="blockCount > 0"
+                class="ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-teal-500 text-white text-3xs font-bold"
+              >
+                {{ blockCount }}
+              </span>
+            </button>
             <button
               type="button"
               class="text-2xs font-bold px-3 py-1.5 rounded-lg border transition-colors inline-flex items-center gap-1"
@@ -1211,7 +1358,7 @@ async function bulkDelete() {
                 : 'bg-white text-violet-700 border-violet-200 hover:border-violet-300'"
               @click="listFilter = 'group'"
             >
-              <span class="text-sm leading-none">⚭</span>
+              <NavIcon name="git-merge" :size="11" />
               {{ $t('admin.schedule.combined.filterGroup') }}
               <span
                 v-if="groupedEntryCount > 0"
@@ -1232,7 +1379,7 @@ async function bulkDelete() {
           >
             <header class="flex items-center justify-between sticky top-0 z-10 bg-violet-50 py-2 px-3 rounded-lg border border-violet-200">
               <h3 class="text-2xs font-black text-violet-800 uppercase tracking-widest flex items-center gap-1.5">
-                <span class="text-sm leading-none">⚭</span>
+                <NavIcon name="git-merge" :size="12" />
                 {{
                   $t('admin.schedule.combined.pinnedSectionTitle', {
                     count: groupedEntries.length,
@@ -1260,8 +1407,8 @@ async function bulkDelete() {
                   </p>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-[13px] font-bold text-slate-900 truncate">
-                    <span class="text-violet-700 mr-1">⚭</span>
+                  <p class="text-[13px] font-bold text-slate-900 truncate flex items-center gap-1.5">
+                    <NavIcon name="git-merge" :size="11" class="text-violet-700 flex-shrink-0" />
                     {{ g.subject_name }} ·
                     <span class="text-slate-600 font-normal">
                       {{ g.teacher_name ?? 'Tanpa guru' }}
@@ -1311,42 +1458,96 @@ async function bulkDelete() {
               <div
                 v-for="(r, idx) in rowsByDay[d]"
                 :key="r.id"
-                class="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors cursor-pointer"
+                class="group w-full text-left px-4 py-3 flex items-stretch gap-3 hover:bg-slate-50 transition-colors cursor-pointer"
                 :class="[
                   idx > 0 ? 'border-t border-slate-100' : '',
                   r.conflict_with && r.conflict_with.length > 0 ? 'bg-red-50/40' : '',
                   bulkMode && selectedIds.has(r.id) ? 'bg-role-admin/5' : '',
                   r.is_grouped ? 'bg-violet-50/30' : '',
+                  r.is_block ? 'bg-teal-50/30' : '',
                 ]"
                 @click="bulkMode ? toggleSelect(r.id) : onRowClick(r)"
               >
                 <input
                   v-if="bulkMode"
                   type="checkbox"
-                  class="w-4 h-4 accent-role-admin flex-shrink-0"
+                  class="w-4 h-4 accent-role-admin flex-shrink-0 self-center"
                   :checked="selectedIds.has(r.id)"
                   @click.stop="toggleSelect(r.id)"
+                />
+                <!-- Colour spine — the row's type is readable at a glance
+                     before any badge text is parsed. Conflict outranks
+                     block outranks group, matching how urgently each
+                     needs the admin's attention. -->
+                <span
+                  class="w-[3px] rounded-full flex-shrink-0"
+                  :class="
+                    r.conflict_with && r.conflict_with.length > 0
+                      ? 'bg-red-500'
+                      : r.is_block
+                        ? 'bg-teal-500'
+                        : r.is_grouped
+                          ? 'bg-violet-500'
+                          : 'bg-slate-200'
+                  "
                 />
                 <!-- Time anchor — the slot's clock time is the row's
                      spine. Start reads large + bold; end, duration and
                      the JP ordinal ride underneath it as quiet meta. -->
-                <div class="w-16 flex-shrink-0 leading-tight">
-                  <p class="text-[12px] font-bold text-slate-900 tabular-nums">{{ r.start_time }}</p>
-                  <p class="text-3xs text-slate-400 tabular-nums">– {{ r.end_time }}</p>
+                <!-- A block's headline time is its OUTER span (07:40–09:00)
+                     and its ordinal a range (JP2–3) — collapsing the two
+                     duplicate rows into one honest line is the point of
+                     the merge. -->
+                <div class="w-16 flex-shrink-0 leading-tight self-center">
+                  <p class="text-[12px] font-bold text-slate-900 tabular-nums">
+                    {{ r.is_block ? (r.block_start_time ?? r.start_time) : r.start_time }}
+                  </p>
+                  <p class="text-3xs text-slate-400 tabular-nums">
+                    – {{ r.is_block ? (r.block_end_time ?? r.end_time) : r.end_time }}
+                  </p>
                   <p class="text-4xs font-bold text-slate-400 uppercase tracking-wide mt-0.5">
-                    <template v-if="slotDuration(r.start_time, r.end_time)">
-                      {{ slotDuration(r.start_time, r.end_time) }} ·
-                    </template>
+                    {{ slotDuration(
+                      r.is_block ? (r.block_start_time ?? r.start_time) : r.start_time,
+                      r.is_block ? (r.block_end_time ?? r.end_time) : r.end_time,
+                    ) }}
+                  </p>
+                  <span
+                    v-if="r.is_block"
+                    class="inline-flex items-center gap-0.5 mt-1 rounded bg-teal-100 text-teal-800 border border-teal-200 px-1 text-4xs font-black"
+                  >
+                    <NavIcon name="link" :size="8" />
+                    {{ blockHourLabel(r) }}
+                  </span>
+                  <p v-else class="text-4xs font-bold text-slate-400 uppercase tracking-wide">
                     {{ $t('admin.schedule.jpAbbrev') }}{{ r.hour_number }}
                   </p>
                 </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-[13px] font-bold text-slate-900 truncate">
-                    <!-- ⚭ marker for grouped rows so the per-day list
-                         echoes what the pinned section already said. -->
-                    <span v-if="r.is_grouped" class="text-violet-700 mr-1">⚭</span>
-                    {{ r.subject_name }}
-                    <span v-if="r.conflict_with && r.conflict_with.length > 0" class="text-red-600 ml-1">⚠ {{ $t('admin.schedule.conflictBadge') }}</span>
+                <div class="flex-1 min-w-0 self-center">
+                  <p class="text-[13px] font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                    <span class="truncate">{{ r.subject_name }}</span>
+                    <!-- Type badges — icon + text, so the row still reads
+                         correctly without relying on the spine colour. -->
+                    <span
+                      v-if="r.is_block"
+                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-teal-100 text-teal-800 border border-teal-200 text-[11px] font-bold leading-none"
+                    >
+                      <NavIcon name="link" :size="9" />
+                      {{ $t('admin.schedule.block.spanBadge', { n: r.block_span ?? 0 }) }}
+                    </span>
+                    <span
+                      v-if="r.is_grouped"
+                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-violet-100 text-violet-800 border border-violet-200 text-[11px] font-bold leading-none"
+                    >
+                      <NavIcon name="git-merge" :size="9" />
+                      {{ $t('admin.schedule.combined.classCountBadge', { n: (r.grouped_class_names ?? []).length }) }}
+                    </span>
+                    <span
+                      v-if="r.conflict_with && r.conflict_with.length > 0"
+                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-red-100 text-red-700 border border-red-200 text-[11px] font-bold leading-none"
+                    >
+                      <NavIcon name="alert-triangle" :size="9" />
+                      {{ $t('admin.schedule.conflictBadge') }}
+                    </span>
                   </p>
                   <div class="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 min-w-0">
                     <!-- Kelas as a cobalt chip — the class is the row's
@@ -1372,8 +1573,49 @@ async function bulkDelete() {
                     <span class="text-2xs text-slate-500 truncate">{{ r.teacher_name ?? 'Tanpa guru' }}</span>
                     <span v-if="r.room" class="text-2xs text-slate-400">· {{ r.room }}</span>
                   </div>
+                  <!-- Block breakdown — which JPs the merged session
+                       actually covers. Without it "07:40–09:00" hides
+                       the fact that two timetable slots are involved. -->
+                  <div
+                    v-if="r.is_block && (r.block_hour_numbers ?? []).length > 1"
+                    class="mt-1.5 pl-2 border-l-2 border-dashed border-teal-200 text-4xs font-bold text-teal-700"
+                  >
+                    {{
+                      (r.block_hour_numbers ?? [])
+                        .map((h) => `${$t('admin.schedule.jpAbbrev')}${h}`)
+                        .join(' · ')
+                    }}
+                  </div>
                 </div>
-                <NavIcon name="chevron-right" :size="14" class="text-slate-300 ml-1" />
+                <!-- Hover actions. Merge only appears where the backend
+                     would accept it (same mapel+guru next hour, neither
+                     already blocked), so the admin never hits an
+                     avoidable 422. Hidden in bulk mode — the row is a
+                     selection target there, not an action target. -->
+                <div
+                  v-if="!bulkMode"
+                  class="self-center flex items-center gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <button
+                    v-if="r.is_block"
+                    type="button"
+                    class="w-7 h-7 rounded-lg border border-teal-200 bg-teal-50 text-teal-700 grid place-items-center hover:bg-teal-100 transition-colors"
+                    :title="$t('admin.schedule.block.splitAction')"
+                    @click.stop="askSplit(r)"
+                  >
+                    <NavIcon name="unlink" :size="12" />
+                  </button>
+                  <button
+                    v-else-if="mergeCandidateFor(r)"
+                    type="button"
+                    class="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 grid place-items-center hover:border-teal-400 hover:text-teal-700 hover:bg-teal-50 transition-colors"
+                    :title="$t('admin.schedule.block.mergeTooltip')"
+                    @click.stop="askMerge(r)"
+                  >
+                    <NavIcon name="link-down" :size="12" />
+                  </button>
+                </div>
+                <NavIcon name="chevron-right" :size="14" class="text-slate-300 ml-1 self-center" />
               </div>
             </div>
           </section>
@@ -1412,7 +1654,7 @@ async function bulkDelete() {
               class="inline-flex items-center gap-2 rounded-xl bg-violet-600 text-white text-2xs font-bold px-4 py-2.5 shadow-lg shadow-violet-500/30 hover:bg-violet-700 transition-colors"
               @click="onFabAddCombined"
             >
-              <span class="text-sm leading-none">⚭</span>
+              <NavIcon name="git-merge" :size="13" />
               {{ $t('admin.schedule.combined.fabAddCombined') }}
             </button>
             <button
@@ -1646,7 +1888,88 @@ async function bulkDelete() {
       @change-teacher="detailChangeTeacher"
       @duplicate="detailDuplicate"
       @delete="detailDelete"
+      @merge-next="detailRow && askMerge(detailRow)"
+      @split-block="detailRow && askSplit(detailRow)"
     />
+
+    <!-- Gabung jam confirmation. Names the DOWNSTREAM consequence
+         (presensi 1 sesi, kegiatan kelas 1 entri) rather than asking a
+         bare "yakin?" — that consequence is the reason the feature
+         exists and the reason it's worth confirming. -->
+    <Modal
+      v-if="mergeTarget"
+      :title="$t('admin.schedule.block.mergeRowTitle', {
+        from: mergeTarget.row.hour_number,
+        to: mergeTarget.next.hour_number,
+      })"
+      size="sm"
+      @close="mergeTarget = null"
+    >
+      <div class="space-y-3">
+        <div class="rounded-xl border border-teal-200 bg-teal-50 p-3 space-y-2">
+          <div class="flex items-center gap-2 text-[12px]">
+            <span class="w-10 text-3xs font-black text-teal-700">
+              {{ $t('admin.schedule.jpAbbrev') }}{{ mergeTarget.row.hour_number }}
+            </span>
+            <span class="text-slate-600 tabular-nums">
+              {{ mergeTarget.row.start_time }}–{{ mergeTarget.row.end_time }}
+            </span>
+          </div>
+          <div class="flex items-center gap-2 text-[12px]">
+            <span class="w-10 text-3xs font-black text-teal-700">
+              {{ $t('admin.schedule.jpAbbrev') }}{{ mergeTarget.next.hour_number }}
+            </span>
+            <span class="text-slate-600 tabular-nums">
+              {{ mergeTarget.next.start_time }}–{{ mergeTarget.next.end_time }}
+            </span>
+          </div>
+          <div class="flex items-center gap-2 text-[12px] pt-2 border-t border-teal-200">
+            <span class="w-10 text-3xs font-black text-teal-800 inline-flex items-center gap-0.5">
+              <NavIcon name="link" :size="9" />
+            </span>
+            <span class="font-bold text-teal-800 tabular-nums">
+              {{ mergeTarget.row.start_time }}–{{ mergeTarget.next.end_time }}
+            </span>
+          </div>
+        </div>
+        <p class="text-2xs text-slate-600 leading-relaxed">
+          {{ $t('admin.schedule.block.mergeRowBody', {
+            start: mergeTarget.row.start_time,
+            end: mergeTarget.next.end_time,
+          }) }}
+        </p>
+      </div>
+      <template #footer>
+        <Button variant="secondary" @click="mergeTarget = null">
+          {{ $t('common.cancel') }}
+        </Button>
+        <Button variant="primary" :disabled="isBlockBusy" @click="confirmMerge">
+          <NavIcon name="link-down" :size="13" />
+          {{ $t('admin.schedule.block.mergeConfirm') }}
+        </Button>
+      </template>
+    </Modal>
+
+    <!-- Pisahkan blok confirmation — the mirror of the merge dialog. -->
+    <Modal
+      v-if="splitTarget"
+      :title="$t('admin.schedule.block.splitConfirmTitle')"
+      size="sm"
+      @close="splitTarget = null"
+    >
+      <p class="text-2xs text-slate-600 leading-relaxed">
+        {{ $t('admin.schedule.block.splitConfirmBody') }}
+      </p>
+      <template #footer>
+        <Button variant="secondary" @click="splitTarget = null">
+          {{ $t('common.cancel') }}
+        </Button>
+        <Button variant="danger" :disabled="isBlockBusy" @click="confirmSplit">
+          <NavIcon name="unlink" :size="13" />
+          {{ $t('admin.schedule.block.splitConfirm') }}
+        </Button>
+      </template>
+    </Modal>
 
     <SingleRescheduleModal
       v-if="rescheduleRow"

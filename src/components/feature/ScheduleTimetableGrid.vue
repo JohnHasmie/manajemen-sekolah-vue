@@ -82,6 +82,9 @@ const emit = defineEmits<{
   /** Empty-cell click — the parent opens ScheduleFormModal in create
    *  mode with these fields pre-filled + skipSetupCheck=true. */
   create: [payload: TimetableCreatePayload];
+  /** Hover "Gabung ke JPn" pill — the parent confirms, then calls the
+   *  merge endpoint and refetches the matrix. */
+  mergeNext: [payload: { schedule_id: string; from_hour: number; to_hour: number }];
 }>();
 
 const { t } = useI18n();
@@ -264,6 +267,80 @@ function groupCellAt(hourNumber: number) {
 function isGroupMember(dayId: string, hourNumber: number): boolean {
   const c = cellAt(dayId, hourNumber);
   return !!c?.schedule_group_id;
+}
+
+// ── Multi-hour blocks ("blok jam") ─────────────────────────────────
+// A block is rendered as ONE cell with `rowspan = block_span` on its
+// anchor hour; the hours the span covers must emit NO <td> at all or
+// the grid shifts right by one column per swallowed cell.
+
+/** Rowspan for this cell — 1 for a plain slot, block_span for an anchor. */
+function rowspanFor(dayId: string, hourNumber: number): number {
+  const c = cellAt(dayId, hourNumber);
+  if (!c?.is_block || !c.is_block_anchor) return 1;
+  return Math.max(1, c.block_span ?? 1);
+}
+
+/**
+ * True when this (day, hour) is covered by a block anchored at an
+ * EARLIER hour — the template must skip the <td> entirely.
+ *
+ * Walks back through the visible hour list rather than trusting
+ * hour_number arithmetic, because hour numbers can be sparse (a school
+ * may define JP1, JP2, JP4 with no JP3).
+ */
+function isCoveredByBlockAbove(dayId: string, hourNumber: number): boolean {
+  const cell = cellAt(dayId, hourNumber);
+  // Only a non-anchor member of a block can be covered.
+  if (!cell?.is_block || cell.is_block_anchor) return false;
+
+  const idx = hourRows.value.findIndex((h) => h.hour_number === hourNumber);
+  if (idx <= 0) return false;
+
+  for (let i = idx - 1; i >= 0; i--) {
+    const above = cellAt(dayId, hourRows.value[i].hour_number);
+    if (above?.block_group_id !== cell.block_group_id) break;
+    if (above?.is_block_anchor) return true;
+  }
+  return false;
+}
+
+/**
+ * The next hour's cell, when merging THIS cell into it is possible:
+ * same block-less state, same subject + teacher. Drives the hover
+ * "Gabung ke JPn" pill — we only offer the action where the backend
+ * would actually accept it, so the admin never hits a 422 they could
+ * have been spared.
+ */
+function mergeCandidateFor(
+  dayId: string,
+  hourNumber: number,
+): { nextHourNumber: number } | null {
+  const cell = cellAt(dayId, hourNumber);
+  if (!cell || cell.is_block) return null;
+
+  const idx = hourRows.value.findIndex((h) => h.hour_number === hourNumber);
+  if (idx === -1 || idx + 1 >= hourRows.value.length) return null;
+
+  const nextHourNumber = hourRows.value[idx + 1].hour_number;
+  const next = cellAt(dayId, nextHourNumber);
+  if (!next || next.is_block) return null;
+  if (next.subject?.id !== cell.subject?.id) return null;
+  if (next.teacher?.id !== cell.teacher?.id) return null;
+
+  return { nextHourNumber };
+}
+
+/** Emit the merge request for the cell at (day, hour). */
+function onMergeClick(dayId: string, hourNumber: number) {
+  const cell = cellAt(dayId, hourNumber);
+  const candidate = mergeCandidateFor(dayId, hourNumber);
+  if (!cell || !candidate) return;
+  emit('mergeNext', {
+    schedule_id: cell.schedule_id,
+    from_hour: hourNumber,
+    to_hour: candidate.nextHourNumber,
+  });
 }
 
 
@@ -574,8 +651,10 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                 <th
                   class="text-4xs font-black text-violet-700 uppercase tracking-widest px-2 py-3 min-w-[180px] bg-violet-50 border-l-2 border-violet-200"
                 >
-                  <span class="mr-1">⚭</span>
-                  {{ t('admin.schedule.combined.gridColumnHeader') }}
+                  <span class="inline-flex items-center gap-1 justify-center">
+                    <NavIcon name="git-merge" :size="10" />
+                    {{ t('admin.schedule.combined.gridColumnHeader') }}
+                  </span>
                 </th>
               </tr>
             </thead>
@@ -598,9 +677,16 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                     {{ row.end_time }}
                   </p>
                 </td>
+                <!-- `<template v-for>` + `v-if` on the <td>: Vue 3 gives
+                     v-if higher priority than v-for, so the two can't sit on
+                     the same element (the `d` binding wouldn't exist yet).
+                     The v-if drops the <td> entirely for hours swallowed by
+                     a block anchored above — emitting an empty cell there
+                     would shift every later column one place right. -->
+                <template v-for="d in days" :key="`${d.id}-${row.hour_number}`">
                 <td
-                  v-for="d in days"
-                  :key="`${d.id}-${row.hour_number}`"
+                  v-if="!isCoveredByBlockAbove(d.id, row.hour_number)"
+                  :rowspan="rowspanFor(d.id, row.hour_number)"
                   class="p-1 align-top relative group"
                 >
                   <!-- Class-column plain cell — only rendered when the
@@ -608,9 +694,18 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                        cells route their render into the ⚭ column so we
                        show a "lihat kolom gabung" placeholder here. -->
                   <template v-if="cellAt(d.id, row.hour_number) && !isGroupMember(d.id, row.hour_number)">
+                    <!-- Blocked cells take the teal treatment + `h-full` so
+                         the rowspan'd <td> renders as ONE tall card across
+                         its hours rather than a short card floating in a
+                         tall cell. -->
                     <button
                       type="button"
-                      class="w-full text-left rounded-lg p-2 bg-role-admin/5 border border-role-admin/20 hover:bg-role-admin/10 transition-all"
+                      class="w-full text-left rounded-lg p-2 transition-all"
+                      :class="
+                        cellAt(d.id, row.hour_number)!.is_block
+                          ? 'h-full bg-teal-50 border border-teal-200 hover:bg-teal-100'
+                          : 'bg-role-admin/5 border border-role-admin/20 hover:bg-role-admin/10'
+                      "
                       :aria-label="
                         t('admin.schedule.timetable.editCellAria', {
                           subject: cellAt(d.id, row.hour_number)!.subject.name,
@@ -623,7 +718,10 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       <!-- Mapel is the headline: bold + role-admin so it
                            reads as the cell's subject, with the teacher a
                            quiet muted line under it. -->
-                      <p class="text-3xs font-bold text-role-admin truncate pr-4">
+                      <p
+                        class="text-3xs font-bold truncate pr-4"
+                        :class="cellAt(d.id, row.hour_number)!.is_block ? 'text-teal-800' : 'text-role-admin'"
+                      >
                         <span v-if="cellAt(d.id, row.hour_number)!.subject.code">
                           [{{ cellAt(d.id, row.hour_number)!.subject.code }}]
                         </span>
@@ -631,8 +729,19 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                           {{ cellAt(d.id, row.hour_number)!.subject.name }}
                         </span>
                       </p>
-                      <p class="text-4xs text-slate-500 truncate">
+                      <p
+                        class="text-4xs truncate"
+                        :class="cellAt(d.id, row.hour_number)!.is_block ? 'text-teal-700' : 'text-slate-500'"
+                      >
                         {{ cellAt(d.id, row.hour_number)!.teacher.name }}
+                      </p>
+                      <!-- A block's own line reports the OUTER clock span,
+                           which is the fact the merge exists to surface. -->
+                      <p
+                        v-if="cellAt(d.id, row.hour_number)!.is_block"
+                        class="text-4xs text-teal-600/80 truncate tabular-nums mt-0.5"
+                      >
+                        {{ cellAt(d.id, row.hour_number)!.block_start_time }}–{{ cellAt(d.id, row.hour_number)!.block_end_time }}
                       </p>
                       <p
                         v-if="cellAt(d.id, row.hour_number)!.room"
@@ -641,6 +750,15 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                         {{ cellAt(d.id, row.hour_number)!.room }}
                       </p>
                     </button>
+                    <!-- Span badge — sits top-left so it never collides
+                         with the hover-kebab on the top-right. -->
+                    <span
+                      v-if="cellAt(d.id, row.hour_number)!.is_block"
+                      class="absolute top-1.5 left-1.5 inline-flex items-center gap-0.5 rounded bg-teal-600 text-white text-4xs font-black px-1.5 py-0.5 pointer-events-none"
+                    >
+                      <NavIcon name="link" :size="8" />
+                      {{ t('admin.schedule.block.spanBadge', { n: cellAt(d.id, row.hour_number)!.block_span ?? 0 }) }}
+                    </span>
                     <!-- Hover-kebab — an explicit "this slot has actions"
                          affordance. Opens the same detail modal the cell
                          click does (Edit · Pindah Slot · Ganti Guru ·
@@ -659,7 +777,7 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       "
                       @click.stop="onCellClick(d.id, row.hour_number)"
                     >
-                      <span class="text-[13px] font-black leading-none -mt-1.5">⋯</span>
+                      <NavIcon name="more-horizontal" :size="12" />
                     </button>
                   </template>
                   <!-- Group-member ghost placeholder — cell exists but
@@ -677,7 +795,7 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       "
                       @click="onCellClick(d.id, row.hour_number)"
                     >
-                      <span>↗</span>
+                      <NavIcon name="git-merge" :size="11" />
                       <span>{{ t('admin.schedule.combined.gridGhostLabel') }}</span>
                     </button>
                   </template>
@@ -700,7 +818,28 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       <span class="opacity-0 group-hover:opacity-100 transition-opacity">+</span>
                     </button>
                   </template>
+
+                  <!-- Merge affordance — only rendered where the backend
+                       would actually accept the merge (next hour holds the
+                       same subject + teacher and neither is already
+                       blocked), so the admin never hits an avoidable 422.
+                       Sits on the cell's bottom edge to read as "join the
+                       row below". -->
+                  <button
+                    v-if="mergeCandidateFor(d.id, row.hour_number)"
+                    type="button"
+                    class="absolute -bottom-2 left-1/2 -translate-x-1/2 z-20 hidden group-hover:inline-flex items-center gap-1 rounded-full bg-teal-600 text-white text-4xs font-bold px-2 py-0.5 border-2 border-white shadow-md hover:bg-teal-700 whitespace-nowrap"
+                    @click.stop="onMergeClick(d.id, row.hour_number)"
+                  >
+                    <NavIcon name="link-down" :size="9" />
+                    {{
+                      t('admin.schedule.block.cellMergeCta', {
+                        to: mergeCandidateFor(d.id, row.hour_number)!.nextHourNumber,
+                      })
+                    }}
+                  </button>
                 </td>
+                </template>
                 <!-- "⚭ GABUNG" virtual column cell. Renders the group
                      card (2px violet border, chip row for members) OR
                      an empty placeholder if this hour has no group. -->
@@ -718,7 +857,7 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                       @click="onGroupCardClick(row.hour_number)"
                     >
                       <p class="text-3xs font-bold text-slate-900 truncate flex items-center gap-1">
-                        <span class="text-violet-700">⚭</span>
+                        <NavIcon name="git-merge" :size="10" class="text-violet-700 flex-shrink-0" />
                         <span
                           v-if="groupCellAt(row.hour_number)!.subject.code"
                           class="text-violet-700"
@@ -760,11 +899,28 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
           </table>
         </div>
 
-        <!-- Slot counter. Right-aligned so it reads like a page footer,
-             not another content block. -->
-        <p class="text-3xs font-bold text-slate-500 text-right px-1">
-          {{ counterLabel }}
-        </p>
+        <!-- Footer: slot counter on the left, colour legend on the right.
+             The legend is what makes the teal/violet cell tinting legible
+             — without it the colours are decoration rather than meaning. -->
+        <div class="flex items-center gap-x-3 gap-y-1.5 flex-wrap px-1">
+          <p class="text-3xs font-bold text-slate-500">
+            {{ counterLabel }}
+          </p>
+          <div class="ml-auto flex items-center gap-x-3 gap-y-1 flex-wrap">
+            <span class="inline-flex items-center gap-1 text-4xs font-bold text-slate-500">
+              <i class="w-2.5 h-2.5 rounded-sm bg-role-admin/5 border border-role-admin/20" />
+              {{ t('admin.schedule.block.legendSingle') }}
+            </span>
+            <span class="inline-flex items-center gap-1 text-4xs font-bold text-teal-700">
+              <i class="w-2.5 h-2.5 rounded-sm bg-teal-50 border border-teal-200" />
+              {{ t('admin.schedule.block.legendBlock') }}
+            </span>
+            <span class="inline-flex items-center gap-1 text-4xs font-bold text-violet-700">
+              <i class="w-2.5 h-2.5 rounded-sm bg-violet-50 border border-violet-300" />
+              {{ t('admin.schedule.block.legendGroup') }}
+            </span>
+          </div>
+        </div>
       </template>
     </template>
   </section>
