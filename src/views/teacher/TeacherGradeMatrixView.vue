@@ -957,305 +957,303 @@ function typeLabel(type: AssessmentType): string {
          MATRIX MODE — editable students × assessments grid.
          List-mode template lives in the sibling TeacherGradeBookView.
          ════════════════════════════════════════════════════════ -->
-    <template>
-      <PageFilterToolbar
-        :search="matrixSearchQuery"
-        :search-placeholder="t('tutor.sekolah.gradebook.matrixSearchPlaceholder')"
-        @update:search="(v) => (matrixSearchQuery = v)"
-      >
-        <template #chips>
-          <span
-            class="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5"
-          >
-            <span
-              class="text-4xs font-bold uppercase tracking-widest text-slate-400"
-              >{{ t('tutor.sekolah.gradebook.matrixChipClass') }}</span
-            >
-            <span class="text-[12px] font-bold text-slate-900">{{
-              matrixClass?.name
-            }}</span>
-          </span>
-          <span
-            class="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5"
-          >
-            <span
-              class="text-4xs font-bold uppercase tracking-widest text-slate-400"
-              >{{ t('tutor.sekolah.gradebook.matrixChipSubject') }}</span
-            >
-            <span class="text-[12px] font-bold text-slate-900">{{
-              matrixSubject?.name
-            }}</span>
-          </span>
-        </template>
-      </PageFilterToolbar>
-
-      <section class="bg-white border border-slate-200 rounded-2xl p-3 space-y-2.5">
-        <div class="flex items-center gap-3 flex-wrap">
-          <span
-            class="text-2xs font-bold text-slate-500 uppercase tracking-widest"
-          >
-            {{ t('tutor.sekolah.gradebook.matrixTypeLabel') }}
-          </span>
-          <SegmentedControl
-            :model-value="typeFilter"
-            :options="typeOptions"
-            @update:model-value="(v) => (typeFilter = v as AssessmentType | 'all')"
-          />
-        </div>
-        <div
-          class="flex items-center gap-4 flex-wrap px-3 py-2 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-2xs text-slate-600"
+    <PageFilterToolbar
+      :search="matrixSearchQuery"
+      :search-placeholder="t('tutor.sekolah.gradebook.matrixSearchPlaceholder')"
+      @update:search="(v) => (matrixSearchQuery = v)"
+    >
+      <template #chips>
+        <span
+          class="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5"
         >
-          <span class="inline-flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-700"></span>
-            <b class="text-slate-900 font-bold">{{ matrixSummary.tuntas }}</b>
-            {{ t('tutor.sekolah.gradebook.kkmTuntas') }}
-          </span>
-          <span class="inline-flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-red-700"></span>
-            <b class="text-slate-900 font-bold">{{ matrixSummary.remed }}</b>
-            {{ t('tutor.sekolah.gradebook.kkmRemed') }}
-          </span>
-          <span class="inline-flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-slate-300"></span>
-            <b class="text-slate-900 font-bold">{{ matrixSummary.belum }}</b>
-            {{ t('tutor.sekolah.gradebook.kkmBelum') }}
-          </span>
-          <span class="flex-1"></span>
-          <span class="text-slate-500">
-            {{ t('tutor.sekolah.gradebook.kkmClassAvg') }}
-            <b class="text-slate-900 font-bold">{{ matrixSummary.avg || '—' }}</b>
-            · {{ t('tutor.sekolah.gradebook.kkmLabel', { kkm: matrix.kkm }) }}
-          </span>
-        </div>
-        <p
-          class="hidden md:flex items-center gap-3 flex-wrap text-[10.5px] text-slate-500 px-1"
-        >
-          <span class="font-bold text-slate-400 uppercase tracking-widest">
-            {{ t('tutor.sekolah.gradebook.shortcutsLabel') }}
-          </span>
-          <span class="inline-flex items-center gap-1">
-            <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">Tab</kbd>
-            /
-            <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">↵</kbd>
-            {{ t('tutor.sekolah.gradebook.shortcutsMoveCell') }}
-          </span>
-          <span class="inline-flex items-center gap-1">
-            <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">↑</kbd>
-            <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">↓</kbd>
-            {{ t('tutor.sekolah.gradebook.shortcutsMoveRow') }}
-          </span>
-          <span class="inline-flex items-center gap-1">
-            <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">{{ t('tutor.sekolah.gradebook.shortcutsCtrl') }}</kbd>
-            +
-            <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">S</kbd>
-            {{ t('tutor.sekolah.gradebook.shortcutsSave') }}
-            <em class="text-slate-400">
-              {{ t('tutor.sekolah.gradebook.shortcutsAutosave') }}
-            </em>
-          </span>
-        </p>
-      </section>
-
-      <AsyncView
-        :state="matrixState"
-        :empty-title="t('tutor.sekolah.gradebook.matrixEmptyTitle')"
-        :empty-description="t('tutor.sekolah.gradebook.matrixEmptyDesc')"
-        @retry="loadMatrix"
-      >
-        <template #default>
-          <section
-            class="bg-white border border-slate-200 rounded-2xl overflow-x-auto"
+          <span
+            class="text-4xs font-bold uppercase tracking-widest text-slate-400"
+            >{{ t('tutor.sekolah.gradebook.matrixChipClass') }}</span
           >
-            <table class="w-full text-[12px] border-collapse">
-              <thead>
-                <tr
-                  class="bg-slate-50 text-slate-500 text-3xs uppercase tracking-widest"
+          <span class="text-[12px] font-bold text-slate-900">{{
+            matrixClass?.name
+          }}</span>
+        </span>
+        <span
+          class="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5"
+        >
+          <span
+            class="text-4xs font-bold uppercase tracking-widest text-slate-400"
+            >{{ t('tutor.sekolah.gradebook.matrixChipSubject') }}</span
+          >
+          <span class="text-[12px] font-bold text-slate-900">{{
+            matrixSubject?.name
+          }}</span>
+        </span>
+      </template>
+    </PageFilterToolbar>
+
+    <section class="bg-white border border-slate-200 rounded-2xl p-3 space-y-2.5">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span
+          class="text-2xs font-bold text-slate-500 uppercase tracking-widest"
+        >
+          {{ t('tutor.sekolah.gradebook.matrixTypeLabel') }}
+        </span>
+        <SegmentedControl
+          :model-value="typeFilter"
+          :options="typeOptions"
+          @update:model-value="(v) => (typeFilter = v as AssessmentType | 'all')"
+        />
+      </div>
+      <div
+        class="flex items-center gap-4 flex-wrap px-3 py-2 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-2xs text-slate-600"
+      >
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-700"></span>
+          <b class="text-slate-900 font-bold">{{ matrixSummary.tuntas }}</b>
+          {{ t('tutor.sekolah.gradebook.kkmTuntas') }}
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-red-700"></span>
+          <b class="text-slate-900 font-bold">{{ matrixSummary.remed }}</b>
+          {{ t('tutor.sekolah.gradebook.kkmRemed') }}
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+          <b class="text-slate-900 font-bold">{{ matrixSummary.belum }}</b>
+          {{ t('tutor.sekolah.gradebook.kkmBelum') }}
+        </span>
+        <span class="flex-1"></span>
+        <span class="text-slate-500">
+          {{ t('tutor.sekolah.gradebook.kkmClassAvg') }}
+          <b class="text-slate-900 font-bold">{{ matrixSummary.avg || '—' }}</b>
+          · {{ t('tutor.sekolah.gradebook.kkmLabel', { kkm: matrix.kkm }) }}
+        </span>
+      </div>
+      <p
+        class="hidden md:flex items-center gap-3 flex-wrap text-[10.5px] text-slate-500 px-1"
+      >
+        <span class="font-bold text-slate-400 uppercase tracking-widest">
+          {{ t('tutor.sekolah.gradebook.shortcutsLabel') }}
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">Tab</kbd>
+          /
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">↵</kbd>
+          {{ t('tutor.sekolah.gradebook.shortcutsMoveCell') }}
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">↑</kbd>
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">↓</kbd>
+          {{ t('tutor.sekolah.gradebook.shortcutsMoveRow') }}
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">{{ t('tutor.sekolah.gradebook.shortcutsCtrl') }}</kbd>
+          +
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">S</kbd>
+          {{ t('tutor.sekolah.gradebook.shortcutsSave') }}
+          <em class="text-slate-400">
+            {{ t('tutor.sekolah.gradebook.shortcutsAutosave') }}
+          </em>
+        </span>
+      </p>
+    </section>
+
+    <AsyncView
+      :state="matrixState"
+      :empty-title="t('tutor.sekolah.gradebook.matrixEmptyTitle')"
+      :empty-description="t('tutor.sekolah.gradebook.matrixEmptyDesc')"
+      @retry="loadMatrix"
+    >
+      <template #default>
+        <section
+          class="bg-white border border-slate-200 rounded-2xl overflow-x-auto"
+        >
+          <table class="w-full text-[12px] border-collapse">
+            <thead>
+              <tr
+                class="bg-slate-50 text-slate-500 text-3xs uppercase tracking-widest"
+              >
+                <th
+                  class="text-left font-bold px-4 py-2.5 sticky left-0 bg-slate-50 z-10"
                 >
-                  <th
-                    class="text-left font-bold px-4 py-2.5 sticky left-0 bg-slate-50 z-10"
-                  >
-                    {{ t('tutor.sekolah.gradebook.matrixColStudent') }}
-                  </th>
-                  <th
-                    v-for="a in visibleAssessments"
-                    :key="a.id"
-                    class="font-bold px-3 py-2.5 text-center min-w-[80px]"
-                  >
-                    <button
-                      type="button"
-                      class="w-full inline-flex flex-col items-center gap-0.5 px-2 py-1 rounded-md hover:bg-brand-cobalt/10 transition-colors text-slate-500 hover:text-brand-cobalt"
-                      :title="t('tutor.sekolah.gradebook.matrixColActionTitle', { name: assessmentDisplayNames[a.id] || a.name })"
-                      @click="openColumnActions(a)"
-                    >
-                      <span>{{ assessmentDisplayNames[a.id] || a.name }}</span>
-                      <span class="text-4xs font-medium text-slate-400">
-                        {{ typeLabel(a.type) }}
-                      </span>
-                    </button>
-                  </th>
-                  <th class="font-bold px-3 py-2.5 text-center min-w-[64px]">
-                    {{ t('tutor.sekolah.gradebook.matrixColAverage') }}
-                  </th>
-                  <th class="font-bold px-3 py-2.5 text-center min-w-[100px]">
-                    {{ t('tutor.sekolah.gradebook.matrixColStatus') }}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="(row, idx) in filteredMatrixRows"
-                  :key="row.student_id"
-                  :class="{ 'border-t border-slate-100': idx > 0 }"
+                  {{ t('tutor.sekolah.gradebook.matrixColStudent') }}
+                </th>
+                <th
+                  v-for="a in visibleAssessments"
+                  :key="a.id"
+                  class="font-bold px-3 py-2.5 text-center min-w-[80px]"
                 >
-                  <td class="px-4 py-2.5 sticky left-0 bg-white z-10">
-                    <div class="flex items-center gap-2.5">
-                      <InitialsAvatar
-                        :name="row.student_name"
-                        :size="28"
-                        :border-radius="7"
-                        :color="
-                          row.alert_tone === 'danger' ? '#B91C1C' : '#1B6FB8'
-                        "
-                      />
-                      <div>
-                        <p class="font-bold text-slate-900 text-[12px]">
-                          {{ row.student_name }}
-                        </p>
-                        <p class="text-3xs text-slate-400">
-                          {{ t('tutor.sekolah.gradebook.matrixStudentNumber', { number: row.student_number }) }}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td
-                    v-for="a in visibleAssessments"
-                    :key="a.id"
-                    class="px-3 py-2.5 text-center"
-                    :class="{
-                      'bg-red-50':
-                        row.cells[a.id]?.score !== null &&
-                        (row.cells[a.id]?.score as number) < matrix.kkm,
-                    }"
+                  <button
+                    type="button"
+                    class="w-full inline-flex flex-col items-center gap-0.5 px-2 py-1 rounded-md hover:bg-brand-cobalt/10 transition-colors text-slate-500 hover:text-brand-cobalt"
+                    :title="t('tutor.sekolah.gradebook.matrixColActionTitle', { name: assessmentDisplayNames[a.id] || a.name })"
+                    @click="openColumnActions(a)"
                   >
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      :value="row.cells[a.id]?.score ?? ''"
-                      :data-grade-cell="`${row.student_id}__${a.id}`"
-                      class="w-14 px-1.5 py-1 text-[12px] font-bold text-center rounded-md border border-slate-200 focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white"
-                      :class="{
-                        'border-red-200 text-red-700 bg-red-50/60':
-                          row.cells[a.id]?.score !== null &&
-                          (row.cells[a.id]?.score as number) < matrix.kkm,
-                        'ring-2 ring-amber-300/40': row.cells[a.id]?.dirty,
-                      }"
-                      @input="
-                        (e) =>
-                          updateCell(
-                            row.student_id,
-                            a.id,
-                            (e.target as HTMLInputElement).value,
-                          )
-                      "
-                      @keydown="
-                        (e) => onCellKeydown(e, row.student_id, a.id)
+                    <span>{{ assessmentDisplayNames[a.id] || a.name }}</span>
+                    <span class="text-4xs font-medium text-slate-400">
+                      {{ typeLabel(a.type) }}
+                    </span>
+                  </button>
+                </th>
+                <th class="font-bold px-3 py-2.5 text-center min-w-[64px]">
+                  {{ t('tutor.sekolah.gradebook.matrixColAverage') }}
+                </th>
+                <th class="font-bold px-3 py-2.5 text-center min-w-[100px]">
+                  {{ t('tutor.sekolah.gradebook.matrixColStatus') }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(row, idx) in filteredMatrixRows"
+                :key="row.student_id"
+                :class="{ 'border-t border-slate-100': idx > 0 }"
+              >
+                <td class="px-4 py-2.5 sticky left-0 bg-white z-10">
+                  <div class="flex items-center gap-2.5">
+                    <InitialsAvatar
+                      :name="row.student_name"
+                      :size="28"
+                      :border-radius="7"
+                      :color="
+                        row.alert_tone === 'danger' ? '#B91C1C' : '#1B6FB8'
                       "
                     />
-                  </td>
-                  <td
-                    class="px-3 py-2.5 text-center font-bold text-slate-900"
+                    <div>
+                      <p class="font-bold text-slate-900 text-[12px]">
+                        {{ row.student_name }}
+                      </p>
+                      <p class="text-3xs text-slate-400">
+                        {{ t('tutor.sekolah.gradebook.matrixStudentNumber', { number: row.student_number }) }}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td
+                  v-for="a in visibleAssessments"
+                  :key="a.id"
+                  class="px-3 py-2.5 text-center"
+                  :class="{
+                    'bg-red-50':
+                      row.cells[a.id]?.score !== null &&
+                      (row.cells[a.id]?.score as number) < matrix.kkm,
+                  }"
+                >
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    :value="row.cells[a.id]?.score ?? ''"
+                    :data-grade-cell="`${row.student_id}__${a.id}`"
+                    class="w-14 px-1.5 py-1 text-[12px] font-bold text-center rounded-md border border-slate-200 focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white"
                     :class="{
-                      'bg-red-50 text-red-700':
-                        rowAverage(row.student_id) !== null &&
-                        (rowAverage(row.student_id) as number) < matrix.kkm,
+                      'border-red-200 text-red-700 bg-red-50/60':
+                        row.cells[a.id]?.score !== null &&
+                        (row.cells[a.id]?.score as number) < matrix.kkm,
+                      'ring-2 ring-amber-300/40': row.cells[a.id]?.dirty,
                     }"
+                    @input="
+                      (e) =>
+                        updateCell(
+                          row.student_id,
+                          a.id,
+                          (e.target as HTMLInputElement).value,
+                        )
+                    "
+                    @keydown="
+                      (e) => onCellKeydown(e, row.student_id, a.id)
+                    "
+                  />
+                </td>
+                <td
+                  class="px-3 py-2.5 text-center font-bold text-slate-900"
+                  :class="{
+                    'bg-red-50 text-red-700':
+                      rowAverage(row.student_id) !== null &&
+                      (rowAverage(row.student_id) as number) < matrix.kkm,
+                  }"
+                >
+                  {{ rowAverage(row.student_id) ?? '—' }}
+                </td>
+                <td class="px-3 py-2.5 text-center">
+                  <span
+                    v-if="rowAverage(row.student_id) === null"
+                    class="inline-flex items-center gap-1.5 text-3xs font-bold text-slate-500"
                   >
-                    {{ rowAverage(row.student_id) ?? '—' }}
-                  </td>
-                  <td class="px-3 py-2.5 text-center">
-                    <span
-                      v-if="rowAverage(row.student_id) === null"
-                      class="inline-flex items-center gap-1.5 text-3xs font-bold text-slate-500"
-                    >
-                      <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                      {{ t('tutor.sekolah.gradebook.matrixStatusBelum') }}
-                    </span>
-                    <span
-                      v-else-if="(rowAverage(row.student_id) as number) >= matrix.kkm"
-                      class="inline-flex items-center gap-1.5 text-3xs font-bold text-emerald-700"
-                    >
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-700"></span>
-                      {{ t('tutor.sekolah.gradebook.matrixStatusTuntas') }}
-                    </span>
-                    <span
-                      v-else
-                      class="inline-flex items-center gap-1.5 text-3xs font-bold text-red-700"
-                    >
-                      <span class="w-1.5 h-1.5 rounded-full bg-red-700"></span>
-                      {{ t('tutor.sekolah.gradebook.matrixStatusRemedial') }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
-        </template>
-      </AsyncView>
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                    {{ t('tutor.sekolah.gradebook.matrixStatusBelum') }}
+                  </span>
+                  <span
+                    v-else-if="(rowAverage(row.student_id) as number) >= matrix.kkm"
+                    class="inline-flex items-center gap-1.5 text-3xs font-bold text-emerald-700"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-700"></span>
+                    {{ t('tutor.sekolah.gradebook.matrixStatusTuntas') }}
+                  </span>
+                  <span
+                    v-else
+                    class="inline-flex items-center gap-1.5 text-3xs font-bold text-red-700"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-700"></span>
+                    {{ t('tutor.sekolah.gradebook.matrixStatusRemedial') }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </template>
+    </AsyncView>
 
-      <!-- Sticky save bar -->
-      <section
-        v-if="matrix.rows.length > 0"
-        class="sticky bottom-4 flex items-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-lg z-20"
-      >
-        <div class="text-2xs text-slate-600">
-          <span
-            v-if="dirtyCount === 0 && !isSaving"
-            class="text-emerald-700 font-bold inline-flex items-center gap-1"
-          >
-            <NavIcon name="check-circle" :size="12" />
-            {{ t('tutor.sekolah.gradebook.saveSaved') }}
-          </span>
-          <span v-else-if="isSaving" class="text-brand-cobalt font-bold">
-            {{ t('tutor.sekolah.gradebook.saveSaving') }}
-          </span>
-          <span v-else class="text-amber-700 font-bold">
-            {{ t('tutor.sekolah.gradebook.saveDirty', { count: dirtyCount }) }}
-          </span>
-          <span v-if="matrixSummary.remed > 0" class="ml-2 text-slate-400">
-            ·
-            <span class="text-red-700 font-bold">{{ matrixSummary.remed }}</span>
-            {{ t('tutor.sekolah.gradebook.saveRemedNote') }}
-          </span>
-        </div>
-        <span class="flex-1"></span>
-        <Button variant="secondary" size="sm" @click="loadMatrix">
-          {{ t('tutor.sekolah.gradebook.saveReload') }}
-        </Button>
-        <Button
-          variant="primary"
-          size="sm"
-          :loading="isSaving"
-          :disabled="dirtyCount === 0"
-          @click="save()"
+    <!-- Sticky save bar -->
+    <section
+      v-if="matrix.rows.length > 0"
+      class="sticky bottom-4 flex items-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-lg z-20"
+    >
+      <div class="text-2xs text-slate-600">
+        <span
+          v-if="dirtyCount === 0 && !isSaving"
+          class="text-emerald-700 font-bold inline-flex items-center gap-1"
         >
-          {{ t('tutor.sekolah.gradebook.saveButton') }}
-        </Button>
-      </section>
-
-      <!-- ── FAB: Tambah Asesmen (Flutter parity) ─────────────── -->
-      <!-- Hidden when matrix has no students — adding a column
-           when there's no roster has no save target. -->
-      <button
-        v-if="matrix.rows.length > 0"
-        type="button"
-        class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
-        @click="openAddAsesmen"
+          <NavIcon name="check-circle" :size="12" />
+          {{ t('tutor.sekolah.gradebook.saveSaved') }}
+        </span>
+        <span v-else-if="isSaving" class="text-brand-cobalt font-bold">
+          {{ t('tutor.sekolah.gradebook.saveSaving') }}
+        </span>
+        <span v-else class="text-amber-700 font-bold">
+          {{ t('tutor.sekolah.gradebook.saveDirty', { count: dirtyCount }) }}
+        </span>
+        <span v-if="matrixSummary.remed > 0" class="ml-2 text-slate-400">
+          ·
+          <span class="text-red-700 font-bold">{{ matrixSummary.remed }}</span>
+          {{ t('tutor.sekolah.gradebook.saveRemedNote') }}
+        </span>
+      </div>
+      <span class="flex-1"></span>
+      <Button variant="secondary" size="sm" @click="loadMatrix">
+        {{ t('tutor.sekolah.gradebook.saveReload') }}
+      </Button>
+      <Button
+        variant="primary"
+        size="sm"
+        :loading="isSaving"
+        :disabled="dirtyCount === 0"
+        @click="save()"
       >
-        <NavIcon name="plus" :size="16" />
-        {{ t('tutor.sekolah.gradebook.fabAdd') }}
-      </button>
-    </template>
+        {{ t('tutor.sekolah.gradebook.saveButton') }}
+      </Button>
+    </section>
+
+    <!-- ── FAB: Tambah Asesmen (Flutter parity) ─────────────── -->
+    <!-- Hidden when matrix has no students — adding a column
+         when there's no roster has no save target. -->
+    <button
+      v-if="matrix.rows.length > 0"
+      type="button"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
+      @click="openAddAsesmen"
+    >
+      <NavIcon name="plus" :size="16" />
+      {{ t('tutor.sekolah.gradebook.fabAdd') }}
+    </button>
 
     <!-- ── Column actions sheet (Flutter parity) ────────────── -->
     <Modal
