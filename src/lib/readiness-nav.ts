@@ -63,6 +63,51 @@ export const READINESS_ROUTE_MAP: Record<string, ReadinessRouteTarget> = {
     labelKey: 'nav.schedule',
     icon: 'calendar',
   },
+
+  // ── Lane B (Perlu Perhatian) — operational targets ────────────────
+  //
+  // These were emitted by the backend from the start but never mapped
+  // here, so every operational row rendered as a dead card: the backend
+  // deliberately tolerates unknown hints by dropping the onTap, which
+  // meant the omission failed silently instead of erroring.
+  admin_announcement_drafts: {
+    name: 'admin.announcements',
+    path: '/admin/announcements',
+    labelKey: 'nav.announcements',
+    icon: 'megaphone',
+  },
+  admin_overdue_bills: {
+    name: 'admin.finance.bills',
+    path: '/admin/finance/bills',
+    labelKey: 'nav.finance',
+    icon: 'wallet',
+  },
+  admin_payment_verification: {
+    name: 'admin.finance.payments',
+    path: '/admin/finance/payments',
+    labelKey: 'nav.finance',
+    icon: 'credit-card',
+  },
+  admin_report_card_hub: {
+    name: 'admin.report-cards',
+    path: '/admin/report-cards',
+    labelKey: 'nav.reportCards',
+    icon: 'file-text',
+  },
+  admin_rpp_review: {
+    name: 'admin.lesson-plans',
+    path: '/admin/lesson-plans',
+    labelKey: 'nav.lessonPlans',
+    icon: 'clipboard-list',
+  },
+  // Conflicts live on the schedule hub itself — there is no separate
+  // conflicts screen, and the hub surfaces them inline with a red badge.
+  admin_schedule_conflicts: {
+    name: 'admin.schedule',
+    path: '/admin/schedule',
+    labelKey: 'nav.schedule',
+    icon: 'alert-triangle',
+  },
   admin_academic_year: {
     name: 'admin.settings.manage-academic-years',
     path: '/admin/settings/academic-years',
