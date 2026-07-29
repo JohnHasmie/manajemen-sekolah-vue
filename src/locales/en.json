@@ -1405,6 +1405,7 @@
       "typeExam": "Exam",
       "typeNote": "Note",
       "periodLabel": "PERIOD",
+      "typeLabel": "Type",
       "periodToday": "Today",
       "period7d": "7 Days",
       "period30d": "30 Days",

@@ -986,21 +986,29 @@ function typeLabel(type: AssessmentType): string {
           }}</span>
         </span>
       </template>
+
+      <!-- The type filter belongs with the class/subject chips, not in
+           the summary card below — it filters the SAME table those chips
+           scope. It sat in that card only because the card was built
+           first. Moving it here also lets the card be purely a readout
+           (KKM tallies + shortcuts) instead of mixing a control in. -->
+      <template #segmented>
+        <div class="flex items-center gap-2">
+          <span
+            class="text-3xs font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap"
+          >
+            {{ t('tutor.sekolah.gradebook.matrixTypeLabel') }}
+          </span>
+          <SegmentedControl
+            :model-value="typeFilter"
+            :options="typeOptions"
+            @update:model-value="(v) => (typeFilter = v as AssessmentType | 'all')"
+          />
+        </div>
+      </template>
     </PageFilterToolbar>
 
     <section class="bg-white border border-slate-200 rounded-2xl p-3 space-y-2.5">
-      <div class="flex items-center gap-3 flex-wrap">
-        <span
-          class="text-2xs font-bold text-slate-500 uppercase tracking-widest"
-        >
-          {{ t('tutor.sekolah.gradebook.matrixTypeLabel') }}
-        </span>
-        <SegmentedControl
-          :model-value="typeFilter"
-          :options="typeOptions"
-          @update:model-value="(v) => (typeFilter = v as AssessmentType | 'all')"
-        />
-      </div>
       <div
         class="flex items-center gap-4 flex-wrap px-3 py-2 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-2xs text-slate-600"
       >

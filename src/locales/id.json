@@ -1405,6 +1405,7 @@
       "typeExam": "Ujian",
       "typeNote": "Catatan",
       "periodLabel": "PERIODE",
+      "typeLabel": "Jenis",
       "periodToday": "Hari Ini",
       "period7d": "7 Hari",
       "period30d": "30 Hari",
