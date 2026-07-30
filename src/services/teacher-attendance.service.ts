@@ -924,6 +924,12 @@ export const TeacherAttendanceService = {
           present_count: asInt(d.present_count, 0),
           late_count: asInt(d.late_count, 0),
           absent_count: asInt(d.absent_count, 0),
+          // Clocked in, never clocked out. This mapper builds the object
+          // the chart consumes, so a field missing HERE is invisible no
+          // matter what the server sends — backend !574 emitted this and
+          // the card still drew a dash because the value was dropped in
+          // transit. Defaults to 0 for pre-!574 servers.
+          no_checkout_count: asInt(d.no_checkout_count, 0),
           ontime_pct: asFloat(d.ontime_pct, 0),
           overtime_minutes: asInt(d.overtime_minutes, 0),
           // `present_pct` was added alongside the 7-day dashboard bars.
