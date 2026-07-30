@@ -635,6 +635,7 @@
         "todaySuffix": "hari ini",
         "weekend": "Akhir pekan",
         "holiday": "Libur",
+        "incompleteCheckout": "Ada yang belum absen pulang",
         "emptyEffective": "Minggu ini tidak ada hari efektif.",
         "chartAria": "Grafik kehadiran 7 hari"
       }

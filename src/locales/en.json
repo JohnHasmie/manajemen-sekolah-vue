@@ -635,6 +635,7 @@
         "todaySuffix": "today",
         "weekend": "Weekend",
         "holiday": "Holiday",
+        "incompleteCheckout": "Some check-outs missing",
         "emptyEffective": "No effective days this week.",
         "chartAria": "7-day attendance chart"
       }

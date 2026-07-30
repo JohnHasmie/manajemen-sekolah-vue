@@ -696,6 +696,14 @@ export interface TeacherAttendanceTimeseriesDay {
   late_count: number;
   /** Rows with no check-in that day (workday only; server excludes staff on non-workdays). */
   absent_count: number;
+  /**
+   * Clocked in but never clocked out — CloseUncheckedOutDaysJob rewrites
+   * the status at 00:30. These people WERE at work: they count toward
+   * `present_pct` but are excluded from `ontime_pct`, because the job
+   * overwrites the status wholesale so their arrival time is no longer
+   * knowable. Optional — pre-!574 servers omit it.
+   */
+  no_checkout_count?: number;
   /** round(present / (present + absent) * 100, 1); 0 when no rows. */
   ontime_pct: number;
   /** Sum of overtime minutes across the day. */

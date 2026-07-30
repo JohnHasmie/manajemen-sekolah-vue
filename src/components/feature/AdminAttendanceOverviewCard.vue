@@ -234,6 +234,12 @@ interface ChartDay {
   holiday_name: string | null;
   /** Whether the day carried any records at all (workday & rows > 0). */
   has_data: boolean;
+  /**
+   * Someone clocked in but never clocked out that day. Attendance still
+   * counts them, but the bar is hatched so an admin can tell the day's
+   * checkout data is incomplete rather than reading a clean 100%.
+   */
+  has_incomplete_checkout: boolean;
 }
 
 const activeDim = ref<Dim>('student');
@@ -307,6 +313,7 @@ function alignToWeek(rows: ChartDay[]): ChartDay[] {
       present_pct: 0,
       holiday_name: null,
       has_data: false,
+      has_incomplete_checkout: false,
     });
   }
   return out;
@@ -317,6 +324,8 @@ function studentToChart(d: StudentAttendanceTimeseriesDay): ChartDay {
     date: d.date,
     is_workday: d.is_workday,
     present_pct: Math.max(0, Math.min(100, Math.round(d.present_pct))),
+    // Students have no check-out flow, so this is never set for them.
+    has_incomplete_checkout: false,
     holiday_name: d.holiday_name ?? null,
     has_data: d.is_workday && d.total > 0,
   };
@@ -325,13 +334,24 @@ function studentToChart(d: StudentAttendanceTimeseriesDay): ChartDay {
 function personnelToChart(d: TeacherAttendanceTimeseriesDay): ChartDay {
   // The backend rounds to 1dp — we render integers on the bars.
   const pct = Math.max(0, Math.min(100, Math.round(d.present_pct ?? 0)));
+  const noCheckout = d.no_checkout_count ?? 0;
   return {
     date: d.date,
     is_workday: d.is_workday,
     present_pct: pct,
     holiday_name: null,
+    // Every status that means "a record exists" counts, not just
+    // present/absent. A day of nothing but `late` arrivals, or one where
+    // everyone forgot to clock out, used to fall through both checks and
+    // render as a dash — the day looked unrecorded while people were
+    // actually at work, and the weekly average skipped it.
     has_data:
-      d.is_workday && (d.present_count > 0 || d.absent_count > 0),
+      d.is_workday &&
+      (d.present_count > 0 ||
+        d.absent_count > 0 ||
+        d.late_count > 0 ||
+        noCheckout > 0),
+    has_incomplete_checkout: d.is_workday && noCheckout > 0,
   };
 }
 
@@ -564,6 +584,11 @@ function holidayLabelFor(day: ChartDay): string {
   if (dow === 0 || dow === 6) return t('admin.attendance.weekly.weekend');
   return t('admin.attendance.weekly.holiday');
 }
+
+/** Drives the hatch legend — hidden on weeks with clean checkouts. */
+const hasIncompleteCheckoutDay = computed(() =>
+  (activeDays.value ?? []).some((d) => d.has_incomplete_checkout),
+);
 
 /** Off-day pills row — only lists days that are actually non-workday. */
 const holidayPills = computed(() => {
@@ -825,6 +850,23 @@ const holidayPills = computed(() => {
           role="img"
           :aria-label="t('admin.attendance.weekly.chartAria')"
         >
+          <defs>
+            <!-- Diagonal hatch laid over a day whose checkouts are
+                 incomplete. patternTransform rotates the stripes so they
+                 stay visible under `preserveAspectRatio="none"`, which
+                 stretches the viewBox horizontally. -->
+            <pattern
+              id="incompleteCheckoutHatch"
+              width="6"
+              height="6"
+              patternUnits="userSpaceOnUse"
+              patternTransform="rotate(45)"
+            >
+              <rect width="6" height="6" fill="transparent" />
+              <line x1="0" y1="0" x2="0" y2="6" stroke="#FFFFFF" stroke-width="2.5" opacity="0.55" />
+            </pattern>
+          </defs>
+
           <!-- Gridlines @ 50 / 75 / 100 -->
           <line :x1="CHART_LEFT_PAD" :x2="CHART_W - CHART_RIGHT_PAD" :y1="yForPct(100)" :y2="yForPct(100)"
                 stroke="#E2E8F0" stroke-width="1" stroke-dasharray="2 3"/>
@@ -875,6 +917,23 @@ const holidayPills = computed(() => {
               :fill="activeBarFill"
               opacity="0.86"
             />
+            <!-- Incomplete checkout overlay — these people WERE at work,
+                 so the bar keeps its full height and the day keeps its
+                 percentage; the hatch just says "someone never clocked
+                 out". Without it the day reads as a clean 100% and the
+                 missing checkouts are invisible. -->
+            <rect
+              v-if="day.is_workday && day.has_data && day.has_incomplete_checkout"
+              :x="xForIndex(idx)"
+              :y="yForPct(day.present_pct)"
+              :width="BAR_WIDTH"
+              :height="heightForPct(day.present_pct)"
+              rx="6"
+              fill="url(#incompleteCheckoutHatch)"
+              :aria-label="t('admin.attendance.weekly.incompleteCheckout')"
+            >
+              <title>{{ t('admin.attendance.weekly.incompleteCheckout') }}</title>
+            </rect>
 
             <!-- Value label -->
             <text
@@ -936,6 +995,23 @@ const holidayPills = computed(() => {
             </template>
           </template>
         </svg>
+
+        <!-- Legend for the hatch — only when a day actually carries it,
+             so the row stays quiet on weeks with clean checkouts. -->
+        <div
+          v-if="!weekLoading && hasIncompleteCheckoutDay"
+          class="flex flex-wrap justify-end gap-1.5 mt-1"
+        >
+          <span
+            class="inline-flex items-center gap-1 bg-slate-100 text-slate-500 text-3xs font-bold px-2 py-0.5 rounded"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" class="flex-shrink-0">
+              <rect width="10" height="10" rx="2" :fill="activeBarFill" opacity="0.86" />
+              <rect width="10" height="10" rx="2" fill="url(#incompleteCheckoutHatch)" />
+            </svg>
+            <span>{{ t('admin.attendance.weekly.incompleteCheckout') }}</span>
+          </span>
+        </div>
 
         <!-- Holiday pill row — sits below the chart, right-aligned. -->
         <div
