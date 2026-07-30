@@ -632,6 +632,7 @@
         "daysUnit": "{n} hari",
         "bestWorst": "Terbaik / Terlemah",
         "today": "HARI INI",
+        "todaySuffix": "hari ini",
         "weekend": "Akhir pekan",
         "holiday": "Libur",
         "emptyEffective": "Minggu ini tidak ada hari efektif.",

@@ -740,9 +740,27 @@ const holidayPills = computed(() => {
             class="w-2 h-2 rounded-full flex-shrink-0"
             :class="activeDim === tab.key ? tab.activeDotBg : 'bg-slate-300'"
           ></span>
-          <span class="truncate">
-            {{ t(tab.labelKey) }}
-            <span v-if="tab.pctToday != null" class="tabular-nums">· {{ tab.pctToday }}%</span>
+          <!-- `pctToday` is TODAY's figure, but this row sits under the
+               "Minggu ini · <range>" eyebrow and directly above the
+               weekly average — without the qualifier a reader takes
+               "Siswa · 0%" as the week's number and concludes the data
+               is wrong (it isn't: 0% today, 95% for the week). The
+               suffix is what separates the two. -->
+          <!-- The dimension name truncates first; the figure + qualifier
+               are nowrap so "0% hari ini" survives a narrow chip. Losing
+               the suffix is what recreates the ambiguity, so it must not
+               be the part that gets cut. -->
+          <span class="min-w-0 flex items-baseline gap-1">
+            <span class="truncate">{{ t(tab.labelKey) }}</span>
+            <span
+              v-if="tab.pctToday != null"
+              class="tabular-nums whitespace-nowrap flex-shrink-0"
+            >
+              · {{ tab.pctToday }}%
+              <span class="opacity-70">
+                {{ t('admin.attendance.weekly.todaySuffix') }}
+              </span>
+            </span>
           </span>
         </button>
       </div>

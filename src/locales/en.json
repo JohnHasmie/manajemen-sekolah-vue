@@ -632,6 +632,7 @@
         "daysUnit": "{n} days",
         "bestWorst": "Best / Worst",
         "today": "TODAY",
+        "todaySuffix": "today",
         "weekend": "Weekend",
         "holiday": "Holiday",
         "emptyEffective": "No effective days this week.",
