@@ -92,11 +92,11 @@ const counts = computed(() => {
   const all = students.value;
   return {
     total: all.length,
-    draft: all.filter((r) => r.raport_status === 'draft').length,
-    final: all.filter((r) => r.raport_status === 'final').length,
-    published: all.filter((r) => r.raport_status === 'published').length,
-    distributed: all.filter((r) => r.raport_status === 'distributed').length,
-    belum: all.filter((r) => !r.raport_status).length,
+    draft: all.filter((r) => r.report_card_status === 'draft').length,
+    final: all.filter((r) => r.report_card_status === 'final').length,
+    published: all.filter((r) => r.report_card_status === 'published').length,
+    distributed: all.filter((r) => r.report_card_status === 'distributed').length,
+    belum: all.filter((r) => !r.report_card_status).length,
   };
 });
 
@@ -240,7 +240,7 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
           :key="s.student_class_id"
           :avatar="{
             name: s.student_name || '?',
-            color: s.raport_status ? '#143068' : '#DC2626',
+            color: s.report_card_status ? '#143068' : '#DC2626',
           }"
           :divided="idx > 0"
           chevron
@@ -261,7 +261,7 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
 
           <template #trailing>
             <button
-              v-if="s.raport_status && s.raport_status !== 'draft'"
+              v-if="s.report_card_status && s.report_card_status !== 'draft'"
               type="button"
               class="w-9 h-9 rounded-full bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-600 flex-shrink-0 transition-colors"
               @click.stop="downloadStudentPdf(s)"
@@ -270,8 +270,8 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
             </button>
 
             <StatusBadge
-              :label="statusPill(s.raport_status).label"
-              :tone="statusPill(s.raport_status).tone"
+              :label="statusPill(s.report_card_status).label"
+              :tone="statusPill(s.report_card_status).tone"
               uppercase
             />
           </template>

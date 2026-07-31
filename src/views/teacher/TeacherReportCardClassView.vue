@@ -100,20 +100,20 @@ const counts = computed(() => {
   const all = students.value;
   return {
     total: all.length,
-    draft: all.filter((r) => r.raport_status === 'draft').length,
-    final: all.filter((r) => r.raport_status === 'final').length,
-    published: all.filter((r) => r.raport_status === 'published').length,
-    distributed: all.filter((r) => r.raport_status === 'distributed').length,
-    belum: all.filter((r) => !r.raport_status).length,
+    draft: all.filter((r) => r.report_card_status === 'draft').length,
+    final: all.filter((r) => r.report_card_status === 'final').length,
+    published: all.filter((r) => r.report_card_status === 'published').length,
+    distributed: all.filter((r) => r.report_card_status === 'distributed').length,
+    belum: all.filter((r) => !r.report_card_status).length,
   };
 });
 
 const visibleStudents = computed(() => {
   if (statusFilter.value === 'all') return students.value;
   if (statusFilter.value === 'belum') {
-    return students.value.filter((r) => !r.raport_status);
+    return students.value.filter((r) => !r.report_card_status);
   }
-  return students.value.filter((r) => r.raport_status === statusFilter.value);
+  return students.value.filter((r) => r.report_card_status === statusFilter.value);
 });
 
 const kpiCards = computed<KpiCard[]>(() => [
@@ -210,12 +210,12 @@ async function exportClassExcel() {
 }
 
 function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
-  if (!s.raport_status) {
+  if (!s.report_card_status) {
     return { label: t('tutor.sekolah.reportCardClass.pillEmpty'), class: 'bg-slate-100 text-slate-500' };
   }
-  const tone = STATUS_TONES[s.raport_status];
+  const tone = STATUS_TONES[s.report_card_status];
   return {
-    label: STATUS_LABELS[s.raport_status],
+    label: STATUS_LABELS[s.report_card_status],
     class: `${tone.bg} ${tone.text}`,
   };
 }
@@ -315,7 +315,7 @@ function statusPillFor(s: RaportSummaryRow): { label: string; class: string } {
           :key="s.student_class_id"
           :avatar="{
             name: s.student_name || '?',
-            color: s.raport_status ? '#1B6FB8' : '#DC2626',
+            color: s.report_card_status ? '#1B6FB8' : '#DC2626',
           }"
           :divided="idx > 0"
           chevron

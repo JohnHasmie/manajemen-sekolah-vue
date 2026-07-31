@@ -530,7 +530,15 @@ function parentReportCardRowFromJson(raw: AnyRecord): ParentReportCardRow {
 export interface SaveReportCardPayload {
   student_class_id: string;
   academic_year_id: string;
-  semester_id: string;
+  /**
+   * Optional — `save()` resolves the school's current semester when this
+   * is omitted, the same way `getDetail`/`getInitialData` already do.
+   * Required here previously, which pushed callers into supplying
+   * something; the raport detail screen supplied
+   * `academic.activeYear.id`, an ACADEMIC YEAR id, and every card it
+   * saved was keyed to a semester that was not this school's.
+   */
+  semester_id?: string;
   status?: ReportCardStatus;
   spiritual_predicate?: string;
   spiritual_description?: string;
