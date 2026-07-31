@@ -108,6 +108,12 @@ export const READINESS_ROUTE_MAP: Record<string, ReadinessRouteTarget> = {
     labelKey: 'nav.schedule',
     icon: 'alert-triangle',
   },
+  admin_staff_attendance_report: {
+    name: 'admin.teacher-attendance.report',
+    path: '/admin/teacher-attendance/report',
+    labelKey: 'nav.teacherAttendance',
+    icon: 'camera',
+  },
   admin_academic_year: {
     name: 'admin.settings.manage-academic-years',
     path: '/admin/settings/academic-years',
