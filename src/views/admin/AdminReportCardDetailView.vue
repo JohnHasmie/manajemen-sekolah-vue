@@ -155,7 +155,16 @@ const isGenap = computed(() => {
   const raw = (detail.value?.semester ?? '').toLowerCase();
   return raw === 'even' || raw.includes('genap');
 });
-const isNaikKelas = computed(() => (detail.value?.promotion_decision ?? '').toLowerCase().includes('naik'));
+// The service normalises this field through normalizePromotionDecision(),
+// so by the time it reaches here "naik kelas" has already become
+// `promoted` — and `'promoted'.includes('naik')` is false. Every student
+// therefore rendered in the red "tidak naik" state, including the ones
+// who passed. Compare against the canonical values instead; `graduated`
+// counts as a positive outcome too, which the substring check never did.
+const isNaikKelas = computed(() => {
+  const decision = (detail.value?.promotion_decision ?? '').toLowerCase();
+  return decision === 'promoted' || decision === 'graduated';
+});
 
 const totalAttendance = computed(() => {
   const sick = detail.value?.attendance_sick ?? 0;
