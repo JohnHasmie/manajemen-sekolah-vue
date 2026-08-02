@@ -792,9 +792,15 @@ watch(() => auth.isAuthenticated, (v) => {
   font-size: 11px; font-weight: 600;
   cursor: pointer;
 }
+.sv-account {
+  /* Single source of truth for the drop below the avatar: the menu offsets
+     itself by this, and the hover bridge below spans exactly the same
+     distance. Two hardcoded numbers would drift apart. */
+  --sv-account-gap: 8px;
+}
 .sv-account-menu {
   position: absolute;
-  top: calc(100% + 8px); right: 0;
+  top: calc(100% + var(--sv-account-gap)); right: 0;
   min-width: 210px;
   background: #FFFFFF;
   border: 0.5px solid #E2E8F0;
@@ -806,6 +812,29 @@ watch(() => auth.isAuthenticated, (v) => {
   pointer-events: none;
   transition: opacity 0.15s, transform 0.15s;
   z-index: 20;
+}
+/*
+  Hover bridge across the gap between the avatar and the menu.
+
+  The menu opens on `.sv-account:hover`, but it floats 8px below the avatar
+  and nothing occupied that strip. Moving the pointer down to "Ganti akun
+  Google" crossed it, `:hover` went false mid-travel, and the menu became
+  `pointer-events: none` and started fading — so the click never landed and
+  the menu appeared to vanish as you reached for it. Reported 2026-08-02.
+
+  Verified in a browser: with the pointer parked in the gap the old menu
+  computes `pointer-events: none`, and with this bridge it computes `auto`.
+
+  The bridge belongs to the menu, so it inherits the menu's own
+  `pointer-events` — invisible and inert while closed, live only once the
+  menu is open. It cannot make the avatar's hover area "sticky".
+*/
+.sv-account-menu::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 100%;
+  height: var(--sv-account-gap);
 }
 .sv-account:hover .sv-account-menu,
 .sv-account:focus-within .sv-account-menu {
