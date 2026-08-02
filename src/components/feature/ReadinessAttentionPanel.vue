@@ -23,6 +23,16 @@
   a real Vue route by the shared `readiness-nav` helper (falling back to
   the readiness page when a hint is unmapped).
 
+  ABILITY GATING — the two lanes are treated DIFFERENTLY on purpose:
+    · Lane B is DROPPED when the viewer can't open the destination.
+      Unscored operational nudges: hiding one costs nothing, showing one
+      that 403s costs trust. Filtering runs before the cap so a dropped
+      row yields its slot.
+    · Lane A stays VISIBLE but goes non-tappable (no chevron, no click).
+      These rows are the score's line items — hiding one would leave an
+      83% the admin can't reconcile against the list in front of them.
+  Both read the same `requiredAbilities` declared in `readiness-nav`.
+
   RENDER GUARD (mirrors the Flutter admin dashboard body): the panel
   renders NOTHING until readiness state is actually KNOWN — i.e. the
   parent holds `readiness.view`, the fetch has SETTLED (`loaded`), the
@@ -37,11 +47,15 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import { useMeStore } from '@/stores/me';
 import type {
   ReadinessPayload,
   ReadinessSeverity,
 } from '@/services/readiness.service';
-import { resolveReadinessRouteName } from '@/lib/readiness-nav';
+import {
+  canReachReadinessTarget,
+  resolveReadinessRouteName,
+} from '@/lib/readiness-nav';
 
 const props = withDefaults(
   defineProps<{
@@ -61,6 +75,7 @@ const props = withDefaults(
 
 const { t } = useI18n();
 const router = useRouter();
+const me = useMeStore();
 
 // Keep the rail compact: at most this many rows per lane.
 const MAX_COMPLETION = 3;
@@ -81,6 +96,12 @@ interface PanelRow {
   /** Backend route hint — resolved on click by the shared helper. */
   targetRoute: string;
   targetParams: Record<string, unknown>;
+  /**
+   * False when the viewer lacks the destination's ability. Only Lane A
+   * rows can carry `false` — unreachable Lane B rows are filtered out
+   * entirely rather than rendered inert.
+   */
+  tappable: boolean;
 }
 
 /**
@@ -97,16 +118,25 @@ const stateKnown = computed(
   () => props.loaded && props.readiness != null && props.readiness.supported,
 );
 
+// Lane B minus everything this viewer can't open. Counted from the
+// FILTERED list so the "N perlu perhatian" eyebrow matches what the
+// full Pusat Kendali page (gated the same way) will show them.
+const reachableAttention = computed(() =>
+  (props.readiness?.attention_needed ?? []).filter((item) =>
+    canReachReadinessTarget(item.target_route, me),
+  ),
+);
+
 const completionCount = computed(
   () => props.readiness?.completion_needed?.length ?? 0,
 );
-const attentionCount = computed(
-  () => props.readiness?.attention_needed?.length ?? 0,
-);
+const attentionCount = computed(() => reachableAttention.value.length);
 const totalCount = computed(() => completionCount.value + attentionCount.value);
 const hasItems = computed(() => totalCount.value > 0);
 
 // Spread before sort so we never mutate the reactive payload array.
+// Lane A rows are NEVER dropped — an unreachable one just loses its
+// tap target, so the score stays fully itemised.
 const completionRows = computed<PanelRow[]>(() =>
   [...(props.readiness?.completion_needed ?? [])]
     .sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity])
@@ -118,11 +148,12 @@ const completionRows = computed<PanelRow[]>(() =>
       subtitle: item.subtitle,
       targetRoute: item.target_route,
       targetParams: item.target_params,
+      tappable: canReachReadinessTarget(item.target_route, me),
     })),
 );
 
 const attentionRows = computed<PanelRow[]>(() =>
-  [...(props.readiness?.attention_needed ?? [])]
+  [...reachableAttention.value]
     .sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity])
     .slice(0, MAX_ATTENTION)
     .map((item) => ({
@@ -132,15 +163,24 @@ const attentionRows = computed<PanelRow[]>(() =>
       subtitle: item.subtitle,
       targetRoute: item.target_route,
       targetParams: item.target_params,
+      tappable: true,
     })),
 );
 
 // Severity → row tint + dot. These colours CARRY MEANING (critical /
 // warning / info), so they stay per the theme-colour rationalisation.
 const ROW_CLASS: Record<ReadinessSeverity, string> = {
-  critical: 'bg-red-50 border-red-200 hover:bg-red-100',
-  warning: 'bg-amber-50 border-amber-200 hover:bg-amber-100',
-  info: 'bg-slate-50 border-slate-200 hover:bg-slate-100',
+  critical: 'bg-red-50 border-red-200',
+  warning: 'bg-amber-50 border-amber-200',
+  info: 'bg-slate-50 border-slate-200',
+};
+// Applied only to tappable rows, so an ability-blocked Lane A row reads
+// as inert (no hover tint, no pointer cursor) instead of looking
+// clickable and doing nothing.
+const ROW_INTERACTIVE_CLASS: Record<ReadinessSeverity, string> = {
+  critical: 'hover:bg-red-100 cursor-pointer',
+  warning: 'hover:bg-amber-100 cursor-pointer',
+  info: 'hover:bg-slate-100 cursor-pointer',
 };
 const DOT_CLASS: Record<ReadinessSeverity, string> = {
   critical: 'bg-red-500',
@@ -149,6 +189,7 @@ const DOT_CLASS: Record<ReadinessSeverity, string> = {
 };
 
 function goto(row: PanelRow) {
+  if (!row.tappable) return;
   const name = resolveReadinessRouteName(row.targetRoute);
   if (name) {
     router.push({ name, params: row.targetParams as Record<string, string> });
@@ -193,12 +234,19 @@ function gotoReadiness() {
           {{ t('admin.readiness.laneA') }}
           <span class="text-3xs font-bold text-role-admin normal-case">· {{ t('admin.readiness.laneAHint') }}</span>
         </p>
+        <!-- Row stays rendered even when the viewer can't open it (the
+             score has to stay itemised); `disabled` + no chevron is what
+             communicates "not yours to fix". -->
         <button
           v-for="row in completionRows"
           :key="row.key"
           type="button"
-          class="w-full flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-colors cursor-pointer"
-          :class="ROW_CLASS[row.severity]"
+          class="w-full flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-colors"
+          :class="[
+            ROW_CLASS[row.severity],
+            row.tappable ? ROW_INTERACTIVE_CLASS[row.severity] : 'cursor-default',
+          ]"
+          :disabled="!row.tappable"
           @click="goto(row)"
         >
           <span
@@ -210,7 +258,12 @@ function gotoReadiness() {
             <span class="block text-xs font-bold text-slate-900 leading-tight">{{ row.label }}</span>
             <span class="block text-3xs text-slate-500 leading-tight mt-0.5 truncate">{{ row.subtitle }}</span>
           </span>
-          <NavIcon name="chevron-right" :size="14" class="text-slate-400 self-center flex-shrink-0" />
+          <NavIcon
+            v-if="row.tappable"
+            name="chevron-right"
+            :size="14"
+            class="text-slate-400 self-center flex-shrink-0"
+          />
         </button>
       </div>
 
@@ -220,12 +273,14 @@ function gotoReadiness() {
           {{ t('admin.readiness.laneB') }}
           <span class="text-3xs font-bold text-slate-400 normal-case">· {{ t('admin.readiness.laneBHint') }}</span>
         </p>
+        <!-- Lane B rows are pre-filtered to reachable destinations only,
+             so every one of these is genuinely tappable. -->
         <button
           v-for="row in attentionRows"
           :key="row.key"
           type="button"
-          class="w-full flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-colors cursor-pointer"
-          :class="ROW_CLASS[row.severity]"
+          class="w-full flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-colors"
+          :class="[ROW_CLASS[row.severity], ROW_INTERACTIVE_CLASS[row.severity]]"
           @click="goto(row)"
         >
           <span
