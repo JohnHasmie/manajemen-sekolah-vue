@@ -15,9 +15,12 @@
                        - pending_lesson_plans      (academic)
                        - draft_announcements       (communication)
                      Each alert = badge angka + title + subtitle + arrow,
-                     click → route to the relevant page. Ability-gated
-                     per alert so a card that can't be reached never
-                     renders.
+                     click → route to the relevant page. Lane B rows
+                     resolve their backend `target_route` hint through
+                     the SHARED `readiness-nav` map (same helper as the
+                     full page + the chips) — never a local dotted map.
+                     The stat-derived alerts are ability-gated so a card
+                     that can't be reached never renders.
     3. Contextual chips · "jump to what's incomplete" — derived from the
                           SCORED completion_needed gaps (mapped to routes
                           via the shared readiness-nav helper, gated
@@ -126,7 +129,13 @@ const alerts = computed<AlertCard[]>(() => {
       title: item.label,
       subtitle: item.subtitle,
       count: item.count > 0 ? item.count : 1,
-      route: mapAttentionRoute(item.target_route),
+      // Backend hints are snake_case (`admin_payment_verification`, …).
+      // Resolve them through the SHARED readiness-nav map — the same one
+      // the full page and the contextual chips use — so an alert lands
+      // on the screen that actually resolves it. Unknown hint (backend
+      // schema drift mid-session) → the full Pusat Kendali page, which
+      // is still actionable rather than a hard router error.
+      route: resolveReadinessTarget(item.target_route)?.path ?? '/admin/readiness',
       urgent: item.severity === 'critical',
     });
   }
@@ -186,24 +195,6 @@ const noAlerts = computed(() => alerts.value.length === 0);
 const trulyAllClear = computed(
   () => noAlerts.value && completionCount.value === 0,
 );
-
-/**
- * Maps a backend route hint (e.g. `bills.list`) to a Vue router path.
- * Falls back to `/admin` if the hint isn't recognised so a
- * mid-session schema drift stays inside the shell instead of throwing.
- */
-function mapAttentionRoute(target: string): string {
-  const map: Record<string, string> = {
-    'bills.list': '/admin/finance',
-    'admin.finance': '/admin/finance',
-    'lesson-plans.list': '/admin/lesson-plans',
-    'admin.lesson_plans': '/admin/lesson-plans',
-    'announcements.list': '/admin/announcements',
-    'admin.announcements': '/admin/announcements',
-    'admin.readiness': '/admin/readiness',
-  };
-  return map[target] ?? '/admin/readiness';
-}
 
 /**
  * Chips = "jump to what's incomplete". Derived from the SCORED

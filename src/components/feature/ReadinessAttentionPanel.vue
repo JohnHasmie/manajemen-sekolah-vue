@@ -22,6 +22,15 @@
   Each row clicks through via the backend `target_route` hint, mapped to
   a real Vue route by the shared `readiness-nav` helper (falling back to
   the readiness page when a hint is unmapped).
+
+  RENDER GUARD (mirrors the Flutter admin dashboard body): the panel
+  renders NOTHING until readiness state is actually KNOWN — i.e. the
+  parent holds `readiness.view`, the fetch has SETTLED (`loaded`), the
+  payload came back non-null, and the tenant is `supported`. An empty
+  payload and an unknown payload are different things: without this
+  guard a failed / unsupported / unauthorised fetch fell through to the
+  emerald "Semua aman" strip and told the admin everything was fine
+  when we simply had no idea.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
@@ -34,10 +43,21 @@ import type {
 } from '@/services/readiness.service';
 import { resolveReadinessRouteName } from '@/lib/readiness-nav';
 
-const props = defineProps<{
-  /** Readiness payload from GET /admin/readiness (null when unsupported / not loaded). */
-  readiness: ReadinessPayload | null;
-}>();
+const props = withDefaults(
+  defineProps<{
+    /** Readiness payload from GET /admin/readiness (null when unsupported / not loaded). */
+    readiness: ReadinessPayload | null;
+    /**
+     * Whether the parent's `/admin/readiness` fetch has SETTLED for a
+     * viewer that actually holds `readiness.view`. False means "state
+     * unknown" — either still in flight, or the ability is absent so no
+     * fetch was ever issued. Distinct from `readiness === null`, which
+     * additionally covers a fetch that settled by REJECTING.
+     */
+    loaded?: boolean;
+  }>(),
+  { loaded: false },
+);
 
 const { t } = useI18n();
 const router = useRouter();
@@ -62,6 +82,20 @@ interface PanelRow {
   targetRoute: string;
   targetParams: Record<string, unknown>;
 }
+
+/**
+ * Readiness state is KNOWN — the only condition under which this panel
+ * is allowed to make a claim (including the green "Semua aman" one).
+ * Same gates as `admin_dashboard_body.dart`:
+ *   1. the fetch settled for an ability-holding viewer (`loaded`) —
+ *      this also covers "admin lacks readiness.view", because the
+ *      parent never fires the request in that case
+ *   2. the payload is non-null (it settled by RESOLVING, not rejecting)
+ *   3. the tenant supports readiness
+ */
+const stateKnown = computed(
+  () => props.loaded && props.readiness != null && props.readiness.supported,
+);
 
 const completionCount = computed(
   () => props.readiness?.completion_needed?.length ?? 0,
@@ -130,7 +164,10 @@ function gotoReadiness() {
 </script>
 
 <template>
-  <section class="bg-white border border-slate-200 rounded-2xl p-4">
+  <section
+    v-if="stateKnown"
+    class="bg-white border border-slate-200 rounded-2xl p-4"
+  >
     <!-- Header — alert icon when there are items, check icon when clear. -->
     <header class="flex items-center gap-2.5 mb-3 px-1">
       <div

@@ -79,9 +79,21 @@ const adminStaffSummary = ref<AdminStaffSummaryPayload | null>(null);
 // Readiness teaser — CORE feature, gated only on `readiness.view`.
 const canSeeReadiness = computed(() => meApi.can('readiness.view'));
 const readinessPayload = ref<ReadinessPayload | null>(null);
+// Whether the readiness fetch has SETTLED (resolved OR rejected) for a
+// viewer that actually holds the ability. Stays false when the ability
+// is absent, because we never fire the request then. The "Perlu
+// Perhatian" panel needs this to tell "no items" apart from "we don't
+// know" — see ReadinessAttentionPanel's render guard.
+const readinessLoaded = ref(false);
+// Same distinction for the Prestasi card: a rejected fetch must show an
+// error + retry, not an eternal skeleton.
+const prestasiFailed = ref(false);
 
 async function loadPrestasi() {
   if (!canSeePrestasi.value) return;
+  // Reset so a retry shows the skeleton again rather than sticking on
+  // the previous error.
+  prestasiFailed.value = false;
   try {
     const [s, r] = await Promise.all([
       TeacherProgressService.getAdminHighlight(),
@@ -90,10 +102,12 @@ async function loadPrestasi() {
     adminHighlight.value = s;
     adminSummary.value = r;
   } catch {
-    // Silent — a mid-session sub loss must not disrupt the rest of the
-    // dashboard. The v-if drops the band cleanly.
+    // Silent for the rest of the dashboard — a mid-session sub loss must
+    // not disrupt it — but the card itself surfaces a retry instead of
+    // pulsing a skeleton forever.
     adminHighlight.value = null;
     adminSummary.value = null;
+    prestasiFailed.value = true;
   }
   // Staff highlight + summary fetched independently. A tenant may have
   // zero staff rows (single-guru bimbel) — the merged card self-hides the
@@ -118,6 +132,11 @@ async function loadReadiness() {
   } catch {
     // Silent — card degrades when this stays null.
     readinessPayload.value = null;
+  } finally {
+    // Settled either way. `readinessLoaded` means "we asked and got an
+    // answer", NOT "the answer was good" — the panel still checks the
+    // payload for null / unsupported before it renders anything.
+    readinessLoaded.value = true;
   }
 }
 
@@ -319,14 +338,16 @@ interface QuickTile {
   to: string;
 }
 const TILE_ICON_CLASS = 'bg-role-admin/10 text-role-admin';
-const AKSES_CEPAT_KEYS = [
+// The i18n labels read "Akses cepat" in Bahasa; the identifier stays
+// English per the project naming convention.
+const QUICK_ACTION_KEYS = [
   'nav.reportCards',
   'nav.gradeRecap',
   'nav.announcements',
   'nav.finance',
 ];
 const quickTiles = computed<QuickTile[]>(() =>
-  AKSES_CEPAT_KEYS.map((k) => {
+  QUICK_ACTION_KEYS.map((k) => {
     const found = quickActions.value.find((a) => a.labelKey === k);
     if (!found) return null;
     return { labelKey: found.labelKey, icon: found.icon, to: found.to };
@@ -434,7 +455,11 @@ function gotoModules() {
                     </p>
                   </button>
 
+                  <!-- Same ability pair the left nav uses for
+                       /admin/teachers (useNavMenu.ts) — a tile the user
+                       can't open must not render. -->
                   <button
+                    v-if="me.canAny(['school.teacher.view', 'school.teacher.manage'])"
                     type="button"
                     class="bg-white border border-slate-200 rounded-2xl p-3 text-left hover:border-role-admin hover:shadow-sm transition-all"
                     @click="router.push('/admin/teachers')"
@@ -451,7 +476,10 @@ function gotoModules() {
                     <p class="text-3xs text-slate-400 mt-1">{{ t('admin.dashboard.teacherActive') }}</p>
                   </button>
 
+                  <!-- Same ability pair the left nav uses for
+                       /admin/staff (useNavMenu.ts). -->
                   <button
+                    v-if="me.canAny(['school.staff.view', 'school.staff.manage'])"
                     type="button"
                     class="bg-white border border-slate-200 rounded-2xl p-3 text-left hover:border-role-admin hover:shadow-sm transition-all"
                     @click="router.push('/admin/staff')"
@@ -505,6 +533,7 @@ function gotoModules() {
                 <div class="flex flex-col gap-md">
                   <ReadinessAttentionPanel
                     :readiness="canSeeReadiness ? readinessPayload : null"
+                    :loaded="canSeeReadiness && readinessLoaded"
                   />
 
                   <button
@@ -542,6 +571,8 @@ function gotoModules() {
                   :teacher-summary="adminSummary"
                   :staff-highlight="adminStaffHighlight"
                   :staff-summary="adminStaffSummary"
+                  :failed="prestasiFailed"
+                  @retry="loadPrestasi"
                 />
                 <div id="quick-actions-anchor" class="grid grid-cols-2 gap-3">
                   <button
