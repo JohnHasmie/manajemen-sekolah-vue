@@ -22,8 +22,10 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useMeStore } from '@/stores/me';
 import { SubscriptionBillingService } from '@/services/billing.service';
 import type {
+  CycleChangePreview,
   ModuleCatalog,
   MyModules,
   MyModuleRow,
@@ -57,6 +59,23 @@ withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false });
 
 const router = useRouter();
 const auth = useAuthStore();
+const me = useMeStore();
+
+/**
+ * The four subscription-lifecycle endpoints (cycle-change preview +
+ * commit, cancel, resume) are all gated on `billing.subscription.manage`
+ * in SubscriptionLifecycleController. Gate the CONTROLS on the same
+ * ability so an admin who lacks it still sees the state of their
+ * subscription (current cycle, a pending cancel) read-only, instead of
+ * being handed buttons that 403.
+ *
+ * Read off /me abilities — scoped to the active role — never off
+ * `roles[].permission_keys`, which is unscoped and exists only for the
+ * role switcher.
+ */
+const canManageBilling = computed<boolean>(() =>
+  me.can('billing.subscription.manage'),
+);
 
 // ── State ──────────────────────────────────────────────────────────
 const catalog = ref<ModuleCatalog | null>(null);
@@ -71,6 +90,22 @@ type ConfirmMode = 'cancel' | 'resume' | 'add';
 const confirmMode = ref<ConfirmMode | null>(null);
 const confirmKey = ref<string | null>(null);
 const confirmBusy = ref(false);
+
+// ── Subscription-lifecycle state (separate from the per-module
+// modals above — these act on the `subscriptions` row itself). ──────
+type LifecycleMode = 'cycle' | 'cancel-sub';
+const lifecycleMode = ref<LifecycleMode | null>(null);
+const lifecycleBusy = ref(false);
+/**
+ * The server's quote for the cycle change. Null until the preview call
+ * lands — the confirm button stays disabled while it is, because the
+ * amount shown to the admin MUST be the server's `amount_due` and not
+ * a local estimate.
+ */
+const cyclePreview = ref<CycleChangePreview | null>(null);
+const cyclePreviewError = ref<string | null>(null);
+/** Resume runs without a modal, so it needs its own busy flag. */
+const resumeBusy = ref(false);
 
 // ── Derived ────────────────────────────────────────────────────────
 const sub = computed<MyModulesSubscription | null>(() => mine.value.subscription);
@@ -209,6 +244,63 @@ const expiresDate = computed<string>(() => formatDate(sub.value?.expires_at));
 const startsDate = computed<string>(() => formatDate(sub.value?.starts_at));
 
 const daysRemaining = computed<number>(() => sub.value?.days_remaining ?? 0);
+
+// ── Billing cycle + cancel state ───────────────────────────────────
+//
+// "Plan" on this subscription means the BILLING CYCLE and nothing else
+// — monthly or yearly. There is no Basic/Pro tier in this product; the
+// feature tiers are the modules listed below. All copy here says
+// "siklus tagihan", never "upgrade paket".
+
+const isYearly = computed<boolean>(() => sub.value?.plan === 'yearly');
+
+const cycleLabel = computed<string>(() => (isYearly.value ? 'Tahunan' : 'Bulanan'));
+
+/** "/ tahun" vs "/ bln" — the unit the current charge is quoted in. */
+const cycleUnit = computed<string>(() => (isYearly.value ? '/ tahun' : '/ bln'));
+
+/**
+ * What the current cycle costs. Prefer the server's discount-aware
+ * `amount`; fall back to the summed module rows on older backends
+ * (same fallback `monthlyThisPeriod` uses).
+ */
+const cycleAmount = computed<number>(() => {
+  const serverAmount = sub.value?.amount;
+  if (typeof serverAmount === 'number') return serverAmount;
+  return monthlyThisPeriodGross.value;
+});
+
+/**
+ * A period-end cancel is pending. `status` is still `active` and the
+ * tenant keeps everything until `cancel_effective_at` — this flag only
+ * means "do not carry into the next period".
+ *
+ * Absent on pre-!618 backends, so compare explicitly against true
+ * rather than relying on undefined being falsy by accident.
+ */
+const cancelPending = computed<boolean>(
+  () => sub.value?.cancel_at_period_end === true,
+);
+
+/**
+ * The date access actually stops. The server only populates
+ * `cancel_effective_at` while a cancel is pending; fall back to
+ * `expires_at` so a pre-!618 backend still renders a real date rather
+ * than an em dash in the banner headline.
+ */
+const cancelEffectiveDate = computed<string>(() =>
+  formatDate(sub.value?.cancel_effective_at ?? sub.value?.expires_at),
+);
+
+/**
+ * Rule 3: yearly → monthly is refused mid-term (the backend 422s with
+ * this same reasoning). The control is rendered DISABLED rather than
+ * hidden — hiding it makes an admin conclude the product can't switch
+ * back at all, when in fact they just have to wait for renewal.
+ */
+const monthlyBlockedReason = computed<string>(
+  () => `Bisa diubah saat perpanjangan (${expiresDate.value})`,
+);
 
 const initials = computed<string>(() =>
   (tenantName.value || auth.user?.name || '?')
@@ -411,6 +503,126 @@ async function doAdd(): Promise<void> {
   }
 }
 
+// ── Subscription lifecycle actions ─────────────────────────────────
+
+function closeLifecycleModal(): void {
+  if (lifecycleBusy.value) return;
+  lifecycleMode.value = null;
+  cyclePreview.value = null;
+  cyclePreviewError.value = null;
+}
+
+/**
+ * Open the cycle-change confirmation and fetch the server's quote.
+ *
+ * The modal opens IMMEDIATELY in a loading state rather than waiting
+ * for the preview to land, so the click has instant feedback; the
+ * confirm button is disabled until `cyclePreview` is populated. Every
+ * figure the admin sees comes from that response — nothing here
+ * multiplies a rate by a day count.
+ */
+async function askCycleChange(): Promise<void> {
+  if (!sub.value || !canManageBilling.value) return;
+  lifecycleMode.value = 'cycle';
+  cyclePreview.value = null;
+  cyclePreviewError.value = null;
+  lifecycleBusy.value = true;
+  try {
+    cyclePreview.value = await SubscriptionBillingService.previewCycleChange({
+      subscription_id: sub.value.id,
+      plan: 'yearly',
+    });
+  } catch (e) {
+    // Surface the backend's own message (it explains WHY — wrong
+    // direction, no-op, inactive subscription) inside the modal rather
+    // than the page-level error strip, so it sits next to the action
+    // that produced it.
+    cyclePreviewError.value = (e as Error).message;
+  } finally {
+    lifecycleBusy.value = false;
+  }
+}
+
+/**
+ * Commit the switch. Guarded on `cyclePreview` being present so we can
+ * never POST a change the admin confirmed against a blank/failed quote.
+ */
+async function doCycleChange(): Promise<void> {
+  const quote = cyclePreview.value;
+  if (!sub.value || !quote) return;
+  lifecycleBusy.value = true;
+  try {
+    await SubscriptionBillingService.changeCycle({
+      subscription_id: sub.value.id,
+      plan: quote.target_plan,
+    });
+    // Clear busy BEFORE closing — closeLifecycleModal()'s guard would
+    // otherwise swallow the close and strand the dialog open over a
+    // stale plan (the same bug the per-module modals hit).
+    lifecycleBusy.value = false;
+    closeLifecycleModal();
+    void loadAll();
+  } catch (e) {
+    cyclePreviewError.value = (e as Error).message;
+    lifecycleBusy.value = false;
+  }
+}
+
+function askCancelSubscription(): void {
+  if (!canManageBilling.value) return;
+  lifecycleMode.value = 'cancel-sub';
+}
+
+async function doCancelSubscription(): Promise<void> {
+  if (!sub.value) return;
+  lifecycleBusy.value = true;
+  try {
+    const state = await SubscriptionBillingService.cancelSubscription({
+      subscription_id: sub.value.id,
+    });
+    // Optimistically flip into the cancel-pending banner so the page
+    // reflects the decision before the refetch lands. Take the date
+    // from the server response — it is the authority on when access
+    // actually stops.
+    if (mine.value.subscription) {
+      mine.value.subscription.cancel_at_period_end = true;
+      mine.value.subscription.cancel_effective_at = state.active_until;
+    }
+    lifecycleBusy.value = false;
+    closeLifecycleModal();
+    void loadAll();
+  } catch (e) {
+    errorMessage.value = (e as Error).message;
+    lifecycleBusy.value = false;
+  }
+}
+
+/**
+ * Resume runs WITHOUT a confirmation step, unlike every other action
+ * on this page. It is the recovery path out of an alarming amber
+ * banner and it only restores the state the tenant was already in —
+ * putting a "are you sure you want to keep your subscription?" gate in
+ * front of that would be friction pointed the wrong way.
+ */
+async function doResumeSubscription(): Promise<void> {
+  if (!sub.value || !canManageBilling.value) return;
+  resumeBusy.value = true;
+  try {
+    await SubscriptionBillingService.resumeSubscription({
+      subscription_id: sub.value.id,
+    });
+    if (mine.value.subscription) {
+      mine.value.subscription.cancel_at_period_end = false;
+      mine.value.subscription.cancel_effective_at = null;
+    }
+    void loadAll();
+  } catch (e) {
+    errorMessage.value = (e as Error).message;
+  } finally {
+    resumeBusy.value = false;
+  }
+}
+
 function shareTokenFromShareUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   const parts = String(url).split('/subscribe/addon/transfer/');
@@ -590,11 +802,137 @@ function formatDate(iso: string | null | undefined): string {
         </div>
         <div class="mm-hero-side">
           <span class="pill is-active">Aktif</span>
-          <div class="mm-hero-side-sub">Perpanjangan otomatis</div>
+          <!-- `status` stays `active` through a pending cancel, so the
+               pill is correct — but the sub-line must not keep
+               promising a renewal that will not happen. -->
+          <div v-if="cancelPending" class="mm-hero-side-sub is-ending">
+            Berhenti {{ cancelEffectiveDate }}
+          </div>
+          <div v-else class="mm-hero-side-sub">Perpanjangan otomatis</div>
         </div>
       </div>
 
       <p v-if="errorMessage" class="mm-err">{{ errorMessage }}</p>
+
+      <!-- ═════════ Siklus tagihan + status langganan ═════════
+           Sits directly under the subscription summary and above the
+           module lists: it describes the subscription as a whole,
+           while everything in `.mm-body` is per-module. A pending
+           cancel has to be the first thing an admin sees on open, and
+           full-width here is the only spot that guarantees that
+           without competing with the sticky billing summary. -->
+      <section class="mm-lifecycle">
+        <!-- STATE 3 — cancel pending. Replaces the whole area: an
+             admin who is mid-cancel should be offered exactly one
+             action (undo), not a cadence upgrade. This is also what
+             keeps a cancelling tenant away from a renewal purchase —
+             see the `.side-preview` card below. -->
+        <div v-if="cancelPending" class="mm-cancel-banner">
+          <div class="mm-cancel-icon" aria-hidden="true">
+            <i class="ti ti-alert-triangle" />
+          </div>
+          <div class="mm-cancel-body">
+            <h2 class="mm-cancel-title">
+              Langganan berhenti pada {{ cancelEffectiveDate }}
+            </h2>
+            <p class="mm-cancel-sub">
+              Semua fitur <strong>tetap aktif sampai {{ cancelEffectiveDate }}</strong> — periode ini
+              sudah dibayar dan tidak ada refund. Setelah tanggal itu langganan tidak diperpanjang.
+              Anda bisa membatalkan keputusan ini kapan saja sebelum tanggal tersebut.
+            </p>
+            <div class="mm-cancel-meta">
+              Siklus tagihan saat ini: <strong>{{ cycleLabel }}</strong>
+              · {{ money(cycleAmount) }} {{ cycleUnit }}
+            </div>
+          </div>
+          <div class="mm-cancel-cta">
+            <button
+              v-if="canManageBilling"
+              type="button"
+              class="btn primary"
+              :disabled="resumeBusy"
+              @click="doResumeSubscription"
+            >
+              <template v-if="resumeBusy">Memproses…</template>
+              <template v-else>
+                <i class="ti ti-refresh" aria-hidden="true" />
+                Lanjutkan langganan
+              </template>
+            </button>
+            <!-- STATE 4 (read-only) — no ability, so no action. The
+                 state above is still fully visible. -->
+            <span v-else class="mm-lifecycle-readonly">
+              Hubungi admin dengan akses penagihan untuk melanjutkan langganan.
+            </span>
+          </div>
+        </div>
+
+        <!-- STATE 1 / 2 — normal. Current cycle + the cadence options. -->
+        <div v-else class="mm-cycle-card">
+          <div class="mm-cycle-current">
+            <div class="side-kicker">Siklus tagihan</div>
+            <div class="mm-cycle-now">
+              <span class="mm-cycle-name">{{ cycleLabel }}</span>
+              <span class="mm-cycle-amount">{{ money(cycleAmount) }} {{ cycleUnit }}</span>
+            </div>
+            <div class="mm-cycle-hint">
+              Periode berjalan sampai {{ expiresDate }}
+            </div>
+          </div>
+
+          <div class="mm-cycle-options">
+            <!-- STATE 1 — on monthly: yearly is offered. The amount is
+                 NOT computed here; clicking fetches the server quote. -->
+            <template v-if="!isYearly">
+              <button
+                v-if="canManageBilling"
+                type="button"
+                class="row-cta is-add"
+                @click="askCycleChange"
+              >
+                <i class="ti ti-calendar-up" aria-hidden="true" />
+                Ubah ke Tahunan
+              </button>
+              <span class="mm-cycle-note">
+                Sisa hari di periode bulanan ini dihitung sebagai potongan.
+              </span>
+            </template>
+
+            <!-- STATE 2 — on yearly: monthly is shown DISABLED with the
+                 reason + date, never hidden (rule 3). -->
+            <template v-else>
+              <button
+                type="button"
+                class="row-cta"
+                disabled
+                aria-describedby="mm-cycle-monthly-reason"
+              >
+                Ubah ke Bulanan
+              </button>
+              <span id="mm-cycle-monthly-reason" class="mm-cycle-note">
+                {{ monthlyBlockedReason }}
+              </span>
+            </template>
+          </div>
+
+          <!-- Low-emphasis, destructive-adjacent. Deliberately a text
+               link, not a button — it must not compete with the module
+               actions in the list below. -->
+          <div class="mm-cycle-foot">
+            <button
+              v-if="canManageBilling"
+              type="button"
+              class="mm-cancel-link"
+              @click="askCancelSubscription"
+            >
+              Batalkan langganan
+            </button>
+            <span v-else class="mm-lifecycle-readonly">
+              Anda tidak memiliki akses untuk mengubah langganan.
+            </span>
+          </div>
+        </div>
+      </section>
 
       <div class="mm-body">
         <!-- MAIN column -->
@@ -727,7 +1065,22 @@ function formatDate(iso: string | null | undefined): string {
             </div>
           </div>
 
-          <div class="side-card side-preview">
+          <!-- Renewal preview. Suppressed entirely while a cancel is
+               pending: quoting "perpanjangan otomatis Rp X" at a tenant
+               who has just cancelled is a false promise, and it is the
+               one place on this page that could walk them into a
+               renewal purchase instead of the resume they actually
+               need. The backend's renewalQuote does NOT check
+               cancel_at_period_end, so the guard has to live here. -->
+          <div v-if="cancelPending" class="side-card side-ending">
+            <div class="side-kicker">Tidak diperpanjang</div>
+            <div class="side-title">Berakhir {{ cancelEffectiveDate }}</div>
+            <div class="side-ending-note">
+              Langganan dijadwalkan berhenti. Lanjutkan langganan dulu untuk
+              mengaktifkan kembali perpanjangan.
+            </div>
+          </div>
+          <div v-else class="side-card side-preview">
             <div class="side-kicker">Perpanjangan otomatis</div>
             <div class="side-title">{{ expiresDate }}</div>
             <div class="side-total">{{ money(monthlyNextPeriod) }}</div>
@@ -878,6 +1231,147 @@ function formatDate(iso: string | null | undefined): string {
               Bayar {{ proratedAdd ? money(proratedAdd.amount) : '' }} &amp; aktifkan
               <i class="ti ti-arrow-right" aria-hidden="true" />
             </template>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════ Modal — Ubah siklus tagihan ═════════
+         Every rupiah in this dialog comes from the preview response.
+         The confirm button stays disabled until that response lands,
+         so the admin can never approve a number the server did not
+         produce — and the commit re-runs the same action, so the
+         charge matches what is on screen. -->
+    <div
+      v-if="lifecycleMode === 'cycle'"
+      class="mm-scrim"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="mm-cycle-title"
+      @click.self="closeLifecycleModal"
+    >
+      <div class="mm-modal">
+        <div class="mm-modal-head">
+          <div class="mm-modal-icon add"><i class="ti ti-calendar-up" aria-hidden="true" /></div>
+          <div class="mm-modal-body">
+            <div id="mm-cycle-title" class="mm-modal-title">
+              Ubah siklus tagihan ke <em>Tahunan</em>
+            </div>
+            <div class="mm-modal-sub">
+              Sisa hari yang belum terpakai di periode bulanan Anda dihitung sebagai
+              potongan dari tagihan tahunan.
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading the quote -->
+        <div v-if="!cyclePreview && !cyclePreviewError" class="mm-quote-loading">
+          <div class="mm-spinner" aria-hidden="true"></div>
+          <span>Menghitung tagihan…</span>
+        </div>
+
+        <!-- Quote failed — show the backend's reason verbatim -->
+        <p v-else-if="cyclePreviewError" class="mm-err mm-err-inline">
+          {{ cyclePreviewError }}
+        </p>
+
+        <!-- Server-computed figures -->
+        <div v-else-if="cyclePreview" class="mm-quote">
+          <div class="mm-quote-row">
+            <span class="mm-quote-lbl">Tagihan tahunan</span>
+            <span class="mm-quote-val">{{ money(cyclePreview.target_amount) }}</span>
+          </div>
+          <div class="mm-quote-row">
+            <span class="mm-quote-lbl">
+              Potongan sisa {{ cyclePreview.unused_days }} hari periode bulanan
+            </span>
+            <span class="mm-quote-val is-credit">
+              −{{ money(cyclePreview.unused_days_credit) }}
+            </span>
+          </div>
+          <div class="mm-quote-sep"></div>
+          <div class="mm-quote-row total">
+            <span class="mm-quote-lbl">Bayar sekarang</span>
+            <span class="mm-quote-val">{{ money(cyclePreview.amount_due) }}</span>
+          </div>
+        </div>
+
+        <ul v-if="cyclePreview" class="mm-bullet mm-bullet-tight">
+          <li>
+            Periode tahunan baru berlaku sampai
+            <strong>{{ formatDate(cyclePreview.new_expires_at) }}</strong>.
+          </li>
+          <li>Semua modul aktif Anda ikut terbawa ke periode baru.</li>
+          <li class="x">
+            Setelah beralih, siklus tahunan tidak bisa dikembalikan ke bulanan
+            di tengah periode — hanya saat perpanjangan.
+          </li>
+        </ul>
+
+        <div class="mm-modal-cta">
+          <button class="btn ghost" :disabled="lifecycleBusy" @click="closeLifecycleModal">
+            Batal
+          </button>
+          <button
+            class="btn primary"
+            :disabled="lifecycleBusy || !cyclePreview"
+            @click="doCycleChange"
+          >
+            <template v-if="lifecycleBusy">Memproses…</template>
+            <template v-else-if="cyclePreview">
+              Ya, bayar {{ money(cyclePreview.amount_due) }}
+            </template>
+            <template v-else>Ya, ubah siklus</template>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════ Modal — Batalkan langganan ═════════ -->
+    <div
+      v-if="lifecycleMode === 'cancel-sub'"
+      class="mm-scrim"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="mm-cancelsub-title"
+      @click.self="closeLifecycleModal"
+    >
+      <div class="mm-modal">
+        <div class="mm-modal-head">
+          <div class="mm-modal-icon warn"><i class="ti ti-alert-triangle" aria-hidden="true" /></div>
+          <div class="mm-modal-body">
+            <div id="mm-cancelsub-title" class="mm-modal-title">
+              Batalkan <em>seluruh langganan</em>?
+            </div>
+            <div class="mm-modal-sub">
+              Langganan berhenti di akhir periode berjalan. Tidak ada yang dimatikan
+              sekarang.
+            </div>
+          </div>
+        </div>
+        <ul class="mm-bullet">
+          <li>
+            Semua fitur &amp; modul tetap bisa dipakai
+            <strong>sampai {{ expiresDate }}</strong>.
+          </li>
+          <li class="x">
+            Periode ini sudah dibayar — <strong>tidak ada refund</strong>.
+          </li>
+          <li>
+            Bisa dibatalkan kapan saja sebelum {{ expiresDate }} lewat tombol
+            <strong>Lanjutkan langganan</strong> di halaman ini.
+          </li>
+          <li class="x">
+            Setelah {{ expiresDate }} langganan tidak diperpanjang dan akses berhenti.
+          </li>
+        </ul>
+        <div class="mm-modal-cta">
+          <button class="btn ghost" :disabled="lifecycleBusy" @click="closeLifecycleModal">
+            Batal, tetap berlangganan
+          </button>
+          <button class="btn warn" :disabled="lifecycleBusy" @click="doCancelSubscription">
+            <template v-if="lifecycleBusy">Memproses…</template>
+            <template v-else>Ya, hentikan di {{ expiresDate }}</template>
           </button>
         </div>
       </div>
@@ -1290,9 +1784,160 @@ function formatDate(iso: string | null | undefined): string {
 .btn.primary { background: #1B6FB8; color: #fff; }
 .btn.primary:hover:not(:disabled) { background: #113E75; }
 
+/* ── Siklus tagihan + status langganan ───────────────────────────
+   Full-width band between the hero and the module lists. Aligned to
+   the hero's 24px gutter so the card's left edge lines up with the
+   heading above it. */
+.mm-lifecycle { padding: 16px 24px 0; }
+
+/* Cancel-pending banner. Deliberately louder than `.mm-note-strip`
+   (the per-module warning): a solid left rule + a full amber field, so
+   a tenant whose whole subscription is ending sees it the moment the
+   page paints. */
+.mm-cancel-banner {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: #FEF3C7;
+  border: 0.5px solid #FDE68A;
+  /* Same amber field as `.mm-note-strip`; the solid rule + larger type
+     is what makes it read as louder, so no new hex is introduced. */
+  border-left: 3px solid #B45309;
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.mm-cancel-icon {
+  width: 36px; height: 36px; border-radius: 9px;
+  background: #FDE68A; color: #B45309;
+  display: grid; place-items: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.mm-cancel-body { flex: 1; min-width: 0; }
+.mm-cancel-title {
+  font-size: 15px; font-weight: 600;
+  letter-spacing: -0.2px; color: #78350F;
+  margin: 0; text-wrap: balance;
+}
+.mm-cancel-sub {
+  font-size: 12.5px; color: #92400E;
+  margin: 5px 0 0; line-height: 1.55;
+}
+.mm-cancel-sub strong { color: #78350F; font-weight: 600; }
+.mm-cancel-meta {
+  font-size: 11.5px; color: #A16207;
+  margin-top: 8px;
+}
+.mm-cancel-meta strong { color: #78350F; font-weight: 600; }
+.mm-cancel-cta { flex-shrink: 0; align-self: center; }
+/* `.btn` is flex:1 for the modal footer; that must not stretch it
+   here, where it sits alone in a non-flex container. */
+.mm-cancel-cta .btn { flex: 0 0 auto; }
+
+/* Normal state — current cycle + cadence options. */
+.mm-cycle-card {
+  background: #fff;
+  border: 0.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 18px;
+  align-items: center;
+}
+.mm-cycle-current { min-width: 0; }
+.mm-cycle-now {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  margin-top: 2px;
+}
+.mm-cycle-name {
+  font-size: 16px; font-weight: 600;
+  color: #113E75; letter-spacing: -0.2px;
+}
+.mm-cycle-amount {
+  font-size: 12.5px; color: #475569; font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.mm-cycle-hint { font-size: 11.5px; color: #94A3B8; margin-top: 3px; }
+.mm-cycle-options {
+  display: flex; flex-direction: column;
+  align-items: flex-end; gap: 5px;
+  text-align: right;
+}
+.mm-cycle-note {
+  font-size: 11px; color: #94A3B8;
+  line-height: 1.45; max-width: 240px;
+}
+.mm-cycle-foot {
+  grid-column: 1 / -1;
+  border-top: 0.5px solid #F1F5F9;
+  padding-top: 10px;
+}
+/* Destructive-adjacent, so a plain text link rather than a button —
+   it must not read as a peer of "Tambahkan" / "Matikan modul" in the
+   lists below. */
+.mm-cancel-link {
+  font-family: inherit;
+  background: none; border: none; padding: 0;
+  font-size: 11.5px; color: #94A3B8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.mm-cancel-link:hover { color: #B91C1C; }
+.mm-lifecycle-readonly {
+  font-size: 11.5px; color: #94A3B8; line-height: 1.45;
+}
+
+/* Disabled cadence option (yearly → monthly). Shown, never hidden. */
+.row-cta:disabled {
+  opacity: 1;
+  color: #94A3B8;
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+  cursor: not-allowed;
+}
+.row-cta:disabled:hover { color: #94A3B8; border-color: #E2E8F0; }
+
+/* Hero sub-line when a cancel is pending. */
+.mm-hero-side-sub.is-ending { color: #B45309; font-weight: 600; }
+
+/* Sidebar card that replaces the renewal preview while cancelling. */
+.side-ending {
+  background: #FEF3C7;
+  border-color: #FDE68A;
+}
+.side-ending .side-kicker { color: #B45309; }
+.side-ending .side-title { color: #78350F; }
+.side-ending-note {
+  font-size: 11px; color: #92400E;
+  margin-top: 6px; line-height: 1.45;
+}
+
+/* Quote-loading state inside the cycle-change modal. */
+.mm-quote-loading {
+  display: flex; align-items: center; gap: 10px;
+  padding: 18px 14px;
+  margin-top: 14px;
+  border: 0.5px solid #E7ECF3;
+  border-radius: 10px;
+  background: #FBFCFE;
+  color: #64748B; font-size: 12.5px;
+}
+/* Page-level error strip reused inside a modal — drop the page gutter. */
+.mm-err-inline { margin: 14px 0 0; }
+/* The credit line reads as money coming back, so tint it like the
+   savings language used elsewhere in this view. */
+.mm-quote-val.is-credit { color: #0F6E56; }
+
 @media (max-width: 900px) {
   .mm-body { grid-template-columns: 1fr; }
   .mm-side { border-left: none; border-top: 0.5px solid #E7ECF3; position: static; max-height: none; }
+}
+@media (max-width: 640px) {
+  .mm-cancel-banner { flex-wrap: wrap; }
+  .mm-cancel-cta { width: 100%; }
+  .mm-cancel-cta .btn { width: 100%; }
+  .mm-cycle-card { grid-template-columns: 1fr; }
+  .mm-cycle-options { align-items: flex-start; text-align: left; }
+  .mm-cycle-note { max-width: none; }
 }
 @media (max-width: 640px) {
   .mm-row { grid-template-columns: 40px 1fr; }

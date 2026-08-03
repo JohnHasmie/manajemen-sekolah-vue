@@ -28,6 +28,7 @@ import {
 import type {
   AddonCreated,
   AddonQuote,
+  BillingPeriod,
   ModuleCatalog,
   ModularQuote,
   MySubscription,
@@ -944,6 +945,95 @@ export const SubscriptionBillingService = {
       return body as AddonCreated;
     } catch (e) {
       throw new Error(humanError(e, 'Gagal membuat top up.'));
+    }
+  },
+
+  // ── Subscription lifecycle (backend !618) ────────────────────────
+  // All four are gated on `billing.subscription.manage` server-side.
+  // The caller must gate the UI on the same ability via
+  // `useMeStore().can(...)` — a read-only admin still sees the state.
+
+  /**
+   * GET /billing/subscription/cycle-change/preview — server-computed
+   * quote for switching the billing cycle. Read-only: no writes, and
+   * it runs the same action the commit runs.
+   *
+   * Render `amount_due` from this response verbatim. Do NOT derive a
+   * local estimate — preview and commit are guaranteed to agree only
+   * because both come from the server, and a client-side estimate
+   * drifting from the real charge is exactly the bug this endpoint
+   * was added to kill.
+   *
+   * Throws with the backend's own Indonesian message on 422 (forbidden
+   * direction, no-op, or a subscription that can't be re-cycled).
+   */
+  async previewCycleChange(payload: {
+    subscription_id: string;
+    plan: BillingPeriod;
+  }): Promise<import('@/types/subscription-billing').CycleChangePreview> {
+    try {
+      const res = await api.get('/billing/subscription/cycle-change/preview', {
+        params: {
+          subscription_id: payload.subscription_id,
+          plan: payload.plan,
+        },
+      });
+      const body = res.data?.data ?? res.data;
+      return body as import('@/types/subscription-billing').CycleChangePreview;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menghitung perubahan siklus tagihan.'));
+    }
+  },
+
+  /**
+   * POST /billing/subscription/cycle-change — commit the switch.
+   * monthly → yearly only; the reverse is refused mid-term with a 422
+   * that names the renewal date (see PreviewBillingCycleChangeAction).
+   */
+  async changeCycle(payload: {
+    subscription_id: string;
+    plan: BillingPeriod;
+  }): Promise<import('@/types/subscription-billing').CycleChangeResult> {
+    try {
+      const res = await api.post('/billing/subscription/cycle-change', payload);
+      const body = res.data?.data ?? res.data;
+      return body as import('@/types/subscription-billing').CycleChangeResult;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal mengubah siklus tagihan.'));
+    }
+  },
+
+  /**
+   * POST /billing/subscription/cancel — set cancel_at_period_end.
+   * Access is retained until `active_until` and `status` stays
+   * `active`; there is no refund and no immediate revoke.
+   */
+  async cancelSubscription(payload: {
+    subscription_id: string;
+  }): Promise<import('@/types/subscription-billing').SubscriptionCancelState> {
+    try {
+      const res = await api.post('/billing/subscription/cancel', payload);
+      const body = res.data?.data ?? res.data;
+      return body as import('@/types/subscription-billing').SubscriptionCancelState;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal membatalkan langganan.'));
+    }
+  },
+
+  /**
+   * POST /billing/subscription/resume — clear the cancel flag. Refused
+   * once the subscription is no longer active (the tenant has to
+   * resubscribe); the backend message says so.
+   */
+  async resumeSubscription(payload: {
+    subscription_id: string;
+  }): Promise<import('@/types/subscription-billing').SubscriptionCancelState> {
+    try {
+      const res = await api.post('/billing/subscription/resume', payload);
+      const body = res.data?.data ?? res.data;
+      return body as import('@/types/subscription-billing').SubscriptionCancelState;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal melanjutkan langganan.'));
     }
   },
 };
