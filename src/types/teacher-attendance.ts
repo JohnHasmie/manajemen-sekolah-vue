@@ -894,15 +894,10 @@ export interface TeacherAttendanceExportFilters {
 // ───────────────────────────────────────────────────────────────────
 
 /**
- * Per-school policy for pulang cepat (early-leave). Comes from the
- * school's attendance config on the backend.
- *   · none  — early leave is unmarked; the button always fires.
- *   · warn  — the teacher may still checkout; the record is stamped
- *             `early_leave` for the admin's rekap.
- *   · block — the button is hard-disabled until the early-leave
- *             boundary is reached server-side.
+ * The early-leave policy type is declared once, near the top of this
+ * file — a second identical `export type` here was a duplicate
+ * identifier, not an alternative definition.
  */
-export type TeacherAttendanceEarlyLeavePolicy = 'none' | 'warn' | 'block';
 
 /**
  * The `data` block of GET /teacher-attendance/checkout-preview. Nullable

@@ -32,9 +32,8 @@ withDefaults(
     <div
       class="w-10 h-10 rounded-xl grid place-items-center flex-shrink-0"
       :class="{
-        'bg-tutoring-accent-dim text-tutoring-accent': accent === 'admin',
-        'bg-tutoring-accent-dim text-tutoring-accent': accent === 'tutor',
-        'bg-tutoring-accent-dim text-tutoring-accent': accent === 'parent',
+        'bg-tutoring-accent-dim text-tutoring-accent':
+          accent === 'admin' || accent === 'tutor' || accent === 'parent',
       }"
     >
       <NavIcon :name="icon" :size="20" />
@@ -51,9 +50,8 @@ withDefaults(
         <span
           v-if="accentName"
           :class="{
-            'text-tutoring-accent': accent === 'admin',
-            'text-tutoring-accent': accent === 'tutor',
-            'text-tutoring-accent': accent === 'parent',
+            'text-tutoring-accent':
+              accent === 'admin' || accent === 'tutor' || accent === 'parent',
           }"
         >
           {{ accentName }}

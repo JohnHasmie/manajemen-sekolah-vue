@@ -68,13 +68,6 @@ const props = withDefaults(
     field?: string;
     /** Coerce the emitted value to a Number (mirrors v-model.number). */
     numberModel?: boolean;
-    /**
-     * Stable handle for E2E selectors, placed on the rendered control.
-     * Label text would couple assertions to locales/id.json (switchable
-     * at runtime); positional selectors break on field reorder. Callers
-     * pass the model key, e.g. `field="guardian_email"`.
-     */
-    field?: string;
   }>(),
   {
     label: '',

@@ -25,11 +25,10 @@ withDefaults(
     <div
       class="w-10 h-10 rounded-xl grid place-items-center"
       :class="{
-        'bg-tutoring-accent-dim text-tutoring-accent': tone === 'brand',
+        'bg-tutoring-accent-dim text-tutoring-accent': tone === 'brand' || tone === 'info',
         'bg-tutoring-green-dim text-tutoring-green': tone === 'ok',
         'bg-tutoring-amber-dim text-tutoring-amber': tone === 'warn',
         'bg-tutoring-red-dim text-tutoring-red': tone === 'danger',
-        'bg-tutoring-accent-dim text-tutoring-accent': tone === 'info',
       }"
     >
       <NavIcon :name="icon" :size="20" />

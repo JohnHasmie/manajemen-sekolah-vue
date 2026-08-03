@@ -35,9 +35,8 @@ function handle() {
     <span
       class="w-9 h-9 rounded-xl grid place-items-center flex-shrink-0"
       :class="{
-        'bg-tutoring-accent-dim text-tutoring-accent': accent === 'admin',
-        'bg-tutoring-accent-dim text-tutoring-accent': accent === 'tutor',
-        'bg-tutoring-accent-dim text-tutoring-accent': accent === 'parent',
+        'bg-tutoring-accent-dim text-tutoring-accent':
+          accent === 'admin' || accent === 'tutor' || accent === 'parent',
       }"
     >
       <NavIcon :name="icon" :size="18" />

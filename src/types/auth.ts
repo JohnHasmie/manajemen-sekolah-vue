@@ -169,9 +169,13 @@ export interface AuthResponse {
   token?: string;
   user?: User;
 
-  // Picker payloads
-  schools?: School[];
-  roles?: Role[];
+  // Picker payloads.
+  //
+  // `schools` and `roles` are NOT repeated here: the flow-control block
+  // above already declares them, alongside the legacy `sekolah_list` /
+  // `role_list` spellings they replaced. Two identical declarations in
+  // one interface is a duplicate-identifier error, and the second added
+  // nothing.
   school?: School;
   sekolah?: School;
   selectedSchool?: School;
