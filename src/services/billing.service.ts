@@ -967,6 +967,37 @@ export const SubscriptionBillingService = {
    * Throws with the backend's own Indonesian message on 422 (forbidden
    * direction, no-op, or a subscription that can't be re-cycled).
    */
+  /**
+   * GET /billing/modules/add/preview — server-computed prorata for
+   * adding one module mid-cycle. Read-only, and it runs the same
+   * action `addModule` runs.
+   *
+   * Render `amount` verbatim. The old client-side formula could not be
+   * correct: the server prices from env-driven config that overrides
+   * the catalog constants this app reads, and bundles are priced from a
+   * separate map entirely.
+   *
+   * Throws with the backend's own Indonesian message on 422 (unknown
+   * key, module already active, subscription not addable).
+   */
+  async previewAddModule(payload: {
+    subscription_id: string;
+    module_key: string;
+  }): Promise<import('@/types/subscription-billing').ModuleAddPreview> {
+    try {
+      const res = await api.get('/billing/modules/add/preview', {
+        params: {
+          subscription_id: payload.subscription_id,
+          module_key: payload.module_key,
+        },
+      });
+      const body = res.data?.data ?? res.data;
+      return body as import('@/types/subscription-billing').ModuleAddPreview;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menghitung biaya penambahan modul.'));
+    }
+  },
+
   async previewCycleChange(payload: {
     subscription_id: string;
     plan: BillingPeriod;

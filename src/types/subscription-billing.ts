@@ -530,6 +530,30 @@ export interface CycleChangePreview {
 }
 
 /**
+ * GET /billing/modules/add/preview — server-computed prorata for adding
+ * one module mid-cycle. The exact figures POST /billing/modules/add
+ * will charge; both halves run the same action.
+ *
+ * This replaced a client-side re-derivation of the same formula. The
+ * client cannot get it right: rates come from env-driven config that
+ * overrides the constants `/billing/modules/catalog` serves, and bundle
+ * rates live in a separate map the picker never consulted. Render
+ * `amount` verbatim; never recompute it locally.
+ */
+export interface ModuleAddPreview {
+  module_key: string;
+  /** Full monthly rate at the current seat counts, before prorating. */
+  monthly: number;
+  /** floor(monthly / 30) — shown as the "per hari" line. */
+  daily_rate: number;
+  /** Whole days left in the current billing window, floored at 1. */
+  days_remaining: number;
+  /** floor(monthly × days_remaining / 30). THE figure to show. */
+  amount: number;
+  currency: string;
+}
+
+/**
  * POST /billing/subscription/cycle-change — the preview payload plus
  * the persisted period. Same numbers; the commit re-runs the preview
  * inside its transaction so the guards are re-checked at write time.

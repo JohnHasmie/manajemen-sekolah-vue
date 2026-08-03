@@ -26,6 +26,7 @@ import { useMeStore } from '@/stores/me';
 import { SubscriptionBillingService } from '@/services/billing.service';
 import type {
   CycleChangePreview,
+  ModuleAddPreview,
   ModuleCatalog,
   MyModules,
   MyModuleRow,
@@ -324,20 +325,49 @@ const confirmCatalogItem = computed(() =>
   confirmKey.value ? catalog.value?.optional[confirmKey.value] ?? null : null,
 );
 
-// Prorata preview: exactly matches AddModuleAction's formula
-// (monthly × days_remaining / 30). Computed FE-side so we don't need
-// a preview endpoint; the mutation still recomputes server-side.
-const proratedAdd = computed<{ dailyRate: number; monthly: number; amount: number } | null>(() => {
-  if (confirmMode.value !== 'add' || !confirmCatalogItem.value || !sub.value) return null;
-  const item = confirmCatalogItem.value;
-  const monthly =
-    item.price_per_student * sub.value.student_count +
-    item.price_per_staff * sub.value.staff_count;
-  const days = Math.max(1, daysRemaining.value);
-  const amount = Math.floor((monthly * days) / 30);
-  const dailyRate = Math.floor(monthly / 30);
-  return { dailyRate, monthly, amount };
-});
+// Prorata quote — SERVER-COMPUTED, fetched when the add dialog opens.
+//
+// This used to be a local `computed` that re-ran AddModuleAction's
+// formula in TypeScript against the catalog response. It could not stay
+// correct: the server prices from `config('billing.modules'|'bundles')`
+// first and only falls back to the catalog constants, and that config
+// is env-driven — so retuning a BILLING_* var in prod moved the charge
+// without moving what this page displayed. It also read bundles out of
+// `catalog.optional`, where they do not live, so bundle rows showed no
+// price at all.
+//
+// Never re-derive `amount` here. The whole point is that the number on
+// screen and the number charged come from one place.
+const proratedAdd = ref<ModuleAddPreview | null>(null);
+const proratedAddLoading = ref(false);
+const proratedAddError = ref<string | null>(null);
+
+async function loadAddQuote(moduleKey: string): Promise<void> {
+  if (!sub.value) return;
+  proratedAdd.value = null;
+  proratedAddError.value = null;
+  proratedAddLoading.value = true;
+  const requestedFor = moduleKey;
+  try {
+    const quote = await SubscriptionBillingService.previewAddModule({
+      subscription_id: sub.value.id,
+      module_key: moduleKey,
+    });
+    // Guard against a slow response landing after the admin switched
+    // modules or closed the dialog — otherwise the price of a module
+    // they are no longer looking at would appear on the button.
+    if (confirmMode.value === 'add' && confirmKey.value === requestedFor) {
+      proratedAdd.value = quote;
+    }
+  } catch (e) {
+    if (confirmMode.value === 'add' && confirmKey.value === requestedFor) {
+      proratedAddError.value =
+        e instanceof Error ? e.message : 'Gagal menghitung biaya penambahan modul.';
+    }
+  } finally {
+    if (confirmKey.value === requestedFor) proratedAddLoading.value = false;
+  }
+}
 
 const requiresLabels = computed<string[]>(() => {
   if (confirmMode.value !== 'add' || !confirmCatalogItem.value || !catalog.value) return [];
@@ -410,11 +440,15 @@ function askResume(key: string): void {
 function askAdd(key: string): void {
   confirmMode.value = 'add';
   confirmKey.value = key;
+  void loadAddQuote(key);
 }
 function closeModal(): void {
   if (confirmBusy.value) return;
   confirmMode.value = null;
   confirmKey.value = null;
+  proratedAdd.value = null;
+  proratedAddError.value = null;
+  proratedAddLoading.value = false;
 }
 
 async function doCancel(): Promise<void> {
@@ -1200,7 +1234,7 @@ function formatDate(iso: string | null | undefined): string {
           </div>
           <div v-if="proratedAdd" class="mm-quote-row">
             <span class="mm-quote-lbl">Tarif harian × seat</span>
-            <span class="mm-quote-val">{{ money(proratedAdd.dailyRate) }} / hari</span>
+            <span class="mm-quote-val">{{ money(proratedAdd.daily_rate) }} / hari</span>
           </div>
           <div v-if="proratedAdd" class="mm-quote-row">
             <span class="mm-quote-lbl">Bulan depan (mulai {{ expiresDate }})</span>
@@ -1210,6 +1244,13 @@ function formatDate(iso: string | null | undefined): string {
           <div v-if="proratedAdd" class="mm-quote-row total">
             <span class="mm-quote-lbl">Bayar sekarang (prorata)</span>
             <span class="mm-quote-val">{{ money(proratedAdd.amount) }}</span>
+          </div>
+          <div v-else-if="proratedAddLoading" class="mm-quote-row total">
+            <span class="mm-quote-lbl">Bayar sekarang (prorata)</span>
+            <span class="mm-quote-val muted">Menghitung…</span>
+          </div>
+          <div v-else-if="proratedAddError" class="mm-quote-note error" role="alert">
+            {{ proratedAddError }}
           </div>
         </div>
 
@@ -1225,10 +1266,14 @@ function formatDate(iso: string | null | undefined): string {
 
         <div class="mm-modal-cta">
           <button class="btn ghost" :disabled="confirmBusy" @click="closeModal">Batal</button>
-          <button class="btn primary" :disabled="confirmBusy" @click="doAdd">
+          <!-- Disabled until the server quote lands, so the admin can
+               never approve a figure the server did not produce. -->
+          <button class="btn primary" :disabled="confirmBusy || !proratedAdd" @click="doAdd">
             <template v-if="confirmBusy">Memproses…</template>
+            <template v-else-if="proratedAddLoading">Menghitung biaya…</template>
+            <template v-else-if="!proratedAdd">Biaya tidak tersedia</template>
             <template v-else>
-              Bayar {{ proratedAdd ? money(proratedAdd.amount) : '' }} &amp; aktifkan
+              Bayar {{ money(proratedAdd.amount) }} &amp; aktifkan
               <i class="ti ti-arrow-right" aria-hidden="true" />
             </template>
           </button>
@@ -1763,6 +1808,18 @@ function formatDate(iso: string | null | undefined): string {
 }
 .mm-quote-row.total .mm-quote-lbl { color: #0F172A; font-weight: 600; }
 .mm-quote-row.total .mm-quote-val { color: #113E75; font-weight: 700; font-size: 15px; }
+/* While the server quote is in flight the total reads "Menghitung…" —
+   muted, so it never looks like a settled figure. */
+.mm-quote-val.muted { color: #64748B; font-weight: 500; font-size: 13px; }
+.mm-quote-note.error {
+  color: #A3231C;
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.45;
+}
 
 /* Modal footer */
 .mm-modal-cta {
