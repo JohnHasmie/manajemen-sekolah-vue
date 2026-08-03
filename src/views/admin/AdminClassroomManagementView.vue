@@ -483,7 +483,8 @@ function onPromoted(res: { promoted: number; failed: number }) {
         <button
           type="button"
           class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white border border-slate-200 shadow-md text-2xs font-bold text-slate-700 hover:border-role-admin/40"
-          @click="editTarget = null; showFab = false"
+          data-testid="classes-fab-add"
+            @click="editTarget = null; showFab = false"
         >
           <NavIcon name="plus" :size="12" class="text-role-admin" />
           Tambah Kelas
@@ -491,6 +492,7 @@ function onPromoted(res: { promoted: number; failed: number }) {
       </div>
     </Transition>
     <button
+      data-testid="classes-fab-toggle"
       type="button"
       class="rounded-full text-white shadow-card flex items-center justify-center w-12 h-12 transition-transform hover:scale-105"
       :style="{ backgroundColor: primaryColor }"

@@ -149,7 +149,7 @@ const emit = defineEmits<{
             <NavIcon name="trash-2" :size="13" />
             Hapus
           </Button>
-          <Button variant="primary" block @click="emit('edit')">
+          <Button data-testid="detail-edit" variant="primary" block @click="emit('edit')">
             <NavIcon name="edit" :size="13" />
             Edit
           </Button>

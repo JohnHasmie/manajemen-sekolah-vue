@@ -164,6 +164,7 @@ function submit() {
     @cancel="emit('close')"
   >
       <FormField
+        field="name"
         v-model="form.name"
         label="Nama lengkap"
         :disabled="isSaving"
@@ -216,14 +217,16 @@ function submit() {
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
         <FormField
-          v-model="form.email"
+          field="email"
+        v-model="form.email"
           type="email"
           label="Email"
           :disabled="isSaving"
           :error="errors.email"
         />
         <FormField
-          v-model="form.employee_number"
+          field="employee_number"
+        v-model="form.employee_number"
           label="NIP / No. Pegawai"
           :disabled="isSaving"
         />
@@ -231,14 +234,16 @@ function submit() {
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
         <FormField
-          v-model="form.role"
+          field="role"
+        v-model="form.role"
           type="select"
           label="Peran"
           :options="roleOptions"
           :disabled="isSaving"
         />
         <FormField
-          v-model="form.phone_number"
+          field="phone_number"
+        v-model="form.phone_number"
           type="tel"
           label="No. HP"
           :disabled="isSaving"
@@ -247,7 +252,8 @@ function submit() {
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
         <FormField
-          v-model="form.gender"
+          field="gender"
+        v-model="form.gender"
           type="select"
           label="Jenis kelamin"
           select-placeholder="— Pilih —"
@@ -255,7 +261,8 @@ function submit() {
           :disabled="isSaving"
         />
         <FormField
-          v-model="form.employment_status"
+          field="employment_status"
+        v-model="form.employment_status"
           type="select"
           label="Status kepegawaian"
           select-placeholder="— Pilih —"
@@ -265,6 +272,7 @@ function submit() {
       </div>
 
       <FormField
+        field="homeroom_class_id"
         v-model="form.homeroom_class_id"
         type="select"
         select-placeholder="— Tidak menjabat wali kelas —"
@@ -299,6 +307,7 @@ function submit() {
       </div>
 
       <FormField
+        field="address"
         v-model="form.address"
         type="textarea"
         label="Alamat"

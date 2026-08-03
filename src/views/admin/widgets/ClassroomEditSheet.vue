@@ -77,6 +77,7 @@ function submit() {
   >
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
       <FormField
+        field="name"
         v-model="form.name"
         label="Nama kelas"
         placeholder="Contoh: 7A"
@@ -84,6 +85,7 @@ function submit() {
         :error="errors.name"
       />
       <FormField
+        field="grade_level"
         v-model="form.grade_level"
         type="select"
         label="Tingkat"
@@ -95,7 +97,8 @@ function submit() {
     </div>
 
     <FormField
-      v-model="form.homeroom_teacher_id"
+      field="homeroom_teacher_id"
+        v-model="form.homeroom_teacher_id"
       type="select"
       select-placeholder="— Belum ada wali kelas —"
       :options="teacherOptions"

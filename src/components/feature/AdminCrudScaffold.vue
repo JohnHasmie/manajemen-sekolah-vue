@@ -118,6 +118,7 @@ watch(searchValue, (v) => {
         <slot name="filter-chips" />
         <button
           v-if="activeFilterCount > 0"
+          data-testid="crud-clear-filters"
           type="button"
           class="text-2xs font-bold text-slate-500 hover:text-role-admin px-2"
           @click="emit('clearAllFilters')"
@@ -128,21 +129,33 @@ watch(searchValue, (v) => {
     </PageFilterToolbar>
 
     <!-- Body -->
-    <AsyncView
-      :state="state"
-      :empty-title="emptyTitleText"
-      :empty-description="emptyDescription"
-      min-height="20rem"
-      @retry="emit('retry')"
-    >
-      <template #default>
-        <slot />
-      </template>
-    </AsyncView>
+    <!--
+      `crud-body` wraps AsyncView rather than sitting inside its default
+      slot, because that slot is not rendered at all in the loading,
+      error or empty states. Anchored inside, the container VANISHED the
+      moment a filter matched nothing — so "the roster no longer shows X"
+      failed with "element(s) not found" while the search was working
+      perfectly. A test anchor has to exist in every state it is asked
+      about.
+    -->
+    <div data-testid="crud-body">
+      <AsyncView
+        :state="state"
+        :empty-title="emptyTitleText"
+        :empty-description="emptyDescription"
+        min-height="20rem"
+        @retry="emit('retry')"
+      >
+        <template #default>
+          <slot />
+        </template>
+      </AsyncView>
+    </div>
 
     <!-- Sticky bulk action bar -->
     <section
       v-if="selectedCount > 0"
+      data-testid="crud-bulk-bar"
       class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-white border border-slate-200 rounded-2xl shadow-lg p-3 flex items-center gap-2 max-w-2xl w-[calc(100%-2rem)]"
     >
       <p class="text-2xs font-bold text-slate-700 flex-1">
@@ -157,6 +170,7 @@ watch(searchValue, (v) => {
     <!-- Floating + FAB (bottom-right) -->
     <Button
       v-if="!hideAddFab"
+      data-testid="crud-add-fab"
       variant="primary"
       class="fixed bottom-6 right-6 z-30 shadow-lg shadow-role-admin/30"
       @click="emit('addClick')"

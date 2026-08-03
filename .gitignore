@@ -31,3 +31,6 @@ vite.config.js.timestamp-*
 
 # Build cache
 node_modules/.tmp
+e2e-report/
+test-results/
+playwright/.cache/

@@ -81,12 +81,13 @@ function onCancel() {
 <template>
   <Modal
     v-if="open"
+    testid="form-sheet"
     :title="title"
     :subtitle="subtitle"
     :size="size"
     @close="onCancel"
   >
-    <form class="space-y-md" @submit.prevent="emit('save')">
+    <form data-testid="form-sheet-form" class="space-y-md" @submit.prevent="emit('save')">
       <slot />
 
       <BottomSheetFooter

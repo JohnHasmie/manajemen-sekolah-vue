@@ -36,11 +36,16 @@ defineEmits<{ primary: []; secondary: [] }>();
 </script>
 
 <template>
+  <!-- Every sheet and confirm dialog in the app ends in this footer, so
+       these two ids cover cancel/submit everywhere. Targeting the labels
+       instead would couple ~200 assertions to locales/id.json, where a
+       copy edit would turn the suite red with nothing actually broken. -->
   <div class="grid grid-cols-2 gap-2 mt-md pt-md border-t border-slate-100">
-    <Button variant="secondary" block @click="$emit('secondary')">
+    <Button data-testid="sheet-cancel" variant="secondary" block @click="$emit('secondary')">
       {{ secondaryLabel }}
     </Button>
     <Button
+      data-testid="sheet-submit"
       :variant="danger ? 'danger' : 'primary'"
       :disabled="primaryDisabled"
       :loading="primaryLoading"

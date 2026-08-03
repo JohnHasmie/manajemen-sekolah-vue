@@ -471,6 +471,7 @@ async function submit() {
       </div>
 
       <FormField
+        field="name"
         v-model="form.name"
         label="Nama mata pelajaran"
         placeholder="Contoh: Matematika"
@@ -480,7 +481,8 @@ async function submit() {
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
         <FormField
-          v-model="form.code"
+          field="code"
+        v-model="form.code"
           placeholder="MAT"
           :disabled="isSaving"
         >
@@ -489,7 +491,8 @@ async function submit() {
           </template>
         </FormField>
         <FormField
-          v-model="form.kkm"
+          field="kkm"
+        v-model="form.kkm"
           type="number"
           number-model
           label="KKM (nilai ambang)"
@@ -501,6 +504,7 @@ async function submit() {
       </div>
 
       <FormField
+        field="description"
         v-model="form.description"
         type="textarea"
         :rows="3"
