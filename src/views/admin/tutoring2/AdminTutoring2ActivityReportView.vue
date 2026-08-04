@@ -107,7 +107,7 @@ function downloadPdf() {
 }
 
 function exportCsv() {
-  const csv = csvFrom(rows.value, [
+  const csv = csvFrom(rows.value as unknown as Record<string, unknown>[], [
     { key: 'date', header: t('tutoring2.common.date') },
     { key: 'sessions_scheduled', header: t('tutoring2.admin.reports.activity.colScheduled') },
     { key: 'sessions_completed', header: t('tutoring2.admin.reports.activity.colCompleted') },

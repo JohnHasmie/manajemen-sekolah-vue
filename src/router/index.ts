@@ -1832,16 +1832,21 @@ const routes: RouteRecordRaw[] = [
           role: 'admin' satisfies Role,
           needs: 'tutoring-module',
           ability: 'tutoring.voucher.view',
-        // WEB-12: greenfield "Announcement Kelompok" surface for admin
-        // (BE-22). Sits alongside the other admin tutoring2 routes;
-        // gated on `tutoring.announcement.view` matching the backend.
+        },
+      },
+      // WEB-12: greenfield "Announcement Kelompok" surface for admin
+      // (BE-22). Sits alongside the other admin tutoring2 routes;
+      // gated on `tutoring.announcement.view` matching the backend.
+      {
         path: 'admin/tutoring2/group-announcements',
         name: 'admin.tutoring2.group-announcements',
         component: () => import('@/views/admin/tutoring2/AdminTutoring2GroupAnnouncementsView.vue'),
         meta: {
           role: 'admin' satisfies Role,
           needs: 'tutoring-module',
-          ability: 'tutoring.announcement.view',        },
+          ability: 'tutoring.announcement.view',
+        },
+      },
       // WEB-14: admin leaderboard for greenfield bimbel (BE-21).
       // Ability-gated so the sidebar entry hides for admins whose
       // role tier lacks `tutoring.leaderboard.view`.
@@ -1853,7 +1858,8 @@ const routes: RouteRecordRaw[] = [
           role: 'admin' satisfies Role,
           needs: 'tutoring-module',
           ability: 'tutoring.leaderboard.view',
-        },      },
+        },
+      },
 
       // ── Admin reports (WEB-15, BE-28) ─────────────────────────────
       // Namespace: `admin.tutoring2.reports.*` — activity/attendance/
@@ -1891,6 +1897,7 @@ const routes: RouteRecordRaw[] = [
           needs: 'tutoring-module',
           ability: 'dashboard.admin.view',
         },
+      },
       // WEB-16 — admin payouts surface (BE-24/25/26). Four routes so
       // sidebar deep-links stay bookmarkable; summary is its own page
       // rather than a section of Requests so the URL is a clean landing.

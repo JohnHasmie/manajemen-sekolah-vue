@@ -15,7 +15,7 @@
   back to a soft empty state if the tutor is view-only.
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
@@ -63,7 +63,7 @@ const { state, reload } = useDataRefresh(async () => {
   return {
     rows: list.items.map<SubmissionRow>((s) => ({
       ...s,
-      _scoreInput: s.score,
+      _scoreInput: s.score ?? null,
       _feedbackInput: '',
       _dirty: false,
       _saving: false,

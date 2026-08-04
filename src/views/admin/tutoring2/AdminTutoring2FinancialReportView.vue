@@ -104,7 +104,7 @@ function downloadPdf() {
 function exportCsv() {
   // Amounts written as plain numbers (no "Rp") so a spreadsheet can
   // sum them without a text-to-number conversion.
-  const csv = csvFrom(rows.value, [
+  const csv = csvFrom(rows.value as unknown as Record<string, unknown>[], [
     { key: 'date', header: t('tutoring2.common.date') },
     {
       key: 'bills_created_count',

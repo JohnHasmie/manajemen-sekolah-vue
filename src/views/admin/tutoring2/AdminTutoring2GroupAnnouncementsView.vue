@@ -23,7 +23,6 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import Modal from '@/components/ui/Modal.vue';
-import Button from '@/components/ui/Button.vue';
 import AppRichTextEditor from '@/components/ui/AppRichTextEditor.vue';
 import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';

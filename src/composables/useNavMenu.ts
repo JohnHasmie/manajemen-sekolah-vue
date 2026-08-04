@@ -996,14 +996,10 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
         icon: 'trophy',
         ability: 'tutoring.leaderboard.view',
         needs: 'tutoring-module',
-  // Greenfield admin reports (WEB-15). Sits in an "Insight" group so
-  // the three sub-entries (Aktivitas / Kehadiran / Keuangan) read as
-  // one coherent bucket; the NavItem shape doesn't support real
-  // nesting so we render them as siblings under one section.
-  // Ability `dashboard.admin.view` matches the backend gate.
-  {
-    titleKey: 'tutoring2.nav.sectionInsight',
-    items: [
+      },
+      // Greenfield admin reports (WEB-15) — three siblings under the
+      // same Insight section (NavItem shape doesn't support nesting).
+      // Ability `dashboard.admin.view` matches the backend gate.
       {
         to: '/admin/tutoring2/reports/activity',
         labelKey: 'tutoring2.nav.reportsActivity',
@@ -1020,7 +1016,8 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
         to: '/admin/tutoring2/reports/financial',
         labelKey: 'tutoring2.nav.reportsFinancial',
         icon: 'wallet',
-        ability: 'dashboard.admin.view',      },
+        ability: 'dashboard.admin.view',
+      },
     ],
   },
   {
