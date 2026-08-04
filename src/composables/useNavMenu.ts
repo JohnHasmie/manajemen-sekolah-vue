@@ -817,9 +817,16 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
         icon: 'users',
       },
       {
-        to: '/admin/tutoring/leads',
+        // WEB-8: Leads now routes to the greenfield admin view
+        // (/admin/tutoring2/leads) backed by BE-15's /tutoring-v2/leads
+        // surface. The legacy `/admin/tutoring/leads` view is a
+        // teardown target once CLEAN-4 renames /tutoring-v2 → /tutoring.
+        // Ability-gated on `tutoring.lead.view` so staff without the
+        // key don't see a dead nav row.
+        to: '/admin/tutoring2/leads',
         labelKey: 'tutoring.nav.leads',
         icon: 'users',
+        ability: 'tutoring.lead.view',
       },
     ],
   },

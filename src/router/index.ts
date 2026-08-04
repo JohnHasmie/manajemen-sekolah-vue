@@ -1748,6 +1748,21 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
       },
       {
+        // Leads / funnel — WEB-8, backed by BE-15's /tutoring-v2/leads*.
+        // Reads gate on `tutoring.lead.view`; the write buttons inside
+        // the view additionally check `tutoring.lead.manage`. Both keys
+        // exist in the backend PermissionCatalog already so no
+        // client-side seed is needed here.
+        path: 'admin/tutoring2/leads',
+        name: 'admin.tutoring2.leads',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2LeadsView.vue'),
+        meta: {
+          role: 'admin' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.lead.view',
+        },
+      },
+      {
         path: 'admin/tutoring2/students',
         name: 'admin.tutoring2.students',
         component: () => import('@/views/admin/tutoring2/AdminTutoring2StudentsView.vue'),
