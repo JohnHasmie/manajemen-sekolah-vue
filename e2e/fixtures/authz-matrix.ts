@@ -112,6 +112,34 @@ export const DENY_MATRIX: MatrixRow[] = [
     expect: 200,
     because: 'CONTROL: the staff session is genuinely authenticated',
   },
+  // ── found by the broad probe, then confirmed with real rows ───────
+  {
+    fixture: 'parent',
+    method: 'GET',
+    path: '/lesson-plans/admin-queue',
+    expect: 403,
+    because:
+      "REGRESSION GUARD: the admin REVIEW queue was ungated, so a parent received the whole "
+      + "tier-grouped list — lesson-plan titles, subjects, classes and teacher names. Same "
+      + 'controller family as /rpp (fixed in !627); this route was missed.',
+  },
+  {
+    fixture: 'parent',
+    method: 'GET',
+    path: '/teacher',
+    expect: 403,
+    because:
+      'REGRESSION GUARD: the staff roster was ungated and carries PII — every teacher\'s '
+      + 'employee_number, phone_number, gender and employment_status went to any parent.',
+  },
+  {
+    fixture: 'staff',
+    method: 'GET',
+    path: '/teacher',
+    expect: 403,
+    because: 'baseline staff defaults carry no school.teacher.view',
+  },
+
 ];
 
 /**
