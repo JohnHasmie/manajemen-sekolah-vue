@@ -27,7 +27,6 @@ import type {
   ClassMiniChip,
   PipelineKey,
   TingkatGroup,
-  ReportCardStatus,
 } from '@/types/report-card';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';

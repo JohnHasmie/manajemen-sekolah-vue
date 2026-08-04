@@ -191,6 +191,7 @@
     "announcement": "Announcement",
     "grade": "Grade",
     "billing": "Billing",
+    "payout": "Payout",
     "system": "System",
     "other": "Other",
     "noNotificationsNow": "No notifications at this time.",

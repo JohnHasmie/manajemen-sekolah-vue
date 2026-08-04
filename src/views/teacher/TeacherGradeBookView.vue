@@ -34,9 +34,7 @@ import { SubjectService } from '@/services/subjects.service';
 import { GradeService } from '@/services/grades.service';
 import type { Classroom, Subject } from '@/types/entities';
 import type {
-  Assessment,
   AssessmentType,
-  GradeMatrix,
   TeacherGradeSummaryClass,
   TeacherGradeSummarySubject,
 } from '@/types/grades';

@@ -26,7 +26,6 @@ import { SubjectService } from '@/services/subjects.service';
 import { subjectLabel } from '@/lib/labels';
 import { formatDayName } from '@/lib/day-name';
 import type {
-  AdminScheduleFilters,
   BlockCandidate,
 } from '@/services/schedule.service';
 import {

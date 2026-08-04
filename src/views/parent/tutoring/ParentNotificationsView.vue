@@ -7,7 +7,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { NotificationService } from '@/services/notification.service';
-import type { AppNotification, NotificationCategory } from '@/types/notification';
+import type { AppNotification } from '@/types/notification';
 
 import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';

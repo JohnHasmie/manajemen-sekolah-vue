@@ -20,7 +20,9 @@ withDefaults(
      * short (≤80 chars) so the list stays scannable. Rendered only
      * on destructive actions where the caller opted in.
      */
-    impact?: string[];
+    /** Read-only: `useConfirmHost` hands out `readonly(state)`, so the
+     *  host cannot pass a mutable array. This component only reads it. */
+    impact?: readonly string[];
   }>(),
   {
     confirmLabel: 'Konfirmasi',

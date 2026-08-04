@@ -82,7 +82,10 @@ async function load() {
     const [tutors, sched, pay] = await Promise.all([
       TutoringService.getAdminTutors().catch(() => []),
       TutoringService.getAllSessions(from, to).catch(() => []),
-      TutoringService.getPayoutSummary({ user_id: uid }).catch(() => null),
+      // `userId` — the service maps it onto the `user_id` query param.
+      // Passing `user_id` here was an excess property, so the summary
+      // came back unfiltered instead of scoped to this tutor.
+      TutoringService.getPayoutSummary({ userId: uid }).catch(() => null),
     ]);
     tutor.value = (tutors as TutoringTutorRow[]).find((t) => t.user_id === uid) ?? null;
     const myGroupIds = new Set((tutor.value?.groups ?? []).map((g) => g.id));

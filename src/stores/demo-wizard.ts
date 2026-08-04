@@ -31,6 +31,13 @@ import {
 
 const LS_KEY = 'demo_wizard_state_v1';
 
+/** The keys of DemoWizardPayload whose value is an object slice. */
+type DemoPayloadSliceKey = {
+  [K in keyof DemoWizardPayload]-?: NonNullable<DemoWizardPayload[K]> extends object
+    ? K
+    : never;
+}[keyof DemoWizardPayload];
+
 interface PersistedShape {
   currentStep: number;
   payload: DemoWizardPayload;
@@ -259,8 +266,15 @@ export const useDemoWizardStore = defineStore('demoWizard', {
       }
     },
 
-    /** Replace a slice of the payload immutably + persist. */
-    patchPayload<K extends keyof DemoWizardPayload>(
+    /**
+     * Replace a slice of the payload immutably + persist.
+     *
+     * `K` is narrowed to the object-valued keys. `DemoWizardPayload` also
+     * carries `tenant_type`, a plain string — spreading that would have
+     * produced `{0:'s',1:'c',…}` rather than failing. No caller does, and
+     * now none can.
+     */
+    patchPayload<K extends DemoPayloadSliceKey>(
       key: K,
       value: Partial<DemoWizardPayload[K]>,
     ): void {
@@ -360,7 +374,7 @@ export const useDemoWizardStore = defineStore('demoWizard', {
 
     _persist(): void {
       const auth = useAuthStore();
-      storage.set<PersistedShape>(LS_KEY, {
+      storage.set(LS_KEY, {
         currentStep: this.currentStep,
         payload: this.payload,
         updatedAt: new Date().toISOString(),
@@ -369,7 +383,10 @@ export const useDemoWizardStore = defineStore('demoWizard', {
         // is recoverable across reloads. clearLocalProgress()/reset() remove
         // the whole LS_KEY entry, which correctly drops this as well.
         result: this.result,
-      });
+        // `satisfies`, because `storage.set` is not generic — the
+        // `set<PersistedShape>(…)` this used to write passed a type
+        // argument to a function that takes none, so nothing was checked.
+      } satisfies PersistedShape);
     },
 
     /**

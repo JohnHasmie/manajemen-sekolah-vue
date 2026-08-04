@@ -131,7 +131,9 @@ async function save() {
 async function remove(row: TeacherAttendanceGeofence) {
   const ok = await confirm({
     title: 'Hapus lokasi?',
-    body: `Yakin hapus "${row.name}"? Presensi guru akan mengabaikan lokasi ini setelah dihapus.`,
+    // `message`, not `body` — ConfirmOptions has no `body`, so the
+    // delete dialog rendered with its question missing.
+    message: `Yakin hapus "${row.name}"? Presensi guru akan mengabaikan lokasi ini setelah dihapus.`,
     confirmLabel: 'Hapus',
   });
   if (!ok) return;
