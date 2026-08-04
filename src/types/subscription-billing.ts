@@ -401,6 +401,76 @@ export interface MyModuleRow {
  * discount object with just the Rp reduction rather than dropping the
  * badge silently.
  */
+/**
+ * ── Discount codes ────────────────────────────────────────────────
+ *
+ * Four files import `AppliedDiscount` / `DiscountPreviewFailure` and
+ * `BillingService.previewDiscountCode` declares it returns
+ * `DiscountPreviewResult`, but none of the three had ever been defined
+ * here. Type-only imports erase at build time, so the feature ran while
+ * nothing about it was checked.
+ *
+ * Shapes below are taken from `PreviewDiscountCodeAction` and the
+ * `discount_codes` migration, not inferred from the call sites.
+ */
+
+/**
+ * `discount_codes.type`. `DiscountCode::discountFor()` branches on
+ * `=== 'percent'` and treats everything else as a fixed rupiah amount.
+ */
+export type DiscountCodeType = 'percent' | 'fixed';
+
+/** Every `reason` PreviewDiscountCodeAction can return. */
+export type DiscountPreviewFailureReason =
+  | 'not_found'
+  | 'below_min'
+  | 'scope_mismatch'
+  | 'first_time_only'
+  | 'tenant_scope'
+  // Derived from the code's status by `messageForStatus`.
+  | 'not_yet_active'
+  | 'expired'
+  | 'exhausted'
+  | 'paused';
+
+/**
+ * A validated code, as the subscribe flow keeps it. Mirrors the
+ * `valid: true` branch minus `subtotal_after`, which the caller
+ * recomputes against the live cart.
+ *
+ * Distinct from {@link AppliedDiscountSnapshot}, which is what a
+ * *already-running* subscription reports and can carry nulls where the
+ * source code row has since been deleted.
+ */
+export interface AppliedDiscount {
+  code: string;
+  /** `description` is NOT NULL in the migration. */
+  description: string;
+  type: DiscountCodeType;
+  /** Percent 1–90, or a rupiah amount when `type` is fixed. */
+  value: number;
+  /** NULL = for the life of the subscription. */
+  duration_months: number | null;
+  discount_amount: number;
+  valid_until: string | null;
+  used_count: number;
+  /** NULL = unlimited quota. */
+  max_uses: number | null;
+}
+
+export interface DiscountPreviewFailure {
+  valid: false;
+  reason: DiscountPreviewFailureReason;
+  message: string;
+  /** Only present when the code existed but was rejected. */
+  code?: string;
+}
+
+/** Discriminated on `valid`, so callers switch rather than try/catch. */
+export type DiscountPreviewResult =
+  | (AppliedDiscount & { valid: true; subtotal_after: number })
+  | DiscountPreviewFailure;
+
 export interface AppliedDiscountSnapshot {
   code: string | null;
   description: string | null;

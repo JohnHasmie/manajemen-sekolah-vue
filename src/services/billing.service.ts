@@ -39,6 +39,7 @@ import type {
   SubscribeResult,
   SubscriptionQuote,
   SubscriptionTenant,
+  TenantType,
 } from '@/types/subscription-billing';
 
 function asNum(v: unknown, fallback = 0): number {
