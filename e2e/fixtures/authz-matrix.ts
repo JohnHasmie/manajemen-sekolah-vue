@@ -174,3 +174,46 @@ export const ADMIN_READ_PROBES: string[] = [
   '/alert-settings',
   '/billing-settings',
 ];
+
+/**
+ * Reads that stay 200 for everyone but must return DIFFERENT rows per
+ * caller.
+ *
+ * DENY_MATRIX cannot express this. Its rows assert a status code, and a
+ * status code is exactly what these endpoints do not distinguish: the
+ * low-privilege caller is *allowed* to read, they must simply not receive
+ * the whole tenant. `/teaching-schedule/all` shipped for months returning
+ * every row in the school to any holder of `academic.schedule.view` — an
+ * ability parents and students hold too — and answered 200 the entire
+ * time.
+ *
+ * That is the same lesson the probe group above learned the hard way: a
+ * 200 is a lead, not a verdict. `/bill/parent` looked identical to an
+ * IDOR until its body turned out to be `[]`. Only reading the payload
+ * tells a leak apart from a correctly-scoped result.
+ *
+ * The assertion is a STRICT SUBSET, not a smaller count. Counting alone
+ * passes an implementation that scopes to the wrong thing entirely — some
+ * other class, some other teacher — as long as it returns fewer rows.
+ */
+export interface ScopedReadRow {
+  path: string;
+  /** The fixture whose view is the whole tenant — and the control. */
+  full: FixtureKey;
+  /** Fixtures whose view must be a strict, non-equal subset of `full`. */
+  narrowed: FixtureKey[];
+  /** Why this row exists — printed on failure. */
+  because: string;
+}
+
+export const SCOPED_READS: ScopedReadRow[] = [
+  {
+    path: '/teaching-schedule/all',
+    full: 'admin',
+    narrowed: ['teacher', 'parent'],
+    because:
+      'the timetable grid is an admin surface; a teacher may see the lessons they teach and ' +
+      'a parent the classes their children sit in, but neither may pull the whole school — ' +
+      'which teacher is with which class at which hour, all week',
+  },
+];
