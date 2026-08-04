@@ -167,11 +167,23 @@ for (const row of SCOPED_READS) {
       try {
         const idsOf = async (client: Awaited<ReturnType<typeof apiFor>>) => {
           const res = await client.ctx.fetch(`${client.base}${row.path}`);
-          const body = (await res.json().catch(() => null)) as { data?: { id?: string }[] } | null;
+          const body = (await res.json().catch(() => null)) as unknown;
+
+          // Two response shapes in one controller: most reads answer
+          // `{success, data: [...]}`, but the unfiltered index returns a
+          // BARE array straight from the repository. Reading only `.data`
+          // scored it as zero rows, and the control below then failed the
+          // test for "an empty tenant" — a true statement about the wrong
+          // thing. Accept either shape rather than assert the tidier one.
+          const rows = Array.isArray(body)
+            ? body
+            : ((body as { data?: unknown })?.data ?? []);
 
           return {
             status: res.status(),
-            ids: (body?.data ?? []).map((r) => r.id).filter(Boolean) as string[],
+            ids: (Array.isArray(rows) ? rows : [])
+              .map((r) => (r as { id?: string })?.id)
+              .filter(Boolean) as string[],
           };
         };
 
@@ -206,3 +218,108 @@ for (const row of SCOPED_READS) {
     });
   }
 }
+
+// ── Group E — a teacher id in the query string is not a free pass ────
+
+/**
+ * `/teaching-schedule/teacher/{id}`, `week-summary` and `daily-summary`
+ * take a teacher id as INPUT and scope themselves to it perfectly — for
+ * whichever teacher the caller names. That is an IDOR, not an over-broad
+ * list, which is why backend !636 answers 403 rather than an empty array:
+ * nothing was filtered out, the request was not the caller's to make.
+ *
+ * These live here rather than in DENY_MATRIX because the path carries a
+ * seeded id, and a hard-coded one would rot on the next re-seed.
+ */
+test('a parent cannot walk teacher ids', async () => {
+  test.skip(!has('parent') || !has('teacher'), 'parent or teacher fixture missing');
+
+  const victim = fixtureFor('teacher').user_id;
+  const parent = await apiFor(await login(fixtureFor('parent')));
+  const teacher = await apiFor(await login(fixtureFor('teacher')));
+
+  try {
+    for (const path of [
+      `/teaching-schedule/teacher/${victim}`,
+      `/teaching-schedule/week-summary?teacher_id=${victim}`,
+      `/teaching-schedule/daily-summary?teacher_id=${victim}`,
+    ]) {
+      expect(await statusOf(parent, 'GET', path), `a parent read another person's ${path}`).toBe(403);
+    }
+
+    // CONTROL: the teacher's OWN id still works. Without it the three
+    // 403s above would pass just as happily against an endpoint that had
+    // been broken for everyone.
+    expect(
+      await statusOf(teacher, 'GET', `/teaching-schedule/teacher/${victim}`),
+      'CONTROL: a teacher lost access to their own schedule',
+    ).toBe(200);
+
+    // And a missing id is still the historical 400, not a 403 — the
+    // teacher's own screen calls these before it has resolved a profile
+    // id, and turning that into a refusal broke it once already.
+    expect(
+      await statusOf(teacher, 'GET', '/teaching-schedule/week-summary'),
+      'an absent teacher_id must stay a 400 "required", not become a 403',
+    ).toBe(400);
+  } finally {
+    await parent.dispose();
+    await teacher.dispose();
+  }
+});
+
+test('the class timetable matrix refuses a class the caller has no tie to', async () => {
+  test.skip(!has('parent') || !has('admin'), 'parent or admin fixture missing');
+
+  const wide = await apiFor(await login(fixtureFor('admin')));
+  const narrow = await apiFor(await login(fixtureFor('parent')));
+
+  try {
+    // Which classes is this parent actually entitled to? Ask the product,
+    // do not assume. The first attempt at this test hard-coded
+    // `classes[0]` and failed against a CORRECT backend, because the
+    // fixture parent's child happens to sit in that very class — an
+    // identical matrix was the right answer and the test called it a
+    // leak.
+    const mineRes = await narrow.ctx.fetch(`${narrow.base}/teaching-schedule`);
+    const mineBody = (await mineRes.json().catch(() => null)) as unknown;
+    const mineRows = (Array.isArray(mineBody) ? mineBody : ((mineBody as { data?: unknown })?.data ?? [])) as {
+      class_id?: string;
+    }[];
+    const ownClassIds = new Set(mineRows.map((r) => r?.class_id).filter(Boolean));
+
+    const foreign = manifest.data.classes.find((c) => !ownClassIds.has(c.id));
+    test.skip(!foreign, 'the seeded parent is tied to every class, so there is no foreign class to probe');
+
+    const cellCount = async (client: Awaited<ReturnType<typeof apiFor>>) => {
+      const res = await client.ctx.fetch(
+        `${client.base}/teaching-schedules/matrix?class_id=${foreign!.id}`,
+      );
+      const body = (await res.json().catch(() => null)) as
+        | { data?: { cells?: Record<string, unknown> }; cells?: Record<string, unknown> }
+        | null;
+      const cells = body?.data?.cells ?? body?.cells ?? {};
+
+      return { status: res.status(), filled: Object.keys(cells).length };
+    };
+
+    const full = await cellCount(wide);
+    const slice = await cellCount(narrow);
+
+    expect(full.status, `CONTROL: the admin must still read ${foreign!.name}`).toBe(200);
+    expect(
+      full.filled,
+      `CONTROL: ${foreign!.name} has no lessons in it, so an empty parent matrix would prove nothing`,
+    ).toBeGreaterThan(0);
+
+    expect(slice.status, 'the matrix is scoped, not denied').toBe(200);
+    expect(
+      slice.filled,
+      `a parent read the full timetable of ${foreign!.name} — class_id is caller-supplied, so ` +
+        'without narrowing any class in the school can be read by naming it',
+    ).toBe(0);
+  } finally {
+    await wide.dispose();
+    await narrow.dispose();
+  }
+});

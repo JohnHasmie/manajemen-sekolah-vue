@@ -140,6 +140,43 @@ export const DENY_MATRIX: MatrixRow[] = [
     because: 'baseline staff defaults carry no school.teacher.view',
   },
 
+  // ── schedule editing helpers (backend !636) ───────────────────────
+  //
+  // Gated on `academic.schedule.manage`, NOT row-scoped, and the
+  // distinction is the whole point: these answer "is this slot taken",
+  // "who is free", "what can merge". A caller shown a partial timetable
+  // would be told a slot is free while someone else teaches in it, and
+  // that wrong answer then gets written to the database. Refusing beats
+  // answering wrongly.
+  {
+    fixture: 'parent',
+    method: 'GET',
+    path: '/teaching-schedule/conflicts',
+    expect: 403,
+    because: 'conflict detection is an editing affordance; a parent holds .view, never .manage',
+  },
+  {
+    fixture: 'teacher',
+    method: 'GET',
+    path: '/teaching-schedules/block-candidates',
+    expect: 403,
+    because: 'block merge candidates are proposed to whoever edits the grid — teachers do not',
+  },
+  {
+    fixture: 'parent',
+    method: 'GET',
+    path: '/teaching-schedules/available-teachers',
+    expect: 403,
+    because: 'who-is-free leaks every teacher\'s occupancy across the school',
+  },
+  {
+    fixture: 'admin',
+    method: 'GET',
+    path: '/teaching-schedules/block-candidates',
+    expect: 200,
+    because: 'CONTROL: the admin who actually edits the grid still reaches it, so the three 403s above are denials and not a controller refusing everyone',
+  },
+
 ];
 
 /**
@@ -207,6 +244,20 @@ export interface ScopedReadRow {
 }
 
 export const SCOPED_READS: ScopedReadRow[] = [
+  {
+    path: '/teaching-schedule',
+    full: 'admin',
+    narrowed: ['teacher', 'parent'],
+    because:
+      'the unfiltered index went through TeachingScheduleRepository::getAll(), which bypassed ' +
+      'the filtered Action entirely — it was the one read left school-wide after !635',
+  },
+  {
+    path: '/teaching-schedule/filtered?limit=200',
+    full: 'admin',
+    narrowed: ['teacher', 'parent'],
+    because: 'the paginated list behind every schedule filter UI',
+  },
   {
     path: '/teaching-schedule/all',
     full: 'admin',
