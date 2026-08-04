@@ -639,8 +639,15 @@ export interface TeacherAttendanceOwnSummaryMeta
 }
 
 /** The teacher's own totals block (history/summary `summary`). */
-export interface TeacherAttendanceOwnSummaryTotals
-  extends TeacherAttendanceStatusCounts {
+export interface TeacherAttendanceOwnSummaryTotals {
+  /**
+   * Per-status counts, keyed from the response meta. Declared here
+   * rather than inherited from `TeacherAttendanceStatusCounts`
+   * (`Record<string, number>`) because `overtime_minutes` below is
+   * optional, and `number | undefined` cannot live under a `number`
+   * index signature.
+   */
+  [statusKey: string]: number | undefined;
   total: number;
   present_pct: number;
   /**

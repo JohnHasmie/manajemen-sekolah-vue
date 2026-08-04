@@ -96,7 +96,9 @@ async function load() {
   try {
     roster.value = await AttendanceDailyService.getDailyRoster({
       date: date.value,
-      gradeLevel: gradeLevel.value === 'all' ? undefined : gradeLevel.value,
+      // The service forwards `tingkat`; `gradeLevel` was an excess
+      // property and got dropped, so picking a tingkat changed nothing.
+      tingkat: gradeLevel.value === 'all' ? undefined : gradeLevel.value,
     });
   } catch (e) {
     errorMsg.value = (e as Error)?.message ?? 'Gagal memuat data harian.';

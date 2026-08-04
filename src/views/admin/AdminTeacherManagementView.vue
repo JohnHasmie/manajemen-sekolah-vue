@@ -209,7 +209,9 @@ async function reload(page = 1, opts: { skeleton?: boolean } = {}) {
       gender: filters.gender ?? undefined,
       employment_status: filters.employment_status ?? undefined,
       activity_status: filters.activity_status ?? undefined,
-      academic_year_id: ayStore.activeYearId || undefined,
+      // `selectedYearId` — the store exposes no `activeYearId`, so this
+      // was undefined and the teacher list went out unscoped by year.
+      academic_year_id: ayStore.selectedYearId || undefined,
     });
     teachers.value = res.items;
     pagination.value = res.pagination ?? null;

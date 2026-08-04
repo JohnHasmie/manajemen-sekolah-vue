@@ -80,8 +80,13 @@ const state = computed<AsyncState<StaffMember[]>>(() => {
 const kpiCards = computed<KpiCard[]>(() => [
   { icon: 'users', label: $t('admin.staff.kpiTotal'), value: kpis.value.total, tone: 'brand' },
   { icon: 'shield-check', label: $t('admin.staff.kpiWithAccess', 'PUNYA ROLE'), value: kpis.value.with_access, suffix: `/${kpis.value.total}`, tone: 'green' },
-  { icon: 'briefcase', label: 'JABATAN', value: kpis.value.unique_positions, tone: 'indigo' },
-  { icon: 'user', label: 'PEREMPUAN', value: kpis.value.female, tone: 'pink' },
+  // `indigo` / `pink` are not KpiTone. ICON_BG is a Record lookup, so
+  // both resolved to undefined and these two cards drew their icon
+  // square with no fill — the same defect !1085 fixed on this screen's
+  // filter chips, which surfaced here as an overload failure on the
+  // array rather than as TS2322 and so was missed.
+  { icon: 'briefcase', label: 'JABATAN', value: kpis.value.unique_positions, tone: 'violet' },
+  { icon: 'user', label: 'PEREMPUAN', value: kpis.value.female, tone: 'amber' },
 ]);
 
 async function reload(page = 1, opts: { skeleton?: boolean } = {}) {
