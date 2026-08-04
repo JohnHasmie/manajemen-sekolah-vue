@@ -177,6 +177,41 @@ export const DENY_MATRIX: MatrixRow[] = [
     because: 'CONTROL: the admin who actually edits the grid still reaches it, so the three 403s above are denials and not a controller refusing everyone',
   },
 
+  // ── bill-type catalogue + the announcement control (backend !640) ──
+  {
+    fixture: 'parent',
+    method: 'GET',
+    path: '/payment-types',
+    expect: 403,
+    because:
+      'the fee catalogue is an admin finance surface; a parent reads their own bills through ' +
+      '/bill/parent, which already embeds the type it needs',
+  },
+  {
+    fixture: 'teacher',
+    method: 'GET',
+    path: '/payment-types',
+    expect: 403,
+    because: 'teachers hold no finance ability at all',
+  },
+  {
+    fixture: 'admin',
+    method: 'GET',
+    path: '/payment-types',
+    expect: 200,
+    because: 'CONTROL: AdminFinanceJenisView and AdminFinanceBillsView live on this endpoint',
+  },
+  {
+    fixture: 'parent',
+    method: 'GET',
+    path: '/announcement',
+    expect: 200,
+    because:
+      'CONTROL, and the point of the row: /announcement sat on the same reachable list as the two ' +
+      'above and was NOT a leak — the repository already filters by role_target. Locking the 200 ' +
+      'stops a future sweep from "fixing" it into a 403 and taking the parent inbox with it',
+  },
+
 ];
 
 /**
@@ -244,6 +279,22 @@ export interface ScopedReadRow {
 }
 
 export const SCOPED_READS: ScopedReadRow[] = [
+  // `teacher` is deliberately NOT in `narrowed` here. The seeded tenant
+  // has two classes and the fixture teacher teaches both, so "sees fewer
+  // than the admin" is simply false for them — asserting it would fail
+  // against a CORRECT backend, which is exactly how the matrix case in
+  // !1092 first went red. The teacher branch of ClassVisibilityScope is
+  // covered by ClassAndPaymentTypeReadAuthzTest, where the fixture is
+  // built rather than borrowed.
+  {
+    path: '/classes?per_page=200',
+    full: 'admin',
+    narrowed: ['parent'],
+    because:
+      'school.class.view is admin-only, yet thirteen teacher screens fill their class pickers ' +
+      'here — so !640 narrowed the rows instead of gating, and a parent now sees only the classes ' +
+      'their children sit in',
+  },
   {
     path: '/teaching-schedule',
     full: 'admin',
