@@ -1810,6 +1810,19 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/tutoring2/AdminTutoring2SettingsView.vue'),
         meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
       },
+      {
+        // WEB-9 — greenfield vouchers (BE-16). Ability-guarded so read-only
+        // staff without `tutoring.voucher.view` bounce at the guard, not
+        // inside the view.
+        path: 'admin/tutoring2/vouchers',
+        name: 'admin.tutoring2.vouchers',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2VouchersView.vue'),
+        meta: {
+          role: 'admin' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.voucher.view',
+        },
+      },
 
       {
         path: 'teacher/tutoring/class',
