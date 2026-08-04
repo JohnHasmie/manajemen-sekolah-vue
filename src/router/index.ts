@@ -1795,6 +1795,33 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/tutoring2/AdminTutoring2SettingsView.vue'),
         meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
       },
+      // WEB-16 — admin payouts surface (BE-24/25/26). Four routes so
+      // sidebar deep-links stay bookmarkable; summary is its own page
+      // rather than a section of Requests so the URL is a clean landing.
+      {
+        path: 'admin/tutoring2/payouts/rates',
+        name: 'admin.tutoring2.payouts.rates',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2PayoutRatesView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/payouts/requests',
+        name: 'admin.tutoring2.payouts.requests',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2PayoutRequestsView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/payouts/settings',
+        name: 'admin.tutoring2.payouts.settings',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2PayoutSettingsView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/payouts/summary',
+        name: 'admin.tutoring2.payouts.summary',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2PayoutSummaryView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
 
       {
         path: 'teacher/tutoring/class',
