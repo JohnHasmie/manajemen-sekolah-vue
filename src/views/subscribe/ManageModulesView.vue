@@ -716,13 +716,6 @@ function labelFor(key: string): string {
   const item = catalog.value?.optional[key];
   return item ? moduleLabel(item, tenantType.value) : key;
 }
-function taglineFor(key: string): string {
-  if (catalog.value?.bundles[key]) {
-    return moduleTagline(itemFor(key), tenantType.value);
-  }
-  const item = catalog.value?.optional[key];
-  return item ? moduleTagline(item, tenantType.value) : '';
-}
 function seatBreakdown(row: MyModuleRow): string {
   if (!sub.value) return '';
   const parts: string[] = [];

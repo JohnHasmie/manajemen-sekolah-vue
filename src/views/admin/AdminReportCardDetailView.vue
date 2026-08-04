@@ -122,14 +122,6 @@ const isPublished = computed(() => status.value === 'published' || status.value 
 const statusTone = computed(() => STATUS_TONES[status.value]);
 const statusLabel = computed(() => STATUS_LABELS[status.value]);
 
-const headerMeta = computed(() => {
-  const sem = detail.value?.semester ?? '';
-  const tp = detail.value?.academic_year ?? '';
-  const parts: string[] = [];
-  if (tp) parts.push(t('admin.sekolah.report_card_detail.tp_label', { tp }));
-  if (sem) parts.push(t('admin.sekolah.report_card_detail.sem_label', { sem }));
-  return parts.join(' · ');
-});
 
 const averageScore = computed(() => {
   return detail.value?.summary?.rerata ?? detail.value?.avg_grade ?? '—';

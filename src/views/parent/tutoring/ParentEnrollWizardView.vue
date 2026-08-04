@@ -72,7 +72,6 @@ watch(programId, async (id) => {
 
 const selectedProgram = computed(() => programs.value.find((p) => p.id === programId.value) ?? null);
 const selectedPackage = computed(() => packages.value.find((p) => p.id === packageId.value) ?? null);
-const selectedGroup = computed(() => groups.value.find((g) => g.id === groupId.value) ?? null);
 const selectedChild = computed(() =>
   children.value.find((c) => c.student_id === activeChildId.value) ?? children.value[0] ?? null,
 );

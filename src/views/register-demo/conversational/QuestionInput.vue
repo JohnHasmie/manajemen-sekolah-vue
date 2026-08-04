@@ -24,7 +24,6 @@ import {
   gibberishMessage,
   phoneMessage,
 } from '@/lib/gibberish';
-import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { educationLevelDisplay, normalizeEducationLevel } from '@/lib/labels';
 import type { Question } from './questions';
 
@@ -45,7 +44,6 @@ const emit = defineEmits<{
   (e: 'patchPayload', patcher: (p: any) => any): void;
 }>();
 
-const wizard = useDemoWizardStore();
 
 // ── focus management ────────────────────────────────────────────────
 const textRef = ref<HTMLInputElement | null>(null);

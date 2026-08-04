@@ -50,7 +50,6 @@ import RoleToggleChipRow, {
 } from '@/components/feature/RoleToggleChipRow.vue';
 import RecommendationClassCard from '@/components/feature/RecommendationClassCard.vue';
 import RecommendationGenerateSheet from '@/components/feature/RecommendationGenerateSheet.vue';
-import NavIcon from '@/components/feature/NavIcon.vue';
 import Toast from '@/components/ui/Toast.vue';
 
 const auth = useAuthStore();

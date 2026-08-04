@@ -6,7 +6,6 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
-import NavIcon from '@/components/feature/NavIcon.vue';
 
 const props = defineProps<{
   identityKey: string;

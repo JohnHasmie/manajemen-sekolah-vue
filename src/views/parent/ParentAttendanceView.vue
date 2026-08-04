@@ -29,7 +29,6 @@ import type {
   ParentAttendanceEntry,
   ParentAttendanceStatus,
 } from '@/types/parent';
-import { PARENT_ATTENDANCE_LABELS } from '@/types/parent';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
