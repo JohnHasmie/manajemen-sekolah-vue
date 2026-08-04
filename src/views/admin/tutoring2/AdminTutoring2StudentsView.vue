@@ -1,18 +1,20 @@
 <!--
-  AdminTutoring2SiswaView.vue — greenfield "Siswa" list.
+  AdminTutoring2StudentsView.vue — admin "Siswa" list, full CRUD spine
+  (WEB-11). Extends the WEB-3 MVP: swaps the derive-from-enrollments
+  shortcut for the real BE-18 endpoint (`/api/tutoring-v2/students*`),
+  and adds the create / edit / deactivate row actions the MVP flagged.
 
-  Bimbel doesn't have its own students table (reuses the shared
-  `students` row). For the WEB-3 MVP we derive the siswa list by
-  grouping the enrollments feed by `student_id` — good enough to
-  show who's enrolled, how many active programs each student has,
-  and their billing snapshot.
-
-  Mirrors AdminTutoring2ProgramsView shape:
+  Shape (same 5-block layout as the other admin tutoring2 views):
     1. `BrandPageHeader`
-    2. `KpiStripCards` — 4 tiles
-    3. `PageFilterToolbar` + `AppFilterChip`s
-    4. `AsyncView` → white rounded-3xl table card
-    5. Floating "+ Tambah siswa" CTA.
+    2. `KpiStripCards` — 4 tiles (total/active/inactive/with-bills)
+    3. `PageFilterToolbar` + `AppFilterChip`s (search + include-inactive)
+    4. `AsyncView` → white rounded-3xl table card with row actions
+    5. Floating "+ Tambah siswa" CTA (only when tutoring.student.manage)
+
+  Ability gates:
+    - `tutoring.student.view` — the whole view (mount guard is upstream,
+      but every mutation is also `.manage`-gated at the button level)
+    - `tutoring.student.manage` — new / edit / deactivate CTAs
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -27,21 +29,26 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useConfirm } from '@/composables/useConfirm';
 import { useDataRefresh } from '@/composables/useDataRefresh';
-import {
-  TutoringBimbelService,
-  type BimbelEnrollment,
-} from '@/services/tutoring-bimbel.service';
+import { useMe } from '@/composables/useMe';
+import { useToast } from '@/composables/useToast';
+import { TutoringStudentsService } from '@/services/tutoring2/students';
+import type { BimbelStudent } from '@/types/tutoring2/student';
 import type { StatusBadgeTone } from '@/types/status-badge';
-
-// TODO WEB-3+ swap to a proper /tutoring-v2/students endpoint once BE exposes it; for now derived from enrollments
-
-const search = ref('');
-const statusFilter = ref<string>(''); // '' | 'active' | 'trial' | 'withdrawn'
-const programFilter = ref<string>(''); // '' | program_id
-const waliFilter = ref<string>(''); // nominal for MVP — '' | 'linked'
+import AdminTutoring2StudentCreateEditSheet from './AdminTutoring2StudentCreateEditSheet.vue';
 
 const { t } = useI18n();
+const { can } = useMe();
+const { confirm } = useConfirm();
+const toast = useToast();
+
+const canManage = computed(() => can('tutoring.student.manage'));
+
+// ── Filters ────────────────────────────────────────────────────────
+
+const search = ref('');
+const includeInactive = ref(false); // false → only active (default)
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -49,99 +56,112 @@ const applyDebounced = useDebounceFn((v: string) => {
 }, 300);
 watch(search, (v) => applyDebounced(v));
 
+// ── Data ───────────────────────────────────────────────────────────
+
 const { state, reload } = useDataRefresh(async () => {
-  const { items } = await TutoringBimbelService.listEnrollments({
-    per_page: 200,
-    status: statusFilter.value || undefined,
-    program_id: programFilter.value || undefined,
+  const { items } = await TutoringStudentsService.list({
+    per_page: 100,
+    // BE takes boolean-ish; only pass `active=false` when the admin
+    // toggled include-inactive on. `active=true` is the default so
+    // omitting is equivalent — kept the query string minimal.
+    ...(includeInactive.value ? { active: false } : {}),
+    ...(debouncedSearch.value.trim() ? { search: debouncedSearch.value.trim() } : {}),
   });
   return items;
 });
 
-watch([debouncedSearch, statusFilter, programFilter, waliFilter], () => reload());
+watch([debouncedSearch, includeInactive], () => reload());
 useAcademicYearWatcher(reload);
 
-// Derived: one row per unique student_id, keeping the most-recent enrollment
-// as the "primary" snapshot and counting how many active programs they have.
-interface StudentRow {
-  student_id: string;
-  program_id: string;
-  billing_mode: BimbelEnrollment['billing_mode'];
-  billing_mode_label?: string;
-  status: BimbelEnrollment['status'];
-  status_label?: string;
-  remaining_sessions?: number | null;
-  total_sessions_snapshot?: number | null;
-  active_programs: number;
-}
+// ── Derived rendering ──────────────────────────────────────────────
 
-const studentRows = computed<StudentRow[]>(() => {
-  const items = (state.value.status === 'content' ? state.value.data : []) as BimbelEnrollment[];
-  const byStudent = new Map<string, StudentRow>();
-  for (const e of items) {
-    const existing = byStudent.get(e.student_id);
-    if (!existing) {
-      byStudent.set(e.student_id, {
-        student_id: e.student_id,
-        program_id: e.program_id,
-        billing_mode: e.billing_mode,
-        billing_mode_label: e.billing_mode_label,
-        status: e.status,
-        status_label: e.status_label,
-        remaining_sessions: e.remaining_sessions,
-        total_sessions_snapshot: e.total_sessions_snapshot,
-        active_programs: e.status === 'active' ? 1 : 0,
-      });
-    } else if (e.status === 'active') {
-      existing.active_programs += 1;
-    }
-  }
-  const rows = Array.from(byStudent.values());
-  const needle = debouncedSearch.value.trim().toLowerCase();
-  if (!needle) return rows;
-  return rows.filter((r) => r.student_id.toLowerCase().includes(needle));
-});
+const rows = computed<BimbelStudent[]>(() =>
+  (state.value.status === 'content' ? state.value.data : []) as BimbelStudent[],
+);
 
 const kpiCards = computed<KpiCard[]>(() => {
-  const items = (state.value.status === 'content' ? state.value.data : []) as BimbelEnrollment[];
-  const unique = new Set(items.map((e) => e.student_id)).size;
-  const aktif = items.filter((e) => e.status === 'active').length;
-  const trial = items.filter((e) => e.status === 'trial').length;
-  const lulusKeluar = items.filter((e) => e.status === 'graduated' || e.status === 'withdrawn').length;
+  const items = rows.value;
+  const total = items.length;
+  const active = items.filter((s) => s.active !== false).length;
+  const inactive = items.filter((s) => s.active === false).length;
+  const withBills = items.filter((s) => (s.active_bill_count ?? 0) > 0).length;
   return [
-    { icon: 'users', label: t('tutoring2.admin.students.kpiTotal'), value: String(unique) },
-    { icon: 'circle-check', label: t('tutoring2.admin.students.kpiActive'), value: String(aktif) },
-    { icon: 'sparkles', label: t('tutoring2.admin.students.kpiTrial'), value: String(trial), tone: trial > 0 ? 'amber' : undefined },
-    { icon: 'log-out', label: t('tutoring2.admin.students.kpiGraduated'), value: String(lulusKeluar) },
+    { icon: 'users', label: t('tutoring2.admin.students.kpiTotal'), value: String(total) },
+    { icon: 'circle-check', label: t('tutoring2.admin.students.kpiActive'), value: String(active) },
+    {
+      icon: 'log-out',
+      label: t('tutoring2.admin.students.kpiGraduated'),
+      value: String(inactive),
+      tone: inactive > 0 ? 'slate' : undefined,
+    },
+    {
+      icon: 'sparkles',
+      label: t('tutoring2.admin.students.kpiWithBills'),
+      value: String(withBills),
+      tone: withBills > 0 ? 'amber' : undefined,
+    },
   ];
 });
 
-const uniqueStudentCount = computed(() => {
-  const items = (state.value.status === 'content' ? state.value.data : []) as BimbelEnrollment[];
-  return new Set(items.map((e) => e.student_id)).size;
-});
+function statusToneFor(s: BimbelStudent): StatusBadgeTone {
+  // active flag is authoritative — student_status may be null on
+  // never-graduated rows and the BE resource maps that to active=true.
+  if (s.active === false) return 'neutral';
+  if (s.student_status === 'trial') return 'warning';
+  return 'success';
+}
 
-const activeEnrollmentCount = computed(() => {
-  const items = (state.value.status === 'content' ? state.value.data : []) as BimbelEnrollment[];
-  return items.filter((e) => e.status === 'active').length;
-});
+function statusLabelFor(s: BimbelStudent): string {
+  if (s.active === false) return t('tutoring2.admin.students.kpiGraduated');
+  if (s.student_status === 'trial') return t('tutoring2.admin.students.kpiTrial');
+  return t('tutoring2.admin.students.kpiActive');
+}
 
-function statusPillTone(status: BimbelEnrollment['status']): StatusBadgeTone {
-  switch (status) {
-    case 'active': return 'success';
-    case 'trial': return 'warning';
-    case 'paused': return 'neutral';
-    case 'graduated': return 'info';
-    case 'withdrawn': return 'neutral';
+// ── Sheet state ────────────────────────────────────────────────────
+
+/**
+ * `undefined` → sheet closed. `null` → open in create mode.
+ * A BimbelStudent → open in edit mode (pre-hydrated).
+ */
+const sheetTarget = ref<BimbelStudent | null | undefined>(undefined);
+
+function openCreate() {
+  if (!canManage.value) return;
+  sheetTarget.value = null;
+}
+function openEdit(row: BimbelStudent) {
+  if (!canManage.value) return;
+  sheetTarget.value = row;
+}
+function closeSheet() {
+  sheetTarget.value = undefined;
+}
+function onSaved() {
+  // The child already toasts success — the parent just re-fetches so
+  // the new/updated row shows with fresh subselect counts.
+  reload();
+}
+
+// ── Deactivate ─────────────────────────────────────────────────────
+
+async function deactivate(row: BimbelStudent) {
+  if (!canManage.value) return;
+  const ok = await confirm({
+    title: t('tutoring2.admin.students.deactivateConfirmTitle'),
+    message: t('tutoring2.admin.students.deactivateConfirmMsg'),
+    confirmLabel: t('tutoring2.admin.students.actionDeactivate'),
+    danger: true,
+  });
+  if (!ok) return;
+  try {
+    await TutoringStudentsService.deactivate(row.id);
+    toast.success(t('tutoring2.admin.students.deactivateSuccess'));
+    reload();
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[tutoring2/students] deactivate failed', err);
+    toast.error(t('tutoring2.admin.students.deactivateError'));
   }
-}
-
-function statusLabel(status: BimbelEnrollment['status']): string {
-  return t(`tutoring2.status.${status}`);
-}
-
-function shortId(id: string): string {
-  return id.length > 8 ? id.slice(0, 8) : id;
 }
 </script>
 
@@ -152,7 +172,7 @@ function shortId(id: string): string {
       :kicker="t('tutoring2.common.roleAdmin')"
       :title="t('tutoring2.admin.students.title')"
       :meta="state.status === 'content'
-        ? `${uniqueStudentCount} ${t('tutoring2.common.student').toLowerCase()} · ${activeEnrollmentCount} ${t('tutoring2.admin.students.kpiActive').toLowerCase()}`
+        ? `${rows.length} ${t('tutoring2.common.student').toLowerCase()}`
         : t('tutoring2.common.loading')"
     />
 
@@ -162,24 +182,10 @@ function shortId(id: string): string {
       <template #chips>
         <AppFilterChip
           :label="t('tutoring2.common.status')"
-          :value="statusFilter || t('tutoring2.common.all')"
+          :value="includeInactive ? t('tutoring2.admin.students.showInactive') : t('tutoring2.admin.students.kpiActive')"
           icon-name="circle-check"
-          :active="!!statusFilter"
-          @click="statusFilter = statusFilter ? '' : 'active'"
-        />
-        <AppFilterChip
-          :label="t('tutoring2.common.program')"
-          :value="programFilter ? shortId(programFilter) : t('tutoring2.common.all')"
-          icon-name="book"
-          :active="!!programFilter"
-          @click="programFilter = ''"
-        />
-        <AppFilterChip
-          :label="t('tutoring2.common.student_')"
-          :value="waliFilter || t('tutoring2.common.all')"
-          icon-name="user"
-          :active="!!waliFilter"
-          @click="waliFilter = waliFilter ? '' : 'linked'"
+          :active="includeInactive"
+          @click="includeInactive = !includeInactive"
         />
       </template>
     </PageFilterToolbar>
@@ -193,32 +199,65 @@ function shortId(id: string): string {
       @retry="reload"
     >
       <template #default>
-        <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
+        <div class="rounded-3xl border border-slate-100 bg-white shadow-sm overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400">
-                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.name') }}</th>
-                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.program') }}</th>
-                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.billingMode') }}</th>
-                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
-                <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.remainingQuota') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.admin.students.colName') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.admin.students.colStudentNumber') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.admin.students.colWali') }}</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.admin.students.colStatus') }}</th>
+                <th class="px-4 py-3 font-bold text-right">{{ t('tutoring2.admin.students.colEnrollments') }}</th>
+                <th class="px-4 py-3 font-bold text-right">{{ t('tutoring2.admin.students.colBills') }}</th>
+                <th
+                  v-if="canManage"
+                  class="px-4 py-3 font-bold text-right"
+                >
+                  {{ t('tutoring2.admin.students.colActions') }}
+                </th>
               </tr>
             </thead>
             <tbody>
               <tr
-                v-for="r in studentRows"
-                :key="r.student_id"
+                v-for="r in rows"
+                :key="r.id"
                 class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
               >
-                <!-- TODO WEB-3+ join with students.name once /tutoring-v2/students exposes it -->
-                <td class="px-4 py-3 font-bold text-slate-900">{{ shortId(r.student_id) }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ shortId(r.program_id) }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ r.billing_mode_label ?? r.billing_mode }}</td>
-                <td class="px-4 py-3">
-                  <StatusBadge :label="r.status_label ?? statusLabel(r.status)" :tone="statusPillTone(r.status)" uppercase />
-                </td>
+                <td class="px-4 py-3 font-bold text-slate-900">{{ r.name }}</td>
+                <td class="px-4 py-3 text-slate-600">{{ r.student_number ?? '—' }}</td>
                 <td class="px-4 py-3 text-slate-600">
-                  {{ r.remaining_sessions ?? '—' }}<span class="text-slate-400"> / {{ r.total_sessions_snapshot ?? '—' }}</span>
+                  <div class="flex flex-col">
+                    <span>{{ r.guardian_name ?? '—' }}</span>
+                    <span v-if="r.guardian_email" class="text-xs text-slate-400">{{ r.guardian_email }}</span>
+                  </div>
+                </td>
+                <td class="px-4 py-3">
+                  <StatusBadge :label="statusLabelFor(r)" :tone="statusToneFor(r)" uppercase />
+                </td>
+                <td class="px-4 py-3 text-right text-slate-600">{{ r.active_enrollment_count ?? 0 }}</td>
+                <td class="px-4 py-3 text-right text-slate-600">{{ r.active_bill_count ?? 0 }}</td>
+                <td
+                  v-if="canManage"
+                  class="px-4 py-3 text-right"
+                >
+                  <div class="inline-flex items-center gap-2">
+                    <button
+                      type="button"
+                      class="text-xs font-semibold text-brand-cobalt hover:underline"
+                      @click="openEdit(r)"
+                    >
+                      {{ t('tutoring2.admin.students.actionEdit') }}
+                    </button>
+                    <span class="text-slate-300" aria-hidden="true">·</span>
+                    <button
+                      type="button"
+                      class="text-xs font-semibold text-status-danger hover:underline disabled:opacity-40 disabled:no-underline"
+                      :disabled="r.active === false"
+                      @click="deactivate(r)"
+                    >
+                      {{ t('tutoring2.admin.students.actionDeactivate') }}
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -228,10 +267,25 @@ function shortId(id: string): string {
     </AsyncView>
 
     <button
+      v-if="canManage"
       type="button"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
+      @click="openCreate"
     >
       <span aria-hidden="true">+</span> {{ t('tutoring2.admin.students.newCta') }}
     </button>
+
+    <!--
+      Sheet mount — `v-if` gate keeps the form state fresh on every
+      open (create-mode reactive form resets from empty props). The
+      child owns POST/PUT via TutoringStudentsService and toasts on
+      success; parent just reloads and closes.
+    -->
+    <AdminTutoring2StudentCreateEditSheet
+      v-if="sheetTarget !== undefined"
+      :student="sheetTarget"
+      @close="closeSheet"
+      @saved="onSaved"
+    />
   </div>
 </template>
