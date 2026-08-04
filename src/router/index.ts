@@ -1855,6 +1855,44 @@ const routes: RouteRecordRaw[] = [
           ability: 'tutoring.leaderboard.view',
         },      },
 
+      // ── Admin reports (WEB-15, BE-28) ─────────────────────────────
+      // Namespace: `admin.tutoring2.reports.*` — activity/attendance/
+      // financial. Gated on `dashboard.admin.view` (the same key the
+      // backend AdminReportController checks; tutors don't hold it).
+      {
+        path: 'admin/tutoring2/reports/activity',
+        name: 'admin.tutoring2.reports.activity',
+        component: () =>
+          import('@/views/admin/tutoring2/AdminTutoring2ActivityReportView.vue'),
+        meta: {
+          role: 'admin' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'dashboard.admin.view',
+        },
+      },
+      {
+        path: 'admin/tutoring2/reports/attendance',
+        name: 'admin.tutoring2.reports.attendance',
+        component: () =>
+          import('@/views/admin/tutoring2/AdminTutoring2AttendanceReportView.vue'),
+        meta: {
+          role: 'admin' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'dashboard.admin.view',
+        },
+      },
+      {
+        path: 'admin/tutoring2/reports/financial',
+        name: 'admin.tutoring2.reports.financial',
+        component: () =>
+          import('@/views/admin/tutoring2/AdminTutoring2FinancialReportView.vue'),
+        meta: {
+          role: 'admin' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'dashboard.admin.view',
+        },
+      },
+
       {
         path: 'teacher/tutoring/class',
         name: 'teacher.tutoring.classes',
