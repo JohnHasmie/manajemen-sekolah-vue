@@ -145,7 +145,7 @@ const emit = defineEmits<{
           {{ resetPasswordLabel }}
         </Button>
         <div class="grid grid-cols-2 gap-2">
-          <Button variant="danger" block @click="emit('delete')">
+          <Button data-testid="detail-delete" variant="danger" block @click="emit('delete')">
             <NavIcon name="trash-2" :size="13" />
             Hapus
           </Button>
