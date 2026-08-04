@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { loadManifest, type FixtureKey } from './fixtures/accounts';
 import { apiFor, statusOf } from './fixtures/api';
-import { ADMIN_READ_PROBES, DENY_MATRIX } from './fixtures/authz-matrix';
+import { ADMIN_READ_PROBES, DENY_MATRIX, SCOPED_READS } from './fixtures/authz-matrix';
 import { login } from './fixtures/auth';
 
 /**
@@ -139,3 +139,70 @@ test('omitting X-Active-Role does not widen abilities to the union of roles', as
     await headerless.dispose();
   }
 });
+
+// ── Group D — scoped reads: 200 for everyone, different rows each ────
+
+/**
+ * Reads whose protection is the PAYLOAD, not the status code.
+ *
+ * Every assertion here has a control that must hold first, because each
+ * one has a way of passing for the wrong reason:
+ *
+ *  • the admin view must be non-empty — against an empty tenant "the
+ *    parent sees fewer rows" is true and meaningless;
+ *  • the narrowed caller must get 200 — a 403 would also produce zero
+ *    rows, and would be a different (and wrong) fix silently accepted;
+ *  • the narrowed set must be a strict SUBSET by id, not merely smaller.
+ *    A count check passes an implementation scoped to the wrong class or
+ *    the wrong teacher, as long as it returns fewer rows.
+ */
+for (const row of SCOPED_READS) {
+  for (const key of row.narrowed) {
+    test(`${key} sees only their slice of ${row.path}`, async () => {
+      test.skip(!has(key) || !has(row.full), `fixture '${key}' or '${row.full}' missing`);
+
+      const wide = await apiFor(await login(fixtureFor(row.full)));
+      const narrow = await apiFor(await login(fixtureFor(key)));
+
+      try {
+        const idsOf = async (client: Awaited<ReturnType<typeof apiFor>>) => {
+          const res = await client.ctx.fetch(`${client.base}${row.path}`);
+          const body = (await res.json().catch(() => null)) as { data?: { id?: string }[] } | null;
+
+          return {
+            status: res.status(),
+            ids: (body?.data ?? []).map((r) => r.id).filter(Boolean) as string[],
+          };
+        };
+
+        const full = await idsOf(wide);
+        const slice = await idsOf(narrow);
+
+        expect(full.status, `CONTROL: ${row.full} must be able to read ${row.path}`).toBe(200);
+        expect(
+          full.ids.length,
+          `CONTROL: ${row.full} sees no rows at ${row.path}, so every comparison below is vacuous. ` +
+            'Re-seed the tenant rather than trusting this test.',
+        ).toBeGreaterThan(0);
+
+        expect(
+          slice.status,
+          `${key} must still be ALLOWED to read ${row.path} — the fix is scoping, not denial. ` +
+            'A 403 here would zero the rows for the wrong reason and hide a regression.',
+        ).toBe(200);
+
+        const leaked = slice.ids.filter((id) => !full.ids.includes(id));
+        expect(leaked, `${key} received rows outside ${row.full}'s view of ${row.path}`).toEqual([]);
+
+        expect(
+          slice.ids.length,
+          `${key} received the SAME ${full.ids.length} rows as ${row.full} — the read is not ` +
+            `scoped at all. ${row.because}`,
+        ).toBeLessThan(full.ids.length);
+      } finally {
+        await wide.dispose();
+        await narrow.dispose();
+      }
+    });
+  }
+}
