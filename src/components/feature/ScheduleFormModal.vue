@@ -181,7 +181,13 @@ const span = ref<number>(1);
 
 // ── Loaded data ─────────────────────────────────────────────────────
 const teacherSubjects = ref<Array<{ id: string; name: string; code?: string | null }>>([]);
-const allSubjects = ref<Array<{ id: string; name: string; code?: string | null }>>([]);
+// `grade` is the subject's grade level (`subject_schools.grade`, added
+// 2026-07-16). The Quick-Add "Pilih Existing" list renders it as a
+// "Kelas N" hint next to the code, so it has to survive the mapper —
+// it did not, and that hint has been dead ever since.
+const allSubjects = ref<
+  Array<{ id: string; name: string; code?: string | null; grade?: number | null }>
+>([]);
 const lessonHours = ref<LessonHour[]>([]);
 const conflicts = ref<ScheduleConflict[]>([]);
 /** Occupied slots — existing schedules for the picked class/day/term.
@@ -281,6 +287,7 @@ async function loadAllSubjects() {
       id: String(s.id),
       name: String(s.name ?? s.nama ?? ''),
       code: s.code ?? s.kode ?? null,
+      grade: s.grade ?? null,
     }));
   } catch {
     allSubjects.value = [];

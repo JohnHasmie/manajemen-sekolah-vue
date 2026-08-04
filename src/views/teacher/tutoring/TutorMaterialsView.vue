@@ -61,6 +61,14 @@ onMounted(async () => {
   await Promise.all([load(), loadGroups()]);
 });
 
+// Template expressions resolve identifiers against the component
+// instance, not the global scope, so a `window.open(...)` written inline
+// in the template compiles to `_ctx.window.open(...)` and throws on
+// click. Opening a file has to go through script setup.
+function openFile(url: string) {
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 function openCreate() {
   fTitle.value = '';
   fDesc.value = '';
@@ -212,7 +220,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             : t('tutor.bimbel.materials.row_draft'),
           m.description,
         ].filter(Boolean).join(' · ')"
-        :to="m.file_url ? () => window.open(m.file_url!, '_blank') : null"
+        :to="m.file_url ? () => openFile(m.file_url!) : null"
       >
         <template #trailing>
           <span class="inline-flex items-center gap-1">

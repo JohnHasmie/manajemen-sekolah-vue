@@ -63,6 +63,12 @@ export interface School {
   name: string;
   /** @deprecated Backend now ships canonical `name`; kept for backward-compat. */
   school_name?: string;
+  /**
+   * @deprecated Pre-English-migration alias. LoginAction / VerifyOtpAction
+   * still assign `user.nama_sekolah`, so the auth store reads it as the
+   * last fallback before `name`. Do not introduce new reads.
+   */
+  nama_sekolah?: string | null;
   address?: string;
   city?: string;
   academic_year?: string;
@@ -123,6 +129,9 @@ export interface User {
    * — this only hides menu items / page shells the user can't act on.
    */
   abilities?: string[];
+  /** `users.phone_number` — fillable on the backend User model and shown
+   *  on the subscribe flow's contact step. */
+  phone_number?: string | null;
 }
 
 /**

@@ -37,13 +37,20 @@ const emit = defineEmits<{
   click: [cls: RaportClassSummary];
 }>();
 
-// Belum = students - any-status raport. Coalesce both operands: if the
-// class summary omits either field, `undefined - n` is NaN and
+// Belum = students - any-status report card. Coalesce both operands: if
+// the class summary omits either field, `undefined - n` is NaN and
 // `Math.max(0, NaN)` stays NaN — which rendered literally as "NaN" on the
 // "Belum" stat (founder report). Guard so it falls back to 0.
+//
+// The guard is why that NaN report was the last complaint about this
+// stat and not the last bug in it. The field was read as `total_raports`,
+// which `parseReportCardClassSummary` normalises away to
+// `total_report_cards`, so the read was always undefined. Coalescing to 0
+// turned "NaN" into "every student is missing a report card" — quieter,
+// and wrong for longer.
 const belumCount = computed(() => {
   const s = props.cls;
-  return Math.max(0, (s.student_count ?? 0) - (s.total_raports ?? 0));
+  return Math.max(0, (s.student_count ?? 0) - (s.total_report_cards ?? 0));
 });
 
 const completionPct = computed(() => {

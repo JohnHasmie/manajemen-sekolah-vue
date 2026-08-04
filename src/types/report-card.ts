@@ -243,6 +243,9 @@ export interface ReportCardDetail {
   // ── Derived / display ──
   avg_grade?: number | null;
   remed_count?: number;
+  /** Homeroom teacher name — canonical English key, printed on the
+   *  parent-facing report card header. */
+  homeroom_teacher?: string | null;
 }
 
 export interface ReportCardInitialData {
