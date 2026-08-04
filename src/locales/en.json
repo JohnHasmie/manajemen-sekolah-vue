@@ -4366,6 +4366,8 @@
       "leads": "Leads",
       "vouchers": "Vouchers",
       "groupAnnouncements": "Group announcements",
+      "groupAnnouncementsV2": "Group announcements",
+      "sectionGrowth": "Growth",
       "leaderboard": "Leaderboard",
       "monitoring": "Monitoring",
       "schedule": "Session schedule",
@@ -7123,6 +7125,40 @@
         "profile": "Bimbel profile",
         "appearance": "Appearance",
         "tenantConfigNote": "Stored in tenant_config. module:tutoring + ModuleCatalog scope=bimbel controls which modules are enabled."
+      },
+      "groupAnnouncements": {
+        "title": "Group announcements",
+        "meta": "{count} announcements",
+        "searchPh": "Search announcement titles…",
+        "emptyTitle": "No announcements yet",
+        "emptyDesc": "Write the first announcement for your group.",
+        "kpiTotal": "Total",
+        "kpiPublished": "Published",
+        "kpiDrafts": "Drafts",
+        "kpiGroupsCovered": "Groups covered",
+        "composeCta": "Compose",
+        "composeTitle": "New announcement",
+        "composeSubtitle": "Sends to every student + parent in the group",
+        "titlePh": "e.g. Next week schedule change",
+        "body": "Announcement body",
+        "bodyPh": "Write your announcement here…",
+        "publishImmediately": "Publish now (sends notifications)",
+        "publishCta": "Publish",
+        "publishedToast": "Announcement published",
+        "publishFailed": "Failed to publish announcement",
+        "saveDraftCta": "Save draft",
+        "saveFailed": "Failed to save announcement",
+        "deletedToast": "Announcement deleted",
+        "deleteFailed": "Failed to delete announcement",
+        "author": "Author",
+        "publishedAt": "Published",
+        "actions": "Actions",
+        "confirmPublishTitle": "Publish announcement?",
+        "confirmPublishMsg": "This sends a notification to every student + parent in the group. Continue?",
+        "confirmDeleteTitle": "Delete announcement?",
+        "confirmDeleteMsg": "The announcement will disappear for every student + parent. This cannot be undone.",
+        "pickGroupFirst": "Pick a group first",
+        "validationLen": "Title and body must be at least 3 characters"
       }
     },
     "tutor": {
@@ -7242,6 +7278,37 @@
         "appearanceDesc": "Auto light/dark (tutoring theme)",
         "logout": "Log out",
         "logoutDesc": "Log out of this account"
+      },
+      "groupAnnouncements": {
+        "title": "Announcements",
+        "meta": "{count} announcements",
+        "searchPh": "Search announcement titles…",
+        "emptyTitle": "No announcements yet",
+        "emptyDesc": "Write the first announcement for your groups.",
+        "kpiTotal": "Total",
+        "kpiPublished": "Published",
+        "kpiDrafts": "Drafts",
+        "kpiGroups": "My groups",
+        "composeCta": "Compose",
+        "composeTitle": "New announcement",
+        "composeSubtitle": "For a group you teach",
+        "titlePh": "e.g. Next week schedule change",
+        "body": "Announcement body",
+        "bodyPh": "Write your announcement here…",
+        "publishImmediately": "Publish now (sends notifications)",
+        "publishCta": "Publish",
+        "publishedToast": "Announcement published",
+        "publishFailed": "Failed to publish announcement",
+        "saveDraftCta": "Save draft",
+        "saveFailed": "Failed to save announcement",
+        "deletedToast": "Announcement deleted",
+        "deleteFailed": "Failed to delete announcement",
+        "confirmPublishTitle": "Publish announcement?",
+        "confirmPublishMsg": "This sends a notification to every student + parent in the group. Continue?",
+        "confirmDeleteTitle": "Delete announcement?",
+        "confirmDeleteMsg": "The announcement will disappear for every student + parent. This cannot be undone.",
+        "pickGroupFirst": "Pick a group first",
+        "validationLen": "Title and body must be at least 3 characters"
       }
     },
     "student": {
@@ -7436,6 +7503,13 @@
         "helpDesc": "Guide & FAQ",
         "logout": "Log out",
         "logoutDesc": "Log out of this account"
+      },
+      "groupAnnouncements": {
+        "title": "Announcements",
+        "meta": "{count} active announcements",
+        "emptyTitle": "No announcements for your child(ren) yet.",
+        "emptyDesc": "Tutor announcements will appear here once published.",
+        "countLabel": "{count} announcements"
       }
     }
   }

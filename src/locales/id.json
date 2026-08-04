@@ -4366,6 +4366,8 @@
       "leads": "Lead / Calon",
       "vouchers": "Voucher / Promo",
       "groupAnnouncements": "Pengumuman Kelas",
+      "groupAnnouncementsV2": "Announcement Kelompok",
+      "sectionGrowth": "Growth",
       "leaderboard": "Peringkat",
       "monitoring": "Monitoring Anak",
       "schedule": "Jadwal Sesi",
@@ -7123,6 +7125,40 @@
         "profile": "Profil bimbel",
         "appearance": "Tampilan",
         "tenantConfigNote": "Disimpan di tenant_config. module:tutoring + ModuleCatalog scope=bimbel menentukan modul terbuka."
+      },
+      "groupAnnouncements": {
+        "title": "Announcement Kelompok",
+        "meta": "{count} pengumuman",
+        "searchPh": "Cari judul pengumuman…",
+        "emptyTitle": "Belum ada pengumuman",
+        "emptyDesc": "Tulis pengumuman pertama untuk kelompok Anda.",
+        "kpiTotal": "Total",
+        "kpiPublished": "Terbit",
+        "kpiDrafts": "Draft",
+        "kpiGroupsCovered": "Kelompok terjangkau",
+        "composeCta": "Compose",
+        "composeTitle": "Buat pengumuman",
+        "composeSubtitle": "Kirim ke semua siswa + wali di kelompok",
+        "titlePh": "Contoh: Perubahan jadwal minggu depan",
+        "body": "Isi pengumuman",
+        "bodyPh": "Tulis pengumuman di sini…",
+        "publishImmediately": "Terbitkan sekarang (kirim notifikasi)",
+        "publishCta": "Terbitkan",
+        "publishedToast": "Pengumuman diterbitkan",
+        "publishFailed": "Gagal menerbitkan pengumuman",
+        "saveDraftCta": "Simpan draft",
+        "saveFailed": "Gagal menyimpan pengumuman",
+        "deletedToast": "Pengumuman dihapus",
+        "deleteFailed": "Gagal menghapus pengumuman",
+        "author": "Penulis",
+        "publishedAt": "Diterbitkan",
+        "actions": "Aksi",
+        "confirmPublishTitle": "Terbitkan pengumuman?",
+        "confirmPublishMsg": "Ini akan mengirim notifikasi ke semua siswa+wali di kelompok. Lanjutkan?",
+        "confirmDeleteTitle": "Hapus pengumuman?",
+        "confirmDeleteMsg": "Pengumuman akan hilang untuk semua siswa+wali. Aksi ini tidak dapat dibatalkan.",
+        "pickGroupFirst": "Pilih kelompok dulu",
+        "validationLen": "Judul dan isi minimal 3 karakter"
       }
     },
     "tutor": {
@@ -7242,6 +7278,37 @@
         "appearanceDesc": "Auto light/dark (tutoring theme)",
         "logout": "Keluar",
         "logoutDesc": "Logout dari akun ini"
+      },
+      "groupAnnouncements": {
+        "title": "Announcement",
+        "meta": "{count} pengumuman",
+        "searchPh": "Cari judul pengumuman…",
+        "emptyTitle": "Belum ada pengumuman",
+        "emptyDesc": "Buat pengumuman pertama untuk kelompok Anda.",
+        "kpiTotal": "Total",
+        "kpiPublished": "Terbit",
+        "kpiDrafts": "Draft",
+        "kpiGroups": "Kelompok saya",
+        "composeCta": "Compose",
+        "composeTitle": "Buat pengumuman",
+        "composeSubtitle": "Untuk kelompok yang Anda ampu",
+        "titlePh": "Contoh: Perubahan jadwal minggu depan",
+        "body": "Isi pengumuman",
+        "bodyPh": "Tulis pengumuman di sini…",
+        "publishImmediately": "Terbitkan sekarang (kirim notifikasi)",
+        "publishCta": "Terbitkan",
+        "publishedToast": "Pengumuman diterbitkan",
+        "publishFailed": "Gagal menerbitkan pengumuman",
+        "saveDraftCta": "Simpan draft",
+        "saveFailed": "Gagal menyimpan pengumuman",
+        "deletedToast": "Pengumuman dihapus",
+        "deleteFailed": "Gagal menghapus pengumuman",
+        "confirmPublishTitle": "Terbitkan pengumuman?",
+        "confirmPublishMsg": "Ini akan mengirim notifikasi ke semua siswa+wali di kelompok. Lanjutkan?",
+        "confirmDeleteTitle": "Hapus pengumuman?",
+        "confirmDeleteMsg": "Pengumuman akan hilang untuk semua siswa+wali. Aksi ini tidak dapat dibatalkan.",
+        "pickGroupFirst": "Pilih kelompok dulu",
+        "validationLen": "Judul dan isi minimal 3 karakter"
       }
     },
     "student": {
@@ -7436,6 +7503,13 @@
         "helpDesc": "Panduan & pertanyaan umum",
         "logout": "Keluar",
         "logoutDesc": "Logout dari akun ini"
+      },
+      "groupAnnouncements": {
+        "title": "Pengumuman",
+        "meta": "{count} pengumuman aktif",
+        "emptyTitle": "Belum ada pengumuman untuk anak Anda.",
+        "emptyDesc": "Pengumuman tutor akan muncul di sini setelah diterbitkan.",
+        "countLabel": "{count} pengumuman"
       }
     }
   }
