@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { fixture } from '../fixtures/accounts';
 import { applySession, login } from '../fixtures/auth';
 import { Tracker, namespaceFor } from '../fixtures/isolation';
-import { crud, formSheet, sheetSubmit } from '../pages/ui';
+import { confirmDialog, crud, formSheet, sheetCancel, sheetSubmit } from '../pages/ui';
 
 /**
  * Phase 6 — the remaining four admin rosters.
@@ -54,6 +54,17 @@ interface Roster {
   submitControl?: (page: Page) => ReturnType<typeof formSheet>;
   /** Required fields, taken from the BACKEND validation rules. */
   fill: (page: Page, name: string) => Promise<void>;
+  /**
+   * Opens the edit sheet for a row. Defaults to the shared detail sheet
+   * (row → Detail → Edit). Subjects has no detail sheet: its card
+   * carries an inline Edit link instead.
+   */
+  openEdit?: (page: Page, name: string) => Promise<void>;
+  /**
+   * Opens the delete confirmation for a row. Defaults to the shared
+   * detail sheet's danger button.
+   */
+  openDelete?: (page: Page, name: string) => Promise<void>;
 }
 
 const ROSTERS: Roster[] = [
@@ -83,7 +94,7 @@ const ROSTERS: Roster[] = [
     endpoint: '/staff',
     createUrl: '/staff',
     // Bare <Modal>: no FormSheet wrapper, no shared footer button.
-    sheet: (page) => page.getByTestId('modal'),
+    sheet: (page) => page.getByTestId('staff-sheet'),
     submit: async (page) => { await page.getByTestId('staff-submit').click(); },
     submitControl: (page) => page.getByTestId('staff-submit'),
     // StaffController::store validates name + position, but the sheet's
@@ -127,8 +138,48 @@ const ROSTERS: Roster[] = [
     fill: async (page, name) => {
       await page.getByTestId('field-name').fill(name);
     },
+    // No AdminEntityDetailSheet here — the curriculum card exposes an
+    // inline Edit link and a kebab menu holding Hapus.
+    // NB: clicking a subject card NAVIGATES to a detail page rather than
+    // opening a sheet, so the row must not be clicked at all — the card
+    // carries its own inline Edit link and a kebab holding Hapus. Search
+    // has already narrowed the list to one card, so .first() is exact.
+    openEdit: async (page) => {
+      await page.getByTestId('subject-edit').first().click();
+    },
+    openDelete: async (page) => {
+      await page.getByTestId('subject-kebab').first().click();
+      await page.getByTestId('subject-delete').first().click();
+    },
   },
 ];
+
+/**
+ * Close anything a roster leaves on screen after a successful create.
+ *
+ * Staff reveals the new account's generated password in a modal that
+ * does not close itself. Left up, it intercepts the NEXT click — which
+ * surfaces as "the row is not clickable", a timeout with no visible
+ * connection to the modal that caused it. The trace is what showed it:
+ * create succeeded, the sheet hid, search ran, and the row click then
+ * never completed.
+ *
+ * The wait matters as much as the dismissal. The modal renders a beat
+ * AFTER the form sheet hides, so a synchronous isVisible() right there
+ * finds nothing, returns happily, and the modal appears immediately
+ * afterwards. Applied to every roster: a stray modal blocking clicks is
+ * a generic hazard, not a staff-specific one.
+ */
+async function dismissStrayModal(page: Page): Promise<void> {
+  const modal = page.getByTestId('modal');
+
+  await modal.waitFor({ state: 'visible', timeout: 3_000 }).catch(() => {});
+
+  if (await modal.isVisible().catch(() => false)) {
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+  }
+}
 
 for (const roster of ROSTERS) {
   test.describe(`admin · ${roster.key}`, () => {
@@ -142,6 +193,18 @@ for (const roster of ROSTERS) {
     const sheetOf = (page: Page) => (roster.sheet ? roster.sheet(page) : formSheet(page));
     const submitSheet = (page: Page) =>
       roster.submit ? roster.submit(page) : sheetSubmit(page).click();
+    const opener = (page: Page) =>
+      roster.openCreate ? page.getByTestId('classes-fab-toggle') : crud(page).addFab;
+    const openEdit = async (page: Page, name: string) => {
+      if (roster.openEdit) return roster.openEdit(page, name);
+      await crud(page).row(name).click();
+      await page.getByTestId('detail-edit').click();
+    };
+    const openDelete = async (page: Page, name: string) => {
+      if (roster.openDelete) return roster.openDelete(page, name);
+      await crud(page).row(name).click();
+      await page.getByTestId('detail-delete').click();
+    };
 
     test.beforeEach(async ({ context, page }, testInfo) => {
       tracker = new Tracker();
@@ -154,11 +217,7 @@ for (const roster of ROSTERS) {
       // Wait on the control this roster actually offers — not
       // `networkidle`, which never arrives on these polling pages, and
       // not the scaffold FAB, which the classes page does not render.
-      const opener = roster.openCreate
-        ? page.getByTestId('classes-fab-toggle')
-        : crud(page).addFab;
-
-      await expect(opener).toBeVisible({ timeout: 60_000 });
+      await expect(opener(page)).toBeVisible({ timeout: 60_000 });
     });
 
     test.afterEach(async () => {
@@ -189,6 +248,7 @@ for (const roster of ROSTERS) {
       if (id) tracker.track(roster.endpoint, id);
 
       await expect(sheetOf(page)).toBeHidden();
+      await dismissStrayModal(page);
     }
 
     test('create · the new row appears in the roster', async ({ page }) => {
@@ -227,6 +287,70 @@ for (const roster of ROSTERS) {
 
       await expect(sheetOf(page), 'the sheet must stay open on invalid input').toBeVisible();
       expect(writes, 'a create request left the browser despite invalid input').toEqual([]);
+    });
+
+    test('edit · the change survives a full page reload', async ({ page }) => {
+      const name = `${ns}-Ubah`;
+      const renamed = `${ns}-Sudah`;
+
+      await create(page, name);
+      await crud(page).searchFor(name);
+
+      await openEdit(page, name);
+      await expect(sheetOf(page)).toBeVisible();
+      await page.getByTestId('field-name').fill(renamed);
+
+      // Wait for the WRITE, not for the sheet to close. Whether a sheet
+      // auto-closes after saving differs per roster — teachers keeps
+      // theirs open — and that is a UI choice, not the contract. The
+      // contract is that the change was persisted.
+      const saved = page.waitForResponse(
+        (r) => r.url().includes(roster.createUrl) && ['PUT', 'PATCH'].includes(r.request().method()),
+      );
+      await submitSheet(page);
+      await saved;
+
+      // The reload is the point: a list patched only in memory passes
+      // every assertion made without one.
+      await page.reload();
+      await expect(opener(page)).toBeVisible({ timeout: 60_000 });
+      await crud(page).searchFor(renamed);
+
+      await expect(crud(page).row(renamed)).toBeVisible();
+    });
+
+    test('delete · cancel keeps the row, confirm removes it for good', async ({ page }) => {
+      const name = `${ns}-Hapus`;
+
+      await create(page, name);
+      await crud(page).searchFor(name);
+      await expect(crud(page).row(name)).toBeVisible();
+
+      // Cancelling is the assertion people forget, and the one that
+      // matters most: a flow that deletes on CANCEL is far worse than
+      // one that fails to delete on confirm.
+      await openDelete(page, name);
+      await expect(confirmDialog(page)).toBeVisible();
+      await sheetCancel(page).click();
+
+      await page.reload();
+      await expect(opener(page)).toBeVisible({ timeout: 60_000 });
+      await crud(page).searchFor(name);
+      await expect(crud(page).row(name), 'cancelling the confirm deleted the row').toBeVisible();
+
+      await openDelete(page, name);
+      await expect(confirmDialog(page)).toBeVisible();
+      await sheetSubmit(page).click();
+
+      // Wait for the dialog to close before reloading — reloading on the
+      // click aborts the in-flight DELETE, and the surviving row then
+      // reads as "delete is broken" when the request was just cancelled.
+      await expect(confirmDialog(page)).toBeHidden();
+
+      await page.reload();
+      await expect(opener(page)).toBeVisible({ timeout: 60_000 });
+      await crud(page).searchFor(name);
+      await expect(crud(page).row(name), 'the row came back after a reload').toBeHidden();
     });
 
     test('search · finds the new row and clearing restores the list', async ({ page }) => {

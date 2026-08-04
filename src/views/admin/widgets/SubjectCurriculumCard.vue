@@ -220,6 +220,7 @@ function onCardClick(e: MouseEvent) {
 
       <div v-if="!readOnly" class="subject-card__menu-wrap" @click.stop>
         <button
+          data-testid="subject-kebab"
           type="button"
           class="subject-card__menu-trigger"
           aria-label="Menu"
@@ -233,7 +234,7 @@ function onCardClick(e: MouseEvent) {
           </svg>
         </button>
         <div v-if="menuOpen" class="subject-card__menu" role="menu">
-          <button type="button" role="menuitem" class="subject-card__menu-item subject-card__menu-item--danger" @click="onDelete">
+          <button data-testid="subject-delete" type="button" role="menuitem" class="subject-card__menu-item subject-card__menu-item--danger" @click="onDelete">
             Hapus mata pelajaran
           </button>
         </div>
@@ -288,6 +289,7 @@ function onCardClick(e: MouseEvent) {
       </button>
       <span v-else class="subject-card__foot-spacer" aria-hidden="true"></span>
       <button
+        data-testid="subject-edit"
         type="button"
         class="subject-card__edit"
         :style="{ color: primaryColor }"

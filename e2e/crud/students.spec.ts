@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { fixture, loadManifest } from '../fixtures/accounts';
 import { applySession, login } from '../fixtures/auth';
 import { Tracker, namespaceFor } from '../fixtures/isolation';
-import { crud, formSheet, sheetCancel, sheetSubmit } from '../pages/ui';
+import { confirmDialog, crud, formSheet, sheetCancel, sheetSubmit } from '../pages/ui';
 
 /**
  * Phase 6 — CRUD against the admin student roster.
@@ -184,17 +184,38 @@ test.describe('admin · students', () => {
     await crud(page).searchFor(name);
     await expect(crud(page).row(name)).toBeVisible();
 
-    // Cancelling a destructive confirm must be a no-op — the assertion
-    // people forget, and the one that matters most.
+    // ── cancelling the confirm must be a no-op ──────────────────
+    // The assertion people forget, and the one that matters most: a
+    // delete flow that removes the row on CANCEL is far worse than one
+    // that fails to remove it on confirm.
     await crud(page).row(name).click();
-    await page.getByTestId('detail-edit').click();
-    await expect(formSheet(page)).toBeVisible();
+    await page.getByTestId('detail-delete').click();
+    await expect(confirmDialog(page)).toBeVisible();
     await sheetCancel(page).click();
+
     await page.reload();
-    // Same reason as in beforeEach: this page polls, so `networkidle`
-    // never arrives and the wait consumes the whole test budget.
     await expect(crud(page).addFab).toBeVisible({ timeout: 60_000 });
     await crud(page).searchFor(name);
-    await expect(crud(page).row(name)).toBeVisible();
+    await expect(crud(page).row(name), 'cancelling the confirm deleted the row').toBeVisible();
+
+    // ── confirming actually deletes, and it stays deleted ───────
+    await crud(page).row(name).click();
+    await page.getByTestId('detail-delete').click();
+    await expect(confirmDialog(page)).toBeVisible();
+    await sheetSubmit(page).click();
+
+    // Wait for the dialog to close before reloading. Reloading straight
+    // after the click aborts the in-flight DELETE, so the row survives
+    // and the failure reads as "delete does not work" when the request
+    // was simply cancelled mid-air.
+    await expect(confirmDialog(page)).toBeHidden();
+
+    await page.reload();
+    await expect(crud(page).addFab).toBeVisible({ timeout: 60_000 });
+    await crud(page).searchFor(name);
+
+    // Reload before asserting: a list patched only in memory looks
+    // identical to a row that was really removed.
+    await expect(crud(page).row(name), 'the row came back after a reload').toBeHidden();
   });
 });

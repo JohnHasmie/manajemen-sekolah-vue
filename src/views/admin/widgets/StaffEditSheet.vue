@@ -114,6 +114,7 @@ const labelClass = 'block text-2xs font-bold text-slate-600 mb-1';
 
 <template>
   <Modal
+    testid="staff-sheet"
     :title="isEdit ? $t('admin.staff.formEditTitle') : $t('admin.staff.formCreateTitle')"
     size="md"
     @close="emit('close')"
