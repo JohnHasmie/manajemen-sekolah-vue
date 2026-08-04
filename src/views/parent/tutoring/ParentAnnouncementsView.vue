@@ -19,7 +19,7 @@ import type { TutoringGroupAnnouncement } from '@/types/tutoring';
 import ParentHomeHero from '@/components/feature/tutoring/ParentHomeHero.vue';
 
 const { t } = useI18n();
-const { children,} = useChildPicker();
+const { children } = useChildPicker();
 
 // Row carries the child it belongs to so the chip filter + subtitle
 // can show "milik anak X" without an extra lookup.

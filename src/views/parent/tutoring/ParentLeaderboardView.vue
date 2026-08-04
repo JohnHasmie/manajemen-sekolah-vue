@@ -18,7 +18,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
 const route = useRoute();
-const { activeChildId,} = useChildPicker();
+const { activeChildId } = useChildPicker();
 
 const studentId = computed(() =>
   String(route.params.studentId || activeChildId.value || ''),
