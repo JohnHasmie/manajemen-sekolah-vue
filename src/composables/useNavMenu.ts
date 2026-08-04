@@ -891,6 +891,40 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
       },
     ],
   },
+  // WEB-16 — greenfield payouts sidebar. Sits alongside the legacy
+  // "Pendapatan Tutor" (which still serves App\Modules\TutoringLegacy)
+  // until CLEAN-3 drops the old links. Each item gates on the same
+  // ability the controller enforces so a manager without the right
+  // permission simply doesn't see the row.
+  {
+    titleKey: 'tutoring2.nav.sectionPayouts',
+    items: [
+      {
+        to: '/admin/tutoring2/payouts/rates',
+        labelKey: 'tutoring2.nav.payoutRates',
+        icon: 'tag',
+        ability: 'tutoring.payout.rates.manage',
+      },
+      {
+        to: '/admin/tutoring2/payouts/requests',
+        labelKey: 'tutoring2.nav.payoutRequests',
+        icon: 'wallet',
+        ability: 'tutoring.payout.view_all',
+      },
+      {
+        to: '/admin/tutoring2/payouts/summary',
+        labelKey: 'tutoring2.nav.payoutSummary',
+        icon: 'bar-chart',
+        ability: 'tutoring.payout.view_all',
+      },
+      {
+        to: '/admin/tutoring2/payouts/settings',
+        labelKey: 'tutoring2.nav.payoutSettings',
+        icon: 'settings',
+        ability: 'tutoring.payout.settings.view',
+      },
+    ],
+  },
   {
     titleKey: 'tutoring.nav.sectionStudentFinance',
     items: [
