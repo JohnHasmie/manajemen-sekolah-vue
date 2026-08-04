@@ -157,10 +157,6 @@ function copyCode(code: string) {
   toast.success(t('admin.bimbel.vouchers.code_copied', { code }));
 }
 
-function valueLabel(v: TutoringVoucher): string {
-  if (v.type === 'PERCENTAGE') return `${v.value}%`;
-  return formatRupiah(v.value);
-}
 
 const activeCount = computed(() => rows.value.filter((v) => v.is_active).length);
 const totalRedemptions = computed(

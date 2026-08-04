@@ -40,7 +40,6 @@ import RoleToggleChipRow, {
   type RoleOption,
 } from '@/components/feature/RoleToggleChipRow.vue';
 import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
-import NavIcon from '@/components/feature/NavIcon.vue';
 import Modal from '@/components/ui/Modal.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { subjectLabel } from '@/lib/labels';

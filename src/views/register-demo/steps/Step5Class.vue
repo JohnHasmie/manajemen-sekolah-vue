@@ -7,7 +7,6 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
-import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
 const wizard = useDemoWizardStore();

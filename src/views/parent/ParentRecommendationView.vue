@@ -41,7 +41,7 @@ import ParentRecFilterModal from '@/components/feature/ParentRecFilterModal.vue'
 
 const { t } = useI18n();
 const auth = useAuthStore();
-const { children, activeChildId } = useChildPicker();
+const { activeChildId } = useChildPicker();
 
 const ALL_KEY = '__all__';
 

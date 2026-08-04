@@ -110,7 +110,7 @@ function billTitle(raw: any, pt: Bill['payment_type']): string {
   return [name, month].filter(Boolean).join(' · ') || 'Tagihan';
 }
 
-function billSubtitle(raw: any, pt: Bill['payment_type'], stu: Bill['student']): string | null {
+function billSubtitle(_raw: any, pt: Bill['payment_type'], stu: Bill['student']): string | null {
   const parts: string[] = [];
   if (pt?.period) {
     const p = String(pt.period).toLowerCase();

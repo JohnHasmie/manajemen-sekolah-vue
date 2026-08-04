@@ -59,9 +59,6 @@ const voucherPreview = ref<{
 const voucherErr = ref<string | null>(null);
 const voucherChecking = ref(false);
 
-const effectiveAmount = computed(
-  () => voucherPreview.value?.final_amount ?? amount.value ?? 0,
-);
 
 async function applyVoucher() {
   const code = voucherCode.value.trim();

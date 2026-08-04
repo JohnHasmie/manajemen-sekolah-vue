@@ -36,7 +36,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const { t } = useI18n();
 const router = useRouter();
-const { children, activeChildId, activeChild, setActive } = useChildPicker();
+const { children, activeChildId, activeChild,} = useChildPicker();
 
 const bills = ref<Bill[]>([]);
 const isLoading = ref(true);

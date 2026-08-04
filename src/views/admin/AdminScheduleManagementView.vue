@@ -139,17 +139,6 @@ const prefill = ref<TimetableCreatePayload | null>(null);
 const skipSetupForForm = ref(false);
 
 // ── Loaders ─────────────────────────────────────────────────────────
-function activeFilters(): AdminScheduleFilters {
-  return {
-    teacher_id: filterTeacherId.value || undefined,
-    class_id: filterClassId.value || undefined,
-    day_id: filterDayId.value || undefined,
-    subject_id: filterSubjectId.value || undefined,
-    hour_number: filterHourNumber.value === '' ? undefined : filterHourNumber.value,
-    search: search.value.trim() || undefined,
-  };
-}
-
 async function loadFilterOptions() {
   filterOptions.value = await ScheduleService.getFilterOptions({
     academic_year_id: ayStore.selectedYearId ?? undefined,
@@ -217,8 +206,8 @@ async function loadRows() {
   isLoading.value = true;
   error.value = null;
   try {
-    // Deliberately NOT passing activeFilters() — the /all endpoint
-    // only honours AY + semester server-side; sending chip filters
+    // Deliberately fetching unfiltered. The /all endpoint only
+    // honours AY + semester server-side; sending the chip filters
     // (teacher/class/day/subject/hour/search) here would be a wasted
     // round-trip since we re-apply them client-side anyway.
     rows.value = await ScheduleService.listAll({});

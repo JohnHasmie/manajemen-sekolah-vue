@@ -152,10 +152,6 @@ watch(
   },
 );
 
-const whatsappUrl = computed(() => {
-  const num = import.meta.env.VITE_WHATSAPP_SUPPORT ?? '6285179819002';
-  return `https://wa.me/${num}`;
-});
 </script>
 
 <template>

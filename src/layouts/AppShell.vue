@@ -83,15 +83,6 @@ const isTutoringRoute = computed(() => {
   if (isTutoringTenant.value) return true;
   return false;
 });
-const isTutorBimbelRoute = computed(() => {
-  const name = String(route.name ?? '');
-  if (name.startsWith('teacher.tutoring')) return true;
-  // Same reasoning as `isTutoringRoute` — the tutoring tutor home is
-  // rendered on `teacher.home` for tutoring-center tenants, and its
-  // surface should obey the user's light/dark/auto pick.
-  if (name === 'teacher.home' && isTutoringTenant.value) return true;
-  return false;
-});
 const tutoringRoleClass = computed(() =>
   auth.activeRole === 'teacher'
     ? 'tutoring-tutor'

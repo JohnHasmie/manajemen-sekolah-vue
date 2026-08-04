@@ -94,8 +94,6 @@ const AdminAnnouncementView = () =>
   import('@/views/admin/AdminAnnouncementView.vue');
 const AdminStudentAttendanceHub = () =>
   import('@/views/admin/AdminStudentAttendanceHub.vue');
-const AdminAttendanceDashboardView = () =>
-  import('@/views/admin/AdminAttendanceDashboardView.vue');
 const AdminTeacherEngagementView = () =>
   import('@/views/admin/AdminTeacherEngagementView.vue');
 const AdminStaffEngagementView = () =>
@@ -104,10 +102,6 @@ const AdminReadinessView = () =>
   import('@/views/admin/AdminReadinessView.vue');
 const AdminMobileAppBroadcastView = () =>
   import('@/views/admin/AdminMobileAppBroadcastView.vue');
-const AdminAttendanceTingkatHeatmapView = () =>
-  import('@/views/admin/AdminAttendanceTingkatHeatmapView.vue');
-const AdminAttendanceReportView = () =>
-  import('@/views/admin/AdminAttendanceReportView.vue');
 const AdminAttendanceDetailView = () =>
   import('@/views/admin/AdminAttendanceDetailView.vue');
 const AdminClassActivityView = () =>

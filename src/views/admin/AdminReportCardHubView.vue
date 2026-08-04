@@ -33,7 +33,6 @@ import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
-import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';

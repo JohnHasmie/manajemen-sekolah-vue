@@ -71,7 +71,6 @@ async function load() {
   await rbac.loadMembers(schoolId.value, roleId.value);
 }
 
-const modulesInOrder = computed(() => Object.keys(catalogByModule.value));
 const totalCatalogCount = computed(
   () =>
     Object.values(catalogByModule.value).reduce(

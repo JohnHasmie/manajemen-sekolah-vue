@@ -22,9 +22,7 @@
 <script setup lang="ts">
 import {
   computed,
-  nextTick,
   onMounted,
-  onUnmounted,
   ref,
   watch,
 } from 'vue';
@@ -34,7 +32,6 @@ import { useAuthStore } from '@/stores/auth';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SubjectService } from '@/services/subjects.service';
 import { GradeService } from '@/services/grades.service';
-import { localISODate } from '@/lib/format';
 import type { Classroom, Subject } from '@/types/entities';
 import type {
   Assessment,
@@ -54,12 +51,9 @@ import KpiStripCards, {
 import RoleToggleChipRow, {
   type RoleOption,
 } from '@/components/feature/RoleToggleChipRow.vue';
-import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
 import GradeSubjectCard from '@/components/feature/GradeSubjectCard.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
-import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
-import Toast from '@/components/ui/Toast.vue';
 import { useQuickAction } from '@/composables/useQuickAction';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
@@ -123,7 +117,6 @@ const classes = ref<Classroom[]>([]);
 const subjects = ref<Subject[]>([]);
 const classFilter = ref<string>('');
 const subjectFilter = ref<string>('');
-const semester = ref<string>('genap'); // kept internal; not surfaced
 const searchQuery = ref<string>('');
 
 const showClassPicker = ref(false);
