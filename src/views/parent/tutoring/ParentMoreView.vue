@@ -41,7 +41,7 @@ function chipClass(i: number): string {
 
 function pickChild(id: string) {
   setActive(id);
-  router.push({ name: 'parent.tutoring.overview', params: { studentId: id } });
+  router.push({ name: 'parent.tutoring2.home', params: { studentId: id } });
 }
 
 interface Tile {
@@ -66,7 +66,7 @@ const funnel = computed<Tile[]>(() => [
 
 const account = computed<Tile[]>(() => [
   { label: t('wali.bimbel.more.tile_notifications_label'), sub: t('wali.bimbel.more.tile_notifications_sub'), icon: 'bell', route: 'parent.tutoring.notifications' },
-  { label: t('wali.bimbel.more.tile_profile_label'), sub: t('wali.bimbel.more.tile_profile_sub'), icon: 'user', route: 'parent.tutoring.profile' },
+  { label: t('wali.bimbel.more.tile_profile_label'), sub: t('wali.bimbel.more.tile_profile_sub'), icon: 'user', route: 'parent.tutoring2.profile' },
   { label: t('wali.bimbel.more.tile_appearance_label'), sub: t('wali.bimbel.more.tile_appearance_sub'), icon: 'sun', route: 'parent.tutoring.appearance' },
 ]);
 

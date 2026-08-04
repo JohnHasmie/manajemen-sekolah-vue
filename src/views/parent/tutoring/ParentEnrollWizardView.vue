@@ -238,7 +238,7 @@ function cancel() {
       <button
         type="button"
         class="mt-4 rounded-lg bg-tutoring-hero text-white text-[14px] font-bold px-4 py-2"
-        @click="router.push({ name: 'parent.tutoring.bills' })"
+        @click="router.push({ name: 'parent.tutoring2.pay' })"
       >{{ t('wali.bimbel.enroll_wizard.success_button') }}</button>
     </div>
 

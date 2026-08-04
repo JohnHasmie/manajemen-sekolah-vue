@@ -507,7 +507,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
           <!-- Bimbel entry — only for tutoring-center tenants. -->
           <TenantEntryBanner
             :subtitle="t('tutoring.entry.tutorSub')"
-            @click="router.push({ name: 'teacher.tutoring.sessions' })"
+            @click="router.push({ name: 'teacher.tutoring2.sessions' })"
           />
           </template>
 

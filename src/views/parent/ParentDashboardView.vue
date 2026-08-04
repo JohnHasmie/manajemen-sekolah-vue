@@ -103,7 +103,7 @@ function openTutoring() {
   const studentId = current.value.student_id as string | undefined;
   if (!studentId) return;
   router.push({
-    name: 'parent.tutoring.overview',
+    name: 'parent.tutoring2.home',
     params: { studentId },
     query: { name: (current.value.name as string | undefined) ?? t('wali.sekolah.dashboard.anakFallback') },
   });

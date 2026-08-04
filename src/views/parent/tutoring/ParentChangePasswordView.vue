@@ -67,7 +67,7 @@ const canSubmit = computed(
 );
 
 function cancel() {
-  router.push({ name: 'parent.tutoring.profile' });
+  router.push({ name: 'parent.tutoring2.profile' });
 }
 
 async function submit() {

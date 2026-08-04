@@ -381,7 +381,7 @@ function gotoModules() {
             <!-- Bimbel entry — only for tutoring-center tenants. -->
             <TenantEntryBanner
               :subtitle="t('admin.sekolah.dashboard.tutoring_banner_subtitle')"
-              @click="router.push({ name: 'admin.tutoring.programs' })"
+              @click="router.push({ name: 'admin.tutoring2.programs' })"
             />
           </template>
 
