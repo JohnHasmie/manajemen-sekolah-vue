@@ -1832,7 +1832,16 @@ const routes: RouteRecordRaw[] = [
           role: 'admin' satisfies Role,
           needs: 'tutoring-module',
           ability: 'tutoring.voucher.view',
-        },
+        // WEB-12: greenfield "Announcement Kelompok" surface for admin
+        // (BE-22). Sits alongside the other admin tutoring2 routes;
+        // gated on `tutoring.announcement.view` matching the backend.
+        path: 'admin/tutoring2/group-announcements',
+        name: 'admin.tutoring2.group-announcements',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2GroupAnnouncementsView.vue'),
+        meta: {
+          role: 'admin' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.announcement.view',        },
       },
 
       {
@@ -2047,6 +2056,20 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/teacher/tutoring2/TutorTutoring2ProfileView.vue'),
         meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
       },
+      {
+        // WEB-12: tutor "Announcement" surface (BE-22). Task brief calls
+        // for route name `tutor.tutoring2.announcements`; using the
+        // codebase's canonical `teacher.` prefix (activeRole collapses
+        // wali_kelas/tutor to `teacher` — see useNavMenu.ts).
+        path: 'teacher/tutoring2/announcements',
+        name: 'teacher.tutoring2.group-announcements',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2GroupAnnouncementsView.vue'),
+        meta: {
+          role: 'teacher' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.announcement.view',
+        },
+      },
 
       // ────────────────────────────────────────────────────────────
       // Greenfield student (siswa) bimbel (WEB-5). Same coexistence
@@ -2182,6 +2205,21 @@ const routes: RouteRecordRaw[] = [
         name: 'parent.tutoring2.profile',
         component: () => import('@/views/parent/tutoring2/ParentTutoring2ProfileView.vue'),
         meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        // WEB-12: wali read-only feed of announcements for enrolled
+        // child(ren)'s groups (BE-22, published-only). Task brief calls
+        // for route name `parent.tutoring2.announcements`; kept the
+        // more specific `.group-announcements` to avoid future collision
+        // with a broader parent announcements screen.
+        path: 'parent/tutoring2/announcements',
+        name: 'parent.tutoring2.group-announcements',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2GroupAnnouncementsView.vue'),
+        meta: {
+          role: 'parent' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.announcement.view',
+        },
       },
 
       // Staff subtree (F3). The `staff` role now has a REAL web

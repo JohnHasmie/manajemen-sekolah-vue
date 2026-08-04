@@ -856,6 +856,22 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
     ],
   },
   {
+    // ── Growth (WEB-12) — greenfield bimbel growth surface. Starts
+    // with Announcement Kelompok (BE-22); more Wave 4 growth screens
+    // will land here as MRs merge. Gated on
+    // `tutoring.announcement.view` so a tenant/admin without the
+    // ability doesn't see an empty section.
+    titleKey: 'tutoring.nav.sectionGrowth',
+    items: [
+      {
+        to: '/admin/tutoring2/group-announcements',
+        labelKey: 'tutoring.nav.groupAnnouncementsV2',
+        icon: 'megaphone',
+        ability: 'tutoring.announcement.view',
+      },
+    ],
+  },
+  {
     titleKey: 'tutoring.nav.sectionTutorIncome',
     items: [
       {
@@ -1011,6 +1027,15 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
         icon: 'megaphone',
       },
       {
+        // WEB-12 tutor entry — greenfield BE-22 announcement surface.
+        // Sits alongside the legacy `announcements` route above during
+        // coexistence; CLEAN-4 removes the legacy row.
+        to: '/teacher/tutoring2/announcements',
+        labelKey: 'tutoring.nav.groupAnnouncementsV2',
+        icon: 'megaphone',
+        ability: 'tutoring.announcement.view',
+      },
+      {
         to: '/teacher/tutoring/leaderboard',
         labelKey: 'tutoring.nav.leaderboard',
         icon: 'bar-chart',
@@ -1098,6 +1123,16 @@ function parentTutoringNav(activeChildId: string): NavSection[] {
           to: `/parent/tutoring/${child}/announcements`,
           labelKey: 'nav.announcements',
           icon: 'megaphone',
+        },
+        {
+          // WEB-12 wali entry — greenfield BE-22 wali-facing feed of
+          // published announcements across every enrolled child's
+          // group. Path is child-agnostic (feed derives children from
+          // the wali-scoped enrollments query on the server).
+          to: '/parent/tutoring2/announcements',
+          labelKey: 'tutoring.nav.groupAnnouncementsV2',
+          icon: 'megaphone',
+          ability: 'tutoring.announcement.view',
         },
         {
           to: '/parent/tutoring/vouchers',
