@@ -47,7 +47,21 @@ export type AnnouncementStatus =
   | 'archived';
 
 /** Who the announcement targets. */
+/**
+ * How an announcement is *targeted*. Not a role — see
+ * {@link AnnouncementRoleTarget}, which is the vocabulary that goes on
+ * the wire as `role_target`. The two overlap on `all` and `student`,
+ * which is exactly why they were confused for each other.
+ */
 export type AnnouncementAudience = 'all' | 'role' | 'class' | 'student';
+
+/** Values of `announcements.role_target` — who receives it. */
+export type AnnouncementRoleTarget =
+  | 'all'
+  | 'parent'
+  | 'teacher'
+  | 'student'
+  | 'admin';
 
 /**
  * Canonical announcement record returned by `/announcement` for

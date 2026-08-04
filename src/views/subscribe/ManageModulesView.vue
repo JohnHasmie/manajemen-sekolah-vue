@@ -20,7 +20,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, type HistoryState } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useMeStore } from '@/stores/me';
 import { SubscriptionBillingService } from '@/services/billing.service';
@@ -522,7 +522,10 @@ async function doAdd(): Promise<void> {
         path: `/subscribe/addon/transfer/${token}`,
         // Router 4 forwards the state option through history.state so
         // the destination view can read `window.history.state.addon`.
-        state: { addon: created as unknown as Record<string, unknown> },
+        // Router's own state type, not Record<string, unknown> —
+        // HistoryStateValue is a closed union and a bare `unknown`
+        // record does not satisfy it.
+        state: { addon: created as unknown as HistoryState },
       });
       return;
     }

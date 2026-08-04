@@ -419,7 +419,7 @@ const activeSemesterLabel = computed(
             :label="t('parent.grades.chipPeriod')"
             :value="activeSemesterLabel"
             icon-name="calendar"
-            tone="cobalt"
+            tone="brand"
             @click="showSemesterPicker = true"
           />
           <AppFilterChip

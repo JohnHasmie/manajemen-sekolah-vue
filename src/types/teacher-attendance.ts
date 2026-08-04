@@ -588,8 +588,18 @@ export interface TeacherAttendanceSummaryMeta {
 }
 
 /** One per-teacher rekap row (admin/summary `data[]`). */
-export interface TeacherAttendanceSummaryRow
-  extends TeacherAttendanceStatusCounts {
+export interface TeacherAttendanceSummaryRow {
+  /**
+   * Per-status counts (`hadir`, `izin`, … — keys come from the response
+   * meta, so they cannot be enumerated here) sit on the row next to the
+   * named fields below.
+   *
+   * This used to `extend TeacherAttendanceStatusCounts`, i.e.
+   * `Record<string, number>`, which cannot hold `person_id: string` —
+   * every string field on the row contradicted the index signature. The
+   * totals rows still extend it, correctly: they are numbers only.
+   */
+  [statusKey: string]: string | number | null | undefined;
   /** Stable unique key per person — teacher's id or staff's user id.
    *  Use this as the row key: `teacher_id` is null for staff rows. */
   person_id: string;

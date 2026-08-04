@@ -15,6 +15,7 @@ import {
   announcementFromJson,
   type Announcement,
   type AnnouncementAudience,
+  type AnnouncementRoleTarget,
   type AnnouncementCategory,
   type AnnouncementFilterOptions,
   type AnnouncementPriority,
@@ -27,7 +28,17 @@ interface ListParams {
   per_page?: number;
   priority?: AnnouncementPriority | null;
   status?: AnnouncementStatus | null;
-  audience?: AnnouncementAudience | null;
+  /**
+   * Role to filter by — sent as `role_target`, which is what the
+   * backend actually filters on (`where('role_target', …)`).
+   *
+   * NOT `AnnouncementAudience`. That union (`all | role | class |
+   * student`) is the *targeting mode* of an announcement, a different
+   * vocabulary that happens to share the word "audience" and the value
+   * `student`. The admin filter has always sent roles and the request
+   * has always been correct; only this annotation disagreed.
+   */
+  audience?: AnnouncementRoleTarget | null;
   search?: string;
 }
 

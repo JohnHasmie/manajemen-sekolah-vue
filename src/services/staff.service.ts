@@ -70,6 +70,9 @@ export const StaffService = {
             current_page: meta.current_page,
             per_page: meta.per_page ?? params.per_page ?? 20,
             has_next_page: meta.current_page < (meta.last_page ?? 1),
+            // Pagination.vue gates the Prev button on this. Omitted, it
+            // read `!undefined` → permanently disabled.
+            has_prev_page: meta.current_page > 1,
           }
         : undefined;
     return { items, pagination, kpis: meta.kpis, facets: meta.facets };

@@ -43,6 +43,24 @@ const { t } = useI18n();
 // ── Data state ──
 const activeFilter = ref<PipelineKey | 'all'>('all');
 
+/**
+ * Status filter options. Hoisted out of the template: written inline as
+ * an array literal, `opt.key` inferred as `string`, so assigning it back
+ * to `activeFilter` was an unchecked widening — a typo in any key would
+ * have compiled and silently matched nothing.
+ */
+const STATUS_FILTER_OPTIONS: {
+  key: PipelineKey | 'all';
+  label: string;
+  icon: string;
+}[] = [
+  { key: 'all', label: 'Semua Status', icon: 'layers' },
+  { key: 'draft', label: 'Draft', icon: 'edit' },
+  { key: 'reviewed', label: 'Diperiksa', icon: 'check-square' },
+  { key: 'published', label: 'Terbit', icon: 'send' },
+  { key: 'distributed', label: 'Dibagikan', icon: 'share' },
+];
+
 // UI Modals / Sheets state
 const showStatusModal = ref(false);
 const showMoreMenuModal = ref(false);
@@ -641,13 +659,7 @@ function chipBadgeClass(tone: string | undefined): string {
     >
       <div class="space-y-1">
         <button
-          v-for="opt in [
-            { key: 'all', label: 'Semua Status', icon: 'layers' },
-            { key: 'draft', label: 'Draft', icon: 'edit' },
-            { key: 'reviewed', label: 'Diperiksa', icon: 'check-square' },
-            { key: 'published', label: 'Terbit', icon: 'send' },
-            { key: 'distributed', label: 'Dibagikan', icon: 'share' },
-          ]"
+          v-for="opt in STATUS_FILTER_OPTIONS"
           :key="opt.key"
           type="button"
           class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors flex items-center gap-3"

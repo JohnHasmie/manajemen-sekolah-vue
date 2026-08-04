@@ -163,7 +163,7 @@ const totalActive = computed(() => rows.value.filter((r) => r.is_active).length)
           sistem pakai koordinat tunggal di atas.
         </p>
       </div>
-      <Button variant="solid" size="sm" @click="openCreate">
+      <Button variant="primary" size="sm" @click="openCreate">
         <NavIcon name="plus" :size="14" />
         <span class="ml-1">Tambah</span>
       </Button>
@@ -380,7 +380,7 @@ const totalActive = computed(() => rows.value.filter((r) => r.is_active).length)
           <Button variant="ghost" size="sm" @click="modalOpen = false">
             Batal
           </Button>
-          <Button variant="solid" size="sm" :loading="saving" @click="save">
+          <Button variant="primary" size="sm" :loading="saving" @click="save">
             {{ editingId ? 'Simpan' : 'Tambah' }}
           </Button>
         </footer>

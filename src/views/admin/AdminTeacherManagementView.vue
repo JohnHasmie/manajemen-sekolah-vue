@@ -681,7 +681,7 @@ async function confirmDelete() {
         icon-name="activity"
         :label="$t('admin.teachers.filterActivity')"
         :value="activityStatusChipValue"
-        tone="rose"
+        tone="red"
         @click="showActivityPicker = true"
       />
     </template>

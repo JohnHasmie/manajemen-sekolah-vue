@@ -64,7 +64,10 @@ const rejecting = ref(false);
 //   the exact rekening tujuan without re-fetching per row. Loaded once
 //   on mount; the plan cache in the service prevents re-fetches on
 //   navigation. Safe to be null (drawer hides the panel).
-const bankTransfer = ref<PricingPlan['bank_transfer'] | null>(null);
+// NonNullable, because `bank_transfer` is optional on PricingPlan and
+// the inherited `| undefined` does not match the detail panel's prop.
+// Every write here already lands `?? null`, so undefined never occurs.
+const bankTransfer = ref<NonNullable<PricingPlan['bank_transfer']> | null>(null);
 
 // ── Local toast for approve/reject success + error surfaces ──
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);

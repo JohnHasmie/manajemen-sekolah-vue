@@ -333,7 +333,7 @@ const staffDeleteImpact = computed<string[]>(() => [ $t('admin.staff.deleteImpac
         icon-name="briefcase"
         label="Jabatan"
         :value="positionChipValue"
-        tone="indigo"
+        tone="brand"
         @click="showPositionPicker = true"
       />
       <AppFilterChip
@@ -347,14 +347,14 @@ const staffDeleteImpact = computed<string[]>(() => [ $t('admin.staff.deleteImpac
         icon-name="user"
         label="Gender"
         :value="genderChipValue"
-        tone="pink"
+        tone="amber"
         @click="showGenderPicker = true"
       />
       <AppFilterChip
         icon-name="id-card"
         label="Kepegawaian"
         :value="employmentChipValue"
-        tone="sky"
+        tone="green"
         @click="showEmploymentPicker = true"
       />
     </template>
