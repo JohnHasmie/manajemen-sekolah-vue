@@ -971,12 +971,18 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
         icon: 'calendar',
       },
       {
-        to: '/teacher/tutoring/activities',
+        // WEB-13 swap: repoint to greenfield tutor Activities
+        // (`/teacher/tutoring2/activities`). Legacy path drops with
+        // CLEAN-1..3 alongside the rest of `App\Modules\TutoringLegacy`.
+        to: '/teacher/tutoring2/activities',
         labelKey: 'tutoring.nav.activities',
         icon: 'check-circle',
       },
       {
-        to: '/teacher/tutoring/ratings',
+        // WEB-13 swap: repoint to greenfield tutor Ratings
+        // (`/teacher/tutoring2/ratings`, self endpoint bypasses
+        // `tutoring.tutor.view` per BE-20).
+        to: '/teacher/tutoring2/ratings',
         labelKey: 'tutoring.nav.rating',
         icon: 'star',
       },

@@ -2009,6 +2009,31 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
       },
 
+      // WEB-13 tutor: Activities + Submissions grader + Ratings
+      // (wires BE-23 activities/submissions + BE-20 self ratings). All
+      // three sit under `teacher/tutoring2/*` alongside WEB-4 —
+      // deliberate consistency, even though the WEB-13 brief said
+      // `tutor.tutoring2.*` (the app serves tutors under the teacher
+      // role — see WEB-4 memory).
+      {
+        path: 'teacher/tutoring2/activities',
+        name: 'teacher.tutoring2.activities',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2ActivitiesView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/submissions',
+        name: 'teacher.tutoring2.submissions',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2SubmissionsView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/ratings',
+        name: 'teacher.tutoring2.ratings',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2RatingsView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+
       // ────────────────────────────────────────────────────────────
       // Greenfield student (siswa) bimbel (WEB-5). Same coexistence
       // rule as WEB-3/4: `student/tutoring2/*` + `student.tutoring2.*`,
