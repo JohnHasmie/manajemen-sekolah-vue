@@ -889,6 +889,24 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
     ],
   },
   {
+    // ── GROWTH — greenfield acquisition / promo surface ──────────────
+    // Small dedicated section (per WEB-9) so the new /admin/tutoring2/*
+    // greenfield surface has a legible home in the sidebar. Currently
+    // only Voucher lives here; leads / referrals / campaigns from later
+    // MRs will slot in beside it. Ability-gated on `tutoring.voucher.view`
+    // so the row disappears for staff without the read grant.
+    titleKey: 'tutoring.nav.sectionGrowth',
+    items: [
+      {
+        to: '/admin/tutoring2/vouchers',
+        labelKey: 'tutoring.nav.vouchersV2',
+        icon: 'tag',
+        ability: 'tutoring.voucher.view',
+        needs: 'tutoring-module',
+      },
+    ],
+  },
+  {
     titleKey: 'tutoring.nav.sectionExtra',
     items: [
       {
