@@ -365,7 +365,7 @@ const heroChipLabel = computed(() => {
               </p>
               <p class="text-lg font-black mt-1 text-violet-700 tabular-nums">
                 <template
-                  v-if="row.rank !== null && row.total_in_class !== null"
+                  v-if="row.rank != null && row.total_in_class != null"
                 >
                   {{ row.rank
                   }}<span class="text-slate-400 text-[13px]"
@@ -382,7 +382,7 @@ const heroChipLabel = computed(() => {
                 {{ t('wali.sekolah.reportCardDetail.kpiAttendance') }}
               </p>
               <p class="text-lg font-black mt-1 text-emerald-700 tabular-nums">
-                <template v-if="row.attendance_pct !== null">
+                <template v-if="row.attendance_pct != null">
                   {{ Math.round(row.attendance_pct)
                   }}<span class="text-slate-400 text-[13px]">%</span>
                 </template>

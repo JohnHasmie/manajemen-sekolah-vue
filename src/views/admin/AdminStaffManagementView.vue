@@ -282,6 +282,24 @@ function openResetPassword() {
   detailTarget.value = null;
 }
 
+/**
+ * The modal's `resetFn` contract requires `password: string`, while
+ * StaffService types it optional (`password?`) because the endpoint
+ * omits it when the caller supplied one. Normalise here rather than
+ * loosening the modal for every caller.
+ */
+async function resetStaffPassword(
+  password?: string,
+): Promise<{ password: string; was_generated: boolean }> {
+  const id = resetTarget.value?.id;
+  if (!id) throw new Error('Tidak ada staf yang dipilih.');
+  const res = await StaffService.resetPassword(id, password);
+  return {
+    password: res.password ?? password ?? '',
+    was_generated: res.was_generated,
+  };
+}
+
 function onResetDone() { toast.value = { message: 'Password staf berhasil direset.', tone: 'success' }; }
 
 // Excel export / import / template are handled by <AdminExcelToolbar>.
@@ -415,11 +433,18 @@ const staffDeleteImpact = computed<string[]>(() => [ $t('admin.staff.deleteImpac
     @close="deleteTarget = null"
   />
 
+  <!--
+    Props matched to what ResetPasswordModal actually declares. It was
+    being handed `target-id` / `target-name` / `entity-type`, none of
+    which exist on it, so `resetFn` arrived undefined and the reset
+    button threw the moment it was pressed — staff passwords could not
+    be reset at all. Mirrors the Guru and Wali call sites.
+  -->
   <ResetPasswordModal
     v-if="resetTarget"
-    :target-id="resetTarget.id"
-    :target-name="resetTarget.name"
-    entity-type="staff"
+    title="Reset Password Staf"
+    :subject-name="resetTarget.name"
+    :reset-fn="resetStaffPassword"
     @close="resetTarget = null"
     @done="onResetDone"
   />

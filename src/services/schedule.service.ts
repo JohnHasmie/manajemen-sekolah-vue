@@ -49,7 +49,11 @@ function asNum(v: unknown, fallback = 0): number {
   return fallback;
 }
 
-function sanitize(obj: Record<string, unknown>): Record<string, unknown> {
+// `object`, not `Record<string, unknown>`: interfaces have no implicit
+// index signature, so every typed filter object (AdminScheduleFilters,
+// BillGroupFilters, …) was rejected at the call site even though
+// Object.entries handles them fine.
+function sanitize(obj: object): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(obj)) {
     if (v === undefined || v === null || v === '') continue;

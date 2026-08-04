@@ -138,13 +138,18 @@ const kpiCards = computed<KpiCard[]>(() => {
       { icon: 'file-text', label: t('parent.reportCards.kpiStatus'), value: '—', tone: 'slate' },
     ];
   }
-  const avg = r.average_score !== null ? r.average_score : null;
+  // `!= null`, not `!== null`. These four are optional on the summary
+  // (`number | null | undefined`), and the backend omits them rather than
+  // nulling them when a report card has no aggregate yet. Strict `!==
+  // null` let `undefined` through every guard below, so this card showed
+  // parents "NaN%" for kehadiran and "undefined/undefined" for peringkat.
+  const avg = r.average_score != null ? r.average_score : null;
   const rank =
-    r.rank !== null && r.total_in_class !== null
+    r.rank != null && r.total_in_class != null
       ? `${r.rank}/${r.total_in_class}`
       : '—';
   const attPct =
-    r.attendance_pct !== null ? `${Math.round(r.attendance_pct)}%` : '—';
+    r.attendance_pct != null ? `${Math.round(r.attendance_pct)}%` : '—';
   return [
     {
       icon: 'check-circle',
@@ -158,7 +163,7 @@ const kpiCards = computed<KpiCard[]>(() => {
       label: t('parent.reportCards.kpiAttendance'),
       value: attPct,
       tone:
-        r.attendance_pct !== null && r.attendance_pct >= 90
+        r.attendance_pct != null && r.attendance_pct >= 90
           ? 'green'
           : 'amber',
     },
@@ -338,13 +343,13 @@ function pickSemester(id: SemesterId) {
                   {{ STATUS_LABELS[row.reportCard.status] }}
                 </span>
                 <span
-                  v-if="row.rank !== null && row.total_in_class !== null"
+                  v-if="row.rank != null && row.total_in_class != null"
                   class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 uppercase tracking-wider"
                 >
                   {{ t('parent.reportCards.badgeRank', { rank: row.rank, total: row.total_in_class }) }}
                 </span>
                 <span
-                  v-if="row.average_score !== null"
+                  v-if="row.average_score != null"
                   class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase tracking-wider"
                 >
                   {{ t('parent.reportCards.badgeAvg', { avg: row.average_score }) }}

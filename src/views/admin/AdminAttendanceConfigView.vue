@@ -371,6 +371,9 @@ async function saveReminder() {
 }
 
 // ── Rules state (shared by both rules tabs) ─────────────────────────
+// TODO: `any[]` is why the v-for below type-checks as an array index.
+// The rows are check-in rules with a known shape; typing them would let
+// TS see `checkin_times_custom_days` as the string-keyed record it is.
 const rules = ref<any[]>([]);
 const teachersList = ref<any[]>([]);
 const gradeLevelsList = ref<string[]>([]);
@@ -1793,7 +1796,7 @@ function jumpToSection(id: string): void {
                     </div>
                     <div v-else class="text-3xs text-slate-500">
                       <span v-for="(time, day) in rule.checkin_times_custom_days" :key="day" class="mr-2 inline-block">
-                        <span class="font-bold text-slate-700">{{ getDayName(day).substring(0, 3) }}:</span> {{ time.substring(0, 5) }}
+                        <span class="font-bold text-slate-700">{{ getDayName(String(day)).substring(0, 3) }}:</span> {{ time.substring(0, 5) }}
                       </span>
                     </div>
                   </td>
@@ -1950,7 +1953,7 @@ function jumpToSection(id: string): void {
                     </div>
                     <div v-else class="text-3xs text-slate-500">
                       <span v-for="(time, day) in rule.checkout_times_custom_days" :key="day" class="mr-2 inline-block">
-                        <span class="font-bold text-slate-700">{{ getDayName(day).substring(0, 3) }}:</span> {{ time.substring(0, 5) }}
+                        <span class="font-bold text-slate-700">{{ getDayName(String(day)).substring(0, 3) }}:</span> {{ time.substring(0, 5) }}
                       </span>
                     </div>
                   </td>

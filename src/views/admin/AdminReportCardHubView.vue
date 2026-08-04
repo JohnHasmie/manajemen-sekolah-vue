@@ -23,7 +23,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { ReportCardService } from '@/services/report-card.service';
 import type {
-  AdminRaportPipeline,
+  AdminReportCardPipeline,
   ClassMiniChip,
   PipelineKey,
   TingkatGroup,
@@ -79,7 +79,10 @@ const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 // false` keeps the prior behaviour (this view only refetched on
 // academic-year change). The loader keeps its side-effect of expanding
 // the first tingkat on first load.
-const { state: loadState, reload } = useDataRefresh<AdminRaportPipeline>(
+// `| null` because getAdminPipeline swallows its own errors and returns
+// null; the generic claimed non-null and the loader never matched it.
+// Canonical name too — `AdminRaportPipeline` is a deprecated alias.
+const { state: loadState, reload } = useDataRefresh<AdminReportCardPipeline | null>(
   async () => {
     const data = await ReportCardService.getAdminPipeline();
     if (data?.tingkats.length) {
