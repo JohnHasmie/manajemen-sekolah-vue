@@ -908,6 +908,22 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
       },
     ],
   },
+  // WEB-14 — greenfield "Insight" (Wawasan) section for tutoring2.
+  // Just the leaderboard entry today; future WEB MRs will grow this
+  // section (activity reports v2, attendance reports v2, etc.).
+  // Ability-gated so it hides for admin tiers without leaderboard.view.
+  {
+    titleKey: 'tutoring.nav.sectionInsight',
+    items: [
+      {
+        to: '/admin/tutoring2/leaderboard',
+        labelKey: 'tutoring.nav.leaderboardV2',
+        icon: 'trophy',
+        ability: 'tutoring.leaderboard.view',
+        needs: 'tutoring-module',
+      },
+    ],
+  },
   {
     titleKey: 'tutoring.nav.sectionAccount',
     items: [

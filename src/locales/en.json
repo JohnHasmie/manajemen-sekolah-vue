@@ -4367,6 +4367,8 @@
       "vouchers": "Vouchers",
       "groupAnnouncements": "Group announcements",
       "leaderboard": "Leaderboard",
+      "leaderboardV2": "Leaderboard",
+      "sectionInsight": "Insight",
       "monitoring": "Monitoring",
       "schedule": "Session schedule",
       "scores": "Scores & progress",
@@ -7123,6 +7125,27 @@
         "profile": "Bimbel profile",
         "appearance": "Appearance",
         "tenantConfigNote": "Stored in tenant_config. module:tutoring + ModuleCatalog scope=bimbel controls which modules are enabled."
+      },
+      "leaderboard": {
+        "title": "Leaderboard",
+        "meta": "{count} participants",
+        "searchPh": "Search participants…",
+        "emptyTitle": "No scores for this period yet.",
+        "emptyDesc": "Scores appear once a try-out or exercise is published.",
+        "tabLabel": "View",
+        "tabGroup": "Per group",
+        "tabProgram": "Per program",
+        "assessmentLabel": "Assessment",
+        "kpiParticipants": "Participants",
+        "kpiAverage": "Average",
+        "kpiTop": "Top",
+        "kpiMedian": "Median",
+        "colRank": "Rank",
+        "colAverage": "Avg score",
+        "colAssessments": "Assessments",
+        "colStreak": "Streak (days)",
+        "metaAssessments": "{count} assessments",
+        "streak": "{days}-day streak"
       }
     },
     "tutor": {

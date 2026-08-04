@@ -1795,6 +1795,19 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/tutoring2/AdminTutoring2SettingsView.vue'),
         meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
       },
+      // WEB-14: admin leaderboard for greenfield bimbel (BE-21).
+      // Ability-gated so the sidebar entry hides for admins whose
+      // role tier lacks `tutoring.leaderboard.view`.
+      {
+        path: 'admin/tutoring2/leaderboard',
+        name: 'admin.tutoring2.leaderboard',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2LeaderboardView.vue'),
+        meta: {
+          role: 'admin' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.leaderboard.view',
+        },
+      },
 
       {
         path: 'teacher/tutoring/class',

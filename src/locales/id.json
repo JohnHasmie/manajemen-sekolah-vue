@@ -4367,6 +4367,8 @@
       "vouchers": "Voucher / Promo",
       "groupAnnouncements": "Pengumuman Kelas",
       "leaderboard": "Peringkat",
+      "leaderboardV2": "Peringkat",
+      "sectionInsight": "Wawasan",
       "monitoring": "Monitoring Anak",
       "schedule": "Jadwal Sesi",
       "scores": "Nilai & Progress",
@@ -7123,6 +7125,27 @@
         "profile": "Profil bimbel",
         "appearance": "Tampilan",
         "tenantConfigNote": "Disimpan di tenant_config. module:tutoring + ModuleCatalog scope=bimbel menentukan modul terbuka."
+      },
+      "leaderboard": {
+        "title": "Peringkat",
+        "meta": "{count} peserta",
+        "searchPh": "Cari peserta…",
+        "emptyTitle": "Belum ada nilai untuk periode ini.",
+        "emptyDesc": "Nilai akan muncul setelah try-out atau latihan dipublikasi.",
+        "tabLabel": "Tampilan",
+        "tabGroup": "Per Kelompok",
+        "tabProgram": "Per Program",
+        "assessmentLabel": "Penilaian",
+        "kpiParticipants": "Peserta",
+        "kpiAverage": "Rata-rata",
+        "kpiTop": "Tertinggi",
+        "kpiMedian": "Median",
+        "colRank": "Peringkat",
+        "colAverage": "Nilai rata",
+        "colAssessments": "Jumlah penilaian",
+        "colStreak": "Streak (hari)",
+        "metaAssessments": "{count} penilaian",
+        "streak": "Streak {days} hari"
       }
     },
     "tutor": {
