@@ -1760,6 +1760,17 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
       },
       {
+        // WEB-10 admin tutor detail — consumed by row click on the list
+        // above. Kept as a sibling of `admin.tutoring2.tutors` (not
+        // nested under it) so both routes appear at the same depth in
+        // the admin section and the AppShell breadcrumb stays flat.
+        path: 'admin/tutoring2/tutors/:id',
+        name: 'admin.tutoring2.tutor.detail',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2TutorDetailView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+        props: true,
+      },
+      {
         path: 'admin/tutoring2/schedule',
         name: 'admin.tutoring2.schedule',
         component: () => import('@/views/admin/tutoring2/AdminTutoring2ScheduleView.vue'),
