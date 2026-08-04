@@ -48,7 +48,11 @@ type Tier = 'penting' | 'acara' | 'umum';
 const tier = computed<Tier>(() => {
   const a = props.announcement;
   if (a.priority === 'high' || a.priority === 'urgent') return 'penting';
-  if (a.type === 'event' || a.event_at || a.category === 'acara') return 'acara';
+  // `a.category === 'acara'` used to be the third arm here. It cannot
+  // match: `normalizeAnnouncementType` folds the legacy Indonesian
+  // 'acara' onto 'event' before the row reaches this component, so
+  // `category` is always one of the four English values.
+  if (a.type === 'event' || a.event_at) return 'acara';
   return 'umum';
 });
 

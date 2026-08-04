@@ -710,7 +710,12 @@ export interface Subject {
 export function subjectFromJson(raw: AnyRecord): Subject {
   const r = raw;
   const ms = r.master_subject as AnyRecord | undefined;
-  const statusRaw = (r.status as string) ?? (r.is_active as unknown) ?? null;
+  // `unknown`, not `as string`. This parses loose JSON where `status`
+  // legitimately arrives as a boolean, 0/1, or one of four strings —
+  // which is exactly what the branches below handle. Asserting `string`
+  // made the numeric arms unreachable to the checker while they kept
+  // firing at runtime.
+  const statusRaw: unknown = r.status ?? r.is_active ?? null;
   let isActive: boolean | undefined;
   if (typeof statusRaw === 'boolean') isActive = statusRaw;
   else if (statusRaw === 'active' || statusRaw === 'aktif') isActive = true;

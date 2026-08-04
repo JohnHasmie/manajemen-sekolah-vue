@@ -104,14 +104,20 @@ onMounted(async () => {
   // after a successful login.
   //
   // Two-layer guard:
-  //   1. Skip the toast unless `auth.step === 'form'` — pickers
-  //      don't need session-expired warnings.
+  //   1. Skip the toast unless the user is on the credentials step —
+  //      pickers don't need session-expired warnings.
+  //
+  //      That step is `'login'`. This guard was written against
+  //      `'form'`, which `AuthStep` has never contained, so it was
+  //      false for every step and the toast never appeared at all —
+  //      while the cleanup below still stripped `reason` from the URL.
+  //      The fix for the false positive suppressed the true ones too.
   //   2. After reading the reason, strip it from the URL so a page
   //      refresh (or a router-replace that keeps other query params)
   //      does not surface the same warning again.
   const reason = route.query.reason;
   if (typeof reason === 'string' && reason.length > 0) {
-    if (auth.step === 'form') {
+    if (auth.step === 'login') {
       toast.value = { message: reason, tone: 'error' };
     }
     // Clean the stale reason out of the URL regardless of whether
