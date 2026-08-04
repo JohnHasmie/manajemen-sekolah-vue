@@ -7123,6 +7123,55 @@
         "profile": "Bimbel profile",
         "appearance": "Appearance",
         "tenantConfigNote": "Stored in tenant_config. module:tutoring + ModuleCatalog scope=bimbel controls which modules are enabled."
+      },
+      "reports": {
+        "meta": "{count} rows",
+        "from": "From",
+        "to": "To",
+        "downloadCsv": "Download CSV",
+        "downloadPdf": "Download PDF",
+        "activity": {
+          "title": "Activity report",
+          "kpiScheduled": "Sessions scheduled",
+          "kpiCompleted": "Sessions completed",
+          "kpiCancelled": "Sessions cancelled",
+          "kpiAttendance": "Attendance rows",
+          "colScheduled": "Scheduled",
+          "colCompleted": "Completed",
+          "colCancelled": "Cancelled",
+          "colAttendance": "Attendance",
+          "emptyTitle": "No activity yet",
+          "emptyDesc": "No sessions or attendance recorded in this range."
+        },
+        "attendance": {
+          "title": "Attendance report",
+          "kpiStudents": "Active students",
+          "kpiPlanned": "Sessions planned",
+          "kpiHadir": "Total present",
+          "kpiRate": "Attendance rate",
+          "colPlanned": "Planned",
+          "colHadir": "Present",
+          "colIzin": "Excused",
+          "colSakit": "Sick",
+          "colAlpa": "Absent",
+          "colRate": "Rate",
+          "emptyTitle": "No attendance yet",
+          "emptyDesc": "No attendance rows recorded in this range."
+        },
+        "financial": {
+          "title": "Financial report",
+          "kpiRevenue": "Total revenue",
+          "kpiOutstanding": "Total outstanding",
+          "kpiBilled": "Total billed",
+          "kpiBillsCount": "Bills issued",
+          "colBillsCount": "Bills",
+          "colBilled": "Billed",
+          "colPaid": "Paid",
+          "colOverdue": "Overdue",
+          "colRefunds": "Refunds",
+          "emptyTitle": "No transactions yet",
+          "emptyDesc": "No tutoring bills in this range."
+        }
       }
     },
     "tutor": {
@@ -7437,6 +7486,12 @@
         "logout": "Log out",
         "logoutDesc": "Log out of this account"
       }
+    },
+    "nav": {
+      "sectionInsight": "Insight",
+      "reportsActivity": "Activity",
+      "reportsAttendance": "Attendance",
+      "reportsFinancial": "Financials"
     }
   }
 }

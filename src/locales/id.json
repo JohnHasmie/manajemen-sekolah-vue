@@ -7123,6 +7123,55 @@
         "profile": "Profil bimbel",
         "appearance": "Tampilan",
         "tenantConfigNote": "Disimpan di tenant_config. module:tutoring + ModuleCatalog scope=bimbel menentukan modul terbuka."
+      },
+      "reports": {
+        "meta": "{count} baris",
+        "from": "Dari",
+        "to": "Sampai",
+        "downloadCsv": "Unduh CSV",
+        "downloadPdf": "Unduh PDF",
+        "activity": {
+          "title": "Laporan Aktivitas",
+          "kpiScheduled": "Sesi terjadwal",
+          "kpiCompleted": "Sesi selesai",
+          "kpiCancelled": "Sesi dibatalkan",
+          "kpiAttendance": "Presensi tercatat",
+          "colScheduled": "Terjadwal",
+          "colCompleted": "Selesai",
+          "colCancelled": "Dibatalkan",
+          "colAttendance": "Presensi",
+          "emptyTitle": "Belum ada aktivitas",
+          "emptyDesc": "Tidak ada sesi atau presensi pada rentang tanggal ini."
+        },
+        "attendance": {
+          "title": "Laporan Kehadiran",
+          "kpiStudents": "Siswa aktif",
+          "kpiPlanned": "Sesi direncanakan",
+          "kpiHadir": "Total hadir",
+          "kpiRate": "Rerata kehadiran",
+          "colPlanned": "Rencana",
+          "colHadir": "Hadir",
+          "colIzin": "Izin",
+          "colSakit": "Sakit",
+          "colAlpa": "Alpa",
+          "colRate": "Persentase",
+          "emptyTitle": "Belum ada presensi",
+          "emptyDesc": "Tidak ada baris presensi pada rentang tanggal ini."
+        },
+        "financial": {
+          "title": "Laporan Keuangan",
+          "kpiRevenue": "Total pemasukan",
+          "kpiOutstanding": "Total menunggak",
+          "kpiBilled": "Total tertagih",
+          "kpiBillsCount": "Jumlah tagihan",
+          "colBillsCount": "Jml Tagihan",
+          "colBilled": "Tertagih",
+          "colPaid": "Terbayar",
+          "colOverdue": "Menunggak",
+          "colRefunds": "Refund",
+          "emptyTitle": "Belum ada transaksi",
+          "emptyDesc": "Tidak ada tagihan tutoring pada rentang tanggal ini."
+        }
       }
     },
     "tutor": {
@@ -7437,6 +7486,12 @@
         "logout": "Keluar",
         "logoutDesc": "Logout dari akun ini"
       }
+    },
+    "nav": {
+      "sectionInsight": "Insight",
+      "reportsActivity": "Aktivitas",
+      "reportsAttendance": "Kehadiran",
+      "reportsFinancial": "Keuangan"
     }
   }
 }
