@@ -13,6 +13,7 @@ import { defineConfig, devices } from '@playwright/test';
  *   2. `php artisan db:seed --class=Database\Seeders\E2ESeeder`
  */
 const BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:5173';
+const BASE_PORT = new URL(BASE_URL).port || '5173';
 
 export default defineConfig({
   testDir: './e2e',
@@ -55,7 +56,14 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    command: 'npm run dev -- --port 5173 --strictPort',
+    // The port comes from BASE_URL. It used to be hard-coded to 5173
+    // while `url` followed E2E_BASE_URL, so pointing the suite at another
+    // port booted a server on 5173 and then waited for a URL nothing was
+    // serving. Worse, with 5173 free it silently started a server from
+    // THIS checkout and served it as if it were the one you had aimed at
+    // — a before/after comparison against another build then ran twice
+    // against the same code and passed both times.
+    command: `npm run dev -- --port ${BASE_PORT} --strictPort`,
     url: BASE_URL,
     reuseExistingServer: true,
     timeout: 120_000,

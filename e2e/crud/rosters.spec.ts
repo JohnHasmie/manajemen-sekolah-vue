@@ -83,6 +83,12 @@ const ROSTERS: Roster[] = [
     // behaviour; the test simply must not trigger it by accident.
     fill: async (page, name) => {
       await page.getByTestId('field-name').fill(name);
+      // Gender is required on create as well as update (backend !6xx).
+      // Leaving it unset used to produce a teacher that could never be
+      // edited again, which is what made `edit · the change survives a
+      // full page reload` fail: the rename came back 422 and the row the
+      // assertion looked for never existed.
+      await page.getByTestId('field-gender').selectOption('female');
       await page
         .getByTestId('field-email')
         .fill(`${name.toLowerCase()}-${Date.now()}@kamiledu.test`);
@@ -351,6 +357,44 @@ for (const roster of ROSTERS) {
       await expect(opener(page)).toBeVisible({ timeout: 60_000 });
       await crud(page).searchFor(name);
       await expect(crud(page).row(name), 'the row came back after a reload').toBeHidden();
+    });
+
+    test('create · a missing gender is caught before the request leaves', async ({ page }) => {
+      test.skip(roster.key !== 'teachers', 'only the teacher form collects a gender');
+
+      // The client half of the create/update asymmetry. The backend now
+      // requires a gender on create; without this guard the sheet still
+      // submitted `gender: null` and the admin met a raw 422 instead of
+      // an inline message — and on create it produced a teacher that
+      // could never be edited afterwards.
+      //
+      // Watching the network, not just the DOM: a form that shows an
+      // error AND still fires the POST is a different, worse bug.
+      const writes: string[] = [];
+      page.on('request', (r) => {
+        if (r.method() === 'POST' && r.url().includes(roster.createUrl)) writes.push(r.url());
+      });
+
+      await openCreate(page);
+      await expect(sheetOf(page)).toBeVisible();
+      await page.getByTestId('field-name').fill(`${ns}-TanpaGender`);
+      await page
+        .getByTestId('field-email')
+        .fill(`${ns.toLowerCase()}-nogender-${Date.now()}@kamiledu.test`);
+      await submitSheet(page);
+
+      await expect(sheetOf(page), 'the sheet must stay open without a gender').toBeVisible();
+      expect(writes, 'a create request left the browser without a gender').toEqual([]);
+
+      // The assertion that actually discriminates. The two above pass
+      // with OR without the client guard — the sheet stays open either
+      // way, and the POST is blocked by something else upstream — so on
+      // their own they proved nothing. Only the inline message is unique
+      // to the guard this test exists to cover.
+      await expect(
+        page.getByText('Jenis kelamin wajib dipilih.'),
+        'the form must say WHICH field is missing, not just refuse to submit',
+      ).toBeVisible();
     });
 
     test('search · finds the new row and clearing restores the list', async ({ page }) => {

@@ -126,6 +126,12 @@ function validate(): boolean {
   if (!form.email.trim()) errors.email = 'Email wajib diisi.';
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
     errors.email = 'Format email tidak valid.';
+  // The backend requires a gender on BOTH create and update. Without
+  // this the sheet submitted `gender: null` and the admin got a raw 422
+  // instead of an inline message — and on create it silently produced a
+  // teacher that could never be edited afterwards, because every later
+  // save asked for a gender the record had never been given.
+  if (!form.gender) errors.gender = 'Jenis kelamin wajib dipilih.';
   return Object.keys(errors).length === 0;
 }
 
@@ -253,11 +259,12 @@ function submit() {
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
         <FormField
           field="gender"
-        v-model="form.gender"
+          v-model="form.gender"
           type="select"
           label="Jenis kelamin"
           select-placeholder="— Pilih —"
           :options="genderOptions"
+          :error="errors.gender"
           :disabled="isSaving"
         />
         <FormField
