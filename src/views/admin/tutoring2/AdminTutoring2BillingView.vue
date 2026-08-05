@@ -20,6 +20,7 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { toLocalYm } from '@/lib/local-date';
 import {
   TutoringBimbelService,
   type BimbelBill,
@@ -144,7 +145,7 @@ function billStatusLabel(status: string): string {
           :value="monthFilter || t('tutoring2.common.all')"
           icon-name="calendar"
           :active="!!monthFilter"
-          @click="monthFilter = monthFilter ? '' : new Date().toISOString().slice(0, 7)"
+          @click="monthFilter = monthFilter ? '' : toLocalYm()"
         />
       </template>
     </PageFilterToolbar>

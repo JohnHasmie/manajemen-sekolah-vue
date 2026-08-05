@@ -35,6 +35,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
+import { toLocalYm } from '@/lib/local-date';
 import { PayoutsService } from '@/services/tutoring2/payouts';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import type { PayoutRequest, PayoutRequestStatus } from '@/types/tutoring2/payout';
@@ -85,7 +86,7 @@ const filteredRequests = computed<PayoutRequest[]>(() => {
 
 const kpiCards = computed<KpiCard[]>(() => {
   const rows = filteredRequests.value;
-  const nowMonth = new Date().toISOString().slice(0, 7);
+  const nowMonth = toLocalYm();
   const pending = rows.filter((r) => r.status === 'pending').length;
   const approved = rows.filter((r) => r.status === 'approved').length;
   const paidThis = rows
@@ -254,7 +255,7 @@ const statusOptions = PAYOUT_REQUEST_STATUSES.map((s) => ({ value: s, label: sta
           :value="monthFilter || t('tutoring2.common.all')"
           icon-name="calendar"
           :active="!!monthFilter"
-          @click="monthFilter = monthFilter ? '' : new Date().toISOString().slice(0, 7)"
+          @click="monthFilter = monthFilter ? '' : toLocalYm()"
         />
         <AppFilterChip
           :label="t('tutoring2.common.tutor')"

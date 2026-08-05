@@ -15,6 +15,7 @@ import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { toLocalYmd } from '@/lib/local-date';
 import {
   TutoringBimbelService,
   type BimbelSession,
@@ -25,8 +26,8 @@ const router = useRouter();
 
 const { state, reload } = useDataRefresh(async () => {
   const today = new Date();
-  const todayIso = today.toISOString().slice(0, 10);
-  const tomorrow = new Date(today.getTime() + 24 * 3600 * 1000).toISOString().slice(0, 10);
+  const todayIso = toLocalYmd(today);
+  const tomorrow = toLocalYmd(new Date(today.getTime() + 24 * 3600 * 1000));
   const { items } = await TutoringBimbelService.listSessions({
     per_page: 50,
     from: todayIso,

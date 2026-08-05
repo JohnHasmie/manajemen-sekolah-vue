@@ -17,12 +17,13 @@ import KpiStripCards, { type KpiCard } from '@/components/feature/KpiStripCards.
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import FormField from '@/components/ui/FormField.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { toLocalYm } from '@/lib/local-date';
 import { PayoutsService } from '@/services/tutoring2/payouts';
 import type { PayoutSummaryMeta, PayoutSummaryRow } from '@/types/tutoring2/payout';
 
 const { t } = useI18n();
 
-const month = ref(new Date().toISOString().slice(0, 7));
+const month = ref(toLocalYm());
 
 interface SummaryBundle {
   rows: PayoutSummaryRow[];

@@ -44,6 +44,7 @@ import {
 import type { Tutor, DeactivateTutorConflict } from '@/types/tutoring2/tutor';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { formatDateTime } from '@/lib/format';
+import { toLocalYmd } from '@/lib/local-date';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -75,7 +76,7 @@ const { state, reload } = useDataRefresh<TutorBundle>(async () => {
       // Only look forward from today so the "upcoming" tab doesn't
       // pull historical rows. Local date is fine — sessions are
       // filtered coarsely and the exact tz cutoff isn't load-bearing.
-      from: new Date().toISOString().slice(0, 10),
+      from: toLocalYmd(),
     }),
   ]);
   const activeGroups =

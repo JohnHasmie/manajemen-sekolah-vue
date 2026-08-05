@@ -797,22 +797,26 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
     titleKey: 'tutoring.nav.manajemen',
     items: [
       {
-        to: '/admin/tutoring/students',
+        // review-round-1: repointed to greenfield WEB-3 view; legacy
+        // route removed by CLEAN-2.
+        to: '/admin/tutoring2/students',
         labelKey: 'tutoring.nav.students',
         icon: 'users',
       },
       {
-        to: '/admin/tutoring/tutors',
+        // review-round-1: repointed to greenfield WEB-3 view; legacy
+        // route removed by CLEAN-2.
+        to: '/admin/tutoring2/tutors',
         labelKey: 'tutoring.nav.tutors',
         icon: 'user-check',
       },
       // "Groups" reused the school "Classes" label/icon confusingly —
       // relabel to a bimbel-native "Kelompok Belajar" / "Study groups"
       // and swap the `layers` (classes/stacks) icon for `users` (a group
-      // of learners). Label/icon change only — same /admin/tutoring/groups
-      // route.
+      // of learners). review-round-1: repointed to greenfield WEB-3
+      // route; legacy /admin/tutoring/groups removed by CLEAN-2.
       {
-        to: '/admin/tutoring/groups',
+        to: '/admin/tutoring2/groups',
         labelKey: 'tutoring.nav.groups',
         icon: 'users',
       },
@@ -834,25 +838,26 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
     titleKey: 'tutoring.nav.sectionPrograms',
     items: [
       {
-        to: '/admin/tutoring/programs',
+        // review-round-1: repointed to greenfield WEB-3 view; legacy
+        // /admin/tutoring/programs removed by CLEAN-2.
+        to: '/admin/tutoring2/programs',
         labelKey: 'tutoring.nav.programs',
         icon: 'layers',
       },
       {
-        to: '/admin/tutoring/sessions',
+        // review-round-1: repointed to greenfield admin schedule
+        // (bimbel sessions). Legacy /admin/tutoring/sessions removed by
+        // CLEAN-2.
+        to: '/admin/tutoring2/schedule',
         labelKey: 'tutoring.nav.sessions',
         icon: 'calendar',
       },
-      {
-        to: '/admin/tutoring/session-reminders',
-        labelKey: 'tutoring.nav.sessionReminders',
-        icon: 'bell',
-      },
-      {
-        to: '/admin/tutoring/group-announcements',
-        labelKey: 'tutoring.nav.groupAnnouncements',
-        icon: 'megaphone',
-      },
+      // removed CLEAN-2: no greenfield yet — track in project_bimbel_greenfield_rebuild
+      // (was: /admin/tutoring/session-reminders — session reminders
+      // feature not yet re-implemented on greenfield).
+      // review-round-1: legacy /admin/tutoring/group-announcements
+      // removed by CLEAN-2. The greenfield equivalent already appears
+      // in the "sectionGrowth" block below — don't duplicate it here.
     ],
   },
   {
@@ -871,26 +876,12 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
       },
     ],
   },
-  {
-    titleKey: 'tutoring.nav.sectionTutorIncome',
-    items: [
-      {
-        to: '/admin/tutoring/payouts',
-        labelKey: 'tutoring.nav.payouts',
-        icon: 'wallet',
-      },
-      {
-        to: '/admin/tutoring/payout-requests',
-        labelKey: 'tutoring.nav.payoutRequests',
-        icon: 'wallet',
-      },
-      {
-        to: '/admin/tutoring/payout-settings',
-        labelKey: 'tutoring.nav.payoutSettings',
-        icon: 'settings',
-      },
-    ],
-  },
+  // removed CLEAN-2: no greenfield yet — track in project_bimbel_greenfield_rebuild
+  // (was: whole "sectionTutorIncome" block — /admin/tutoring/{payouts,
+  // payout-requests,payout-settings}. All three routes were removed by
+  // CLEAN-2; the greenfield equivalents live in the WEB-16
+  // "sectionPayouts" block immediately below, so this legacy section
+  // was dead-and-duplicated.)
   // WEB-16 — greenfield payouts sidebar. Sits alongside the legacy
   // "Pendapatan Tutor" (which still serves App\Modules\TutoringLegacy)
   // until CLEAN-3 drops the old links. Each item gates on the same
@@ -929,20 +920,22 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
     titleKey: 'tutoring.nav.sectionStudentFinance',
     items: [
       {
-        to: '/admin/tutoring/bills',
+        // review-round-1: repointed to greenfield WEB-3 billing view;
+        // legacy /admin/tutoring/bills removed by CLEAN-2.
+        to: '/admin/tutoring2/billing',
         labelKey: 'tutoring.nav.bills',
         icon: 'wallet',
       },
       {
+        // PRESERVED by CLEAN-2 — legacy AdminTutoringBillingSettingsView
+        // still ships; greenfield replacement not yet built.
         to: '/admin/tutoring/billing-settings',
         labelKey: 'tutoring.nav.billingSettings',
         icon: 'settings',
       },
-      {
-        to: '/admin/tutoring/vouchers',
-        labelKey: 'tutoring.nav.vouchers',
-        icon: 'wallet',
-      },
+      // removed CLEAN-2: no greenfield yet — track in project_bimbel_greenfield_rebuild
+      // (was: /admin/tutoring/vouchers — greenfield equivalent already
+      // appears in the "sectionGrowth" block below; don't duplicate.)
     ],
   },
   {
@@ -963,26 +956,12 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
       },
     ],
   },
-  {
-    titleKey: 'tutoring.nav.sectionExtra',
-    items: [
-      {
-        to: '/admin/tutoring/leaderboard',
-        labelKey: 'tutoring.nav.leaderboard',
-        icon: 'bar-chart',
-      },
-      {
-        to: '/admin/tutoring/reports/activity',
-        labelKey: 'tutoring.nav.activities',
-        icon: 'bar-chart',
-      },
-      {
-        to: '/admin/tutoring/reports/attendance',
-        labelKey: 'tutoring.nav.attendance',
-        icon: 'check-square',
-      },
-    ],
-  },
+  // removed CLEAN-2: no greenfield yet — track in project_bimbel_greenfield_rebuild
+  // (was: whole admin "sectionExtra" block — /admin/tutoring/leaderboard,
+  // /admin/tutoring/reports/{activity,attendance}. All three routes were
+  // removed by CLEAN-2; the greenfield equivalents ship in the WEB-14/15
+  // "sectionInsight" block immediately below, so this legacy section
+  // was dead-and-duplicated.)
   // WEB-14 — greenfield "Insight" (Wawasan) section for tutoring2.
   // Just the leaderboard entry today; future WEB MRs will grow this
   // section (activity reports v2, attendance reports v2, etc.).
@@ -1047,17 +1026,19 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
     titleKey: 'tutoring.nav.sectionMain',
     items: [
       { to: '/teacher', labelKey: 'tutoring.nav.home', icon: 'home' },
+      // removed CLEAN-2: no greenfield yet — track in project_bimbel_greenfield_rebuild
+      // (was: /teacher/tutoring/class — tutor "kelas" hub screen not
+      // yet re-implemented on greenfield; students + sessions cover
+      // most of that navigation flow already.)
       {
-        to: '/teacher/tutoring/class',
-        labelKey: 'tutoring.nav.classes',
-        icon: 'layers',
-      },
-      {
-        to: '/teacher/tutoring/sessions',
+        // review-round-1: repointed to greenfield WEB-4 sessions view;
+        // legacy /teacher/tutoring/sessions removed by CLEAN-2.
+        to: '/teacher/tutoring2/sessions',
         labelKey: 'tutoring.nav.jadwal',
         icon: 'calendar',
       },
       {
+        // PRESERVED by CLEAN-2 — legacy TutorEarningsView still ships.
         to: '/teacher/tutoring/earnings',
         labelKey: 'tutoring.nav.honor',
         icon: 'wallet',
@@ -1068,16 +1049,18 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
     titleKey: 'tutoring.nav.sectionExtra',
     items: [
       {
-        to: '/teacher/tutoring/materials',
+        // review-round-1: repointed to greenfield WEB-4 materials view;
+        // legacy /teacher/tutoring/materials removed by CLEAN-2.
+        to: '/teacher/tutoring2/materials',
         labelKey: 'tutoring.nav.materials',
         icon: 'book',
       },
+      // removed CLEAN-2: no greenfield yet — track in project_bimbel_greenfield_rebuild
+      // (was: /teacher/tutoring/tryout-generator — AI tryout generator
+      // not yet re-implemented on greenfield.)
       {
-        to: '/teacher/tutoring/tryout-generator',
-        labelKey: 'tutoring.nav.ai',
-        icon: 'sparkles',
-      },
-      {
+        // PRESERVED by CLEAN-2 — legacy TutorRecurringSessionsView still
+        // ships; greenfield recurring UI not yet built.
         to: '/teacher/tutoring/recurring',
         labelKey: 'tutoring.nav.recurring',
         icon: 'calendar',
@@ -1098,15 +1081,13 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
         labelKey: 'tutoring.nav.rating',
         icon: 'star',
       },
-      {
-        to: '/teacher/tutoring/announcements',
-        labelKey: 'nav.announcements',
-        icon: 'megaphone',
-      },
+      // removed CLEAN-2: no greenfield yet — track in project_bimbel_greenfield_rebuild
+      // (was: /teacher/tutoring/announcements — legacy tutor
+      // announcements route removed by CLEAN-2. The WEB-12 greenfield
+      // /teacher/tutoring2/announcements entry immediately below is the
+      // sole announcement nav row now.)
       {
         // WEB-12 tutor entry — greenfield BE-22 announcement surface.
-        // Sits alongside the legacy `announcements` route above during
-        // coexistence; CLEAN-4 removes the legacy row.
         to: '/teacher/tutoring2/announcements',
         labelKey: 'tutoring.nav.groupAnnouncementsV2',
         icon: 'megaphone',
@@ -1128,7 +1109,9 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
         icon: 'bell',
       },
       {
-        to: '/teacher/tutoring/profile',
+        // review-round-1: repointed to greenfield WEB-4 profile view;
+        // legacy /teacher/tutoring/profile removed by CLEAN-2.
+        to: '/teacher/tutoring2/profile',
         labelKey: 'tutoring.nav.profile',
         icon: 'user',
       },
@@ -1212,7 +1195,10 @@ function parentTutoringNav(activeChildId: string): NavSection[] {
           ability: 'tutoring.announcement.view',
         },
         {
-          to: '/parent/tutoring/vouchers',
+          // review-round-1: legacy route was preserved but under the
+          // singular path `parent/tutoring/voucher` — the plural form
+          // used here landed on NotFound. Corrected below.
+          to: '/parent/tutoring/voucher',
           labelKey: 'tutoring.nav.myVouchers',
           icon: 'sparkles',
         },
@@ -1222,17 +1208,26 @@ function parentTutoringNav(activeChildId: string): NavSection[] {
       titleKey: 'tutoring.nav.sectionAccount',
       items: [
         {
-          to: '/parent/tutoring/notifications',
+          // review-round-1: legacy route was preserved but under the
+          // Indonesian path `parent/tutoring/notifikasi` — the English
+          // form used here landed on NotFound. Corrected below.
+          to: '/parent/tutoring/notifikasi',
           labelKey: 'tutoring.nav.notifications',
           icon: 'bell',
         },
         {
-          to: '/parent/tutoring/profile',
+          // review-round-1: repointed to greenfield WEB-5 wali profile
+          // view; no legacy `/parent/tutoring/profile` route ever
+          // existed (was already landing on NotFound before CLEAN-2).
+          to: '/parent/tutoring2/profile',
           labelKey: 'tutoring.nav.profile',
           icon: 'user',
         },
         {
-          to: '/parent/tutoring/appearance',
+          // review-round-1: legacy route was preserved but under the
+          // Indonesian path `parent/tutoring/tampilan` — the English
+          // form used here landed on NotFound. Corrected below.
+          to: '/parent/tutoring/tampilan',
           labelKey: 'tutoring.nav.appearance',
           icon: 'sun',
         },

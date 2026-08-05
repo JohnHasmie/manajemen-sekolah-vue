@@ -35,6 +35,7 @@ import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
+import { toLocalYm } from '@/lib/local-date';
 import { PayoutsService } from '@/services/tutoring2/payouts';
 import type {
   PayoutClose,
@@ -112,7 +113,7 @@ async function saveSettings() {
 
 // ─── Monthly close ──────────────────────────────────────────────────
 
-const closeMonthInput = ref(new Date().toISOString().slice(0, 7));
+const closeMonthInput = ref(toLocalYm());
 const closeNote = ref('');
 const isClosing = ref(false);
 const closeError = ref<string | null>(null);
