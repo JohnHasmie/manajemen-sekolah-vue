@@ -294,6 +294,16 @@ function normalizeSchool(raw: any): School {
     education_level: raw.education_level ?? raw.level ?? raw.jenjang,
     level: raw.education_level ?? raw.level ?? raw.jenjang,
     logo_url: raw.logo_url ?? raw.logo ?? null,
+    // Tenant kind MUST survive normalization. `useTenant` resolves the
+    // active tenant by looking for `tenant_type` on the user payload,
+    // then on the rows of this very list; when every source comes up
+    // empty it falls back to sniffing the school NAME for "bimbel" /
+    // "tutoring". Dropping the field here made that name heuristic the
+    // only signal, so a bimbel whose name doesn't contain the word —
+    // "Konimex", "Cahaya" — silently rendered the SCHOOL sidebar
+    // (Siswa / Kelas / Mata Pelajaran) instead of the bimbel one.
+    // /user/schools ships `tenant_type` on every row; pass it through.
+    tenant_type: raw.tenant_type,
     roles: Array.isArray(raw.roles)
       ? raw.roles.map((r: any) =>
           normalizeRoleString(typeof r === 'string' ? r : (r?.role ?? r?.name ?? '')),
