@@ -240,6 +240,39 @@ export const DENY_MATRIX: MatrixRow[] = [
     because: 'CONTROL: AdminImportExcelModal downloads this before an import',
   },
 
+  // ── Jadwal filter bar (backend !649) ──────────────────────────────
+  //
+  // The option set behind the ADMIN filter bar: every teacher name and
+  // every class in the school. Gated on academic.schedule.manage like
+  // the three editing helpers in !636, because `.view` narrows nothing
+  // — parents and students hold it too.
+  //
+  // The other half of !649 is not testable from here: the academic-year
+  // list was returning EVERY school's years, and seeing that needs a
+  // second tenant. It is locked in TeachingScheduleAuthzTest, which
+  // builds one.
+  {
+    fixture: 'parent',
+    method: 'GET',
+    path: '/teaching-schedule/filter-options',
+    expect: 403,
+    because: 'the filter bar lists every teacher name and class in the school',
+  },
+  {
+    fixture: 'teacher',
+    method: 'GET',
+    path: '/teaching-schedule/filter-options',
+    expect: 403,
+    because: 'teachers hold academic.schedule.view, never .manage; no teacher screen calls this',
+  },
+  {
+    fixture: 'admin',
+    method: 'GET',
+    path: '/teaching-schedule/filter-options',
+    expect: 200,
+    because: 'CONTROL: AdminScheduleManagementView and AdminLessonHourSettingsView live on it',
+  },
+
 ];
 
 /**
