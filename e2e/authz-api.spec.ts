@@ -323,3 +323,90 @@ test('the class timetable matrix refuses a class the caller has no tie to', asyn
     await narrow.dispose();
   }
 });
+
+// ── Group F — class helper reads (backend !645) ──────────────────────
+
+/**
+ * Two more reads on ClassController, and the two different answers they
+ * needed. Hand-written rather than matrix rows because both paths carry
+ * a seeded id, and a hard-coded one rots on the next re-seed.
+ */
+test('the homeroom picker is admin-only', async () => {
+  test.skip(!has('parent') || !has('teacher') || !has('admin'), 'fixtures missing');
+
+  const classId = manifest.data.classes[0]?.id;
+  test.skip(!classId, 'no seeded class in the manifest');
+
+  const path = `/class/${classId}/homeroom-candidates`;
+  const parent = await apiFor(await login(fixtureFor('parent')));
+  const teacher = await apiFor(await login(fixtureFor('teacher')));
+  const admin = await apiFor(await login(fixtureFor('admin')));
+
+  try {
+    // It returns `employee_number` — the NIP /teacher was gated for in
+    // !633 — and answers "who could be wali kelas here", which a partial
+    // staff list would answer wrongly rather than incompletely.
+    expect(await statusOf(parent, 'GET', path), 'a parent read staff NIPs').toBe(403);
+    expect(await statusOf(teacher, 'GET', path), 'a teacher read staff NIPs').toBe(403);
+
+    // CONTROL: the admin screens that assign a wali kelas still work.
+    expect(
+      await statusOf(admin, 'GET', path),
+      'CONTROL: the admin lost the homeroom picker, so the 403s above prove nothing',
+    ).toBe(200);
+  } finally {
+    await parent.dispose();
+    await teacher.dispose();
+    await admin.dispose();
+  }
+});
+
+test('the by-subject class list is scoped to the caller', async () => {
+  test.skip(!has('parent') || !has('admin'), 'fixtures missing');
+
+  const subjectId = manifest.data.subjects[0];
+  test.skip(!subjectId, 'no seeded subject in the manifest');
+
+  const path = `/class-by-mata-pelajaran?subject_id=${subjectId}`;
+  const admin = await apiFor(await login(fixtureFor('admin')));
+  const parent = await apiFor(await login(fixtureFor('parent')));
+
+  try {
+    const idsOf = async (client: Awaited<ReturnType<typeof apiFor>>) => {
+      const res = await client.ctx.fetch(`${client.base}${path}`);
+      const body = (await res.json().catch(() => null)) as unknown;
+      const rows = Array.isArray(body) ? body : ((body as { data?: unknown })?.data ?? []);
+
+      return {
+        status: res.status(),
+        ids: (Array.isArray(rows) ? rows : []).map((r) => (r as { id?: string })?.id).filter(Boolean) as string[],
+      };
+    };
+
+    const full = await idsOf(admin);
+    const slice = await idsOf(parent);
+
+    expect(full.status, 'CONTROL: the admin must still read the by-subject list').toBe(200);
+    expect(
+      full.ids.length,
+      'CONTROL: the seeded subject is attached to no class, so the comparison below is vacuous',
+    ).toBeGreaterThan(1);
+
+    // Scoped, NOT gated: the lesson-plan screens on mobile call this as
+    // a teacher to pick the class an RPP is for, and school.class.view
+    // is admin-only — a 403 here would stop teachers writing RPP.
+    expect(slice.status, 'a parent must still be allowed to read, just less').toBe(200);
+    expect(
+      slice.ids.length,
+      'a parent received every class attached to the subject; the read is not scoped',
+    ).toBeLessThan(full.ids.length);
+
+    // `teacher` is deliberately absent: the fixture teacher teaches both
+    // seeded classes, so "sees fewer" is false for them and asserting it
+    // would fail against a CORRECT backend. That branch is covered by
+    // ClassAndPaymentTypeReadAuthzTest, on a fixture that is built.
+  } finally {
+    await admin.dispose();
+    await parent.dispose();
+  }
+});
