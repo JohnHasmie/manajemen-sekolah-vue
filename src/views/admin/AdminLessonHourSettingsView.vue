@@ -31,6 +31,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Toast from '@/components/ui/Toast.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { formatDayName } from '@/lib/day-name';
 
 const { t } = useI18n();
 
@@ -253,7 +254,8 @@ async function copyDay() {
 }
 
 function dayName(id: string): string {
-  return days.value.find((d) => d.id === id)?.name ?? '—';
+  const raw = days.value.find((d) => d.id === id)?.name;
+  return raw ? formatDayName(raw) : '—';
 }
 </script>
 
@@ -299,7 +301,7 @@ function dayName(id: string): string {
           >
             <header class="flex items-center justify-between">
               <div>
-                <h3 class="text-[13px] font-black text-slate-900">{{ d.name }}</h3>
+                <h3 class="text-[13px] font-black text-slate-900">{{ formatDayName(d.name) }}</h3>
                 <p class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
                   {{ t('admin.sekolah.lesson_hours.hour_count', { count: hoursByDay[d.id]?.length ?? 0 }) }}
                 </p>
@@ -366,7 +368,7 @@ function dayName(id: string): string {
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
           >
             <option value="">{{ t('admin.sekolah.lesson_hours.pick_day') }}</option>
-            <option v-for="d in days" :key="d.id" :value="d.id">{{ d.name }}</option>
+            <option v-for="d in days" :key="d.id" :value="d.id">{{ formatDayName(d.name) }}</option>
           </select>
         </div>
         <div>
@@ -435,7 +437,7 @@ function dayName(id: string): string {
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
           >
             <option value="">{{ t('admin.sekolah.lesson_hours.pick_day') }}</option>
-            <option v-for="d in days" :key="d.id" :value="d.id">{{ d.name }}</option>
+            <option v-for="d in days" :key="d.id" :value="d.id">{{ formatDayName(d.name) }}</option>
           </select>
         </div>
         <div>
@@ -445,7 +447,7 @@ function dayName(id: string): string {
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
           >
             <option value="">{{ t('admin.sekolah.lesson_hours.pick_day') }}</option>
-            <option v-for="d in days" :key="d.id" :value="d.id">{{ d.name }}</option>
+            <option v-for="d in days" :key="d.id" :value="d.id">{{ formatDayName(d.name) }}</option>
           </select>
         </div>
         <label class="flex items-center gap-2 text-2xs font-bold text-slate-700 cursor-pointer">

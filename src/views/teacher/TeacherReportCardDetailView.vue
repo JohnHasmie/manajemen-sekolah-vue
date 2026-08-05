@@ -116,9 +116,12 @@ async function load() {
   isLoading.value = true;
   loadError.value = null;
   const ayId = academic.selectedYearId ?? '';
-  // Backend needs a semester id too — fall back to the active year's
-  // active semester when available.
-  const semId = academic.activeYear?.id ?? '';
+  // No semester_id here on purpose. `academic.activeYear` is an
+  // ACADEMIC YEAR, so its `.id` was never a semester id — passing it
+  // wrote report cards keyed to a semester that is not this school's,
+  // and publishing (which filters on the real semester) could never
+  // find them. The service resolves the current semester from
+  // `/semesters` when the caller omits it, which is what we want.
   if (!studentClassId.value || !ayId) {
     loadError.value = t('tutor.sekolah.reportCardDetail.incompleteContext');
     isLoading.value = false;
@@ -261,7 +264,6 @@ const totalAttendance = computed(
 async function save(targetStatus: ReportCardStatus) {
   if (!original.value) return;
   const ayId = academic.selectedYearId ?? '';
-  const semId = academic.activeYear?.id ?? '';
   if (!ayId) {
     toast.value = {
       message: t('tutor.sekolah.reportCardDetail.noActiveAyToast'),
@@ -274,7 +276,6 @@ async function save(targetStatus: ReportCardStatus) {
     const updated = await ReportCardService.save({
       student_class_id: studentClassId.value,
       academic_year_id: ayId,
-      semester_id: semId,
       status: targetStatus,
       spiritual_predicate: form.spiritual_predicate,
       spiritual_description: form.spiritual_description,

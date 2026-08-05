@@ -390,28 +390,38 @@ function exportCsv() {
           {{ $t('admin.classActivity.reset') }}
         </button>
       </template>
+
+      <!-- Period rides inside the toolbar's own #segmented slot, next to
+           the chips — same arrangement as the teacher twin
+           (TeacherClassActivityView). Only ONE of the two segmented
+           filters goes in here: chips + 5 type + 5 period + search
+           wraps badly on a laptop, so type stays on its own row below. -->
+      <template #segmented>
+        <div class="flex items-center gap-2">
+          <span class="text-3xs font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+            {{ $t('admin.classActivity.periodLabel') }}
+          </span>
+          <SegmentedControl
+            :model-value="periodFilter"
+            :options="periodTabs"
+            @update:model-value="periodFilter = $event as ActivityPeriod"
+          />
+        </div>
+      </template>
     </PageFilterToolbar>
 
-    <!-- TYPE TABS — segmented control (replaces the old pill-chip row for
-         a uniform filter look across the app). -->
-    <div class="overflow-x-auto">
+    <!-- TYPE TABS — labelled to match the period row inside the toolbar
+         above. The label is what makes the two read as a parallel pair
+         (label + control); without it the naked tab row looked like a
+         third, unrelated UI element. -->
+    <div class="flex items-center gap-2 overflow-x-auto">
+      <span class="text-3xs font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+        {{ $t('admin.classActivity.typeLabel') }}
+      </span>
       <SegmentedControl
         :model-value="typeFilter"
         :options="typeTabs"
         @update:model-value="typeFilter = $event as ActivityType | 'all'"
-      />
-    </div>
-
-    <!-- PERIOD TABS — labelled segmented control (the "RENTANG · 7/30/90"
-         idiom used elsewhere), replacing the old pill row. -->
-    <div class="flex items-center gap-2 flex-wrap">
-      <span class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
-        {{ $t('admin.classActivity.periodLabel') }}
-      </span>
-      <SegmentedControl
-        :model-value="periodFilter"
-        :options="periodTabs"
-        @update:model-value="periodFilter = $event as ActivityPeriod"
       />
     </div>
 

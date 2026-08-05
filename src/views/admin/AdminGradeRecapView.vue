@@ -266,8 +266,8 @@ function babDone(r: AdminRecapOverviewRow): {
   expected: number;
   done: boolean;
 } {
-  const expected = r.students_total * r.bab_total;
-  const filled = r.bab_filled;
+  const expected = r.students_total * r.chapter_total;
+  const filled = r.chapter_filled;
   return {
     filled,
     expected,
@@ -275,10 +275,10 @@ function babDone(r: AdminRecapOverviewRow): {
   };
 }
 function utsDone(r: AdminRecapOverviewRow): boolean {
-  return r.students_total > 0 && r.uts_done >= r.students_total;
+  return r.students_total > 0 && r.midterm_done >= r.students_total;
 }
 function uasDone(r: AdminRecapOverviewRow): boolean {
-  return r.students_total > 0 && r.uas_done >= r.students_total;
+  return r.students_total > 0 && r.final_exam_done >= r.students_total;
 }
 
 // ── Sort selector options ──
@@ -323,10 +323,10 @@ function exportCsv() {
       Math.round(r.progress_pct * 10) / 10,
       r.avg_final_score ?? '',
       r.avg_final_score !== null ? Math.round(r.pass_rate * 10) / 10 : '',
-      r.bab_total,
-      r.bab_filled,
-      r.uts_done,
-      r.uas_done,
+      r.chapter_total,
+      r.chapter_filled,
+      r.midterm_done,
+      r.final_exam_done,
       r.is_complete ? t('admin.sekolah.grade_recap.yes') : t('admin.sekolah.grade_recap.no'),
     ]
       .map(csvEscape)
@@ -619,20 +619,20 @@ function exportCsv() {
                 {
                   done: babDone(r).done,
                   label:
-                    r.students_total > 0 && r.bab_total > 0
-                      ? t('admin.sekolah.grade_recap.bab_chip', { filled: Math.floor(r.bab_filled / r.students_total), total: r.bab_total })
-                      : t('admin.sekolah.grade_recap.bab_chip', { filled: 0, total: r.bab_total }),
+                    r.students_total > 0 && r.chapter_total > 0
+                      ? t('admin.sekolah.grade_recap.bab_chip', { filled: Math.floor(r.chapter_filled / r.students_total), total: r.chapter_total })
+                      : t('admin.sekolah.grade_recap.bab_chip', { filled: 0, total: r.chapter_total }),
                   title: t('admin.sekolah.grade_recap.bab_title', { filled: babDone(r).filled, expected: babDone(r).expected }),
                 },
                 {
                   done: utsDone(r),
                   label: utsDone(r) ? t('admin.sekolah.grade_recap.uts_done') : t('admin.sekolah.grade_recap.uts_pending'),
-                  title: t('admin.sekolah.grade_recap.uts_title', { done: r.uts_done, total: r.students_total }),
+                  title: t('admin.sekolah.grade_recap.uts_title', { done: r.midterm_done, total: r.students_total }),
                 },
                 {
                   done: uasDone(r),
                   label: uasDone(r) ? t('admin.sekolah.grade_recap.uas_done') : t('admin.sekolah.grade_recap.uas_pending'),
-                  title: t('admin.sekolah.grade_recap.uas_title', { done: r.uas_done, total: r.students_total }),
+                  title: t('admin.sekolah.grade_recap.uas_title', { done: r.final_exam_done, total: r.students_total }),
                 },
               ]"
               :key="chip.label"

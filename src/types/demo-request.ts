@@ -17,7 +17,12 @@
  *   - POST   /api/demo-requests/{id}/approve
  *   - POST   /api/demo-requests/{id}/reject
  */
-import type { DemoWizardPayload, DemoRegistrationItem, ActiveSchoolItem } from './demo';
+import type {
+  DemoWizardPayload,
+  DemoRegistrationItem,
+  ActiveSchoolItem,
+  TenantType,
+} from './demo';
 
 /** Lifecycle status of a demo request. */
 export type DemoRequestStatus =
@@ -48,6 +53,11 @@ export interface DemoRequestSchoolSummary {
   education_level: string | null;
   city: string | null;
   npsn: string | null;
+  /**
+   * Tenant kind, sent by `DemoRequestResource::school_summary`. The
+   * super-admin request list badges school vs tutoring centre from it.
+   */
+  tenant_type?: TenantType | string | null;
 }
 
 /**

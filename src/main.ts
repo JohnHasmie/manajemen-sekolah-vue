@@ -14,6 +14,7 @@ import App from './App.vue';
 import router from './router';
 import { i18n } from './lib/i18n';
 import { useAuthStore } from '@/stores/auth';
+import { useMeStore } from '@/stores/me';
 import { storage, StorageKeys } from '@/lib/storage';
 import {
   CHUNK_INCIDENT_EVENT,
@@ -183,5 +184,60 @@ window.addEventListener('pageshow', (event) => {
     window.location.replace('/');
   }
 });
+
+/**
+ * Dev-only handles for the E2E authorization suite.
+ *
+ * Vite statically eliminates this whole block from a production build
+ * (`import.meta.env.DEV` is a compile-time constant), so nothing here
+ * ships. What it buys: the ~200-route table becomes a self-maintaining
+ * oracle for the router-authorization matrix instead of a hand
+ * transcription that goes stale the next time a route is added.
+ *
+ * `__E2E_GOTO__` matters as much as the table. Checking ~200 routes
+ * across 6 role surfaces means ~1,200 decisions; at a full page load
+ * each that is half an hour per run, which is a suite nobody runs. An
+ * in-app `router.push` exercises the SAME `beforeEach` guard in about a
+ * minute. It does not prove the page then renders — nav-smoke already
+ * covers that.
+ */
+if (import.meta.env.DEV) {
+  const w = window as unknown as Record<string, unknown>;
+
+  w.__E2E_ROUTES__ = router.getRoutes().map((r) => ({
+    path: r.path,
+    name: String(r.name ?? ''),
+    hasRedirect: Boolean(r.redirect),
+    meta: r.meta,
+  }));
+
+  w.__E2E_GOTO__ = async (path: string): Promise<string> => {
+    try {
+      await router.push(path);
+    } catch {
+      // A guard returning a redirect target rejects the navigation.
+      // That IS the outcome under test, so read where we ended up
+      // rather than treating it as an error.
+    }
+
+    return router.currentRoute.value.fullPath;
+  };
+
+  // Read straight from the stores so the oracle compares against the
+  // same data the guard itself uses, not a re-fetch that could drift.
+  Object.defineProperty(w, '__E2E_ME__', {
+    get() {
+      const auth = useAuthStore();
+      const me = useMeStore();
+
+      return {
+        abilities: [...(me.snapshot?.abilities ?? [])],
+        activeRole: auth.activeRole ?? '',
+        isSuperAdmin: auth.isSuperAdmin,
+      };
+    },
+    configurable: true,
+  });
+}
 
 app.mount('#app');

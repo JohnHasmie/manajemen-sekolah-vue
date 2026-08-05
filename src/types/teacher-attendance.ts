@@ -588,8 +588,18 @@ export interface TeacherAttendanceSummaryMeta {
 }
 
 /** One per-teacher rekap row (admin/summary `data[]`). */
-export interface TeacherAttendanceSummaryRow
-  extends TeacherAttendanceStatusCounts {
+export interface TeacherAttendanceSummaryRow {
+  /**
+   * Per-status counts (`hadir`, `izin`, … — keys come from the response
+   * meta, so they cannot be enumerated here) sit on the row next to the
+   * named fields below.
+   *
+   * This used to `extend TeacherAttendanceStatusCounts`, i.e.
+   * `Record<string, number>`, which cannot hold `person_id: string` —
+   * every string field on the row contradicted the index signature. The
+   * totals rows still extend it, correctly: they are numbers only.
+   */
+  [statusKey: string]: string | number | null | undefined;
   /** Stable unique key per person — teacher's id or staff's user id.
    *  Use this as the row key: `teacher_id` is null for staff rows. */
   person_id: string;
@@ -629,8 +639,15 @@ export interface TeacherAttendanceOwnSummaryMeta
 }
 
 /** The teacher's own totals block (history/summary `summary`). */
-export interface TeacherAttendanceOwnSummaryTotals
-  extends TeacherAttendanceStatusCounts {
+export interface TeacherAttendanceOwnSummaryTotals {
+  /**
+   * Per-status counts, keyed from the response meta. Declared here
+   * rather than inherited from `TeacherAttendanceStatusCounts`
+   * (`Record<string, number>`) because `overtime_minutes` below is
+   * optional, and `number | undefined` cannot live under a `number`
+   * index signature.
+   */
+  [statusKey: string]: number | undefined;
   total: number;
   present_pct: number;
   /**
@@ -696,6 +713,14 @@ export interface TeacherAttendanceTimeseriesDay {
   late_count: number;
   /** Rows with no check-in that day (workday only; server excludes staff on non-workdays). */
   absent_count: number;
+  /**
+   * Clocked in but never clocked out — CloseUncheckedOutDaysJob rewrites
+   * the status at 00:30. These people WERE at work: they count toward
+   * `present_pct` but are excluded from `ontime_pct`, because the job
+   * overwrites the status wholesale so their arrival time is no longer
+   * knowable. Optional — pre-!574 servers omit it.
+   */
+  no_checkout_count?: number;
   /** round(present / (present + absent) * 100, 1); 0 when no rows. */
   ontime_pct: number;
   /** Sum of overtime minutes across the day. */
@@ -886,15 +911,10 @@ export interface TeacherAttendanceExportFilters {
 // ───────────────────────────────────────────────────────────────────
 
 /**
- * Per-school policy for pulang cepat (early-leave). Comes from the
- * school's attendance config on the backend.
- *   · none  — early leave is unmarked; the button always fires.
- *   · warn  — the teacher may still checkout; the record is stamped
- *             `early_leave` for the admin's rekap.
- *   · block — the button is hard-disabled until the early-leave
- *             boundary is reached server-side.
+ * The early-leave policy type is declared once, near the top of this
+ * file — a second identical `export type` here was a duplicate
+ * identifier, not an alternative definition.
  */
-export type TeacherAttendanceEarlyLeavePolicy = 'none' | 'warn' | 'block';
 
 /**
  * The `data` block of GET /teacher-attendance/checkout-preview. Nullable

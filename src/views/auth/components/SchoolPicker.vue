@@ -153,7 +153,15 @@ async function handleConfirm() {
                   v-for="r in s.roles" :key="r"
                   class="px-1.5 py-0.5 rounded-full bg-brand-cobalt/10 text-brand-cobalt text-[8px] font-black tracking-[0.3px] uppercase"
                 >
-                  {{ r === 'administrator' ? t('role.admin') : r === 'teacher' ? t('role.teacher') : r === 'parent' ? t('role.parent') : r.toUpperCase() }}
+                  <!--
+                    `role.*` has a label for every value of `Role`, so the
+                    chain of ternaries is just a lookup. It also tested for
+                    `'administrator'`, which `Role` does not contain — the
+                    canonical key is `admin` — so admin pills fell through
+                    to `r.toUpperCase()` and rendered the raw key, as did
+                    wali_kelas, student, staff and super_admin.
+                  -->
+                  {{ t(`role.${r}`) }}
                 </span>
               </div>
             </div>

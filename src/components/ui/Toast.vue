@@ -38,7 +38,13 @@ onBeforeUnmount(() => {
 <template>
   <Teleport to="body">
     <div class="fixed inset-x-0 bottom-4 z-[60] flex justify-center px-md pointer-events-none">
+      <!-- `data-tone` mirrors the class binding so a test can assert
+           success-vs-error without matching Tailwind class names. A bare
+           role="alert" selector is ambiguous: ConfirmationDialog's impact
+           card carries one too. -->
       <div
+        data-testid="toast"
+        :data-tone="tone ?? 'error'"
         class="rounded-xl shadow-card px-md py-sm text-sm font-medium pointer-events-auto flex items-start gap-2 max-w-md w-full sm:w-auto"
         :class="{
           'bg-status-success text-white': tone === 'success',

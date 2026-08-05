@@ -542,10 +542,12 @@ export const SCHOOL_QUESTIONS: readonly Question[] = [
       ...p,
       students: {
         ...p.students,
-        per_class: Math.max(1, Math.min(60, Number(v) || 0)),
+        // Clamp to the backend cap (SubmitDemoRequestRequest students.per_class max:40)
+        // so the wizard can't produce a value the provision endpoint 422s on.
+        per_class: Math.max(1, Math.min(40, Number(v) || 0)),
       },
     }),
-    isValid: (p) => p.students.per_class >= 1 && p.students.per_class <= 60,
+    isValid: (p) => p.students.per_class >= 1 && p.students.per_class <= 40,
   },
   {
     key: 'teachers.count',
@@ -561,10 +563,13 @@ export const SCHOOL_QUESTIONS: readonly Question[] = [
       ...p,
       teachers: {
         ...p.teachers,
-        count: Math.max(1, Math.min(200, Number(v) || 0)),
+        // Clamp to the backend cap (SubmitDemoRequestRequest teachers.count max:100)
+        // — a 61-teacher school (SMAN 2 JENEPONTO) sailed past the old 200 clamp
+        // and 422'd at provision. Keep the two in lockstep.
+        count: Math.max(1, Math.min(100, Number(v) || 0)),
       },
     }),
-    isValid: (p) => p.teachers.count >= 1 && p.teachers.count <= 200,
+    isValid: (p) => p.teachers.count >= 1 && p.teachers.count <= 100,
   },
   {
     key: 'schedule.active_days',

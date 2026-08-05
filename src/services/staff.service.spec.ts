@@ -36,12 +36,18 @@ describe('StaffService', () => {
     const res = await StaffService.list({ page: 1 });
 
     expect(res.items).toHaveLength(1);
+    // `has_prev_page` is required by the Pagination interface and read by
+    // Pagination.vue to enable the Prev control. The service used to omit
+    // it and this assertion locked that omission in — a `toEqual` over the
+    // whole object describes the shape, so it fails when the shape is
+    // corrected as readily as when it regresses.
     expect(res.pagination).toEqual({
       total_items: 42,
       total_pages: 3,
       current_page: 1,
       per_page: 20,
       has_next_page: true,
+      has_prev_page: false,
     });
   });
 

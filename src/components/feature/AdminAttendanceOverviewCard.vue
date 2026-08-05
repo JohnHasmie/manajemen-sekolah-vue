@@ -39,7 +39,7 @@
       when attendance_per_class is not null).
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, useId } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useMeStore } from '@/stores/me';
@@ -50,6 +50,10 @@ import { formatDateLong } from '@/lib/format';
 import { toLocalYmd } from '@/lib/local-date';
 import { AttendanceService } from '@/services/attendance.service';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
+import {
+  noCheckoutBandHeight,
+  noCheckoutPctOfAll,
+} from '@/components/feature/attendance-week-chart';
 import type {
   StudentAttendanceTimeseries,
   StudentAttendanceTimeseriesDay,
@@ -234,6 +238,20 @@ interface ChartDay {
   holiday_name: string | null;
   /** Whether the day carried any records at all (workday & rows > 0). */
   has_data: boolean;
+  /**
+   * Someone clocked in but never clocked out that day. Attendance still
+   * counts them, but part of the bar is hatched so an admin can tell the
+   * day's checkout data is incomplete rather than reading a clean 100%.
+   */
+  has_incomplete_checkout: boolean;
+  /** How many people that was — shown in the bar's tooltip. */
+  no_checkout_count: number;
+  /**
+   * Their share of everyone counted that day (0..100), which is what the
+   * hatched band actually measures. Reads straight off the y-axis: a band
+   * spanning 12 points means 12% of all personnel never clocked out.
+   */
+  no_checkout_pct: number;
 }
 
 const activeDim = ref<Dim>('student');
@@ -307,6 +325,9 @@ function alignToWeek(rows: ChartDay[]): ChartDay[] {
       present_pct: 0,
       holiday_name: null,
       has_data: false,
+      has_incomplete_checkout: false,
+      no_checkout_count: 0,
+      no_checkout_pct: 0,
     });
   }
   return out;
@@ -317,6 +338,10 @@ function studentToChart(d: StudentAttendanceTimeseriesDay): ChartDay {
     date: d.date,
     is_workday: d.is_workday,
     present_pct: Math.max(0, Math.min(100, Math.round(d.present_pct))),
+    // Students have no check-out flow, so this is never set for them.
+    has_incomplete_checkout: false,
+    no_checkout_count: 0,
+    no_checkout_pct: 0,
     holiday_name: d.holiday_name ?? null,
     has_data: d.is_workday && d.total > 0,
   };
@@ -325,13 +350,31 @@ function studentToChart(d: StudentAttendanceTimeseriesDay): ChartDay {
 function personnelToChart(d: TeacherAttendanceTimeseriesDay): ChartDay {
   // The backend rounds to 1dp — we render integers on the bars.
   const pct = Math.max(0, Math.min(100, Math.round(d.present_pct ?? 0)));
+  const noCheckout = d.no_checkout_count ?? 0;
   return {
     date: d.date,
     is_workday: d.is_workday,
     present_pct: pct,
     holiday_name: null,
+    // Every status that means "a record exists" counts, not just
+    // present/absent. A day of nothing but `late` arrivals, or one where
+    // everyone forgot to clock out, used to fall through both checks and
+    // render as a dash — the day looked unrecorded while people were
+    // actually at work, and the weekly average skipped it.
     has_data:
-      d.is_workday && (d.present_count > 0 || d.absent_count > 0),
+      d.is_workday &&
+      (d.present_count > 0 ||
+        d.absent_count > 0 ||
+        d.late_count > 0 ||
+        noCheckout > 0),
+    has_incomplete_checkout: d.is_workday && noCheckout > 0,
+    no_checkout_count: noCheckout,
+    no_checkout_pct: noCheckoutPctOfAll({
+      present: d.present_count,
+      late: d.late_count,
+      absent: d.absent_count,
+      noCheckout,
+    }),
   };
 }
 
@@ -536,6 +579,27 @@ function yForPct(pct: number): number {
   return CHART_BASE - heightForPct(pct);
 }
 
+/** Pixels between the 0 and 100 gridlines. */
+const PLOT_RANGE = CHART_BASE - CHART_TOP;
+
+/**
+ * Height of the hatched band, measured up from the bar's baseline. The
+ * band is a proportion of the bar, not the whole bar: hatching all of it
+ * said "this day has a checkout problem" without saying how big, so one
+ * forgotten checkout out of eighty looked identical to eighty out of
+ * eighty.
+ */
+function noCheckoutBandPx(day: ChartDay): number {
+  return noCheckoutBandHeight(day.no_checkout_pct, day.present_pct, PLOT_RANGE);
+}
+
+/**
+ * Unique per component instance — the SVG `<clipPath>` ids below must not
+ * collide if this card is ever mounted twice on one page.
+ */
+const uid = useId();
+const clipId = (idx: number) => `no-checkout-clip-${uid}-${idx}`;
+
 /** Localized day-of-week short name (Sen/Sel/Rab…). */
 function shortDow(dateStr: string): string {
   if (!dateStr) return '';
@@ -564,6 +628,11 @@ function holidayLabelFor(day: ChartDay): string {
   if (dow === 0 || dow === 6) return t('admin.attendance.weekly.weekend');
   return t('admin.attendance.weekly.holiday');
 }
+
+/** Drives the hatch legend — hidden on weeks with clean checkouts. */
+const hasIncompleteCheckoutDay = computed(() =>
+  (activeDays.value ?? []).some((d) => d.has_incomplete_checkout),
+);
 
 /** Off-day pills row — only lists days that are actually non-workday. */
 const holidayPills = computed(() => {
@@ -740,9 +809,27 @@ const holidayPills = computed(() => {
             class="w-2 h-2 rounded-full flex-shrink-0"
             :class="activeDim === tab.key ? tab.activeDotBg : 'bg-slate-300'"
           ></span>
-          <span class="truncate">
-            {{ t(tab.labelKey) }}
-            <span v-if="tab.pctToday != null" class="tabular-nums">· {{ tab.pctToday }}%</span>
+          <!-- `pctToday` is TODAY's figure, but this row sits under the
+               "Minggu ini · <range>" eyebrow and directly above the
+               weekly average — without the qualifier a reader takes
+               "Siswa · 0%" as the week's number and concludes the data
+               is wrong (it isn't: 0% today, 95% for the week). The
+               suffix is what separates the two. -->
+          <!-- The dimension name truncates first; the figure + qualifier
+               are nowrap so "0% hari ini" survives a narrow chip. Losing
+               the suffix is what recreates the ambiguity, so it must not
+               be the part that gets cut. -->
+          <span class="min-w-0 flex items-baseline gap-1">
+            <span class="truncate">{{ t(tab.labelKey) }}</span>
+            <span
+              v-if="tab.pctToday != null"
+              class="tabular-nums whitespace-nowrap flex-shrink-0"
+            >
+              · {{ tab.pctToday }}%
+              <span class="opacity-70">
+                {{ t('admin.attendance.weekly.todaySuffix') }}
+              </span>
+            </span>
           </span>
         </button>
       </div>
@@ -807,6 +894,41 @@ const holidayPills = computed(() => {
           role="img"
           :aria-label="t('admin.attendance.weekly.chartAria')"
         >
+          <defs>
+            <!-- Diagonal hatch laid over a day whose checkouts are
+                 incomplete. patternTransform rotates the stripes so they
+                 stay visible under `preserveAspectRatio="none"`, which
+                 stretches the viewBox horizontally. -->
+            <pattern
+              id="incompleteCheckoutHatch"
+              width="6"
+              height="6"
+              patternUnits="userSpaceOnUse"
+              patternTransform="rotate(45)"
+            >
+              <rect width="6" height="6" fill="transparent" />
+              <line x1="0" y1="0" x2="0" y2="6" stroke="#FFFFFF" stroke-width="2.5" opacity="0.55" />
+            </pattern>
+
+            <!-- One clip per bar, matching the bar exactly. The hatched
+                 band is drawn as a plain rectangle and clipped to this,
+                 so it inherits the bar's rounded bottom corners and can
+                 never bleed outside the bar it belongs to. -->
+            <clipPath
+              v-for="(day, idx) in activeDays ?? []"
+              :id="clipId(idx)"
+              :key="`clip-${day.date}`"
+            >
+              <rect
+                :x="xForIndex(idx)"
+                :y="yForPct(day.present_pct)"
+                :width="BAR_WIDTH"
+                :height="heightForPct(day.present_pct)"
+                rx="6"
+              />
+            </clipPath>
+          </defs>
+
           <!-- Gridlines @ 50 / 75 / 100 -->
           <line :x1="CHART_LEFT_PAD" :x2="CHART_W - CHART_RIGHT_PAD" :y1="yForPct(100)" :y2="yForPct(100)"
                 stroke="#E2E8F0" stroke-width="1" stroke-dasharray="2 3"/>
@@ -857,6 +979,44 @@ const holidayPills = computed(() => {
               :fill="activeBarFill"
               opacity="0.86"
             />
+            <!-- Incomplete-checkout band — these people WERE at work, so
+                 the bar keeps its full height and the day keeps its
+                 percentage; the hatch marks how MANY of them never
+                 clocked out. Anchored at the baseline like any stacked
+                 sub-population, and sized off the same denominator as the
+                 bar, so its span can be read against the y-axis. -->
+            <g
+              v-if="day.is_workday && day.has_data && day.has_incomplete_checkout"
+              :clip-path="`url(#${clipId(idx)})`"
+            >
+              <rect
+                :x="xForIndex(idx)"
+                :y="CHART_BASE - noCheckoutBandPx(day)"
+                :width="BAR_WIDTH"
+                :height="noCheckoutBandPx(day)"
+                fill="url(#incompleteCheckoutHatch)"
+              />
+              <!-- Boundary line — without it the hatch fades into the bar
+                   and the band's top edge is hard to place against the
+                   gridlines. -->
+              <line
+                :x1="xForIndex(idx)"
+                :x2="xForIndex(idx) + BAR_WIDTH"
+                :y1="CHART_BASE - noCheckoutBandPx(day)"
+                :y2="CHART_BASE - noCheckoutBandPx(day)"
+                stroke="#FFFFFF"
+                stroke-width="1.5"
+                opacity="0.9"
+              />
+              <title>
+                {{
+                  t('admin.attendance.weekly.incompleteCheckoutDetail', {
+                    count: day.no_checkout_count,
+                    pct: Math.round(day.no_checkout_pct),
+                  })
+                }}
+              </title>
+            </g>
 
             <!-- Value label -->
             <text
@@ -918,6 +1078,33 @@ const holidayPills = computed(() => {
             </template>
           </template>
         </svg>
+
+        <!-- Legend for the hatch — only when a day actually carries it,
+             so the row stays quiet on weeks with clean checkouts. -->
+        <div
+          v-if="!weekLoading && hasIncompleteCheckoutDay"
+          class="flex flex-wrap justify-end gap-1.5 mt-1"
+        >
+          <span
+            class="inline-flex items-center gap-1 bg-slate-100 text-slate-500 text-3xs font-bold px-2 py-0.5 rounded"
+          >
+            <!-- Swatch is part-hatched, matching what the bars now do —
+                 a fully-hatched swatch would teach the wrong reading. -->
+            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" class="flex-shrink-0">
+              <defs>
+                <clipPath :id="`legend-swatch-${uid}`">
+                  <rect width="10" height="10" rx="2" />
+                </clipPath>
+              </defs>
+              <g :clip-path="`url(#legend-swatch-${uid})`">
+                <rect width="10" height="10" :fill="activeBarFill" opacity="0.86" />
+                <rect y="5.5" width="10" height="4.5" fill="url(#incompleteCheckoutHatch)" />
+                <line x1="0" y1="5.5" x2="10" y2="5.5" stroke="#FFFFFF" stroke-width="1" opacity="0.9" />
+              </g>
+            </svg>
+            <span>{{ t('admin.attendance.weekly.incompleteCheckout') }}</span>
+          </span>
+        </div>
 
         <!-- Holiday pill row — sits below the chart, right-aligned. -->
         <div

@@ -62,7 +62,11 @@ function persistActive(id: string): void {
 function fromSlices(slices: unknown): Child[] {
   if (!Array.isArray(slices)) return [];
   return slices
-    .map((raw) => {
+    // Annotated `Child | null` rather than inferred. Inference widened
+    // `avatar` to `string | null`, which `Child` (optional `avatar`, so
+    // `| undefined`) is not assignable to — that made the `c is Child`
+    // predicate below invalid, and the null-filter stopped narrowing.
+    .map((raw): Child | null => {
       if (!raw || typeof raw !== 'object') return null;
       const m = raw as Record<string, unknown>;
       const id = m.student_id ?? m.id;

@@ -27,6 +27,7 @@ import type { DayKey, ScheduleSession, SessionSummary } from '@/types/schedule';
 import { DAY_LABELS, DAY_ORDER, sessionSummaryKey } from '@/types/schedule';
 import { semesterLabel } from '@/lib/labels';
 import { localISODate } from '@/lib/format';
+import { formatDayName } from '@/lib/day-name';
 import type { Classroom } from '@/types/entities';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -476,15 +477,7 @@ function periodeLabel(s: ScheduleSession): string {
 }
 
 function formatDay(d?: string | null): string {
-  if (!d) return '';
-  const raw = d.toLowerCase();
-  if (raw.startsWith('mon') || raw.startsWith('sen')) return t('common.monday');
-  if (raw.startsWith('tue') || raw.startsWith('sel')) return t('common.tuesday');
-  if (raw.startsWith('wed') || raw.startsWith('rab')) return t('common.wednesday');
-  if (raw.startsWith('thu') || raw.startsWith('kam')) return t('common.thursday');
-  if (raw.startsWith('fri') || raw.startsWith('jum')) return t('common.friday');
-  if (raw.startsWith('sat') || raw.startsWith('sab')) return t('common.saturday');
-  return d;
+  return formatDayName(d);
 }
 
 // ── Quick actions ──────────────────────────────────────────────

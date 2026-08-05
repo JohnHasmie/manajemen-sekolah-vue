@@ -335,7 +335,12 @@ async function copyFromLast() {
       subject_id: subjectId.value,
       date: ystr,
     });
-    const map = new Map(list.map((r) => [r.student_id, r.status]));
+    // Typed explicitly: `list.map(…)` yields `(string | AttendanceStatus)[][]`,
+    // not a tuple array, so an untyped `new Map(…)` collapsed the value
+    // type to `{}` and the copied status stopped being an AttendanceStatus.
+    const map = new Map<string, AttendanceStatus>(
+      list.map((r) => [r.student_id, r.status]),
+    );
     rows.value = rows.value.map((r) => ({
       ...r,
       status: map.get(r.student_id) ?? r.status,

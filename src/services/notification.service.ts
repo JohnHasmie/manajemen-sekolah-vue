@@ -101,6 +101,11 @@ export const NotificationService = {
             current_page: flat.current_page,
             per_page: flat.per_page ?? perPage,
             has_next_page: flat.current_page < (flat.last_page ?? 1),
+            // Same omission as the Next-page bug this block already
+            // fixed, one field over: Pagination.vue disables Prev on
+            // `!has_prev_page`, so leaving it undefined pinned the
+            // control off for every page.
+            has_prev_page: flat.current_page > 1,
           }
         : undefined;
     return { items, pagination };

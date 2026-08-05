@@ -243,6 +243,9 @@ export interface ReportCardDetail {
   // ── Derived / display ──
   avg_grade?: number | null;
   remed_count?: number;
+  /** Homeroom teacher name — canonical English key, printed on the
+   *  parent-facing report card header. */
+  homeroom_teacher?: string | null;
 }
 
 export interface ReportCardInitialData {
@@ -375,6 +378,21 @@ export interface ParentReportCardRow {
   total_in_class?: number | null;
   average_score?: number | null;
   attendance_pct?: number | null;
+  /**
+   * Attendance figures as `ReportCardAttendance::summarise` computes
+   * them. `present` is derived server-side (`total - sick - permit -
+   * absent`) and exists nowhere on `reportCard` — reading
+   * `reportCard.attendance_present` is the mistake that made every
+   * printed certificate say "Hadir: 0 hari, 0%".
+   */
+  attendance?: {
+    total: number;
+    sick: number;
+    permit: number;
+    absent: number;
+    present: number;
+    percentage: number | null;
+  };
   /** Full hydrated rapor — same shape as `ReportCardDetail`. */
   reportCard: ReportCardDetail;
 }

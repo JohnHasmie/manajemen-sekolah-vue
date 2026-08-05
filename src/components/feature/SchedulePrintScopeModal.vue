@@ -16,6 +16,7 @@ import { semesterLabel } from '@/lib/labels';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import { formatDayName } from '@/lib/day-name';
 
 defineProps<{
   filterOptions?: ScheduleFilterOptions | null;
@@ -147,7 +148,7 @@ async function print() {
             "
             @click="dayId = d.id"
           >
-            {{ d.name }}
+            {{ formatDayName(d.name) }}
           </button>
         </div>
       </div>

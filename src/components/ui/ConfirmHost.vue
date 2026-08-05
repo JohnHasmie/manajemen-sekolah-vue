@@ -22,7 +22,7 @@ const { t } = useI18n();
     :confirm-label="state.confirmLabel"
     :cancel-label="state.cancelLabel"
     :danger="state.danger"
-    :impact="state.impact ?? []"
+    :impact="state.impact"
     @confirm="onConfirm"
     @close="onCancel"
   />

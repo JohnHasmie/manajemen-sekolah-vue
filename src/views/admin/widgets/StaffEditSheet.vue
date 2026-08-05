@@ -114,6 +114,7 @@ const labelClass = 'block text-2xs font-bold text-slate-600 mb-1';
 
 <template>
   <Modal
+    testid="staff-sheet"
     :title="isEdit ? $t('admin.staff.formEditTitle') : $t('admin.staff.formCreateTitle')"
     size="md"
     @close="emit('close')"
@@ -122,13 +123,15 @@ const labelClass = 'block text-2xs font-bold text-slate-600 mb-1';
       <!-- Nama -->
       <div>
         <label :class="labelClass">{{ $t('admin.staff.fieldName') }}</label>
-        <input v-model="name" :class="inputClass" :placeholder="$t('admin.staff.fieldNamePlaceholder')" />
+        <input data-testid="field-name"
+          v-model="name" :class="inputClass" :placeholder="$t('admin.staff.fieldNamePlaceholder')" />
       </div>
 
       <!-- NIP Pegawai -->
       <div>
         <label :class="labelClass">NIP Pegawai <span class="text-slate-400 font-medium">({{ $t('admin.staff.optional') }})</span></label>
-        <input v-model="employeeNumber" :class="inputClass" placeholder="Masukkan NIP Pegawai" />
+        <input data-testid="field-employeeNumber"
+          v-model="employeeNumber" :class="inputClass" placeholder="Masukkan NIP Pegawai" />
       </div>
 
       <!-- Email (create only; read-only in edit) -->
@@ -136,6 +139,7 @@ const labelClass = 'block text-2xs font-bold text-slate-600 mb-1';
         <label :class="labelClass">{{ $t('admin.staff.fieldEmail') }}</label>
         <input
           v-if="!isEdit"
+          data-testid="field-email"
           v-model="email"
           type="email"
           :class="inputClass"
@@ -153,7 +157,8 @@ const labelClass = 'block text-2xs font-bold text-slate-600 mb-1';
         <!-- Jabatan -->
         <div>
           <label :class="labelClass">{{ $t('admin.staff.fieldPosition') }}</label>
-          <input v-model="position" :class="inputClass" :placeholder="$t('admin.staff.fieldPositionPlaceholder')" />
+          <input data-testid="field-position"
+          v-model="position" :class="inputClass" :placeholder="$t('admin.staff.fieldPositionPlaceholder')" />
         </div>
         <!-- No. HP -->
         <div>
@@ -161,7 +166,8 @@ const labelClass = 'block text-2xs font-bold text-slate-600 mb-1';
             {{ $t('admin.staff.fieldPhone') }}
             <span class="text-slate-400 font-medium">{{ $t('admin.staff.optional') }}</span>
           </label>
-          <input v-model="phone" :class="inputClass" placeholder="08…" />
+          <input data-testid="field-phone"
+          v-model="phone" :class="inputClass" placeholder="08…" />
         </div>
       </div>
 
@@ -196,6 +202,7 @@ const labelClass = 'block text-2xs font-bold text-slate-600 mb-1';
       <div>
         <label :class="labelClass">Alamat Lengkap <span class="text-slate-400 font-medium">({{ $t('admin.staff.optional') }})</span></label>
         <textarea
+          data-testid="field-address"
           v-model="address"
           rows="2"
           :class="[inputClass, 'resize-none']"
@@ -206,7 +213,8 @@ const labelClass = 'block text-2xs font-bold text-slate-600 mb-1';
       <!-- Akses (role) — create only -->
       <div v-if="!isEdit">
         <label :class="labelClass">{{ $t('admin.staff.fieldAccess') }}</label>
-        <select v-model="roleId" :class="inputClass">
+        <select data-testid="field-roleId"
+          v-model="roleId" :class="inputClass">
           <option :value="null">{{ $t('admin.staff.accessNone') }}</option>
           <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.label }}</option>
         </select>
@@ -254,7 +262,8 @@ const labelClass = 'block text-2xs font-bold text-slate-600 mb-1';
         </div>
         <div v-if="pwMode === 'manual'" class="relative mt-2">
           <input
-            v-model="password"
+            data-testid="field-password"
+          v-model="password"
             :type="showPassword ? 'text' : 'password'"
             :class="[inputClass, 'pr-10']"
             :placeholder="$t('admin.staff.pwPlaceholder')"
@@ -281,6 +290,7 @@ const labelClass = 'block text-2xs font-bold text-slate-600 mb-1';
       <div class="grid grid-cols-2 gap-2 pt-1">
         <Button variant="secondary" block @click="emit('close')">{{ $t('common.cancel') }}</Button>
         <Button
+          data-testid="staff-submit"
           variant="primary"
           block
           :loading="isSaving"

@@ -93,6 +93,7 @@ function submit() {
     @cancel="emit('close')"
   >
     <FormField
+      field="name"
       v-model="form.name"
       :label="t('common.fullName')"
       :disabled="isSaving"
@@ -101,13 +102,15 @@ function submit() {
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
       <FormField
-        v-model="form.student_number"
+        field="student_number"
+      v-model="form.student_number"
         :label="t('admin.student.nisLabel')"
         :disabled="isSaving"
         :error="errors.student_number"
       />
       <FormField
-        v-model="form.class_id"
+        field="class_id"
+      v-model="form.class_id"
         type="select"
         :label="t('common.class')"
         :select-placeholder="t('admin.student.selectClassPlaceholder')"
@@ -119,16 +122,21 @@ function submit() {
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
       <FormField
-        v-model="form.gender"
+        field="gender"
+      v-model="form.gender"
         type="select"
         :label="t('common.gender')"
         :select-placeholder="t('common.selectPlaceholder')"
         :options="genderOptions"
         :disabled="isSaving"
       />
+      <!-- Bespoke control through the default slot, so FormField's own
+           `field` prop never reaches an element — the id goes on the
+           input this component supplies instead. -->
       <FormField v-model="form.date_of_birth" :label="t('common.dateOfBirth')">
         <input
           v-model="form.date_of_birth"
+          data-testid="field-date_of_birth"
           type="date"
           class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
           :disabled="isSaving"
@@ -137,6 +145,7 @@ function submit() {
     </div>
 
     <FormField
+      field="address"
       v-model="form.address"
       type="textarea"
       :label="t('common.address')"
@@ -149,20 +158,23 @@ function submit() {
         {{ t('admin.student.guardianDataSection') }}
       </p>
       <FormField
-        v-model="form.guardian_name"
+        field="guardian_name"
+      v-model="form.guardian_name"
         :label="t('admin.student.guardianName')"
         :disabled="isSaving"
         :error="errors.guardian_name"
       />
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
         <FormField
-          v-model="form.guardian_email"
+          field="guardian_email"
+      v-model="form.guardian_email"
           type="email"
           :label="t('admin.student.guardianEmail')"
           :disabled="isSaving"
         />
         <FormField
-          v-model="form.phone_number"
+          field="phone_number"
+      v-model="form.phone_number"
           type="tel"
           :label="t('common.phoneNumber')"
           :disabled="isSaving"

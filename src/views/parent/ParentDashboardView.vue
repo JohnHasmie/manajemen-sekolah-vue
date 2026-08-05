@@ -250,16 +250,6 @@ function feedTone(type?: string) {
   }
 }
 
-function feedLabel(type?: string) {
-  const labels: Record<string, string> = {
-    announcement: t('parent.dashboard.feedAnnouncement'),
-    grade: t('parent.dashboard.feedGrade'),
-    class_activity: t('parent.dashboard.feedClassActivity'),
-    report_card: t('parent.dashboard.feedReportCard'),
-    billing: t('parent.dashboard.feedBilling'),
-  };
-  return type ? labels[type] ?? type : t('parent.dashboard.feedOther');
-}
 
 const priorityItems = computed(() => mapToPriorityItems(priorityRaw.value));
 const priorityHeaderLabel = computed(() =>

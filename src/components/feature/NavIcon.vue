@@ -214,6 +214,37 @@ defineProps<{
       <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
       <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
     </template>
+    <!-- `unlink` — "Pisahkan blok" (undo a multi-hour block). Mirrors
+         `link` above with the two halves pulled apart. -->
+    <template v-else-if="name === 'unlink'">
+      <path d="M18.84 12.25l1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M5.17 11.75l-1.71 1.71a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+      <line x1="8" y1="2" x2="8" y2="5" />
+      <line x1="2" y1="8" x2="5" y2="8" />
+      <line x1="16" y1="19" x2="16" y2="22" />
+      <line x1="19" y1="16" x2="22" y2="16" />
+    </template>
+    <!-- `link-down` — "Gabung dengan JP berikutnya": two branches
+         converging downward into one stem, i.e. this period and the one
+         below becoming a single session.
+
+         Drawn with straight strokes on purpose. The previous version
+         used two overlapping chain arcs which collapsed into an
+         illegible squiggle at the 12px the merge pill renders it at. -->
+    <template v-else-if="name === 'link-down'">
+      <path d="M7 4v5l5 5" />
+      <path d="M17 4v5l-5 5" />
+      <path d="M12 14v6" />
+      <polyline points="9 17 12 20 15 17" />
+    </template>
+    <!-- `git-merge` — combined-class (jadwal gabung ⚭): two branches
+         converging into one, which is exactly what N classes sharing one
+         teacher+slot look like. Replaces the literal "⚭" glyph. -->
+    <template v-else-if="name === 'git-merge'">
+      <circle cx="18" cy="18" r="3" />
+      <circle cx="6" cy="6" r="3" />
+      <path d="M6 21V9a9 9 0 0 0 9 9" />
+    </template>
     <template v-else-if="name === 'eye'">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
       <circle cx="12" cy="12" r="3" />

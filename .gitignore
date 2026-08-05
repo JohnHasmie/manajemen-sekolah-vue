@@ -31,3 +31,23 @@ vite.config.js.timestamp-*
 
 # Build cache
 node_modules/.tmp
+e2e-report/
+test-results/
+playwright/.cache/
+
+# vue-tsc emitted output.
+#
+# The documented typecheck command is `vue-tsc --build` — `--noEmit`
+# checks zero files here and always passes, so it is not an option. But
+# `--build` EMITS, and tsconfig has no outDir, so the .js and .d.ts land
+# NEXT TO their sources inside src/ rather than in a build folder.
+#
+# One run produces ~1370 untracked files (a .js + .d.ts pair per .vue and
+# per .ts). Two worktrees were found sitting on exactly that, and it was
+# not carelessness — it is what following the documented command does.
+#
+# Nothing under src/ is legitimately a tracked .js or .d.ts (verified:
+# `git ls-files 'web-vue/src/**/*.js' 'web-vue/src/**/*.d.ts'` → 0), so
+# these patterns cannot mask real source.
+src/**/*.js
+src/**/*.d.ts

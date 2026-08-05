@@ -246,6 +246,12 @@ export interface DemoWizardPayload {
    * web-vue / backend deploys can roll independently.
    */
   tutoring: DemoTutoringPayload;
+  /**
+   * @deprecated Legacy spelling of `tutoring`. Demo payloads persisted
+   * before the 2026-06-26 cutover still carry this key, so readers fall
+   * back to it. Never write it.
+   */
+  bimbel?: DemoTutoringPayload;
   /** Requester identity — submitted with the pending demo request. */
   requester: DemoRequesterPayload;
 }

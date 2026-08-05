@@ -33,6 +33,7 @@ import type {
   TutoringGroupAnnouncement,
   TutoringLead,
   TutoringLeaderboardRow,
+  TutoringLeaderboardGroupRow,
   TutoringMaterial,
   TutoringSessionFeedback,
   TutoringSessionFeedbackSummary,

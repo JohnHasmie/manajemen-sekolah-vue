@@ -20,7 +20,9 @@ withDefaults(
      * short (≤80 chars) so the list stays scannable. Rendered only
      * on destructive actions where the caller opted in.
      */
-    impact?: string[];
+    /** Read-only: `useConfirmHost` hands out `readonly(state)`, so the
+     *  host cannot pass a mutable array. This component only reads it. */
+    impact?: readonly string[];
   }>(),
   {
     confirmLabel: 'Konfirmasi',
@@ -35,7 +37,7 @@ defineEmits<{ confirm: []; close: [] }>();
 </script>
 
 <template>
-  <Modal :title="title" @close="$emit('close')">
+  <Modal testid="confirm-dialog" :title="title" @close="$emit('close')">
     <p class="text-sm text-slate-600 leading-relaxed">{{ message }}</p>
     <!-- IMPACT CARD — bulleted preview of cascade side effects. Only
          rendered when the caller passes at least one line, so simple
@@ -44,6 +46,7 @@ defineEmits<{ confirm: []; close: [] }>();
          will actually happen" list before hitting Konfirmasi. -->
     <div
       v-if="impact.length > 0"
+      data-testid="confirm-impact"
       class="mt-md rounded-xl border p-3"
       :class="danger
         ? 'bg-red-50 border-red-200'

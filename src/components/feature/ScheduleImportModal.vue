@@ -14,6 +14,7 @@ import {
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import { formatDayName } from '@/lib/day-name';
 
 // Re-export ScheduleImportResults so parent views can keep importing it
 // from this component (backwards-compat with existing `onImportDone`
@@ -213,7 +214,7 @@ function closeReport() {
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium">
               <tr v-for="(lh, index) in missingHours" :key="index" class="hover:bg-slate-50/50">
-                <td class="px-4 py-2.5">{{ lh.day_name }}</td>
+                <td class="px-4 py-2.5">{{ formatDayName(lh.day_name) }}</td>
                 <td class="px-4 py-2.5">Jam ke-{{ lh.hour_number }}</td>
                 <td class="px-4 py-2.5">{{ lh.start_time || '-' }}</td>
                 <td class="px-4 py-2.5">{{ lh.end_time || '-' }}</td>

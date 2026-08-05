@@ -23,17 +23,15 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { ReportCardService } from '@/services/report-card.service';
 import type {
-  AdminRaportPipeline,
+  AdminReportCardPipeline,
   ClassMiniChip,
   PipelineKey,
   TingkatGroup,
-  ReportCardStatus,
 } from '@/types/report-card';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
-import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
@@ -43,6 +41,24 @@ const { t } = useI18n();
 
 // ── Data state ──
 const activeFilter = ref<PipelineKey | 'all'>('all');
+
+/**
+ * Status filter options. Hoisted out of the template: written inline as
+ * an array literal, `opt.key` inferred as `string`, so assigning it back
+ * to `activeFilter` was an unchecked widening — a typo in any key would
+ * have compiled and silently matched nothing.
+ */
+const STATUS_FILTER_OPTIONS: {
+  key: PipelineKey | 'all';
+  label: string;
+  icon: string;
+}[] = [
+  { key: 'all', label: 'Semua Status', icon: 'layers' },
+  { key: 'draft', label: 'Draft', icon: 'edit' },
+  { key: 'reviewed', label: 'Diperiksa', icon: 'check-square' },
+  { key: 'published', label: 'Terbit', icon: 'send' },
+  { key: 'distributed', label: 'Dibagikan', icon: 'share' },
+];
 
 // UI Modals / Sheets state
 const showStatusModal = ref(false);
@@ -62,7 +78,10 @@ const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 // false` keeps the prior behaviour (this view only refetched on
 // academic-year change). The loader keeps its side-effect of expanding
 // the first tingkat on first load.
-const { state: loadState, reload } = useDataRefresh<AdminRaportPipeline>(
+// `| null` because getAdminPipeline swallows its own errors and returns
+// null; the generic claimed non-null and the loader never matched it.
+// Canonical name too — `AdminRaportPipeline` is a deprecated alias.
+const { state: loadState, reload } = useDataRefresh<AdminReportCardPipeline | null>(
   async () => {
     const data = await ReportCardService.getAdminPipeline();
     if (data?.tingkats.length) {
@@ -642,13 +661,7 @@ function chipBadgeClass(tone: string | undefined): string {
     >
       <div class="space-y-1">
         <button
-          v-for="opt in [
-            { key: 'all', label: 'Semua Status', icon: 'layers' },
-            { key: 'draft', label: 'Draft', icon: 'edit' },
-            { key: 'reviewed', label: 'Diperiksa', icon: 'check-square' },
-            { key: 'published', label: 'Terbit', icon: 'send' },
-            { key: 'distributed', label: 'Dibagikan', icon: 'share' },
-          ]"
+          v-for="opt in STATUS_FILTER_OPTIONS"
           :key="opt.key"
           type="button"
           class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors flex items-center gap-3"

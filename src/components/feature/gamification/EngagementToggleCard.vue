@@ -13,7 +13,10 @@
   Gating lives in the PARENT — this card only renders inside the
   `canSeePrestasi` branch. When the tenant has zero staff the toggle
   hides and only the Guru side shows. Payloads may be null while the
-  fetch is in flight; the card shows a lightweight loading shell.
+  fetch is in flight; the card shows a lightweight loading shell. When
+  the parent's fetch REJECTS it passes `failed` and the shell is replaced
+  by a compact error + retry — a null payload alone can't distinguish
+  "in flight" from "never coming", which used to pulse forever.
 
   Palette (admin-theme rationalisation): the card reads as ADMIN NAVY.
   Violet survives ONLY as the small header trophy badge — a chip-sized
@@ -35,12 +38,24 @@ import type {
   AdminStaffSummaryPayload,
 } from '@/services/teacher-progress.service';
 
-const props = defineProps<{
-  teacherHighlight: AdminHighlightPayload | null;
-  teacherSummary: AdminSummaryPayload | null;
-  staffHighlight: AdminStaffHighlightPayload | null;
-  staffSummary: AdminStaffSummaryPayload | null;
-}>();
+const props = withDefaults(
+  defineProps<{
+    teacherHighlight: AdminHighlightPayload | null;
+    teacherSummary: AdminSummaryPayload | null;
+    staffHighlight: AdminStaffHighlightPayload | null;
+    staffSummary: AdminStaffSummaryPayload | null;
+    /**
+     * The parent's prestasi fetch REJECTED. Without this the card can't
+     * tell "still in flight" from "never coming" — both look like
+     * `hasData === false` — so a failed fetch pulsed the loading
+     * skeleton forever. True → compact error + retry instead.
+     */
+    failed?: boolean;
+  }>(),
+  { failed: false },
+);
+
+const emit = defineEmits<{ retry: [] }>();
 
 const { t } = useI18n();
 const router = useRouter();
@@ -166,6 +181,9 @@ const topThree = computed<TopRow[]>(() => {
 const placeholderCount = computed(() => Math.max(0, 3 - topThree.value.length));
 
 const hasData = computed(() => stats.value != null || winner.value != null);
+// Error branch wins over the skeleton, but never over real data — a
+// stale-but-present payload is more useful than an error card.
+const showError = computed(() => !hasData.value && props.failed);
 
 function gotoDetail() {
   router.push(
@@ -232,8 +250,31 @@ function gotoDetail() {
       </button>
     </div>
 
+    <!-- Fetch rejected and we have nothing to show → compact error with
+         a retry, mirroring ErrorState's icon/title/message/button shape
+         at card scale. Never an endless skeleton. -->
+    <div
+      v-if="showError"
+      class="flex-1 flex flex-col items-center justify-center text-center gap-1.5 py-6"
+      role="alert"
+    >
+      <span class="w-10 h-10 rounded-full bg-status-danger-soft text-status-danger grid place-items-center">
+        <NavIcon name="alert-triangle" :size="18" />
+      </span>
+      <p class="text-xs font-bold text-slate-900 mt-1">{{ t('common.errorTitle') }}</p>
+      <p class="text-3xs text-slate-500 max-w-xs">{{ t('common.errorMessage') }}</p>
+      <button
+        type="button"
+        class="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-role-admin hover:opacity-90 text-white px-3.5 py-1.5 text-2xs font-bold transition-opacity"
+        @click="emit('retry')"
+      >
+        <NavIcon name="refresh-cw" :size="13" />
+        {{ t('common.retry') }}
+      </button>
+    </div>
+
     <!-- Loading shell while payloads resolve -->
-    <div v-if="!hasData" class="flex-1 flex flex-col gap-3">
+    <div v-else-if="!hasData" class="flex-1 flex flex-col gap-3">
       <div class="h-16 rounded-xl bg-slate-50 animate-pulse"></div>
       <div class="h-14 rounded-xl bg-slate-50 animate-pulse"></div>
     </div>

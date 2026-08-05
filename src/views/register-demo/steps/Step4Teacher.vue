@@ -53,7 +53,7 @@ const subjectsList = computed(() => wizard.payload.subjects.names);
 // the form always has exactly `count` rows.
 watch(
   [count, fillMode],
-  ([n, mode]) => {
+  ([, mode]) => {
     if (mode !== 'manual') return;
     syncManualLength();
   },

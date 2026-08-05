@@ -49,7 +49,11 @@ function asNum(v: unknown, fallback = 0): number {
   return fallback;
 }
 
-function sanitize(obj: Record<string, unknown>): Record<string, unknown> {
+// `object`, not `Record<string, unknown>`: interfaces have no implicit
+// index signature, so every typed filter object (AdminScheduleFilters,
+// BillGroupFilters, …) was rejected at the call site even though
+// Object.entries handles them fine.
+function sanitize(obj: object): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(obj)) {
     if (v === undefined || v === null || v === '') continue;
@@ -249,6 +253,45 @@ function sessionFromJson(raw: any): ScheduleSession {
     schedule_group_id: groupId ? String(groupId) : null,
     is_grouped: isGrouped,
     grouped_class_names: groupedNames,
+    ...parseBlockFields(raw),
+  };
+}
+
+/**
+ * Normalise the multi-hour block ("blok jam") fields.
+ *
+ * A pre-deploy backend ships none of these, so every consumer must be
+ * able to treat the row as a plain single-hour slot. `is_block_anchor`
+ * deliberately defaults to TRUE when absent — listings filter on it, and
+ * defaulting to false would make every row vanish against an old API.
+ */
+function parseBlockFields(raw: any): {
+  block_group_id: string | null;
+  is_block: boolean;
+  block_span: number;
+  block_hour_numbers: number[];
+  block_start_time: string | null;
+  block_end_time: string | null;
+  is_block_anchor: boolean;
+} {
+  const blockId = raw?.block_group_id ?? null;
+  return {
+    block_group_id: blockId ? String(blockId) : null,
+    is_block: typeof raw?.is_block === 'boolean' ? raw.is_block : !!blockId,
+    block_span: Number.isFinite(Number(raw?.block_span))
+      ? Number(raw.block_span)
+      : 0,
+    block_hour_numbers: Array.isArray(raw?.block_hour_numbers)
+      ? raw.block_hour_numbers.map(Number).filter((n: number) => Number.isFinite(n))
+      : [],
+    block_start_time: raw?.block_start_time
+      ? String(raw.block_start_time).slice(0, 5)
+      : null,
+    block_end_time: raw?.block_end_time
+      ? String(raw.block_end_time).slice(0, 5)
+      : null,
+    is_block_anchor:
+      typeof raw?.is_block_anchor === 'boolean' ? raw.is_block_anchor : true,
   };
 }
 
@@ -359,6 +402,7 @@ function rowFromJson(raw: any): ScheduleRow {
         ? raw.is_grouped
         : !!raw.schedule_group_id,
     grouped_class_names: parseGroupedClassNames(raw.grouped_class_names),
+    ...parseBlockFields(raw),
   };
 }
 
@@ -655,6 +699,20 @@ export interface TimetableCell {
   schedule_group_id?: string | null;
   /** Sibling class refs for the group (empty for plain slots). */
   grouped_class_names?: Array<{ id: string; name: string }>;
+
+  // ── Multi-hour block ("blok jam") ────────────────────────────────
+  // The grid renders ONE cell with `rowspan = block_span` on the anchor
+  // and skips the hours that span already covers, so it needs both the
+  // span and the anchor flag.
+  block_group_id?: string | null;
+  is_block?: boolean;
+  /** True only for the earliest hour in the block — the cell we render. */
+  is_block_anchor?: boolean;
+  /** Row count the anchor cell should span (0/1 → no rowspan). */
+  block_span?: number;
+  block_hour_numbers?: number[];
+  block_start_time?: string | null;
+  block_end_time?: string | null;
 }
 
 /** Matrix meta strip — counters + IDs surfaced under the grid. */
@@ -723,6 +781,42 @@ export interface ResyncOrphan {
 export interface ResyncPreview {
   total: number;
   orphans: ResyncOrphan[];
+}
+
+/**
+ * One suggested "gabung jam" pair — two consecutive periods sharing
+ * class + subject + teacher. `schedule_id` is the EARLIER period and is
+ * what gets posted back to apply the merge; `next_schedule_id` is carried
+ * only so the UI can describe the pair.
+ *
+ * `start_time` / `end_time` already describe the OUTER window the merged
+ * block would occupy, which is the thing the admin is deciding about.
+ */
+export interface BlockCandidate {
+  schedule_id: string;
+  next_schedule_id: string;
+  day_id: string;
+  day_name: string | null;
+  day_order: number;
+  hour_number: number;
+  next_hour_number: number;
+  start_time: string;
+  end_time: string;
+  subject_name: string | null;
+  class_name: string | null;
+  teacher_name: string | null;
+}
+
+/** GET /teaching-schedules/block-candidates payload. */
+export interface BlockCandidatesResult {
+  total: number;
+  candidates: BlockCandidate[];
+}
+
+/** POST /teaching-schedules/merge-block-bulk result. */
+export interface BlockBulkResult {
+  merged: number;
+  skipped: Array<{ schedule_id: string; reason: string }>;
 }
 
 /** POST /schedule/resync/apply result — repointed count + per-row failures. */
@@ -1164,6 +1258,121 @@ export const ScheduleService = {
   },
 
   /**
+   * POST /teaching-schedules/{id}/merge-next — "gabung jam".
+   *
+   * Merges this slot with the NEXT lesson hour into one multi-hour
+   * block. The backend answers 422 with a human-readable `message` when
+   * the next hour isn't an eligible partner (different subject/teacher,
+   * no next hour, already in another block) — surface it verbatim; it's
+   * written for the admin, not for a developer.
+   *
+   * When the slot is part of a jadwal-gabung group, the backend merges
+   * EVERY member class so the group stays symmetric.
+   */
+  async mergeNextHour(
+    id: string,
+  ): Promise<{ block_group_id: string; merged_ids: string[]; span: number }> {
+    try {
+      const res = await api.post(`/teaching-schedules/${id}/merge-next`);
+      const d = (res.data?.data ?? res.data ?? {}) as Record<string, any>;
+      return {
+        block_group_id: String(d.block_group_id ?? ''),
+        merged_ids: Array.isArray(d.merged_ids) ? d.merged_ids.map(String) : [],
+        span: Number(d.span ?? 0),
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menggabungkan jam pelajaran.'));
+    }
+  },
+
+  /**
+   * POST /teaching-schedules/{id}/split-block — "pisahkan blok".
+   *
+   * Clears the block from every row that shares it. Idempotent: calling
+   * it on an un-blocked row is a no-op that still resolves.
+   */
+  async splitBlock(id: string): Promise<number> {
+    try {
+      const res = await api.post(`/teaching-schedules/${id}/split-block`);
+      const d = (res.data?.data ?? res.data ?? {}) as Record<string, any>;
+      return Number(d.unlinked_count ?? 0);
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memisahkan blok jam.'));
+    }
+  },
+
+  /**
+   * GET /teaching-schedules/block-candidates — consecutive-period pairs
+   * that COULD become one block. Read-only: nothing merges until the
+   * admin confirms via `mergeBlockBulk`.
+   *
+   * Swallows failures into `total: 0` because the only caller is a
+   * gating badge in the page header — a telemetry hiccup shouldn't
+   * surface an error banner on a page the admin came to do other work on.
+   */
+  async blockCandidates(params: {
+    semesterId?: string;
+    academicYearId?: string | number;
+  } = {}): Promise<BlockCandidatesResult> {
+    try {
+      const res = await api.get('/teaching-schedules/block-candidates', {
+        params: {
+          ...(params.semesterId ? { semester_id: params.semesterId } : {}),
+          ...(params.academicYearId != null
+            ? { academic_year_id: params.academicYearId }
+            : {}),
+        },
+      });
+      const body = (res.data?.data ?? res.data ?? {}) as Record<string, any>;
+      const candidates: BlockCandidate[] = Array.isArray(body.candidates)
+        ? body.candidates.map((c: any) => ({
+            schedule_id: asStr(c?.schedule_id),
+            next_schedule_id: asStr(c?.next_schedule_id),
+            day_id: asStr(c?.day_id),
+            day_name: c?.day_name ? asStr(c.day_name) : null,
+            day_order: asNum(c?.day_order),
+            hour_number: asNum(c?.hour_number),
+            next_hour_number: asNum(c?.next_hour_number),
+            start_time: asStr(c?.start_time),
+            end_time: asStr(c?.end_time),
+            subject_name: c?.subject_name ? asStr(c.subject_name) : null,
+            class_name: c?.class_name ? asStr(c.class_name) : null,
+            teacher_name: c?.teacher_name ? asStr(c.teacher_name) : null,
+          }))
+        : [];
+      return { total: asNum(body.total ?? candidates.length), candidates };
+    } catch {
+      return { total: 0, candidates: [] };
+    }
+  },
+
+  /**
+   * POST /teaching-schedules/merge-block-bulk — applies the pairs the
+   * admin ticked. Partial success is normal: a suggestion can go stale
+   * between listing and applying, so `skipped` carries a per-row reason
+   * instead of the whole batch failing.
+   */
+  async mergeBlockBulk(scheduleIds: string[]): Promise<BlockBulkResult> {
+    try {
+      const res = await api.post('/teaching-schedules/merge-block-bulk', {
+        schedule_ids: scheduleIds,
+      });
+      const d = (res.data?.data ?? res.data ?? {}) as Record<string, any>;
+      return {
+        merged: asNum(d.merged),
+        skipped: Array.isArray(d.skipped)
+          ? d.skipped.map((s: any) => ({
+              schedule_id: asStr(s?.schedule_id),
+              reason: asStr(s?.reason),
+            }))
+          : [],
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal menggabungkan jam pelajaran.'));
+    }
+  },
+
+  /**
    * PATCH /teaching-schedule/{id}/reschedule — drag-drop reschedule.
    * Body: { lesson_hour_days_id, force? }
    * Throws an Error with a `.conflicts` annotation when the server
@@ -1531,6 +1740,7 @@ export const ScheduleService = {
             grouped_class_names: parseGroupedClassNames(
               raw.grouped_class_names,
             ),
+            ...parseBlockFields(raw),
           };
         }
       }

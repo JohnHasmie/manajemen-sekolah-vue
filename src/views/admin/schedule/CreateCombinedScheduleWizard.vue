@@ -31,6 +31,7 @@ import {
   type AvailableTeacher,
 } from '@/services/schedule.service';
 import { LessonHourService } from '@/services/lesson-hour.service';
+import { formatDayName } from '@/lib/day-name';
 import { SubjectService } from '@/services/subjects.service';
 import type {
   LessonHour,
@@ -481,7 +482,7 @@ const stepTitle = computed(() => {
                 {{ t('admin.schedule.formB.dayPlaceholder') }}
               </option>
               <option v-for="d in days" :key="d.id" :value="d.id">
-                {{ d.name }}
+                {{ formatDayName(d.name) }}
               </option>
             </select>
             <div
@@ -629,7 +630,7 @@ const stepTitle = computed(() => {
           </p>
           <ul class="text-2xs text-red-700 space-y-1">
             <li v-for="c in conflicts" :key="c.id" class="leading-relaxed">
-              <strong>{{ c.day_name }} · {{ c.start_time }}–{{ c.end_time }}</strong>:
+              <strong>{{ formatDayName(c.day_name) }} · {{ c.start_time }}–{{ c.end_time }}</strong>:
               {{ c.subject_name ?? 'Mapel' }}
               <span v-if="c.teacher_name"> · {{ c.teacher_name }}</span>
               <span v-if="c.class_name"> · {{ c.class_name }}</span>

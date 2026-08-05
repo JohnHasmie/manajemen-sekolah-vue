@@ -47,7 +47,21 @@ export type AnnouncementStatus =
   | 'archived';
 
 /** Who the announcement targets. */
+/**
+ * How an announcement is *targeted*. Not a role — see
+ * {@link AnnouncementRoleTarget}, which is the vocabulary that goes on
+ * the wire as `role_target`. The two overlap on `all` and `student`,
+ * which is exactly why they were confused for each other.
+ */
 export type AnnouncementAudience = 'all' | 'role' | 'class' | 'student';
+
+/** Values of `announcements.role_target` — who receives it. */
+export type AnnouncementRoleTarget =
+  | 'all'
+  | 'parent'
+  | 'teacher'
+  | 'student'
+  | 'admin';
 
 /**
  * Canonical announcement record returned by `/announcement` for
@@ -84,6 +98,19 @@ export interface Announcement {
   /** Audience label rendered as a pill ("→ Teacher", "→ 9A"). */
   audience_label?: string | null;
   is_pinned?: boolean;
+  /**
+   * Pin expiry. `announcements.pinned_until` (cast to datetime on the
+   * model); the pinned feed filters on `pinned_until IS NULL OR >= now`,
+   * and the admin compose form round-trips it.
+   */
+  pinned_until?: string | null;
+  /**
+   * Derived server-side in CommunicationRepository from `file_path`:
+   * `attachment_url` is the full asset URL, `attachment_name` its
+   * basename. Both null when the announcement carries no file.
+   */
+  attachment_url?: string | null;
+  attachment_name?: string | null;
   scheduled_at?: string | null;
   /** Event date/time this announcement is about (e.g. a meeting). Drives
    *  the calendar entry + reminders. Distinct from `scheduled_at` (publish). */

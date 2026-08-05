@@ -47,7 +47,6 @@ const length = computed(() => trimmed.value.length);
 const isValid = computed(
   () => length.value >= REASON_MIN && length.value <= REASON_MAX,
 );
-const remaining = computed(() => REASON_MAX - length.value);
 
 function onConfirm() {
   touched.value = true;

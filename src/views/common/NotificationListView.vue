@@ -118,6 +118,7 @@ function categoryLabel(cat: AppNotification['category']) {
     class_activity: t('common.activity'),
     lesson_plan: t('common.lessonPlan'),
     billing: t('common.billing'),
+    tutoring_payout: t('common.payout'),
     system: t('common.system'),
     other: t('common.other'),
   };

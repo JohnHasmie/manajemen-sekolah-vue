@@ -258,7 +258,7 @@ export const StudentService = {
         return null;
       }
 
-      return list.map((row) => {
+      return list.map((row: unknown) => {
         const r = row as Record<string, unknown>;
         const student = studentFromJson(r);
         // Override student_class_id with the entry scoped to the

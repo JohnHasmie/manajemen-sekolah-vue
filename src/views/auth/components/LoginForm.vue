@@ -129,6 +129,7 @@ async function handleSubmit() {
           </div>
           <input
             id="email"
+            data-testid="login-email"
             v-model="email"
             type="email"
             autocomplete="email"
@@ -152,6 +153,7 @@ async function handleSubmit() {
           </div>
           <input
             id="password"
+            data-testid="login-password"
             v-model="password"
             :type="showPassword ? 'text' : 'password'"
             autocomplete="current-password"
@@ -188,6 +190,7 @@ async function handleSubmit() {
       </p>
 
       <button
+        data-testid="login-submit"
         type="submit"
         :disabled="auth.isLoading || !auth.serverOnline"
         class="w-full rounded-xl bg-gradient-to-br from-brand-dark-blue to-brand-cobalt hover:opacity-90 disabled:from-slate-300 disabled:to-slate-300 text-white font-black py-[14px] shadow-lg shadow-brand-dark-blue/30 disabled:shadow-none transition-all flex items-center justify-center gap-2"

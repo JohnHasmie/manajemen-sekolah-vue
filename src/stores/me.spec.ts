@@ -87,14 +87,25 @@ describe('useMeStore', () => {
       const p2 = me.refresh();
       const p3 = me.refresh();
 
-      // All three should be the SAME promise instance (in-flight coalesce).
-      expect(p1).toBe(p2);
-      expect(p2).toBe(p3);
-      // Exactly one HTTP call fired despite three refresh() invocations.
+      // The contract is ONE NETWORK ROUND-TRIP, which is what the store
+      // guarantees via its `inFlight` latch and what actually matters to
+      // callers.
+      //
+      // This used to assert `p1 === p2 === p3` as well. That can never
+      // hold: `refresh` is declared `async`, and an async function wraps
+      // whatever it returns in a fresh promise, so returning the same
+      // `inFlight` internally still hands each caller a distinct object.
+      // The assertion was testing a property of `async`, not of the
+      // store — and since these specs had never once run (vitest was
+      // never installed), nobody found out.
       expect(MeService.fetch).toHaveBeenCalledTimes(1);
 
+      // All three resolve to the same snapshot, which is the observable
+      // half of "they shared one round-trip".
       resolveFetch(SNAP());
-      await p1;
+      const [r1, r2, r3] = await Promise.all([p1, p2, p3]);
+      expect(r2).toEqual(r1);
+      expect(r3).toEqual(r1);
     });
 
     it('allows a fresh call after the previous refresh settles', async () => {

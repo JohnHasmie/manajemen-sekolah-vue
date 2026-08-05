@@ -15,16 +15,26 @@
                        - pending_lesson_plans      (academic)
                        - draft_announcements       (communication)
                      Each alert = badge angka + title + subtitle + arrow,
-                     click → route to the relevant page. Ability-gated
-                     per alert so a card that can't be reached never
-                     renders.
+                     click → route to the relevant page. Lane B rows
+                     resolve their backend `target_route` hint through
+                     the SHARED `readiness-nav` map (same helper as the
+                     full page + the chips) — never a local dotted map.
+                     EVERY alert is ability-gated: the stat-derived ones
+                     inline, the Lane B ones via the map's declared
+                     `requiredAbilities`. Dropping happens BEFORE the
+                     4-slot cap, so an unreachable row yields its slot to
+                     the next actionable one instead of wasting it.
     3. Contextual chips · "jump to what's incomplete" — derived from the
-                          SCORED completion_needed gaps (mapped to routes
-                          via the shared readiness-nav helper, gated
-                          against the parent's ability-filtered
-                          quickActions). Falls back to a minimal
-                          Siswa/Guru/Kelas set when nothing is incomplete,
-                          so it never duplicates the "Akses cepat" tools.
+                          SCORED completion_needed gaps, mapped to routes
+                          AND gated by the same shared readiness-nav
+                          helper the alerts use. (This used to intersect
+                          the resolved path against the parent's
+                          ability-filtered `quickActions` — a second,
+                          weaker mechanism that also silently dropped any
+                          destination missing from that curated list.)
+                          Falls back to a minimal Siswa/Guru/Kelas set
+                          when nothing is incomplete, so it never
+                          duplicates the "Akses cepat" tools.
 
   Fallback modes:
     - `!readiness || !readiness.supported`: header degrades to the icon +
@@ -43,7 +53,10 @@ import type {
   ReadinessAttentionItem,
   ReadinessCompletionItem,
 } from '@/services/readiness.service';
-import { resolveReadinessTarget } from '@/lib/readiness-nav';
+import {
+  canReachReadinessTarget,
+  resolveReadinessTarget,
+} from '@/lib/readiness-nav';
 
 interface QuickActionLike {
   labelKey: string;
@@ -60,8 +73,9 @@ const props = defineProps<{
   overdueBills: number;
   /**
    * Already ability-filtered quick-action list from the parent view.
-   * We show at most `maxChips` (default 5) then append a "Lainnya" chip
-   * that scrolls to the full quick-actions grid.
+   * Used ONLY for the fallback chip row (nothing incomplete → a minimal
+   * Siswa/Guru/Kelas set). The contextual chips no longer gate against
+   * it — they use the readiness map's own `requiredAbilities`.
    */
   quickActions: QuickActionLike[];
   /** When true, the "Aktifkan Pusat Kendali" CTA replaces the header. */
@@ -119,14 +133,29 @@ const alerts = computed<AlertCard[]>(() => {
   // 1. Readiness Lane B (operational) — already localised server-side.
   //    Every attention item is `urgent: true` because they mean actual
   //    operational blockers (unverified payments, expired kelas, dst.).
-  for (const item of attentionItems.value.slice(0, 4)) {
+  //
+  //    Ability-gated on the destination the map declares, exactly like
+  //    the stat-derived alerts below. Without this an admin at a school
+  //    without the finance module was still shown "Verifikasi
+  //    pembayaran" and tapped into a 403. Filter runs BEFORE the slice
+  //    so a dropped row hands its slot to the next actionable item.
+  const reachableAttention = attentionItems.value.filter((item) =>
+    canReachReadinessTarget(item.target_route, me),
+  );
+  for (const item of reachableAttention.slice(0, 4)) {
     list.push({
       key: `attn-${item.id}`,
       icon: 'zap',
       title: item.label,
       subtitle: item.subtitle,
       count: item.count > 0 ? item.count : 1,
-      route: mapAttentionRoute(item.target_route),
+      // Backend hints are snake_case (`admin_payment_verification`, …).
+      // Resolve them through the SHARED readiness-nav map — the same one
+      // the full page and the contextual chips use — so an alert lands
+      // on the screen that actually resolves it. Unknown hint (backend
+      // schema drift mid-session) → the full Pusat Kendali page, which
+      // is still actionable rather than a hard router error.
+      route: resolveReadinessTarget(item.target_route)?.path ?? '/admin/readiness',
       urgent: item.severity === 'critical',
     });
   }
@@ -188,32 +217,20 @@ const trulyAllClear = computed(
 );
 
 /**
- * Maps a backend route hint (e.g. `bills.list`) to a Vue router path.
- * Falls back to `/admin` if the hint isn't recognised so a
- * mid-session schema drift stays inside the shell instead of throwing.
- */
-function mapAttentionRoute(target: string): string {
-  const map: Record<string, string> = {
-    'bills.list': '/admin/finance',
-    'admin.finance': '/admin/finance',
-    'lesson-plans.list': '/admin/lesson-plans',
-    'admin.lesson_plans': '/admin/lesson-plans',
-    'announcements.list': '/admin/announcements',
-    'admin.announcements': '/admin/announcements',
-    'admin.readiness': '/admin/readiness',
-  };
-  return map[target] ?? '/admin/readiness';
-}
-
-/**
  * Chips = "jump to what's incomplete". Derived from the SCORED
  * completion gaps (Lane A) so a click moves the readiness score, not
  * from a generic quick-action list that duplicated the "Akses cepat"
  * tools grid below. Each completion item's backend `target_route` is
- * mapped to a chip (label + icon + path) by the shared helper, then
- * gated by intersecting with the parent's already-ability-filtered
- * `quickActions` (so we never surface a destination the user can't
- * reach). Deduped by path, capped at 4.
+ * mapped to a chip (label + icon + path) AND gated by the shared
+ * helper — the same `requiredAbilities` the Lane B alerts above use.
+ * Deduped by path, capped at 4.
+ *
+ * This replaces an intersection against the parent's `quickActions`.
+ * That worked as an ability gate by accident (quickActions is
+ * ability-filtered) but was really a membership test against a CURATED
+ * list, so any readiness destination absent from it — Tahun Ajaran, WA
+ * blast — was dropped even for a full-privileged admin. The gate is now
+ * the destination's real one.
  */
 interface Chip {
   labelKey: string;
@@ -223,13 +240,12 @@ interface Chip {
 
 const contextualChips = computed<Chip[]>(() => {
   if (!supported.value) return [];
-  const visiblePaths = new Set(props.quickActions.map((a) => a.to));
   const seen = new Set<string>();
   const out: Chip[] = [];
   for (const item of completionItems.value) {
     const target = resolveReadinessTarget(item.target_route);
     if (!target) continue;
-    if (!visiblePaths.has(target.path)) continue; // ability gate via parent
+    if (!canReachReadinessTarget(item.target_route, me)) continue;
     if (seen.has(target.path)) continue;
     seen.add(target.path);
     out.push({ labelKey: target.labelKey, icon: target.icon, to: target.path });

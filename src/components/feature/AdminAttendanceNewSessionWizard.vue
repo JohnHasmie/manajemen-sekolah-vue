@@ -22,6 +22,7 @@ import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import TeacherSelectionSheet from './TeacherSelectionSheet.vue';
 import { localISODate } from '@/lib/format';
+import { formatDayName } from '@/lib/day-name';
 
 const emit = defineEmits<{
   close: [];
@@ -273,7 +274,7 @@ const stepSubtitle = computed(() => {
             <option value="">— Tanpa JP spesifik —</option>
             <option v-for="h in lessonHours" :key="h.id" :value="h.id">
               JP {{ h.hour_number }} · {{ h.start_time }}–{{ h.end_time }}
-              <template v-if="h.day_name"> · {{ h.day_name }}</template>
+              <template v-if="h.day_name"> · {{ formatDayName(h.day_name) }}</template>
             </option>
           </select>
         </div>

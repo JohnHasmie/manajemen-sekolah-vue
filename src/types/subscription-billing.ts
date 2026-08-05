@@ -401,6 +401,76 @@ export interface MyModuleRow {
  * discount object with just the Rp reduction rather than dropping the
  * badge silently.
  */
+/**
+ * ── Discount codes ────────────────────────────────────────────────
+ *
+ * Four files import `AppliedDiscount` / `DiscountPreviewFailure` and
+ * `BillingService.previewDiscountCode` declares it returns
+ * `DiscountPreviewResult`, but none of the three had ever been defined
+ * here. Type-only imports erase at build time, so the feature ran while
+ * nothing about it was checked.
+ *
+ * Shapes below are taken from `PreviewDiscountCodeAction` and the
+ * `discount_codes` migration, not inferred from the call sites.
+ */
+
+/**
+ * `discount_codes.type`. `DiscountCode::discountFor()` branches on
+ * `=== 'percent'` and treats everything else as a fixed rupiah amount.
+ */
+export type DiscountCodeType = 'percent' | 'fixed';
+
+/** Every `reason` PreviewDiscountCodeAction can return. */
+export type DiscountPreviewFailureReason =
+  | 'not_found'
+  | 'below_min'
+  | 'scope_mismatch'
+  | 'first_time_only'
+  | 'tenant_scope'
+  // Derived from the code's status by `messageForStatus`.
+  | 'not_yet_active'
+  | 'expired'
+  | 'exhausted'
+  | 'paused';
+
+/**
+ * A validated code, as the subscribe flow keeps it. Mirrors the
+ * `valid: true` branch minus `subtotal_after`, which the caller
+ * recomputes against the live cart.
+ *
+ * Distinct from {@link AppliedDiscountSnapshot}, which is what a
+ * *already-running* subscription reports and can carry nulls where the
+ * source code row has since been deleted.
+ */
+export interface AppliedDiscount {
+  code: string;
+  /** `description` is NOT NULL in the migration. */
+  description: string;
+  type: DiscountCodeType;
+  /** Percent 1–90, or a rupiah amount when `type` is fixed. */
+  value: number;
+  /** NULL = for the life of the subscription. */
+  duration_months: number | null;
+  discount_amount: number;
+  valid_until: string | null;
+  used_count: number;
+  /** NULL = unlimited quota. */
+  max_uses: number | null;
+}
+
+export interface DiscountPreviewFailure {
+  valid: false;
+  reason: DiscountPreviewFailureReason;
+  message: string;
+  /** Only present when the code existed but was rejected. */
+  code?: string;
+}
+
+/** Discriminated on `valid`, so callers switch rather than try/catch. */
+export type DiscountPreviewResult =
+  | (AppliedDiscount & { valid: true; subtotal_after: number })
+  | DiscountPreviewFailure;
+
 export interface AppliedDiscountSnapshot {
   code: string | null;
   description: string | null;
@@ -439,6 +509,20 @@ export interface MyModulesSubscription {
    * Absent on pre-!463 backends — treat missing as null.
    */
   applied_discount?: AppliedDiscountSnapshot | null;
+  /**
+   * Period-end cancel of the WHOLE subscription (not a single module
+   * row). While true the backend still reports `status: 'active'` and
+   * every entitlement gate behaves normally — the tenant paid through
+   * `expires_at` and keeps full access until then. Absent on pre-!618
+   * backends; treat missing as `false`.
+   */
+  cancel_at_period_end?: boolean;
+  /**
+   * The date access actually stops. Null unless a cancel is pending,
+   * so the client can never render a stale "berakhir pada" date off a
+   * subscription that is not cancelling. Absent on pre-!618 backends.
+   */
+  cancel_effective_at?: string | null;
 }
 
 export interface MyModules {
@@ -464,4 +548,103 @@ export interface ModuleAddonCreated {
     account_holder: string;
     reference_code: string;
   };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Subscription lifecycle — billing-cycle change + cancel / resume
+// (backend !618, SubscriptionLifecycleController).
+// ═══════════════════════════════════════════════════════════════════
+//
+// "Plan" on these endpoints means BILLING CYCLE only (monthly |
+// yearly). There is no Basic/Pro tier in this product — feature tiers
+// are the modules in `MyModuleRow[]`. Copy must say "siklus tagihan",
+// never "upgrade paket".
+
+/**
+ * GET /billing/subscription/cycle-change/preview — the server-computed
+ * quote for switching cycle. Read-only; runs the exact same action the
+ * POST commit runs, so `amount_due` is a promise rather than an
+ * estimate.
+ *
+ * NEVER recompute any of these figures client-side. The mobile
+ * "Kelola Modul" prorata sheet shipped a local estimate that drifted
+ * from the server charge and users were billed a different number
+ * than they confirmed; this endpoint exists specifically to close
+ * that gap, and only closes it if the client renders what it returns.
+ */
+export interface CycleChangePreview {
+  subscription_id: string;
+  current_plan: BillingPeriod;
+  target_plan: BillingPeriod;
+  currency: string;
+  student_count: number;
+  staff_count: number;
+  /** Whole days in the current billing window (starts_at → expires_at). */
+  total_days: number;
+  /** Whole days from now to expires_at, clamped into [0, total_days]. */
+  unused_days: number;
+  /** Full pre-discount monthly bill the credit is derived from. */
+  current_monthly_amount: number;
+  /** floor(current_monthly_amount × unused_days / total_days). */
+  unused_days_credit: number;
+  /** The re-priced charge at the target cadence, before the credit. */
+  target_amount: number;
+  /** target_amount − unused_days_credit, floored at 0. THE figure to show. */
+  amount_due: number;
+  /** The new term runs now → now + 1 year (not stacked on expires_at). */
+  new_starts_at: string;
+  new_expires_at: string;
+  /** Module keys carried into the new term (cancelled ones dropped). */
+  carried_modules: string[];
+  quote: SubscriptionQuote;
+}
+
+/**
+ * GET /billing/modules/add/preview — server-computed prorata for adding
+ * one module mid-cycle. The exact figures POST /billing/modules/add
+ * will charge; both halves run the same action.
+ *
+ * This replaced a client-side re-derivation of the same formula. The
+ * client cannot get it right: rates come from env-driven config that
+ * overrides the constants `/billing/modules/catalog` serves, and bundle
+ * rates live in a separate map the picker never consulted. Render
+ * `amount` verbatim; never recompute it locally.
+ */
+export interface ModuleAddPreview {
+  module_key: string;
+  /** Full monthly rate at the current seat counts, before prorating. */
+  monthly: number;
+  /** floor(monthly / 30) — shown as the "per hari" line. */
+  daily_rate: number;
+  /** Whole days left in the current billing window, floored at 1. */
+  days_remaining: number;
+  /** floor(monthly × days_remaining / 30). THE figure to show. */
+  amount: number;
+  currency: string;
+}
+
+/**
+ * POST /billing/subscription/cycle-change — the preview payload plus
+ * the persisted period. Same numbers; the commit re-runs the preview
+ * inside its transaction so the guards are re-checked at write time.
+ */
+export interface CycleChangeResult extends CycleChangePreview {
+  applied: true;
+  status: string;
+  starts_at: string;
+  expires_at: string;
+  monthly_amount: number;
+  amount: number;
+}
+
+/**
+ * POST /billing/subscription/cancel and .../resume both return this.
+ * `status` stays `active` on cancel — access runs to `active_until`,
+ * there is no refund, and resume undoes it before that date.
+ */
+export interface SubscriptionCancelState {
+  subscription_id: string;
+  cancel_at_period_end: boolean;
+  status: string;
+  active_until: string | null;
 }

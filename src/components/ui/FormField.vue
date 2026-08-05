@@ -55,6 +55,17 @@ const props = withDefaults(
     /** min/max forwarded to number inputs. */
     min?: number | string;
     max?: number | string;
+    /**
+     * Stable handle for E2E selectors, placed on the rendered control.
+     *
+     * Forms are the one place the suite genuinely has to reach an
+     * individual element, and the alternatives are both bad: label text
+     * couples the assertion to `locales/id.json` (switchable at runtime,
+     * so a copy edit reddens the suite with nothing broken), and
+     * positional selectors break the moment a field is reordered.
+     * Callers pass the model key, e.g. `field="guardian_email"`.
+     */
+    field?: string;
     /** Coerce the emitted value to a Number (mirrors v-model.number). */
     numberModel?: boolean;
   }>(),
@@ -72,6 +83,7 @@ const props = withDefaults(
     min: undefined,
     max: undefined,
     numberModel: false,
+    field: '',
   },
 );
 
@@ -115,6 +127,7 @@ function onInput(event: Event) {
     <slot>
       <textarea
         v-if="type === 'textarea'"
+        :data-testid="field ? `field-${field}` : undefined"
         :value="modelValue ?? ''"
         :rows="rows"
         :placeholder="placeholder"
@@ -125,6 +138,7 @@ function onInput(event: Event) {
 
       <select
         v-else-if="type === 'select'"
+        :data-testid="field ? `field-${field}` : undefined"
         :value="modelValue ?? ''"
         :disabled="disabled"
         :class="[CONTROL_BASE, 'bg-white']"
@@ -138,6 +152,7 @@ function onInput(event: Event) {
 
       <input
         v-else
+        :data-testid="field ? `field-${field}` : undefined"
         :value="modelValue ?? ''"
         :type="type"
         :placeholder="placeholder"

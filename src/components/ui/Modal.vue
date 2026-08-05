@@ -25,8 +25,16 @@ const props = withDefaults(
     title?: string;
     subtitle?: string;
     size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+    /**
+     * Identity for E2E selectors. Every dialog in the app is built on
+     * this component, so `role="dialog"` cannot distinguish an edit form
+     * from a delete confirmation — wrappers that specialise Modal
+     * (FormSheet, ConfirmationDialog) override this so a test can target
+     * exactly the one it means.
+     */
+    testid?: string;
   }>(),
-  { size: 'md' },
+  { size: 'md', testid: 'modal' },
 );
 
 const emit = defineEmits<{ close: [] }>();
@@ -57,11 +65,19 @@ onBeforeUnmount(() => {
 
 <template>
   <Teleport to="body">
+    <!-- Identity lives on the primitive, not on the ~20 call sites: one
+         attribute here is how an E2E suite finds any dialog in the app.
+         `role="dialog"` cannot serve that purpose because FormSheet and
+         ConfirmationDialog are BOTH built on this component, so
+         getByRole('dialog') cannot tell an edit form from a delete
+         confirm — hence the overridable `testid`. -->
     <div
+      data-testid="modal-backdrop"
       class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 px-md py-md sm:p-lg"
       @click.self="emit('close')"
     >
       <div
+        :data-testid="props.testid"
         class="w-full form-card max-h-[90vh] overflow-y-auto p-lg sm:p-xl"
         :class="SIZE_CLASS[size]"
         role="dialog"

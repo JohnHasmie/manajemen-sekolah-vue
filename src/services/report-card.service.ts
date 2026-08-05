@@ -521,6 +521,22 @@ function parentReportCardRowFromJson(raw: AnyRecord): ParentReportCardRow {
       raw.average_score !== undefined ? num(raw.average_score) : null,
     attendance_pct:
       raw.attendance_pct !== undefined ? num(raw.attendance_pct) : null,
+    // The backend sends the whole summary beside `attendance_pct`; this
+    // used to drop it, which is why callers reached for a
+    // `reportCard.attendance_present` that has never existed.
+    attendance: raw.attendance
+      ? (() => {
+          const a = raw.attendance as AnyRecord;
+          return {
+            total: num(a.total, 0),
+            sick: num(a.sick, 0),
+            permit: num(a.permit, 0),
+            absent: num(a.absent, 0),
+            present: num(a.present, 0),
+            percentage: a.percentage != null ? num(a.percentage) : null,
+          };
+        })()
+      : undefined,
     reportCard: detailFromJson(reportRaw),
   };
 }
@@ -530,7 +546,15 @@ function parentReportCardRowFromJson(raw: AnyRecord): ParentReportCardRow {
 export interface SaveReportCardPayload {
   student_class_id: string;
   academic_year_id: string;
-  semester_id: string;
+  /**
+   * Optional — `save()` resolves the school's current semester when this
+   * is omitted, the same way `getDetail`/`getInitialData` already do.
+   * Required here previously, which pushed callers into supplying
+   * something; the raport detail screen supplied
+   * `academic.activeYear.id`, an ACADEMIC YEAR id, and every card it
+   * saved was keyed to a semester that was not this school's.
+   */
+  semester_id?: string;
   status?: ReportCardStatus;
   spiritual_predicate?: string;
   spiritual_description?: string;

@@ -16,7 +16,7 @@
   works from a fresh browser session.
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
@@ -437,6 +437,55 @@ function flagSubscribeIntent(): void {
 }
 
 /**
+ * Account menu open state.
+ *
+ * This used to be pure CSS: `.sv-account:hover .sv-account-menu`. That has
+ * no touch equivalent — a phone or tablet never produces :hover, so the menu
+ * could not be opened at all on mobile, and on desktop the 8px gap between
+ * the avatar and the panel closed it mid-travel (fixed by a hover bridge in
+ * !1067, now superseded). Driving it from state makes both inputs behave the
+ * same: tap or click the avatar to toggle, tap or click away to dismiss.
+ */
+const accountMenuOpen = ref(false);
+const accountRef = ref<HTMLElement | null>(null);
+
+function toggleAccountMenu(): void {
+  accountMenuOpen.value = !accountMenuOpen.value;
+}
+
+function closeAccountMenu(): void {
+  accountMenuOpen.value = false;
+}
+
+/**
+ * Dismiss on any pointer press outside the menu. Bound to `pointerdown`
+ * rather than `click` so a tap that starts outside closes on touch-down
+ * instead of waiting for the release. The guard skips presses inside
+ * `.sv-account`, so pressing the avatar reaches its own click handler and
+ * the toggle keeps working instead of closing and reopening.
+ */
+function onDocumentPointerDown(e: PointerEvent): void {
+  if (!accountMenuOpen.value) return;
+  const root = accountRef.value;
+  if (root && e.target instanceof Node && root.contains(e.target)) return;
+  closeAccountMenu();
+}
+
+function onDocumentKeydown(e: KeyboardEvent): void {
+  if (e.key === 'Escape') closeAccountMenu();
+}
+
+onMounted(() => {
+  document.addEventListener('pointerdown', onDocumentPointerDown);
+  document.addEventListener('keydown', onDocumentKeydown);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', onDocumentPointerDown);
+  document.removeEventListener('keydown', onDocumentKeydown);
+});
+
+/**
  * Ganti akun Google. The user got here signed in with the wrong Gmail
  * (e.g. clicked the wrong Chrome profile) and needs to swap. We clear
  * the session locally + on the server, reset the picker state, then
@@ -445,6 +494,7 @@ function flagSubscribeIntent(): void {
  */
 async function onSwitchAccount(): Promise<void> {
   if (loggingOut.value) return;
+  closeAccountMenu();
   loggingOut.value = true;
   try {
     await auth.logout();
@@ -491,12 +541,21 @@ watch(() => auth.isAuthenticated, (v) => {
         </a>
         <div
           v-if="auth.isAuthenticated"
+          ref="accountRef"
           class="sv-account"
         >
-          <div class="sv-avatar" :title="auth.user?.email ?? undefined">
+          <button
+            type="button"
+            class="sv-avatar"
+            :title="auth.user?.email ?? undefined"
+            :aria-expanded="accountMenuOpen"
+            aria-haspopup="menu"
+            aria-label="Menu akun"
+            @click="toggleAccountMenu"
+          >
             {{ (auth.user?.name ?? auth.user?.email ?? '?').slice(0, 2).toUpperCase() }}
-          </div>
-          <div class="sv-account-menu">
+          </button>
+          <div class="sv-account-menu" :class="{ 'is-open': accountMenuOpen }">
             <div class="sv-account-email">
               {{ auth.user?.email ?? auth.user?.name ?? 'Akun Google' }}
             </div>
@@ -784,6 +843,8 @@ watch(() => auth.isAuthenticated, (v) => {
 .sv-account {
   position: relative;
   display: flex; align-items: center;
+  /* How far the panel floats below the avatar. */
+  --sv-account-gap: 8px;
 }
 .sv-avatar {
   width: 30px; height: 30px; border-radius: 50%;
@@ -791,10 +852,18 @@ watch(() => auth.isAuthenticated, (v) => {
   display: grid; place-items: center;
   font-size: 11px; font-weight: 600;
   cursor: pointer;
+  /* It is a <button> now (tappable + focusable); strip the UA chrome so it
+     still renders as the plain circle the mockup asks for. */
+  border: none; padding: 0; margin: 0;
+  font-family: inherit; line-height: 1;
+  -webkit-appearance: none; appearance: none;
+}
+.sv-avatar:focus-visible {
+  outline: 2px solid #1B6FB8; outline-offset: 2px;
 }
 .sv-account-menu {
   position: absolute;
-  top: calc(100% + 8px); right: 0;
+  top: calc(100% + var(--sv-account-gap)); right: 0;
   min-width: 210px;
   background: #FFFFFF;
   border: 0.5px solid #E2E8F0;
@@ -804,13 +873,23 @@ watch(() => auth.isAuthenticated, (v) => {
   padding: 10px;
   opacity: 0; transform: translateY(-4px);
   pointer-events: none;
-  transition: opacity 0.15s, transform 0.15s;
+  /*
+    `visibility: hidden` while closed matters as much as opacity: without it
+    the switch button stays in the tab order behind an invisible panel, so a
+    keyboard user tabs into a control they cannot see. Delayed to 0.15s so
+    the fade still plays on the way out.
+  */
+  visibility: hidden;
+  transition: opacity 0.15s, transform 0.15s, visibility 0s linear 0.15s;
   z-index: 20;
 }
-.sv-account:hover .sv-account-menu,
-.sv-account:focus-within .sv-account-menu {
+/* Open state is driven by `accountMenuOpen`, not by :hover — see the
+   toggle in the script block for why. */
+.sv-account-menu.is-open {
+  visibility: visible;
   opacity: 1; transform: translateY(0);
   pointer-events: auto;
+  transition: opacity 0.15s, transform 0.15s, visibility 0s;
 }
 .sv-account-email {
   font-size: 11.5px; color: #0F172A;

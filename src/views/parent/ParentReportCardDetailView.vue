@@ -151,12 +151,19 @@ const publishedLabel = computed(() => {
 
 const attendanceTotal = computed(() => {
   if (!row.value) return 0;
+  // `attendance.total` is the server's denominator — the count of
+  // distinct dates this enrolment has any record for. Re-deriving it
+  // here read `reportCard.attendance_present`, which is not a column
+  // and not an accessor, so `present` was always 0 and the total came
+  // out short by exactly the days the student attended.
+  const a = row.value.attendance;
+  if (a) return a.total;
   const r = row.value.reportCard;
-  const present = Number(r.attendance_present ?? 0);
-  const sick = Number(r.attendance_sick ?? 0);
-  const permit = Number(r.attendance_permit ?? 0);
-  const absent = Number(r.attendance_absent ?? 0);
-  return present + sick + permit + absent;
+  return (
+    Number(r.attendance_sick ?? 0) +
+    Number(r.attendance_permit ?? 0) +
+    Number(r.attendance_absent ?? 0)
+  );
 });
 
 async function downloadPdf(variant: 'certificate' | 'raport' = 'certificate') {
@@ -365,7 +372,7 @@ const heroChipLabel = computed(() => {
               </p>
               <p class="text-lg font-black mt-1 text-violet-700 tabular-nums">
                 <template
-                  v-if="row.rank !== null && row.total_in_class !== null"
+                  v-if="row.rank != null && row.total_in_class != null"
                 >
                   {{ row.rank
                   }}<span class="text-slate-400 text-[13px]"
@@ -382,7 +389,7 @@ const heroChipLabel = computed(() => {
                 {{ t('wali.sekolah.reportCardDetail.kpiAttendance') }}
               </p>
               <p class="text-lg font-black mt-1 text-emerald-700 tabular-nums">
-                <template v-if="row.attendance_pct !== null">
+                <template v-if="row.attendance_pct != null">
                   {{ Math.round(row.attendance_pct)
                   }}<span class="text-slate-400 text-[13px]">%</span>
                 </template>
@@ -563,7 +570,7 @@ const heroChipLabel = computed(() => {
                   {{ t('attendance.present') }}
                 </p>
                 <p class="text-base font-black mt-1 tabular-nums text-emerald-700">
-                  {{ row.reportCard.attendance_present ?? 0 }}
+                  {{ row.attendance?.present ?? 0 }}
                 </p>
               </div>
               <div

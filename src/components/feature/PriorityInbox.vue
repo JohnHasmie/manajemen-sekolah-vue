@@ -3,7 +3,6 @@
   Mirrors Flutter's `PendingInboxCard.priorityItems`.
 -->
 <script setup lang="ts">
-import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import NavIcon from './NavIcon.vue';
 
@@ -21,7 +20,7 @@ export interface PriorityItem {
   target_params: Record<string, any>;
 }
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   items: PriorityItem[];
   isLoading?: boolean;
   showHeader?: boolean;

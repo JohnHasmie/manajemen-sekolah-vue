@@ -9,14 +9,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { api } from '@/lib/http';
 import { ParentService } from '@/services/parent.service';
 import { AnnouncementService } from '@/services/announcements.service';
 import type { Announcement as ParentAnnouncement } from '@/types/parent';
 import {
   announcementFromJson,
   type Announcement,
-  type AnnouncementCategory,
   type AnnouncementPriority,
 } from '@/types/announcements';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';

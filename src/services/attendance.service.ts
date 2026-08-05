@@ -98,6 +98,36 @@ function attendanceFactsFromJson(raw: Record<string, any>): {
   };
 }
 
+/**
+ * Payload for `POST /attendance/export`.
+ *
+ * Named rather than inline because `downloadXlsx` used to reference it as
+ * `Parameters<typeof AttendanceService.exportXlsx>[0]` from inside the
+ * very object literal that defines `AttendanceService` — a circular
+ * reference that resolves to `unknown`, so the payload it forwarded was
+ * unchecked.
+ */
+export interface AttendanceExportPayload {
+  presenceData: Array<{
+    student_id: string;
+    student_name: string;
+    student_number?: string | null;
+    status: NonNullable<AttendanceStatus>;
+    notes?: string | null;
+  }>;
+  class_id: string;
+  class_name: string;
+  subject_id: string;
+  subject_name: string;
+  date: string;
+  teacher_id?: string;
+  teacher_name?: string;
+  lesson_hour_id?: string;
+  hour_number?: number | null;
+  /** @deprecated Use `hour_number`. */
+  jam_ke?: number | null;
+}
+
 export const AttendanceService = {
   /**
    * Build the per-session roster for the attendance detail / input
@@ -362,7 +392,13 @@ export const AttendanceService = {
   async getStudentHeatmap(args: {
     tingkat?: number;
     class_id?: string;
-    days?: 30 | 60 | 90;
+    /**
+     * Window length. The backend clamps to 7–90
+     * (`min(90, max(7, days ?? 30))` in AttendanceRepository), so this is
+     * any integer, not the three presets the picker happens to offer —
+     * RekapTab already asks for 31.
+     */
+    days?: number;
     end_date?: string;
     academic_year_id?: string;
   }): Promise<StudentHeatmapResponse> {
@@ -589,26 +625,7 @@ export const AttendanceService = {
    * payload + class/subject identity. Returns a downloadable Blob so
    * the caller can wrap it in `URL.createObjectURL` + an anchor.
    */
-  async exportXlsx(payload: {
-    presenceData: Array<{
-      student_id: string;
-      student_name: string;
-      student_number?: string | null;
-      status: NonNullable<AttendanceStatus>;
-      notes?: string | null;
-    }>;
-    class_id: string;
-    class_name: string;
-    subject_id: string;
-    subject_name: string;
-    date: string;
-    teacher_id?: string;
-    teacher_name?: string;
-    lesson_hour_id?: string;
-    hour_number?: number | null;
-    /** @deprecated Use `hour_number`. */
-    jam_ke?: number | null;
-  }): Promise<Blob> {
+  async exportXlsx(payload: AttendanceExportPayload): Promise<Blob> {
     const res = await api.post('/attendance/export', payload, {
       responseType: 'blob',
     });
@@ -617,7 +634,7 @@ export const AttendanceService = {
 
   /** Convenience helper: download the XLSX blob via an anchor click. */
   async downloadXlsx(
-    payload: Parameters<typeof AttendanceService.exportXlsx>[0],
+    payload: AttendanceExportPayload,
     suggestedName = 'presensi.xlsx',
   ): Promise<void> {
     const blob = await this.exportXlsx(payload);

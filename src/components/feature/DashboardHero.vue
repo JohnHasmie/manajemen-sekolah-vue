@@ -6,7 +6,6 @@
 import { computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { canonicalRole, ROLE_ADMIN, ROLE_TEACHER } from '@/utils/role';
-import InitialsAvatar from './InitialsAvatar.vue';
 import NavIcon from './NavIcon.vue';
 
 const props = defineProps<{

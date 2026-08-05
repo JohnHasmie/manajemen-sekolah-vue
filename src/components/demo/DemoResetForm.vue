@@ -156,7 +156,14 @@ watch(
     // Normalise legacy (SD/SMP/...) or new (ELEMENTARY/...) wire value
     // to the canonical English form, then keep only the four mainline
     // jenjang here (the picker doesn't offer MI / TK / Pesantren / etc.).
-    const j = normalizeEducationLevel(school.education_level ?? school.jenjang);
+    // `school` is a Record<string, unknown>, so both reads are `unknown`.
+    // normalizeEducationLevel already handles null/undefined and unknown
+    // strings; it just needs to be told the value is a string-ish.
+    const rawJenjang = (school.education_level ?? school.jenjang) as
+      | string
+      | null
+      | undefined;
+    const j = normalizeEducationLevel(rawJenjang);
     overrideJenjang.value =
       j === 'ELEMENTARY' || j === 'JUNIOR_HIGH' ||
       j === 'SENIOR_HIGH' || j === 'VOCATIONAL_HIGH'

@@ -35,11 +35,13 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import PersonnelCardsPanel from './widgets/PersonnelCardsPanel.vue';
 import StudentCardsPanel from './widgets/StudentCardsPanel.vue';
+import { useMeStore } from '@/stores/me';
 
 type TabKey = 'guru' | 'staf' | 'siswa';
 
 const route = useRoute();
 const router = useRouter();
+const me = useMeStore();
 
 interface TabDef {
   key: TabKey;
@@ -50,19 +52,31 @@ interface TabDef {
 // Kicker/title stay identical to the pre-rebuild copy so bookmarks +
 // muscle memory don't feel a naming change; only the body layout is
 // reworked.
-const TABS: TabDef[] = [
+const ALL_TABS: TabDef[] = [
   { key: 'guru', label: 'Guru', icon: 'user-check' },
   { key: 'staf', label: 'Staf', icon: 'briefcase' },
   { key: 'siswa', label: 'Siswa', icon: 'users' },
 ];
 
+// Siswa card issuance only makes sense for tenants that manage students —
+// attendance_staff-only trials (e.g. SDI Balangboddong) don't need it and
+// hitting the panel would 402 on the roster fetch. hasStudentContext is
+// the same "does this tenant touch students" concept used by the sidebar
+// gate (nav.classes, nav.subjects).
+const TABS = computed<TabDef[]>(() =>
+  ALL_TABS.filter((t) => t.key !== 'siswa' || me.hasStudentContext),
+);
+
 /**
  * Resolve the active tab from `?tab=` on the URL. Any unknown value
  * (missing, typo, legacy) collapses to `guru` — the safest default,
- * that being the tab most schools will land on first.
+ * that being the tab most schools will land on first. Also collapses
+ * `siswa` back to `guru` for tenants without student-context so a
+ * bookmarked `?tab=siswa` URL doesn't land on an invisible tab.
  */
 const activeTab = computed<TabKey>(() => {
   const raw = String(route.query.tab ?? '').toLowerCase();
+  if (raw === 'siswa' && !me.hasStudentContext) return 'guru';
   if (raw === 'staf' || raw === 'siswa') return raw;
   return 'guru';
 });

@@ -92,6 +92,7 @@ function onSearchInput(e: Event) {
       >
         <NavIcon name="search" :size="13" class="text-slate-400" />
         <input
+          data-testid="crud-search"
           :value="search"
           type="search"
           :placeholder="searchPlaceholder"

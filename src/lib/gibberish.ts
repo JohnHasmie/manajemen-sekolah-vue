@@ -51,7 +51,6 @@ const KEYBOARD_FRAGMENTS: ReadonlySet<string> = (() => {
   return set;
 })();
 
-const VOWELS_RE = /[aiueoAIUEO]/;
 const ALPHA_RE = /[a-zA-Z]/;
 
 /**

@@ -155,12 +155,6 @@ watch(chosenAmount, (next, prev) => {
   }, 550);
 });
 
-const perStudent = computed(() => {
-  const total = monthlyAmount.value;
-  const denom = props.studentCount;
-  if (!denom) return 0;
-  return Math.round(total / denom);
-});
 
 /**
  * Honest per-unit breakdown for the little grey line under the big

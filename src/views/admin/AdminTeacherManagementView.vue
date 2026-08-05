@@ -43,7 +43,6 @@ import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
 const { t: $t } = useI18n();
 const primaryColor = useRoleHex();
 const ayStore = useAcademicYearStore();
-const ayReadOnly = computed(() => ayStore.isReadOnly);
 
 const teachers = shallowRef<Teacher[]>([]);
 const classes = shallowRef<Classroom[]>([]);
@@ -210,7 +209,9 @@ async function reload(page = 1, opts: { skeleton?: boolean } = {}) {
       gender: filters.gender ?? undefined,
       employment_status: filters.employment_status ?? undefined,
       activity_status: filters.activity_status ?? undefined,
-      academic_year_id: ayStore.activeYearId || undefined,
+      // `selectedYearId` — the store exposes no `activeYearId`, so this
+      // was undefined and the teacher list went out unscoped by year.
+      academic_year_id: ayStore.selectedYearId || undefined,
     });
     teachers.value = res.items;
     pagination.value = res.pagination ?? null;
@@ -619,7 +620,7 @@ async function confirmDelete() {
     :state="state"
     :selected-count="selectedIds.size"
     :active-filter-count="activeFilterCount"
-    :hide-add-fab="ayReadOnly"
+    :hide-add-fab="false"
     :search-placeholder="$t('admin.teachers.searchPlaceholder')"
     :empty-title="$t('admin.teachers.emptyTitle')"
     :empty-description="$t('admin.teachers.emptyDesc')"
@@ -631,11 +632,15 @@ async function confirmDelete() {
     @retry="reload()"
   >
     <template #header-actions>
+      <!-- Teachers aren't scoped to an academic year (the teachers table has
+           no academic_year_id) — so we don't gate Import/Export on
+           ayReadOnly like AY-scoped entities (students, classes) do.
+           Fixes the attendance_staff-only tenant seeing Import disabled
+           just because they hadn't created an AY yet. -->
       <AdminExcelToolbar
         entity="teacher"
         entity-label="guru"
         :import-title="$t('admin.sekolah.teacher_management.import_title')"
-        :read-only="ayReadOnly"
         @refresh="reload(pagination?.current_page ?? 1, { skeleton: true })"
         @imported="reload(1)"
       />
@@ -678,7 +683,7 @@ async function confirmDelete() {
         icon-name="activity"
         :label="$t('admin.teachers.filterActivity')"
         :value="activityStatusChipValue"
-        tone="rose"
+        tone="red"
         @click="showActivityPicker = true"
       />
     </template>
@@ -775,7 +780,7 @@ async function confirmDelete() {
     :avatar-name="detailTarget.name"
     :avatar-color="primaryColor"
     :sections="detailSections"
-    :read-only="ayReadOnly"
+    :read-only="false"
     reset-password-label="Reset Password Guru"
     @close="detailTarget = null"
     @edit="detailEdit"

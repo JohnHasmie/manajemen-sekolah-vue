@@ -22,6 +22,13 @@
       key like `admin_teacher_management`) — the view maps it to a real
       Vue route name via `mapRouteName`. Unmapped hints render a
       disabled CTA + console.warn so the miss is visible in QA.
+    · Holding `readiness.view` does NOT imply holding the abilities the
+      lanes deep-link into, so both lanes gate on the destination's own
+      `requiredAbilities` (declared in the shared readiness-nav map).
+      Lane B DROPS unreachable rows — unscored, so nothing goes
+      unexplained. Lane A keeps them and disables the "Perbaiki" CTA
+      instead, because every Lane A row is a line item of the score
+      shown at the top of this very page.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
@@ -34,6 +41,7 @@ import LevelXpRing from '@/components/feature/gamification/LevelXpRing.vue';
 import PriorityInbox, { type PriorityItem } from '@/components/feature/PriorityInbox.vue';
 import AdminBadgeTile from '@/components/feature/readiness/AdminBadgeTile.vue';
 import { useAuthStore } from '@/stores/auth';
+import { useMeStore } from '@/stores/me';
 import {
   ReadinessService,
   type ReadinessPayload,
@@ -45,11 +53,29 @@ import {
 // exist as literal Vue route names; the mapping lives in a shared helper
 // (also consumed by the dashboard panel + control-center chips) so the
 // three surfaces never drift.
-import { resolveReadinessRouteName as mapRouteName } from '@/lib/readiness-nav';
+import {
+  canReachReadinessTarget,
+  resolveReadinessRouteName as mapRouteName,
+} from '@/lib/readiness-nav';
 
 const auth = useAuthStore();
+const me = useMeStore();
 const router = useRouter();
 const { t } = useI18n();
+
+/**
+ * Template-facing predicate: can this viewer actually open the screen a
+ * `target_route` hint points at? Same gate the dashboard panel and the
+ * control-center card use — one map, one answer, three surfaces.
+ */
+function canReach(targetRoute: string): boolean {
+  return canReachReadinessTarget(targetRoute, me);
+}
+
+/** Lane A "Perbaiki" CTA is live only when mapped AND reachable. */
+function canFix(targetRoute: string): boolean {
+  return !!mapRouteName(targetRoute) && canReach(targetRoute);
+}
 
 const state = ref<AsyncState<ReadinessPayload>>({ status: 'loading' });
 const payload = ref<ReadinessPayload | null>(null);
@@ -93,8 +119,14 @@ function severityDotClass(sev: string): string {
 // Lane B — reuse PriorityInbox.vue. Its item type is structurally
 // identical to `ReadinessAttentionItem`, but keep the mapping explicit
 // so a shape drift on either side is caught by the compiler.
+//
+// Lane B rows the viewer can't open are DROPPED here, not rendered
+// inert: they're unscored, so their absence explains itself, and
+// PriorityInbox has no disabled-row affordance to reuse.
 const attentionItems = computed<PriorityItem[]>(() => {
-  const items = payload.value?.attention_needed ?? [];
+  const items = (payload.value?.attention_needed ?? []).filter((item) =>
+    canReach(item.target_route),
+  );
   return items.map((item) => ({
     id: item.id,
     type: item.type,
@@ -109,6 +141,7 @@ const attentionItems = computed<PriorityItem[]>(() => {
 });
 
 function onCompletionTap(item: ReadinessCompletionItem) {
+  if (!canFix(item.target_route)) return;
   const name = mapRouteName(item.target_route);
   if (!name) return;
   router.push({ name, params: item.target_params as Record<string, string> });
@@ -395,10 +428,10 @@ onMounted(() => {
                   <button
                     type="button"
                     class="text-2xs font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 flex-shrink-0"
-                    :class="mapRouteName(item.target_route)
+                    :class="canFix(item.target_route)
                       ? 'bg-brand-cobalt/10 text-brand-cobalt hover:bg-brand-cobalt/20'
                       : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
-                    :disabled="!mapRouteName(item.target_route)"
+                    :disabled="!canFix(item.target_route)"
                     @click="onCompletionTap(item)"
                   >
                     {{ t('common.fix') }}
