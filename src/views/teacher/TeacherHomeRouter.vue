@@ -15,7 +15,7 @@ import { useAuthStore } from '@/stores/auth';
 import { tenantKindFromRaw } from '@/composables/useTenant';
 
 import TeacherDashboardView from '@/views/teacher/TeacherDashboardView.vue';
-import TutorTutoringHomeView from '@/views/teacher/tutoring/TutorTutoringHomeView.vue';
+import TutorTutoring2HomeView from '@/views/teacher/tutoring2/TutorTutoring2HomeView.vue';
 
 const auth = useAuthStore();
 
@@ -29,6 +29,6 @@ const isTutoringTenant = computed(() => {
 </script>
 
 <template>
-  <TutorTutoringHomeView v-if="isTutoringTenant" />
+  <TutorTutoring2HomeView v-if="isTutoringTenant" />
   <TeacherDashboardView v-else />
 </template>

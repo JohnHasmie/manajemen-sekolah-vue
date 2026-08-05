@@ -74,7 +74,7 @@ function whenLabel(iso?: string | null): string {
     <button
       type="button"
       class="inline-flex items-center gap-1 text-[14px] text-tutoring-text-mid hover:text-tutoring-text-hi"
-      @click="router.push({ name: 'admin.tutoring.groups' })"
+      @click="router.push({ name: 'admin.tutoring2.groups' })"
     >
       <NavIcon name="chevron-left" :size="13" /> {{ t('admin.bimbel.group_detail.back') }}
     </button>

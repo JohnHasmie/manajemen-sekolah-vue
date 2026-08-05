@@ -129,8 +129,8 @@ const leadHintLine = computed(() => {
   return t('admin.bimbel.dashboard.hot_lead_hint', { days, name: l.name });
 });
 
-function goLeads() { router.push({ name: 'admin.tutoring.leads' }); }
-function goBills() { router.push({ name: 'admin.tutoring.bills' }); }
+function goLeads() { router.push({ name: 'admin.tutoring2.leads' }); }
+function goBills() { router.push({ name: 'admin.tutoring2.billing' }); }
 function goGroupDetail(g: TutoringGroup) {
   router.push({ name: 'admin.tutoring.group-detail', params: { groupId: g.id } });
 }

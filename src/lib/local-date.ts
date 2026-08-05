@@ -28,3 +28,22 @@ export function toLocalYmd(d: Date = new Date()): string {
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
+
+/**
+ * Format a Date to `YYYY-MM` using the browser's LOCAL calendar
+ * components — not UTC.
+ *
+ * Same rationale as `toLocalYmd`: `d.toISOString().slice(0, 7)` returns
+ * the UTC month. In WIB (UTC+7) the last few hours of any month roll
+ * back a full month when serialized via UTC — e.g. Aug 1 00:00–06:59
+ * WIB stringifies as `2026-07`. Any month-picker default computed from
+ * `toISOString()` then loads July's data on the morning of Aug 1.
+ *
+ * Prefer this helper anywhere the string is a CALENDAR MONTH the user
+ * sees (payout month, billing month picker, monthly report default).
+ */
+export function toLocalYm(d: Date = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}

@@ -24,7 +24,7 @@ import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
 import PriorityInbox from '@/components/feature/PriorityInbox.vue';
-import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
+import TenantEntryBanner from '@/components/feature/TenantEntryBanner.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
 import { usePriorityInbox } from '@/composables/usePriorityInbox';
@@ -103,7 +103,7 @@ function openTutoring() {
   const studentId = current.value.student_id as string | undefined;
   if (!studentId) return;
   router.push({
-    name: 'parent.tutoring.overview',
+    name: 'parent.tutoring2.home',
     params: { studentId },
     query: { name: (current.value.name as string | undefined) ?? t('wali.sekolah.dashboard.anakFallback') },
   });
@@ -320,7 +320,7 @@ watch(sliceKey, () => {
           </section>
 
           <!-- Bimbel entry — only for tutoring-center tenants. -->
-          <TutoringEntryBanner
+          <TenantEntryBanner
             :title="t('tutoring.entry.parentTitle')"
             :subtitle="t('tutoring.entry.parentSub')"
             @click="openTutoring"

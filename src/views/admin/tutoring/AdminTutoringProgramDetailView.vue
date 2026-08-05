@@ -35,9 +35,8 @@ const programName = String(route.query.name ?? 'Program');
 
 function goEnroll() {
   router.push({
-    name: 'admin.tutoring.enroll',
-    params: { programId },
-    query: { name: programName },
+    name: 'admin.tutoring2.enrollments',
+    query: { programId, name: programName },
   });
 }
 
@@ -49,9 +48,8 @@ const loading = ref(true);
 function openAssessment(a: TutoringAssessment) {
   if (!a.questions_count) return;
   router.push({
-    name: 'admin.tutoring.assessment-detail',
-    params: { assessmentId: a.id },
-    query: { name: a.title },
+    name: 'admin.tutoring2.assessments',
+    query: { assessmentId: a.id, name: a.title },
   });
 }
 

@@ -33,7 +33,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import PriorityInbox, { type PriorityItem } from '@/components/feature/PriorityInbox.vue';
 import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
-import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
+import TenantEntryBanner from '@/components/feature/TenantEntryBanner.vue';
 import GamificationHighlightCard from '@/components/feature/gamification/GamificationHighlightCard.vue';
 import {
   TeacherProgressService,
@@ -505,9 +505,9 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
           </section>
 
           <!-- Bimbel entry — only for tutoring-center tenants. -->
-          <TutoringEntryBanner
+          <TenantEntryBanner
             :subtitle="t('tutoring.entry.tutorSub')"
-            @click="router.push({ name: 'teacher.tutoring.sessions' })"
+            @click="router.push({ name: 'teacher.tutoring2.sessions' })"
           />
           </template>
 

@@ -66,7 +66,7 @@ async function submit() {
     <button
       type="button"
       class="inline-flex items-center gap-1 text-[13px] text-tutoring-text-mid hover:text-tutoring-text-hi"
-      @click="router.push({ name: 'teacher.tutoring.profile' })"
+      @click="router.push({ name: 'teacher.tutoring2.profile' })"
     >
       <NavIcon name="chevron-left" :size="13" /> {{ t('tutor.bimbel.change_password.back') }}
     </button>
@@ -103,7 +103,7 @@ async function submit() {
         </div>
         <div v-if="message" class="rounded-lg px-3 py-2 text-[13px]" :class="message.kind === 'ok' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/10 text-rose-700 dark:text-rose-300'">{{ message.text }}</div>
         <div class="flex gap-2 pt-2">
-          <button type="button" class="flex-1 rounded-lg border border-tutoring-border bg-tutoring-panel px-3 py-2 text-[14px] font-bold text-tutoring-text-hi hover:bg-tutoring-border-soft" @click="router.push({ name: 'teacher.tutoring.profile' })">{{ t('tutor.bimbel.change_password.cancel') }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-tutoring-border bg-tutoring-panel px-3 py-2 text-[14px] font-bold text-tutoring-text-hi hover:bg-tutoring-border-soft" @click="router.push({ name: 'teacher.tutoring2.profile' })">{{ t('tutor.bimbel.change_password.cancel') }}</button>
           <button type="submit" :disabled="!canSubmit" class="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50">{{ saving ? t('tutor.bimbel.change_password.saving') : t('tutor.bimbel.change_password.save_btn') }}</button>
         </div>
       </form>

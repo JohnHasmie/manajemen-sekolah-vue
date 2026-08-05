@@ -33,7 +33,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
-import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
+import TenantEntryBanner from '@/components/feature/TenantEntryBanner.vue';
 import AdminControlCenterCard from '@/components/feature/AdminControlCenterCard.vue';
 import AdminAttendanceOverviewCard from '@/components/feature/AdminAttendanceOverviewCard.vue';
 import SubscriptionMiniRow from '@/components/feature/SubscriptionMiniRow.vue';
@@ -400,9 +400,9 @@ function gotoModules() {
             </section>
 
             <!-- Bimbel entry — only for tutoring-center tenants. -->
-            <TutoringEntryBanner
+            <TenantEntryBanner
               :subtitle="t('admin.sekolah.dashboard.tutoring_banner_subtitle')"
-              @click="router.push({ name: 'admin.tutoring.programs' })"
+              @click="router.push({ name: 'admin.tutoring2.programs' })"
             />
           </template>
 
