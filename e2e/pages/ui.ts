@@ -55,11 +55,34 @@ export function crud(page: Page) {
     addFab: page.getByTestId('crud-add-fab'),
 
     async searchFor(term: string): Promise<void> {
+      // Waits for the request the search actually fires, not for a fixed
+      // slice of time.
+      //
+      // The previous comment here said the field is debounced. It is
+      // not: AdminCrudScaffold emits on every change of its search ref
+      // and each roster's `onSearch` calls `reload(1)` straight away.
+      // The 600 ms was pure slop, and `teachers › search` failed about
+      // one run in six when the box ran slower than that guess.
+      //
+      // `networkidle` genuinely is unusable on some of these pages, but
+      // that is a separate fact and not a reason to guess at a delay.
+      if (!term) {
+        throw new Error(
+          'searchFor() needs a non-empty term — it waits for the request carrying it. ' +
+            'To clear the box, use the reset control instead.',
+        );
+      }
+
+      // Registered BEFORE fill(): the request can be answered faster than
+      // the next await resumes, and a listener attached afterwards would
+      // wait for a response that has already come and gone.
+      const settled = page.waitForResponse(
+        (r) => r.request().method() === 'GET' && decodeURIComponent(r.url()).includes(`search=${term}`),
+        { timeout: 20_000 },
+      );
+
       await page.getByTestId('crud-search').fill(term);
-      // The field is debounced. `networkidle` is NOT usable here — these
-      // pages poll, so it never arrives — so give the request time to go
-      // out and let the caller's own assertion do the waiting.
-      await page.waitForTimeout(600);
+      await settled;
     },
 
     /**
