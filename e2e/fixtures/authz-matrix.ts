@@ -212,6 +212,34 @@ export const DENY_MATRIX: MatrixRow[] = [
       'stops a future sweep from "fixing" it into a 403 and taking the parent inbox with it',
   },
 
+  // ── class import template (backend !645) ──────────────────────────
+  //
+  // Not a blank form despite the name: it ships every class in the
+  // school plus each one's homeroom teacher, i.e. the roster as a
+  // spreadsheet. `import` on the same controller already required
+  // school.class.manage; the template feeding it did not.
+  {
+    fixture: 'parent',
+    method: 'GET',
+    path: '/class/template',
+    expect: 403,
+    because: 'the class template is a pre-filled roster export, not a blank form',
+  },
+  {
+    fixture: 'teacher',
+    method: 'GET',
+    path: '/class/template',
+    expect: 403,
+    because: 'school.class.manage is admin-only, and importing classes is an admin flow',
+  },
+  {
+    fixture: 'admin',
+    method: 'GET',
+    path: '/class/template',
+    expect: 200,
+    because: 'CONTROL: AdminImportExcelModal downloads this before an import',
+  },
+
 ];
 
 /**
