@@ -29,9 +29,30 @@ import type { Session } from './auth';
  * invisible to each other without any coordination.
  */
 export function namespaceFor(testInfo: TestInfo): string {
-  const slug = testInfo.title.replace(/\W+/g, '').slice(0, 10);
+  // Built from the test's GROUP as well as its own title.
+  //
+  // `testInfo.title` alone was not unique, and the rule this function
+  // exists to enforce — name it, own it — quietly did not hold.
+  // rosters.spec.ts is table-driven: all five rosters run tests with
+  // IDENTICAL titles, so `admin · teachers → edit · …` and
+  // `admin · subjects → edit · …` both produced
+  // `E2E-local-p0-editthecha` and were free to match each other's rows.
+  //
+  // Both halves are needed. The group alone would collide every test
+  // WITHIN a roster; the title alone collides the same test ACROSS
+  // rosters. Ten characters each keeps the names short enough to read in
+  // a failure message while staying distinct for the current specs
+  // (adminteach / adminstaff / adminclass / adminsubje / adminstude).
+  const compact = (value: string, max: number) => value.replace(/\W+/g, '').slice(0, max);
 
-  return `E2E-${process.env.E2E_RUN_ID ?? 'local'}-p${testInfo.parallelIndex}-${slug}`;
+  // titlePath is [file, ...describes, title]; taking the last two from
+  // the end rather than by index keeps this working for specs with no
+  // describe block, where the parent is simply the file name.
+  const path = testInfo.titlePath;
+  const leaf = compact(path[path.length - 1] ?? '', 10);
+  const group = compact(path[path.length - 2] ?? '', 10);
+
+  return `E2E-${process.env.E2E_RUN_ID ?? 'local'}-p${testInfo.parallelIndex}-${group}-${leaf}`;
 }
 
 /**
