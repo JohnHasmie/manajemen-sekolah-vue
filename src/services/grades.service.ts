@@ -574,7 +574,7 @@ export const GradeService = {
    * Delete every grade row tied to one assessment in one shot.
    *
    * Mirrors Flutter `GradeService.deleteAssessmentBatch`:
-   *   `DELETE /grades/batch?mata_pelajaran_id=&jenis=&tanggal=[&title=]`
+   *   `DELETE /grades/batch?subject_id=&jenis=&tanggal=[&title=]`
    *
    * Backend matches the composite key on (subject_school_id, type,
    * date, title) so all grade rows + the implicit assessment row are
@@ -589,7 +589,7 @@ export const GradeService = {
     title?: string | null;
   }): Promise<void> {
     const params: Record<string, string> = {
-      mata_pelajaran_id: args.subject_id,
+      subject_id: args.subject_id,
       jenis: args.type,
       tanggal: args.date,
     };
