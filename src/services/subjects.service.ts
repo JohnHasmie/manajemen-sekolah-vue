@@ -428,12 +428,12 @@ export const SubjectService = {
     }
   },
 
-  /** GET /class-by-mata-pelajaran?subject_id=… — list classes attached to a subject. */
+  /** GET /class-by-subject?subject_id=… — list classes attached to a subject. */
   async getAttachedClasses(
     subjectId: string,
   ): Promise<Array<{ id: string; name: string; grade_level?: string | null; homeroom_teacher_name?: string | null; student_count?: number }>> {
     try {
-      const res = await api.get('/class-by-mata-pelajaran', {
+      const res = await api.get('/class-by-subject', {
         params: { subject_id: subjectId },
       });
       const body = res.data?.data ?? res.data ?? [];
