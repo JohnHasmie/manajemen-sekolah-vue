@@ -208,8 +208,21 @@ export interface SelfPayoutSummary {
   net_amount?: number;
 }
 
+/**
+ * Body of `POST /tutoring-v2/payouts/requests`.
+ *
+ * WIRE-KEY WARNING: the month field is `period_month`, NOT `month`.
+ * `SubmitPayoutRequestRequest` validates
+ * `period_month => required|regex:/^\d{4}-(0[1-9]|1[0-2])$/` with no
+ * `prepareForValidation` alias, so posting `month` 422s. This differs
+ * from {@link ClosePayoutMonthPayload} and the `?month=` read params,
+ * which really are called `month` — the asymmetry is backend truth,
+ * not a typo here. (Corrected in CLEAN-2 P2 when the tutor withdrawal
+ * dialog became the first caller of this payload.)
+ */
 export interface CreatePayoutRequestPayload {
-  month: string; // YYYY-MM
+  period_month: string; // YYYY-MM
+  /** Rupiah, positive integer — backend rule is `integer|min:1`. */
   amount: number;
   note?: string;
 }

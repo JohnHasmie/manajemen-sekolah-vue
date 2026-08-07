@@ -32,6 +32,7 @@ import { useI18n } from 'vue-i18n';
 import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
+import TutorTutoring2WithdrawalDialog from '@/components/tutoring2/TutorTutoring2WithdrawalDialog.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { PayoutsService } from '@/services/tutoring2/payouts';
 import type {
@@ -124,6 +125,17 @@ function formatMonthLabel(ym: string): string {
 }
 
 /**
+ * Withdrawal dialog (CLEAN-2 P2). Mounted only while open so its
+ * settings + summary fetches don't run on every earnings page view.
+ * On success we reload so the new pending request appears in the list.
+ */
+const withdrawalOpen = ref(false);
+
+function onWithdrawalSubmitted() {
+  void reload();
+}
+
+/**
  * Status → tone. Kept byte-identical to `statusTone` in
  * AdminTutoring2PayoutRequestsView so the same request reads the same
  * colour whether a tutor or an admin is looking at it. If you change
@@ -168,7 +180,23 @@ function requestTone(status: PayoutRequestStatus): StatusBadgeTone {
         type="month"
         class="rounded-md border px-3 py-1.5 text-sm"
       />
+      <button
+        v-if="isOnboarded"
+        type="button"
+        class="ml-auto rounded-lg bg-brand-cobalt px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90"
+        @click="withdrawalOpen = true"
+      >
+        {{ t('tutoring2.tutor.withdrawal.openCta') }}
+      </button>
     </div>
+
+    <TutorTutoring2WithdrawalDialog
+      v-if="withdrawalOpen"
+      :initial-month="month"
+      :initial-eligible="summary?.net_amount"
+      @close="withdrawalOpen = false"
+      @submitted="onWithdrawalSubmitted"
+    />
 
     <AsyncView :state="state" @retry="reload">
       <template #default>
