@@ -1893,6 +1893,16 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/teacher/tutoring2/TutorTutoring2RatingsView.vue'),
         meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
       },
+      {
+        // CLEAN-2 Phase 2 — greenfield replacement for
+        // `teacher.tutoring.earnings`. The legacy route stays live
+        // until the whole legacy tree is deleted at the end of this
+        // phase, so both resolve during the migration.
+        path: 'teacher/tutoring2/earnings',
+        name: 'teacher.tutoring2.earnings',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2EarningsView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
 
       // ────────────────────────────────────────────────────────────
       // Greenfield student (siswa) bimbel (WEB-5). Same coexistence

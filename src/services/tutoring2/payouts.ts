@@ -17,6 +17,7 @@ import { api } from '@/lib/http';
 import type { Pagination } from '@/types/api';
 import type {
   ClosePayoutMonthPayload,
+  CreatePayoutRequestPayload,
   ListPayoutRateParams,
   ListPayoutRequestParams,
   MarkPayoutRequestPaidPayload,
@@ -27,6 +28,7 @@ import type {
   PayoutSummaryMeta,
   PayoutSummaryRow,
   RejectPayoutRequestPayload,
+  SelfPayoutSummary,
   UpdatePayoutSettingsPayload,
   UpsertPayoutRatePayload,
 } from '@/types/tutoring2/payout';
@@ -112,6 +114,37 @@ export const PayoutsService = {
 
   async rollbackRequest(id: string): Promise<PayoutRequest> {
     const r = await api.patch<OneEnvelope<PayoutRequest>>(`${BASE}/requests/${id}/rollback`, {});
+    return r.data.data;
+  },
+
+  // ─── Self-service (tutor's own view) ─────────────────────────────
+
+  /**
+   * The calling tutor's own payout summary for `month` (default:
+   * backend's current period). Backend resolves the tutor from the
+   * auth context — there is deliberately no `user_id` param, unlike
+   * the legacy v1 endpoint. Admins wanting a tenant-wide view use
+   * {@link getAdminSummary} instead.
+   */
+  async getSelfSummary(params: { month?: string } = {}): Promise<SelfPayoutSummary> {
+    const r = await api.get<OneEnvelope<SelfPayoutSummary>>(`${BASE}/summary`, { params });
+    return r.data.data;
+  },
+
+  /**
+   * The calling tutor's own withdrawal requests. Same endpoint as
+   * {@link listRequests}; the backend scopes to the caller when they
+   * hold only `tutoring.payout.view_own`, so no client-side tutor
+   * filter is sent (sending one would be a no-op at best and an IDOR
+   * probe at worst).
+   */
+  async listMyRequests(params: { page?: number; per_page?: number } = {}) {
+    const r = await api.get<ListEnvelope<PayoutRequest>>(`${BASE}/requests`, { params });
+    return { items: r.data.data, pagination: r.data.meta };
+  },
+
+  async createRequest(payload: CreatePayoutRequestPayload): Promise<PayoutRequest> {
+    const r = await api.post<OneEnvelope<PayoutRequest>>(`${BASE}/requests`, payload);
     return r.data.data;
   },
 

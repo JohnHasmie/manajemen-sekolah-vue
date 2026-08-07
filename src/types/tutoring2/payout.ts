@@ -183,6 +183,37 @@ export interface PayoutSummaryMeta {
   tutor_count: number;
 }
 
+/**
+ * Self-scoped payout summary — what `GET /tutoring-v2/payouts/summary`
+ * returns for the CALLING tutor.
+ *
+ * Same field set as one {@link PayoutSummaryRow} of the tenant-wide
+ * admin aggregate, but the backend resolves `tutor_id` from the
+ * caller's `user_id` → `teachers.id` rather than accepting it as a
+ * param. A tutor with no `teachers` row on this tenant (never
+ * onboarded) gets an empty payload, hence every field is optional.
+ *
+ * Contract note vs the legacy v1 endpoint: v1 accepted `?user_id=` so
+ * an admin could read any tutor's summary through the tutor-side path.
+ * v2 deliberately does not — admins use `/payouts/admin-summary`
+ * instead. Do not reintroduce a `user_id` param here.
+ */
+export interface SelfPayoutSummary {
+  tutor_id?: string | null;
+  tutor_name?: string | null;
+  period_month?: string | null; // YYYY-MM
+  sessions_taught?: number;
+  base_amount?: number;
+  adjustments?: number;
+  net_amount?: number;
+}
+
+export interface CreatePayoutRequestPayload {
+  month: string; // YYYY-MM
+  amount: number;
+  note?: string;
+}
+
 export interface PayoutClose {
   id: string;
   period_month: string; // YYYY-MM

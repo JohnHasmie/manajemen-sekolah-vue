@@ -6801,6 +6801,17 @@
         "notFound": "Session not found",
         "title": "Session detail",
         "completed": "Session marked done"
+      },
+      "earnings": {
+        "title": "My Earnings",
+        "monthLabel": "Period",
+        "kpiNet": "Net earnings",
+        "kpiBase": "Base earnings",
+        "kpiAdjustments": "Adjustments",
+        "kpiSessions": "Sessions taught",
+        "notOnboarded": "Your account is not registered as a tutor at this tutoring center yet, so there are no earnings to calculate. Ask the admin to add you.",
+        "requestsTitle": "Recent withdrawal requests",
+        "requestsEmpty": "No withdrawal requests yet."
       }
     },
     "bills": {

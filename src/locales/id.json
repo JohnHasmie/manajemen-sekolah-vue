@@ -7658,6 +7658,17 @@
           "submitted": "Dikumpulkan",
           "graded": "Dinilai"
         }
+      },
+      "earnings": {
+        "title": "Honor Saya",
+        "monthLabel": "Periode",
+        "kpiNet": "Honor bersih",
+        "kpiBase": "Honor dasar",
+        "kpiAdjustments": "Penyesuaian",
+        "kpiSessions": "Sesi diajar",
+        "notOnboarded": "Akun kamu belum terdaftar sebagai tutor di bimbel ini, jadi belum ada honor yang bisa dihitung. Hubungi admin bimbel untuk didaftarkan.",
+        "requestsTitle": "Pengajuan pencairan terakhir",
+        "requestsEmpty": "Belum ada pengajuan pencairan."
       }
     }
   },
