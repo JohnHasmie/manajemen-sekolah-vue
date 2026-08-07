@@ -1384,39 +1384,6 @@ const routes: RouteRecordRaw[] = [
       // this array doesn't matter (Vue Router matches by path). Lazy
       // imports keep the bimbel bundle out of the school-only flows.
       {
-        path: 'parent/tutoring/:studentId/sessions',
-        name: 'parent.tutoring.sessions',
-        component: () => import('@/views/parent/tutoring/ParentSessionsView.vue'),
-        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
-      },
-      {
-        path: 'parent/tutoring/:studentId/activities',
-        name: 'parent.tutoring.activities',
-        component: () =>
-          import('@/views/parent/tutoring/ParentActivitiesView.vue'),
-        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
-      },
-      {
-        path: 'parent/tutoring/:studentId/progress',
-        name: 'parent.tutoring.progress',
-        component: () => import('@/views/parent/tutoring/ParentProgressView.vue'),
-        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
-      },
-      {
-        path: 'parent/tutoring/voucher',
-        name: 'parent.tutoring.vouchers',
-        component: () =>
-          import('@/views/parent/tutoring/ParentVouchersView.vue'),
-        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
-      },
-      {
-        path: 'parent/tutoring/:studentId/leaderboard',
-        name: 'parent.tutoring.leaderboard',
-        component: () =>
-          import('@/views/parent/tutoring/ParentLeaderboardView.vue'),
-        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
-      },
-      {
         path: 'parent/tutoring/notifikasi',
         name: 'parent.tutoring.notifications',
         component: () =>
@@ -1443,47 +1410,6 @@ const routes: RouteRecordRaw[] = [
         component: () =>
           import('@/views/parent/tutoring/ParentAppearanceView.vue'),
         meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
-      },
-      {
-        path: 'parent/tutoring/daftar-calon',
-        name: 'parent.tutoring.register-lead',
-        component: () =>
-          import('@/views/parent/tutoring/ParentRegisterLeadView.vue'),
-        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
-      },
-      {
-        path: 'parent/tutoring/daftar-anak',
-        name: 'parent.tutoring.enroll-new',
-        component: () =>
-          import('@/views/parent/tutoring/ParentEnrollWizardView.vue'),
-        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
-      },
-      {
-        path: 'admin/tutoring',
-        name: 'admin.tutoring.dashboard',
-        component: () =>
-          import('@/views/admin/tutoring/AdminTutoringDashboardView.vue'),
-        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
-      },
-      {
-        path: 'admin/tutoring/programs/:programId',
-        name: 'admin.tutoring.program-detail',
-        component: () =>
-          import('@/views/admin/tutoring/AdminTutoringProgramDetailView.vue'),
-        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
-      },
-      {
-        path: 'admin/tutoring/billing-settings',
-        name: 'admin.tutoring.billing-settings',
-        component: () =>
-          import('@/views/admin/tutoring/AdminTutoringBillingSettingsView.vue'),
-        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
-      },
-      {
-        path: 'admin/tutoring/groups/:groupId',
-        name: 'admin.tutoring.group-detail',
-        component: () => import('@/views/admin/tutoring/AdminTutoringGroupDetailView.vue'),
-        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
       },
       {
         path: 'admin/tutoring/profile',
@@ -1714,29 +1640,9 @@ const routes: RouteRecordRaw[] = [
         path: 'admin/tutoring2/payouts/summary',
         name: 'admin.tutoring2.payouts.summary',
         component: () => import('@/views/admin/tutoring2/AdminTutoring2PayoutSummaryView.vue'),
-        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },      },
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
 
-      {
-        path: 'teacher/tutoring/sessions/new',
-        name: 'teacher.tutoring.session-create',
-        component: () =>
-          import('@/views/teacher/tutoring/TutorCreateSessionView.vue'),
-        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
-      },
-      {
-        path: 'teacher/tutoring/earnings',
-        name: 'teacher.tutoring.earnings',
-        component: () =>
-          import('@/views/teacher/tutoring/TutorEarningsView.vue'),
-        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
-      },
-      {
-        path: 'teacher/tutoring/recurring',
-        name: 'teacher.tutoring.recurring',
-        component: () =>
-          import('@/views/teacher/tutoring/TutorRecurringSessionsView.vue'),
-        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
-      },
       {
         // Tutor Appearance — the light/dark mode picker for the bimbel
         // (tutor) surface. Route NAME contains "tutoring" so AppShell's
@@ -1762,13 +1668,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/teacher/tutoring/TutorNotificationsView.vue'),
         meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
       },
-      {
-        path: 'teacher/tutoring/leaderboard',
-        name: 'teacher.tutoring.leaderboard',
-        component: () => import('@/views/teacher/tutoring/TutorLeaderboardView.vue'),
-        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
-      },
-
       // ────────────────────────────────────────────────────────────
       // Greenfield tutor bimbel (WEB-4). Same coexistence rule as
       // WEB-3 admin: `teacher/tutoring2/*` + `teacher.tutoring2.*`,

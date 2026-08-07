@@ -53,15 +53,15 @@ interface Tile {
 }
 
 const academic = computed<Tile[]>(() => [
-  { label: t('wali.bimbel.more.tile_progress_label'), sub: t('wali.bimbel.more.tile_progress_sub'), icon: 'chart-bar', iconCls: 'bg-tutoring-accent-dim text-tutoring-hero', route: 'parent.tutoring.progress' },
-  { label: t('wali.bimbel.more.tile_leaderboard_label'), sub: t('wali.bimbel.more.tile_leaderboard_sub'), icon: 'star', iconCls: 'bg-tutoring-amber-dim text-amber-700', route: 'parent.tutoring.leaderboard' },
-  { label: t('wali.bimbel.more.tile_activities_label'), sub: t('wali.bimbel.more.tile_activities_sub'), icon: 'book', iconCls: 'bg-tutoring-accent-dim text-tutoring-hero', route: 'parent.tutoring.activities' },
+  { label: t('wali.bimbel.more.tile_progress_label'), sub: t('wali.bimbel.more.tile_progress_sub'), icon: 'chart-bar', iconCls: 'bg-tutoring-accent-dim text-tutoring-hero', route: 'parent.tutoring2.progress' },
+  { label: t('wali.bimbel.more.tile_leaderboard_label'), sub: t('wali.bimbel.more.tile_leaderboard_sub'), icon: 'star', iconCls: 'bg-tutoring-amber-dim text-amber-700', route: 'parent.tutoring2.leaderboard' },
+  { label: t('wali.bimbel.more.tile_activities_label'), sub: t('wali.bimbel.more.tile_activities_sub'), icon: 'book', iconCls: 'bg-tutoring-accent-dim text-tutoring-hero', route: 'parent.tutoring2.activities' },
 ]);
 
 const funnel = computed<Tile[]>(() => [
-  { label: t('wali.bimbel.more.tile_vouchers_label'), sub: t('wali.bimbel.more.tile_vouchers_sub'), icon: 'discount', iconCls: 'bg-tutoring-red-dim text-red-700', route: 'parent.tutoring.vouchers' },
-  { label: t('wali.bimbel.more.tile_register_lead_label'), sub: t('wali.bimbel.more.tile_register_lead_sub'), icon: 'user-plus', iconCls: 'bg-tutoring-green-dim text-green-700', route: 'parent.tutoring.register-lead' },
-  { label: t('wali.bimbel.more.tile_enroll_program_label'), sub: t('wali.bimbel.more.tile_enroll_program_sub'), icon: 'package', iconCls: 'bg-tutoring-accent-dim text-tutoring-hero', route: 'parent.tutoring.enroll-new' },
+  { label: t('wali.bimbel.more.tile_vouchers_label'), sub: t('wali.bimbel.more.tile_vouchers_sub'), icon: 'discount', iconCls: 'bg-tutoring-red-dim text-red-700', route: 'parent.tutoring2.vouchers' },
+  { label: t('wali.bimbel.more.tile_register_lead_label'), sub: t('wali.bimbel.more.tile_register_lead_sub'), icon: 'user-plus', iconCls: 'bg-tutoring-green-dim text-green-700', route: 'parent.tutoring2.register-lead' },
+  { label: t('wali.bimbel.more.tile_enroll_program_label'), sub: t('wali.bimbel.more.tile_enroll_program_sub'), icon: 'package', iconCls: 'bg-tutoring-accent-dim text-tutoring-hero', route: 'parent.tutoring2.enroll' },
 ]);
 
 const account = computed<Tile[]>(() => [

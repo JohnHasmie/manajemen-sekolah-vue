@@ -46,7 +46,7 @@ function pick(id: string) {
 
 function onChipClick() {
   if (children.value.length === 0) {
-    router.push({ name: 'parent.tutoring.register-lead' });
+    router.push({ name: 'parent.tutoring2.register-lead' });
     return;
   }
   open.value = !open.value;
