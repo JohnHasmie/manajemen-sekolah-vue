@@ -1,5 +1,5 @@
 {
-  "buildCommand": "vue-tsc --noEmit && vite build",
+  "buildCommand": "vue-tsc --build --force && vite build",
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
