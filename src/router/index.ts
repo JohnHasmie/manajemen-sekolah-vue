@@ -1893,6 +1893,98 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/teacher/tutoring2/TutorTutoring2RatingsView.vue'),
         meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
       },
+
+      // ── CLEAN-2 Phase 2 — greenfield replacements for the legacy
+      //    `*/tutoring/*` views. Both trees resolve during the migration;
+      //    the legacy routes are deleted once every consumer is repointed.
+      //    Only `parent.tutoring2.sessions` carries an `ability`: a wali
+      //    genuinely holds `tutoring.session.view`, whereas gating
+      //    register-lead or vouchers would make the screens unreachable and
+      //    hide the panel that explains the missing permission.
+      {
+        path: 'admin/tutoring2',
+        name: 'admin.tutoring2.dashboard',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2DashboardView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/settings/billing',
+        name: 'admin.tutoring2.settings.billing',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2BillingSettingsView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/groups/:groupId',
+        name: 'admin.tutoring2.group-detail',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2GroupDetailView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'admin/tutoring2/programs/:programId',
+        name: 'admin.tutoring2.program-detail',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2ProgramDetailView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/activities/:studentId',
+        name: 'parent.tutoring2.activities',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2ActivitiesView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/enroll/:studentId',
+        name: 'parent.tutoring2.enroll',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2EnrollWizardView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/leaderboard/:studentId',
+        name: 'parent.tutoring2.leaderboard',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2LeaderboardView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/progress/:studentId',
+        name: 'parent.tutoring2.progress',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2ProgressView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/register-lead',
+        name: 'parent.tutoring2.register-lead',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2RegisterLeadView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'parent/tutoring2/sessions/:studentId',
+        name: 'parent.tutoring2.sessions',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2SessionsView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module', ability: 'tutoring.session.view' },
+      },
+      {
+        path: 'parent/tutoring2/vouchers/:studentId',
+        name: 'parent.tutoring2.vouchers',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2VouchersView.vue'),
+        meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/sessions/new',
+        name: 'teacher.tutoring2.session-create',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2CreateSessionView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/sessions/recurring',
+        name: 'teacher.tutoring2.sessions-recurring',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2RecurringSessionsView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      {
+        path: 'teacher/tutoring2/leaderboard',
+        name: 'teacher.tutoring2.leaderboard',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2LeaderboardView.vue'),
+        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
       {
         // CLEAN-2 Phase 2 — greenfield replacement for
         // `teacher.tutoring.earnings`. The legacy route stays live
