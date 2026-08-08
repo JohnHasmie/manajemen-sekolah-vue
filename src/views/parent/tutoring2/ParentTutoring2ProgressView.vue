@@ -97,14 +97,19 @@ interface ProgressPayload {
   peerAverageByProgram: Record<string, number>;
 }
 
-const { state, reload } = useDataRefresh<ProgressPayload>(async () => {
-  const empty: ProgressPayload = { points: [], programs: [], peerAverageByProgram: {} };
-  if (!studentId) return empty;
+// `ProgressPayload | null` — see the note in the sibling Activities view.
+// useDataRefresh's `isEmpty()` recognises only null/undefined/empty-array,
+// so returning an object with zero points made AsyncView render its
+// content branch over nothing instead of the empty state. That was true
+// of this view before the endpoint swap too; fixed here while in the file.
+const { state, reload } = useDataRefresh<ProgressPayload | null>(async () => {
+  if (!studentId) return null;
 
   // ONE request. This used to fetch enrollments, then every assessment,
   // then one scores call PER ASSESSMENT — capped at 40 so it could not
   // run away. See the file header for what that cost.
   const progress = await TutoringStudentsService.getProgress(studentId);
+  if (progress.points.length === 0) return null;
 
   return {
     // Already oldest-first and already filtered to published assessments

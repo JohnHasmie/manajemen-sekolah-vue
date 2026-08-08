@@ -130,14 +130,24 @@ const EMPTY_SUMMARY: StudentSubmissionsSummary = {
   pending: 0,
 };
 
-const { state, reload } = useDataRefresh<Worklist>(async () => {
-  if (!studentId) return { rows: [], summary: EMPTY_SUMMARY, truncated: false };
+// `Worklist | null`, not `Worklist`, and the null matters: useDataRefresh
+// decides `status: 'empty'` via `isEmpty()`, which only recognises null,
+// undefined, or an EMPTY ARRAY. This loader returns an object, so a
+// worklist with zero rows would count as `content` and AsyncView would
+// render its content branch over nothing — the "belum ada aktivitas"
+// empty state would never appear for a newly enrolled child.
+const { state, reload } = useDataRefresh<Worklist | null>(async () => {
+  if (!studentId) return null;
 
   // One request per page, and each row already carries THIS child's own
   // submission. See the file header for the bug the old fan-out caused.
   const first = await SubmissionsService.listByStudent(studentId, {
     per_page: PER_PAGE,
   });
+
+  // Genuinely nothing to show — hand back null so AsyncView renders its
+  // empty state rather than an empty content branch.
+  if (first.total === 0) return null;
 
   const rows = [...first.items];
   const pages = Math.min(first.lastPage, PAGE_LIMIT);
