@@ -231,8 +231,8 @@ export function notificationHref(
       // tutors land on their earnings page (which lists the recent
       // withdrawal history). The web app has no `/:id` detail route for
       // a single payout request — the list IS the experience.
-      if (audience === 'admin') return '/admin/tutoring/payout-requests';
-      return '/teacher/tutoring/earnings';
+      if (audience === 'admin') return '/admin/tutoring2/payouts/requests';
+      return '/teacher/tutoring2/earnings';
     }
 
     // `system` / `other` have no meaningful in-app target.
