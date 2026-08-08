@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { loadManifest } from './fixtures/accounts';
+import { uiFixtures } from './fixtures/accounts';
 import { applySession, isOnLogin, login } from './fixtures/auth';
 
 /**
@@ -38,7 +38,6 @@ interface PageReport {
   clientErrors: string[];
 }
 
-const manifest = loadManifest();
 
 /** Text length below which a page counts as "rendered nothing". */
 const MIN_CONTENT_CHARS = 20;
@@ -74,7 +73,11 @@ async function collectNavHrefs(page: Page): Promise<string[]> {
   return [...new Set(hrefs)];
 }
 
-for (const account of manifest.fixtures) {
+// Walks the UI, so it takes `uiFixtures()` rather than every fixture in
+// the manifest: `multi_role` holds two roles and no profile rows, and
+// driving it through teacher pages produced 404s and 403s that read as
+// product bugs. See the `api_only` note on E2EFixture.
+for (const account of uiFixtures()) {
   // Titled by SURFACE, not role: `teacher` and `wali_kelas` are both the
   // `teacher` role, and a report showing "teacher" twice would hide which
   // of the two navs was actually walked.

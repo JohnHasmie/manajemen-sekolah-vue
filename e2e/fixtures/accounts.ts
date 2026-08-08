@@ -29,7 +29,18 @@ export type FixtureKey =
   | 'wali_kelas'
   | 'parent'
   | 'staff'
-  | 'super_admin';
+  | 'super_admin'
+  | 'multi_role';
+
+export const FIXTURE_KEYS: readonly FixtureKey[] = [
+  'admin',
+  'teacher',
+  'wali_kelas',
+  'parent',
+  'staff',
+  'super_admin',
+  'multi_role',
+] as const;
 
 export interface E2EFixture {
   key: FixtureKey;
@@ -43,6 +54,20 @@ export interface E2EFixture {
   child_class_id?: string;
   /** super_admin only: reaches every demo school, not just the fixture. */
   read_only?: boolean;
+  /**
+   * Do not drive this account through the browser.
+   *
+   * `multi_role` holds two roles and NO profile rows for either — no
+   * `teachers` row, no student naming it as guardian. That is deliberate:
+   * it exists solely to prove `X-Active-Role` narrows abilities, which is
+   * decided by `role_id → roles → role_permissions` and needs no profile.
+   * Walking it through the UI instead renders teacher pages for an account
+   * with no teacher, which 404s and 403s in ways that look like product
+   * bugs and are not.
+   */
+  api_only?: boolean;
+  /** multi_role only: every role the account holds. */
+  roles?: string[];
   warning?: string;
 }
 
@@ -112,9 +137,50 @@ export function loadManifest(): E2EManifest {
     );
   }
 
+  // Nothing type-checks this directory — `e2e/` is in no tsconfig include,
+  // so `vue-tsc` never sees it. That is exactly how `multi_role` came to
+  // sit in the manifest for weeks while `FixtureKey` did not list it and
+  // `api_only` was declared by the seeder and honoured by nobody. A key
+  // the suite does not know about must fail here, at load, or it silently
+  // gets driven through whatever loop happens to iterate the list.
+  const unknown = manifest.fixtures
+    .map((f) => f.key)
+    .filter((k) => !FIXTURE_KEYS.includes(k));
+
+  if (unknown.length > 0) {
+    throw new Error(
+      `E2E manifest carries fixture(s) this suite does not know: ${unknown.join(', ')}.\n` +
+        `Known: ${FIXTURE_KEYS.join(', ')}.\n` +
+        'Add the key to FixtureKey/FIXTURE_KEYS and decide whether it is safe to ' +
+        'drive through the browser (see uiFixtures) — do not just widen the type.',
+    );
+  }
+
   cached = manifest;
 
   return manifest;
+}
+
+/**
+ * The fixtures a browser-driving loop may walk.
+ *
+ * Anything marked `api_only` is excluded: see the flag's note on
+ * `E2EFixture`. The seeder has documented that contract since the account
+ * was minted ("never used as a login fixture for the UI"); this is the
+ * first thing that enforces it.
+ */
+export function uiFixtures(): E2EFixture[] {
+  const usable = loadManifest().fixtures.filter((f) => !f.api_only);
+
+  if (usable.length === 0) {
+    throw new Error(
+      'Every fixture in the manifest is marked api_only, so every UI walk would ' +
+        'silently cover nothing. Re-seed:\n' +
+        SEED_COMMAND,
+    );
+  }
+
+  return usable;
 }
 
 /** Look a fixture up by surface, failing loudly when the seeder skipped it. */
@@ -123,7 +189,7 @@ export function fixture(key: FixtureKey): E2EFixture {
 
   if (!found) {
     throw new Error(
-      `No '${key}' fixture in the manifest. The seeder asserts all six surfaces exist, ` +
+      `No '${key}' fixture in the manifest. The seeder asserts every surface exists, ` +
         `so this means the manifest predates that check — re-seed:\n${SEED_COMMAND}`,
     );
   }

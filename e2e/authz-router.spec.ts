@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { loadManifest } from './fixtures/accounts';
+import { loadManifest, uiFixtures } from './fixtures/accounts';
 import { applySession, login } from './fixtures/auth';
 import {
   concretise,
@@ -49,7 +49,11 @@ interface Decision {
   observed: string;
 }
 
-for (const account of manifest.fixtures) {
+// Walks the UI, so it takes `uiFixtures()` rather than every fixture in
+// the manifest: `multi_role` holds two roles and no profile rows, and
+// driving it through teacher pages produced 404s and 403s that read as
+// product bugs. See the `api_only` note on E2EFixture.
+for (const account of uiFixtures()) {
   test(`router authz — ${account.key}`, async ({ browser }) => {
     const context = await browser.newContext();
     await applySession(context, await login(account), account);
