@@ -1,4 +1,5 @@
 import { fileURLToPath, URL } from 'node:url';
+import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vitest/config';
 
 /**
@@ -15,6 +16,7 @@ import { defineConfig } from 'vitest/config';
  * had ever run. This is what makes them executable.
  */
 export default defineConfig({
+  plugins: [vue()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -40,8 +42,6 @@ export default defineConfig({
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
-      'src/views/**/tutoring2/**/*.spec.ts',
-      'src/components/tutoring/*.spec.ts',
     ],
     // Fail rather than silently pass when a glob matches nothing — the
     // whole point of this change is that missing tests stop being
