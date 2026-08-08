@@ -25,16 +25,22 @@ export default defineConfig({
     // `document` (the lazy-chunk recovery helper, for one).
     environment: 'jsdom',
     include: ['src/**/*.{spec,test}.ts'],
-    // MOB-11/Wave-4A greenfield tutoring2 specs mount `.vue` SFCs
-    // (unlike this repo's pattern of pure-logic specs), and the
-    // vitest config deliberately omits `@vitejs/plugin-vue`. Exclude
-    // them here so `test_web` stays green; migrate to logic-only
-    // specs (or a Vue-enabled sub-config) in a follow-up MR.
+    // VIEW specs mount `.vue` SFCs (unlike this repo's pattern of
+    // pure-logic specs) and this config deliberately omits
+    // `@vitejs/plugin-vue`, so they cannot run here. Migrating them to
+    // logic-only specs — or adding a Vue-enabled sub-config — is still
+    // an open follow-up.
+    //
+    // `src/services/tutoring2/**` was excluded alongside them and should
+    // not have been: not one service spec imports a `.vue` file. The
+    // over-broad glob kept 11 files / 64 passing tests out of CI. Keep
+    // this list scoped to what genuinely cannot run — an exclusion that
+    // silently disables working tests is worse than a failing one,
+    // because nothing ever reports it.
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
       'src/views/**/tutoring2/**/*.spec.ts',
-      'src/services/tutoring2/**/*.spec.ts',
       'src/components/tutoring/*.spec.ts',
     ],
     // Fail rather than silently pass when a glob matches nothing — the
