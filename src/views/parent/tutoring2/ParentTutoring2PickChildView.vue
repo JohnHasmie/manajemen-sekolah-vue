@@ -13,7 +13,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
@@ -25,6 +25,36 @@ import {
 
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
+
+/**
+ * Where picking a child leads.
+ *
+ * This view used to hard-code `parent.tutoring2.attendance`, which meant
+ * it could only ever serve one nav entry. Every other per-child wali
+ * screen is routed as `.../:studentId`, so a param-free menu item (say
+ * "Voucher") had nowhere to point — the picker would silently land the
+ * wali on Kehadiran instead.
+ *
+ * `?target=` fixes that. It is validated against an allow-list rather
+ * than pushed straight into router.push: `target` arrives from the URL,
+ * so an unchecked value would let a crafted link bounce a wali into any
+ * named route in the app. Anything unrecognised falls back to the
+ * historical destination, which also keeps existing links working.
+ */
+const TARGETS: Record<string, string> = {
+  attendance: 'parent.tutoring2.attendance',
+  vouchers: 'parent.tutoring2.vouchers',
+  progress: 'parent.tutoring2.progress',
+  activities: 'parent.tutoring2.activities',
+  assessments: 'parent.tutoring2.assessments',
+  sessions: 'parent.tutoring2.sessions',
+};
+
+const targetRouteName = computed(() => {
+  const key = String(route.query.target ?? '');
+  return TARGETS[key] ?? TARGETS.attendance;
+});
 
 // MVP: derive children from unique student_id in enrollments — parent
 // only sees rows whose students they are linked to (backend enforces).
@@ -51,7 +81,7 @@ const children = computed<ChildRow[]>(() => {
 });
 
 function openChild(studentId: string) {
-  router.push({ name: 'parent.tutoring2.attendance', params: { studentId } });
+  router.push({ name: targetRouteName.value, params: { studentId } });
 }
 </script>
 

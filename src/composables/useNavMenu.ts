@@ -1196,7 +1196,7 @@ function parentTutoringNav(activeChildId: string): NavSection[] {
           // review-round-1: legacy route was preserved but under the
           // singular path `parent/tutoring/voucher` — the plural form
           // used here landed on NotFound. Corrected below.
-          to: '/parent/tutoring/voucher',
+          to: '/parent/tutoring2/children?target=vouchers',
           labelKey: 'tutoring.nav.myVouchers',
           icon: 'sparkles',
         },
