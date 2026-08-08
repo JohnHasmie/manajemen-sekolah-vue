@@ -114,3 +114,34 @@ export interface SubmissionGradePayload {
   /** Client-side only for now — see the Submission DTO comment. */
   feedback?: string | null;
 }
+
+/**
+ * One row of `GET /tutoring-v2/students/{id}/submissions` — an activity
+ * paired with THAT child's own submission.
+ *
+ * `submission` is always present on the wire and explicitly `null` when
+ * the child has not handed in. It is never omitted: consumers render
+ * null as the "belum dikumpulkan" pseudo-status, so a missing key would
+ * be indistinguishable from a genuine non-submission.
+ */
+export interface StudentActivityRow {
+  activity: Activity;
+  submission: Submission | null;
+}
+
+/**
+ * `meta.summary` from the same endpoint — counts across the WHOLE
+ * filtered set, not the returned page, so KPI tiles stay correct
+ * regardless of how much of the list the client has loaded.
+ *
+ * `pending` is cross-status (nothing handed in OR handed in but not yet
+ * graded) and therefore overlaps `missing` and `submitted` by design —
+ * it is what a wali opens the page to find, not a disjoint bucket.
+ */
+export interface StudentSubmissionsSummary {
+  total: number;
+  missing: number;
+  submitted: number;
+  graded: number;
+  pending: number;
+}

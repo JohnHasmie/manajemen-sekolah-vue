@@ -7873,6 +7873,7 @@
         "kpiTotal": "Total activities",
         "kpiPending": "Outstanding",
         "kpiGraded": "Graded",
+        "truncated": "Showing {shown} of {total} activities. The summary above still counts all of them.",
         "kpiOverdue": "Overdue",
         "filterPending": "Outstanding",
         "kindTugas": "Assignment",

@@ -6677,6 +6677,7 @@
         "kpiTotal": "Total aktivitas",
         "kpiPending": "Belum tuntas",
         "kpiGraded": "Sudah dinilai",
+        "truncated": "Menampilkan {shown} dari {total} aktivitas. Ringkasan di atas tetap menghitung seluruhnya.",
         "kpiOverdue": "Lewat tenggat",
         "filterPending": "Belum tuntas",
         "kindTugas": "Tugas",

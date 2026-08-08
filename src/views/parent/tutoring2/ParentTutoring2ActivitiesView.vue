@@ -1,51 +1,57 @@
 <!--
   ParentTutoring2ActivitiesView.vue — the wali's feed of one child's
-  tugas / kuis / materi baca (CLEAN-2 Phase 2 · greenfield replacement
-  for the legacy `parent/tutoring/ParentActivitiesView.vue`).
+  tugas / kuis / materi baca (greenfield replacement for the legacy
+  `parent/tutoring/ParentActivitiesView.vue`).
 
   Route: /parent/tutoring2/activities/:studentId
-  Endpoints (all `/tutoring-v2/*`):
-    GET /tutoring-v2/enrollments?student_id=          — the child's groups
-    GET /tutoring-v2/learning-groups/{id}/activities   — per-group feed
-    GET /tutoring-v2/activities/{id}/submissions       — wali-scoped rows
+  Endpoint: GET /tutoring-v2/students/{id}/submissions   — ONE call/page
 
   Child scope: `:studentId` route param, exactly like
   ParentTutoring2AttendanceView / ParentTutoring2AssessmentsView. The
-  wali reaches it from ParentTutoring2PickChildView. No new picker
-  mechanism is invented here.
+  wali reaches it from ParentTutoring2PickChildView.
 
-  CONTRACT DIFFERENCES vs the legacy v1 view — read before touching:
+  HISTORY — the bug this file used to have:
+
+    v2 had no student-centric route, so this view rebuilt the feed in the
+    browser: enrollments, then one activities call per learning group,
+    then ONE submissions call PER ACTIVITY — capped at the first 30.
+
+    That cap was not a performance trade, it was a CORRECTNESS BUG. Past
+    row 30 every activity arrived with `submission: null`, and null here
+    is not "unknown": `rowTone` renders it as the pseudo-status "belum
+    dikumpulkan". A child who handed their work in on time was shown to
+    their parent as delinquent, with nothing on screen saying the data
+    had been truncated. The per-group `per_page: 50` dropped activities
+    outright on the same basis.
+
+    The fan-out also pulled SIBLINGS' submissions — scores and answer
+    bodies — into the browser, because the submissions index is scoped to
+    every student the wali is linked to, and the view filtered that
+    superset in JS. The server now resolves ownership, so only the
+    requested child's rows are ever sent.
+
+  WHAT THE SERVER GUARANTEES, so do not re-implement it here:
+    • `submission` is always present, explicitly null when absent.
+    • Drafts are already excluded — ActivityController's publish gate
+      applies to anyone without `tutoring.activity.manage`.
+    • `meta.summary` counts the WHOLE set, not the page, which is why the
+      KPI tiles read from it rather than from the loaded rows.
+
+  CONTRACT DIFFERENCES vs the legacy v1 view — still true:
 
   1. v1 called `GET /tutoring/activities`, a TENANT-WIDE index with no
-     student scoping, and overlaid `GET /tutoring/activity-submissions
-     ?student_id=`. v2 has NO tenant-wide activity index and NO
-     student-feed route (checked the whole `Route::prefix('tutoring-v2')`
-     group: the only activity index is
-     `/learning-groups/{groupId}/activities`). So the feed is rebuilt
-     from the child's own learning groups. Practical effect: activities
-     belonging to a group the child is NOT enrolled in no longer show —
-     which is the correct behaviour, but it IS a behaviour change from
-     v1, where a parent saw every activity in the tenant.
+     student scoping. The v2 feed is the child's own enrolled groups, so
+     activities from a group the child is NOT in no longer appear. That
+     is the correct behaviour, but it IS a change from v1.
   2. Activity kinds changed with the module: v1 `ASSIGNMENT | EXAM |
      MATERIAL`; v2 `tugas | kuis | materi_baca` (see `ActivityKind`).
-     The filter chip enumerates `ACTIVITY_KINDS` so a fourth kind is a
+     The filter chip enumerates `ACTIVITY_KINDS`, so a fourth kind is a
      one-line change on both sides.
   3. v1 submission statuses were `ASSIGNED | LATE | MISSED | SUBMITTED |
      GRADED`. v2 has only `draft | submitted | graded` — there is no
-     server-side "late"/"missed" state, so the legacy red LATE pill is
-     NOT ported. Lateness is derived purely client-side from `due_at`
-     for a row that has no submission at all, and is rendered as a
-     separate "belum dikumpulkan" pseudo-status (see `rowTone`).
-  4. Drafts are invisible to a wali by construction — ActivityController
-     adds `whereNotNull('published_at')` for anyone without
-     `tutoring.activity.manage`. No client-side draft filter needed.
-
-  PERFORMANCE NOTE: v2 has no bulk "submissions for student X" route, so
-  the submission overlay costs one request per activity. Capped at
-  MAX_SUBMISSION_LOOKUPS rows (the ones the parent actually sees first);
-  older activities render without the overlay rather than firing an
-  unbounded fan-out. A backend `GET /tutoring-v2/students/{id}/submissions`
-  would collapse this to a single call.
+     server-side "late"/"missed", so the legacy red LATE pill is not
+     ported. Lateness is derived client-side from `due_at` for a row with
+     no submission, and rendered as the "belum dikumpulkan" pseudo-status.
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -60,14 +66,13 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
-import { ActivitiesService } from '@/services/tutoring2/activities';
 import { SubmissionsService } from '@/services/tutoring2/submissions';
-import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
 import {
   ACTIVITY_KINDS,
   type Activity,
   type ActivityKind,
-  type Submission,
+  type StudentActivityRow,
+  type StudentSubmissionsSummary,
 } from '@/types/tutoring2/activity';
 import type { StatusBadgeTone } from '@/types/status-badge';
 
@@ -77,13 +82,25 @@ const route = useRoute();
 /** Child scope — same mechanism as every other parent/tutoring2 view. */
 const studentId = String(route.params.studentId ?? '');
 
-/** See the PERFORMANCE NOTE in the file header. */
-const MAX_SUBMISSION_LOOKUPS = 30;
+/**
+ * Rows per request. The server answers in a flat number of queries, so
+ * this is a transport size, not a fan-out budget — and PAGE_LIMIT below
+ * bounds the walk rather than silently truncating the numbers.
+ */
+const PER_PAGE = 200;
 
-interface ActivityRow {
-  activity: Activity;
-  /** null = the child has no submission row for this activity yet. */
-  submission: Submission | null;
+/** Walk at most this many pages (PER_PAGE * PAGE_LIMIT rows). */
+const PAGE_LIMIT = 5;
+
+/** The view's own row type is the wire row — no remapping needed. */
+type ActivityRow = StudentActivityRow;
+
+interface Worklist {
+  rows: ActivityRow[];
+  /** Counts across the WHOLE set, even when the walk stopped early. */
+  summary: StudentSubmissionsSummary;
+  /** True when PAGE_LIMIT cut the walk short — the LIST is partial. */
+  truncated: boolean;
 }
 
 /**
@@ -105,58 +122,53 @@ function compareByDue(a: Activity, b: Activity): number {
   return Math.abs(av - now) - Math.abs(bv - now);
 }
 
-const { state, reload } = useDataRefresh<ActivityRow[]>(async () => {
-  if (!studentId) return [];
+const EMPTY_SUMMARY: StudentSubmissionsSummary = {
+  total: 0,
+  missing: 0,
+  submitted: 0,
+  graded: 0,
+  pending: 0,
+};
 
-  const { items: enrollments } = await TutoringBimbelService.listEnrollments({
-    student_id: studentId,
-    per_page: 100,
+const { state, reload } = useDataRefresh<Worklist>(async () => {
+  if (!studentId) return { rows: [], summary: EMPTY_SUMMARY, truncated: false };
+
+  // One request per page, and each row already carries THIS child's own
+  // submission. See the file header for the bug the old fan-out caused.
+  const first = await SubmissionsService.listByStudent(studentId, {
+    per_page: PER_PAGE,
   });
 
-  // Only the child's OWN enrollment ids may claim a submission row —
-  // the backend scopes the submissions index to every student the wali
-  // is linked to, which for a multi-child wali is a superset.
-  const ownEnrollmentIds = new Set(enrollments.map((e) => e.id));
-
-  const groupIds = [
-    ...new Set(
-      enrollments
-        .map((e) => e.learning_group_id)
-        .filter((id): id is string => Boolean(id)),
-    ),
-  ];
-  if (groupIds.length === 0) return [];
-
-  const perGroup = await Promise.all(
-    groupIds.map((id) => ActivitiesService.listByGroup(id, { per_page: 50 })),
-  );
-  const activities = perGroup.flatMap((r) => r.items).sort(compareByDue);
-
-  const overlayTargets = activities.slice(0, MAX_SUBMISSION_LOOKUPS);
-  const submissionLists = await Promise.all(
-    overlayTargets.map((a) =>
-      SubmissionsService.listByActivity(a.id, { per_page: 50 }),
-    ),
-  );
-
-  const byActivityId = new Map<string, Submission>();
-  for (const list of submissionLists) {
-    for (const s of list.items) {
-      if (ownEnrollmentIds.has(s.enrollment_id)) byActivityId.set(s.activity_id, s);
-    }
+  const rows = [...first.items];
+  const pages = Math.min(first.lastPage, PAGE_LIMIT);
+  for (let page = 2; page <= pages; page++) {
+    const next = await SubmissionsService.listByStudent(studentId, {
+      per_page: PER_PAGE,
+      page,
+    });
+    rows.push(...next.items);
   }
 
-  return activities.map((activity) => ({
-    activity,
-    submission: byActivityId.get(activity.id) ?? null,
-  }));
+  return {
+    rows: rows.sort((a, b) => compareByDue(a.activity, b.activity)),
+    // Straight from the server, so the KPI tiles describe every activity
+    // even in the (unreached in practice) case where the walk stopped.
+    summary: first.summary,
+    truncated: first.lastPage > PAGE_LIMIT,
+  };
 });
 
-const rows = computed<ActivityRow[]>(() =>
+const worklist = computed<Worklist | null>(() =>
   state.value.status === 'content' || state.value.status === 'empty'
-    ? ((state.value.data as ActivityRow[] | undefined) ?? [])
-    : [],
+    ? ((state.value.data as Worklist | undefined) ?? null)
+    : null,
 );
+
+const rows = computed<ActivityRow[]>(() => worklist.value?.rows ?? []);
+const summary = computed<StudentSubmissionsSummary>(
+  () => worklist.value?.summary ?? EMPTY_SUMMARY,
+);
+const isTruncated = computed(() => worklist.value?.truncated ?? false);
 
 // ── Filters ───────────────────────────────────────────────────────
 // '' = every kind; 'pending' is a cross-kind filter for "not handed in
@@ -185,10 +197,15 @@ function cycleKind() {
 
 // ── KPIs ─────────────────────────────────────────────────────────
 const kpiCards = computed<KpiCard[]>(() => {
-  const all = rows.value;
-  const pending = all.filter(isPending).length;
-  const graded = all.filter((r) => r.submission?.status === 'graded').length;
-  const overdue = all.filter((r) => {
+  // total / pending / graded come from meta.summary, which the server
+  // computes over the WHOLE set. They were previously counted from the
+  // loaded rows, which meant the tiles inherited the fan-out's cap and
+  // under-reported alongside it.
+  const s = summary.value;
+  // Overdue is the one tile with no server-side counterpart: it needs
+  // due_at compared against the viewer's own clock. Derived from loaded
+  // rows, so it is exact unless `isTruncated` — the template says so.
+  const overdue = rows.value.filter((r) => {
     if (r.submission !== null) return false;
     const days = daysUntilDue(r.activity);
     return days !== null && days < 0;
@@ -197,18 +214,18 @@ const kpiCards = computed<KpiCard[]>(() => {
     {
       icon: 'clipboard',
       label: t('tutoring2.parent.activities.kpiTotal'),
-      value: String(all.length),
+      value: String(s.total),
     },
     {
       icon: 'clock',
       label: t('tutoring2.parent.activities.kpiPending'),
-      value: String(pending),
+      value: String(s.pending),
       tone: 'amber',
     },
     {
       icon: 'check-circle',
       label: t('tutoring2.parent.activities.kpiGraded'),
-      value: String(graded),
+      value: String(s.graded),
       tone: 'green',
     },
     {
@@ -339,6 +356,22 @@ function subtitle(row: ActivityRow): string {
     />
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
+
+    <!--
+      A partial list must never look complete. The KPI tiles above stay
+      exact (they read meta.summary, which the server computes over the
+      whole set), but the scrollable list below stops at PAGE_LIMIT
+      pages, so say so rather than letting the parent assume they have
+      seen everything. Unreachable for any realistic child; the previous
+      version of this screen truncated silently, which is the failure
+      this notice exists to prevent.
+    -->
+    <p
+      v-if="isTruncated"
+      class="rounded-lg bg-amber-50 px-md py-sm text-2xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+    >
+      {{ t('tutoring2.parent.activities.truncated', { shown: rows.length, total: summary.total }) }}
+    </p>
 
     <PageFilterToolbar :hide-default-search="true">
       <template #chips>

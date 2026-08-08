@@ -15,6 +15,7 @@
  */
 import { api } from '@/lib/http';
 import type { Pagination } from '@/types/api';
+import type { StudentProgress } from '@/types/tutoring2/progress';
 import type {
   BimbelStudent,
   BimbelStudentCreatePayload,
@@ -80,6 +81,30 @@ export const TutoringStudentsService = {
     const r = await api.put<OneEnvelope<BimbelStudent>>(
       `/tutoring-v2/students/${id}`,
       payload,
+    );
+    return r.data.data;
+  },
+
+  /**
+   * `GET /tutoring-v2/students/{id}/progress` — one child's graded-score
+   * history plus the per-programme peer baseline, in a single call.
+   *
+   * Replaced a client-side rebuild that fetched enrollments, then every
+   * assessment, then ONE scores call PER ASSESSMENT — capped at 40 to
+   * stop it running away. The server answers in two queries and applies
+   * the publish gate, so an unfinished mark can never reach a wali.
+   *
+   * `program_id` filters server-side, but callers that already hold the
+   * full payload should filter in memory instead of refetching — the
+   * response carries every programme the child is enrolled in.
+   */
+  async getProgress(
+    studentId: string,
+    params: { program_id?: string } = {},
+  ): Promise<StudentProgress> {
+    const r = await api.get<OneEnvelope<StudentProgress>>(
+      `/tutoring-v2/students/${studentId}/progress`,
+      { params },
     );
     return r.data.data;
   },

@@ -1,14 +1,9 @@
 <!--
-  ParentTutoring2ProgressView.vue — one child's score trend (CLEAN-2
-  Phase 2 · greenfield replacement for the legacy
-  `parent/tutoring/ParentProgressView.vue`).
+  ParentTutoring2ProgressView.vue — one child's score trend (greenfield
+  replacement for the legacy `parent/tutoring/ParentProgressView.vue`).
 
   Route: /parent/tutoring2/progress/:studentId
-  Endpoints (all `/tutoring-v2/*`):
-    GET /tutoring-v2/enrollments?student_id=          — child's programs
-    GET /tutoring-v2/assessments?published=true       — wali-scoped, drafts hidden
-    GET /tutoring-v2/assessments/{id}/scores          — wali-scoped rows
-    GET /tutoring-v2/programs/{id}/leaderboard        — peer-average baseline
+  Endpoint: GET /tutoring-v2/students/{id}/progress   — ONE call
 
   Child scope: `:studentId` route param, same mechanism as every other
   parent/tutoring2 view.
@@ -16,45 +11,40 @@
   Distinct from ParentTutoring2ReportCardView (a rapor scaffold) — this
   page is the per-assessment score history, not a term report.
 
-  ⚠️ DROP AND DOCUMENT — the legacy view's data source does not exist in v2.
+  HISTORY — why this file used to look very different:
 
-    v1 read ONE aggregate route, `GET /tutoring/students/{id}/progress`
-    (TutoringService.getProgress), which returned `{ summary.overall.average,
-    trend: { [subjectName]: number[] } }`. There is NO progress route
-    anywhere in the `Route::prefix('tutoring-v2')` group — checked the
-    whole block. A backend `GET /tutoring-v2/students/{id}/progress`
-    would restore the legacy shape in a single call.
+    v2 originally had no progress route, so this view rebuilt the payload
+    in the browser: enrollments, then every assessment, then ONE scores
+    call PER ASSESSMENT, capped at 40 lookups to stop it running away.
+    The backend route now exists and returns the whole payload in two
+    queries, with the publish gate applied server-side — so an unfinished
+    mark cannot reach a wali even briefly.
 
-    What is rebuilt here from routes that DO exist: the child's real
-    per-assessment scores, normalised to a 0..100 percentage
-    (`score / max_score * 100`, the same normalisation BE-21 uses), from
-    the wali-readable assessments + scores pair. The chart plots those
-    real points against `assessment_date` — nothing is stubbed.
+    Everything the server sends is final. In particular:
+      • `points` arrive oldest-first and already exclude drafts. Do not
+        re-sort or re-filter for those reasons.
+      • `kkm_percent` is ALREADY rescaled onto the 0..100 percentage
+        scale. The raw `kkm` lives on the assessment's own scale (an
+        assessment out of 200 has a KKM out of 200), so re-deriving it
+        client-side is how pass/fail ends up rendered backwards.
+      • `peer_average_by_program` is the mean across every participant's
+        published scores — a finer baseline than the leaderboard
+        average-of-averages it replaced, where one assessment counted as
+        much as twenty.
 
-    What is DROPPED, and why:
-      • The legacy `STUB_CHILD` / `STUB_AVG` hardcoded arrays
-        ([70,73,75,…]) that drew a fake ascending line whenever the API
-        returned no trend. That was invented data presented as the
-        child's progress; it is gone, and an honest "not enough graded
-        assessments yet" note takes its place.
-      • The legacy KPI strip's three permanently-"—" tiles (attendance,
-        assignments, sessions/month). Those were never wired to anything.
-        Attendance already has its own real screen
-        (ParentTutoring2AttendanceView).
-      • Per-MAPEL breakdown. Bimbel has no subject dimension —
-        `bimbel_assessments` hangs off a PROGRAM, not a mata pelajaran.
-        The filter is therefore per-program, which is the real axis.
-      • The legacy per-period group-average SERIES. BE-21's leaderboard
-        returns one overall average per participant, not a time series,
-        so the peer baseline here is a single CONSTANT line labelled as
-        such ("rata-rata peserta program"), computed from real
-        leaderboard rows. It is deliberately NOT drawn as a fake curve.
-        A per-period peer average needs a backend aggregate.
+  STILL NOT AVAILABLE, deliberately not faked:
+    • A per-period peer average SERIES. The server returns one constant
+      per programme, so the baseline is drawn as a single labelled line
+      ("rata-rata peserta program"), never as an invented curve.
+    • Per-MAPEL breakdown. Bimbel has no subject dimension —
+      `bimbel_assessments` hang off a PROGRAM, not a mata pelajaran, so
+      the filter is per-program, which is the real axis.
 
-  PERFORMANCE NOTE: v2 has no bulk "scores for student X" route, so the
-  score lookup costs one request per published assessment, capped at
-  MAX_SCORE_LOOKUPS. A backend `GET /tutoring-v2/students/{id}/scores`
-  would collapse it to one call.
+  Also gone for good, from the legacy view: the STUB_CHILD / STUB_AVG
+  hardcoded arrays ([70,73,75,…]) that drew a fake ascending line
+  whenever the API returned nothing. That was invented data presented as
+  a real child's progress. An honest "not enough graded assessments yet"
+  note takes its place.
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -69,17 +59,13 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
-import { TutoringLeaderboardService } from '@/services/tutoring2/leaderboard';
-import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
+import { TutoringStudentsService } from '@/services/tutoring2/students';
 import type { StatusBadgeTone } from '@/types/status-badge';
 
 const { t } = useI18n();
 const route = useRoute();
 
 const studentId = String(route.params.studentId ?? '');
-
-/** See the PERFORMANCE NOTE in the file header. */
-const MAX_SCORE_LOOKUPS = 40;
 
 /** One graded assessment for this child. */
 interface ScorePoint {
@@ -100,7 +86,14 @@ interface ScorePoint {
 interface ProgressPayload {
   points: ScorePoint[];
   programs: Array<{ id: string; name: string }>;
-  /** programId → mean of every participant's overall average (0..100). */
+  /**
+   * programId → mean percentage across every participant's PUBLISHED
+   * scores in that programme (0..100), computed server-side.
+   *
+   * This is a finer baseline than the leaderboard average it replaces:
+   * the leaderboard means an average-of-averages, so a participant with
+   * one assessment counted as much as one with twenty.
+   */
   peerAverageByProgram: Record<string, number>;
 }
 
@@ -108,88 +101,34 @@ const { state, reload } = useDataRefresh<ProgressPayload>(async () => {
   const empty: ProgressPayload = { points: [], programs: [], peerAverageByProgram: {} };
   if (!studentId) return empty;
 
-  const { items: enrollments } = await TutoringBimbelService.listEnrollments({
-    student_id: studentId,
-    per_page: 100,
-  });
-  if (enrollments.length === 0) return empty;
-
-  // Only THIS child's enrollment rows may claim a score — the backend
-  // scopes `/scores` to every student the wali is linked to, which for a
-  // multi-child wali is a superset.
-  const ownEnrollmentIds = new Set(enrollments.map((e) => e.id));
-
-  const programNameById = new Map<string, string>();
-  for (const e of enrollments) {
-    programNameById.set(
-      e.program_id,
-      e.program_name ?? `${t('tutoring2.common.program')} ${e.program_id.slice(0, 8)}`,
-    );
-  }
-
-  // `published: true` is belt-and-braces — AssessmentController already
-  // forces `published_at IS NOT NULL` for the wali's `_view_own` scope.
-  const { items: assessments } = await TutoringBimbelService.listAssessments({
-    published: true,
-    per_page: 100,
-  });
-  const relevant = assessments
-    .filter((a) => programNameById.has(a.program_id) && a.max_score > 0)
-    .slice(0, MAX_SCORE_LOOKUPS);
-
-  const scoreLists = await Promise.all(
-    relevant.map((a) => TutoringBimbelService.listScores(a.id)),
-  );
-
-  const points: ScorePoint[] = [];
-  relevant.forEach((a, i) => {
-    const mine = scoreLists[i].items.find(
-      (row) => ownEnrollmentIds.has(row.enrollment_id) && row.score != null,
-    );
-    if (!mine || mine.score == null) return;
-    points.push({
-      assessmentId: a.id,
-      title: a.title,
-      programId: a.program_id,
-      programName: programNameById.get(a.program_id) ?? '—',
-      date: a.assessment_date ?? null,
-      score: mine.score,
-      maxScore: a.max_score,
-      percent: Math.round((mine.score / a.max_score) * 1000) / 10,
-      kkmPercent:
-        a.kkm != null ? Math.round((a.kkm / a.max_score) * 1000) / 10 : null,
-    });
-  });
-
-  // Oldest → newest so the chart reads left-to-right. Undated rows sink
-  // to the end (they can't be placed on a time axis).
-  points.sort((x, y) => {
-    if (x.date === null && y.date === null) return 0;
-    if (x.date === null) return 1;
-    if (y.date === null) return -1;
-    return x.date.localeCompare(y.date);
-  });
-
-  // Peer baseline — real leaderboard rows, one constant per program.
-  const programIds = [...programNameById.keys()];
-  const boards = await Promise.all(
-    programIds.map((id) => TutoringLeaderboardService.getProgram(id, { limit: 100 })),
-  );
-  const peerAverageByProgram: Record<string, number> = {};
-  programIds.forEach((id, i) => {
-    const scored = boards[i].items.filter((r) => r.assessments_taken > 0);
-    if (scored.length === 0) return;
-    peerAverageByProgram[id] =
-      scored.reduce((sum, r) => sum + r.avg_score, 0) / scored.length;
-  });
+  // ONE request. This used to fetch enrollments, then every assessment,
+  // then one scores call PER ASSESSMENT — capped at 40 so it could not
+  // run away. See the file header for what that cost.
+  const progress = await TutoringStudentsService.getProgress(studentId);
 
   return {
-    points,
-    programs: programIds.map((id) => ({
-      id,
-      name: programNameById.get(id) ?? id,
-    })),
-    peerAverageByProgram,
+    // Already oldest-first and already filtered to published assessments
+    // by the server, so neither is re-done here.
+    points: progress.points
+      // A point with no percent had max_score 0 — it cannot be placed on
+      // a 0..100 axis, and the server sends null rather than guessing.
+      .filter((p): p is typeof p & { percent: number } => p.percent !== null)
+      .map((p) => ({
+        assessmentId: p.assessment_id,
+        title: p.title,
+        programId: p.program_id,
+        programName: p.program_name ?? t('tutoring2.common.notAvailable'),
+        date: p.date,
+        score: p.score,
+        maxScore: p.max_score,
+        percent: p.percent,
+        // Already rescaled onto 0..100 by the server. Do NOT re-derive
+        // from a raw kkm — the raw value is on the assessment's own
+        // scale, and comparing it to a percent inverts pass/fail.
+        kkmPercent: p.kkm_percent,
+      })),
+    programs: progress.programs,
+    peerAverageByProgram: progress.peer_average_by_program,
   };
 });
 
