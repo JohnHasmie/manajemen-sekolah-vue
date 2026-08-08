@@ -930,9 +930,7 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
         icon: 'wallet',
       },
       {
-        // PRESERVED by CLEAN-2 — legacy AdminTutoringBillingSettingsView
-        // still ships; greenfield replacement not yet built.
-        to: '/admin/tutoring/billing-settings',
+        to: '/admin/tutoring2/settings/billing',
         labelKey: 'tutoring.nav.billingSettings',
         icon: 'settings',
       },
@@ -1041,8 +1039,7 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
         icon: 'calendar',
       },
       {
-        // PRESERVED by CLEAN-2 — legacy TutorEarningsView still ships.
-        to: '/teacher/tutoring/earnings',
+        to: '/teacher/tutoring2/earnings',
         labelKey: 'tutoring.nav.honor',
         icon: 'wallet',
       },
@@ -1062,9 +1059,7 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
       // (was: /teacher/tutoring/tryout-generator — AI tryout generator
       // not yet re-implemented on greenfield.)
       {
-        // PRESERVED by CLEAN-2 — legacy TutorRecurringSessionsView still
-        // ships; greenfield recurring UI not yet built.
-        to: '/teacher/tutoring/recurring',
+        to: '/teacher/tutoring2/sessions/recurring',
         labelKey: 'tutoring.nav.recurring',
         icon: 'calendar',
       },
@@ -1097,7 +1092,7 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
         ability: 'tutoring.announcement.view',
       },
       {
-        to: '/teacher/tutoring/leaderboard',
+        to: '/teacher/tutoring2/leaderboard',
         labelKey: 'tutoring.nav.leaderboard',
         icon: 'bar-chart',
       },

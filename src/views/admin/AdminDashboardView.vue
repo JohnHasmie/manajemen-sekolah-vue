@@ -37,7 +37,7 @@ import TenantEntryBanner from '@/components/feature/TenantEntryBanner.vue';
 import AdminControlCenterCard from '@/components/feature/AdminControlCenterCard.vue';
 import AdminAttendanceOverviewCard from '@/components/feature/AdminAttendanceOverviewCard.vue';
 import SubscriptionMiniRow from '@/components/feature/SubscriptionMiniRow.vue';
-import AdminTutoringDashboardView from '@/views/admin/tutoring/AdminTutoringDashboardView.vue';
+import AdminTutoring2DashboardView from '@/views/admin/tutoring2/AdminTutoring2DashboardView.vue';
 import ReadinessAttentionPanel from '@/components/feature/ReadinessAttentionPanel.vue';
 import EngagementToggleCard from '@/components/feature/gamification/EngagementToggleCard.vue';
 import {
@@ -360,7 +360,7 @@ function gotoModules() {
 </script>
 
 <template>
-  <AdminTutoringDashboardView v-if="isTutoringCenter" />
+  <AdminTutoring2DashboardView v-if="isTutoringCenter" />
   <div v-else class="space-y-md">
     <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
       <template #default>
