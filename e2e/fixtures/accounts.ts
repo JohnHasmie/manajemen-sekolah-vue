@@ -71,12 +71,27 @@ export interface E2EFixture {
   warning?: string;
 }
 
+/** One authenticated GET whose controller carries no `authorize()`. */
+export interface ProbeTarget {
+  path: string;
+  /** `SomeController@method` — what to open when a 2xx needs explaining. */
+  action: string;
+}
+
 export interface E2EManifest {
   version: number;
   seeded_at: string;
   school: { id: string; name: string };
   password: string;
   fixtures: E2EFixture[];
+  /**
+   * Computed by the seeder, not transcribed here: every authenticated,
+   * parameter-free `GET api/*` whose controller never calls
+   * `$this->authorize()`. Optional because a manifest seeded before this
+   * existed simply lacks it — the probe skips loudly rather than passing
+   * on an empty list.
+   */
+  probe_targets?: ProbeTarget[];
   data: {
     classes: { id: string; name: string }[];
     subjects: string[];

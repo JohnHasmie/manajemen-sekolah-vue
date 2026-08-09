@@ -424,3 +424,83 @@ test('the by-subject class list is scoped to the caller', async () => {
     await parent.dispose();
   }
 });
+
+// ── Group G — the wide sweep, driven by the backend's own answer ─────
+
+/**
+ * Every authenticated, parameter-free GET whose controller never calls
+ * `$this->authorize()`, tried as a low-privilege role.
+ *
+ * Enforcement here is controller-opt-in: 73 of 138 controllers gate, 65
+ * do not. `ADMIN_READ_PROBES` covers about twenty of those endpoints and
+ * was typed by hand, so it only ever covered what existed when someone
+ * last edited it. The seeder now computes the full list into
+ * `probe_targets` — 88 routes across 46 controllers — for the same reason
+ * the router table is read from the running app rather than transcribed.
+ *
+ * Report only, and deliberately so. A 2xx here is a LEAD, not a verdict:
+ *
+ *  · plenty of these are self-scoped by design — `/me`, `/profile`,
+ *    `/notifications`, `/billing/my-subscription` SHOULD answer 200 for
+ *    anyone logged in, and a denial would be the bug;
+ *  · a few narrow rows instead of gating, on purpose. `/classes` returns
+ *    200 with the caller's slice, which is the documented fix from !640,
+ *    not a hole;
+ *  · an endpoint can answer 200 with an empty, correctly-scoped body.
+ *
+ * So the question a 2xx raises is always the same one, and it is not
+ * answered here: does the BODY carry rows that belong to someone else?
+ * When it does, the row graduates into DENY_MATRIX with an allow-control
+ * beside it — that is where a hard failure belongs.
+ */
+for (const key of ['parent', 'staff'] as FixtureKey[]) {
+  test(`sweep: what ${key} can reach of the ungated GET surface`, async () => {
+    const targets = loadManifest().probe_targets;
+
+    test.skip(
+      !targets,
+      'manifest has no probe_targets — it predates the seeder computing them. ' +
+        'Re-seed. This is a COVERAGE GAP, not a pass.',
+    );
+
+    // A sweep that silently covers nothing reads exactly like a sweep that
+    // found nothing. The real list is ~88; a floor well under that still
+    // catches an empty or truncated one without breaking on every route
+    // someone deletes.
+    expect(
+      targets!.length,
+      'probe_targets came back nearly empty, so "no 2xx" below would mean nothing',
+    ).toBeGreaterThan(40);
+
+    const client = await apiFor(await login(fixtureFor(key)));
+    const reached: { path: string; action: string; status: number }[] = [];
+
+    try {
+      for (const t of targets!) {
+        const status = await statusOf(client, 'GET', t.path);
+
+        if (status >= 200 && status < 300) {
+          reached.push({ ...t, status });
+        }
+      }
+    } finally {
+      await client.dispose();
+    }
+
+    console.log(
+      `\n── ${key}: ${reached.length}/${targets!.length} ungated GETs returned 2xx ──\n`,
+    );
+
+    for (const r of reached) {
+      console.log(`    ${String(r.status)} ${r.path.padEnd(46)} ${r.action}`);
+    }
+
+    console.log(
+      '\n   Report only. Self-scoped reads (/me, /profile, /notifications) belong in\n' +
+        '   this list and are correct. So are row-scoped ones (/classes). Open the\n' +
+        "   controller named beside each path and ask whether the BODY carries other\n" +
+        '   people\'s rows; only then promote it into DENY_MATRIX with a control.\n',
+    );
+  });
+}
+
