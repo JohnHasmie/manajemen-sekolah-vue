@@ -335,6 +335,16 @@ export interface ScopedReadRow {
   full: FixtureKey;
   /** Fixtures whose view must be a strict, non-equal subset of `full`. */
   narrowed: FixtureKey[];
+  /**
+   * Narrowed fixtures allowed to see NOTHING.
+   *
+   * A strict subset is satisfied by the empty set, so "fewer rows than the
+   * admin" also passes when the scope has broken and returns zero to
+   * everyone — the same vacuous pass this file guards against everywhere
+   * else. So a narrowed caller must see at least one row by default, and a
+   * genuine empty answer has to be declared here and justified.
+   */
+  mayBeEmpty?: FixtureKey[];
   /** Why this row exists — printed on failure. */
   because: string;
 }
@@ -350,7 +360,14 @@ export const SCOPED_READS: ScopedReadRow[] = [
   {
     path: '/classes?per_page=200',
     full: 'admin',
-    narrowed: ['parent'],
+    narrowed: ['parent', 'staff'],
+    // Staff legitimately sees zero: ClassVisibilityScope grants rows via a
+    // `teacher_classes` match or a student the caller owns, and the staff
+    // fixture has neither — no `teachers` row, no child. Measured against
+    // the seeded tenant: admin 2, teacher 2, parent 1, staff 0. The row is
+    // here to catch that number becoming non-zero, which would mean the
+    // scope started handing school-wide data to a non-teaching account.
+    mayBeEmpty: ['staff'],
     because:
       'school.class.view is admin-only, yet thirteen teacher screens fill their class pickers ' +
       'here — so !640 narrowed the rows instead of gating, and a parent now sees only the classes ' +

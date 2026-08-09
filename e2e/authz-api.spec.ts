@@ -206,6 +206,20 @@ for (const row of SCOPED_READS) {
         const leaked = slice.ids.filter((id) => !full.ids.includes(id));
         expect(leaked, `${key} received rows outside ${row.full}'s view of ${row.path}`).toEqual([]);
 
+        // The empty set is a strict subset, so every assertion around this
+        // one still passes when the scope breaks and returns nothing to
+        // anybody. A narrowed caller must therefore SEE something, unless
+        // the row declares that zero is the honest answer for them.
+        if (!row.mayBeEmpty?.includes(key)) {
+          expect(
+            slice.ids.length,
+            `${key} received ZERO rows from ${row.path}. That satisfies "a strict subset of ` +
+              `${row.full}" without proving anything — a scope that returns nothing to everyone ` +
+              'would pass every other assertion here. Either the scope regressed, or zero is ' +
+              `correct for ${key} and belongs in this row's mayBeEmpty.`,
+          ).toBeGreaterThan(0);
+        }
+
         expect(
           slice.ids.length,
           `${key} received the SAME ${full.ids.length} rows as ${row.full} — the read is not ` +
