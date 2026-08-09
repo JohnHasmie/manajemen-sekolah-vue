@@ -216,3 +216,87 @@ test('every route ability exists in the permission catalogue', async ({ browser 
 
   await context.close();
 });
+
+/**
+ * Which admin routes carry NO ability gate at all.
+ *
+ * Report only, and the last promised piece of Phase 4. A route with
+ * `meta.role: 'admin'` and no `meta.ability` is protected in the client by
+ * a role string and nothing else — and the router guard is cosmetic: it
+ * has no 403 view, it fails open when `/me` errors, and curl skips it
+ * entirely. Whether such a route is actually protected is decided by
+ * `$this->authorize()` in the controller behind it, and only 61 of 108
+ * carry one.
+ *
+ * So this list is not a bug list. It is the SHORTLIST to point the Phase 5
+ * API probes at: for each entry, the question worth asking is whether a
+ * staff or parent token can reach the endpoints that page calls.
+ */
+test('inventory: admin routes with no ability gate', async ({ browser }) => {
+  const admin = manifest.fixtures.find((f) => f.key === 'admin')!;
+  const context = await browser.newContext();
+  await applySession(context, await login(admin), admin);
+  const page = await context.newPage();
+
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+
+  const routes = await readRouteTable(page);
+
+  // A report that says "0 found" because it read nothing is worse than no
+  // report: it reads as a clean bill of health. Prove the table loaded
+  // before believing anything derived from it.
+  expect(
+    routes.length,
+    'the route table came back empty, so "no ungated routes" would mean nothing',
+  ).toBeGreaterThan(50);
+
+  const ungated = routes.filter(
+    (r) =>
+      !r.hasRedirect &&
+      !r.meta.public &&
+      r.meta.role === 'admin' &&
+      !r.meta.superAdmin &&
+      !r.meta.ability &&
+      !(r.meta.abilityAny && r.meta.abilityAny.length > 0),
+  );
+
+  const gated = routes.filter(
+    (r) => r.meta.role === 'admin' && (r.meta.ability || r.meta.abilityAny?.length),
+  ).length;
+
+  // Split by whether anything ELSE narrows the route. `meta.needs` gates on
+  // the tenant having the module at all, which is a real constraint but not
+  // an authorization one — every admin of a tenant that HAS the module
+  // reaches the page. Reporting both in one flat list buries the seven
+  // routes that rest on the role string alone under twenty-six bimbel ones.
+  const moduleGated = ungated.filter((r) => r.meta.needs);
+  const roleStringOnly = ungated.filter((r) => !r.meta.needs);
+
+  console.log(
+    `\n── ${ungated.length} of ${ungated.length + gated} admin routes carry no ability gate ──\n`,
+  );
+
+  console.log(`  ${roleStringOnly.length} rest on the role string and nothing else:\n`);
+  for (const r of roleStringOnly) {
+    console.log(`    ${r.path}${r.name ? `  [${r.name}]` : ''}`);
+  }
+
+  console.log(
+    `\n  ${moduleGated.length} also require a module (meta.needs) — a tenant constraint,\n` +
+      '  not an authorization one:\n',
+  );
+  for (const r of moduleGated) {
+    console.log(`    ${r.path}  (needs: ${r.meta.needs})`);
+  }
+
+  console.log(
+    '\n   Report only. The router gate is cosmetic — it has no 403 view, fails open\n' +
+      '   when /me errors, and curl skips it. These are the pages whose protection\n' +
+      '   rests entirely on the controller behind them, and only 61 of 108 carry an\n' +
+      '   authorize(). Feed them to the Phase 5 probes; a 2xx for staff or parent\n' +
+      '   THERE is the finding, not membership of this list.\n',
+  );
+
+  await context.close();
+});

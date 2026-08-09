@@ -27,6 +27,39 @@ export interface MatrixRow {
 }
 
 export const DENY_MATRIX: MatrixRow[] = [
+  // ── /admin/inbox, the one route the Phase 4 inventory shortlisted ────
+  // Of 92 admin routes, 33 carry no `meta.ability`. Split by whether
+  // anything else narrows them, only two rest on the role string alone:
+  // `/admin` (the landing page) and `/admin/inbox`. The router gate is
+  // cosmetic, so what actually protects that page is the endpoint behind
+  // it — `dashboard.admin.view` on GET /dashboard/admin-priority-inbox/all.
+  // Reading the authorize() call is not proof; these rows are.
+  {
+    fixture: 'staff',
+    method: 'GET',
+    path: '/dashboard/admin-priority-inbox/all',
+    expect: 403,
+    because:
+      'the admin priority inbox aggregates the whole school — unpaid bills, unsubmitted ' +
+      'RPPs, attendance gaps — and staff holds no dashboard.admin.view',
+  },
+  {
+    fixture: 'parent',
+    method: 'GET',
+    path: '/dashboard/admin-priority-inbox/all',
+    expect: 403,
+    because: 'same surface, and a parent has even less business reading it than staff',
+  },
+  {
+    fixture: 'admin',
+    method: 'GET',
+    path: '/dashboard/admin-priority-inbox/all',
+    expect: 200,
+    because:
+      'CONTROL: the admin CAN read it, so the two 403s above are denials rather than a ' +
+      'broken route or a stale session',
+  },
+
   // ── parent ────────────────────────────────────────────────────────
   {
     fixture: 'parent',
