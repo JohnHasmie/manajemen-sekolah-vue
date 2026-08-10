@@ -1,75 +1,45 @@
 <!--
   AdminTutoring2BillingSettingsView.vue — tenant-wide billing settings
-  for the bimbel admin (CLEAN-2 Phase 2 · greenfield replacement for
+  for the bimbel admin (greenfield replacement for
   `admin/tutoring/AdminTutoringBillingSettingsView.vue`).
 
   Route: /admin/tutoring2/settings/billing
   Endpoints:
-    GET /tutoring-v2/settings/bill-reminders   (BE-9)
-    PUT /tutoring-v2/settings/bill-reminders   (BE-9)
+    GET|PUT /tutoring-v2/settings/bill-reminders   reminder offsets
+    GET|PUT /tutoring-v2/billing-settings          payment destination
 
-  ══ READ THIS BEFORE TOUCHING — THE BRIEF'S PREMISE WAS WRONG ═══════
-  The task brief said this view's backend is
-  `GET|PUT /tutoring-v2/billing-settings` (+ `/billing-settings/qris`).
-  Those routes DO NOT EXIST. Grepping `routes/api.php` for
-  `billing-settings` returns exactly three hits, all inside the LEGACY
-  `Route::prefix('tutoring')` group (lines ~1465, ~1466, ~1495), served
-  by `TutoringLegacy\...\TutoringBillingSettingsController` +
-  `TutoringBillingUploadController` and wrapped in the
-  `log.legacy-tutoring` middleware. The greenfield
-  `App\Modules\Tutoring` module has no billing-settings controller at
-  all (`ls app/Modules/Tutoring/Http/Controllers` — 24 files, none of
-  them it).
+  ── History, because this file used to say the opposite ──────────────
 
-  Per the brief's DROP-AND-DOCUMENT rule we do not call the v1 route,
-  do not invent a v2 one, and do not fake the data. So the entire
-  legacy feature set below is DROPPED, and the view ships the one
-  tenant-wide billing setting v2 genuinely does expose: bill reminder
-  offsets.
+  This view shipped documenting `GET|PUT /tutoring-v2/billing-settings`
+  as NON-EXISTENT, with a list of five dropped features and the routes
+  each would need. That was true when written. Four of the five are now
+  live and wired above, so the list has been removed rather than left to
+  mislead the next reader into re-planning work that is already done.
 
-  ── DROPPED, and the backend route each would need ───────────────────
-   1. Billing-mode toggles (allow_prepaid / allow_monthly /
-      allow_per_session) + `default_mode`.
-      Needs: GET|PUT /tutoring-v2/billing-settings.
-      NOTE for whoever writes that MR: in v2 the allowed modes are
-      already modelled PER PACKAGE (`bimbel_packages.allowed_billing_modes`,
-      see `PackageResource`) and per enrollment (`bimbel_enrollments.billing_mode`).
-      A tenant-wide toggle is therefore a NEW concept in v2, not a
-      port — decide deliberately whether it should exist, or whether
-      the package-level field is the real contract and this screen
-      should become a read-only roll-up of it.
-   2. Bank account block (bank_name / bank_account_number /
-      bank_account_holder).
-      Needs: GET|PUT /tutoring-v2/billing-settings.
-   3. QRIS image upload + preview.
-      Needs: POST /tutoring-v2/billing-settings/qris.
-   4. Free-text payment instructions.
-      Needs: GET|PUT /tutoring-v2/billing-settings.
-   5. Payment-gateway enable + provider picker (midtrans / xendit) and
-      the `payment_gateway_configured` badge.
-      Needs: GET|PUT /tutoring-v2/billing-settings.
-   Items 2–4 are also what the legacy `GET /tutoring/payment-account`
-   endpoint reads back on the parent bill-detail screen, so restoring
-   them is one backend surface, not five.
+  What the v2 route deliberately does NOT carry, and why:
 
-  ── ADDED (v2-only, no legacy equivalent on this screen) ─────────────
-   Bill reminder offsets. Legacy exposed these on a DIFFERENT screen
-   via `/tutoring/settings/bill-reminders`; BE-9 folded session + bill
-   reminders into one `bimbel_reminder_settings` table. Contract shifts
-   worth knowing (full detail in `@/types/tutoring2/reminder-settings`):
-     - units are MINUTES on both kinds now, not days for bills;
-     - there is no `enabled` boolean — the design is "empty offsets
-       array = disabled".
-   ⚠ That second point is currently UNREACHABLE: BE-9's
-   `UpdateReminderSettingsRequest` marks `offsets` `required`, and
-   Laravel's `required` rejects an empty array, so a PUT of
-   `offsets: []` 422s. There is therefore NO master on/off switch on
-   this screen — see the `canSave` comment in the script for the
-   one-word backend fix (`required` → `present`).
+    Tenant-wide billing-mode toggles (allow_prepaid / allow_monthly /
+    allow_per_session / default_mode). The columns still exist for v1,
+    but in v2 the allowed modes live PER PACKAGE
+    (`bimbel_packages.allowed_billing_modes`) and the chosen mode PER
+    ENROLLMENT (`bimbel_enrollments.billing_mode`). A tenant-wide switch
+    would be a NEW concept and a second, competing source of truth for
+    the same question — a product decision, not a port. Do not add it
+    here on the assumption that v1 having it makes it a gap.
 
-  Ability: all four reminder endpoints gate on
-  `tutoring.session_reminder.manage` (BE-9 reuses the session key for
-  both kinds on purpose).
+  ── STILL GENUINELY MISSING ──────────────────────────────────────────
+
+    QRIS image upload. Needs POST /tutoring-v2/billing-settings/qris.
+    The identically-named v1 route exists, but inside the LEGACY
+    `Route::prefix('tutoring')` group — a different group serving a
+    different controller. Same path is not the same endpoint; check the
+    group boundaries before concluding a route exists (v2 spans lines
+    1102-1328 of routes/api.php, v1 spans 1330-1593).
+
+    Until it ships, `qris_image_url` is read-only here: it is displayed
+    to parents if a v1 upload set it, and cannot be changed from this
+    screen. The API rejects a caller-supplied URL by design, so this is
+    not a field to wire up hopefully.
 -->
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
