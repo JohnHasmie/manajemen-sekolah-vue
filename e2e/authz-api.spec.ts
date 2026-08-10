@@ -464,13 +464,24 @@ for (const key of ['parent', 'staff'] as FixtureKey[]) {
     );
 
     // A sweep that silently covers nothing reads exactly like a sweep that
-    // found nothing. The real list is ~88; a floor well under that still
-    // catches an empty or truncated one without breaking on every route
-    // someone deletes.
+    // found nothing.
+    //
+    // The floor is deliberately LOW, and this is the interesting part: the
+    // list is supposed to SHRINK. It counts endpoints nobody gated, so
+    // every gate added takes one off it — 88 when this was written, 43
+    // once the scanner learned `$user->can()` and FormRequest::authorize(),
+    // 28 once it stopped missing authorization middleware. A floor set
+    // near the current size fights the goal and fails on progress, which
+    // is exactly what happened at 40.
+    //
+    // So: low enough that honest narrowing never trips it, high enough
+    // that an empty or truncated manifest still does. If this ever needs
+    // changing it should be LOWERED, not raised.
     expect(
       targets!.length,
-      'probe_targets came back nearly empty, so "no 2xx" below would mean nothing',
-    ).toBeGreaterThan(40);
+      'probe_targets came back nearly empty, so "no 2xx" below would mean nothing. ' +
+        'If the real list has genuinely shrunk this far, lower the floor — do not delete it.',
+    ).toBeGreaterThan(10);
 
     const client = await apiFor(await login(fixtureFor(key)));
     const reached: { path: string; action: string; status: number }[] = [];
