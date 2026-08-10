@@ -6644,6 +6644,9 @@
         "linkedChildren": "Anak tertaut"
       },
       "notifications": {
+        "minutesAgo": "{n} mnt lalu",
+        "hoursAgo": "{n} jam lalu",
+        "daysAgo": "{n} hari lalu",
         "meta": "{count} baru",
         "title": "Notifikasi",
         "markAllRead": "Tandai semua dibaca",

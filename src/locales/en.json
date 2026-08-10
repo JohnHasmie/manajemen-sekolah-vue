@@ -7871,6 +7871,9 @@
         "kpiCompleted": "Completed"
       },
       "notifications": {
+        "minutesAgo": "{n} min ago",
+        "hoursAgo": "{n}h ago",
+        "daysAgo": "{n}d ago",
         "markAllRead": "Mark all as read",
         "title": "Notifications",
         "emptyTitle": "No notifications yet",
