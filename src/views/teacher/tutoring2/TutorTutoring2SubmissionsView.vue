@@ -69,6 +69,11 @@ const { state, reload } = useDataRefresh(async () => {
       _saving: false,
     })),
   };
+}, {
+  // Rows are wrapped in an object so the loader can also stash the
+  // activity; that wrapper is what stops isEmpty()'s array rule from
+  // ever applying. No submissions = empty.
+  isEmpty: (d) => d.rows.length === 0,
 });
 
 onMounted(async () => {

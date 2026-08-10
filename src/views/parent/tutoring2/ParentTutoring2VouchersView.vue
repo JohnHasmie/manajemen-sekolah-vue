@@ -121,6 +121,10 @@ const { state, reload } = useDataRefresh<VoucherBundle>(async () => {
       : Promise.resolve<BimbelBill[]>([]),
   ]);
   return { vouchers, enrollments, bills };
+}, {
+  // Enrollments and bills are context for redeeming; the page is ABOUT
+  // vouchers, so no vouchers is empty even when the other two have rows.
+  isEmpty: (d) => d.vouchers.length === 0,
 });
 
 const bundle = computed<VoucherBundle | null>(() =>

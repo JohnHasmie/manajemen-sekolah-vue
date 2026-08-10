@@ -60,6 +60,10 @@ const { state, reload } = useDataRefresh<BillingBundle>(async () => {
     }),
   ]);
   return { bills: billsRes.items, summary: summaryRes };
+}, {
+  // The summary rides along with the rows, so the payload is an object
+  // and `isEmpty()`'s array rule never applies. No bills = empty.
+  isEmpty: (d) => d.bills.length === 0,
 });
 
 watch([debouncedSearch, statusFilter, sourceFilter, monthFilter], () => reload());

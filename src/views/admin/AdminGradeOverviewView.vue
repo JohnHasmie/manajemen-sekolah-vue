@@ -50,7 +50,12 @@ const { state: loadState, reload: load } = useDataRefresh<AdminGradeOverview>(
     GradeService.getAdminOverview({
       academic_year_id: ayStore.selectedYearId ?? undefined,
     }),
-  { watchLocale: false },
+  {
+    watchLocale: false,
+    // Object payload — without this the empty state can never fire and a
+    // school with no graded teachers renders a blank panel.
+    isEmpty: (d) => (d?.teachers?.length ?? 0) === 0,
+  },
 );
 
 const overview = computed(() => loadState.value.data ?? null);

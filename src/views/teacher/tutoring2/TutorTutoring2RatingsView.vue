@@ -29,6 +29,12 @@ const { t } = useI18n();
 
 const { state, reload } = useDataRefresh(async () => {
   return await RatingsService.getSelf();
+}, {
+  // The summary object always comes back, with zeroes when nobody has
+  // rated this tutor — so without a predicate the empty state can never
+  // fire. Note the computed below already reads `status === 'empty'`:
+  // the author expected this to work.
+  isEmpty: (d) => (d?.total_ratings ?? 0) === 0,
 });
 
 const summary = computed<TutorRatingSummary | null>(() => {

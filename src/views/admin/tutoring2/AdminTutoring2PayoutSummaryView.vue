@@ -33,6 +33,8 @@ interface SummaryBundle {
 const { state, reload } = useDataRefresh<SummaryBundle>(async () => {
   const { rows, meta } = await PayoutsService.getAdminSummary({ month: month.value });
   return { rows, meta };
+}, {
+  isEmpty: (d) => d.rows.length === 0,
 });
 watch(month, () => reload());
 
