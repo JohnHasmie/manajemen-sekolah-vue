@@ -12,11 +12,11 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { TutoringMaterial } from '@/types/tutoring-bimbel';
+import type { Material } from '@/types/tutoring2/material';
 
 const props = withDefaults(
   defineProps<{
-    material: TutoringMaterial;
+    material: Material;
     /** Controls the delete button visibility. Only 'tutor' typically. */
     role?: 'tutor' | 'student' | 'parent';
     canDelete?: boolean;
@@ -25,9 +25,9 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  open: [TutoringMaterial];
-  download: [TutoringMaterial];
-  delete: [TutoringMaterial];
+  open: [Material];
+  download: [Material];
+  delete: [Material];
 }>();
 
 /**
@@ -50,11 +50,14 @@ const kindLabel = computed<string>(() => {
 });
 
 const sizeLabel = computed<string | null>(() => {
-  const mb = props.material.file_size_mb;
-  if (mb != null && mb > 0) return `${mb.toFixed(mb >= 10 ? 0 : 1)} MB`;
+  // Derived here rather than expected from the API. The previous prop
+  // type asked for a `file_size_mb` the backend never sent — it existed
+  // only in the sample data these screens used to render.
   const bytes = props.material.file_size;
-  if (bytes != null && bytes > 0) return `${Math.round(bytes / 1024)} KB`;
-  return null;
+  if (bytes == null || bytes <= 0) return null;
+  const mb = Math.round((bytes / 1024 / 1024) * 100) / 100;
+  if (mb >= 0.1) return `${mb.toFixed(mb >= 10 ? 0 : 1)} MB`;
+  return `${Math.round(bytes / 1024)} KB`;
 });
 
 const canDownload = computed(() => Boolean(props.material.file_url));
@@ -76,10 +79,10 @@ const canDownload = computed(() => Boolean(props.material.file_url));
     >
       <p class="truncate text-sm font-bold text-tutoring-text-hi">{{ material.title }}</p>
       <p class="truncate text-2xs text-tutoring-text-mid">
-        <span v-if="material.program_label">{{ material.program_label }}</span>
-        <span v-if="material.program_label && sizeLabel"> · </span>
+        <span v-if="material.program_name">{{ material.program_name }}</span>
+        <span v-if="material.program_name && sizeLabel"> · </span>
         <span v-if="sizeLabel">{{ sizeLabel }}</span>
-        <span v-if="!material.program_label && !sizeLabel">{{ kindLabel.toLowerCase() }}</span>
+        <span v-if="!material.program_name && !sizeLabel">{{ kindLabel.toLowerCase() }}</span>
       </p>
     </button>
 

@@ -6576,6 +6576,11 @@
   "tutoring2": {
     "tutor": {
       "materialUpload": {
+        "saved": "Material saved.",
+        "group": "Learning group",
+        "groupPlaceholder": "Choose a group…",
+        "externalUrl": "Or a link to the material",
+        "externalUrlHint": "Use a link when the file is too large to upload.",
         "dropZone": "Drop a file or choose",
         "selectedLabel": "Selected",
         "chooseFile": "Choose or drag a file here",
@@ -6583,6 +6588,8 @@
         "savedStub": "Material uploaded (MVP — not yet saved)"
       },
       "materials": {
+        "noFile": "This material has no file.",
+        "deleted": "Material deleted.",
         "kpiVideo": "Video",
         "uploadCta": "Upload material",
         "kpiPdf": "PDF",
@@ -7558,6 +7565,7 @@
     },
     "student": {
       "materials": {
+        "noFile": "This material has no file.",
         "emptyDesc": "Your tutor will share materials here.",
         "title": "Materials",
         "emptyTitle": "No materials yet",

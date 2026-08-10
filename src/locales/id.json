@@ -6868,6 +6868,7 @@
         "selectMethod": "Pilih metode pembayaran"
       },
       "materials": {
+        "noFile": "Materi ini tidak punya berkas.",
         "meta": "{count} materi tersedia",
         "title": "Materi",
         "emptyDesc": "Tutor akan membagikan materi di sini.",
@@ -7757,6 +7758,11 @@
     },
     "tutor": {
       "materialUpload": {
+        "saved": "Materi tersimpan.",
+        "group": "Kelompok belajar",
+        "groupPlaceholder": "Pilih kelompok…",
+        "externalUrl": "Atau tautan materi",
+        "externalUrlHint": "Gunakan tautan bila berkas terlalu besar untuk diunggah.",
         "title": "Unggah materi",
         "savedStub": "Materi diunggah (MVP — belum tersimpan)",
         "chooseFile": "Pilih atau seret berkas ke sini",
@@ -7830,6 +7836,8 @@
         "aiOff": "AI belum aktif"
       },
       "materials": {
+        "noFile": "Materi ini tidak punya berkas.",
+        "deleted": "Materi dihapus.",
         "uploadCta": "Unggah materi",
         "meta": "{count} materi",
         "kpiVideo": "Video",

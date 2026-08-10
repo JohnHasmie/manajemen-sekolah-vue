@@ -24,57 +24,22 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import TutoringMaterialRow from '@/components/tutoring/TutoringMaterialRow.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
-import type { TutoringMaterial } from '@/types/tutoring-bimbel';
+import { MaterialsService } from '@/services/tutoring2/materials';
+import type { Material } from '@/types/tutoring2/material';
 
 const { t } = useI18n();
 const toast = useToast();
 
-// Static sample so the shape reads before BE-8 lands. Kept realistic so
-// the KPI counts exercise the PDF / Video / Other branches.
-const sampleMaterials: TutoringMaterial[] = [
-  {
-    id: 'sample-1',
-    title: 'Ringkasan Vektor.pdf',
-    file_url: 'https://example.invalid/materials/vektor.pdf',
-    file_name: 'ringkasan-vektor.pdf',
-    file_size_mb: 1.4,
-    file_mime: 'application/pdf',
-    kind: 'PDF',
-    program_label: 'Bimbel SMA · Fisika',
-    created_at: '2026-07-10T02:15:00Z',
-  },
-  {
-    id: 'sample-2',
-    title: 'Rumus Cepat.pdf',
-    file_url: 'https://example.invalid/materials/rumus-cepat.pdf',
-    file_name: 'rumus-cepat.pdf',
-    file_size_mb: 0.8,
-    file_mime: 'application/pdf',
-    kind: 'PDF',
-    program_label: 'Bimbel SMA · Matematika',
-    created_at: '2026-07-12T04:00:00Z',
-  },
-  {
-    id: 'sample-3',
-    title: 'Latihan Listening.pdf',
-    file_url: 'https://example.invalid/materials/listening.pdf',
-    file_name: 'latihan-listening.pdf',
-    file_size_mb: 0.6,
-    file_mime: 'application/pdf',
-    kind: 'PDF',
-    program_label: 'Bimbel SMP · Bahasa Inggris',
-    created_at: '2026-07-16T09:00:00Z',
-  },
-];
 
-const { state, reload } = useDataRefresh<TutoringMaterial[]>(async () => {
+const { state, reload } = useDataRefresh<Material[]>(async () => {
   // Simulated latency so the loading skeleton reads on cold nav.
   await new Promise((r) => setTimeout(r, 150));
-  return sampleMaterials;
+  const { items } = await MaterialsService.list({ per_page: 100 });
+  return items;
 });
 
-const contentItems = computed<TutoringMaterial[]>(() =>
-  state.value.status === 'content' ? (state.value.data as TutoringMaterial[]) : [],
+const contentItems = computed<Material[]>(() =>
+  state.value.status === 'content' ? (state.value.data as Material[]) : [],
 );
 
 const kpiCards = computed<KpiCard[]>(() => {
@@ -99,13 +64,22 @@ const kpiCards = computed<KpiCard[]>(() => {
 });
 
 const headerMeta = computed(() =>
-  t('tutoring2.student.materials.meta', { count: sampleMaterials.length }),
+  t('tutoring2.student.materials.meta', { count: contentItems.value.length }),
 );
 
-function onOpen(_material: TutoringMaterial) {
-  toast.info(t('tutoring2.common.notAvailable'));
+/**
+ * New tab, not a navigation: `file_url` is a signed, expiring link, so
+ * going back to a stale one would 403 and read to a student as the
+ * material having been removed.
+ */
+function onOpen(material: Material) {
+  if (!material.file_url) {
+    toast.error(t('tutoring2.student.materials.noFile'));
+    return;
+  }
+  window.open(material.file_url, '_blank', 'noopener');
 }
-function onDownload(_material: TutoringMaterial) {
+function onDownload(_material: Material) {
   toast.info(t('tutoring2.common.notAvailable'));
 }
 </script>
