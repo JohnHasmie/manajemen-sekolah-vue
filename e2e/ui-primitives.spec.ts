@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { fixture, loadManifest } from './fixtures/accounts';
+import { fixture } from './fixtures/accounts';
 import { applySession, login } from './fixtures/auth';
 import { backdrop, crud, formSheet, sheetCancel } from './pages/ui';
 
@@ -99,13 +99,28 @@ test('closing the sheet restores body scrolling', async ({ page }) => {
 test('search filters the roster and clearing restores it', async ({ page }) => {
   const c = crud(page);
 
-  // Assert on a SPECIFIC seeded name disappearing and coming back.
+  // Assert on a SPECIFIC name disappearing and coming back.
   // Asserting "the body has no words" instead looked simpler and was
   // wrong: filtering to nothing renders an empty-state message, which is
   // words, so the test failed while the search worked perfectly.
-  const someone = loadManifest().data.students[0]?.name;
+  //
+  // The name is taken from what the roster is ACTUALLY SHOWING, not from
+  // `manifest.data.students[0]`. That read the seeder's query order and
+  // assumed it matched the roster's first page — true by luck until a
+  // re-seed shuffled the fixture, and then the test failed with the
+  // search working perfectly. The roster paginates; the manifest does not
+  // promise page one.
+  await expect(c.body).not.toBeEmpty();
 
-  test.skip(!someone, 'no seeded student in the manifest to search for');
+  const someone = (await c.body.innerText())
+    .split('\n')
+    .map((line) => line.trim())
+    // Names are the longest human-looking cell; skip the codes, badges and
+    // status chips that share the row.
+    .filter((line) => /^[A-Za-z][A-Za-z .'-]{6,}$/.test(line))
+    .shift();
+
+  test.skip(!someone, 'no name-looking row on the roster to search for');
 
   await expect(c.body).toContainText(someone!);
 
