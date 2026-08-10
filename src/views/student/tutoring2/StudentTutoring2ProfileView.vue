@@ -8,11 +8,34 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import { useToast } from '@/composables/useToast';
+import { useAuthStore } from '@/stores/auth';
 
 const { t } = useI18n();
 const toast = useToast();
+const auth = useAuthStore();
+const router = useRouter();
+
+/**
+ * Actually ends the session — this was a toast and nothing else, so a
+ * siswa tapping Keluar stayed signed in. Teardown runs regardless of
+ * what the server says, and the redirect is unconditional.
+ */
+async function doLogout() {
+  try {
+    await auth.logout();
+  } catch {
+    // Swallowed on purpose. The store tears local state down in its own
+    // `finally`, so the session is already gone; re-throwing here would
+    // only escape as an unhandled rejection — noise in the console and a
+    // spurious Sentry event on what is, for the user, a successful
+    // logout. The redirect below is what they actually care about.
+  } finally {
+    router.push({ name: 'login' });
+  }
+}
 
 interface SettingCard {
   short: string;
@@ -52,8 +75,7 @@ const cards = computed<SettingCard[]>(() => [
     short: 'KLR',
     title: t('tutoring2.student.profile.logout'),
     subtitle: t('tutoring2.student.profile.logoutDesc'),
-    // TODO WEB-5+ wire to auth.logout() once the flow is finalised.
-    action: () => toast.info(t('tutoring2.student.profile.logout')),
+    action: doLogout,
   },
 ]);
 </script>
