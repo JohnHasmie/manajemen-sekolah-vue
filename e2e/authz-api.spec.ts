@@ -551,3 +551,67 @@ for (const key of ['parent', 'staff'] as FixtureKey[]) {
   });
 }
 
+/**
+ * A notification id is not a free pass.
+ *
+ * `NotificationController::show` carries no `authorize()` — it scopes
+ * inside the query instead, `Notification::where('user_id', Auth::id())`
+ * then `findOrFail`. That is correct, and invisible to any check that
+ * reads the class for a gate, so the endpoint sits on the ungated
+ * shortlist permanently. This is the test that says the shortlist is
+ * wrong about it, rather than a comment claiming so.
+ *
+ * The id is taken from the ADMIN's own notification list at runtime, not
+ * from the manifest: notification rows are created by provisioning and
+ * their ids are not seeded anywhere, and a hardcoded one would rot on the
+ * next re-seed.
+ *
+ * Of the twelve parameterised GETs with no gate, this is the only one the
+ * school fixture can reach at all — the other eleven are `/tutoring/*`
+ * and the tenant has zero tutoring rows. Covering those needs a bimbel
+ * fixture, which the suite does not have.
+ */
+test('a parent cannot read another user\'s notification by id', async () => {
+  const admin = await apiFor(await login(fixtureFor('admin')));
+  const parent = await apiFor(await login(fixtureFor('parent')));
+
+  try {
+    const listed = await admin.ctx.fetch(`${admin.base}/notifications`);
+    expect(listed.status(), 'CONTROL: the admin must be able to list their own notifications').toBe(200);
+
+    const body = (await listed.json()) as unknown;
+    const rows = Array.isArray(body) ? body : ((body as { data?: unknown[] })?.data ?? []);
+    const id = (rows as { id?: string }[]).map((r) => r?.id).filter(Boolean)[0];
+
+    test.skip(!id, 'the admin has no notification to borrow an id from');
+
+    // CONTROL: the id is real and readable BY ITS OWNER. Without this a
+    // 404 for the parent below would be indistinguishable from a typo.
+    expect(
+      await statusOf(admin, 'GET', `/notifications/${id}`),
+      'CONTROL: the owner must be able to read it, or the parent 404 proves nothing',
+    ).toBe(200);
+
+    // CONTROL: the parent can use this endpoint AT ALL. Without it a 404
+    // below would also be satisfied by a parent who simply cannot reach
+    // /notifications — the denial would be real and the test still
+    // meaningless.
+    const own = await parent.ctx.fetch(`${parent.base}/notifications`);
+    expect(own.status(), 'CONTROL: the parent must be able to list their own notifications').toBe(200);
+
+    // 404 rather than 403 is the right shape here: the row is scoped out
+    // of the query entirely, so the endpoint cannot distinguish "not
+    // yours" from "does not exist" — and should not, since saying which
+    // would confirm the id belongs to someone.
+    expect(
+      await statusOf(parent, 'GET', `/notifications/${id}`),
+      "a parent read the admin's notification. NotificationController::show scopes on " +
+        'user_id inside the query; if that scope is ever dropped this is the only thing ' +
+        'watching, because the controller has no authorize() for a reviewer to notice missing.',
+    ).toBe(404);
+  } finally {
+    await admin.dispose();
+    await parent.dispose();
+  }
+});
+
