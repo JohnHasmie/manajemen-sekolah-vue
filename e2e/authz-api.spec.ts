@@ -1,7 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { loadManifest, type FixtureKey } from './fixtures/accounts';
 import { apiFor, statusOf } from './fixtures/api';
-import { ADMIN_READ_PROBES, DENY_MATRIX, SCOPED_READS } from './fixtures/authz-matrix';
+import {
+  ADMIN_READ_PROBES,
+  DENY_MATRIX,
+  REVIEWED_OPEN_READS,
+  SCOPED_READS,
+} from './fixtures/authz-matrix';
 import { login } from './fixtures/auth';
 
 /**
@@ -507,11 +512,42 @@ for (const key of ['parent', 'staff'] as FixtureKey[]) {
     }
 
     console.log(
-      '\n   Report only. Self-scoped reads (/me, /profile, /notifications) belong in\n' +
-        '   this list and are correct. So are row-scoped ones (/classes). Open the\n' +
-        "   controller named beside each path and ask whether the BODY carries other\n" +
-        '   people\'s rows; only then promote it into DENY_MATRIX with a control.\n',
+      '\n   Self-scoped reads (/me, /profile, /notifications) belong in this list and\n' +
+        '   are correct. So are row-scoped ones. Open the controller named beside each\n' +
+        "   path and ask whether the BODY carries other people's rows; only then\n" +
+        '   promote it into DENY_MATRIX with a control.\n',
     );
+
+    // The one hard assertion. Everything above is a report; this is the
+    // line between "looked at" and "not looked at".
+    //
+    // A path already in REVIEWED_OPEN_READS answering 2xx is expected — a
+    // human decided it was fine. Anything ELSE answering 2xx means either
+    // an endpoint nobody has triaged yet, or a gate that used to be there
+    // and is not any more. Both need a person, and a report that only
+    // grows never gets one.
+    const unreviewed = reached.filter((r) => !REVIEWED_OPEN_READS.includes(r.path));
+
+    expect(
+      unreviewed.map((r) => `${r.path}  (${r.action})`),
+      `${key} reached ${unreviewed.length} ungated endpoint(s) nobody has triaged. This is ` +
+        'NOT a leak report — it says no one has looked. Open each controller, decide ' +
+        'whether the body carries other people\'s rows, then either gate it or add the ' +
+        'path to REVIEWED_OPEN_READS with the reason.',
+    ).toEqual([]);
+
+    // A stale allowlist entry is harmless — it means something got gated,
+    // which is the direction of travel. Worth saying, not worth failing.
+    const goneQuiet = REVIEWED_OPEN_READS.filter(
+      (path) => targets!.some((t) => t.path === path) && !reached.some((r) => r.path === path),
+    );
+
+    if (goneQuiet.length) {
+      console.log(
+        `   ${goneQuiet.length} reviewed path(s) no longer answer ${key} — gated since, ` +
+          `safe to drop from REVIEWED_OPEN_READS:\n     ${goneQuiet.join('\n     ')}\n`,
+      );
+    }
   });
 }
 

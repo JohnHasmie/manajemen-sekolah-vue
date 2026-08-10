@@ -430,3 +430,65 @@ export const SCOPED_READS: ScopedReadRow[] = [
       'which teacher is with which class at which hour, all week',
   },
 ];
+
+/**
+ * Ungated GETs a low-privilege role may reach, each one already triaged.
+ *
+ * The sweep prints every 2xx and fails on nothing, on the grounds that a
+ * 2xx is a lead rather than a verdict. True — but a report that can only
+ * grow is a report nobody reads, and a gate removed by accident would
+ * surface as one more line in it.
+ *
+ * So this is the line between "looked at" and "not looked at". A 2xx from
+ * a path in here means a human decided it is fine. A 2xx from anything
+ * else fails the sweep — not because it leaks, but because nobody has
+ * checked yet.
+ *
+ * Adding an entry is cheap and is meant to be: open the controller, decide
+ * whether the body carries other people's rows, then either gate it or
+ * write the reason here. What must not happen is the list growing without
+ * that read.
+ *
+ * Verified 2026-08-10 against a local stack on main: parent 22/28,
+ * staff 22/28, identical sets.
+ */
+export const REVIEWED_OPEN_READS: string[] = [
+  // Self-scoped: the response is ABOUT the caller. A denial would be the bug.
+  '/me',
+  '/profile',
+  '/profile/managed-schools',
+  '/profile/security-status',
+  '/user/profile',
+  '/user/roles',
+  '/user/schools',
+  '/notifications',
+  '/notifications/unread-count',
+  '/broadcasting/auth',
+
+  // Tenant status every role's UI renders: the demo banner reads the
+  // expiry, the wizard reads its own state.
+  '/demo/expiry',
+  '/demo/my-registrations',
+  '/demo/wizard-state',
+  '/billing/subscription-wizard',
+
+  // Public-ish directory. Returns nothing without a query.
+  '/schools/search',
+
+  // Tutoring reads a parent and student HOLD the ability for, on purpose:
+  // tutoring.activity.view, .material.view, .session.view and
+  // .leaderboard.view are all granted to them (checked in production).
+  '/tutoring/activities',
+  '/tutoring/materials',
+  '/tutoring/sessions',
+  '/tutoring/leaderboard/by-class',
+  '/tutoring/leaderboard/by-group',
+
+  // Owner-scoped despite carrying no `authorize()`, which is why the
+  // scanner still lists them. `TutoringTutorStatsController` defaults to
+  // the caller's own stats and honours `?tutor_user_id` for an admin only;
+  // `TutoringTutorRatingsController` passes `$request->user()?->id` into
+  // its action. Both read as ungated and are not.
+  '/tutoring/tutor-stats',
+  '/tutoring/tutor/ratings/summary',
+];
