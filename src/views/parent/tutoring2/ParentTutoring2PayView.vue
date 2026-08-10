@@ -35,6 +35,8 @@ import {
   TutoringBimbelService,
   type BimbelBill,
 } from '@/services/tutoring-bimbel.service';
+import { TutoringBillingSettingsService } from '@/services/tutoring2/billing-settings';
+import type { PaymentAccount } from '@/types/tutoring2/billing';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -54,18 +56,50 @@ interface PayBundle {
   mode: 'list' | 'detail';
   bills: BimbelBill[];      // list mode: unpaid bills; detail mode: [bill]
   focused?: BimbelBill;     // detail mode only
+  /**
+   * Where to send the money. Null when the tenant has configured no
+   * destination at all — rendered as an honest notice rather than a
+   * blank bank block, which reads as a real account with missing digits.
+   */
+  paymentAccount: PaymentAccount | null;
 }
 
-const { state, reload } = useDataRefresh<PayBundle>(async () => {
+const { state, reload } = useDataRefresh<PayBundle | null>(async () => {
+  // Fetched alongside the bills, not lazily on tapping "Bayar": a parent
+  // opening this screen is already asking how to pay, and a second
+  // round-trip at the moment they tap is the one place latency is most
+  // visible. It is one small tenant-level row.
+  //
+  // Tolerated failure — `catch(() => null)`: the payment destination is
+  // an ADDITION to this screen. If that call fails, a parent should
+  // still see what they owe, with the transfer panel replaced by an
+  // honest notice. Letting it reject would turn a partial outage into a
+  // blank billing screen.
+  const accountPromise = TutoringBillingSettingsService.getPaymentAccount()
+    .catch(() => null);
+
   if (billIdFromQuery.value) {
-    const focused = await TutoringBimbelService.getBill(billIdFromQuery.value);
-    return { mode: 'detail', bills: [focused], focused };
+    const [focused, paymentAccount] = await Promise.all([
+      TutoringBimbelService.getBill(billIdFromQuery.value),
+      accountPromise,
+    ]);
+    return { mode: 'detail', bills: [focused], focused, paymentAccount };
   }
-  const { items } = await TutoringBimbelService.listBills({
-    status: 'unpaid',
-    per_page: 50,
-  });
-  return { mode: 'list', bills: items };
+
+  const [{ items }, paymentAccount] = await Promise.all([
+    TutoringBimbelService.listBills({ status: 'unpaid', per_page: 50 }),
+    accountPromise,
+  ]);
+
+  // `null`, not an object with an empty `bills` array. useDataRefresh
+  // decides `status: 'empty'` via isEmpty(), which recognises only
+  // null/undefined/[] — an object always reads as content, and this view
+  // binds :state straight into <AsyncView>, so a wali with nothing
+  // outstanding would get a blank panel instead of "tidak ada tagihan".
+  // (Third view in this surface to hit that; see useDataRefresh.spec.ts.)
+  if (items.length === 0) return null;
+
+  return { mode: 'list', bills: items, paymentAccount };
 });
 
 // Re-fetch when the query flips between "no id" and a specific id.
@@ -185,9 +219,37 @@ function backToInbox() {
   router.push({ name: 'parent.tutoring2.pay' });
 }
 
-function pay() {
-  // MVP stub — real payment goes through BE-11 (invoice + gateway).
-  toast.info(t('tutoring2.parent.pay.payStubToast'));
+/**
+ * The transfer destination for the current tenant.
+ *
+ * This screen used to answer "how do I pay?" with a toast saying the
+ * feature was not ready, because v2 had no route for it — a parent could
+ * see what they owed and had no way to discover where to send it. The
+ * details now come from `GET /tutoring-v2/payment-account`.
+ */
+const paymentAccount = computed<PaymentAccount | null>(
+  () => bundle.value?.paymentAccount ?? null,
+);
+
+/** Manual transfer is possible when the tenant filled in ANY of these. */
+const hasManualDestination = computed(() => {
+  const a = paymentAccount.value;
+  if (!a) return false;
+  return Boolean(a.bank_account_number || a.qris_image_url || a.payment_instructions);
+});
+
+async function copyAccountNumber() {
+  const number = paymentAccount.value?.bank_account_number;
+  if (!number) return;
+  try {
+    await navigator.clipboard.writeText(number);
+    toast.success(t('tutoring2.parent.pay.accountCopied'));
+  } catch {
+    // Clipboard is permission-gated and unavailable over plain http.
+    // The number is on screen regardless, so this is a convenience that
+    // failed, not an error worth alarming a parent about.
+    toast.info(t('tutoring2.parent.pay.accountCopyFailed'));
+  }
 }
 </script>
 
@@ -245,12 +307,86 @@ function pay() {
             </div>
           </section>
 
+          <!--
+            WHERE TO PAY. This block replaces a "Bayar sekarang" button
+            whose only behaviour was a toast saying the feature was not
+            ready — the screen could state the amount but not the
+            destination, which is the one thing a parent opens it for.
+
+            Rendered inline rather than behind a tap: it is the answer to
+            the question the screen exists to answer.
+          -->
+          <section
+            v-if="hasManualDestination"
+            class="rounded-3xl border border-slate-100 bg-white p-md shadow-sm"
+          >
+            <h3 class="text-sm font-bold text-slate-900">
+              {{ t('tutoring2.parent.pay.howToPay') }}
+            </h3>
+
+            <dl v-if="paymentAccount?.bank_account_number" class="mt-3 space-y-1.5">
+              <div class="flex items-baseline justify-between gap-3">
+                <dt class="text-2xs text-slate-500">{{ t('tutoring2.parent.pay.bank') }}</dt>
+                <dd class="text-sm font-semibold text-slate-900">
+                  {{ paymentAccount.bank_name ?? '—' }}
+                </dd>
+              </div>
+              <div class="flex items-baseline justify-between gap-3">
+                <dt class="text-2xs text-slate-500">{{ t('tutoring2.parent.pay.accountNumber') }}</dt>
+                <dd class="flex items-center gap-2">
+                  <!-- tabular-nums so digits line up and are easy to read back -->
+                  <span class="text-sm font-bold tabular-nums tracking-wide text-slate-900">
+                    {{ paymentAccount.bank_account_number }}
+                  </span>
+                  <button
+                    type="button"
+                    class="rounded-md px-2 py-0.5 text-2xs font-semibold text-cobalt-700 hover:bg-cobalt-50"
+                    @click="copyAccountNumber"
+                  >
+                    {{ t('tutoring2.parent.pay.copy') }}
+                  </button>
+                </dd>
+              </div>
+              <div v-if="paymentAccount.bank_account_holder" class="flex items-baseline justify-between gap-3">
+                <dt class="text-2xs text-slate-500">{{ t('tutoring2.parent.pay.accountHolder') }}</dt>
+                <dd class="text-sm text-slate-900">{{ paymentAccount.bank_account_holder }}</dd>
+              </div>
+            </dl>
+
+            <img
+              v-if="paymentAccount?.qris_image_url"
+              :src="paymentAccount.qris_image_url"
+              :alt="t('tutoring2.parent.pay.qrisAlt')"
+              class="mt-3 h-48 w-48 rounded-xl border border-slate-100 object-contain"
+            />
+
+            <!--
+              Tenant-authored copy. Rendered as TEXT, never v-html: it is
+              admin-entered and would otherwise be a stored-XSS sink into
+              every parent's browser on the tenant.
+            -->
+            <p
+              v-if="paymentAccount?.payment_instructions"
+              class="mt-3 whitespace-pre-line text-2xs leading-relaxed text-slate-600"
+            >
+              {{ paymentAccount.payment_instructions }}
+            </p>
+          </section>
+
+          <!-- Nothing configured. Say so plainly instead of showing an
+               empty bank block, and point somewhere useful. -->
+          <section
+            v-else
+            class="rounded-3xl border border-amber-100 bg-amber-50/60 p-md"
+          >
+            <p class="text-2xs leading-relaxed text-amber-800">
+              {{ t('tutoring2.parent.pay.noDestination') }}
+            </p>
+          </section>
+
           <div class="flex gap-3 pt-1">
-            <Button variant="ghost" size="sm" @click="backToInbox">
+            <Button variant="ghost" size="sm" class="flex-1" @click="backToInbox">
               {{ t('tutoring2.common.back') }}
-            </Button>
-            <Button variant="primary" size="sm" class="flex-1" @click="pay">
-              {{ t('tutoring2.parent.pay.payCta') }}
             </Button>
           </div>
         </template>

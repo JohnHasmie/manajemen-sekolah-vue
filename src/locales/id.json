@@ -6592,6 +6592,15 @@
         "kpiThisYearCount": "Tagihan tahun ini"
       },
       "pay": {
+        "howToPay": "Cara pembayaran",
+        "bank": "Bank",
+        "accountNumber": "Nomor rekening",
+        "accountHolder": "Atas nama",
+        "copy": "Salin",
+        "accountCopied": "Nomor rekening disalin.",
+        "accountCopyFailed": "Tidak bisa menyalin otomatis. Silakan salin manual.",
+        "qrisAlt": "Kode QRIS untuk pembayaran",
+        "noDestination": "Bimbel belum mengisi informasi pembayaran. Silakan hubungi admin bimbel untuk cara pembayaran.",
         "meta": "{children} anak · {count} tagihan",
         "payStubToast": "Pembayaran diproses (MVP stub)",
         "title": "Pembayaran",

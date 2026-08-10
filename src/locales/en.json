@@ -7772,6 +7772,15 @@
     },
     "parent": {
       "pay": {
+        "howToPay": "How to pay",
+        "bank": "Bank",
+        "accountNumber": "Account number",
+        "accountHolder": "Account holder",
+        "copy": "Copy",
+        "accountCopied": "Account number copied.",
+        "accountCopyFailed": "Could not copy automatically. Please copy it manually.",
+        "qrisAlt": "QRIS code for payment",
+        "noDestination": "This tutoring centre has not added payment details yet. Please contact the admin for how to pay.",
         "kpiTotalChildren": "Children",
         "kpiPaidThisMonth": "Paid this month",
         "payStubToast": "Payment processed (MVP stub)",
