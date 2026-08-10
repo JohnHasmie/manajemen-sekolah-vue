@@ -26,6 +26,12 @@ const router = useRouter();
 async function doLogout() {
   try {
     await auth.logout();
+  } catch {
+    // Swallowed on purpose. The store tears local state down in its own
+    // `finally`, so the session is already gone; re-throwing here would
+    // only escape as an unhandled rejection — noise in the console and a
+    // spurious Sentry event on what is, for the user, a successful
+    // logout. The redirect below is what they actually care about.
   } finally {
     router.push({ name: 'login' });
   }
