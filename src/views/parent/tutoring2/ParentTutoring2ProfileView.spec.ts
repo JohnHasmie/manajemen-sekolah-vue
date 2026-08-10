@@ -21,7 +21,10 @@ import StudentProfile from '../../student/tutoring2/StudentTutoring2ProfileView.
 const logout = vi.fn();
 const push = vi.fn();
 
-vi.mock('@/stores/auth', () => ({ useAuthStore: () => ({ logout }) }));
+const authUser = { value: null as { name?: string } | null };
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: () => ({ logout, get user() { return authUser.value; } }),
+}));
 vi.mock('vue-router', () => ({ useRouter: () => ({ push, back: vi.fn() }) }));
 vi.mock('@/composables/useToast', () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
@@ -32,9 +35,35 @@ async function mountView(Component: unknown) {
   const w = mount(Component as never, {
     global: {
       plugins: [
-        createI18n({ legacy: false, locale: 'id', messages: { id: {} }, missingWarn: false, fallbackWarn: false }),
+        createI18n({
+          legacy: false,
+          locale: 'id',
+          // Real templates for the two keys under test — with empty
+          // messages vue-i18n echoes the KEY and never interpolates, so
+          // `{name}` would be unobservable and the assertion vacuous.
+          messages: {
+            id: {
+              tutoring2: {
+                parent: { profile: { subtitle: 'Wali · {name}' } },
+                common: { roleParent: 'Wali' },
+              },
+            },
+          },
+          missingWarn: false,
+          fallbackWarn: false,
+        }),
       ],
-      stubs: { BrandPageHeader: true, NavIcon: true, InitialsAvatar: true },
+      stubs: {
+        // Renders `meta`, because that is where the header puts the
+        // signed-in user's name — a `true` stub swallows it and the
+        // assertion below would pass against nothing.
+        BrandPageHeader: {
+          props: ['role', 'kicker', 'title', 'meta'],
+          template: '<div data-testid="hdr">{{ title }} {{ meta }}</div>',
+        },
+        NavIcon: true,
+        InitialsAvatar: true,
+      },
     },
   });
   await flushPromises();
@@ -55,6 +84,7 @@ describe.each([
   beforeEach(() => {
     logout.mockReset().mockResolvedValue(undefined);
     push.mockReset();
+    authUser.value = null;
   });
 
   it('ends the session and returns to login', async () => {
@@ -75,5 +105,35 @@ describe.each([
 
     expect(logout).toHaveBeenCalledTimes(1);
     expect(push).toHaveBeenCalledWith({ name: 'login' });
+  });
+
+});
+
+describe('wali profile — whose name is on it', () => {
+  beforeEach(() => {
+    authUser.value = null;
+  });
+
+  it('shows the SIGNED-IN wali, not a hardcoded name', async () => {
+    // The header was `const placeholderName = 'Bpk Anwar'`, so every
+    // wali in every tenant was greeted by the same stranger.
+    authUser.value = { name: 'Ibu Sari Rahmawati' };
+
+    const w = await mountView(ParentProfile);
+
+    expect(w.html()).toContain('Ibu Sari Rahmawati');
+    expect(w.html()).not.toContain('Bpk Anwar');
+  });
+
+  it('falls back to the role label when the account has no name', async () => {
+    // Not a person, and not a dangling "Wali · " either.
+    authUser.value = { name: '   ' };
+
+    const w = await mountView(ParentProfile);
+
+    expect(w.html()).not.toContain('Bpk Anwar');
+    // Reads "Wali · Wali" rather than a dangling "Wali · " — no name is
+    // better than half a sentence, and far better than someone else's.
+    expect(w.get('[data-testid="hdr"]').text()).toContain('Wali · Wali');
   });
 });

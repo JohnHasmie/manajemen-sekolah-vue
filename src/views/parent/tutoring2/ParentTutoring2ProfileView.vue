@@ -27,9 +27,19 @@ interface SettingCard {
   action: () => void;
 }
 
-// TODO: swap 'Bpk Anwar' placeholder for the real authenticated wali
-// name once the auth store exposes it (BE-8+ profile endpoint).
-const placeholderName = 'Bpk Anwar';
+/**
+ * The signed-in wali's own name.
+ *
+ * This screen shipped with `const placeholderName = 'Bpk Anwar'` wired
+ * straight into the header, so EVERY wali was greeted by someone else's
+ * name. The TODO said to swap it once the auth store exposed a name —
+ * `auth.user.name` was already there, and is what the shared
+ * ProfileMenu has been reading all along.
+ *
+ * Falls back to the role label rather than a person: an account with no
+ * name yet should read "Wali", not a stranger's name and not "Wali · ".
+ */
+const displayName = computed(() => auth.user?.name?.trim() || t('tutoring2.common.roleParent'));
 
 /**
  * Actually ends the session.
@@ -103,7 +113,7 @@ const cards = computed<SettingCard[]>(() => [
       role="parent"
       :kicker="t('tutoring2.parent.home.subtitle')"
       :title="t('tutoring2.parent.profile.title')"
-      :meta="t('tutoring2.parent.profile.subtitle', { name: placeholderName })"
+      :meta="t('tutoring2.parent.profile.subtitle', { name: displayName })"
     />
 
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
