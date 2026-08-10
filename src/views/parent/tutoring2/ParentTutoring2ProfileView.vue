@@ -7,14 +7,18 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 // Button unused here — setting cards are raw <button> for layout freedom
 // (spec allows structural buttons; only real form actions must use the
 // Button component).
 import { useToast } from '@/composables/useToast';
+import { useAuthStore } from '@/stores/auth';
 
 const { t } = useI18n();
 const toast = useToast();
+const auth = useAuthStore();
+const router = useRouter();
 
 interface SettingCard {
   short: string;
@@ -27,8 +31,24 @@ interface SettingCard {
 // name once the auth store exposes it (BE-8+ profile endpoint).
 const placeholderName = 'Bpk Anwar';
 
-function doLogout() {
-  toast.info(t('tutoring2.parent.profile.logout'));
+/**
+ * Actually ends the session.
+ *
+ * This used to be `toast.info(...)` and nothing else: a wali tapped
+ * Keluar, saw a confirmation, and stayed signed in. On a shared device —
+ * a family phone, a bimbel front-desk tablet — the next person had their
+ * account.
+ *
+ * `auth.logout()` tears down local state in a `finally`, so a failed or
+ * already-expired server call still clears the session; the redirect is
+ * unconditional for the same reason.
+ */
+async function doLogout() {
+  try {
+    await auth.logout();
+  } finally {
+    router.push({ name: 'login' });
+  }
 }
 
 const cards = computed<SettingCard[]>(() => [
