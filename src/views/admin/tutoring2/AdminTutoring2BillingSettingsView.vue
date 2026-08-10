@@ -27,19 +27,17 @@
     the same question — a product decision, not a port. Do not add it
     here on the assumption that v1 having it makes it a gap.
 
-  ── STILL GENUINELY MISSING ──────────────────────────────────────────
+  ── QRIS ─────────────────────────────────────────────────────────────
 
-    QRIS image upload. Needs POST /tutoring-v2/billing-settings/qris.
-    The identically-named v1 route exists, but inside the LEGACY
-    `Route::prefix('tutoring')` group — a different group serving a
-    different controller. Same path is not the same endpoint; check the
-    group boundaries before concluding a route exists (v2 spans lines
-    1102-1328 of routes/api.php, v1 spans 1330-1593).
+    POST /tutoring-v2/billing-settings/qris uploads AND persists in one
+    call, so there is no second save for the admin to forget.
 
-    Until it ships, `qris_image_url` is read-only here: it is displayed
-    to parents if a v1 upload set it, and cannot be changed from this
-    screen. The API rejects a caller-supplied URL by design, so this is
-    not a field to wire up hopefully.
+    `qris_image_url` on the response is a SIGNED, EXPIRING url. The
+    backend stores a storage path and signs it per request, because the
+    bucket's own endpoint rejects unsigned reads. Never cache that url,
+    never persist it, and never preview an upload from a local
+    `URL.createObjectURL` — the admin would see an image their parents
+    cannot load. Always re-read it from the settings payload.
 -->
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
@@ -212,6 +210,53 @@ const paymentDirty = computed(() => {
   void paymentForm.payment_gateway_provider;
   return Object.keys(buildPaymentPatch()).length > 0;
 });
+
+// ── QRIS ─────────────────────────────────────────────────────────
+const uploadingQris = ref(false);
+const qrisError = ref('');
+
+/**
+ * Client-side guard mirroring the server's rule. The server is the
+ * authority — this exists so an admin who picks a 5 MB holiday photo
+ * finds out immediately instead of after the upload.
+ */
+const QRIS_MAX_BYTES = 2 * 1024 * 1024;
+const QRIS_TYPES = ['image/png', 'image/jpeg'];
+
+async function onQrisPicked(event: Event): Promise<void> {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  qrisError.value = '';
+  if (!QRIS_TYPES.includes(file.type)) {
+    qrisError.value = t('tutoring2.admin.billingSettings.qrisTypeError');
+    input.value = '';
+    return;
+  }
+  if (file.size > QRIS_MAX_BYTES) {
+    qrisError.value = t('tutoring2.admin.billingSettings.qrisSizeError');
+    input.value = '';
+    return;
+  }
+
+  uploadingQris.value = true;
+  try {
+    const saved = await TutoringBillingSettingsService.uploadQris(file);
+    // Reseed from the response so the signed URL and the baseline both
+    // come from the server — never from a local object URL, which would
+    // show the admin an image the parents cannot see.
+    seedPaymentForm(saved);
+    toast.success(t('tutoring2.admin.billingSettings.qrisSaved'));
+  } catch (e) {
+    qrisError.value =
+      e instanceof Error ? e.message : t('tutoring2.admin.billingSettings.saveFailed');
+  } finally {
+    uploadingQris.value = false;
+    // Let the same file be re-picked after a failure.
+    input.value = '';
+  }
+}
 
 async function savePayment(): Promise<void> {
   const patch = buildPaymentPatch();
@@ -468,6 +513,55 @@ const droppedFeatures = computed(() => [
                 {{ t('tutoring2.admin.billingSettings.instructionsHint') }}
               </span>
             </label>
+
+            <!--
+              QRIS. Not part of the text-field diff-save above: it is a
+              file upload with its own endpoint, and the server persists
+              it in the same call — so there is no "save" for the admin
+              to forget after picking an image.
+            -->
+            <div class="rounded-2xl border border-slate-100 bg-slate-50/60 p-3">
+              <span class="text-2xs font-semibold text-slate-600">
+                {{ t('tutoring2.admin.billingSettings.qris') }}
+              </span>
+
+              <img
+                v-if="paymentSettings?.qris_image_url"
+                :src="paymentSettings.qris_image_url"
+                :alt="t('tutoring2.admin.billingSettings.qrisAlt')"
+                class="mt-2 h-40 w-40 rounded-xl border border-slate-200 bg-white object-contain"
+              />
+              <p v-else class="mt-1 text-2xs text-slate-500">
+                {{ t('tutoring2.admin.billingSettings.qrisNone') }}
+              </p>
+
+              <label class="mt-2 inline-flex cursor-pointer items-center gap-2">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  class="sr-only"
+                  :disabled="uploadingQris"
+                  @change="onQrisPicked"
+                />
+                <span
+                  class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-2xs font-semibold text-slate-700"
+                  :class="uploadingQris && 'opacity-40'"
+                >
+                  {{
+                    uploadingQris
+                      ? t('tutoring2.admin.billingSettings.qrisUploading')
+                      : paymentSettings?.qris_image_url
+                        ? t('tutoring2.admin.billingSettings.qrisReplace')
+                        : t('tutoring2.admin.billingSettings.qrisUpload')
+                  }}
+                </span>
+              </label>
+
+              <p v-if="qrisError" class="mt-1.5 text-2xs text-red-600">{{ qrisError }}</p>
+              <p class="mt-1.5 text-2xs text-slate-400">
+                {{ t('tutoring2.admin.billingSettings.qrisHint') }}
+              </p>
+            </div>
 
             <label class="flex items-center gap-2">
               <input v-model="paymentForm.payment_gateway_enabled" type="checkbox" />

@@ -40,6 +40,25 @@ export const TutoringBillingSettingsService = {
   },
 
   /**
+   * Upload the QRIS image. Persists it server-side in the same call and
+   * returns the updated settings, so there is no second save to forget.
+   *
+   * `qris_image_url` on the response is a SIGNED, expiring URL — the
+   * backend stores a storage path and signs it per request, because the
+   * bucket's own endpoint rejects unsigned reads. Do not cache it, and
+   * do not persist it anywhere: re-read it from the settings payload.
+   */
+  async uploadQris(file: File): Promise<BillingSettings> {
+    const form = new FormData();
+    form.append('image', file);
+    const r = await api.post<OneEnvelope<BillingSettings>>(
+      '/tutoring-v2/billing-settings/qris',
+      form,
+    );
+    return r.data.data;
+  },
+
+  /**
    * What a wali/siswa is shown so they can pay.
    *
    * Resolves to `null` when the tenant has configured nothing — the

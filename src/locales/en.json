@@ -7450,6 +7450,16 @@
         "noNewActivity": "No recent activity."
       },
       "billingSettings": {
+        "qris": "QRIS code",
+        "qrisAlt": "QRIS code preview",
+        "qrisNone": "No QRIS code yet.",
+        "qrisUpload": "Upload QRIS",
+        "qrisReplace": "Replace QRIS",
+        "qrisUploading": "Uploading…",
+        "qrisSaved": "QRIS code saved.",
+        "qrisHint": "PNG or JPG, max 2 MB. Saved as soon as you pick it.",
+        "qrisTypeError": "Must be a PNG or JPG.",
+        "qrisSizeError": "Maximum size is 2 MB.",
         "paymentTitle": "Payment destination",
         "paymentDesc": "The account and instructions a guardian sees when paying a bill.",
         "notPayable": "Guardians cannot pay yet",
