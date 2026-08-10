@@ -53,13 +53,36 @@ import type { AsyncState } from '@/components/data/AsyncView.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
 
-export interface UseDataRefreshOptions {
+export interface UseDataRefreshOptions<T = unknown> {
   /** Re-run the loader when the selected academic year changes. Default true. */
   watchAcademicYear?: boolean;
   /** Re-run the loader when the app locale changes. Default true. */
   watchLocale?: boolean;
   /** Run the loader once on mount. Default true. */
   immediate?: boolean;
+  /**
+   * Decide whether the loaded data counts as EMPTY.
+   *
+   * The default only recognises `null`, `undefined`, or an empty ARRAY.
+   * That is a trap for any loader returning an object — say
+   * `{ rows, summary }`, because the screen needs aggregate counts
+   * alongside its rows. An object is never empty by the default rule, so
+   * `<AsyncView :state="state">` renders its CONTENT branch over nothing
+   * and the empty state the view configured never appears.
+   *
+   * It has bitten this codebase repeatedly, always silently: the type is
+   * correct, the tests pass, and a user with no data sees a blank panel
+   * where "belum ada data" belongs.
+   *
+   * Pass a predicate when the data is an object:
+   *
+   *   useDataRefresh(loader, { isEmpty: (d) => d.rows.length === 0 })
+   *
+   * Returning `null` from the loader also works and is equally valid —
+   * several views do that. Prefer this option when the empty case still
+   * needs to carry data (totals, filters) that a bare null would discard.
+   */
+  isEmpty?: (data: T) => boolean;
 }
 
 export interface UseDataRefreshReturn<T> {
@@ -77,13 +100,22 @@ function isEmpty(data: unknown): boolean {
 
 export function useDataRefresh<T>(
   loader: () => Promise<T>,
-  opts: UseDataRefreshOptions = {},
+  opts: UseDataRefreshOptions<T> = {},
 ): UseDataRefreshReturn<T> {
   const {
     watchAcademicYear = true,
     watchLocale = true,
     immediate = true,
+    isEmpty: isEmptyOverride,
   } = opts;
+
+  // null/undefined stay empty regardless: a custom predicate describes
+  // what an empty PAYLOAD looks like, and it should never be handed one
+  // that does not exist.
+  const decideEmpty = (data: T): boolean =>
+    data === null || data === undefined
+      ? true
+      : (isEmptyOverride ?? isEmpty)(data);
 
   const state = ref<AsyncState<T>>({ status: 'loading' }) as Ref<
     AsyncState<T>
@@ -100,7 +132,7 @@ export function useDataRefresh<T>(
     }
     try {
       const data = await loader();
-      state.value = isEmpty(data)
+      state.value = decideEmpty(data)
         ? { status: 'empty', data }
         : { status: 'content', data };
     } catch (e) {

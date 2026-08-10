@@ -15,15 +15,16 @@
  * fix in both is to return `null` when there is genuinely nothing, which
  * only works while the behaviour below holds — hence this spec.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { useDataRefresh } from './useDataRefresh';
 
 /** Run the loader without a component instance (no onMounted, no watchers). */
-async function loadOnce<T>(value: T) {
+async function loadOnce<T>(value: T, isEmpty?: (d: T) => boolean) {
   const { state, reload } = useDataRefresh<T>(async () => value, {
     immediate: false,
     watchAcademicYear: false,
     watchLocale: false,
+    isEmpty,
   });
   await reload();
   return state.value.status;
@@ -57,5 +58,30 @@ describe('useDataRefresh empty detection', () => {
     );
     await reload();
     expect(state.value.status).toBe('error');
+  });
+
+  describe('the isEmpty escape hatch', () => {
+    it('lets an object-shaped payload declare itself empty', () => {
+      // The whole point: a loader that carries aggregates alongside its
+      // rows can now say what empty means, instead of having to discard
+      // the aggregates by returning null.
+      return expect(
+        loadOnce({ rows: [], summary: { total: 0 } }, (d) => d.rows.length === 0),
+      ).resolves.toBe('empty');
+    });
+
+    it('still reports content when the predicate says so', async () => {
+      expect(
+        await loadOnce({ rows: [{ id: 'a' }], summary: { total: 1 } }, (d) => d.rows.length === 0),
+      ).toBe('content');
+    });
+
+    it('never hands the predicate a null payload', async () => {
+      // A custom predicate describes an empty PAYLOAD; it should not have
+      // to defend against not being given one at all.
+      const predicate = vi.fn(() => false);
+      expect(await loadOnce(null, predicate)).toBe('empty');
+      expect(predicate).not.toHaveBeenCalled();
+    });
   });
 });
