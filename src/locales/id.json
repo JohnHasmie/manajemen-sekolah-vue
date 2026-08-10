@@ -6927,6 +6927,10 @@
         "kpiOutstanding": "Tagihan"
       },
       "takeAssessment": {
+        "unavailableTitle": "Ujian online belum tersedia",
+        "unavailableBody": "Asesmen bimbel saat ini dikerjakan secara tertulis. Nilai akan muncul di sini setelah tutor memasukkannya. Jawaban tidak dapat dikirim lewat aplikasi untuk sekarang.",
+        "reference": "Referensi asesmen: {id}",
+        "backToList": "Kembali ke daftar asesmen",
         "progress": "Soal {current} dari {total}",
         "prev": "Sebelumnya",
         "title": "Kerjakan try-out",

@@ -17,13 +17,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import Button from '@/components/ui/Button.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
@@ -34,7 +32,6 @@ import {
 } from '@/services/tutoring-bimbel.service';
 
 const { t } = useI18n();
-const router = useRouter();
 
 // ── Data ──────────────────────────────────────────────────────────
 const { state, reload } = useDataRefresh(async () => {
@@ -92,10 +89,16 @@ const metaLabel = computed(() =>
     : t('tutoring2.student.assessments.meta', { count: items.value.length }),
 );
 
-// ── Navigation ───────────────────────────────────────────────────
-function takeAssessment(id: string) {
-  router.push({ name: 'student.tutoring2.take-assessment', params: { id } });
-}
+// The "Kerjakan" CTA is deliberately absent.
+//
+// It routed to a runner that served TEN FABRICATED QUESTIONS and threw
+// the answers away — there is no question or attempt endpoint anywhere
+// in `Route::prefix('tutoring-v2')`, so nothing a student typed could
+// have been stored. Bimbel assessments are sat on paper today; the marks
+// arrive through the tutor's score entry, which is why this list can
+// show a real result without ever being able to collect one.
+//
+// Restore the button in the same MR that ships the backend, not before.
 </script>
 
 <template>
@@ -145,11 +148,6 @@ function takeAssessment(id: string) {
               </p>
             </div>
 
-            <div class="flex items-center gap-2 shrink-0">
-              <Button variant="primary" size="sm" @click="takeAssessment(a.id)">
-                {{ t('tutoring2.student.assessments.doNow') }}
-              </Button>
-            </div>
           </div>
         </div>
       </template>

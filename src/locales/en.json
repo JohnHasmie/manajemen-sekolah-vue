@@ -7631,6 +7631,10 @@
         "emptyTitle": "No bills"
       },
       "takeAssessment": {
+        "unavailableTitle": "Online assessments are not available yet",
+        "unavailableBody": "Tutoring assessments are currently sat on paper. Your marks appear here once your tutor enters them. Answers cannot be submitted through the app for now.",
+        "reference": "Assessment reference: {id}",
+        "backToList": "Back to assessments",
         "submitFailed": "Failed to submit",
         "next": "Next",
         "optionLabel": "Option",
