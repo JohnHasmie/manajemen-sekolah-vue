@@ -1,17 +1,23 @@
 <!--
   TutorTutoring2MaterialsView.vue — greenfield tutor "Materi" list.
 
-  Mirrors the WEB-3 admin screen shape (BrandPageHeader → KpiStripCards
-  → PageFilterToolbar → AsyncView → floating CTA), but rendered against
-  the tutor role palette. Each row is a `TutoringMaterialRow`, which
-  already provides its own card surface — so the list is a plain
-  vertical stack, NOT a table inside an outer rounded surface.
+  Composition mirrors the WEB-3 admin screen (BrandPageHeader →
+  KpiStripCards → PageFilterToolbar → AsyncView → floating CTA) on the
+  tutor palette. Each row is a `TutoringMaterialRow`, which brings its
+  own card surface, so the list is a plain vertical stack rather than a
+  table inside an outer rounded surface.
 
-  Static-sample MVP: `TutoringBimbelService` has no materi CRUD yet
-  (BE-8). We render 3-4 realistic rows so downstream reviewers can see
-  the composition without waiting on the backend, and wrap the (fake)
-  load through `useDataRefresh` so the state-machine path already
-  matches what the real fetch will slot into.
+  ── History ──
+
+  This screen shipped rendering FOUR HARDCODED SAMPLE MATERIALS, with a
+  note saying the backend had no materi CRUD. `/tutoring-v2/materials`
+  had in fact existed for some time; what was missing was a file-upload
+  route, which arrived separately. A tutor opening this page saw
+  materials that did not exist and could not act on any of them.
+
+  It now reads the real index. `file_url` is a SHORT-LIVED signed link
+  for anything uploaded through the app (the bucket rejects unsigned
+  reads) — open it, never cache or store it.
 -->
 <script setup lang="ts">
 // TODO WEB-4+ add TutoringBimbelService.{listMaterials,createMaterial,deleteMaterial}
@@ -29,7 +35,8 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import TutoringMaterialRow from '@/components/tutoring/TutoringMaterialRow.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
-import type { TutoringMaterial } from '@/services/tutoring-bimbel.service';
+import { MaterialsService } from '@/services/tutoring2/materials';
+import type { Material } from '@/types/tutoring2/material';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -37,77 +44,33 @@ const toast = useToast();
 
 // Static sample so the shape reads before BE-8 lands. Kept realistic so
 // KPI counts and filter chips exercise every branch.
-const sampleMaterials: TutoringMaterial[] = [
-  {
-    id: 'sample-1',
-    title: 'Ringkasan Vektor.pdf',
-    description: 'Rangkuman materi vektor untuk kelas 10 IPA.',
-    file_url: 'https://example.invalid/materials/vektor.pdf',
-    file_name: 'ringkasan-vektor.pdf',
-    file_size_mb: 1.4,
-    file_mime: 'application/pdf',
-    kind: 'PDF',
-    program_label: 'Bimbel SMA · Fisika',
-    created_at: '2026-07-10T02:15:00Z',
-  },
-  {
-    id: 'sample-2',
-    title: 'Pembahasan TO#3.mp4',
-    description: 'Rekaman pembahasan tryout ke-3.',
-    file_url: 'https://example.invalid/materials/to3.mp4',
-    file_name: 'pembahasan-to-3.mp4',
-    file_size_mb: 128,
-    file_mime: 'video/mp4',
-    kind: 'VIDEO',
-    program_label: 'Bimbel SMA · Intensif UTBK',
-    created_at: '2026-07-14T05:40:00Z',
-  },
-  {
-    id: 'sample-3',
-    title: 'Latihan Listening.pdf',
-    description: 'Latihan listening + tautan audio drive.',
-    file_url: 'https://example.invalid/materials/listening.pdf',
-    file_name: 'latihan-listening.pdf',
-    file_size_mb: 0.6,
-    file_mime: 'application/pdf',
-    kind: 'PDF',
-    program_label: 'Bimbel SMP · Bahasa Inggris',
-    created_at: '2026-07-16T09:00:00Z',
-  },
-  {
-    id: 'sample-4',
-    title: 'Panduan Belajar Mandiri.docx',
-    description: 'Panduan belajar mandiri untuk siswa.',
-    file_url: 'https://example.invalid/materials/panduan.docx',
-    file_name: 'panduan-belajar.docx',
-    file_size_mb: 0.3,
-    file_mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    kind: 'DOC',
-    program_label: 'Bimbel SD · Umum',
-    created_at: '2026-07-18T04:10:00Z',
-  },
-];
 
 // Filters — nominal MVP toggles. Once the real API lands these will
 // funnel into query params like the admin screens do.
 const programFilter = ref<string>(''); // '' = Semua
 const kindFilter = ref<'' | 'pdf' | 'video' | 'doc'>('');
 
-const { state, reload } = useDataRefresh<TutoringMaterial[]>(async () => {
-  // Simulated latency so the loading skeleton reads on cold nav.
-  await new Promise((r) => setTimeout(r, 150));
-  return sampleMaterials;
+const { state, reload } = useDataRefresh<Material[]>(async () => {
+  // Filters are sent to the server rather than applied to a page of
+  // results, so a chip narrows the whole set and not just what happens
+  // to be loaded.
+  const { items } = await MaterialsService.list({
+    program_id: programFilter.value || undefined,
+    kind: kindFilter.value ? kindFilter.value.toUpperCase() : undefined,
+    per_page: 100,
+  });
+  return items;
 });
 
 watch([programFilter, kindFilter], () => reload());
 
-const contentItems = computed<TutoringMaterial[]>(() =>
-  state.value.status === 'content' ? (state.value.data as TutoringMaterial[]) : [],
+const contentItems = computed<Material[]>(() =>
+  state.value.status === 'content' ? (state.value.data as Material[]) : [],
 );
 
-const filtered = computed<TutoringMaterial[]>(() => {
+const filtered = computed<Material[]>(() => {
   return contentItems.value.filter((m) => {
-    if (programFilter.value && m.program_label !== programFilter.value) return false;
+    if (programFilter.value && m.program_name !== programFilter.value) return false;
     if (kindFilter.value === 'pdf') {
       const isPdf = (m.file_mime ?? '').toLowerCase().includes('pdf')
         || (m.kind ?? '').toUpperCase() === 'PDF';
@@ -155,7 +118,7 @@ const headerMeta = computed(() =>
 function nextProgramFilter(): string {
   // Cycle: '' → first program in the sample → '' again.
   if (programFilter.value) return '';
-  const first = contentItems.value[0]?.program_label ?? '';
+  const first = contentItems.value[0]?.program_name ?? '';
   return first;
 }
 
@@ -168,14 +131,30 @@ function nextKindFilter(): '' | 'pdf' | 'video' | 'doc' {
   }
 }
 
-function onDownload(_material: TutoringMaterial) {
-  toast.info(t('tutoring2.common.notAvailable'));
+/**
+ * Open in a new tab rather than navigating away: `file_url` is a signed,
+ * expiring link, so a back-navigation to a stale one would 403 and read
+ * as the file being gone.
+ */
+function openFile(material: Material) {
+  if (!material.file_url) {
+    toast.error(t('tutoring2.tutor.materials.noFile'));
+    return;
+  }
+  window.open(material.file_url, '_blank', 'noopener');
 }
-function onOpen(_material: TutoringMaterial) {
-  toast.info(t('tutoring2.common.notAvailable'));
-}
-function onDelete(_material: TutoringMaterial) {
-  toast.info(t('tutoring2.common.notAvailable'));
+
+const onDownload = openFile;
+const onOpen = openFile;
+
+async function onDelete(material: Material) {
+  try {
+    await MaterialsService.destroy(material.id);
+    toast.success(t('tutoring2.tutor.materials.deleted'));
+    await reload();
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : t('tutoring2.common.error'));
+  }
 }
 
 function goUpload() {
