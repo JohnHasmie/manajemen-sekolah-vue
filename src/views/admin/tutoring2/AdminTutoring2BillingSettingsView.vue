@@ -72,14 +72,19 @@
   both kinds on purpose).
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AsyncView from '@/components/data/AsyncView.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
+import { TutoringBillingSettingsService } from '@/services/tutoring2/billing-settings';
 import { TutoringReminderSettingsService } from '@/services/tutoring2/reminder-settings';
+import type {
+  BillingSettings,
+  BillingSettingsUpdatePayload,
+} from '@/types/tutoring2/billing';
 import type { ReminderSettings } from '@/types/tutoring2/reminder-settings';
 
 const { t } = useI18n();
@@ -127,12 +132,136 @@ const canSave = computed(() => selectedOffsets.value.length > 0);
 // whatever the admin had half-typed.
 const { state, reload } = useDataRefresh<ReminderSettings>(
   async () => {
-    const settings = await TutoringReminderSettingsService.getBillReminders();
+    // Two independent settings surfaces on one screen. The payment
+    // destination is fetched in parallel and tolerated on failure: the
+    // reminder form is usable without it, and a 500 on one panel should
+    // not take the whole settings page down.
+    const [settings, billing] = await Promise.all([
+      TutoringReminderSettingsService.getBillReminders(),
+      TutoringBillingSettingsService.get().catch(() => null),
+    ]);
     seedForm(settings);
+    if (billing) seedPaymentForm(billing);
+    paymentLoadFailed.value = billing === null;
     return settings;
   },
   { watchAcademicYear: false, watchLocale: false },
 );
+
+// ── Payment destination ──────────────────────────────────────────
+//
+// The bank block a wali is shown on their Bayar screen. Until !713 there
+// was no v2 route for it, so this panel did not exist and a parent could
+// see what they owed with no way to discover where to send it.
+
+const paymentLoadFailed = ref(false);
+const savingPayment = ref(false);
+
+const paymentForm = reactive({
+  bank_name: '',
+  bank_account_number: '',
+  bank_account_holder: '',
+  payment_instructions: '',
+  payment_gateway_enabled: false,
+  payment_gateway_provider: '',
+});
+
+/**
+ * The values as last loaded/saved. The patch below is computed against
+ * this rather than against "whatever is in the inputs", which is what
+ * makes a partial save safe.
+ */
+let paymentBaseline: BillingSettings | null = null;
+
+const paymentSettings = ref<BillingSettings | null>(null);
+
+function seedPaymentForm(s: BillingSettings): void {
+  paymentBaseline = s;
+  paymentSettings.value = s;
+  paymentForm.bank_name = s.bank_name ?? '';
+  paymentForm.bank_account_number = s.bank_account_number ?? '';
+  paymentForm.bank_account_holder = s.bank_account_holder ?? '';
+  paymentForm.payment_instructions = s.payment_instructions ?? '';
+  paymentForm.payment_gateway_enabled = s.payment_gateway_enabled;
+  paymentForm.payment_gateway_provider = s.payment_gateway_provider ?? '';
+}
+
+/** An input left blank means "no value", not the empty string. */
+function normalise(v: string): string | null {
+  const trimmed = v.trim();
+  return trimmed === '' ? null : trimmed;
+}
+
+/**
+ * Only the fields that actually CHANGED.
+ *
+ * The API distinguishes absent from present-and-null: absent leaves a
+ * field alone, null clears it. Posting the whole form would therefore be
+ * destructive in the ordinary case — a tenant whose bank details were
+ * entered once and never re-typed would have them cleared the moment an
+ * admin edited the instructions box, and one production tenant has
+ * exactly that data.
+ *
+ * So this diffs against the loaded baseline and sends nothing else.
+ */
+function buildPaymentPatch(): BillingSettingsUpdatePayload {
+  const base = paymentBaseline;
+  const patch: BillingSettingsUpdatePayload = {};
+  if (!base) return patch;
+
+  const text = [
+    'bank_name',
+    'bank_account_number',
+    'bank_account_holder',
+    'payment_instructions',
+  ] as const;
+  for (const key of text) {
+    const next = normalise(paymentForm[key]);
+    if (next !== (base[key] ?? null)) patch[key] = next;
+  }
+
+  if (paymentForm.payment_gateway_enabled !== base.payment_gateway_enabled) {
+    patch.payment_gateway_enabled = paymentForm.payment_gateway_enabled;
+  }
+
+  const provider = normalise(paymentForm.payment_gateway_provider);
+  if (provider !== (base.payment_gateway_provider ?? null)) {
+    patch.payment_gateway_provider = provider as 'midtrans' | 'xendit' | null;
+  }
+
+  return patch;
+}
+
+const paymentDirty = computed(() => {
+  // Touch every field so the computed re-evaluates on any edit.
+  void paymentForm.bank_name;
+  void paymentForm.bank_account_number;
+  void paymentForm.bank_account_holder;
+  void paymentForm.payment_instructions;
+  void paymentForm.payment_gateway_enabled;
+  void paymentForm.payment_gateway_provider;
+  return Object.keys(buildPaymentPatch()).length > 0;
+});
+
+async function savePayment(): Promise<void> {
+  const patch = buildPaymentPatch();
+  // Nothing changed — do not send an empty PUT just because the button
+  // was pressed.
+  if (Object.keys(patch).length === 0) return;
+
+  savingPayment.value = true;
+  try {
+    const saved = await TutoringBillingSettingsService.update(patch);
+    seedPaymentForm(saved);
+    toast.success(t('tutoring2.admin.billingSettings.paymentSaved'));
+  } catch (e) {
+    toast.error(
+      e instanceof Error ? e.message : t('tutoring2.admin.billingSettings.saveFailed'),
+    );
+  } finally {
+    savingPayment.value = false;
+  }
+}
 
 /**
  * Seed the editable form from the server row. Offsets that don't match
@@ -282,6 +411,132 @@ const droppedFeatures = computed(() => [
                 : t('tutoring2.admin.billingSettings.save')
             }}
           </button>
+        </section>
+
+        <!--
+          PAYMENT DESTINATION — what a wali sees on their Bayar screen.
+
+          Saving sends only the fields that CHANGED. The API treats an
+          absent key as "leave alone" and an explicit null as "clear", so
+          posting the whole form would wipe a bank account the admin
+          never touched. See buildPaymentPatch().
+        -->
+        <section class="mt-3 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">
+                {{ t('tutoring2.admin.billingSettings.paymentTitle') }}
+              </h2>
+              <p class="mt-0.5 text-2xs text-slate-500">
+                {{ t('tutoring2.admin.billingSettings.paymentDesc') }}
+              </p>
+            </div>
+            <span
+              v-if="paymentSettings && !paymentSettings.has_payable_destination"
+              class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-2xs font-semibold text-amber-800"
+            >
+              {{ t('tutoring2.admin.billingSettings.notPayable') }}
+            </span>
+          </div>
+
+          <p v-if="paymentLoadFailed" class="mt-3 text-2xs text-amber-700">
+            {{ t('tutoring2.admin.billingSettings.paymentLoadFailed') }}
+          </p>
+
+          <div v-else class="mt-3 space-y-3">
+            <label class="block">
+              <span class="text-2xs font-semibold text-slate-600">
+                {{ t('tutoring2.admin.billingSettings.bankName') }}
+              </span>
+              <input
+                v-model="paymentForm.bank_name"
+                type="text"
+                maxlength="80"
+                class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              />
+            </label>
+
+            <label class="block">
+              <span class="text-2xs font-semibold text-slate-600">
+                {{ t('tutoring2.admin.billingSettings.accountNumber') }}
+              </span>
+              <input
+                v-model="paymentForm.bank_account_number"
+                type="text"
+                inputmode="numeric"
+                maxlength="40"
+                class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm tabular-nums"
+              />
+            </label>
+
+            <label class="block">
+              <span class="text-2xs font-semibold text-slate-600">
+                {{ t('tutoring2.admin.billingSettings.accountHolder') }}
+              </span>
+              <input
+                v-model="paymentForm.bank_account_holder"
+                type="text"
+                maxlength="120"
+                class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              />
+            </label>
+
+            <label class="block">
+              <span class="text-2xs font-semibold text-slate-600">
+                {{ t('tutoring2.admin.billingSettings.instructions') }}
+              </span>
+              <textarea
+                v-model="paymentForm.payment_instructions"
+                rows="3"
+                maxlength="5000"
+                class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              ></textarea>
+              <!-- Shown to parents verbatim, and rendered as plain text
+                   on their side — say so, so nobody types HTML expecting
+                   it to format. -->
+              <span class="mt-1 block text-2xs text-slate-400">
+                {{ t('tutoring2.admin.billingSettings.instructionsHint') }}
+              </span>
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input v-model="paymentForm.payment_gateway_enabled" type="checkbox" />
+              <span class="text-2xs font-semibold text-slate-600">
+                {{ t('tutoring2.admin.billingSettings.gatewayEnabled') }}
+              </span>
+            </label>
+
+            <label v-if="paymentForm.payment_gateway_enabled" class="block">
+              <span class="text-2xs font-semibold text-slate-600">
+                {{ t('tutoring2.admin.billingSettings.gatewayProvider') }}
+              </span>
+              <select
+                v-model="paymentForm.payment_gateway_provider"
+                class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              >
+                <option value="">—</option>
+                <option value="midtrans">Midtrans</option>
+                <option value="xendit">Xendit</option>
+              </select>
+              <span
+                v-if="paymentSettings?.payment_gateway_configured"
+                class="mt-1 block text-2xs text-emerald-700"
+              >
+                {{ t('tutoring2.admin.billingSettings.gatewayConfigured') }}
+              </span>
+            </label>
+
+            <div class="flex justify-end pt-1">
+              <button
+                type="button"
+                class="rounded-xl bg-cobalt-600 px-4 py-2 text-2xs font-bold text-white disabled:opacity-40"
+                :disabled="!paymentDirty || savingPayment"
+                @click="savePayment"
+              >
+                {{ savingPayment ? t('common.saving') : t('common.save') }}
+              </button>
+            </div>
+          </div>
         </section>
 
         <!-- Honest gap notice. No dead buttons, no placeholder inputs
