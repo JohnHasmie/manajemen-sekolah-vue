@@ -7649,6 +7649,16 @@
         "noNewActivity": "Belum ada aktivitas baru."
       },
       "billingSettings": {
+        "qris": "Kode QRIS",
+        "qrisAlt": "Pratinjau kode QRIS",
+        "qrisNone": "Belum ada kode QRIS.",
+        "qrisUpload": "Unggah QRIS",
+        "qrisReplace": "Ganti QRIS",
+        "qrisUploading": "Mengunggah…",
+        "qrisSaved": "Kode QRIS tersimpan.",
+        "qrisHint": "PNG atau JPG, maksimal 2 MB. Langsung tersimpan setelah dipilih.",
+        "qrisTypeError": "Format harus PNG atau JPG.",
+        "qrisSizeError": "Ukuran maksimal 2 MB.",
         "paymentTitle": "Tujuan pembayaran",
         "paymentDesc": "Rekening dan instruksi yang dilihat wali saat membayar tagihan.",
         "notPayable": "Wali belum bisa membayar",

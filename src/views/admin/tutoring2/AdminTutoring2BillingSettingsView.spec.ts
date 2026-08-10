@@ -22,7 +22,7 @@ import { TutoringReminderSettingsService } from '@/services/tutoring2/reminder-s
 import type { BillingSettings } from '@/types/tutoring2/billing';
 
 vi.mock('@/services/tutoring2/billing-settings', () => ({
-  TutoringBillingSettingsService: { get: vi.fn(), update: vi.fn() },
+  TutoringBillingSettingsService: { get: vi.fn(), update: vi.fn(), uploadQris: vi.fn() },
 }));
 vi.mock('@/services/tutoring2/reminder-settings', () => ({
   TutoringReminderSettingsService: { getBillReminders: vi.fn(), updateBillReminders: vi.fn() },
@@ -144,5 +144,59 @@ describe('AdminTutoring2BillingSettingsView payment destination', () => {
     expect(w.text()).toContain('tutoring2.admin.billingSettings.paymentLoadFailed');
     // The reminder form still rendered.
     expect(w.html()).toContain('tutoring2.admin.billingSettings');
+  });
+
+  describe('QRIS upload', () => {
+    function pick(w: Awaited<ReturnType<typeof mountView>>, file: File) {
+      const input = w.find('input[type="file"]');
+      Object.defineProperty(input.element, 'files', { value: [file], configurable: true });
+      return input.trigger('change');
+    }
+
+    it('uploads a valid image and reseeds from the SERVER response', async () => {
+      const saved = settings({ qris_image_url: 'https://signed.example/qris.png?sig=abc' });
+      vi.mocked(TutoringBillingSettingsService.uploadQris).mockResolvedValue(saved);
+
+      const w = await mountView();
+      await pick(w, new File(['x'], 'qris.png', { type: 'image/png' }));
+      await flushPromises();
+
+      expect(TutoringBillingSettingsService.uploadQris).toHaveBeenCalledTimes(1);
+      // The preview must come from the server's SIGNED url, never from a
+      // local object URL — otherwise the admin sees an image the parents
+      // cannot load.
+      expect(w.find('img').attributes('src')).toBe('https://signed.example/qris.png?sig=abc');
+    });
+
+    it('rejects a non-image before it reaches the network', async () => {
+      const w = await mountView();
+      await pick(w, new File(['x'], 'doc.pdf', { type: 'application/pdf' }));
+      await flushPromises();
+
+      expect(TutoringBillingSettingsService.uploadQris).not.toHaveBeenCalled();
+      expect(w.text()).toContain('tutoring2.admin.billingSettings.qrisTypeError');
+    });
+
+    it('rejects an oversized image before it reaches the network', async () => {
+      const w = await mountView();
+      const big = new File([new Uint8Array(3 * 1024 * 1024)], 'big.png', { type: 'image/png' });
+      await pick(w, big);
+      await flushPromises();
+
+      expect(TutoringBillingSettingsService.uploadQris).not.toHaveBeenCalled();
+      expect(w.text()).toContain('tutoring2.admin.billingSettings.qrisSizeError');
+    });
+
+    it('a failed upload surfaces an error and does not touch the saved image', async () => {
+      vi.mocked(TutoringBillingSettingsService.uploadQris).mockRejectedValue(new Error('413'));
+
+      const w = await mountView();
+      await pick(w, new File(['x'], 'qris.png', { type: 'image/png' }));
+      await flushPromises();
+
+      expect(w.text()).toContain('413');
+      // Still the originally-loaded value, not a half-applied one.
+      expect(w.find('img').exists()).toBe(false);
+    });
   });
 });
