@@ -6862,6 +6862,13 @@
     },
     "student": {
       "pay": {
+        "howToPay": "Cara pembayaran",
+        "bank": "Bank",
+        "accountNumber": "Nomor rekening",
+        "accountHolder": "Atas nama",
+        "qrisAlt": "Kode QRIS untuk pembayaran",
+        "emptyTitle": "Tagihan tidak ditemukan",
+        "noDestination": "Bimbel belum mengisi informasi pembayaran. Silakan hubungi admin bimbel.",
         "adminFee": "Biaya admin",
         "confirmCta": "Bayar Rp {amount}",
         "title": "Pembayaran",

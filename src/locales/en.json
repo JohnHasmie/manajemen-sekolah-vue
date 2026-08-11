@@ -7572,6 +7572,13 @@
         "meta": "{count} materials available"
       },
       "pay": {
+        "howToPay": "How to pay",
+        "bank": "Bank",
+        "accountNumber": "Account number",
+        "accountHolder": "Account holder",
+        "qrisAlt": "QRIS code for payment",
+        "emptyTitle": "Bill not found",
+        "noDestination": "This tutoring centre has not added payment details yet. Please contact the admin.",
         "methodQris": "QRIS",
         "total": "Total to pay",
         "title": "Payment",
