@@ -24,6 +24,7 @@ const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
  * `homeroomClasses.length > 0` alone.
  */
 export type FixtureKey =
+  | 'parent_other'
   | 'admin'
   | 'teacher'
   | 'wali_kelas'
@@ -92,6 +93,25 @@ export interface E2EManifest {
    * on an empty list.
    */
   probe_targets?: ProbeTarget[];
+  /**
+   * The bimbel tenant, seeded alongside the school one.
+   *
+   * A SEPARATE tenant, not a mode: its roles hold `tutoring.*` abilities
+   * a school's hold none of, so the bimbel surface is unreachable with a
+   * school fixture. Optional because a manifest seeded before it exists
+   * simply lacks it — specs that need it skip loudly.
+   */
+  bimbel?: {
+    school: { id: string; name: string };
+    fixtures: E2EFixture[];
+    data: {
+      programs: { id: string; name: string }[];
+      groups: { id: string; name: string }[];
+      sessions: { id: string }[];
+      materials: { id: string }[];
+      students: { id: string; name: string }[];
+    };
+  };
   data: {
     classes: { id: string; name: string }[];
     subjects: string[];
@@ -206,6 +226,36 @@ export function fixture(key: FixtureKey): E2EFixture {
     throw new Error(
       `No '${key}' fixture in the manifest. The seeder asserts every surface exists, ` +
         `so this means the manifest predates that check — re-seed:\n${SEED_COMMAND}`,
+    );
+  }
+
+  return found;
+}
+
+/**
+ * The bimbel tenant's fixtures, or `null` when the manifest predates it.
+ *
+ * Returns null rather than throwing so a spec can `test.skip` with a
+ * message naming the re-seed, which is a coverage gap worth saying out
+ * loud — not a failure.
+ */
+export function bimbel(): NonNullable<E2EManifest['bimbel']> | null {
+  return loadManifest().bimbel ?? null;
+}
+
+/** A bimbel account by surface. Throws only once `bimbel()` is present. */
+export function bimbelFixture(key: FixtureKey): E2EFixture {
+  const block = bimbel();
+
+  if (!block) {
+    throw new Error(`no bimbel block in the manifest — re-seed:\n${SEED_COMMAND}`);
+  }
+
+  const found = block.fixtures.find((f) => f.key === key);
+
+  if (!found) {
+    throw new Error(
+      `no '${key}' bimbel fixture. Seeded: ${block.fixtures.map((f) => f.key).join(', ')}.`,
     );
   }
 

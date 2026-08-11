@@ -192,7 +192,11 @@ async function freshLogin(account: E2EFixture): Promise<Session> {
     return {
       token: body.token,
       user: body.user,
-      schoolId: manifest.school.id,
+      // The fixture's OWN tenant, not the school one. A bimbel account
+      // logging in with the school's id lands in a tenant it has no roles
+      // in, and every request answers 403 for a reason that has nothing to
+      // do with what is under test.
+      schoolId: tenantFor(account),
       role: account.role,
     };
   } finally {
@@ -244,4 +248,21 @@ export async function applySession(
  */
 export function isOnLogin(page: Page): boolean {
   return new URL(page.url()).pathname.startsWith('/login');
+}
+
+/**
+ * Which tenant an account belongs to.
+ *
+ * The manifest holds two: the school and the bimbel. Membership is decided
+ * by which list the account came from, so nothing has to be threaded
+ * through every call site.
+ */
+function tenantFor(account: E2EFixture): string {
+  const block = loadManifest().bimbel;
+
+  if (block?.fixtures.some((f) => f.email === account.email)) {
+    return block.school.id;
+  }
+
+  return loadManifest().school.id;
 }
