@@ -6576,6 +6576,9 @@
   "tutoring2": {
     "parent": {
       "reportCard": {
+        "unavailableTitle": "Rapor belum tersedia",
+        "unavailableBody": "Rapor bimbel belum diterbitkan lewat aplikasi. Nilai yang sudah dimasukkan tutor dapat dilihat di halaman Perkembangan.",
+        "seeProgress": "Lihat perkembangan nilai",
         "meta": "Batch {term}",
         "title": "Rapor bimbel",
         "tutorNote": "Catatan tutor",

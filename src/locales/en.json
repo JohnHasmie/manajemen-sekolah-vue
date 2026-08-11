@@ -7832,6 +7832,9 @@
         "emptyTitle": "No children"
       },
       "reportCard": {
+        "unavailableTitle": "Report card not available yet",
+        "unavailableBody": "Tutoring report cards are not issued through the app yet. Marks your tutor has entered are on the Progress page.",
+        "seeProgress": "See progress",
         "tutorNote": "Tutor note",
         "downloadPdf": "Download PDF",
         "title": "Bimbel report",

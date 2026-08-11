@@ -31,6 +31,25 @@
  * empty-state illustration — add the file to ALLOWLIST with a reason.
  * The point is that it becomes a decision someone signed off, not an
  * accident that survives because nobody looked.
+ *
+ * ── WHAT THIS GUARD DOES NOT CATCH, AND WHY IT STAYS THAT WAY ──
+ *
+ * An INLINE literal: `return [{ subject: 'Matematika', score: 85 }]`
+ * with no named constant. The parent report card shipped exactly that —
+ * three invented marks on a child's rapor — and this guard was blind to
+ * it.
+ *
+ * I tried to extend the rule and backed it out. Detecting an inline seed
+ * means telling invented domain content apart from a legitimate UI
+ * descriptor, and every heuristic strong enough to catch the report card
+ * also flagged KPI strips and hardcoded Indonesian labels across the
+ * admin surface — dozens of false positives in views that are perfectly
+ * honest. A guard that cries wolf gets switched off, which leaves you
+ * worse off than a narrow one that is always right.
+ *
+ * So this stays narrow ON PURPOSE. Treat it as a safety net for the
+ * common shape, never as proof that a screen is honest. The only reliable
+ * check for the inline case is still reading the loader.
  */
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
