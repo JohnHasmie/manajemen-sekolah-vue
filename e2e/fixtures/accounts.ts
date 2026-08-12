@@ -261,3 +261,31 @@ export function bimbelFixture(key: FixtureKey): E2EFixture {
 
   return found;
 }
+
+/**
+ * Bimbel accounts a browser-driving loop may walk.
+ *
+ * Same `api_only` filter as `uiFixtures()`, and the same non-empty guard:
+ * a bimbel block whose accounts were all excluded would make every walk
+ * silently cover nothing.
+ *
+ * Returns [] — not a throw — when the manifest predates the bimbel
+ * tenant, so a spec can iterate both tenants without branching and the
+ * skip stays where the coverage gap is reported.
+ */
+export function bimbelUiFixtures(): E2EFixture[] {
+  const block = bimbel();
+
+  if (!block) return [];
+
+  const usable = block.fixtures.filter((f) => !f.api_only);
+
+  if (usable.length === 0) {
+    throw new Error(
+      'every bimbel fixture is marked api_only, so the bimbel nav walk would cover nothing. ' +
+        `Re-seed:\n${SEED_COMMAND}`,
+    );
+  }
+
+  return usable;
+}

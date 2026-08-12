@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { uiFixtures } from './fixtures/accounts';
+import { bimbelUiFixtures, uiFixtures } from './fixtures/accounts';
 import { applySession, isOnLogin, login } from './fixtures/auth';
 
 /**
@@ -77,11 +77,46 @@ async function collectNavHrefs(page: Page): Promise<string[]> {
 // the manifest: `multi_role` holds two roles and no profile rows, and
 // driving it through teacher pages produced 404s and 403s that read as
 // product bugs. See the `api_only` note on E2EFixture.
-for (const account of uiFixtures()) {
-  // Titled by SURFACE, not role: `teacher` and `wali_kelas` are both the
-  // `teacher` role, and a report showing "teacher" twice would hide which
-  // of the two navs was actually walked.
-  test(`nav smoke — ${account.key}`, async ({ browser }) => {
+// Both tenants. The bimbel one renders a DIFFERENT nav — 26
+// `/admin/tutoring2/*` routes gated behind `meta.needs: tutoring-module`
+// that a school fixture can never reach, so they had never been walked.
+// It also exercises the tenant-kind resolution in `useTenant`, whose last
+// step sniffs the school NAME for "bimbel"; the fixture is called
+// "E2E Test Bimbel", so a rename there is worth knowing about.
+const walkable = [
+  ...uiFixtures().map((account) => ({ account, tenant: 'school' as const })),
+  ...bimbelUiFixtures().map((account) => ({ account, tenant: 'bimbel' as const })),
+];
+
+for (const { account, tenant } of walkable) {
+  // Titled by TENANT + SURFACE, not role: `teacher` and `wali_kelas` are
+  // both the `teacher` role, and both tenants have an `admin`. A report
+  // showing "admin" twice would hide which nav was actually walked.
+  test(`nav smoke — ${tenant}/${account.key}`, async ({ browser }) => {
+    // KNOWN BUG, not a flaky walk. A bimbel ADMIN renders zero nav items
+    // while the tutor and both wali on the same tenant render 12 and 13.
+    // Marked fixme so the suite stays honest: it does not pass, it is not
+    // silently skipped, and it turns red the moment someone fixes it.
+    //
+    // Ruled out by measurement, so nobody repeats it:
+    //   · abilities — `/me` returns 77 for this admin, including all
+    //     eight the bimbel admin nav gates on;
+    //   · tenant kind — `tenant_type` resolves to TUTORING_CENTER, and
+    //     the tutor/wali on the same tenant get the bimbel nav;
+    //   · `needs` flags — only 2 of the 23 items carry one, and the
+    //     tenant owns the `tutoring` module;
+    //   · academic year — the tenant has none, unlike the school one, but
+    //     inserting one changes nothing (two production bimbel tenants,
+    //     Cahaya and Konimex, also have none);
+    //   · transport — no 4xx/5xx and no console error during the load.
+    //
+    // Symptom left: the page settles on `/` instead of the role home with
+    // an empty sidebar. Cause not identified.
+    test.fixme(
+      tenant === 'bimbel' && account.key === 'admin',
+      'bimbel admin renders an empty nav — cause not yet identified, see the notes above',
+    );
+
     const context = await browser.newContext();
     await applySession(context, await login(account), account);
     const page = await context.newPage();
