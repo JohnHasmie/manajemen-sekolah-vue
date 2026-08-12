@@ -239,8 +239,23 @@ async function loadCatalog() {
   catalogLoading.value = true;
   catalogError.value = null;
   try {
-    // Public endpoint: the picker mounts before sign-in.
-    catalog.value = await SubscriptionBillingService.getPublicModuleCatalog();
+    // Scope the catalog to the tenant kind the user actually picked.
+    //
+    // Without this the server returns the `all` catalog, and a bimbel
+    // signup gets the sekolah world mixed in: 15 modules instead of 9,
+    // and — visibly — `bundle_complete` ("Paket Lengkap (Sekolah)")
+    // priced into the summary, a bundle whose members are sekolah-only
+    // modules that route no bimbel traffic at all. The picker cards were
+    // hidden client-side by `isModuleHiddenFor`, but the calculator was
+    // still billing from the unscoped list, so the nudge card sold it.
+    //
+    // Asking the server for the right catalog removes the whole class of
+    // problem: bimbel simply has no `bundle_complete` to leak, and it
+    // gets `bundle_tutoring` ("Paket Bimbel") — its own bundle, which it
+    // was never offered before.
+    catalog.value = await SubscriptionBillingService.getPublicModuleCatalog({
+      tenantType: form.tenant_type,
+    });
   } catch (e) {
     catalogError.value = (e as Error).message || 'Gagal memuat katalog modul.';
   } finally {
@@ -665,6 +680,12 @@ function back() {
  * Also purges the matching `aiQuota` entries so the calculator's AI
  * quota line disappears alongside the module row.
  */
+// The catalog itself is tenant-scoped, so a flip has to re-fetch it —
+// otherwise the user keeps the previous kind's modules and bundles and
+// the purge watcher below is left compensating for data that should
+// never have been in hand.
+watch(() => form.tenant_type, () => { void loadCatalog(); });
+
 watch(() => form.tenant_type, (newType, oldType) => {
   if (!newType || newType === oldType) return;
   const cat = catalog.value;

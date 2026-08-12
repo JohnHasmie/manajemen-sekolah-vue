@@ -157,7 +157,20 @@ export function useModuleSelection(opts: UseModuleSelectionOptions) {
     if (opts.enabled && !opts.enabled()) return null;
     const cat = catalog.value;
     if (!cat) return null;
-    const complete = cat.bundles['bundle_complete'];
+    // Pick the primary bundle OF THIS CATALOG rather than hard-coding
+    // `bundle_complete`. The catalog is tenant-scoped, so sekolah carries
+    // `bundle_complete` ("Paket Lengkap (Sekolah)") and bimbel carries
+    // `bundle_tutoring` ("Paket Bimbel"). Hard-coding the sekolah key had
+    // two costs: a bimbel signup was pitched a bundle whose members are
+    // sekolah-only modules, and it was never shown its OWN bundle at all.
+    //
+    // `bundle_ai` is an add-on that stacks on top of either, so it is
+    // never the primary; among the rest take the widest, which is the one
+    // the "would a bundle be cheaper?" nudge is meant to compare against.
+    const primaryKey = Object.keys(cat.bundles)
+      .filter((k) => k !== 'bundle_ai')
+      .sort((a, b) => (cat.bundles[b]?.members.length ?? 0) - (cat.bundles[a]?.members.length ?? 0))[0];
+    const complete = primaryKey ? cat.bundles[primaryKey] : undefined;
     if (!complete) return null;
     const total =
       complete.price_per_student * opts.studentCount() +
@@ -166,7 +179,7 @@ export function useModuleSelection(opts: UseModuleSelectionOptions) {
       (m) => !expandedKeys.value.includes(m),
     ).length;
     return {
-      key: 'bundle_complete',
+      key: primaryKey,
       label: complete.label,
       monthlyTotal: total,
       bonusModuleCount: bonus,
