@@ -735,6 +735,32 @@ export const SubscriptionBillingService = {
   },
 
   /**
+   * GET /billing/public/modules/catalog — same payload, no session needed.
+   *
+   * `/subscribe` and `/subscribe/new` are `public: true` routes whose module
+   * picker mounts BEFORE sign-in, so the authenticated catalog above
+   * returned 401 to every anonymous visitor and the step rendered empty
+   * (reported 2026-08-12: "pilih modul tidak keluar modulnya"). `getPlans()`
+   * was already public for exactly this reason.
+   *
+   * Scope must be passed explicitly — the public endpoint never infers it
+   * from a header or session, by design.
+   */
+  async getPublicModuleCatalog(
+    opts: { tenantType?: 'school' | 'tutoring' | 'sekolah' | 'bimbel' | 'all' } = {},
+  ): Promise<ModuleCatalog> {
+    try {
+      const res = await api.get('/billing/public/modules/catalog', {
+        params: opts.tenantType ? { tenant_type: opts.tenantType } : {},
+      });
+      const body = res.data?.data ?? res.data;
+      return body as ModuleCatalog;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat katalog modul.'));
+    }
+  },
+
+  /**
    * POST /billing/discount-codes/preview — validate a discount code
    * against the current cart. Cheap; does NOT touch used_count. See
    * the design doc §2 for counter semantics.

@@ -219,11 +219,20 @@ async function loadPlan() {
   }
 }
 
+// Failure here has to reach the user. A console.warn helped nobody: the
+// picker just rendered empty, which is what "pilih modul tidak keluar
+// modulnya" turned out to be (2026-08-12).
+const catalogError = ref<string | null>(null);
+
 async function loadCatalog() {
   loadingCatalog.value = true;
+  catalogError.value = null;
   try {
-    catalog.value = await SubscriptionBillingService.getModuleCatalog();
+    // Public endpoint — this route is `public: true` and the picker
+    // renders before sign-in, so a session-gated catalog 401'd.
+    catalog.value = await SubscriptionBillingService.getPublicModuleCatalog();
   } catch (e) {
+    catalogError.value = (e as Error).message || 'Gagal memuat katalog modul.';
     console.warn('[SubscribeView.loadCatalog]', (e as Error).message);
   } finally {
     loadingCatalog.value = false;

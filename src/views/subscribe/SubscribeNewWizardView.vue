@@ -227,8 +227,25 @@ const bankAccount = computed(() => plan.value?.bank_transfer?.account_number ?? 
 async function loadPlan() {
   try { plan.value = await SubscriptionBillingService.getPlans(); } catch { /* fail-soft */ }
 }
+// This step IS the product picker — an empty one is a dead end, so its
+// failure has to be visible and retryable. It used to `catch {}` silently,
+// which is why an anonymous visitor (this route is `public: true`, and the
+// catalog endpoint required a session until 2026-08-12) just saw a blank
+// list with no explanation.
+const catalogError = ref<string | null>(null);
+const catalogLoading = ref(false);
+
 async function loadCatalog() {
-  try { catalog.value = await SubscriptionBillingService.getModuleCatalog(); } catch { /* fail-soft */ }
+  catalogLoading.value = true;
+  catalogError.value = null;
+  try {
+    // Public endpoint: the picker mounts before sign-in.
+    catalog.value = await SubscriptionBillingService.getPublicModuleCatalog();
+  } catch (e) {
+    catalogError.value = (e as Error).message || 'Gagal memuat katalog modul.';
+  } finally {
+    catalogLoading.value = false;
+  }
 }
 
 // ── Draft persistence (localStorage) ────────────────────────────────
@@ -1030,6 +1047,21 @@ function flagSubscribeIntent(): void {
             biaya batal.
           </p>
 
+          <!-- An empty picker is a dead end, so say WHY it is empty and give a
+               way out. This used to `catch {}` silently: an anonymous visitor
+               got 401 from the catalog and the step simply rendered blank. -->
+          <div v-if="catalogError" class="sn-form-banner" role="alert">
+            <span>{{ catalogError }}</span>
+            <button
+              type="button"
+              class="sn-catalog-retry"
+              :disabled="catalogLoading"
+              @click="loadCatalog"
+            >
+              {{ catalogLoading ? 'Memuat…' : 'Coba lagi' }}
+            </button>
+          </div>
+
           <!-- bundle_complete = Paket Lengkap (Sekolah). Its members are
                sekolah-only modules (attendance_*, grades, report_cards,
                etc.) that don't route bimbel traffic — offering it to a
@@ -1313,6 +1345,20 @@ function flagSubscribeIntent(): void {
 /* Top-of-step banner shown when validateStep() flags any field. Sits
    just above the form so the user sees WHY the click didn't advance
    before their eyes reach the (now red) input. */
+.sn-catalog-retry {
+  margin-left: auto;
+  flex-shrink: 0;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  padding: 2px 10px;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+.sn-catalog-retry:disabled { opacity: 0.6; cursor: default; }
+
 .sn-form-banner {
   display: flex; align-items: center; gap: 8px;
   margin-bottom: 12px;
