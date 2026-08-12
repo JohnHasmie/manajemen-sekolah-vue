@@ -230,7 +230,16 @@ async function loadCatalog() {
   try {
     // Public endpoint — this route is `public: true` and the picker
     // renders before sign-in, so a session-gated catalog 401'd.
-    catalog.value = await SubscriptionBillingService.getPublicModuleCatalog();
+    //
+    // Scoped to the tenant being converted once one is picked. Left
+    // unscoped the server returns the `all` catalog, which carries
+    // `bundle_complete` even for a bimbel tenant — and the summary then
+    // pitches "Paket Lengkap (Sekolah)", a bundle of sekolah-only
+    // modules. `visibleModuleKeys` hides those CARDS, but the pricing
+    // reads the raw catalog, so hiding alone never fixed the quote.
+    catalog.value = await SubscriptionBillingService.getPublicModuleCatalog({
+      tenantType: selectedTenant.value?.tenant_type,
+    });
   } catch (e) {
     catalogError.value = (e as Error).message || 'Gagal memuat katalog modul.';
     console.warn('[SubscribeView.loadCatalog]', (e as Error).message);
@@ -311,7 +320,12 @@ onMounted(async () => {
 
 // ── Actions ────────────────────────────────────────────────────────
 function pickTenant(t: SubscriptionTenant) {
+  const changedKind = selectedTenant.value?.tenant_type !== t.tenant_type;
   selectedTenant.value = t;
+  // The catalog is tenant-scoped, so a different KIND of tenant needs a
+  // different catalog — otherwise the previous kind's bundles stay in
+  // hand and get priced.
+  if (changedKind) void loadCatalog();
   if (selectedKeys.value.size === 0) applyDefaultSelection();
 }
 

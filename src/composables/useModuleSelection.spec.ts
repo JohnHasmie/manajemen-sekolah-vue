@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 
 import { useModuleSelection } from './useModuleSelection';
 import type { BillingPeriod, ModuleCatalog, PricingPlan } from '@/types/subscription-billing';
@@ -39,12 +39,16 @@ function bundle(label: string, members: string[], perStudent = 6000, perStaff = 
 }
 
 function mount(catalog: ModuleCatalog) {
+  const catalogRef: Ref<ModuleCatalog | null> = ref(catalog);
+  const plan: Ref<PricingPlan | null> = ref(null);
+  const period: Ref<BillingPeriod> = ref('monthly');
+
   return useModuleSelection({
-    catalog: ref(catalog) as never,
-    plan: ref(null) as unknown as ReturnType<typeof ref<PricingPlan | null>>,
+    catalog: catalogRef,
+    plan,
     studentCount: () => 35,
     staffCount: () => 5,
-    period: ref('monthly') as unknown as ReturnType<typeof ref<BillingPeriod>>,
+    period,
   });
 }
 
