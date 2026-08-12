@@ -453,8 +453,18 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
         // A bimbel admin's school dashboard reads empty — bounce to the
         // tutoring-native dashboard instead.
+        //
+        // The target is the GREENFIELD dashboard. It used to be
+        // `admin.tutoring.dashboard`, whose route was deleted by
+        // 39ef2037 ("retire tutoring.service.ts and its 16 legacy views")
+        // while this redirect was left pointing at it. Vue Router cannot
+        // resolve a name that no longer exists, so it threw "No match"
+        // while STARTING — which does not land on a 404, it aborts the
+        // whole router. Every bimbel admin got a completely blank page:
+        // no shell, no nav, no error visible to them, and nothing in the
+        // network tab to suggest why.
         beforeEnter: () =>
-          isTutoringTenant() ? { name: 'admin.tutoring.dashboard' } : true,
+          isTutoringTenant() ? { name: 'admin.tutoring2.dashboard' } : true,
       },
       {
         // "Pusat Kendali Sekolah" — admin readiness command center.

@@ -38,7 +38,6 @@ interface PageReport {
   clientErrors: string[];
 }
 
-
 /** Text length below which a page counts as "rendered nothing". */
 const MIN_CONTENT_CHARS = 20;
 
@@ -93,29 +92,6 @@ for (const { account, tenant } of walkable) {
   // both the `teacher` role, and both tenants have an `admin`. A report
   // showing "admin" twice would hide which nav was actually walked.
   test(`nav smoke — ${tenant}/${account.key}`, async ({ browser }) => {
-    // KNOWN BUG, not a flaky walk. A bimbel ADMIN renders zero nav items
-    // while the tutor and both wali on the same tenant render 12 and 13.
-    // Marked fixme so the suite stays honest: it does not pass, it is not
-    // silently skipped, and it turns red the moment someone fixes it.
-    //
-    // Ruled out by measurement, so nobody repeats it:
-    //   · abilities — `/me` returns 77 for this admin, including all
-    //     eight the bimbel admin nav gates on;
-    //   · tenant kind — `tenant_type` resolves to TUTORING_CENTER, and
-    //     the tutor/wali on the same tenant get the bimbel nav;
-    //   · `needs` flags — only 2 of the 23 items carry one, and the
-    //     tenant owns the `tutoring` module;
-    //   · academic year — the tenant has none, unlike the school one, but
-    //     inserting one changes nothing (two production bimbel tenants,
-    //     Cahaya and Konimex, also have none);
-    //   · transport — no 4xx/5xx and no console error during the load.
-    //
-    // Symptom left: the page settles on `/` instead of the role home with
-    // an empty sidebar. Cause not identified.
-    test.fixme(
-      tenant === 'bimbel' && account.key === 'admin',
-      'bimbel admin renders an empty nav — cause not yet identified, see the notes above',
-    );
 
     const context = await browser.newContext();
     await applySession(context, await login(account), account);

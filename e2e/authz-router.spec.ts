@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { loadManifest, uiFixtures } from './fixtures/accounts';
+import { bimbel, bimbelFixture, loadManifest, uiFixtures } from './fixtures/accounts';
 import { applySession, login } from './fixtures/auth';
 import {
   concretise,
@@ -299,4 +299,62 @@ test('inventory: admin routes with no ability gate', async ({ browser }) => {
   );
 
   await context.close();
+});
+
+/**
+ * Every route name a redirect points at must still exist.
+ *
+ * `beforeEnter: () => ({ name: 'admin.tutoring.dashboard' })` outlived the
+ * route it named by one refactor. Vue Router cannot resolve a missing
+ * name, and it does not fall back to a 404 — it throws while STARTING, so
+ * the router never mounts. Every bimbel admin got a completely blank
+ * page: no shell, no nav, no visible error, and a clean network tab.
+ *
+ * Nothing caught it. The name is a string in a lambda, so `vue-tsc` sees
+ * a valid string; the ability-typo check reads `meta.ability`, not
+ * redirect targets; and nav-smoke only walked the school tenant.
+ *
+ * WHICH TENANT MATTERS, and the first version of this test got it wrong.
+ * Written against the school admin it passed with the dead redirect still
+ * in place, because `isTutoringTenant()` is false there and the broken
+ * branch is never taken. A guard that cannot fail is worse than none. It
+ * now walks the role homes as BOTH tenants' admins, which is the only way
+ * a tenant-branched redirect gets exercised at all.
+ */
+test('every route name referenced by a redirect still exists', async ({ browser }) => {
+  const admins = [
+    manifest.fixtures.find((f) => f.key === 'admin')!,
+    ...(bimbel() ? [bimbelFixture('admin')] : []),
+  ];
+
+  expect(
+    admins.length,
+    'no bimbel admin in the manifest — the tenant-branched redirects go unexercised. Re-seed.',
+  ).toBe(2);
+
+  const warnings: string[] = [];
+
+  for (const account of admins) {
+    const context = await browser.newContext();
+    await applySession(context, await login(account), account);
+    const page = await context.newPage();
+
+    page.on('console', (m) => {
+      if (m.text().includes('No match')) warnings.push(`${account.email}: ${m.text()}`);
+    });
+
+    // The role homes are where the tenant-branched redirects live.
+    for (const path of ['/', '/admin', '/teacher', '/parent', '/staff']) {
+      await page.goto(path);
+      await page.waitForLoadState('networkidle');
+    }
+
+    await context.close();
+  }
+
+  expect(
+    warnings,
+    'Vue Router could not resolve a route name — a redirect outlived its target. That does ' +
+      'not render a 404, it aborts the router and leaves a blank page.',
+  ).toEqual([]);
 });
