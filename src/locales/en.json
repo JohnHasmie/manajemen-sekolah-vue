@@ -6601,7 +6601,6 @@
       },
       "students": {
         "kpiTrial": "Trial",
-        "kpiOverdue": "Overdue",
         "kpiActive": "Active",
         "kpiTotal": "Total students",
         "title": "My students",

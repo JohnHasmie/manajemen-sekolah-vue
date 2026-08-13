@@ -8,7 +8,12 @@
 
   Shape:
     1. BrandPageHeader (teacher gradient)
-    2. KpiStripCards — 4 tiles (Total, Aktif, Trial, Tunggakan=0)
+    2. KpiStripCards — 3 tiles (Total, Aktif, Trial)
+
+  A fourth tile read "Tunggakan: 0" — hardcoded, so every tutor was told
+  all of their students were up to date. Removed rather than wired: the
+  tutor role holds no `tutoring.bill.*` ability, and the bills endpoint
+  403s anyone without one, so no query could fill it.
     3. PageFilterToolbar + AppFilterChip — Status + Program
     4. AsyncView → rounded-3xl surface with divide-y student rows
 -->
@@ -139,7 +144,6 @@ const kpiCards = computed<KpiCard[]>(() => {
       value: String(trialStudents.size),
       tone: trialStudents.size > 0 ? 'amber' : 'slate',
     },
-    { icon: 'wallet', label: t('tutoring2.tutor.students.kpiOverdue'), value: '0', tone: 'slate' },
   ];
 });
 

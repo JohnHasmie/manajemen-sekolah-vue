@@ -7939,7 +7939,6 @@
       },
       "students": {
         "meta": "{count} siswa",
-        "kpiOverdue": "Tunggakan",
         "kpiTrial": "Trial",
         "title": "Siswa saya",
         "kpiTotal": "Total siswa",
