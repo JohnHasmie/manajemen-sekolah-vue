@@ -113,20 +113,34 @@ export const MODULE_TAGLINES: Record<string, string> = {
  * somehow already bought one of these keeps their row (backwards
  * compat), it just won't be re-offered.
  */
+/**
+ * Modules the backend sells ONLY to sekolah tenants.
+ *
+ * This list MUST mirror `ModuleCatalog::SCOPE_SCHOOL` on the server. It
+ * drifted, and the drift was expensive: the backend sells `finance`,
+ * `communication`, `attendance_staff` and all three AI modules to bimbel
+ * too, but this list claimed otherwise — so the picker hid SIX of the
+ * nine modules a bimbel tenant can actually buy. Luay reported it as
+ * "kenapa di rakit paket tidak ada absensi tutor" (2026-08-13);
+ * `attendance_staff` was one of the six.
+ *
+ * The server-scoped catalog is the real filter now — ask it with
+ * `?tenant_type=` and it returns only what that tenant may buy. This
+ * list survives as defence-in-depth for the one path that can still
+ * receive an UNSCOPED catalog: the authenticated `/modules/catalog`
+ * falls back to scope `all` when neither an X-School-ID header nor a
+ * `current_school_id` resolves. Keep it narrow, and keep it true.
+ */
 export const SEKOLAH_ONLY_MODULE_KEYS: readonly string[] = Object.freeze([
+  // Legacy key, split into attendance_class + attendance_gate (Jul 2026).
+  // No catalog returns it any more; harmless to keep listed.
   'attendance_student',
   'attendance_class',
-  'attendance_staff',
   'grades',
   'report_cards',
   'class_activity',
   'schedule',
   'lms',
-  'finance',
-  'communication',
-  'ai_recommendation',
-  'ai_material_quiz',
-  'ai_rpp',
 ]);
 
 /**
