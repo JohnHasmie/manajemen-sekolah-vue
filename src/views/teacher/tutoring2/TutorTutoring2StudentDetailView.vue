@@ -13,10 +13,8 @@ import { useRoute } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
-import Button from '@/components/ui/Button.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
-import { useToast } from '@/composables/useToast';
 import {
   TutoringBimbelService,
   type BimbelEnrollment,
@@ -25,7 +23,6 @@ import type { StatusBadgeTone } from '@/types/status-badge';
 
 const { t } = useI18n();
 const route = useRoute();
-const toast = useToast();
 
 const studentId = computed(() => String(route.params.id ?? ''));
 
@@ -71,13 +68,6 @@ function statusPillTone(status: BimbelEnrollment['status']): StatusBadgeTone {
   }
 }
 
-function openEnrollment(_e: BimbelEnrollment) {
-  toast.info(t('tutoring2.common.notAvailable'));
-}
-
-function sendNoteToParent() {
-  toast.info(t('tutoring2.common.notAvailable'));
-}
 </script>
 
 <template>
@@ -119,12 +109,13 @@ function sendNoteToParent() {
             {{ t('tutoring2.tutor.studentDetail.sectionEnrollments') }}
           </h2>
           <div class="rounded-3xl border border-slate-100 bg-white shadow-sm divide-y divide-slate-100">
-            <button
+            <!-- A row, not a button. It used to be clickable and answer
+                 "Belum tersedia" — there is no enrollment detail view on
+                 this surface, so the affordance was the whole bug. -->
+            <div
               v-for="e in enrollments"
               :key="e.id"
-              type="button"
-              class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 first:rounded-t-3xl last:rounded-b-3xl transition-colors"
-              @click="openEnrollment(e)"
+              class="w-full flex items-center gap-3 px-4 py-3 text-left first:rounded-t-3xl last:rounded-b-3xl"
             >
               <span
                 class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-cobalt/10 text-brand-cobalt text-xs font-bold uppercase"
@@ -144,16 +135,12 @@ function sendNoteToParent() {
                 :label="e.status_label ?? t(`tutoring2.status.${e.status}`)"
                 :tone="statusPillTone(e.status)"
               />
-              <span class="text-slate-300 ml-1" aria-hidden="true">›</span>
-            </button>
+            </div>
           </div>
         </section>
 
         <!-- Footer CTA -->
         <div class="mt-md">
-          <Button variant="secondary" block @click="sendNoteToParent">
-            {{ t('tutoring2.tutor.studentDetail.noteCta') }}
-          </Button>
         </div>
       </template>
     </AsyncView>

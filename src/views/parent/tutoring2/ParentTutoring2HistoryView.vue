@@ -17,17 +17,14 @@ import KpiStripCards, {
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
-import Button from '@/components/ui/Button.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { useDataRefresh } from '@/composables/useDataRefresh';
-import { useToast } from '@/composables/useToast';
 import {
   TutoringBimbelService,
   type BimbelBill,
 } from '@/services/tutoring-bimbel.service';
 
 const { t } = useI18n();
-const toast = useToast();
 
 const { state, reload } = useDataRefresh<BimbelBill[]>(async () => {
   const { items } = await TutoringBimbelService.listBills({
@@ -111,9 +108,6 @@ function statusTone(): StatusBadgeTone {
   return 'success';
 }
 
-function stubReceipt() {
-  toast.info(t('tutoring2.common.notAvailable'));
-}
 </script>
 
 <template>
@@ -151,9 +145,6 @@ function stubReceipt() {
                 </p>
               </div>
               <StatusBadge :label="t('tutoring2.status.paid')" :tone="statusTone()" uppercase />
-              <Button variant="ghost" size="sm" @click="stubReceipt">
-                {{ t('tutoring2.student.bills.receiptCta') }}
-              </Button>
             </li>
           </ul>
         </div>

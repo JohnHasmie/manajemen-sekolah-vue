@@ -28,7 +28,6 @@ import Button from '@/components/ui/Button.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { useDataRefresh } from '@/composables/useDataRefresh';
-import { useToast } from '@/composables/useToast';
 import {
   TutoringBimbelService,
   type BimbelBill,
@@ -36,7 +35,6 @@ import {
 
 const { t } = useI18n();
 const router = useRouter();
-const toast = useToast();
 
 const { state, reload } = useDataRefresh<BimbelBill[]>(async () => {
   const { items } = await TutoringBimbelService.listBills({ per_page: 50 });
@@ -159,9 +157,6 @@ function openDetail(billId: string) {
   router.push({ name: 'student.tutoring2.bill-detail', params: { id: billId } });
 }
 
-function stubReceipt() {
-  toast.info(t('tutoring2.common.notAvailable'));
-}
 </script>
 
 <template>
@@ -242,9 +237,6 @@ function stubReceipt() {
                   :tone="statusTone(effectiveStatus(row))"
                   uppercase
                 />
-                <Button variant="secondary" size="sm" @click="stubReceipt">
-                  {{ t('tutoring2.student.bills.receiptCta') }}
-                </Button>
               </li>
             </ul>
           </section>

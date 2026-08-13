@@ -6807,7 +6807,11 @@
         "notFoundHint": "This session may have been deleted.",
         "notFound": "Session not found",
         "title": "Session detail",
-        "completed": "Session marked done"
+        "completed": "Session marked done",
+        "rescheduled": "Session rescheduled.",
+        "rescheduleFailed": "The session could not be rescheduled.",
+        "startsAt": "Starts",
+        "endsAt": "Ends"
       },
       "earnings": {
         "title": "My Earnings",

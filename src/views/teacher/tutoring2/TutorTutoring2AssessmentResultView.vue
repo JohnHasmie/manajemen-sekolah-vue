@@ -24,16 +24,13 @@ import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import Button from '@/components/ui/Button.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
-import { useToast } from '@/composables/useToast';
 import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
 import type { TutoringScoreRow } from '@/types/tutoring-bimbel';
 
 const { t } = useI18n();
 const route = useRoute();
-const toast = useToast();
 
 const assessmentId = (route.params.id as string) ?? '';
 
@@ -79,10 +76,6 @@ const kpiCards = computed<KpiCard[]>(() => {
 function truncateId(id: string, len = 8): string {
   if (!id) return '—';
   return id.length > len ? id.slice(0, len) : id;
-}
-
-function onShare() {
-  toast.info(t('tutoring2.common.notAvailable'));
 }
 
 const metaLabel = computed(() =>
@@ -140,7 +133,5 @@ const metaLabel = computed(() =>
         </div>
       </template>
     </AsyncView>
-
-    <Button variant="secondary" block @click="onShare">{{ t('tutoring2.tutor.result.shareCta') }}</Button>
   </div>
 </template>

@@ -7870,7 +7870,11 @@
         "notFound": "Sesi tidak ditemukan",
         "completeFailed": "Gagal menandai selesai",
         "completed": "Sesi ditandai selesai",
-        "notFoundHint": "Sesi ini mungkin sudah dihapus."
+        "notFoundHint": "Sesi ini mungkin sudah dihapus.",
+        "rescheduled": "Sesi dijadwalkan ulang.",
+        "rescheduleFailed": "Sesi tidak dapat dijadwalkan ulang.",
+        "startsAt": "Mulai",
+        "endsAt": "Selesai"
       },
       "activities": {
         "title": "Aktivitas",

@@ -24,15 +24,12 @@ import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import Button from '@/components/ui/Button.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
-import { useToast } from '@/composables/useToast';
 import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
 import type { TutoringScoreRow } from '@/types/tutoring-bimbel';
 
 const { t } = useI18n();
 const route = useRoute();
-const toast = useToast();
 
 const assessmentId = (route.params.id as string) ?? '';
 
@@ -75,13 +72,6 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
-function onViewSolution() {
-  toast.info(t('tutoring2.common.notAvailable'));
-}
-
-function onViewLeaderboard() {
-  toast.info(t('tutoring2.common.notAvailable'));
-}
 </script>
 
 <template>
@@ -103,14 +93,6 @@ function onViewLeaderboard() {
       @retry="reload"
     >
       <template #default>
-        <div class="rounded-3xl border border-slate-100 bg-white shadow-sm p-4 space-y-2">
-          <Button variant="secondary" block @click="onViewSolution">
-            {{ t('tutoring2.student.result.viewSolution') }}
-          </Button>
-          <Button variant="primary" block @click="onViewLeaderboard">
-            {{ t('tutoring2.student.result.viewLeaderboard') }}
-          </Button>
-        </div>
       </template>
     </AsyncView>
   </div>

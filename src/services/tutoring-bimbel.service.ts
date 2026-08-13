@@ -288,6 +288,28 @@ export const TutoringBimbelService = {
     const r = await api.post<ListEnvelope<BimbelSession>>('/tutoring-v2/sessions/recurring', payload);
     return r.data.data;
   },
+  /**
+   * Move a session to a new slot.
+   *
+   * `POST /tutoring-v2/sessions/{id}/reschedule` shipped with BE-4 and
+   * had no caller — the tutor's Reschedule button was a
+   * `toast.info('Belum tersedia')` for the whole time it existed.
+   *
+   * The backend validates `ends_at` is after `starts_at` and refuses a
+   * cancelled session, so both failures come back as a 422 message the
+   * caller can surface verbatim rather than re-implementing the rules
+   * here and letting the two drift.
+   */
+  async rescheduleSession(
+    id: string,
+    payload: { starts_at: string; ends_at: string; room?: string | null },
+  ) {
+    const r = await api.post<OneEnvelope<BimbelSession>>(
+      `/tutoring-v2/sessions/${id}/reschedule`,
+      payload,
+    );
+    return r.data.data;
+  },
   async cancelSession(id: string, reason?: string) {
     const r = await api.post<OneEnvelope<BimbelSession>>(`/tutoring-v2/sessions/${id}/cancel`, { reason });
     return r.data.data;

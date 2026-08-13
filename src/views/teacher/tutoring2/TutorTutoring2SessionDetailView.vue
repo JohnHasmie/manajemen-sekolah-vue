@@ -13,12 +13,14 @@
   other tutoring-v2 endpoints already use).
 -->
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Button from '@/components/ui/Button.vue';
+import Modal from '@/components/ui/Modal.vue';
+import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
@@ -92,8 +94,70 @@ function ambilPresensi() {
   });
 }
 
+/**
+ * Reschedule.
+ *
+ * `POST /tutoring-v2/sessions/{id}/reschedule` shipped with BE-4 and had
+ * no caller: this button was `toast.info('Belum tersedia')` for as long
+ * as it existed, next to two siblings that worked.
+ *
+ * The form is prefilled from the session so the common case — nudging a
+ * class by half an hour — is two edits, not four. `datetime-local`
+ * yields a LOCAL wall-clock string with no zone, which is what the
+ * backend's `date` validation expects and what a tutor means when they
+ * say 16:00; sending an ISO instant here would shift every session by
+ * the UTC offset.
+ */
+const rescheduleOpen = ref(false);
+const rescheduleSaving = ref(false);
+const rescheduleForm = ref({ starts_at: '', ends_at: '', room: '' });
+
+/** `2026-07-18T09:00:00+07:00` → `2026-07-18T09:00`, in LOCAL time. */
+function toLocalInput(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  );
+}
+
 function rescheduleAction() {
-  toast.info(t('tutoring2.common.notAvailable'));
+  const s = session.value;
+  if (!s) return;
+  rescheduleForm.value = {
+    starts_at: toLocalInput(s.starts_at),
+    ends_at: toLocalInput(s.ends_at),
+    room: s.room ?? '',
+  };
+  rescheduleOpen.value = true;
+}
+
+async function submitReschedule() {
+  if (rescheduleSaving.value) return;
+  const f = rescheduleForm.value;
+  if (!f.starts_at || !f.ends_at) return;
+
+  rescheduleSaving.value = true;
+  try {
+    await TutoringBimbelService.rescheduleSession(sessionId.value, {
+      starts_at: f.starts_at.replace('T', ' '),
+      ends_at: f.ends_at.replace('T', ' '),
+      room: f.room.trim() || null,
+    });
+    rescheduleOpen.value = false;
+    toast.success(t('tutoring2.tutor.sessionDetail.rescheduled'));
+    await reload();
+  } catch (e) {
+    // The backend owns the rules (ends after starts, not on a cancelled
+    // session) and returns them as a 422 message. Surfacing it verbatim
+    // beats re-implementing the checks here and letting the two drift.
+    toast.error((e as Error).message || t('tutoring2.tutor.sessionDetail.rescheduleFailed'));
+  } finally {
+    rescheduleSaving.value = false;
+  }
 }
 
 async function completeSession() {
@@ -182,5 +246,56 @@ const metaText = computed(() =>
         </template>
       </template>
     </AsyncView>
+
+    <Modal
+      v-if="rescheduleOpen"
+      size="md"
+      :title="t('tutoring2.common.reschedule')"
+      @close="rescheduleOpen = false"
+    >
+      <div class="space-y-md">
+        <label class="block">
+          <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">
+            {{ t('tutoring2.tutor.sessionDetail.startsAt') }}
+          </span>
+          <input
+            v-model="rescheduleForm.starts_at"
+            type="datetime-local"
+            class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-cobalt focus:outline-none"
+          />
+        </label>
+        <label class="block">
+          <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">
+            {{ t('tutoring2.tutor.sessionDetail.endsAt') }}
+          </span>
+          <input
+            v-model="rescheduleForm.ends_at"
+            type="datetime-local"
+            class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-cobalt focus:outline-none"
+          />
+        </label>
+        <label class="block">
+          <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">
+            {{ t('tutoring2.common.room') }}
+          </span>
+          <input
+            v-model="rescheduleForm.room"
+            type="text"
+            class="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand-cobalt focus:outline-none"
+          />
+        </label>
+      </div>
+
+      <!-- Modal has one slot; actions go inline, the way every other
+           dialog on this surface does it. -->
+      <BottomSheetFooter
+        :primary-label="t('tutoring2.common.save')"
+        :secondary-label="t('tutoring2.common.cancel')"
+        :primary-loading="rescheduleSaving"
+        :primary-disabled="!rescheduleForm.starts_at || !rescheduleForm.ends_at"
+        @primary="submitReschedule"
+        @secondary="rescheduleOpen = false"
+      />
+    </Modal>
   </div>
 </template>

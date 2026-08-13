@@ -79,9 +79,17 @@ function onOpen(material: Material) {
   }
   window.open(material.file_url, '_blank', 'noopener');
 }
-function onDownload(_material: Material) {
-  toast.info(t('tutoring2.common.notAvailable'));
-}
+/**
+ * Download is the same act as open for a signed bucket URL: the browser
+ * decides whether to render or save it, and the `download` attribute is
+ * ignored cross-origin anyway.
+ *
+ * This was a `notAvailable` toast sitting next to a working Open button
+ * on the same row. The TUTOR materials view had already resolved it the
+ * same way — `const onDownload = openFile` — so this was the odd one
+ * out rather than a missing capability.
+ */
+const onDownload = onOpen;
 </script>
 
 <template>
