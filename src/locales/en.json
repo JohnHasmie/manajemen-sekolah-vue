@@ -8097,6 +8097,19 @@
         "noPermissionTitle": "Voucher list unavailable",
         "noPermissionDesc": "Parent accounts do not currently have permission to list vouchers. Ask the tutoring admin for a voucher code, or to enable access."
       }
+    },
+    "preferences": {
+      "kicker": "BIMBEL",
+      "title": "Preferences",
+      "theme": "Appearance",
+      "themeLight": "Light",
+      "themeLightDesc": "Always light.",
+      "themeDark": "Dark",
+      "themeDarkDesc": "Always dark.",
+      "themeAuto": "Automatic",
+      "themeAutoDesc": "Light from {light}, dark from {dark}.",
+      "language": "Language",
+      "languageNote": "Your language choice is saved to your account and applies on your other devices too."
     }
   },
   "role": {

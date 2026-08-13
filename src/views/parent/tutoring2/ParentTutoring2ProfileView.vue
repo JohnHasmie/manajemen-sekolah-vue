@@ -1,8 +1,17 @@
 <!--
   ParentTutoring2ProfileView.vue — settings hub for the wali (parent).
-  Mirrors TutorTutoring2ProfileView: 6 clickable setting cards in a
-  responsive grid. All actions stubbed to a "not available" toast until
-  the wali preference endpoints land — Keluar shows a stub logout toast.
+
+  Keluar and the header name were fixed earlier in this series (it used
+  to greet every wali as "Bpk Anwar" and the logout was a toast). This
+  pass does the remaining cards: Akun opens the shared profile view, and
+  Tampilan / Bahasa open the shared bimbel preferences view — both
+  stores behind them have worked the whole time.
+
+  "Anak tertaut", "Notifikasi" and "Bantuan" are REMOVED rather than
+  left as `notAvailable` toasts: there is no linked-children management
+  view, web has no push preference to set, and there is no help centre.
+  A card that announces a feature nobody can reach is a promise, not an
+  IA sketch — one line to restore the day each screen lands.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
@@ -12,11 +21,9 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 // Button unused here — setting cards are raw <button> for layout freedom
 // (spec allows structural buttons; only real form actions must use the
 // Button component).
-import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
 
 const { t } = useI18n();
-const toast = useToast();
 const auth = useAuthStore();
 const router = useRouter();
 
@@ -72,31 +79,19 @@ const cards = computed<SettingCard[]>(() => [
     short: 'AKN',
     title: t('tutoring2.parent.profile.account'),
     subtitle: t('tutoring2.parent.profile.accountDesc'),
-    action: () => toast.info(t('tutoring2.common.notAvailable')),
+    action: () => router.push({ name: 'profile' }),
   },
   {
-    short: 'ANK',
-    title: t('tutoring2.parent.profile.linkedChildren'),
-    subtitle: t('tutoring2.parent.profile.linkedChildrenDesc'),
-    action: () => toast.info(t('tutoring2.common.notAvailable')),
-  },
-  {
-    short: 'NTF',
-    title: t('tutoring2.parent.profile.notifications'),
-    subtitle: t('tutoring2.parent.profile.notificationsDesc'),
-    action: () => toast.info(t('tutoring2.common.notAvailable')),
+    short: 'TEM',
+    title: t('tutoring2.preferences.theme'),
+    subtitle: t('tutoring2.preferences.themeAuto'),
+    action: () => router.push({ name: 'tutoring2.preferences' }),
   },
   {
     short: 'BHS',
-    title: t('tutoring2.parent.profile.language'),
-    subtitle: t('tutoring2.parent.profile.languageDesc'),
-    action: () => toast.info(t('tutoring2.common.notAvailable')),
-  },
-  {
-    short: 'HLP',
-    title: t('tutoring2.parent.profile.help'),
-    subtitle: t('tutoring2.parent.profile.helpDesc'),
-    action: () => toast.info(t('tutoring2.common.notAvailable')),
+    title: t('tutoring2.preferences.language'),
+    subtitle: t('tutoring2.preferences.title'),
+    action: () => router.push({ name: 'tutoring2.preferences' }),
   },
   {
     short: 'KLR',

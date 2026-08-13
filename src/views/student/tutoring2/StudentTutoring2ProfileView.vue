@@ -1,22 +1,48 @@
 <!--
-  StudentTutoring2ProfileView.vue — Siswa bimbel settings hub (WEB-5).
-  Mirrors TutorTutoring2ProfileView: 5 clickable setting cards in a
-  responsive grid, all stubbed until BE-8+ wires the real preference
-  endpoints. Every card except "Keluar" flashes a `notAvailable`
-  toast so the target IA is visible without shipping half a feature.
+  StudentTutoring2ProfileView.vue — Siswa bimbel settings hub.
+
+  ── What changed ──
+
+  Every card except Keluar called `notAvailable`, "so the target IA is
+  visible without shipping half a feature". Four of the five had nothing
+  behind them, and the two that did — theme and language — were never
+  offered at all, even though both stores have worked the whole time.
+
+  Akun now opens the shared profile view; Tampilan and Bahasa open the
+  shared bimbel preferences view.
+
+  Guardian ("Wali tertaut"), Notifikasi and Bantuan are REMOVED rather
+  than left as toasts. There is no linked-guardian view, web has no push
+  preference to set, and there is no help centre — a card that announces
+  a feature nobody can reach is a promise, not an IA sketch. Each is one
+  line to restore the day its screen lands.
+
+  The header subtitle read "Siswa Bimbel Cendekia" — an invented
+  institution shown to every siswa on every tenant. It is the signed-in
+  user now.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
 
 const { t } = useI18n();
-const toast = useToast();
 const auth = useAuthStore();
 const router = useRouter();
+
+/**
+ * The signed-in siswa.
+ *
+ * The header used to render `tutoring2.student.profile.subtitle`, which
+ * was the literal string "Siswa Bimbel Cendekia" — a tenant nobody is
+ * enrolled at. Falls back to the role label rather than a person: an
+ * account with no name yet should read "Siswa", not a stranger's name.
+ */
+const displayName = computed(
+  () => auth.user?.name?.trim() || t('tutoring2.common.roleStudent'),
+);
 
 /**
  * Actually ends the session — this was a toast and nothing else, so a
@@ -44,32 +70,24 @@ interface SettingCard {
   action: () => void;
 }
 
-const notAvailable = () => toast.info(t('tutoring2.common.notAvailable'));
-
 const cards = computed<SettingCard[]>(() => [
   {
     short: 'AKN',
     title: t('tutoring2.student.profile.account'),
     subtitle: t('tutoring2.student.profile.accountDesc'),
-    action: notAvailable,
+    action: () => router.push({ name: 'profile' }),
   },
   {
-    short: 'WLI',
-    title: t('tutoring2.student.profile.guardian'),
-    subtitle: t('tutoring2.student.profile.guardianDesc'),
-    action: notAvailable,
+    short: 'TEM',
+    title: t('tutoring2.preferences.theme'),
+    subtitle: t('tutoring2.preferences.themeAuto'),
+    action: () => router.push({ name: 'tutoring2.preferences' }),
   },
   {
-    short: 'NTF',
-    title: t('tutoring2.student.profile.notifications'),
-    subtitle: t('tutoring2.student.profile.notificationsDesc'),
-    action: notAvailable,
-  },
-  {
-    short: 'HLP',
-    title: t('tutoring2.student.profile.help'),
-    subtitle: t('tutoring2.student.profile.helpDesc'),
-    action: notAvailable,
+    short: 'BHS',
+    title: t('tutoring2.preferences.language'),
+    subtitle: t('tutoring2.preferences.title'),
+    action: () => router.push({ name: 'tutoring2.preferences' }),
   },
   {
     short: 'KLR',
@@ -86,7 +104,7 @@ const cards = computed<SettingCard[]>(() => [
       role="student"
       :kicker="t('tutoring2.common.roleStudent')"
       :title="t('tutoring2.student.profile.title')"
-      :meta="t('tutoring2.student.profile.subtitle')"
+      :meta="displayName"
     />
 
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">

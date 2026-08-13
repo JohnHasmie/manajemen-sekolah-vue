@@ -8097,6 +8097,19 @@
         "errAmountZero": "Nominal pengajuan harus lebih dari 0.",
         "errBelowMin": "Nominal minimal {amount}."
       }
+    },
+    "preferences": {
+      "kicker": "BIMBEL",
+      "title": "Preferensi",
+      "theme": "Tampilan",
+      "themeLight": "Terang",
+      "themeLightDesc": "Selalu terang.",
+      "themeDark": "Gelap",
+      "themeDarkDesc": "Selalu gelap.",
+      "themeAuto": "Otomatis",
+      "themeAutoDesc": "Terang mulai {light}, gelap mulai {dark}.",
+      "language": "Bahasa",
+      "languageNote": "Pilihan bahasa tersimpan di akun Anda dan ikut berlaku di perangkat lain."
     }
   },
   "role": {

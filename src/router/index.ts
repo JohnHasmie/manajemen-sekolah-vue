@@ -1980,6 +1980,21 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/student/tutoring2/StudentTutoring2ProfileView.vue'),
         meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
       },
+      // Role-neutral: theme + language mean the same thing to a siswa, a
+      // wali and a tutor, and the stores behind them are global. One view
+      // rather than the three near-identical appearance views that already
+      // sit under the legacy `views/*/tutoring/` tree — two of which
+      // nothing links to.
+      //
+      // No `role` in meta on purpose: every bimbel role reaches this, and
+      // the surface it renders on is chosen by the AppShell from the route
+      // NAME containing `tutoring`.
+      {
+        path: 'tutoring2/preferences',
+        name: 'tutoring2.preferences',
+        component: () => import('@/views/tutoring2/Tutoring2PreferencesView.vue'),
+        meta: { needs: 'tutoring-module' },
+      },
 
       // ────────────────────────────────────────────────────────────
       // Greenfield parent (wali) bimbel (WEB-5). Coexists with the

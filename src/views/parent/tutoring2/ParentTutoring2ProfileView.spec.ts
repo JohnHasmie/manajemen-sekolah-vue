@@ -17,6 +17,7 @@ import { createI18n } from 'vue-i18n';
 import { createPinia, setActivePinia } from 'pinia';
 import ParentProfile from './ParentTutoring2ProfileView.vue';
 import StudentProfile from '../../student/tutoring2/StudentTutoring2ProfileView.vue';
+import TutorProfile from '../../teacher/tutoring2/TutorTutoring2ProfileView.vue';
 
 const logout = vi.fn();
 const push = vi.fn();
@@ -45,7 +46,17 @@ async function mountView(Component: unknown) {
             id: {
               tutoring2: {
                 parent: { profile: { subtitle: 'Wali · {name}' } },
-                common: { roleParent: 'Wali' },
+                common: {
+                  roleParent: 'Wali',
+                  roleStudent: 'Siswa',
+                  roleTutor: 'Tutor',
+                },
+                preferences: {
+                  theme: 'Tampilan',
+                  themeAuto: 'Otomatis',
+                  language: 'Bahasa',
+                  title: 'Preferensi',
+                },
               },
             },
           },
@@ -80,6 +91,11 @@ async function tapLogout(w: Awaited<ReturnType<typeof mountView>>) {
 describe.each([
   ['wali', ParentProfile],
   ['siswa', StudentProfile],
+  // The tutor screen had `auth.logout()` with NO redirect and a catch
+  // that toasted the literal string 'logout' — a TODO placeholder that
+  // reached users. It is in the shared table now so it cannot drift
+  // away from the other two again.
+  ['tutor', TutorProfile],
 ])('%s profile — Keluar', (_role, Component) => {
   beforeEach(() => {
     logout.mockReset().mockResolvedValue(undefined);
@@ -135,5 +151,68 @@ describe('wali profile — whose name is on it', () => {
     // Reads "Wali · Wali" rather than a dangling "Wali · " — no name is
     // better than half a sentence, and far better than someone else's.
     expect(w.get('[data-testid="hdr"]').text()).toContain('Wali · Wali');
+  });
+});
+
+describe.each([
+  ['wali', ParentProfile],
+  ['siswa', StudentProfile],
+  ['tutor', TutorProfile],
+])('%s profile — every card goes somewhere', (_role, Component) => {
+  beforeEach(() => {
+    logout.mockReset().mockResolvedValue(undefined);
+    push.mockReset();
+    authUser.value = { name: 'Uji Coba' };
+  });
+
+  it('Akun opens the shared profile view', async () => {
+    // Was `toast.info(t('tutoring2.common.notAvailable'))` on all three.
+    const w = await mountView(Component);
+    const cards = w.findAll('button');
+    await cards[0].trigger('click');
+    await flushPromises();
+
+    expect(push).toHaveBeenCalledWith({ name: 'profile' });
+  });
+
+  it('Tampilan and Bahasa open the shared preferences view', async () => {
+    const w = await mountView(Component);
+    const cards = w.findAll('button');
+
+    await cards[1].trigger('click');
+    await cards[2].trigger('click');
+    await flushPromises();
+
+    const targets = push.mock.calls.map((c) => (c[0] as { name: string }).name);
+    expect(targets).toEqual(['tutoring2.preferences', 'tutoring2.preferences']);
+  });
+
+  it('shows no card that leads nowhere', async () => {
+    // Guardian / linked-children / Notifikasi / Bantuan were cards
+    // announcing features with no destination. Four cards remain and
+    // every one of them acts.
+    const w = await mountView(Component);
+    expect(w.findAll('button')).toHaveLength(4);
+  });
+});
+
+describe.each([
+  ['siswa', StudentProfile, 'Siswa Bimbel Cendekia'],
+  ['tutor', TutorProfile, 'Tutor Bimbel Cendekia'],
+])('%s profile — whose name is on it', (_role, Component, invented) => {
+  beforeEach(() => {
+    authUser.value = null;
+  });
+
+  it('shows the SIGNED-IN user, not an invented institution', async () => {
+    // The header subtitle was that literal string, shown to every user
+    // on every tenant — the same "Bimbel Cendekia" that the fabricated
+    // parent report card invented.
+    authUser.value = { name: 'Nama Asli' };
+
+    const w = await mountView(Component);
+
+    expect(w.get('[data-testid="hdr"]').text()).toContain('Nama Asli');
+    expect(w.html()).not.toContain(invented);
   });
 });
