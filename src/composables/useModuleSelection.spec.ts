@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ref, type Ref } from 'vue';
+import { nextTick, ref, type Ref } from 'vue';
 
 import { useModuleSelection } from './useModuleSelection';
 import type { BillingPeriod, ModuleCatalog, PricingPlan } from '@/types/subscription-billing';
@@ -21,9 +21,12 @@ import type { BillingPeriod, ModuleCatalog, PricingPlan } from '@/types/subscrip
  * actually carries, so neither tenant kind can be sold the other's.
  */
 
-function makeCatalog(bundles: ModuleCatalog['bundles']): ModuleCatalog {
+function makeCatalog(
+  bundles: ModuleCatalog['bundles'],
+  optional: Record<string, unknown> = {},
+): ModuleCatalog {
   return {
-    optional: {},
+    optional,
     bundles,
     core_prefixes: [],
   } as unknown as ModuleCatalog;
@@ -102,5 +105,63 @@ describe('useModuleSelection · bundleBenchmark', () => {
 
     // 35 peserta × 6.000 + 5 tutor × 4.000
     expect(bundleBenchmark.value?.monthlyTotal).toBe(35 * 6000 + 5 * 4000);
+  });
+});
+
+describe('useModuleSelection · unsellable-key guard', () => {
+  it('drops selected modules the scoped catalog does not sell', async () => {
+    // Exactly the reported case: a bimbel signup carrying the wizard's
+    // sekolah defaults (plus a stale draft) was billed for modules its
+    // own catalog has no entry for.
+    const catalogRef: Ref<ModuleCatalog | null> = ref(
+      makeCatalog({}, { attendance_class: {}, grades: {}, report_cards: {}, attendance_gate: {} }),
+    );
+    const plan: Ref<PricingPlan | null> = ref(null);
+    const period: Ref<BillingPeriod> = ref('monthly');
+
+    const { selectedKeys } = useModuleSelection({
+      catalog: catalogRef,
+      plan,
+      studentCount: () => 35,
+      staffCount: () => 5,
+      period,
+      initialKeys: ['attendance_class', 'grades', 'report_cards', 'attendance_gate'],
+    });
+
+    expect(selectedKeys.value.size).toBe(4);
+
+    // The bimbel catalog lands — it sells none of the sekolah three.
+    catalogRef.value = makeCatalog(
+      { bundle_tutoring: bundle('Paket Bimbel', ['tutoring']) },
+      { attendance_gate: {}, tutoring: {} },
+    );
+    await nextTick();
+
+    expect([...selectedKeys.value]).toEqual(['attendance_gate']);
+  });
+
+  it('keeps bundle keys, which live outside `optional`', async () => {
+    const catalogRef: Ref<ModuleCatalog | null> = ref(
+      makeCatalog({ bundle_tutoring: bundle('Paket Bimbel', ['tutoring']) }, { tutoring: {} }),
+    );
+    const plan: Ref<PricingPlan | null> = ref(null);
+    const period: Ref<BillingPeriod> = ref('monthly');
+
+    const { selectedKeys } = useModuleSelection({
+      catalog: catalogRef,
+      plan,
+      studentCount: () => 10,
+      staffCount: () => 2,
+      period,
+      initialKeys: ['bundle_tutoring', 'grades'],
+    });
+
+    catalogRef.value = makeCatalog(
+      { bundle_tutoring: bundle('Paket Bimbel', ['tutoring']) },
+      { tutoring: {} },
+    );
+    await nextTick();
+
+    expect([...selectedKeys.value]).toEqual(['bundle_tutoring']);
   });
 });

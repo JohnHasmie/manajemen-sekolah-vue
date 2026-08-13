@@ -81,6 +81,37 @@ export function useModuleSelection(opts: UseModuleSelectionOptions) {
   const aiQuota = ref<Record<string, number>>({});
   const quote = ref<ModularQuote | null>(null);
 
+  // ── Guard: never keep a module this tenant cannot buy ────────────
+  /**
+   * Drop any selected key the CURRENT catalog does not sell.
+   *
+   * The catalog is tenant-scoped, so what is sellable changes when the
+   * tenant kind does. Several paths can put a foreign key into the
+   * selection and each one was patched separately before:
+   *   - the wizard's hardcoded `initialKeys` (a sekolah list, applied
+   *     before any kind is chosen),
+   *   - the localStorage draft, restored AFTER the tenant-type purge and
+   *     therefore able to reinstate exactly what that purge removed,
+   *   - bundle expansion pulling in members.
+   *
+   * Reported 2026-08-13: a Bimbel signup was billed `attendance_class`,
+   * `grades`, `report_cards` and `class_activity` — Rp 249.500/month of
+   * sekolah-only modules. The tell was in the summary itself: those rows
+   * rendered as RAW KEYS while legitimate ones had labels, because the
+   * bimbel catalog has no entry to take a label from.
+   *
+   * Keying the guard on the catalog rather than on tenant_type closes
+   * every one of those paths at once, and cannot race the async reload
+   * the way a tenant_type watcher does — it fires when the new catalog
+   * actually lands.
+   */
+  watch(catalog, (cat) => {
+    if (!cat) return;
+    const sellable = (k: string) => k in cat.optional || k in cat.bundles;
+    const kept = new Set([...selectedKeys.value].filter(sellable));
+    if (kept.size !== selectedKeys.value.size) selectedKeys.value = kept;
+  });
+
   // ── Derived ──────────────────────────────────────────────────────
   /**
    * Selection with bundles expanded to their members and required deps
