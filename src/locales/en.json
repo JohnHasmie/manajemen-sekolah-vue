@@ -7975,27 +7975,6 @@
         "billingMonthly": "Monthly",
         "billingPerSession": "Per session"
       },
-      "leaderboard": {
-        "title": "Child ranking",
-        "meta": "{scope} · {count} participants",
-        "emptyTitle": "No ranking yet",
-        "emptyDesc": "Rankings appear once assessments are published and graded.",
-        "tabLabel": "Scope",
-        "tabGroup": "By group",
-        "tabProgram": "By program",
-        "kpiRank": "Rank",
-        "kpiScore": "Avg score",
-        "kpiBoardAverage": "Peer average",
-        "kpiAssessments": "Assessments",
-        "childLabel": "Your child · {name}",
-        "childBadge": "Child",
-        "ofTotal": "of {total}",
-        "gapToNext": "{diff} points behind rank #{rank}",
-        "metaAssessments": "{count} assessments",
-        "colRank": "Rank",
-        "colAverage": "Avg score",
-        "colAssessments": "Assessments"
-      },
       "progress": {
         "title": "Score progress",
         "meta": "{count} graded assessments",
@@ -8113,6 +8092,30 @@
       "themeAutoDesc": "Light from {light}, dark from {dark}.",
       "language": "Language",
       "languageNote": "Your language choice is saved to your account and applies on your other devices too."
+    },
+    "leaderboard": {
+      "title": "Child's ranking",
+      "meta": "{scope} · {count} participants",
+      "emptyTitle": "No ranking yet",
+      "emptyDesc": "Rankings appear once assessments are published and graded.",
+      "tabLabel": "Scope",
+      "tabGroup": "By group",
+      "tabProgram": "By program",
+      "kpiRank": "Rank",
+      "kpiScore": "Avg score",
+      "kpiBoardAverage": "Peer average",
+      "kpiAssessments": "Assessments",
+      "childLabel": "Your child · {name}",
+      "childBadge": "Child",
+      "ofTotal": "of {total}",
+      "gapToNext": "{diff} points behind rank #{rank}",
+      "metaAssessments": "{count} assessments",
+      "colRank": "Rank",
+      "colAverage": "Avg score",
+      "colAssessments": "Assessments",
+      "titleSelf": "My ranking",
+      "selfLabel": "Your ranking",
+      "selfBadge": "You"
     }
   },
   "role": {

@@ -1849,8 +1849,17 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'parent/tutoring2/leaderboard/:studentId',
         name: 'parent.tutoring2.leaderboard',
-        component: () => import('@/views/parent/tutoring2/ParentTutoring2LeaderboardView.vue'),
+        component: () => import('@/views/tutoring2/Tutoring2LeaderboardView.vue'),
         meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
+      },
+      // Same view, subject resolved from the signed-in student instead
+      // of a route param. The siswa result screen had a "Lihat
+      // peringkat" button that led nowhere until this existed.
+      {
+        path: 'student/tutoring2/leaderboard',
+        name: 'student.tutoring2.leaderboard',
+        component: () => import('@/views/tutoring2/Tutoring2LeaderboardView.vue'),
+        meta: { role: 'student' satisfies Role, needs: 'tutoring-module' },
       },
       {
         path: 'parent/tutoring2/progress/:studentId',

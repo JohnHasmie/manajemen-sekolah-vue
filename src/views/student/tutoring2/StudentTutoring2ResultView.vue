@@ -18,8 +18,9 @@
 // TODO WEB-5+ derive the current-user student_id and filter to their score row
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
+import Button from '@/components/ui/Button.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -30,6 +31,7 @@ import type { TutoringScoreRow } from '@/types/tutoring-bimbel';
 
 const { t } = useI18n();
 const route = useRoute();
+const router = useRouter();
 
 const assessmentId = (route.params.id as string) ?? '';
 
@@ -72,6 +74,15 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
+
+/**
+ * The siswa leaderboard. This button existed from the start, wired to a
+ * `notAvailable` toast, and was removed in !1163 because nothing was
+ * behind it. `Tutoring2LeaderboardView` is that destination.
+ */
+function openLeaderboard() {
+  router.push({ name: 'student.tutoring2.leaderboard' });
+}
 </script>
 
 <template>
@@ -93,6 +104,15 @@ const kpiCards = computed<KpiCard[]>(() => {
       @retry="reload"
     >
       <template #default>
+        <!-- "Lihat pembahasan" is NOT back: there is still no question or
+             solution storage anywhere, which is why the assessment runner
+             was removed too. This one is back because the leaderboard
+             view now exists. -->
+        <div class="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
+          <Button variant="primary" block @click="openLeaderboard">
+            {{ t('tutoring2.student.result.viewLeaderboard') }}
+          </Button>
+        </div>
       </template>
     </AsyncView>
   </div>

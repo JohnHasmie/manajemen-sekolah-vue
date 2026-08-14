@@ -1,9 +1,24 @@
 <!--
-  ParentTutoring2LeaderboardView.vue — the wali's view of one child's
-  standing (CLEAN-2 Phase 2 · greenfield replacement for the legacy
-  `parent/tutoring/ParentLeaderboardView.vue`).
+  Tutoring2LeaderboardView.vue — one student's standing, shown to the
+  wali or to the student themselves.
 
-  Route: /parent/tutoring2/leaderboard/:studentId
+  Routes:
+    /parent/tutoring2/leaderboard/:studentId   (wali)
+    /student/tutoring2/leaderboard             (siswa)
+
+  ── Why one view for both ──
+
+  Was `ParentTutoring2LeaderboardView`. The siswa surface had a "Lihat
+  peringkat" button on the result screen that led nowhere; it was removed
+  in !1163 because there was no destination, and this is that
+  destination. Copying 443 lines to make a student twin would have
+  guaranteed the two drift — the same mistake that left the wali and
+  siswa Profil screens wrong in identical ways.
+
+  The only role-dependent parts are how the SUBJECT is resolved and what
+  we call them: a wali reads a `:studentId` from the route, a siswa is
+  their own subject and the backend already narrows every read to them
+  via `*.view_own`.
   Endpoints (all `/tutoring-v2/*`):
     GET /tutoring-v2/enrollments?student_id=                 — scope options
     GET /tutoring-v2/learning-groups/{groupId}/leaderboard   — per-group rank
@@ -66,7 +81,21 @@ import type { LeaderboardRow } from '@/types/tutoring2/leaderboard';
 const { t } = useI18n();
 const route = useRoute();
 
-const studentId = String(route.params.studentId ?? '');
+/**
+ * Whose standing this is.
+ *
+ * A wali passes the child in the route. A siswa passes nothing: the
+ * backend narrows `/enrollments` to their own rows through
+ * `tutoring.enrollment.view_own`, so their id is whatever those rows
+ * carry — resolved in `loadScopeOptions` below rather than guessed here.
+ */
+const routeStudentId = String(route.params.studentId ?? '');
+const resolvedStudentId = ref(routeStudentId);
+const studentId = computed(() => resolvedStudentId.value);
+
+/** True when the viewer is looking at themselves, not at a child. */
+const isSelf = computed(() => routeStudentId === '');
+
 
 type Tab = 'group' | 'program';
 
@@ -87,11 +116,21 @@ const programOptions = ref<ScopeOption[]>([]);
 const scopeLoaded = ref(false);
 
 async function loadScopeOptions() {
-  if (scopeLoaded.value || !studentId) return;
+  if (scopeLoaded.value) return;
+  // No `student_id` for a siswa: the backend already scopes the list to
+  // them, and sending an id they are not allowed to read would be a 403
+  // rather than a filter.
   const { items } = await TutoringBimbelService.listEnrollments({
-    student_id: studentId,
+    ...(routeStudentId ? { student_id: routeStudentId } : {}),
     per_page: 100,
   });
+
+  // A siswa's own id comes from their own enrollments — it is the same
+  // value on every row, and there is no other place on this surface to
+  // read it from.
+  if (!resolvedStudentId.value && items.length > 0) {
+    resolvedStudentId.value = items[0].student_id;
+  }
   const groups = new Map<string, ScopeOption>();
   const programs = new Map<string, ScopeOption>();
   for (const e of items) {
@@ -143,11 +182,37 @@ const tail = computed(() => rows.value.filter((r) => r.rank > 3));
 
 // ── The child's own row ──────────────────────────────────────────
 const childRow = computed<LeaderboardRow | null>(
-  () => rows.value.find((r) => r.student_id === studentId) ?? null,
+  () => rows.value.find((r) => r.student_id === studentId.value) ?? null,
 );
 
-function isChild(row: LeaderboardRow): boolean {
-  return row.student_id === studentId;
+/**
+ * What to call the highlighted person, and the page.
+ *
+ * "Peringkat anak" / "Anak Anda · Budi" is right for a wali and wrong
+ * for the student reading their own board, so the copy switches rather
+ * than being neutered into something that fits neither.
+ */
+const pageTitle = computed(() =>
+  isSelf.value
+    ? t('tutoring2.leaderboard.titleSelf')
+    : t('tutoring2.leaderboard.title'),
+);
+const subjectBadge = computed(() =>
+  isSelf.value
+    ? t('tutoring2.leaderboard.selfBadge')
+    : t('tutoring2.leaderboard.childBadge'),
+);
+const subjectLabel = computed(() =>
+  isSelf.value
+    ? t('tutoring2.leaderboard.selfLabel')
+    : t('tutoring2.leaderboard.childLabel', {
+        name: childRow.value?.student_name ?? '',
+      }),
+);
+
+/** The highlighted row: the child a wali is watching, or the siswa. */
+function isSubject(row: LeaderboardRow): boolean {
+  return row.student_id === studentId.value;
 }
 
 /**
@@ -180,25 +245,25 @@ const kpiCards = computed<KpiCard[]>(() => {
   return [
     {
       icon: 'trophy',
-      label: t('tutoring2.parent.leaderboard.kpiRank'),
+      label: t('tutoring2.leaderboard.kpiRank'),
       value: me ? `#${me.rank}` : '—',
       tone: 'amber',
       accented: true,
     },
     {
       icon: 'chart-bar',
-      label: t('tutoring2.parent.leaderboard.kpiScore'),
+      label: t('tutoring2.leaderboard.kpiScore'),
       value: me ? formatScore(me.avg_score) : '—',
       tone: 'brand',
     },
     {
       icon: 'users',
-      label: t('tutoring2.parent.leaderboard.kpiBoardAverage'),
+      label: t('tutoring2.leaderboard.kpiBoardAverage'),
       value: formatScore(boardAverage),
     },
     {
       icon: 'clipboard-list',
-      label: t('tutoring2.parent.leaderboard.kpiAssessments'),
+      label: t('tutoring2.leaderboard.kpiAssessments'),
       value: String(me?.assessments_taken ?? 0),
       tone: 'green',
     },
@@ -208,7 +273,7 @@ const kpiCards = computed<KpiCard[]>(() => {
 const metaLabel = computed(() =>
   state.value.status === 'loading'
     ? t('tutoring2.common.loading')
-    : t('tutoring2.parent.leaderboard.meta', {
+    : t('tutoring2.leaderboard.meta', {
         scope: activeScopeLabel(),
         count: rows.value.length,
       }),
@@ -256,7 +321,7 @@ function podiumMedalClass(rank: number): string {
     <BrandPageHeader
       role="parent"
       :kicker="t('tutoring2.parent.home.subtitle')"
-      :title="t('tutoring2.parent.leaderboard.title')"
+      :title="pageTitle"
       :meta="metaLabel"
     />
 
@@ -265,11 +330,11 @@ function podiumMedalClass(rank: number): string {
     <PageFilterToolbar :hide-default-search="true">
       <template #chips>
         <AppFilterChip
-          :label="t('tutoring2.parent.leaderboard.tabLabel')"
+          :label="t('tutoring2.leaderboard.tabLabel')"
           :value="
             tab === 'group'
-              ? t('tutoring2.parent.leaderboard.tabGroup')
-              : t('tutoring2.parent.leaderboard.tabProgram')
+              ? t('tutoring2.leaderboard.tabGroup')
+              : t('tutoring2.leaderboard.tabProgram')
           "
           icon-name="users"
           :active="true"
@@ -289,8 +354,8 @@ function podiumMedalClass(rank: number): string {
       :state="state"
       loading-variant="cards"
       :loading-rows="4"
-      :empty-title="t('tutoring2.parent.leaderboard.emptyTitle')"
-      :empty-description="t('tutoring2.parent.leaderboard.emptyDesc')"
+      :empty-title="t('tutoring2.leaderboard.emptyTitle')"
+      :empty-description="t('tutoring2.leaderboard.emptyDesc')"
       @retry="reload"
     >
       <template #default>
@@ -302,19 +367,19 @@ function podiumMedalClass(rank: number): string {
           class="rounded-3xl border border-brand-azure/20 bg-brand-azure/5 p-4"
         >
           <p class="text-2xs font-bold uppercase tracking-wide text-brand-azure">
-            {{ t('tutoring2.parent.leaderboard.childLabel', { name: childRow.student_name }) }}
+            {{ subjectLabel }}
           </p>
           <div class="mt-1 flex items-end justify-between gap-3">
             <div>
               <p class="text-3xl font-black leading-none text-brand-azure">
                 #{{ childRow.rank }}
                 <span class="text-sm font-normal text-brand-azure/70">
-                  {{ t('tutoring2.parent.leaderboard.ofTotal', { total: rows.length }) }}
+                  {{ t('tutoring2.leaderboard.ofTotal', { total: rows.length }) }}
                 </span>
               </p>
               <p v-if="gapToNextRank !== null" class="mt-1 text-2xs text-brand-azure/80">
                 {{
-                  t('tutoring2.parent.leaderboard.gapToNext', {
+                  t('tutoring2.leaderboard.gapToNext', {
                     rank: childRow.rank - 1,
                     diff: gapToNextRank,
                   })
@@ -323,14 +388,14 @@ function podiumMedalClass(rank: number): string {
             </div>
             <div class="text-right">
               <p class="text-2xs uppercase tracking-wide text-brand-azure/70">
-                {{ t('tutoring2.parent.leaderboard.kpiScore') }}
+                {{ t('tutoring2.leaderboard.kpiScore') }}
               </p>
               <p class="text-xl font-black leading-tight text-brand-azure">
                 {{ formatScore(childRow.avg_score) }}
               </p>
               <p class="text-2xs text-brand-azure/80">
                 {{
-                  t('tutoring2.parent.leaderboard.metaAssessments', {
+                  t('tutoring2.leaderboard.metaAssessments', {
                     count: childRow.assessments_taken,
                   })
                 }}
@@ -362,10 +427,10 @@ function podiumMedalClass(rank: number): string {
               <div class="truncate font-bold text-slate-900">
                 {{ row.student_name }}
                 <span
-                  v-if="isChild(row)"
+                  v-if="isSubject(row)"
                   class="ml-1 rounded-full bg-brand-azure px-1.5 py-px align-middle text-3xs font-bold text-white"
                 >
-                  {{ t('tutoring2.parent.leaderboard.childBadge') }}
+                  {{ subjectBadge }}
                 </span>
               </div>
               <div class="truncate text-2xs text-slate-500">
@@ -378,7 +443,7 @@ function podiumMedalClass(rank: number): string {
               </div>
               <div class="text-2xs text-slate-500">
                 {{
-                  t('tutoring2.parent.leaderboard.metaAssessments', {
+                  t('tutoring2.leaderboard.metaAssessments', {
                     count: row.assessments_taken,
                   })
                 }}
@@ -398,14 +463,14 @@ function podiumMedalClass(rank: number): string {
                 class="border-b border-slate-100 text-left text-2xs uppercase tracking-wide text-slate-400"
               >
                 <th class="w-16 px-4 py-3 font-bold">
-                  {{ t('tutoring2.parent.leaderboard.colRank') }}
+                  {{ t('tutoring2.leaderboard.colRank') }}
                 </th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.name') }}</th>
                 <th class="px-4 py-3 font-bold">
-                  {{ t('tutoring2.parent.leaderboard.colAverage') }}
+                  {{ t('tutoring2.leaderboard.colAverage') }}
                 </th>
                 <th class="px-4 py-3 font-bold">
-                  {{ t('tutoring2.parent.leaderboard.colAssessments') }}
+                  {{ t('tutoring2.leaderboard.colAssessments') }}
                 </th>
               </tr>
             </thead>
@@ -415,7 +480,7 @@ function podiumMedalClass(rank: number): string {
                 :key="row.enrollment_id"
                 :class="[
                   'border-b border-slate-100 last:border-0',
-                  isChild(row) ? 'bg-brand-azure/5' : 'hover:bg-slate-50',
+                  isSubject(row) ? 'bg-brand-azure/5' : 'hover:bg-slate-50',
                 ]"
               >
                 <td class="px-4 py-3 font-bold text-slate-900">#{{ row.rank }}</td>
@@ -423,10 +488,10 @@ function podiumMedalClass(rank: number): string {
                   <div class="font-bold text-slate-900">
                     {{ row.student_name }}
                     <span
-                      v-if="isChild(row)"
+                      v-if="isSubject(row)"
                       class="ml-1 rounded-full bg-brand-azure px-1.5 py-px align-middle text-3xs font-bold text-white"
                     >
-                      {{ t('tutoring2.parent.leaderboard.childBadge') }}
+                      {{ subjectBadge }}
                     </span>
                   </div>
                   <div class="text-2xs text-slate-500">{{ row.student_number ?? '—' }}</div>

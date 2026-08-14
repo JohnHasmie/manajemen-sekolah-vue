@@ -6734,27 +6734,6 @@
         "billingMonthly": "SPP bulanan",
         "billingPerSession": "Per sesi"
       },
-      "leaderboard": {
-        "title": "Peringkat anak",
-        "meta": "{scope} · {count} peserta",
-        "emptyTitle": "Belum ada peringkat",
-        "emptyDesc": "Peringkat muncul setelah ada penilaian yang diterbitkan dan dinilai.",
-        "tabLabel": "Lingkup",
-        "tabGroup": "Per kelompok",
-        "tabProgram": "Per program",
-        "kpiRank": "Peringkat",
-        "kpiScore": "Rata nilai",
-        "kpiBoardAverage": "Rata peserta",
-        "kpiAssessments": "Penilaian",
-        "childLabel": "Anak Anda · {name}",
-        "childBadge": "Anak",
-        "ofTotal": "dari {total}",
-        "gapToNext": "Selisih {diff} poin ke peringkat #{rank}",
-        "metaAssessments": "{count} penilaian",
-        "colRank": "Peringkat",
-        "colAverage": "Rata nilai",
-        "colAssessments": "Penilaian"
-      },
       "progress": {
         "title": "Perkembangan nilai",
         "meta": "{count} penilaian dinilai",
@@ -8113,6 +8092,30 @@
       "themeAutoDesc": "Terang mulai {light}, gelap mulai {dark}.",
       "language": "Bahasa",
       "languageNote": "Pilihan bahasa tersimpan di akun Anda dan ikut berlaku di perangkat lain."
+    },
+    "leaderboard": {
+      "title": "Peringkat anak",
+      "meta": "{scope} · {count} peserta",
+      "emptyTitle": "Belum ada peringkat",
+      "emptyDesc": "Peringkat muncul setelah ada penilaian yang diterbitkan dan dinilai.",
+      "tabLabel": "Lingkup",
+      "tabGroup": "Per kelompok",
+      "tabProgram": "Per program",
+      "kpiRank": "Peringkat",
+      "kpiScore": "Rata nilai",
+      "kpiBoardAverage": "Rata peserta",
+      "kpiAssessments": "Penilaian",
+      "childLabel": "Anak Anda · {name}",
+      "childBadge": "Anak",
+      "ofTotal": "dari {total}",
+      "gapToNext": "Selisih {diff} poin ke peringkat #{rank}",
+      "metaAssessments": "{count} penilaian",
+      "colRank": "Peringkat",
+      "colAverage": "Rata nilai",
+      "colAssessments": "Penilaian",
+      "titleSelf": "Peringkat saya",
+      "selfLabel": "Peringkat Anda",
+      "selfBadge": "Saya"
     }
   },
   "role": {
