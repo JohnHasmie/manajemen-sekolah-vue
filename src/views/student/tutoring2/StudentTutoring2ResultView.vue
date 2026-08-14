@@ -9,14 +9,22 @@
     3. AsyncView              — state machine on listScores().
        Default slot renders a rounded-3xl surface with stacked CTAs.
 
-  MVP note: BE-5 `listScores` returns every enrollment's row for the
-  assessment but does NOT tell us which one belongs to the current
-  student. We pick the first row as a placeholder so the KPI strip +
-  action panel render — the "current-student" filter lands with WEB-5+.
+  The rank is real. It used to read `1/${n}` — literally rank one, for
+  every student, on every assessment, where n was the row count. The
+  dense rank now comes from
+  `GET /programs/{pid}/leaderboard?assessment_id={id}`, matched to this
+  student by `student_id`, and renders "—" when they are not in the
+  returned slice. The leaderboard is capped, and absence from a capped
+  list is not evidence of position.
+
+  The old note here claimed `listScores` returns every enrollment's row
+  and cannot say which is ours. That stopped being true when the
+  endpoint gained `_view_own` scoping: a siswa gets their own row and
+  no one else's, so `rows[0]` IS theirs. The row also carries
+  `student_id` now, which is what finds it on the leaderboard.
 -->
 <script setup lang="ts">
-// TODO WEB-5+ derive the current-user student_id and filter to their score row
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
@@ -27,6 +35,7 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
+import { TutoringLeaderboardService } from '@/services/tutoring2/leaderboard';
 import type { TutoringScoreRow } from '@/types/tutoring-bimbel';
 
 const { t } = useI18n();
@@ -35,8 +44,35 @@ const router = useRouter();
 
 const assessmentId = (route.params.id as string) ?? '';
 
+// Dense rank for this student on this assessment, and the size of the
+// ranked field. Both null until resolved, and null is rendered as "—"
+// rather than as a number.
+const myRank = ref<number | null>(null);
+const rankedTotal = ref<number | null>(null);
+
 const { state, reload } = useDataRefresh<TutoringScoreRow[]>(async () => {
   const { items } = await TutoringBimbelService.listScores(assessmentId);
+
+  // The rank decorates a score; a leaderboard that 403s or 404s must
+  // not blank the score the student came here for.
+  myRank.value = null;
+  rankedTotal.value = null;
+  const mine = items[0];
+  if (mine?.student_id) {
+    try {
+      const assessment = await TutoringBimbelService.getAssessment(assessmentId);
+      const board = await TutoringLeaderboardService.getProgram(assessment.program_id, {
+        assessment_id: assessmentId,
+        limit: 100,
+      });
+      rankedTotal.value = board.items.length;
+      myRank.value = board.items.find((r) => r.student_id === mine.student_id)?.rank ?? null;
+    } catch {
+      // Leave both null — "belum tersedia" is true, and truer than a
+      // number we could not read.
+    }
+  }
+
   return items;
 });
 
@@ -46,12 +82,11 @@ const allRows = computed<TutoringScoreRow[]>(() =>
     : [],
 );
 
-// TODO WEB-5+ derive the current-user student_id and filter to their score row
+// Own-scoped by the backend, so the first row IS this student's.
 const myRow = computed<TutoringScoreRow | null>(() => allRows.value[0] ?? null);
 
 const kpiCards = computed<KpiCard[]>(() => {
   const row = myRow.value;
-  const n = allRows.value.length;
   return [
     {
       icon: 'chart-bar',
@@ -62,7 +97,12 @@ const kpiCards = computed<KpiCard[]>(() => {
     {
       icon: 'trending-up',
       label: t('tutoring2.student.result.kpiRank'),
-      value: n > 0 ? `1/${n}` : '—',
+      value:
+        myRank.value == null
+          ? '—'
+          : rankedTotal.value == null
+            ? `${myRank.value}`
+            : `${myRank.value}/${rankedTotal.value}`,
       tone: 'brand',
     },
     {
