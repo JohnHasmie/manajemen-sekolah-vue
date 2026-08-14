@@ -10,7 +10,7 @@
  */
 
 import { api } from '@/lib/http';
-import type { MeResponseShape, MeSnapshot } from '@/types/me';
+import type { MeResponseShape, MeSnapshot, MeSubscription } from '@/types/me';
 
 /** Unwrap the standard Laravel `{ success, data }` envelope. */
 function unwrap<T>(payload: unknown): T {
@@ -46,7 +46,47 @@ function normalizeSnapshot(raw: MeResponseShape): MeSnapshot {
     isSuperAdmin: raw.is_super_admin === true,
     abilities,
     modules,
+    subscription: normalizeSubscription(raw.subscription),
     fetchedAt: raw.fetched_at ?? null,
+  };
+}
+
+/**
+ * Maps the `subscription` block, tolerating its absence.
+ *
+ * A backend that predates the field, or a session with no active
+ * school, yields null — and null must mean "not blocked". Defaulting
+ * the other way would black out every client the moment they met an
+ * older API.
+ */
+function normalizeSubscription(raw: any): MeSubscription | null {
+  if (!raw || typeof raw !== 'object') return null;
+
+  const ctx = raw.blocked_context;
+
+  return {
+    isBlocked: raw.is_blocked === true,
+    status: String(raw.status ?? 'none'),
+    expiredAt: raw.expired_at ?? null,
+    daysExpired: typeof raw.days_expired === 'number' ? raw.days_expired : null,
+    plan: raw.plan ?? null,
+    amount: typeof raw.amount === 'number' ? raw.amount : null,
+    blockedContext:
+      ctx && typeof ctx === 'object'
+        ? {
+            accounts: Number(ctx.accounts ?? 0),
+            teachers: Number(ctx.teachers ?? 0),
+            staff: Number(ctx.staff ?? 0),
+            students: Number(ctx.students ?? 0),
+            admin: ctx.admin
+              ? {
+                  name: String(ctx.admin.name ?? ''),
+                  email: String(ctx.admin.email ?? ''),
+                  phone: ctx.admin.phone ?? null,
+                }
+              : null,
+          }
+        : null,
   };
 }
 

@@ -324,6 +324,17 @@ const routes: RouteRecordRaw[] = [
     meta: { public: true, registerDemo: true },
   },
 
+  // ── /langganan-berakhir — the full block page ─────────────────────
+  // Replaces the whole shell when the tenant's subscription lapses.
+  // NOT public: the reader must be signed in, because the page names
+  // their school, their day count, and who to nudge. Carries no role
+  // meta — every role lands here, and the view branches on what the
+  // reader can actually do about it.
+  {
+    path: '/langganan-berakhir',
+    name: 'subscription-blocked',
+    component: () => import('@/views/SubscriptionBlockedView.vue'),
+  },
   // ── /subscribe — tenant subscription flow ─────────────────────────
   // Publicly reachable: an unauthenticated visitor can open the page,
   // see pricing + the calculator, hit Google Sign-In (rendered inside
@@ -2224,6 +2235,36 @@ router.beforeEach(async (to) => {
   }
   // No snapshot (fetch failed / still booting) → don't gate client-side.
   if (me.snapshot === null) return true;
+
+  // ── subscription block ───────────────────────────────────────────
+  // A lapsed tenant gets ONE page instead of the app. This sits after
+  // the /me await above, which is what makes a hard refresh land on the
+  // block page without the shell flashing first: navigation is still
+  // suspended here, so nothing has painted.
+  //
+  // Four things stay reachable, and every one of them is load-bearing:
+  //   1. /subscribe*      — already `meta.public`, so the early return
+  //                         above lets it through. Blocking it would
+  //                         leave the school unable to pay its way out.
+  //   2. super-admin      — `isSubscriptionBlocked` is false for them;
+  //                         they are who fixes the tenant.
+  //   3. login / logout   — public + handled in the view.
+  //   4. school switching — the view offers it; the block belongs to the
+  //                         tenant, not the account.
+  if (me.isSubscriptionBlocked && to.name !== 'subscription-blocked') {
+    // Remember where they were headed so renewal can return them there
+    // instead of dumping everyone on a dashboard.
+    return {
+      name: 'subscription-blocked',
+      query: to.fullPath === '/' ? {} : { next: to.fullPath },
+    };
+  }
+  // Not blocked but sitting on the block page (they just renewed, or
+  // switched to a healthy school) → let them back in.
+  if (!me.isSubscriptionBlocked && to.name === 'subscription-blocked') {
+    const next = typeof to.query.next === 'string' ? to.query.next : null;
+    return next ?? { path: roleHomePath[auth.activeRole ?? ''] ?? '/' };
+  }
 
   // Per-permission guard (RBAC Phase A — backend MR !225). Routes that
   // need a specific ability set `meta.ability = 'attendance.gate_qr.manage'`

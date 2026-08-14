@@ -159,6 +159,28 @@ export const useMeStore = defineStore('me', () => {
     'class_activity',
   ]);
 
+  /**
+   * The tenant's subscription is lapsed and every surface is shut.
+   *
+   * Read straight from the server's `is_blocked` — never inferred from
+   * `modules.size === 0`, because an active school that has bought no
+   * optional module looks identical from here and would be locked out.
+   *
+   * Fails OPEN: no snapshot, no subscription block (older backend), or
+   * a super-admin session all yield false. A client that black-holes
+   * itself on a missing field is worse than one that lets a lapsed
+   * tenant through until the next /me.
+   */
+  const isSubscriptionBlocked = computed<boolean>(() => {
+    const snap = snapshot.value;
+    if (!snap) return false;
+    if (snap.isSuperAdmin) return false;
+    return snap.subscription?.isBlocked === true;
+  });
+
+  /** The block page's copy source. Null unless blocked. */
+  const subscription = computed(() => snapshot.value?.subscription ?? null);
+
   const hasStudentContext = computed<boolean>(() => {
     const snap = snapshot.value;
     if (!snap) return false;
@@ -213,6 +235,8 @@ export const useMeStore = defineStore('me', () => {
     // derived
     hasSnapshot,
     isInitialLoading,
+    isSubscriptionBlocked,
+    subscription,
     hasStudentContext,
     hasAcademicContext,
     hasTutoringContext,
