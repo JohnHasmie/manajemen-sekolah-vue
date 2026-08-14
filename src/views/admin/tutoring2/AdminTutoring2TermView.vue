@@ -1,10 +1,23 @@
 <!--
   AdminTutoring2TermView.vue — greenfield "Term / Batch" list.
 
-  Mirrors AdminTutoring2ProgramsView.vue shape 1:1. Backend hasn't
-  exposed /tutoring-v2/terms yet (BE-1 pending), so this MVP derives
-  the term list from unique `term_id` values on learning groups. When
-  BE ships the endpoint we swap the loader and drop the derivation.
+  Mirrors AdminTutoring2ProgramsView.vue shape 1:1.
+
+  This view used to derive its list from the distinct `term_id` values
+  on learning groups, because nothing served `/tutoring-v2/terms` — and
+  it invented the rest of every row:
+
+      name        `Term ${id.slice(0, 8)}`   eight characters of a UUID
+      start_date  null
+      end_date    null
+      status      'draft'                    on EVERY row
+
+  The status was the part that lied loudest: an admin looking at a live
+  batch was told it was a draft, and the Draf KPI counted every term
+  while Aktif and Ditutup both read zero.
+
+  The `terms` table has held the real name, dates, `is_current` and
+  status since BE-1. It is served now, so the derivation is gone.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -21,23 +34,10 @@ import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
-import {
-  TutoringBimbelService,
-  type BimbelLearningGroup,
-} from '@/services/tutoring-bimbel.service';
+import { TutoringTermsService } from '@/services/tutoring2/terms';
+import type { BimbelTerm } from '@/types/tutoring2/term';
 
 const { t } = useI18n();
-
-// Local derived shape until BE-1 ships /tutoring-v2/terms.
-interface BimbelTermRow {
-  id: string;
-  name: string;
-  start_date: string | null;
-  end_date: string | null;
-  status: 'draft' | 'active' | 'closed';
-  status_label: string;
-  groups_count: number;
-}
 
 const search = ref('');
 const statusFilter = ref<string>(''); // '' | 'draft' | 'active' | 'closed'
@@ -49,41 +49,34 @@ const applyDebounced = useDebounceFn((v: string) => {
 }, 300);
 watch(search, (v) => applyDebounced(v));
 
-// TODO WEB-3+ add TutoringBimbelService.listTerms once BE-1 exposes /tutoring-v2/terms
 const { state, reload } = useDataRefresh(async () => {
-  const { items } = await TutoringBimbelService.listGroups({ per_page: 50 });
-  const byTerm = new Map<string, BimbelLearningGroup[]>();
-  for (const g of items) {
-    if (!g.term_id) continue;
-    const arr = byTerm.get(g.term_id) ?? [];
-    arr.push(g);
-    byTerm.set(g.term_id, arr);
-  }
-  const terms: BimbelTermRow[] = Array.from(byTerm.entries()).map(([id, groups]) => ({
-    id,
-    name: `Term ${id.length > 8 ? id.slice(0, 8) : id}`,
-    start_date: null,
-    end_date: null,
-    status: 'draft',
-    status_label: t('tutoring2.status.draft'),
-    groups_count: groups.length,
-  }));
-  const q = debouncedSearch.value.trim().toLowerCase();
-  let rows = q ? terms.filter((row) => row.name.toLowerCase().includes(q)) : terms;
-  if (statusFilter.value) {
-    rows = rows.filter((row) => row.status === statusFilter.value);
-  }
-  return rows;
+  // Search and status filter server-side now — the endpoint does both,
+  // and filtering a paginated slice client-side only ever hid rows
+  // that were on the next page.
+  const { items } = await TutoringTermsService.list({
+    per_page: 100,
+    status: statusFilter.value || undefined,
+    search: debouncedSearch.value.trim() || undefined,
+  });
+
+  // The year chip has no server-side equivalent: it narrows on the
+  // start date's calendar year, which is a display concern. A term
+  // with no start date is not claimed to belong to any year.
+  if (!yearFilter.value) return items;
+  return items.filter((row) => row.start_date?.startsWith(yearFilter.value));
 });
 
 watch([debouncedSearch, statusFilter, yearFilter], () => reload());
 useAcademicYearWatcher(reload);
 
 const kpiCards = computed<KpiCard[]>(() => {
-  const items = (state.value.status === 'content' ? state.value.data : []) as BimbelTermRow[];
+  const items = (state.value.status === 'content' ? state.value.data : []) as BimbelTerm[];
   const active = items.filter((row) => row.status === 'active').length;
   const closed = items.filter((row) => row.status === 'closed').length;
   const draft = items.filter((row) => row.status === 'draft').length;
+  // `groups_count` is optional on the wire. Absent means "not asked",
+  // not "zero", so a term missing it contributes nothing to the sum
+  // rather than dragging it down as a confident 0.
   const groupsTotal = items.reduce((sum, row) => sum + (row.groups_count ?? 0), 0);
   return [
     { icon: 'circle-check', label: t('tutoring2.admin.term.kpiActive'), value: String(active) },
@@ -93,11 +86,15 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
-function statusPillTone(status: BimbelTermRow['status']): StatusBadgeTone {
+function statusPillTone(status: BimbelTerm['status']): StatusBadgeTone {
   switch (status) {
-    case 'active': return 'success';
-    case 'draft': return 'neutral';
-    case 'closed': return 'neutral';
+    case 'active':
+      return 'success';
+    // `terms.status` is free text, not an enum, so an unrecognised
+    // value falls here and renders neutrally rather than borrowing the
+    // tone of a status it is not.
+    default:
+      return 'neutral';
   }
 }
 
@@ -106,7 +103,7 @@ function formatDate(d: string | null): string {
 }
 
 const termCount = computed(() =>
-  state.value.status === 'content' ? (state.value.data as BimbelTermRow[]).length : 0,
+  state.value.status === 'content' ? (state.value.data as BimbelTerm[]).length : 0,
 );
 </script>
 
@@ -163,7 +160,7 @@ const termCount = computed(() =>
             </thead>
             <tbody>
               <tr
-                v-for="row in (data as BimbelTermRow[])"
+                v-for="row in (data as BimbelTerm[])"
                 :key="row.id"
                 class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
               >
@@ -173,7 +170,14 @@ const termCount = computed(() =>
                 <td class="px-4 py-3">
                   <StatusBadge :label="row.status_label" :tone="statusPillTone(row.status)" uppercase />
                 </td>
-                <td class="px-4 py-3 text-slate-600">{{ row.groups_count }} {{ t('tutoring2.common.group').toLowerCase() }}</td>
+                <td class="px-4 py-3 text-slate-600">
+                  <!-- Absent means the endpoint did not compute it, not
+                       that the term has no groups — so "—", not "0". -->
+                  <template v-if="row.groups_count != null">
+                    {{ row.groups_count }} {{ t('tutoring2.common.group').toLowerCase() }}
+                  </template>
+                  <template v-else>—</template>
+                </td>
               </tr>
             </tbody>
           </table>
