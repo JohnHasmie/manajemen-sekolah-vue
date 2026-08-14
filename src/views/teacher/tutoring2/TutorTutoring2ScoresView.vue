@@ -9,12 +9,15 @@
   Route: /teacher/tutoring2/assessments/:id/scores where `id` is the
   assessment id.
 
-  MVP knobs — hardcode maxScore=100 + kkm=75 so the score entry list
-  can render before the parent assessment surface is wired.
-  // TODO WEB-4+ fetch maxScore + kkm from the parent assessment (BE
-  //   already carries `max_score` + `kkm` on BimbelAssessment; the
-  //   AssessmentsView returns them in the list envelope — pass via
-  //   route state or a lightweight GET /assessments/:id).
+  The ceiling and the pass mark are real. This view used to hardcode
+  `maxScore = 100` and `kkm = 75`, so an assessment worth 50 showed a
+  passing 45 as "45 / 100", and every row was coloured against a
+  threshold nobody had set. Both now come from
+  `GET /tutoring-v2/assessments/:id`, fetched alongside the rows.
+
+  `kkm` stays nullable end to end — `TutoringScoreEntryList` skips the
+  pass/fail colouring when it is null, which is the honest answer for
+  an assessment with no threshold.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -26,7 +29,7 @@ import Button from '@/components/ui/Button.vue';
 import TutoringScoreEntryList from '@/components/tutoring/TutoringScoreEntryList.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
-import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
+import { TutoringBimbelService, type BimbelAssessment } from '@/services/tutoring-bimbel.service';
 import type { TutoringScoreRow } from '@/types/tutoring-bimbel';
 
 const { t } = useI18n();
@@ -41,14 +44,23 @@ if (!assessmentId.value) {
 
 const rows = ref<TutoringScoreRow[]>([]);
 const saving = ref(false);
+const assessment = ref<BimbelAssessment | null>(null);
 
-// TODO WEB-4+ fetch maxScore + kkm from the parent assessment (see file header).
-const MAX_SCORE = 100;
-const KKM = 75;
+// Null until the assessment loads. The component treats a null kkm as
+// "no threshold", and maxScore falls back only for the frame before
+// the fetch settles — never as a standing value.
+const maxScore = computed(() => assessment.value?.max_score ?? null);
+const kkm = computed(() => assessment.value?.kkm ?? null);
 
 const { state, reload } = useDataRefresh(async () => {
-  const { items } = await TutoringBimbelService.listScores(assessmentId.value);
-  return items;
+  // Both at once: the rows are meaningless without the ceiling they
+  // are measured against, and the ceiling is a single row.
+  const [scores, meta] = await Promise.all([
+    TutoringBimbelService.listScores(assessmentId.value),
+    TutoringBimbelService.getAssessment(assessmentId.value),
+  ]);
+  assessment.value = meta;
+  return scores.items;
 });
 
 watch(state, (s) => {
@@ -117,11 +129,16 @@ const metaLabel = computed(() =>
     >
       <!-- TODO i18n key: empty-description "Asesmen ini belum memiliki peserta yang bisa diberi skor." -->
       <template #default>
+        <!-- The assessment resolves in the same Promise.all as the
+             rows, so it is always loaded by the time this slot runs.
+             The guard makes that explicit rather than papering over a
+             null max with a fabricated 0. -->
         <TutoringScoreEntryList
+          v-if="maxScore != null"
           :assessment-id="assessmentId"
           :rows="rows"
-          :max-score="MAX_SCORE"
-          :kkm="KKM"
+          :max-score="maxScore"
+          :kkm="kkm"
           :loading="state.status === 'loading'"
           :saving="saving"
           @update:score="onUpdateScore"

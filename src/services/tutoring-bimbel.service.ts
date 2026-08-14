@@ -344,6 +344,14 @@ export const TutoringBimbelService = {
     const r = await api.post<OneEnvelope<BimbelAssessment>>(`/tutoring-v2/assessments/${id}/unpublish`, {});
     return r.data.data;
   },
+  /** One assessment by id — the only place `max_score` and `kkm` are on
+   * the wire. `listScores` returns a flat collection with no envelope,
+   * so a view that renders "45 / max" or colours rows against a pass
+   * mark has to read them from here. */
+  async getAssessment(id: string) {
+    const r = await api.get<OneEnvelope<BimbelAssessment>>(`/tutoring-v2/assessments/${id}`);
+    return r.data.data;
+  },
   async listScores(assessmentId: string) {
     const r = await api.get<ListEnvelope<TutoringScoreRow>>(`/tutoring-v2/assessments/${assessmentId}/scores`);
     return { items: r.data.data, pagination: r.data.meta };
