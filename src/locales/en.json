@@ -7711,6 +7711,7 @@
       "metaParticipants": "{count} participants",
       "startDate": "Start",
       "file": "File",
+      "filterNoOptions": "No options available for this filter yet",
       "metaSessionsDone": "{count} completed sessions",
       "presence": "Presence",
       "student_": "Parent",

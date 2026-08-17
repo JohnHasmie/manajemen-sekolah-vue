@@ -7,14 +7,24 @@
 
   Data path: `useDataRefresh(loader)` → `{ state, reload }`.
   Filters + academic-year change trigger reload.
+
+  The Program / Term / Tutor chips each open a <FilterFacetPickerModal>
+  — the same per-facet picker the Manajemen Data screens use. They
+  previously only ever CLEARED their filter (`@click="x = ''"`) with no
+  menu behind them, so the whole toolbar was inert on prod ("semua
+  button/filter tdk berfungsi") even though the query + watcher below
+  had been wired correctly all along.
 -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -25,7 +35,12 @@ import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
   type BimbelLearningGroup,
+  type BimbelProgram,
 } from '@/services/tutoring-bimbel.service';
+import { TutoringTermsService } from '@/services/tutoring2/terms';
+import { TutoringTutorsService } from '@/services/tutoring2/tutors';
+import type { BimbelTerm } from '@/types/tutoring2/term';
+import type { Tutor } from '@/types/tutoring2/tutor';
 import type { StatusBadgeTone } from '@/types/status-badge';
 
 const search = ref('');
@@ -56,6 +71,55 @@ const { state, reload } = useDataRefresh(async () => {
 
 watch([debouncedSearch, programFilter, termFilter, tutorFilter], () => reload());
 useAcademicYearWatcher(reload);
+
+// ── Facet option lists ─────────────────────────────────────────────
+// The three chips filter on ids, so each one needs the id→name list its
+// picker renders. Programs come off the service this view already uses;
+// terms and tutors have their own WEB-8 wrappers.
+const programs = ref<BimbelProgram[]>([]);
+const terms = ref<BimbelTerm[]>([]);
+const tutors = ref<Tutor[]>([]);
+
+// Per-facet picker visibility
+const showProgramPicker = ref(false);
+const showTermPicker = ref(false);
+const showTutorPicker = ref(false);
+
+const programOptions = computed<FacetOption[]>(() =>
+  programs.value.map((p) => ({
+    key: p.id,
+    label: p.name,
+    meta: p.grade_level
+      ? `${t('tutoring2.common.gradeLevel')} ${p.grade_level}`
+      : undefined,
+  })),
+);
+// `tm` / `tu`, not `t` — the i18n `t` is in scope and must not be shadowed.
+const termOptions = computed<FacetOption[]>(() =>
+  terms.value.map((tm) => ({ key: tm.id, label: tm.name, meta: tm.status_label })),
+);
+const tutorOptions = computed<FacetOption[]>(() =>
+  tutors.value.map((tu) => ({ key: tu.id, label: tu.name })),
+);
+
+/**
+ * Load the three option lists once, tolerantly: they are independent, so
+ * one endpoint failing (or being ability-gated off) must not blank the
+ * other two chips. A list that stays empty leaves its own chip disabled
+ * rather than opening a picker with nothing to pick.
+ */
+async function loadFacetOptions() {
+  const [programRes, termRes, tutorRes] = await Promise.allSettled([
+    TutoringBimbelService.listPrograms({ per_page: 200 }),
+    TutoringTermsService.list({ per_page: 200 }),
+    TutoringTutorsService.list({ per_page: 200 }),
+  ]);
+  if (programRes.status === 'fulfilled') programs.value = programRes.value.items;
+  if (termRes.status === 'fulfilled') terms.value = termRes.value.items;
+  if (tutorRes.status === 'fulfilled') tutors.value = tutorRes.value.items;
+}
+
+onMounted(loadFacetOptions);
 
 const kpiCards = computed<KpiCard[]>(() => {
   const items = (state.value.status === 'content' ? state.value.data : []) as BimbelLearningGroup[];
@@ -98,6 +162,21 @@ function shortId(id: string | null | undefined): string {
   if (!id) return '—';
   return id.length > 8 ? id.slice(0, 8) : id;
 }
+
+/**
+ * What a filter chip reads: the picked option's NAME, or "Semua" when the
+ * facet is unset.
+ *
+ * Falls back to `shortId` only when the id is genuinely not in the loaded
+ * list (options still in flight, or the option was archived away). An id
+ * fragment is ugly but honest there — "—" on a chip that is visibly
+ * ACTIVE would read as "no filter applied", which is the failure this
+ * screen just came out of.
+ */
+function chipValue(id: string, options: FacetOption[]): string {
+  if (!id) return t('tutoring2.common.all');
+  return options.find((o) => o.key === id)?.label ?? shortId(id);
+}
 </script>
 
 <template>
@@ -117,24 +196,30 @@ function shortId(id: string | null | undefined): string {
       <template #chips>
         <AppFilterChip
           :label="t('tutoring2.common.program')"
-          :value="programFilter ? shortId(programFilter) : t('tutoring2.common.all')"
+          :value="chipValue(programFilter, programOptions)"
           icon-name="book"
           :active="!!programFilter"
-          @click="programFilter = ''"
+          :disabled="programOptions.length === 0"
+          :title="programOptions.length === 0 ? t('tutoring2.common.filterNoOptions') : undefined"
+          @click="showProgramPicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.term')"
-          :value="termFilter ? shortId(termFilter) : t('tutoring2.common.all')"
+          :value="chipValue(termFilter, termOptions)"
           icon-name="calendar"
           :active="!!termFilter"
-          @click="termFilter = ''"
+          :disabled="termOptions.length === 0"
+          :title="termOptions.length === 0 ? t('tutoring2.common.filterNoOptions') : undefined"
+          @click="showTermPicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.tutor')"
-          :value="tutorFilter ? shortId(tutorFilter) : t('tutoring2.common.all')"
+          :value="chipValue(tutorFilter, tutorOptions)"
           icon-name="user"
           :active="!!tutorFilter"
-          @click="tutorFilter = ''"
+          :disabled="tutorOptions.length === 0"
+          :title="tutorOptions.length === 0 ? t('tutoring2.common.filterNoOptions') : undefined"
+          @click="showTutorPicker = true"
         />
       </template>
     </PageFilterToolbar>
@@ -199,4 +284,34 @@ function shortId(id: string | null | undefined): string {
       <span aria-hidden="true">+</span> {{ t('tutoring2.admin.groups.newCta') }}
     </button>
   </div>
+
+  <!-- Per-facet pickers. Each writes its ref; the existing watcher on
+       [program, term, tutor] does the reload, so nothing calls it here. -->
+  <FilterFacetPickerModal
+    v-if="showProgramPicker"
+    :title="t('tutoring2.common.program')"
+    :options="programOptions"
+    :selected="programFilter"
+    :all-label="t('tutoring2.common.all')"
+    @close="showProgramPicker = false"
+    @apply="(v) => { programFilter = v; }"
+  />
+  <FilterFacetPickerModal
+    v-if="showTermPicker"
+    :title="t('tutoring2.common.term')"
+    :options="termOptions"
+    :selected="termFilter"
+    :all-label="t('tutoring2.common.all')"
+    @close="showTermPicker = false"
+    @apply="(v) => { termFilter = v; }"
+  />
+  <FilterFacetPickerModal
+    v-if="showTutorPicker"
+    :title="t('tutoring2.common.tutor')"
+    :options="tutorOptions"
+    :selected="tutorFilter"
+    :all-label="t('tutoring2.common.all')"
+    @close="showTutorPicker = false"
+    @apply="(v) => { tutorFilter = v; }"
+  />
 </template>
