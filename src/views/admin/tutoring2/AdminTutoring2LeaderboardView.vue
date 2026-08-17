@@ -12,6 +12,15 @@
   MVP note: `streak_days` is not yet emitted by BE-21 — the type has
   it as optional. The podium/table hide the streak line/column when
   every row is missing it.
+
+  The Kelompok/Program scope chip and the Penilaian chip each open a
+  <FilterFacetPickerModal> — the same per-facet picker the Kelompok
+  Belajar screen uses. The scope chip previously CYCLED one entry per
+  click (fine at 3 groups, unusable at 30) and the Penilaian chip was
+  inert: its handler only ever reset `assessmentId` to '' and no list
+  of assessments was loaded anywhere in this file, so nothing could
+  ever set it. It also rendered a raw id fragment for a state that was
+  unreachable.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -19,18 +28,32 @@ import { useI18n } from 'vue-i18n';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { TutoringLeaderboardService } from '@/services/tutoring2/leaderboard';
-import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
+import {
+  TutoringBimbelService,
+  type BimbelAssessment,
+} from '@/services/tutoring-bimbel.service';
 import type { LeaderboardRow } from '@/types/tutoring2/leaderboard';
 
 const { t } = useI18n();
 
 type Tab = 'group' | 'program';
+
+/** A pickable leaderboard scope. `program_id` is carried for GROUPS
+ *  only — it is what scopes the assessment list below. */
+interface ScopeOption {
+  id: string;
+  name: string;
+  program_id?: string;
+}
 
 const tab = ref<Tab>('group');
 const groupId = ref<string>('');
@@ -41,27 +64,113 @@ const assessmentId = ref<string>(''); // '' = all published
 // the scope chip can auto-select the first item if the admin never
 // picked one — otherwise every tab switch would render an "empty"
 // state that isn't really empty.
-const groupOptions = ref<Array<{ id: string; name: string }>>([]);
-const programOptions = ref<Array<{ id: string; name: string }>>([]);
+const groupOptions = ref<ScopeOption[]>([]);
+const programOptions = ref<ScopeOption[]>([]);
 const scopeLoaded = ref(false);
 
+/** Published assessments the CURRENT scope can be ranked on. */
+const assessments = ref<BimbelAssessment[]>([]);
+
+// Per-facet picker visibility.
+const showScopePicker = ref(false);
+const showAssessmentPicker = ref(false);
+
+/**
+ * Groups + programs, tolerantly: the two lists are independent, so one
+ * endpoint failing (or being ability-gated off) must not blank the
+ * other chip — and must not take the whole page to its error state,
+ * which is what the previous `Promise.all` did from inside the loader.
+ *
+ * `scopeLoaded` is only latched when BOTH settled without rejecting,
+ * so an <AsyncView> retry can still recover a transient failure.
+ */
 async function loadScopeOptions() {
   if (scopeLoaded.value) return;
-  try {
-    const [g, p] = await Promise.all([
-      TutoringBimbelService.listGroups({ per_page: 50 }),
-      TutoringBimbelService.listPrograms({ per_page: 50 }),
-    ]);
-    groupOptions.value = g.items.map((it) => ({ id: it.id, name: it.name }));
-    programOptions.value = p.items.map((it) => ({ id: it.id, name: it.name }));
-    if (!groupId.value && groupOptions.value.length > 0) {
-      groupId.value = groupOptions.value[0].id;
-    }
-    if (!programId.value && programOptions.value.length > 0) {
-      programId.value = programOptions.value[0].id;
-    }
-  } finally {
+  const [g, p] = await Promise.allSettled([
+    TutoringBimbelService.listGroups({ per_page: 200 }),
+    TutoringBimbelService.listPrograms({ per_page: 200 }),
+  ]);
+  if (g.status === 'fulfilled') {
+    groupOptions.value = g.value.items.map((it) => ({
+      id: it.id,
+      name: it.name,
+      program_id: it.program_id,
+    }));
+  }
+  if (p.status === 'fulfilled') {
+    programOptions.value = p.value.items.map((it) => ({
+      id: it.id,
+      name: it.name,
+    }));
+  }
+  if (!groupId.value && groupOptions.value.length > 0) {
+    groupId.value = groupOptions.value[0].id;
+  }
+  if (!programId.value && programOptions.value.length > 0) {
+    programId.value = programOptions.value[0].id;
+  }
+  if (g.status === 'fulfilled' && p.status === 'fulfilled') {
     scopeLoaded.value = true;
+  }
+}
+
+/**
+ * The Penilaian options for the scope that is currently selected —
+ * never every assessment in the tenant.
+ *
+ * `published: true` because the leaderboard aggregates scores only
+ * where `bimbel_assessments.published_at IS NOT NULL`; a draft in the
+ * picker would be a control that reliably returns an empty board.
+ *
+ * Per PROGRAM the narrowing is exact (`program_id`). Per KELOMPOK it
+ * cannot be, because the endpoint scopes by the ENROLLMENT's group
+ * while a program-wide assessment (`learning_group_id` null) is still
+ * scored for that group's students. Filtering on `learning_group_id`
+ * alone would silently drop those, so we ask for the group's PROGRAM
+ * and keep the rows that belong to this group or to no group at all —
+ * i.e. exactly the set that can produce rows here, with the sibling
+ * groups' own assessments left out.
+ */
+async function loadAssessmentOptions() {
+  const scopeId = tab.value === 'group' ? groupId.value : programId.value;
+  if (!scopeId) {
+    assessments.value = [];
+    return;
+  }
+  try {
+    if (tab.value === 'program') {
+      const { items } = await TutoringBimbelService.listAssessments({
+        per_page: 200,
+        published: true,
+        program_id: scopeId,
+      });
+      assessments.value = items;
+      return;
+    }
+    const group = groupOptions.value.find((o) => o.id === scopeId);
+    if (!group?.program_id) {
+      // Group list still in flight / row archived away: the group-only
+      // filter is narrower than we'd like but never wrong.
+      const { items } = await TutoringBimbelService.listAssessments({
+        per_page: 200,
+        published: true,
+        learning_group_id: scopeId,
+      });
+      assessments.value = items;
+      return;
+    }
+    const { items } = await TutoringBimbelService.listAssessments({
+      per_page: 200,
+      published: true,
+      program_id: group.program_id,
+    });
+    assessments.value = items.filter(
+      (a) => !a.learning_group_id || a.learning_group_id === scopeId,
+    );
+  } catch {
+    // One dead endpoint disables this chip only — the scope chip and
+    // the board itself stay usable.
+    assessments.value = [];
   }
 }
 
@@ -80,7 +189,39 @@ const { state, reload } = useDataRefresh(async () => {
   return res.items;
 });
 
+/**
+ * A scope change re-scopes the Penilaian list. The picked assessment
+ * is dropped with it: an assessment belongs to ONE group/program, so
+ * carrying it across would query the new board through a filter that
+ * cannot match — an empty leaderboard under an active-looking chip.
+ *
+ * Clearing it here (rather than after the refetch lands) keeps this to
+ * a single reload: both refs change inside one flush, so the watcher
+ * below still fires once.
+ */
+watch([tab, groupId, programId], () => {
+  assessmentId.value = '';
+  void loadAssessmentOptions();
+});
+
 watch([tab, groupId, programId, assessmentId], () => reload());
+
+const scopeOptions = computed<FacetOption[]>(() =>
+  (tab.value === 'group' ? groupOptions.value : programOptions.value).map(
+    (o) => ({ key: o.id, label: o.name }),
+  ),
+);
+
+const assessmentOptions = computed<FacetOption[]>(() =>
+  assessments.value.map((a) => ({
+    key: a.id,
+    label: a.title,
+    meta:
+      [a.kind_label ?? a.kind, formatShortDate(a.assessment_date)]
+        .filter((part) => part && part !== '—')
+        .join(' · ') || undefined,
+  })),
+);
 
 const rows = computed<LeaderboardRow[]>(() =>
   state.value.status === 'content' ? (state.value.data as LeaderboardRow[]) : [],
@@ -136,9 +277,26 @@ function formatScore(n: number): string {
   return (Math.round(n * 10) / 10).toFixed(1);
 }
 
+/**
+ * Last-resort label for an id whose row is not in the loaded list —
+ * options still in flight, or the row archived away. Ugly but honest;
+ * "—" on a chip that is visibly ACTIVE would read as "no filter", which
+ * is the failure this toolbar just came out of.
+ */
 function truncateId(id: string | null | undefined): string {
   if (!id) return '—';
   return id.length > 8 ? id.slice(0, 8) : id;
+}
+
+function formatShortDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 // Podium chrome: gold / silver / bronze color tokens.
@@ -163,14 +321,19 @@ function activeScopeLabel(): string {
   return hit ? hit.name : t('tutoring2.common.notAvailable');
 }
 
-function pickNextScope() {
-  const list = tab.value === 'group' ? groupOptions.value : programOptions.value;
-  if (list.length === 0) return;
-  const currentId = tab.value === 'group' ? groupId.value : programId.value;
-  const idx = list.findIndex((o) => o.id === currentId);
-  const next = list[(idx + 1) % list.length].id;
-  if (tab.value === 'group') groupId.value = next;
-  else programId.value = next;
+function applyScope(id: string) {
+  if (tab.value === 'group') groupId.value = id;
+  else programId.value = id;
+}
+
+/** What the Penilaian chip reads: the assessment's TITLE, or "Semua"
+ *  for the all-published default. Never a raw id. */
+function assessmentChipValue(): string {
+  if (!assessmentId.value) return t('tutoring2.common.all');
+  return (
+    assessments.value.find((a) => a.id === assessmentId.value)?.title ??
+    truncateId(assessmentId.value)
+  );
 }
 </script>
 
@@ -203,7 +366,7 @@ function pickNextScope() {
           :active="true"
           @click="tab = tab === 'group' ? 'program' : 'group'"
         />
-        <!-- Scope chip: click to cycle to the next group / program -->
+        <!-- Scope chip: opens the group / program picker -->
         <AppFilterChip
           :label="
             tab === 'group'
@@ -213,15 +376,27 @@ function pickNextScope() {
           :value="activeScopeLabel()"
           icon-name="book"
           :active="true"
-          @click="pickNextScope()"
+          :disabled="scopeOptions.length === 0"
+          :title="
+            scopeOptions.length === 0
+              ? t('tutoring2.common.filterNoOptions')
+              : undefined
+          "
+          @click="showScopePicker = true"
         />
         <!-- Optional narrow-to-one-assessment chip -->
         <AppFilterChip
           :label="t('tutoring2.admin.leaderboard.assessmentLabel')"
-          :value="assessmentId ? truncateId(assessmentId) : t('tutoring2.common.all')"
+          :value="assessmentChipValue()"
           icon-name="clipboard-list"
           :active="!!assessmentId"
-          @click="assessmentId = ''"
+          :disabled="assessmentOptions.length === 0"
+          :title="
+            assessmentOptions.length === 0
+              ? t('tutoring2.common.filterNoOptions')
+              : undefined
+          "
+          @click="showAssessmentPicker = true"
         />
       </template>
     </PageFilterToolbar>
@@ -339,4 +514,32 @@ function pickNextScope() {
       </template>
     </AsyncView>
   </div>
+
+  <!-- Per-facet pickers. Each writes its ref; the watchers above do the
+       reload, so nothing calls it here. -->
+  <!-- The scope is REQUIRED (no group/program = no board), so this one
+       has no "Semua" reset row. -->
+  <FilterFacetPickerModal
+    v-if="showScopePicker"
+    :title="
+      tab === 'group'
+        ? t('tutoring2.common.group')
+        : t('tutoring2.common.program')
+    "
+    :options="scopeOptions"
+    :selected="tab === 'group' ? groupId : programId"
+    hide-all-reset
+    @close="showScopePicker = false"
+    @apply="(v) => applyScope(v)"
+  />
+  <FilterFacetPickerModal
+    v-if="showAssessmentPicker"
+    :title="t('tutoring2.admin.leaderboard.assessmentLabel')"
+    :subtitle="activeScopeLabel()"
+    :options="assessmentOptions"
+    :selected="assessmentId"
+    :all-label="t('tutoring2.common.all')"
+    @close="showAssessmentPicker = false"
+    @apply="(v) => { assessmentId = v; }"
+  />
 </template>
