@@ -220,21 +220,39 @@ const metaStr = (i: ClassFeedItem, k: string): string | null =>
 function distinct(
   idKey: string,
   labelOf: (i: ClassFeedItem) => string | null,
+  fallbackLabel: string,
 ): { key: string; label: string }[] {
   const seen = new Map<string, string>();
   for (const i of items.value) {
     const id = metaStr(i, idKey);
-    if (!id || seen.has(id)) continue;
+    if (!id) continue;
     const l = labelOf(i);
-    seen.set(id, l && l.length ? l : id);
+    // Keep looking: the same subject can appear through several item
+    // types, and only some of them name it. First-writer-wins would
+    // freeze whichever one happened to come first in the feed.
+    if (l && l.length) {
+      seen.set(id, l);
+    } else if (!seen.has(id)) {
+      // Never the raw id. A uuid in a dropdown IS the reported "mapel
+      // tidak diketahui" — it tells the reader nothing and looks broken.
+      seen.set(id, fallbackLabel);
+    }
   }
   return [...seen.entries()].map(([key, label]) => ({ key, label }));
 }
 const subjectOptions = computed(() =>
-  distinct('subject_id', (i) => i.subtitle),
+  // `meta.subject_name` is the authoritative field (backend !791); the
+  // display slots are per-type and unreliable — presensi puts the name
+  // in `title` and has no subtitle at all, which is how three subjects
+  // ended up listed as uuids.
+  distinct(
+    'subject_id',
+    (i) => metaStr(i, 'subject_name') ?? i.subtitle ?? i.title,
+    t('classHub.unnamedSubject'),
+  ),
 );
 const teacherOptions = computed(() =>
-  distinct('teacher_id', (i) => metaStr(i, 'teacher_name')),
+  distinct('teacher_id', (i) => metaStr(i, 'teacher_name'), t('classHub.unnamedTeacher')),
 );
 
 // General-hub Mapel / Guru filter — shared AppFilterChip + a picker Modal,
@@ -246,7 +264,9 @@ function labelFor(
   id: string | null,
 ): string {
   if (!id) return t('classHub.filterAll');
-  return opts.find((o) => o.key === id)?.label ?? id;
+  // Same rule as the picker: a selected id whose option has since gone
+  // (feed reloaded, page changed) shows a word, not a uuid.
+  return opts.find((o) => o.key === id)?.label ?? t('classHub.filterAll');
 }
 const filterSubjectLabel = computed(() =>
   labelFor(subjectOptions.value, filterSubjectId.value),
@@ -293,6 +313,29 @@ const visibleItems = computed(() => {
   }
   return list;
 });
+
+// An empty screen has two very different causes, and the onboarding copy
+// ("Bagikan tugas, materi, atau pengumuman untuk memulai kelas ini") only
+// fits one of them. Under an active filter it says the class is empty when
+// the truth is that this teacher or subject has nothing — the reported
+// "riwayat sesi hilang saat guru dipilih spesifik" read as data loss.
+const isFiltered = computed(
+  () => isGeneral.value && Boolean(filterSubjectId.value || filterTeacherId.value),
+);
+const emptyByFilter = computed(
+  () => isFiltered.value && items.value.length > 0,
+);
+const emptyTitle = computed(() =>
+  emptyByFilter.value ? t('classHub.emptyFilteredTitle') : t('classHub.emptyFeedTitle'),
+);
+const emptyDescription = computed(() =>
+  emptyByFilter.value
+    ? t('classHub.emptyFilteredMsg', {
+        subject: filterSubjectLabel.value,
+        teacher: filterTeacherLabel.value,
+      })
+    : t('classHub.emptyFeedMsg'),
+);
 
 const state = computed(() => {
   if (loading.value) return { status: 'loading' as const };
@@ -530,8 +573,8 @@ const headerGradient = computed(() =>
     <AsyncView
       v-else
       :state="state"
-      :empty-title="t('classHub.emptyFeedTitle')"
-      :empty-description="t('classHub.emptyFeedMsg')"
+      :empty-title="emptyTitle"
+      :empty-description="emptyDescription"
     >
       <div class="space-y-4">
         <RouterLink
