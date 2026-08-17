@@ -7415,7 +7415,7 @@
           "waliHint": "Wali akan otomatis terhubung sebagai akun orang tua di sekolah ini. Jika email sudah terdaftar, akun yang ada akan dipakai ulang.",
           "waliCreateNote": "Akun wali baru akan dibuatkan otomatis. Password sementara ditampilkan sekali setelah tersimpan."
         },
-        "showInactive": "Termasuk nonaktif",
+        "showInactive": "Nonaktif",
         "colEnrollments": "Pendaftaran aktif",
         "kpiActive": "Aktif",
         "newCta": "Tambah siswa",

@@ -7034,7 +7034,7 @@
         "colActions": "Actions",
         "loadError": "Failed to load students.",
         "colEnrollments": "Active enrollments",
-        "showInactive": "Include inactive",
+        "showInactive": "Inactive",
         "actionEdit": "Edit",
         "editTitle": "Edit student",
         "kpiActive": "Active",

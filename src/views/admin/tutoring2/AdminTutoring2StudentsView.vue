@@ -48,7 +48,9 @@ const canManage = computed(() => can('tutoring.student.manage'));
 // ── Filters ────────────────────────────────────────────────────────
 
 const search = ref('');
-const includeInactive = ref(false); // false → only active (default)
+// Two-state switch, NOT an include-toggle: off → only active (default),
+// on → only inactive. The BE has no "both" mode.
+const inactiveOnly = ref(false);
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -61,16 +63,16 @@ watch(search, (v) => applyDebounced(v));
 const { state, reload } = useDataRefresh(async () => {
   const { items } = await TutoringStudentsService.list({
     per_page: 100,
-    // BE takes boolean-ish; only pass `active=false` when the admin
-    // toggled include-inactive on. `active=true` is the default so
-    // omitting is equivalent — kept the query string minimal.
-    ...(includeInactive.value ? { active: false } : {}),
+    // BE takes boolean-ish; `active=false` returns ONLY inactive students
+    // (`student_status='lulus'`), it does not widen the set. `active=true`
+    // is the default so omitting is equivalent — keeps the query minimal.
+    ...(inactiveOnly.value ? { active: false } : {}),
     ...(debouncedSearch.value.trim() ? { search: debouncedSearch.value.trim() } : {}),
   });
   return items;
 });
 
-watch([debouncedSearch, includeInactive], () => reload());
+watch([debouncedSearch, inactiveOnly], () => reload());
 useAcademicYearWatcher(reload);
 
 // ── Derived rendering ──────────────────────────────────────────────
@@ -182,10 +184,10 @@ async function deactivate(row: BimbelStudent) {
       <template #chips>
         <AppFilterChip
           :label="t('tutoring2.common.status')"
-          :value="includeInactive ? t('tutoring2.admin.students.showInactive') : t('tutoring2.admin.students.kpiActive')"
+          :value="inactiveOnly ? t('tutoring2.admin.students.showInactive') : t('tutoring2.admin.students.kpiActive')"
           icon-name="circle-check"
-          :active="includeInactive"
-          @click="includeInactive = !includeInactive"
+          :active="inactiveOnly"
+          @click="inactiveOnly = !inactiveOnly"
         />
       </template>
     </PageFilterToolbar>
