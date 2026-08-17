@@ -33,7 +33,6 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { useAuthStore } from '@/stores/auth';
-import { useToast } from '@/composables/useToast';
 import {
   DEMO_SOCIAL_CHANNELS,
   validateRequester,
@@ -42,10 +41,9 @@ import {
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import ToastHost from '@/components/ui/ToastHost.vue';
-import Modal from '@/components/ui/Modal.vue';
 import PublicLanguageSwitcher from '@/components/feature/PublicLanguageSwitcher.vue';
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const wizard = useDemoWizardStore();
 const auth = useAuthStore();
 const router = useRouter();
@@ -64,14 +62,14 @@ onMounted(async () => {
     // a thrown rejection can never leave `checking` stuck true (endless
     // spinner) — fall through to the no-data redirect below.
   }
-  // A restored pending-request receipt always wins: if the user already
-  // submitted (hydrate recovered `result` from localStorage), keep them on
-  // the pending/"Menunggu" done-state and never bounce to the wizard or show
-  // the form again. The template renders `v-else-if="result"` before the
-  // form, so this just guarantees no bounce when the school payload is
-  // somehow empty but a receipt exists.
+  // Already submitted (hydrate recovered `result` from localStorage) →
+  // this screen has nothing left to ask. Send them to the one place that
+  // can answer the only remaining question, which is what happened to
+  // the request. Previously this screen rendered its own terminal panel
+  // here, which is how the app ended up with two different endings that
+  // disagreed about where "Selesai" should go.
   if (wizard.result) {
-    checking.value = false;
+    router.replace('/register-demo/status');
     return;
   }
   // Guard: no wizard (school) data means the user never completed the
@@ -177,24 +175,9 @@ const contactAdminHref = computed(() => {
   return `https://wa.me/${adminWaNumber}?text=${encodeURIComponent(text)}`;
 });
 
-/** Short, human-readable submitted-at — falls back gracefully. */
-const submittedAt = computed(() => {
-  const raw = result.value?.submitted_at;
-  if (!raw) return '';
-  const d = new Date(raw);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString(locale.value === 'en' ? 'en-US' : 'id-ID', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
-});
 
 /* ─── Final submit (same combined-payload contract as before) ─── */
 
-// Pending-request popup — shown after a successful submit. The demo is
-// NOT activated here; the KamilEdu team validates + identifies the
-// requester first, then notifies via WhatsApp/email.
-const showPendingDialog = ref(false);
 
 async function handleSend() {
   // Client-validate the requester identity first (mirrors the backend
@@ -209,21 +192,22 @@ async function handleSend() {
   // existing /demo/provision endpoint — backend contract unchanged.
   const ok = await wizard.provision();
   if (ok) {
-    // The pending demo request is recorded. If this is a brand new user who
-    // only has a 'register_demo' session, we log them out so they can log back
-    // in when activated. But if they are an existing user with active schools,
-    // we keep them signed in so they can continue to their dashboard.
-    const isExistingUser = auth.schools && auth.schools.length > 0;
-    if (!isExistingUser) {
-      await auth.logout();
-    }
-    showPendingDialog.value = true;
+    // The pending demo request is recorded — nothing is activated yet.
+    //
+    // We deliberately do NOT log a brand-new user out here. That is what
+    // turned the last step of a ten-step registration into a login wall:
+    // the account exists but cannot sign in until the request is
+    // approved, so "Selesai" looked like the registration had failed.
+    // The `register_demo` session is enough to read the request's own
+    // status, which is the only thing left to do.
+    //
+    // And we send them somewhere real instead of opening a modal: a
+    // modal dies on refresh, verification takes hours, and the
+    // WhatsApp/email notification needs a URL to link to.
+    await router.replace('/register-demo/status');
   }
 }
 
-function dismissPendingDialog() {
-  showPendingDialog.value = false;
-}
 
 function handleBack() {
   // Return to the wizard so the user can review/adjust answers.
@@ -234,26 +218,9 @@ function handleBack() {
   }
 }
 
-const isExistingUser = computed(() => auth.schools && auth.schools.length > 0);
 
-function goToDashboard() {
-  wizard.clearLocalProgress();
-  if (!auth.activeRole) {
-    useToast().success(t('registerDemo.demoRequestedPleaseSelectSchool', 'Pendaftaran demo berhasil. Silakan pilih sekolah Anda.'));
-  }
-  router.replace('/');
-}
 
-function goToLogin() {
-  wizard.clearLocalProgress();
-  router.replace('/login');
-}
 
-async function handleLogout() {
-  wizard.clearLocalProgress();
-  await auth.logout();
-  router.replace('/login');
-}
 
 const sendLabel = computed(() =>
   wizard.isProvisioning
@@ -280,110 +247,16 @@ const sendLabel = computed(() =>
           </div>
 
           <!-- DONE / PENDING state — replaces the form after a send. -->
-          <div v-else-if="result">
-            <div
-              class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100"
-            >
-              <NavIcon name="check-circle" :size="32" class="text-emerald-600" />
-            </div>
-            <h2 class="mb-1 text-center text-[22px] font-black text-slate-900">
-              {{ t('registerDemo.pendingTitle') }}
-            </h2>
-            <p class="mb-5 text-center text-[13px] leading-relaxed text-slate-600">
-              {{ t('registerDemo.pendingSubtitle') }}
-            </p>
+          <!--
+            The already-submitted state used to render a terminal panel here,
+            with its own "Kembali ke dasbor" / "Selesai" buttons — the second
+            of two endings that disagreed about where Selesai should go.
+            onMounted now redirects to /register-demo/status before this can
+            render, so exactly one screen answers "what happened to my
+            request".
+          -->
+          <div v-else-if="result"></div>
 
-            <!-- Request summary card -->
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p class="mb-3 text-[10.5px] font-bold uppercase tracking-widest text-slate-500">
-                {{ t('registerDemo.pendingSummaryLabel') }}
-              </p>
-              <dl class="space-y-2.5 text-[13px]">
-                <div class="flex items-start gap-3">
-                  <dt class="w-28 flex-shrink-0 text-slate-500">
-                    {{ t('registerDemo.pendingFieldSchool') }}
-                  </dt>
-                  <dd class="flex-1 font-bold text-slate-900">{{ schoolName || '—' }}</dd>
-                </div>
-                <div class="flex items-start gap-3">
-                  <dt class="w-28 flex-shrink-0 text-slate-500">
-                    {{ t('registerDemo.pendingFieldRequester') }}
-                  </dt>
-                  <dd class="flex-1 font-bold text-slate-900">{{ requester.full_name || '—' }}</dd>
-                </div>
-                <div class="flex items-start gap-3">
-                  <dt class="w-28 flex-shrink-0 text-slate-500">
-                    {{ t('registerDemo.pendingFieldWhatsapp') }}
-                  </dt>
-                  <dd class="flex-1 font-mono text-[12.5px] text-slate-900">
-                    {{ requester.whatsapp || '—' }}
-                  </dd>
-                </div>
-                <div v-if="submittedAt" class="flex items-start gap-3">
-                  <dt class="w-28 flex-shrink-0 text-slate-500">
-                    {{ t('registerDemo.pendingFieldSubmittedAt') }}
-                  </dt>
-                  <dd class="flex-1 text-slate-900">{{ submittedAt }}</dd>
-                </div>
-                <div class="flex items-start gap-3">
-                  <dt class="w-28 flex-shrink-0 text-slate-500">
-                    {{ t('registerDemo.pendingFieldStatus') }}
-                  </dt>
-                  <dd class="flex-1">
-                    <span
-                      class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11.5px] font-bold text-amber-800"
-                    >
-                      <NavIcon name="clock" :size="12" />
-                      {{ t('registerDemo.pendingStatusBadge') }}
-                    </span>
-                  </dd>
-                </div>
-              </dl>
-            </div>
-
-            <!-- What happens next — no activation internals. -->
-            <div
-              class="mt-4 flex items-start gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-3"
-            >
-              <NavIcon name="send" :size="16" class="mt-0.5 flex-shrink-0 text-emerald-600" />
-              <p class="text-[12.5px] leading-relaxed text-emerald-900">
-                {{ t('registerDemo.pendingNextSteps') }}
-              </p>
-            </div>
-
-            <p class="mt-4 text-center text-[11.5px] leading-snug text-slate-500">
-              {{ t('registerDemo.pendingFinalNote') }}
-            </p>
-
-            <!-- Terminal action — options to stay, go to dashboard, or logout. -->
-            <div class="mt-6 space-y-2.5">
-              <button
-                v-if="isExistingUser"
-                type="button"
-                class="w-full inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg bg-role-admin text-white text-[13px] font-bold hover:bg-role-admin/90"
-                @click="goToDashboard"
-              >
-                Kembali ke dasbor lembaga Anda
-              </button>
-              <button
-                v-else
-                type="button"
-                class="w-full inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg bg-role-admin text-white text-[13px] font-bold hover:bg-role-admin/90"
-                @click="goToLogin"
-              >
-                {{ t('registerDemo.nextButtonFinish') }}
-              </button>
-
-              <button
-                v-if="isExistingUser"
-                type="button"
-                class="w-full inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-[13px] font-bold hover:bg-slate-50"
-                @click="handleLogout"
-              >
-                Keluar (Logout)
-              </button>
-            </div>
-          </div>
 
           <!-- IDENTITY FORM — the separate "Data Diri" screen body. -->
           <div v-else>
@@ -623,33 +496,5 @@ const sendLabel = computed(() =>
     <ToastHost />
 
     <!-- Pending-request confirmation popup. No activation internals. -->
-    <Modal v-if="showPendingDialog" size="sm" @close="dismissPendingDialog">
-      <div class="text-center">
-        <div
-          class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100"
-        >
-          <NavIcon name="check-circle" :size="28" class="text-emerald-600" />
-        </div>
-        <h2 class="text-[18px] font-black text-slate-900">
-          {{ t('registerDemo.pendingDialogTitle') }}
-        </h2>
-        <p class="mt-2 text-[13px] leading-relaxed text-slate-600">
-          {{ t('registerDemo.pendingDialogMessage') }}
-        </p>
-        <div
-          class="mt-4 flex items-center justify-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-[12px] text-slate-600"
-        >
-          <NavIcon name="send" :size="14" class="text-emerald-500" />
-          {{ t('registerDemo.pendingDialogChannels') }}
-        </div>
-        <button
-          type="button"
-          class="mt-5 w-full rounded-lg bg-role-admin px-5 py-2.5 text-[13px] font-bold text-white hover:bg-role-admin/90"
-          @click="dismissPendingDialog"
-        >
-          {{ t('registerDemo.pendingDialogButton') }}
-        </button>
-      </div>
-    </Modal>
   </div>
 </template>
