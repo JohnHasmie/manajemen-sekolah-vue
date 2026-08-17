@@ -45,7 +45,6 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Button from '@/components/ui/Button.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { TutoringStudentsService } from '@/services/tutoring2/students';
 import type { ProgressPoint, StudentProgress } from '@/types/tutoring2/progress';
@@ -63,7 +62,6 @@ const { state, reload } = useDataRefresh<StudentProgress>(async () => {
   }
   return TutoringStudentsService.getProgress(studentId);
 });
-useAcademicYearWatcher(reload);
 
 const progress = computed<StudentProgress | null>(() =>
   state.value.status === 'content' || state.value.status === 'empty'

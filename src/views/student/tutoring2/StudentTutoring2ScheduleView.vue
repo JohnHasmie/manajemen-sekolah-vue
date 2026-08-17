@@ -20,7 +20,6 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
@@ -35,7 +34,6 @@ const { state, reload } = useDataRefresh(async () => {
   const { items } = await TutoringBimbelService.listSessions({ per_page: 100 });
   return items;
 });
-useAcademicYearWatcher(reload);
 
 // ── Derived ───────────────────────────────────────────────────────
 const allSessions = computed<BimbelSession[]>(() => {

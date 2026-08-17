@@ -52,7 +52,6 @@ import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { TutoringLeaderboardService } from '@/services/tutoring2/leaderboard';
 import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
@@ -105,7 +104,6 @@ const { state, reload } = useDataRefresh(async () => {
 });
 
 watch([tab, groupId, programId], () => reload());
-useAcademicYearWatcher(reload);
 
 const rows = computed<LeaderboardRow[]>(() =>
   state.value.status === 'content' ? (state.value.data as LeaderboardRow[]) : [],

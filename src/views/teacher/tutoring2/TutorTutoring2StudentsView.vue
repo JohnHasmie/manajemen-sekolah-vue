@@ -31,7 +31,6 @@ import KpiStripCards, {
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
 import {
@@ -65,7 +64,6 @@ const { state, reload } = useDataRefresh(async () => {
 });
 
 watch([debouncedSearch, statusFilter, programFilter], () => reload());
-useAcademicYearWatcher(reload);
 
 // ── Derive unique students ──────────────────────────────────────────
 interface StudentRow {

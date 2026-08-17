@@ -16,7 +16,6 @@ import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
@@ -62,7 +61,6 @@ const { state, reload } = useDataRefresh(async () => {
   const { items } = await TutoringBimbelService.listEnrollments({ per_page: 100 });
   return items;
 });
-useAcademicYearWatcher(reload);
 
 interface ChildRow {
   student_id: string;

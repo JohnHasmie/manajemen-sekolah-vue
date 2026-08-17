@@ -19,7 +19,6 @@ import KpiStripCards, {
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
@@ -55,7 +54,6 @@ const { state, reload } = useDataRefresh(async () => {
 });
 
 watch([debouncedSearch, kindFilter, programFilter, statusFilter], () => reload());
-useAcademicYearWatcher(reload);
 
 const kpiCards = computed<KpiCard[]>(() => {
   const items = (state.value.status === 'content' ? state.value.data : []) as BimbelAssessment[];

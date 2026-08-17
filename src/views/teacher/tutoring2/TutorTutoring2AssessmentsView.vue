@@ -23,7 +23,6 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Button from '@/components/ui/Button.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
@@ -60,7 +59,6 @@ const { state, reload } = useDataRefresh(async () => {
 });
 
 watch([debouncedSearch, kindFilter, statusFilter], () => reload());
-useAcademicYearWatcher(reload);
 
 // ─── KPIs ─────────────────────────────────────────────────────────
 const kpiCards = computed<KpiCard[]>(() => {

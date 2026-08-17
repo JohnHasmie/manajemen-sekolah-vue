@@ -14,7 +14,6 @@ import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import {
   TutoringBimbelService,
   type BimbelEnrollment,
@@ -33,7 +32,6 @@ const { state, reload } = useDataRefresh(async () => {
   });
   return items;
 });
-useAcademicYearWatcher(reload);
 
 const enrollments = computed<BimbelEnrollment[]>(() =>
   state.value.status === 'content'

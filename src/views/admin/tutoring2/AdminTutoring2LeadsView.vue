@@ -44,7 +44,6 @@ import StatusBadge from '@/components/ui/StatusBadge.vue';
 import Modal from '@/components/ui/Modal.vue';
 import FormField from '@/components/ui/FormField.vue';
 import Button from '@/components/ui/Button.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
@@ -114,7 +113,6 @@ const { state, reload } = useDataRefresh(async () => {
 watch([debouncedSearch, statusFilter, sourceFilter], () => {
   reload();
 });
-useAcademicYearWatcher(reload);
 
 // ─── KPI derivation from the current page ──────────────────────────
 // Uses the local-timezone Ymd to avoid the toISOString() WIB day-drop

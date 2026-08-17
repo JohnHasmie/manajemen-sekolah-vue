@@ -27,7 +27,6 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import Toast from '@/components/ui/Toast.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useAuthStore } from '@/stores/auth';
 import { TutoringTutorsService } from '@/services/tutoring2/tutors';
@@ -63,7 +62,6 @@ const { state, reload } = useDataRefresh(async () => {
 });
 
 watch([debouncedSearch, activeFilter], () => reload());
-useAcademicYearWatcher(reload);
 
 const tutors = computed<Tutor[]>(() =>
   state.value.status === 'content' ? (state.value.data as Tutor[]) : [],

@@ -28,7 +28,6 @@ import KpiStripCards, {
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useConfirm } from '@/composables/useConfirm';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
@@ -73,7 +72,6 @@ const { state, reload } = useDataRefresh(async () => {
 });
 
 watch([debouncedSearch, inactiveOnly], () => reload());
-useAcademicYearWatcher(reload);
 
 // ── Derived rendering ──────────────────────────────────────────────
 

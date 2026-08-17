@@ -27,7 +27,6 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Button from '@/components/ui/Button.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
@@ -58,7 +57,6 @@ const { state, reload } = useDataRefresh(async () => {
 });
 
 watch([statusFilter], () => reload());
-useAcademicYearWatcher(reload);
 
 // ── Derived (client-side filters) ─────────────────────────────────
 const allSessions = computed<BimbelSession[]>(() => {

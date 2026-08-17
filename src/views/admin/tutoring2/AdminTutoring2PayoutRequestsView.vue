@@ -31,7 +31,6 @@ import Button from '@/components/ui/Button.vue';
 import FormField from '@/components/ui/FormField.vue';
 import FormSheet from '@/components/ui/FormSheet.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
@@ -73,7 +72,6 @@ const { state, reload } = useDataRefresh(async () => {
   return items;
 });
 watch([statusFilter, monthFilter, tutorFilter], () => reload());
-useAcademicYearWatcher(reload);
 
 const filteredRequests = computed<PayoutRequest[]>(() => {
   const rows = state.value.status === 'content' ? (state.value.data as PayoutRequest[]) : [];

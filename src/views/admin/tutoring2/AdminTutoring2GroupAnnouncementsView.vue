@@ -25,7 +25,6 @@ import StatusBadge from '@/components/ui/StatusBadge.vue';
 import Modal from '@/components/ui/Modal.vue';
 import AppRichTextEditor from '@/components/ui/AppRichTextEditor.vue';
 import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
 import { useConfirm } from '@/composables/useConfirm';
@@ -93,7 +92,6 @@ const { state, reload } = useDataRefresh<AnnouncementRow[]>(async () => {
 });
 
 watch([debouncedSearch, groupFilter, statusFilter], () => reload());
-useAcademicYearWatcher(reload);
 
 // ── Groups for the compose form + filter dropdown ──────────────────
 const groups = ref<BimbelLearningGroup[]>([]);

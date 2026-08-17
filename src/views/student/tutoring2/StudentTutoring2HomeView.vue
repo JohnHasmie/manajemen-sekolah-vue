@@ -20,7 +20,6 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Button from '@/components/ui/Button.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { toLocalYmd } from '@/lib/local-date';
 import {
@@ -42,7 +41,6 @@ const { state, reload } = useDataRefresh(async () => {
   });
   return items;
 });
-useAcademicYearWatcher(reload);
 
 const todaySessions = computed<BimbelSession[]>(() => {
   return state.value.status === 'content' ? (state.value.data as BimbelSession[]) : [];

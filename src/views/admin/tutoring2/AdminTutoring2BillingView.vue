@@ -18,7 +18,6 @@ import KpiStripCards, {
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { toLocalYm } from '@/lib/local-date';
 import {
@@ -67,7 +66,6 @@ const { state, reload } = useDataRefresh<BillingBundle>(async () => {
 });
 
 watch([debouncedSearch, statusFilter, sourceFilter, monthFilter], () => reload());
-useAcademicYearWatcher(reload);
 
 const billsList = computed(() => {
   const bundle = state.value.status === 'content' ? (state.value.data as BillingBundle) : null;

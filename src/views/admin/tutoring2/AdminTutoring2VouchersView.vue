@@ -25,7 +25,6 @@ import KpiStripCards, {
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
-import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { toLocalYmd } from '@/lib/local-date';
 import { useAuthStore } from '@/stores/auth';
@@ -68,7 +67,6 @@ const { state, reload } = useDataRefresh(async () => {
 });
 
 watch([debouncedSearch, statusFilter], () => reload());
-useAcademicYearWatcher(reload);
 
 const activeCount = computed(() =>
   state.value.status === 'content' ? (state.value.data as BimbelVoucher[]).length : 0,
