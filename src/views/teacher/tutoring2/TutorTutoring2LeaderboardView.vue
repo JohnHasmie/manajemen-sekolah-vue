@@ -41,6 +41,13 @@
      to compare against. The picker therefore lists every group the
      caller may view — the same behaviour the sibling tutor views
      already ship. See V2_GAPS.
+
+  The Kelompok/Program scope chip opens a <FilterFacetPickerModal>, the
+  same per-facet picker the admin twin and the Kelompok Belajar screen
+  use. It previously CYCLED one entry per click (`pickNextScope()`
+  advanced by modulo), which is tolerable at 3 kelompok and unreachable
+  at 30 — and every click re-fired the leaderboard endpoint on the way
+  past.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -48,6 +55,9 @@ import { useI18n } from 'vue-i18n';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -69,25 +79,50 @@ const groupOptions = ref<Array<{ id: string; name: string }>>([]);
 const programOptions = ref<Array<{ id: string; name: string }>>([]);
 const scopeLoaded = ref(false);
 
-// Fetched once so the scope chip can auto-select the first entry —
-// otherwise every tab switch renders an "empty" state that is really
-// just "nothing picked yet".
+// Visibility of the per-facet scope picker.
+const showScopePicker = ref(false);
+
+/**
+ * Groups + programs, fetched once so the scope chip can auto-select the
+ * first entry — otherwise every tab switch renders an "empty" state that
+ * is really just "nothing picked yet".
+ *
+ * Tolerantly, because the two lists are independent: one endpoint
+ * failing (or being ability-gated off for this tutor) must not blank the
+ * other tab's chip, and must not take the whole page to its error state
+ * — which is exactly what the previous `Promise.all` did, since the
+ * rejection escaped this loader into <AsyncView>.
+ *
+ * `scopeLoaded` is latched only when BOTH settled without rejecting, so
+ * an <AsyncView> retry can still recover a transient failure. The old
+ * `finally` latched it either way and made the failure permanent for the
+ * life of the component.
+ */
 async function loadScopeOptions() {
   if (scopeLoaded.value) return;
-  try {
-    const [g, p] = await Promise.all([
-      TutoringBimbelService.listGroups({ per_page: 50 }),
-      TutoringBimbelService.listPrograms({ per_page: 50 }),
-    ]);
-    groupOptions.value = g.items.map((it) => ({ id: it.id, name: it.name }));
-    programOptions.value = p.items.map((it) => ({ id: it.id, name: it.name }));
-    if (!groupId.value && groupOptions.value.length > 0) {
-      groupId.value = groupOptions.value[0].id;
-    }
-    if (!programId.value && programOptions.value.length > 0) {
-      programId.value = programOptions.value[0].id;
-    }
-  } finally {
+  const [g, p] = await Promise.allSettled([
+    TutoringBimbelService.listGroups({ per_page: 50 }),
+    TutoringBimbelService.listPrograms({ per_page: 50 }),
+  ]);
+  if (g.status === 'fulfilled') {
+    groupOptions.value = g.value.items.map((it) => ({
+      id: it.id,
+      name: it.name,
+    }));
+  }
+  if (p.status === 'fulfilled') {
+    programOptions.value = p.value.items.map((it) => ({
+      id: it.id,
+      name: it.name,
+    }));
+  }
+  if (!groupId.value && groupOptions.value.length > 0) {
+    groupId.value = groupOptions.value[0].id;
+  }
+  if (!programId.value && programOptions.value.length > 0) {
+    programId.value = programOptions.value[0].id;
+  }
+  if (g.status === 'fulfilled' && p.status === 'fulfilled') {
     scopeLoaded.value = true;
   }
 }
@@ -104,6 +139,13 @@ const { state, reload } = useDataRefresh(async () => {
 });
 
 watch([tab, groupId, programId], () => reload());
+
+// The pickable scopes for whichever tab is active.
+const scopeOptions = computed<FacetOption[]>(() =>
+  (tab.value === 'group' ? groupOptions.value : programOptions.value).map(
+    (o) => ({ key: o.id, label: o.name }),
+  ),
+);
 
 const rows = computed<LeaderboardRow[]>(() =>
   state.value.status === 'content' ? (state.value.data as LeaderboardRow[]) : [],
@@ -182,14 +224,9 @@ function activeScopeLabel(): string {
   return hit ? hit.name : t('tutoring2.common.notAvailable');
 }
 
-function pickNextScope() {
-  const list = tab.value === 'group' ? groupOptions.value : programOptions.value;
-  if (list.length === 0) return;
-  const currentId = tab.value === 'group' ? groupId.value : programId.value;
-  const idx = list.findIndex((o) => o.id === currentId);
-  const next = list[(idx + 1) % list.length].id;
-  if (tab.value === 'group') groupId.value = next;
-  else programId.value = next;
+function applyScope(id: string) {
+  if (tab.value === 'group') groupId.value = id;
+  else programId.value = id;
 }
 </script>
 
@@ -221,6 +258,7 @@ function pickNextScope() {
           :active="true"
           @click="tab = tab === 'group' ? 'program' : 'group'"
         />
+        <!-- Scope chip: opens the kelompok / program picker -->
         <AppFilterChip
           :label="
             tab === 'group'
@@ -230,7 +268,13 @@ function pickNextScope() {
           :value="activeScopeLabel()"
           icon-name="book"
           :active="true"
-          @click="pickNextScope()"
+          :disabled="scopeOptions.length === 0"
+          :title="
+            scopeOptions.length === 0
+              ? t('tutoring2.common.filterNoOptions')
+              : undefined
+          "
+          @click="showScopePicker = true"
         />
       </template>
     </PageFilterToolbar>
@@ -347,4 +391,22 @@ function pickNextScope() {
       </template>
     </AsyncView>
   </div>
+
+  <!-- Scope picker. It writes groupId/programId; the watcher above does
+       the reload, so nothing calls it here.
+       The scope is REQUIRED (no kelompok/program = no board), hence no
+       "Semua" reset row — that row could only ever blank the page. -->
+  <FilterFacetPickerModal
+    v-if="showScopePicker"
+    :title="
+      tab === 'group'
+        ? t('tutoring2.common.group')
+        : t('tutoring2.common.program')
+    "
+    :options="scopeOptions"
+    :selected="tab === 'group' ? groupId : programId"
+    hide-all-reset
+    @close="showScopePicker = false"
+    @apply="(v) => applyScope(v)"
+  />
 </template>
