@@ -35,7 +35,11 @@ function toNum(v: unknown): number | null {
   return null;
 }
 
-const kkm = computed<number>(() => props.subject.kkm ?? 75);
+// The KKM is optional on the wire. When the school never set one for this
+// subject there is no threshold to judge against, so every verdict below goes
+// tri-state (`null` = cannot be said) rather than falling back to an invented
+// 75 and telling a guardian their child fell short of a standard nobody set.
+const kkm = computed<number | null>(() => props.subject.kkm ?? null);
 
 const knowledgeNum = computed<number | null>(() =>
   toNum(props.subject.knowledge_score),
@@ -45,17 +49,23 @@ const skillNum = computed<number | null>(() => toNum(props.subject.skill_score))
 const hasKnowledge = computed(() => knowledgeNum.value != null);
 const hasSkill = computed(() => skillNum.value != null);
 
-const knowledgeOk = computed(
-  () => hasKnowledge.value && (knowledgeNum.value ?? 0) >= kkm.value,
-);
-const skillOk = computed(
-  () => hasSkill.value && (skillNum.value ?? 0) >= kkm.value,
-);
+/** `null` when the score or the KKM is unknown — no verdict either way. */
+function okAgainstKkm(score: number | null): boolean | null {
+  const k = kkm.value;
+  if (score == null || k == null) return null;
+  return score >= k;
+}
+
+const knowledgeOk = computed(() => okAgainstKkm(knowledgeNum.value));
+const skillOk = computed(() => okAgainstKkm(skillNum.value));
+
+const hasAnyScore = computed(() => hasKnowledge.value || hasSkill.value);
 
 // Overall verdict — Tuntas only when BOTH KI3 & KI4 are at/above KKM
-// (mirrors Flutter `_ParentRaporVerdictBar` which checks both).
-const allTuntas = computed(() => {
-  if (!hasKnowledge.value && !hasSkill.value) return false;
+// (mirrors Flutter `_ParentRaporVerdictBar` which checks both). `null` means
+// unjudgeable: nothing graded yet, or the school set no KKM for this subject.
+const allTuntas = computed<boolean | null>(() => {
+  if (!hasAnyScore.value || kkm.value == null) return null;
   if (hasKnowledge.value && !knowledgeOk.value) return false;
   if (hasSkill.value && !skillOk.value) return false;
   return true;
@@ -71,9 +81,11 @@ const verdictPct = computed(() => {
 });
 
 function predicateTone(score: number | null): string {
+  const k = kkm.value;
   if (score == null) return 'bg-slate-100 text-slate-500';
-  if (score >= kkm.value + 10) return 'bg-emerald-100 text-emerald-700';
-  if (score >= kkm.value) return 'bg-blue-100 text-blue-700';
+  if (k == null) return 'bg-slate-100 text-slate-700';
+  if (score >= k + 10) return 'bg-emerald-100 text-emerald-700';
+  if (score >= k) return 'bg-blue-100 text-blue-700';
   return 'bg-red-100 text-red-700';
 }
 </script>
@@ -107,13 +119,12 @@ function predicateTone(score: number | null): string {
         <div class="flex items-baseline gap-1.5 mt-1">
           <span
             class="text-[18px] font-black tabular-nums"
-            :class="
-              hasKnowledge
-                ? knowledgeOk
-                  ? 'text-emerald-700'
-                  : 'text-red-700'
-                : 'text-slate-400'
-            "
+            :class="{
+              'text-emerald-700': knowledgeOk === true,
+              'text-red-700': knowledgeOk === false,
+              'text-slate-700': knowledgeOk === null && hasKnowledge,
+              'text-slate-400': !hasKnowledge,
+            }"
           >
             {{ knowledgeNum ?? '—' }}
           </span>
@@ -135,13 +146,12 @@ function predicateTone(score: number | null): string {
         <div class="flex items-baseline gap-1.5 mt-1">
           <span
             class="text-[18px] font-black tabular-nums"
-            :class="
-              hasSkill
-                ? skillOk
-                  ? 'text-emerald-700'
-                  : 'text-red-700'
-                : 'text-slate-400'
-            "
+            :class="{
+              'text-emerald-700': skillOk === true,
+              'text-red-700': skillOk === false,
+              'text-slate-700': skillOk === null && hasSkill,
+              'text-slate-400': !hasSkill,
+            }"
           >
             {{ skillNum ?? '—' }}
           </span>
@@ -161,29 +171,34 @@ function predicateTone(score: number | null): string {
       <div class="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
         <div
           class="h-full transition-all"
-          :class="allTuntas ? 'bg-emerald-500' : 'bg-amber-500'"
+          :class="{
+            'bg-emerald-500': allTuntas === true,
+            'bg-amber-500': allTuntas === false,
+            'bg-slate-400': allTuntas === null,
+          }"
           :style="{ width: `${verdictPct}%` }"
         ></div>
       </div>
       <span
         class="text-3xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex-shrink-0"
-        :class="
-          allTuntas
-            ? 'bg-emerald-100 text-emerald-700'
-            : hasKnowledge || hasSkill
-              ? 'bg-amber-100 text-amber-700'
-              : 'bg-slate-100 text-slate-500'
-        "
+        :class="{
+          'bg-emerald-100 text-emerald-700': allTuntas === true,
+          'bg-amber-100 text-amber-700': allTuntas === false,
+          'bg-slate-100 text-slate-500': allTuntas === null,
+        }"
       >
         {{
-          allTuntas
+          allTuntas === true
             ? 'Tuntas'
-            : hasKnowledge || hasSkill
+            : allTuntas === false
               ? 'Perlu perbaikan'
-              : 'Belum dinilai'
+              : hasAnyScore
+                ? 'Sudah dinilai'
+                : 'Belum dinilai'
         }}
       </span>
       <span
+        v-if="kkm != null"
         class="inline-flex items-center gap-1 text-3xs font-bold text-slate-400 tabular-nums"
       >
         KKM {{ kkm }}

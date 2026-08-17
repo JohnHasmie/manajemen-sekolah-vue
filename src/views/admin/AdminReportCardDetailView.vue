@@ -221,6 +221,27 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
   if (!detail.value) return { status: 'empty' };
   return { status: 'content', data: detail.value };
 });
+
+// A subject's score and its KKM are both optional on the wire. Neither may be
+// invented: a missing score is "not graded yet", NOT zero, and a school that
+// never set a KKM has no threshold to be judged against — so we render no
+// verdict at all rather than a made-up one.
+function toNum(v: unknown): number | null {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (typeof v === 'string' && v.trim()) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+/** 'pass' | 'fail' only when BOTH the score and the KKM are known. */
+function verdict(s: { knowledge_score?: number | string | null; kkm?: number }) {
+  const score = toNum(s.knowledge_score);
+  const kkm = toNum(s.kkm);
+  if (score == null || kkm == null) return null;
+  return score >= kkm ? 'pass' : 'fail';
+}
 </script>
 
 <template>
@@ -351,16 +372,19 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
                 </p>
                 <span
                   class="text-[14px] font-black tabular-nums"
-                  :class="
-                    Number(s.knowledge_score ?? 0) >= (s.kkm ?? 75)
-                      ? 'text-emerald-700'
-                      : 'text-red-700'
-                  "
+                  :class="{
+                    'text-emerald-700': verdict(s) === 'pass',
+                    'text-red-700': verdict(s) === 'fail',
+                    'text-slate-500': verdict(s) === null,
+                  }"
                 >
                   {{ s.knowledge_score ?? '—' }}
                 </span>
-                <span class="text-3xs text-slate-400 tabular-nums">
-                  / KKM {{ s.kkm ?? 75 }}
+                <span
+                  v-if="s.kkm != null"
+                  class="text-3xs text-slate-400 tabular-nums"
+                >
+                  / KKM {{ s.kkm }}
                 </span>
               </div>
               <p
@@ -377,13 +401,13 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
                   Predikat {{ s.knowledge_predicate }}
                 </span>
                 <span
-                  v-if="Number(s.knowledge_score ?? 0) < (s.kkm ?? 75) && Number(s.knowledge_score ?? 0) > 0"
+                  v-if="verdict(s) === 'fail'"
                   class="text-3xs font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700"
                 >
                   Belum tuntas
                 </span>
                 <span
-                  v-else-if="Number(s.knowledge_score ?? 0) >= (s.kkm ?? 75)"
+                  v-else-if="verdict(s) === 'pass'"
                   class="text-3xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"
                 >
                   Tuntas
