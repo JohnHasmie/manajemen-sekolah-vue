@@ -40,9 +40,12 @@ export interface ReportCard {
 export interface ReportCardEntry {
   subject_id: string;
   subject_name: string;
-  score: number;
-  kkm: number;
-  predicate: 'A' | 'B' | 'C' | 'D' | string;
+  /** null when nothing has been graded yet — never coerced to 0. */
+  score: number | null;
+  /** null when the school never set a passing threshold for this subject. */
+  kkm: number | null;
+  /** null when the teacher has not assigned a predicate letter. */
+  predicate: 'A' | 'B' | 'C' | 'D' | string | null;
   notes?: string | null;
 }
 
@@ -115,7 +118,8 @@ export const PARENT_ATTENDANCE_LABELS: Record<ParentAttendanceStatus, string> = 
 export interface ParentGradeRow {
   subject_id: string;
   subject_name: string;
-  kkm: number;
+  /** null when the school never set a passing threshold for this subject. */
+  kkm: number | null;
   scores: { assessment: string; score: number | null }[];
   average: number | null;
 }
@@ -147,7 +151,8 @@ export interface ParentGradeEntry {
   date: string;
   /** null when the teacher hasn't entered a score yet. */
   score: number | null;
-  kkm: number;
+  /** null when the school never set a passing threshold for this subject. */
+  kkm: number | null;
   is_read: boolean;
 }
 
