@@ -16,7 +16,11 @@ import Modal from '@/components/ui/Modal.vue';
 const props = defineProps<{ subject: RaportSubject }>();
 const emit = defineEmits<{ close: [] }>();
 
-const kkm = computed<number>(() => props.subject.kkm ?? 75);
+// The KKM is optional on the wire — a school that never set one for this
+// subject has no passing threshold. Colouring scores against an invented 75
+// would tell a guardian their child failed a standard nobody set, so when it
+// is absent we show the scores neutrally and say nothing about tuntas.
+const kkm = computed<number | null>(() => props.subject.kkm ?? null);
 
 function toNum(v: unknown): number | null {
   if (v == null) return null;
@@ -32,14 +36,18 @@ const knowledgeNum = computed(() => toNum(props.subject.knowledge_score));
 const skillNum = computed(() => toNum(props.subject.skill_score));
 
 function scoreTone(score: number | null): string {
+  const k = kkm.value;
   if (score == null) return 'text-slate-400';
-  if (score >= kkm.value) return 'text-emerald-700';
+  if (k == null) return 'text-slate-700';
+  if (score >= k) return 'text-emerald-700';
   return 'text-red-700';
 }
 function chipTone(score: number | null): string {
+  const k = kkm.value;
   if (score == null) return 'bg-slate-100 text-slate-500';
-  if (score >= kkm.value + 10) return 'bg-emerald-100 text-emerald-700';
-  if (score >= kkm.value) return 'bg-blue-100 text-blue-700';
+  if (k == null) return 'bg-slate-100 text-slate-700';
+  if (score >= k + 10) return 'bg-emerald-100 text-emerald-700';
+  if (score >= k) return 'bg-blue-100 text-blue-700';
   return 'bg-red-100 text-red-700';
 }
 </script>
@@ -139,8 +147,8 @@ function chipTone(score: number | null): string {
       <p
         class="text-2xs text-slate-500 italic px-1 leading-relaxed"
       >
-        KKM {{ kkm }} · Deskripsi ini ditulis oleh wali kelas berdasarkan
-        capaian harian.
+        <template v-if="kkm != null">KKM {{ kkm }} · </template>Deskripsi ini
+        ditulis oleh wali kelas berdasarkan capaian harian.
       </p>
     </div>
   </Modal>

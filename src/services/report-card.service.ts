@@ -49,6 +49,14 @@ function num(v: unknown, fallback = 0): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+/** Like `num`, but absent/unparseable stays absent instead of becoming a number. */
+function numOrUndefined(v: unknown): number | undefined {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : undefined;
+  if (v === null || v === undefined) return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 function strOrNull(v: unknown): string | null {
   if (v === null || v === undefined) return null;
   const s = String(v).trim();
@@ -90,16 +98,11 @@ function subjectFromJson(raw: AnyRecord): ReportCardSubject {
       (raw.teacher_name as string | null) ??
       (raw.guru as string | null) ??
       null,
-    kkm:
-      typeof raw.kkm === 'number'
-        ? raw.kkm
-        : raw.kkm != null
-          ? num(raw.kkm, 75)
-          : typeof subjectRel?.kkm === 'number'
-            ? (subjectRel.kkm as number)
-            : subjectRel?.kkm != null
-              ? num(subjectRel.kkm, 75)
-              : 75,
+    // `kkm` stays undefined when neither the entry nor the master subject
+    // carries one. A school that never set a passing threshold has none, and
+    // defaulting to 75 made every view judge — and print — a standard nobody
+    // configured.
+    kkm: numOrUndefined(raw.kkm) ?? numOrUndefined(subjectRel?.kkm),
     knowledge_score:
       (raw.knowledge_score as number | string | null) ??
       (raw.nilai as number | string | null) ??
@@ -243,13 +246,16 @@ function detailFromJson(raw: AnyRecord): ReportCardDetail {
           (numeric.reduce((a, b) => a + b, 0) / numeric.length) * 10,
         ) / 10
       : null);
+  // Only subjects that have BOTH a score and a KKM can be counted as remedial.
+  // Judging a subject whose school never set a KKM against a hardcoded 75 put
+  // real subjects into this count on nothing but a default.
   const remed =
     (raw.remed_count as number | undefined) ??
-    subjects.filter(
-      (s) =>
-        num(s.knowledge_score, 0) > 0 &&
-        num(s.knowledge_score, 0) < (s.kkm ?? 75),
-    ).length;
+    subjects.filter((s) => {
+      if (s.kkm == null) return false;
+      const score = num(s.knowledge_score, 0);
+      return score > 0 && score < s.kkm;
+    }).length;
 
   return {
     id: raw.id ? String(raw.id) : undefined,
