@@ -786,6 +786,8 @@
         "noClassesCta": "Open Class Data",
         "legendSingle": "Single",
         "classPickerLabel": "CLASS",
+        "highlightActive": "Highlighting {n} session(s) matching the filter. Other slots stay visible so the week reads whole.",
+        "highlightNone": "No session in this class matches the filter.",
         "pickClassDesc": "The timetable shows one class's full week. Pick a class above to load the grid.",
         "errorTitle": "Failed to load timetable",
         "slotsFilled": "{filled} of {total} slots filled",

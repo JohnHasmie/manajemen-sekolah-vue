@@ -786,6 +786,8 @@
         "noClassesCta": "Buka Data Kelas",
         "legendSingle": "Tunggal",
         "classPickerLabel": "KELAS",
+        "highlightActive": "Menyorot {n} sesi yang cocok dengan filter. Slot lain tetap ditampilkan agar minggu ini utuh.",
+        "highlightNone": "Tidak ada sesi di kelas ini yang cocok dengan filter.",
         "pickClassDesc": "Timetable menampilkan seluruh pekan satu kelas. Pilih kelas di atas untuk memuat grid.",
         "errorTitle": "Gagal memuat timetable",
         "slotsFilled": "{filled} dari {total} slot terisi",
