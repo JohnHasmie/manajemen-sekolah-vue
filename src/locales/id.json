@@ -7087,6 +7087,7 @@
       "term": "Term",
       "noRoom": "Tanpa ruang",
       "file": "Berkas",
+      "filterNoOptions": "Belum ada pilihan untuk filter ini",
       "attended": "Hadir",
       "billingMode": "Mode tagihan",
       "off": "Nonaktif",
