@@ -777,11 +777,24 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
   {
     titleKey: '',
     items: [
-      { to: '/admin/tutoring', labelKey: 'nav.dashboard', icon: 'home' },
+      // The bimbel dashboard has lived at `/admin/tutoring2` since the
+      // greenfield rebuild — `/admin/tutoring` was never a route (only
+      // its `/admin/tutoring/*` children survive, see "Akun" below), so
+      // this row pointed at a 404 and, because the user actually sits on
+      // `/admin/tutoring2`, never matched `isActive()` → no highlight.
+      // Same target `/admin` redirects a tutoring tenant to.
+      { to: '/admin/tutoring2', labelKey: 'nav.dashboard', icon: 'home' },
       {
+        // Gate on the SAME ability the route enforces
+        // (`meta.ability` on /admin/announcements). Without it the row
+        // renders for admins who lack the key, and the router guard
+        // bounces the click to the role home — which for a bimbel is
+        // the dashboard, so "Pengumuman" silently showed dashboard
+        // data. Hidden beats lying. Mirrors the school-admin twin.
         to: '/admin/announcements',
         labelKey: 'nav.announcements',
         icon: 'megaphone',
+        ability: 'communication.announcement.view',
       },
     ],
   },

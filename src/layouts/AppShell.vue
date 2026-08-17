@@ -186,9 +186,14 @@ const isActive = (to: string) => {
   // Exact match always wins.
   if (to === route.path) return true;
   // Role-home roots are exact-match only — otherwise /admin would
-  // light up on every /admin/* page.
+  // light up on every /admin/* page. `/admin/tutoring2` is the bimbel
+  // admin's home (that's where /admin redirects a tutoring tenant) and
+  // is likewise a prefix of every other bimbel page, so it belongs
+  // here too — without it "Dashboard" would stay lit alongside
+  // Siswa/Tutor/Program/… on every /admin/tutoring2/* screen.
   if (
     to === '/admin' ||
+    to === '/admin/tutoring2' ||
     to === '/teacher' ||
     to === '/parent' ||
     to === '/staff' ||
