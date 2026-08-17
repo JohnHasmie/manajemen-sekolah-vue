@@ -13,9 +13,25 @@
   `tutoring.payout.view_all`. The controller also enforces these but
   hiding the FAB / disable actions in the UI keeps the affordance
   honest for non-admin managers.
+
+  ── The tutor field ──
+
+  "Tambah rate" picks its tutor from a NAME list. It used to be a free
+  text input whose placeholder read "UUID tutor (BE-1x sedang menyiapkan
+  picker)" — a required field that asked an admin to paste a UUID, on a
+  form they cannot submit without it. The picker it was waiting for
+  arrived long ago; `TutoringTutorsService.list` is the same source the
+  Kelompok Belajar and Pengajuan Payout filters use.
+
+  Deliberately a <FormField type="select"> and NOT the
+  <FilterFacetPickerModal> the filter chips use: FormSheet IS a Modal, so
+  a second Modal on top would stack two `Teleport to="body"` overlays at
+  the same z-50 with two ESC handlers, and no screen in the repo does
+  that. `type="select"` is what the Jenis field two rows down already
+  does, so this stays the thin fit FormField was extracted for.
 -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -24,7 +40,7 @@ import KpiStripCards, { type KpiCard } from '@/components/feature/KpiStripCards.
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Button from '@/components/ui/Button.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
-import FormField from '@/components/ui/FormField.vue';
+import FormField, { type FormFieldOption } from '@/components/ui/FormField.vue';
 import FormSheet from '@/components/ui/FormSheet.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
@@ -32,6 +48,7 @@ import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
 import { toLocalYmd } from '@/lib/local-date';
 import { PayoutsService } from '@/services/tutoring2/payouts';
+import { TutoringTutorsService } from '@/services/tutoring2/tutors';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import type {
   PayoutRate,
@@ -39,6 +56,7 @@ import type {
   UpsertPayoutRatePayload,
 } from '@/types/tutoring2/payout';
 import { PAYOUT_RATE_KINDS } from '@/types/tutoring2/payout';
+import type { Tutor } from '@/types/tutoring2/tutor';
 
 const { t } = useI18n();
 const toast = useToast();
@@ -60,6 +78,46 @@ const { state, reload } = useDataRefresh(async () => {
   return items;
 });
 watch([kindFilter, activeOnly], () => reload());
+
+// ─── Tutor options for the rate sheet ───────────────────────────────
+
+const tutors = ref<Tutor[]>([]);
+
+/**
+ * The sheet's tutor dropdown, by NAME.
+ *
+ * Inactive tutors stay in the list — a rate can legitimately be recorded
+ * for someone deactivated after the period it covers — but they are
+ * LABELLED so nobody attaches a fresh rate to a departed tutor by
+ * accident. `active` is deliberately not forwarded to the service: the
+ * Kelompok Belajar and Pengajuan Payout pickers ask for both too, and
+ * silently hiding a tutor an admin is looking for is the same class of
+ * problem as showing them a UUID.
+ */
+const tutorOptions = computed<FormFieldOption[]>(() =>
+  tutors.value.map((tu) => ({
+    value: tu.id,
+    label: tu.is_active
+      ? tu.name
+      : `${tu.name} (${t('tutoring2.admin.tutors.statusInactive')})`,
+  })),
+);
+
+/**
+ * Load the tutor list once, tolerantly. Reads on this screen gate on
+ * `tutoring.payout.view_all` while the tutor list gates on its own
+ * ability, so the two really can diverge — a rejection here must leave a
+ * disabled field that SAYS why, not a silently empty dropdown and not an
+ * unhandled rejection that takes the rate table down with it.
+ */
+async function loadTutorOptions() {
+  const [res] = await Promise.allSettled([
+    TutoringTutorsService.list({ per_page: 200 }),
+  ]);
+  if (res.status === 'fulfilled') tutors.value = res.value.items;
+}
+
+onMounted(loadTutorOptions);
 
 const filteredRates = computed<PayoutRate[]>(() => {
   const rates = state.value.status === 'content' ? (state.value.data as PayoutRate[]) : [];
@@ -326,12 +384,20 @@ const valueHint = computed(() => {
       @close="showSheet = false"
     >
       <div class="space-y-3">
+        <!-- By name. An empty list disables the field and says why, in
+             the error line, rather than opening a dropdown with nothing
+             in it — the reason is worth reading, not hiding in a title
+             tooltip on a form the admin is trying to fill. -->
         <FormField
           v-model="form.tutor_id"
           :label="t('tutoring2.common.tutor')"
-          type="text"
+          type="select"
+          field="tutor_id"
           required
-          :placeholder="t('tutoring2.admin.payoutRates.tutorIdPh')"
+          :options="tutorOptions"
+          :select-placeholder="t('tutoring2.admin.payoutRates.tutorSelectPh')"
+          :disabled="tutorOptions.length === 0"
+          :error="tutorOptions.length === 0 ? t('tutoring2.admin.payoutRates.errNoTutors') : ''"
         />
         <FormField
           v-model="form.kind"
