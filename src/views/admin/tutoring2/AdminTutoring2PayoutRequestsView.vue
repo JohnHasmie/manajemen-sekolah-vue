@@ -17,14 +17,32 @@
   its own ability (approve/reject/mark_paid/rollback) so a per-role FE
   hides affordances the caller can't fire even if the controller would
   403 them anyway.
+
+  ── The Tutor filter ──
+
+  The Tutor chip now opens a <FilterFacetPickerModal>, the same per-facet
+  picker the Manajemen Data screens use. Its handler was
+  `@click="tutorFilter = ''"`, which only ever CLEARS, and the chip
+  displayed `truncateId(tutorFilter)` — an id fragment.
+
+  The one path that could actually set it was a raw text box in the
+  "advanced" row below, asking an admin to paste a tutor UUID — and that
+  row was `v-if="statusFilter || tutorFilter"`, so it only appeared AFTER
+  you had toggled the Status chip. Filtering by tutor therefore meant:
+  toggle an unrelated filter, then hand-type a UUID. That box is gone;
+  the chip does the job by name. Part of the "semua button/filter tdk
+  berfungsi" report a bimbel admin filed on prod.
 -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import KpiStripCards, { type KpiCard } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Button from '@/components/ui/Button.vue';
@@ -37,9 +55,11 @@ import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
 import { toLocalYm } from '@/lib/local-date';
 import { PayoutsService } from '@/services/tutoring2/payouts';
+import { TutoringTutorsService } from '@/services/tutoring2/tutors';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import type { PayoutRequest, PayoutRequestStatus } from '@/types/tutoring2/payout';
 import { PAYOUT_REQUEST_STATUSES } from '@/types/tutoring2/payout';
+import type { Tutor } from '@/types/tutoring2/tutor';
 
 const { t } = useI18n();
 const toast = useToast();
@@ -74,6 +94,33 @@ const { state, reload } = useDataRefresh(async () => {
 });
 watch([statusFilter, monthFilter, tutorFilter], () => reload());
 useAcademicYearWatcher(reload);
+
+// ── Tutor facet option list ────────────────────────────────────────
+// The chip filters on a tutor id, so it needs the id→name list its
+// picker renders. Status and Period are enum/date toggles: no fetch.
+const tutors = ref<Tutor[]>([]);
+const showTutorPicker = ref(false);
+
+// `tu`, not `t` — the i18n `t` is in scope and must not be shadowed.
+const tutorOptions = computed<FacetOption[]>(() =>
+  tutors.value.map((tu) => ({ key: tu.id, label: tu.name })),
+);
+
+/**
+ * Load the option list once, tolerantly: a failing or ability-gated
+ * endpoint must leave the chip disabled with a hover reason rather than
+ * opening a picker with nothing to pick. This screen gates on
+ * `tutoring.payout.view_all` while the tutor list gates on its own
+ * ability, so the two really can diverge.
+ */
+async function loadFacetOptions() {
+  const [tutorRes] = await Promise.allSettled([
+    TutoringTutorsService.list({ per_page: 200 }),
+  ]);
+  if (tutorRes.status === 'fulfilled') tutors.value = tutorRes.value.items;
+}
+
+onMounted(loadFacetOptions);
 
 const filteredRequests = computed<PayoutRequest[]>(() => {
   const rows = state.value.status === 'content' ? (state.value.data as PayoutRequest[]) : [];
@@ -206,6 +253,21 @@ function truncateId(id: string): string {
   return id.length > 8 ? id.slice(0, 8) : id;
 }
 
+/**
+ * What the Tutor chip reads: the picked tutor's NAME, or "Semua" when
+ * unset.
+ *
+ * Falls back to `truncateId` only when the id is genuinely not in the
+ * loaded list (options still in flight, or the tutor was deactivated
+ * after requesting). An id fragment is ugly but honest there — "—" on a
+ * chip rendered ACTIVE would read as "no filter applied", which is the
+ * failure this screen just came out of.
+ */
+function chipValue(id: string, options: FacetOption[]): string {
+  if (!id) return t('tutoring2.common.all');
+  return options.find((o) => o.key === id)?.label ?? truncateId(id);
+}
+
 function statusLabel(s: PayoutRequestStatus): string {
   return t(`tutoring2.admin.payoutRequests.status.${s}`);
 }
@@ -259,32 +321,27 @@ const statusOptions = PAYOUT_REQUEST_STATUSES.map((s) => ({ value: s, label: sta
         />
         <AppFilterChip
           :label="t('tutoring2.common.tutor')"
-          :value="tutorFilter ? truncateId(tutorFilter) : t('tutoring2.common.all')"
+          :value="chipValue(tutorFilter, tutorOptions)"
           icon-name="user"
           :active="!!tutorFilter"
-          @click="tutorFilter = ''"
+          :disabled="tutorOptions.length === 0"
+          :title="tutorOptions.length === 0 ? t('tutoring2.common.filterNoOptions') : undefined"
+          @click="showTutorPicker = true"
         />
       </template>
     </PageFilterToolbar>
 
-    <!-- Advanced status/tutor filter row so the chip toggles still make
-         sense on the coarse path. -->
-    <div v-if="statusFilter || tutorFilter" class="flex flex-wrap gap-2 text-2xs">
+    <!-- Advanced status row. The Status chip is a two-value toggle
+         (Semua ⇄ pending); this select is how an admin reaches the other
+         four states, so it stays. The tutor UUID box that used to sit
+         beside it is gone — the Tutor chip picks by name now. -->
+    <div v-if="statusFilter" class="flex flex-wrap gap-2 text-2xs">
       <label class="flex items-center gap-2">
         <span class="text-slate-500">{{ t('tutoring2.common.status') }}:</span>
         <select v-model="statusFilter" class="rounded-lg border border-slate-200 px-2 py-1 text-2xs">
           <option value="">{{ t('tutoring2.common.all') }}</option>
           <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
         </select>
-      </label>
-      <label class="flex items-center gap-2">
-        <span class="text-slate-500">{{ t('tutoring2.common.tutor') }}:</span>
-        <input
-          v-model="tutorFilter"
-          type="text"
-          class="rounded-lg border border-slate-200 px-2 py-1 text-2xs"
-          :placeholder="t('tutoring2.admin.payoutRequests.tutorIdPh')"
-        />
       </label>
     </div>
 
@@ -444,5 +501,18 @@ const statusOptions = PAYOUT_REQUEST_STATUSES.map((s) => ({ value: s, label: sta
       />
       <p class="text-2xs text-slate-500 mt-1">{{ t('tutoring2.admin.payoutRequests.markPaidHint') }}</p>
     </FormSheet>
+
+    <!-- Per-facet picker. It writes its ref; the existing watcher on
+         [status, month, tutor] does the reload, so nothing calls it
+         here. -->
+    <FilterFacetPickerModal
+      v-if="showTutorPicker"
+      :title="t('tutoring2.common.tutor')"
+      :options="tutorOptions"
+      :selected="tutorFilter"
+      :all-label="t('tutoring2.common.all')"
+      @close="showTutorPicker = false"
+      @apply="(v) => { tutorFilter = v; }"
+    />
   </div>
 </template>

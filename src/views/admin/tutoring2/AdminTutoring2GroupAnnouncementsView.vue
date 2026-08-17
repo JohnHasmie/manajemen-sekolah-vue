@@ -9,6 +9,22 @@
   for the MVP tenant sizes; when it becomes a hot path, BE can expose
   a flat `/tutoring-v2/announcements?school_id` and this loader
   collapses to one call.
+
+  ── The filter chips ──
+
+  Both chips now open a <FilterFacetPickerModal>, the same per-facet
+  picker the Manajemen Data screens use. Before, both handlers were
+  `@click="xFilter = ''"`, which only ever CLEARS:
+
+    - Status was therefore INERT. Nothing on the page could put a value
+      into it, so an admin could never narrow to Draft or Terbit.
+    - Kelompok was reachable, but only through a strip of round buttons
+      below the toolbar that was `v-if="!groupFilter"` — it VANISHED the
+      moment you used it, so the chip that looked like the control was a
+      clear button and the real control disappeared after one click.
+
+  Part of the "semua button/filter tdk berfungsi" report a bimbel admin
+  filed on prod. Same fix as AdminTutoring2GroupsView (!1191).
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -17,6 +33,9 @@ import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -41,6 +60,11 @@ import {
   type GroupAnnouncementStatus,
 } from '@/types/tutoring2/announcement';
 import type { StatusBadgeTone } from '@/types/status-badge';
+
+/** The three states an announcement can be in. Fixed vocabulary — the
+ *  status picker needs no fetch, which is why its chip is never
+ *  disabled. */
+const ANNOUNCEMENT_STATUSES: GroupAnnouncementStatus[] = ['draft', 'published', 'archived'];
 
 const { t } = useI18n();
 const toast = useToast();
@@ -95,13 +119,61 @@ const { state, reload } = useDataRefresh<AnnouncementRow[]>(async () => {
 watch([debouncedSearch, groupFilter, statusFilter], () => reload());
 useAcademicYearWatcher(reload);
 
-// ── Groups for the compose form + filter dropdown ──────────────────
+// ── Groups for the compose form + filter picker ────────────────────
+// One list serves both. Tolerant on purpose: this list decides whether
+// the Kelompok chip is usable, so a failing or ability-gated endpoint
+// must leave a disabled chip with a hover reason, not an unhandled
+// rejection and a chip that opens an empty menu.
 const groups = ref<BimbelLearningGroup[]>([]);
 async function loadGroups() {
-  const { items } = await TutoringBimbelService.listGroups({ per_page: 100, status: 'active' });
-  groups.value = items;
+  const [res] = await Promise.allSettled([
+    TutoringBimbelService.listGroups({ per_page: 100, status: 'active' }),
+  ]);
+  if (res.status === 'fulfilled') groups.value = res.value.items;
 }
 loadGroups();
+
+// ── Per-facet pickers ──────────────────────────────────────────────
+const showGroupPicker = ref(false);
+const showStatusPicker = ref(false);
+
+const groupOptions = computed<FacetOption[]>(() =>
+  groups.value.map((g) => ({
+    key: g.id,
+    label: g.name,
+    meta: g.program_name ?? undefined,
+  })),
+);
+const statusOptions = computed<FacetOption[]>(() =>
+  ANNOUNCEMENT_STATUSES.map((s) => ({ key: s, label: statusLabel(s) })),
+);
+
+/**
+ * What a filter chip reads: the picked option's NAME, or "Semua" when the
+ * facet is unset.
+ *
+ * Falls back to an id fragment only when the id is genuinely not in the
+ * loaded list (options still in flight, or the group was closed after the
+ * announcement was posted). A fragment is ugly but honest there — "—" on
+ * a chip rendered ACTIVE would read as "no filter applied", which is the
+ * failure this screen just came out of.
+ */
+function chipValue(id: string, options: FacetOption[]): string {
+  if (!id) return t('tutoring2.common.all');
+  return options.find((o) => o.key === id)?.label ?? id.slice(0, 8);
+}
+
+/**
+ * The picker emits a bare string; `statusFilter` is the narrower
+ * `'' | GroupAnnouncementStatus`. Narrow here rather than casting in the
+ * template, so an option key that stops being a valid status fails
+ * closed to "Semua" instead of poisoning the filter.
+ */
+function applyStatusFilter(v: string) {
+  statusFilter.value = ANNOUNCEMENT_STATUSES.includes(v as GroupAnnouncementStatus)
+    ? (v as GroupAnnouncementStatus)
+    : '';
+}
 
 // ── KPI strip ──────────────────────────────────────────────────────
 const kpiCards = computed<KpiCard[]>(() => {
@@ -251,35 +323,22 @@ const totalCount = computed(() =>
       <template #chips>
         <AppFilterChip
           :label="t('tutoring2.common.group')"
-          :value="groupFilter
-            ? (groups.find((g) => g.id === groupFilter)?.name ?? groupFilter.slice(0, 8))
-            : t('tutoring2.common.all')"
+          :value="chipValue(groupFilter, groupOptions)"
           icon-name="users"
           :active="!!groupFilter"
-          @click="groupFilter = ''"
+          :disabled="groupOptions.length === 0"
+          :title="groupOptions.length === 0 ? t('tutoring2.common.filterNoOptions') : undefined"
+          @click="showGroupPicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.status')"
-          :value="statusFilter ? statusLabel(statusFilter) : t('tutoring2.common.all')"
+          :value="chipValue(statusFilter, statusOptions)"
           icon-name="circle-check"
           :active="!!statusFilter"
-          @click="statusFilter = ''"
+          @click="showStatusPicker = true"
         />
       </template>
     </PageFilterToolbar>
-
-    <!-- Group quick-pick strip when the dropdown chip isn't set -->
-    <div v-if="!groupFilter && groups.length > 0" class="flex flex-wrap gap-2">
-      <button
-        v-for="g in groups"
-        :key="g.id"
-        type="button"
-        class="rounded-full border border-slate-200 px-3 py-1 text-2xs font-bold text-slate-600 hover:border-brand-cobalt hover:text-brand-cobalt"
-        @click="groupFilter = g.id"
-      >
-        {{ g.name }}
-      </button>
-    </div>
 
     <AsyncView
       :state="state"
@@ -443,5 +502,27 @@ const totalCount = computed(() =>
         @primary="previewRow = null"
       />
     </Modal>
+
+    <!-- Per-facet pickers. Each writes its ref; the existing watcher on
+         [search, group, status] does the reload, so nothing calls it
+         here. -->
+    <FilterFacetPickerModal
+      v-if="showGroupPicker"
+      :title="t('tutoring2.common.group')"
+      :options="groupOptions"
+      :selected="groupFilter"
+      :all-label="t('tutoring2.common.all')"
+      @close="showGroupPicker = false"
+      @apply="(v) => { groupFilter = v; }"
+    />
+    <FilterFacetPickerModal
+      v-if="showStatusPicker"
+      :title="t('tutoring2.common.status')"
+      :options="statusOptions"
+      :selected="statusFilter"
+      :all-label="t('tutoring2.common.all')"
+      @close="showStatusPicker = false"
+      @apply="applyStatusFilter"
+    />
   </div>
 </template>

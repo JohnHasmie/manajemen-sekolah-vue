@@ -7,6 +7,17 @@
   Same compose flow as the admin view; the group picker defaults to
   the first of the tutor's active groups so the modal is one-tap-away
   from typing.
+
+  ── The filter chip ──
+
+  The Kelompok chip opens a <FilterFacetPickerModal>, the same per-facet
+  picker the Manajemen Data screens use. Its handler used to be
+  `@click="groupFilter = ''"`, which only ever CLEARS. Setting a group was
+  possible, but only through a strip of round buttons below the toolbar
+  that was `v-if="!groupFilter"` — it VANISHED the moment you used it, so
+  the chip that looked like the control was a clear button and the real
+  control disappeared after one click. Same fix as
+  AdminTutoring2GroupsView (!1191).
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -15,6 +26,9 @@ import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -62,7 +76,37 @@ async function loadGroups() {
   const { items } = await TutoringBimbelService.listGroups({ per_page: 100 });
   groups.value = items;
 }
-loadGroups();
+// Mount-time warm-up so the Kelompok chip has its option list. Swallowed
+// on purpose HERE only: the loader below awaits loadGroups() again and a
+// real failure still reaches AsyncView through that path, so this call
+// must not turn into an unhandled rejection — and must not convert a
+// fetch error into a silent "no announcements".
+loadGroups().catch(() => {
+  /* chip stays disabled; the loader reports the failure */
+});
+
+// ── Per-facet picker ───────────────────────────────────────────────
+const showGroupPicker = ref(false);
+
+const groupOptions = computed<FacetOption[]>(() =>
+  groups.value.map((g) => ({
+    key: g.id,
+    label: g.name,
+    meta: g.program_name ?? undefined,
+  })),
+);
+
+/**
+ * What the chip reads: the picked group's NAME, or "Semua" when unset.
+ *
+ * Falls back to an id fragment only when the id is genuinely not in the
+ * loaded list. A fragment is ugly but honest there — "—" on a chip
+ * rendered ACTIVE would read as "no filter applied".
+ */
+function chipValue(id: string, options: FacetOption[]): string {
+  if (!id) return t('tutoring2.common.all');
+  return options.find((o) => o.key === id)?.label ?? id.slice(0, 8);
+}
 
 const { state, reload } = useDataRefresh<AnnouncementRow[]>(async () => {
   if (groups.value.length === 0) await loadGroups();
@@ -227,28 +271,15 @@ const totalCount = computed(() =>
       <template #chips>
         <AppFilterChip
           :label="t('tutoring2.common.group')"
-          :value="groupFilter
-            ? (groups.find((g) => g.id === groupFilter)?.name ?? groupFilter.slice(0, 8))
-            : t('tutoring2.common.all')"
+          :value="chipValue(groupFilter, groupOptions)"
           icon-name="users"
           :active="!!groupFilter"
-          @click="groupFilter = ''"
+          :disabled="groupOptions.length === 0"
+          :title="groupOptions.length === 0 ? t('tutoring2.common.filterNoOptions') : undefined"
+          @click="showGroupPicker = true"
         />
       </template>
     </PageFilterToolbar>
-
-    <!-- Group quick-pick strip -->
-    <div v-if="!groupFilter && groups.length > 0" class="flex flex-wrap gap-2">
-      <button
-        v-for="g in groups"
-        :key="g.id"
-        type="button"
-        class="rounded-full border border-slate-200 px-3 py-1 text-2xs font-bold text-slate-600 hover:border-brand-cobalt hover:text-brand-cobalt"
-        @click="groupFilter = g.id"
-      >
-        {{ g.name }}
-      </button>
-    </div>
 
     <AsyncView
       :state="state"
@@ -402,5 +433,17 @@ const totalCount = computed(() =>
         @primary="previewRow = null"
       />
     </Modal>
+
+    <!-- Per-facet picker. It writes its ref; the existing watcher on
+         [search, group] does the reload, so nothing calls it here. -->
+    <FilterFacetPickerModal
+      v-if="showGroupPicker"
+      :title="t('tutoring2.common.group')"
+      :options="groupOptions"
+      :selected="groupFilter"
+      :all-label="t('tutoring2.common.all')"
+      @close="showGroupPicker = false"
+      @apply="(v) => { groupFilter = v; }"
+    />
   </div>
 </template>
