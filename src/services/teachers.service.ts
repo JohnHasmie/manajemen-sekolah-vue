@@ -6,6 +6,13 @@ import { api } from '@/lib/http';
 import type { Pagination } from '@/types/api';
 import { teacherFromJson, type Teacher } from '@/types/entities';
 
+export interface TeacherStats {
+  total: number;
+  female: number;
+  homeroom: number;
+  has_subject: number;
+}
+
 export interface TeacherListParams {
   page?: number;
   per_page?: number;
@@ -45,6 +52,45 @@ function unwrap(body: unknown) {
 }
 
 export const TeacherService = {
+  /**
+   * GET /teacher/stats — aggregates over the WHOLE filtered set.
+   *
+   * The admin KPI tiles used to count the rows on the current page and
+   * label them "/halaman". That reads fine on a single-page school and
+   * quietly means something else on page two, which is what was reported
+   * ("halaman di ganti hitung total data", 2026-08-14).
+   *
+   * Takes the SAME filters as `list()` on purpose: a KPI sitting above a
+   * filtered table has to describe that table, otherwise the tiles and
+   * the rows disagree on screen.
+   */
+  async stats(params: TeacherListParams = {}): Promise<TeacherStats> {
+    const res = await api.get('/teacher/stats', {
+      params: {
+        ...(params.search ? { search: params.search } : {}),
+        ...(params.subject_id ? { subject_id: params.subject_id } : {}),
+        ...(params.class_id ? { homeroom_class_id: params.class_id } : {}),
+        ...(params.gender ? { gender: params.gender } : {}),
+        ...(params.employment_status
+          ? { employment_status: params.employment_status }
+          : {}),
+        ...(params.activity_status ? { activity_status: params.activity_status } : {}),
+        ...(params.academic_year_id ? { academic_year_id: params.academic_year_id } : {}),
+      },
+    });
+    const d = res.data?.data ?? res.data ?? {};
+
+    // Coerce + default: the endpoint predates `homeroom`/`has_subject`,
+    // so an older backend simply omits them. Rendering `undefined` in a
+    // tile is the blank-card failure this change exists to remove.
+    return {
+      total: Number(d.total ?? 0),
+      female: Number(d.female ?? 0),
+      homeroom: Number(d.homeroom ?? 0),
+      has_subject: Number(d.has_subject ?? 0),
+    };
+  },
+
   async list(params: TeacherListParams = {}): Promise<ListResult> {
     const res = await api.get('/teacher', {
       params: {

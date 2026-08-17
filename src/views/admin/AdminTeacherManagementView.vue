@@ -8,7 +8,11 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, shallowRef } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { TeacherService, type TeacherFilterOptions } from '@/services/teachers.service';
+import {
+  TeacherService,
+  type TeacherFilterOptions,
+  type TeacherStats,
+} from '@/services/teachers.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SubjectService } from '@/services/subjects.service';
 import { useRoleHex } from '@/composables/useRoleHex';
@@ -200,9 +204,7 @@ async function reload(page = 1, opts: { skeleton?: boolean } = {}) {
   forceSkeleton.value = opts.skeleton ?? false;
   error.value = null;
   try {
-    const res = await TeacherService.list({
-      page,
-      per_page: 10,
+    const query = {
       search: search.value || undefined,
       role: filters.role ?? undefined,
       class_id: filters.class_id ?? undefined,
@@ -212,9 +214,20 @@ async function reload(page = 1, opts: { skeleton?: boolean } = {}) {
       // `selectedYearId` — the store exposes no `activeYearId`, so this
       // was undefined and the teacher list went out unscoped by year.
       academic_year_id: ayStore.selectedYearId || undefined,
-    });
-    teachers.value = res.items;
-    pagination.value = res.pagination ?? null;
+    };
+    // Stats alongside the page, on the SAME filters. The KPI tiles used to
+    // be derived from `teachers.value` — one page — and labelled
+    // "/halaman"; the server counts the whole filtered set instead.
+    // allSettled: a stats hiccup must not blank the table. The list is the
+    // primary payload; the tiles degrade to the page-derived numbers.
+    const [listRes, statsRes] = await Promise.allSettled([
+      TeacherService.list({ page, per_page: 10, ...query }),
+      TeacherService.stats(query),
+    ]);
+    if (listRes.status === 'rejected') throw listRes.reason;
+    teachers.value = listRes.value.items;
+    pagination.value = listRes.value.pagination ?? null;
+    stats.value = statsRes.status === 'fulfilled' ? statsRes.value : null;
   } catch (e) {
     error.value = (e as Error).message;
   } finally {
@@ -267,20 +280,31 @@ function clearAll() {
 }
 
 // ── KPI cards ──────────────────────────────────────────────────────
+const stats = ref<TeacherStats | null>(null);
+
 const totalTeachers = computed(
-  () => pagination.value?.total_items ?? teachers.value.length,
+  () => stats.value?.total ?? pagination.value?.total_items ?? teachers.value.length,
 );
-const pageWaliCount = computed(
-  () => teachers.value.filter((t) => Boolean(t.homeroom_class_name)).length,
+// Server totals when we have them; the old page-derived numbers only as
+// a fallback when the stats call failed. `statsReady` drives the suffix
+// so a fallback number is still labelled honestly as per-page rather
+// than silently claiming to be a total.
+const statsReady = computed(() => stats.value !== null);
+const waliCount = computed(
+  () => stats.value?.homeroom
+    ?? teachers.value.filter((t) => Boolean(t.homeroom_class_name)).length,
 );
-const pageWithSubjectsCount = computed(
-  () => teachers.value.filter((t) => (t.subject_names?.length ?? 0) > 0).length,
+const withSubjectsCount = computed(
+  () => stats.value?.has_subject
+    ?? teachers.value.filter((t) => (t.subject_names?.length ?? 0) > 0).length,
 );
-const pageFemaleCount = computed(
-  // Normalise so both legacy 'P' and canonical 'female' count. Without
-  // this, rows stored as 'female' fell through and the KPI card
+const femaleCount = computed(
+  // Fallback normalises so both legacy 'P' and canonical 'female' count.
+  // Without this, rows stored as 'female' fell through and the KPI card
   // undercounted teachers on schools past the English-naming rollout.
-  () => teachers.value.filter((t) => normalizeGender(t.gender) === 'female').length,
+  // The server figure already folds both spellings.
+  () => stats.value?.female
+    ?? teachers.value.filter((t) => normalizeGender(t.gender) === 'female').length,
 );
 
 const kpiCards = computed<KpiCard[]>(() => [
@@ -288,22 +312,22 @@ const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'shield',
     label: $t('admin.teachers.kpiHomeroom'),
-    value: pageWaliCount.value,
-    suffix: $t('admin.shared.perPage'),
+    value: waliCount.value,
+    ...(statsReady.value ? {} : { suffix: $t('admin.shared.perPage') }),
     tone: 'violet',
   },
   {
     icon: 'book-open',
     label: $t('admin.teachers.kpiHasSubject'),
-    value: pageWithSubjectsCount.value,
-    suffix: $t('admin.shared.perPage'),
+    value: withSubjectsCount.value,
+    ...(statsReady.value ? {} : { suffix: $t('admin.shared.perPage') }),
     tone: 'green',
   },
   {
     icon: 'user',
     label: $t('admin.teachers.kpiFemale'),
-    value: pageFemaleCount.value,
-    suffix: $t('admin.shared.perPage'),
+    value: femaleCount.value,
+    ...(statsReady.value ? {} : { suffix: $t('admin.shared.perPage') }),
     tone: 'amber',
   },
 ]);
