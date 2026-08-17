@@ -47,6 +47,12 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import { storage } from '@/lib/storage';
 import { semesterLabel } from '@/lib/labels';
 import { formatDayName } from '@/lib/day-name';
+import {
+  cellMatchesFilters,
+  countMatches,
+  hasHighlightFilter as hasAnyHighlightFilter,
+  type TimetableHighlightFilters,
+} from '@/components/feature/schedule-timetable-filter';
 
 /** Payload emitted when the admin clicks an empty cell. Feeds the
  *  ScheduleFormModal pre-fill props verbatim. */
@@ -73,6 +79,24 @@ const props = defineProps<{
    * the banner, so the admin doesn't see a false alarm on cold open).
    */
   optionsLoading?: boolean;
+  /**
+   * The hub's filter chips. The grid used to ignore them entirely: an
+   * admin who picked "Guru: Pak Budi" and switched to Timetable saw an
+   * unchanged week for whichever class localStorage remembered, chips
+   * still lit. Two different answers, depending on which of the two
+   * class states you happened to look at.
+   *
+   * `filterClassId` is authoritative — it selects the grid outright,
+   * since /matrix is per-class anyway. The rest cannot narrow a week
+   * grid without punching holes in it (a timetable missing slots reads
+   * as "free period", not "filtered"), so they highlight instead: the
+   * matching cells stay, the others go quiet.
+   */
+  filterClassId?: string;
+  filterTeacherId?: string;
+  filterSubjectId?: string;
+  filterDayId?: string;
+  filterHourNumber?: number | '';
 }>();
 
 const emit = defineEmits<{
@@ -85,6 +109,10 @@ const emit = defineEmits<{
   /** Hover "Gabung ke JPn" pill — the parent confirms, then calls the
    *  merge endpoint and refetches the matrix. */
   mergeNext: [payload: { schedule_id: string; from_hour: number; to_hour: number }];
+  /** Class picked INSIDE the grid — pushed back up so the hub's class
+   *  chip agrees with what is on screen. Without this the toolbar keeps
+   *  showing the old class while the grid renders another. */
+  'update:filterClassId': [classId: string];
 }>();
 
 const { t } = useI18n();
@@ -154,13 +182,19 @@ defineExpose({ refresh });
 onMounted(() => {
   // Rehydrate the last-picked class, if it's still in the class list
   // for the current AY (the school may have deleted / archived it).
-  const remembered = storage.get<string>(STORAGE_LAST_CLASS);
-  if (
-    typeof remembered === 'string' &&
-    remembered &&
-    classes.value.some((c) => c.id === remembered)
-  ) {
-    classId.value = remembered;
+  // The hub's class chip wins over the remembered class — arriving here
+  // with "7A" selected upstairs and being shown 9B is the whole bug.
+  if (props.filterClassId && classes.value.some((c) => c.id === props.filterClassId)) {
+    classId.value = props.filterClassId;
+  } else {
+    const remembered = storage.get<string>(STORAGE_LAST_CLASS);
+    if (
+      typeof remembered === 'string' &&
+      remembered &&
+      classes.value.some((c) => c.id === remembered)
+    ) {
+      classId.value = remembered;
+    }
   }
   if (!semesterId.value && semesters.value.length > 0) {
     semesterId.value = props.defaultSemesterId ?? semesters.value[0].id;
@@ -175,8 +209,20 @@ watch(classId, (v) => {
   } else {
     storage.remove(STORAGE_LAST_CLASS);
   }
+  if (v !== (props.filterClassId ?? '')) emit('update:filterClassId', v);
   void loadMatrix();
 });
+
+// Chip changed upstairs (including cleared) — follow it. Guarded on
+// inequality so the round trip chip → grid → chip terminates.
+watch(
+  () => props.filterClassId,
+  (v) => {
+    if (v && v !== classId.value && classes.value.some((c) => c.id === v)) {
+      classId.value = v;
+    }
+  },
+);
 watch(semesterId, () => void loadMatrix());
 
 // If the parent hasn't picked a semester yet but the filter-options
@@ -187,6 +233,16 @@ watch(
   (fo) => {
     if (!semesterId.value && fo?.semesters?.[0]) {
       semesterId.value = props.defaultSemesterId ?? fo.semesters[0].id;
+    }
+    // The class list can arrive AFTER mount, and onMounted could only
+    // check the chip against an empty list. Without this the chip is
+    // dropped on exactly the cold-open path it matters most on.
+    if (
+      props.filterClassId &&
+      props.filterClassId !== classId.value &&
+      (fo?.classes ?? []).some((c) => c.id === props.filterClassId)
+    ) {
+      classId.value = props.filterClassId;
     }
   },
 );
@@ -232,6 +288,45 @@ function findHourIdFor(dayId: string, hourNumber: number): string | null {
 function cellAt(dayId: string, hourNumber: number) {
   return matrix.value?.cells[`${dayId}:${hourNumber}`];
 }
+
+// ── Filter highlighting ────────────────────────────────────────────
+// Predicates live in `schedule-timetable-filter.ts` — pure, and unit
+// tested there. See that file for why the non-class chips highlight
+// rather than remove.
+
+const highlightFilters = computed<TimetableHighlightFilters>(() => ({
+  teacherId: props.filterTeacherId,
+  subjectId: props.filterSubjectId,
+  dayId: props.filterDayId,
+  hourNumber: props.filterHourNumber,
+}));
+
+const hasHighlightFilter = computed(() =>
+  hasAnyHighlightFilter(highlightFilters.value),
+);
+
+/** Cell should be muted: a chip is active and this one is not a hit. */
+function isDimmed(dayId: string, hourNumber: number): boolean {
+  if (!hasHighlightFilter.value) return false;
+  return !cellMatchesFilters(
+    cellAt(dayId, hourNumber),
+    dayId,
+    hourNumber,
+    highlightFilters.value,
+  );
+}
+
+/** Matching-slot count for the banner, so "0" is a stated answer
+ *  rather than a week that merely looks unfiltered. */
+const highlightCount = computed(() => {
+  if (!matrix.value) return 0;
+  return countMatches(
+    days.value.map((d) => d.id),
+    hourRows.value.map((h) => h.hour_number),
+    cellAt,
+    highlightFilters.value,
+  );
+});
 
 /**
  * Group-cell lookup by hour_number: return the first cell at this
@@ -493,6 +588,26 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
       </div>
     </div>
 
+    <!-- Highlight banner — says out loud what the chips are doing to
+         this view. A week grid keeps all its slots (a hole reads as a
+         free period, not as a filter), so matching cells are emphasised
+         and the rest go quiet. Stating the count means "0" is a real
+         answer instead of a week that merely looks unfiltered. -->
+    <div
+      v-if="hasHighlightFilter && matrix"
+      class="flex items-center gap-2 rounded-xl border border-brand-cobalt/25 bg-brand-cobalt/5 px-3 py-2"
+      role="status"
+    >
+      <NavIcon name="filter" :size="13" class="text-brand-cobalt flex-shrink-0" />
+      <p class="text-2xs font-bold text-brand-cobalt leading-relaxed">
+        {{
+          highlightCount > 0
+            ? t('admin.schedule.timetable.highlightActive', { n: highlightCount })
+            : t('admin.schedule.timetable.highlightNone')
+        }}
+      </p>
+    </div>
+
     <!-- Body skeleton while filter-options still loading — replaces the
          picker-prompt / empty banner. Full grid skeleton lives further
          down (gated on `isLoading && !matrix`). -->
@@ -712,7 +827,8 @@ const semesterPickerId = 'schedule-timetable-semester-picker';
                 <td
                   v-if="!isCoveredByBlockAbove(d.id, row.hour_number)"
                   :rowspan="rowspanFor(d.id, row.hour_number)"
-                  class="p-1 align-top relative group"
+                  class="p-1 align-top relative group transition-opacity"
+                  :class="isDimmed(d.id, row.hour_number) ? 'opacity-30' : ''"
                 >
                   <!-- Class-column plain cell — only rendered when the
                        cell exists AND is NOT part of a group. Grouped
