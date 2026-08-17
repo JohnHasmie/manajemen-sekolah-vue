@@ -117,7 +117,19 @@ export interface BimbelSession {
   status_label?: string;
   materials_note?: string | null;
   tutor_note?: string | null;
+  /**
+   * Attendance rows recorded for this session. Present only when the
+   * caller counted them — absent means "not counted", NOT "nobody
+   * attended". `index` did not count at all until BE !786, so every
+   * list row omitted it.
+   */
   attendances_count?: number;
+  /**
+   * How many of those were `hadir`. Same absent-vs-zero rule: a
+   * missing value read as 0 would report a 0% rate for a fully
+   * attended session.
+   */
+  attendances_present_count?: number;
 }
 
 // ─── Assessments + Scores (BE-5) ───────────────────────────────────

@@ -5,9 +5,35 @@
   composition contract top→bottom, but the floating slot is a
   "Ekspor rekap" action instead of a "+" CTA (this is a monitor view).
 
-  MVP data path: list completed sessions and derive attendance stats
-  from `attendances_count`.
-  // TODO WEB-3+ swap to /tutoring-v2/attendance/monitor once BE exposes an aggregated per-session KPI view
+  ── What this replaces ──
+
+  Three of the four tiles were wrong, two of them literals:
+
+      Sesi selesai   real
+      Total presensi ALWAYS 0   — `index` never counted attendances, so
+                                  `attendances_count` was absent from
+                                  every row and `?? 0` swallowed it
+      % Presensi     `const pctPresensi = 92`
+      Belum diambil  `const belumDiambil = 0`
+
+  So an admin whose whole reason for opening this screen is to see
+  whether registers are being taken was told 92% and "nothing
+  outstanding", permanently, on top of a total that could not move off
+  zero.
+
+  BE !786 makes `index` count attendances and, separately, how many
+  were `hadir`. Both KPIs now come from exactly the sessions in the
+  list — filters included. The tempting alternative,
+  `/admin/reports/attendance`, aggregates by enrollment over a date
+  range with no group or tutor filter, so its percentage would
+  contradict the table beneath it as soon as an admin filtered.
+
+  ── Absent is not zero ──
+
+  Both counts are optional on the wire. A row that carries neither is
+  "not counted", which is why the rate renders "—" rather than 0%
+  when nothing countable came back, and why "Belum diambil" only
+  counts rows that actually reported a zero.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -43,7 +69,6 @@ const applyDebounced = useDebounceFn((v: string) => {
 watch(search, (v) => applyDebounced(v));
 
 const { state, reload } = useDataRefresh(async () => {
-  // TODO WEB-3+ swap to /tutoring-v2/attendance/monitor once BE exposes an aggregated per-session KPI view
   const { items } = await TutoringBimbelService.listSessions({
     per_page: 100,
     status: 'done',
@@ -58,15 +83,51 @@ useAcademicYearWatcher(reload);
 
 const kpiCards = computed<KpiCard[]>(() => {
   const items = (state.value.status === 'content' ? state.value.data : []) as BimbelSession[];
-  const totalPresensi = items.reduce((sum, s) => sum + (s.attendances_count ?? 0), 0);
-  // % presensi placeholder — needs roster totals; BE-4+ will expose per-session roster count.
-  const pctPresensi = 92;
-  const belumDiambil = 0;
+
+  // Only rows that actually reported a count take part. A row without
+  // one is unknown, and unknown must not be averaged in as zero.
+  const counted = items.filter((s) => typeof s.attendances_count === 'number');
+  const totalMarks = counted.reduce((sum, s) => sum + (s.attendances_count ?? 0), 0);
+  const totalPresent = counted.reduce(
+    (sum, s) => sum + (s.attendances_present_count ?? 0),
+    0,
+  );
+
+  // Hadir over every mark recorded across these sessions. Null when
+  // nothing countable came back — "—", never 0%, because no register
+  // taken is not the same as nobody attending.
+  const rate =
+    counted.length === 0 || totalMarks === 0
+      ? null
+      : Math.round((totalPresent / totalMarks) * 100);
+
+  // A DONE session with zero attendance rows is a register nobody
+  // took. Rows that reported no count at all are excluded: we cannot
+  // tell an untaken register from an uncounted one.
+  const belumDiambil = counted.filter((s) => (s.attendances_count ?? 0) === 0).length;
+
   return [
-    { icon: 'circle-check', label: t('tutoring2.admin.attendance.kpiCompleted'), value: String(items.length) },
-    { icon: 'users', label: t('tutoring2.admin.attendance.kpiTotal'), value: String(totalPresensi) },
-    { icon: 'chart-bar', label: t('tutoring2.admin.attendance.kpiRate'), value: `${pctPresensi}%` },
-    { icon: 'clock', label: t('tutoring2.admin.attendance.kpiUnrecorded'), value: String(belumDiambil), tone: belumDiambil > 0 ? 'amber' : undefined },
+    {
+      icon: 'circle-check',
+      label: t('tutoring2.admin.attendance.kpiCompleted'),
+      value: String(items.length),
+    },
+    {
+      icon: 'users',
+      label: t('tutoring2.admin.attendance.kpiTotal'),
+      value: counted.length === 0 ? '—' : String(totalMarks),
+    },
+    {
+      icon: 'chart-bar',
+      label: t('tutoring2.admin.attendance.kpiRate'),
+      value: rate == null ? '—' : `${rate}%`,
+    },
+    {
+      icon: 'clock',
+      label: t('tutoring2.admin.attendance.kpiUnrecorded'),
+      value: counted.length === 0 ? '—' : String(belumDiambil),
+      tone: belumDiambil > 0 ? 'amber' : undefined,
+    },
   ];
 });
 
