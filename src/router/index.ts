@@ -434,6 +434,19 @@ const routes: RouteRecordRaw[] = [
   // gating as the wizard. The view itself guards against direct nav /
   // refresh with no wizard data by redirecting back to /register-demo.
   {
+    // Where the wizard actually ends. The demo is NOT active at this
+    // point — a pending `demo_requests` row is, so there is no dashboard
+    // to send anyone to. Public like the rest of the register-demo
+    // subtree, which also means the `step === 'register_demo'` bounce at
+    // the top of beforeEach lets it through instead of throwing the user
+    // back into a form they already finished.
+    path: '/register-demo/status',
+    name: 'register-demo-status',
+    component: () =>
+      import('@/views/register-demo/RegisterDemoStatusView.vue'),
+    meta: { public: true, registerDemo: true },
+  },
+  {
     path: '/register-demo/identity',
     name: 'register-demo-identity',
     component: () => import('@/views/register-demo/RegisterDemoIdentityView.vue'),
