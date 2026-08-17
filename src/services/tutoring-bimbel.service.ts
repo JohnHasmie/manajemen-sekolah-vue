@@ -137,6 +137,10 @@ export interface BimbelSession {
 export interface BimbelAssessment {
   id: string;
   program_id: string;
+  /** AssessmentResource exposes this whenever `program` is loaded, and
+   *  `index` + `show` both eager-load `program:id,name`. The list screen
+   *  printed `program_id` for months while this sat on the same row. */
+  program_name?: string | null;
   learning_group_id?: string | null;
   term_id?: string | null;
   created_by_teacher_id?: string | null;
