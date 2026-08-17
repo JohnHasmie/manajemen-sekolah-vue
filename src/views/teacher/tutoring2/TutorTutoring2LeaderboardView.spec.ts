@@ -7,11 +7,11 @@
  *
  * Part 2 pins the scope chip, which shipped as a CYCLER:
  * `@click="pickNextScope()"` advanced one entry per click through the
- * kelompok/program list by modulo. Tolerable for a tutor with 3
- * kelompok; for a tutor with 30 the 27th needs 27 clicks, and every one
- * of them re-fires the leaderboard endpoint on the way past.
+ * kelompok list by modulo. Tolerable for a tutor with 3 kelompok; for a
+ * tutor with 30 the 27th needs 27 clicks, and every one of them re-fires
+ * the leaderboard endpoint on the way past.
  *
- * These mount-based tests all fail against the pre-fix template:
+ * These mount-based tests all fail against the pre-picker template:
  *
  *   1. opens a picker      — clicking the chip must OPEN an option list
  *                            instead of mutating the filter itself.
@@ -19,12 +19,24 @@
  *   3. apply re-queries    — picking must reach the leaderboard query.
  *   4. no "Semua" row      — a scope is required; without one there is
  *                            no board to show.
- *   5. program tab         — the picker follows the active tab.
- *   6. empty ⇒ disabled    — an empty list must disable its own chip
+ *   5. empty ⇒ disabled    — an empty list must disable its own chip
  *                            rather than leave a dead control.
- *   7. one dead endpoint   — the old `Promise.all` inside the loader let
- *                            a single rejected scope endpoint throw the
- *                            WHOLE page into its error state.
+ *   6. dead endpoint       — a rejected scope endpoint must not throw the
+ *                            WHOLE page into its error state, because the
+ *                            loader runs inside <AsyncView>.
+ *
+ * Part 3 pins the REMOVAL of the "Per Program" tab. The screen was copied
+ * verbatim from AdminTutoring2LeaderboardView (dec3437e) and inherited
+ * the admin's program scope; the v1 predecessor tutor screen never had
+ * one. It is unreachable — `ProgramController::index` authorizes
+ * `tutoring.program.view`, which `PermissionCatalog::tutorTutoringDefaults()`
+ * does not grant — and granting the key was rejected because
+ * `LeaderboardController` scopes a program board by `e.program_id` with
+ * NO tutor predicate, so it spans other tutors' groups.
+ *
+ * Hence the two negative anchors: NO program request may leave this view,
+ * and EXACTLY ONE filter chip may render. Both fail against the version
+ * of the template that still carries the tab.
  *
  * The real <FilterFacetPickerModal> is mounted; only its <Modal> shell is
  * stubbed, because Modal teleports to body and would escape the wrapper.
@@ -133,16 +145,8 @@ function makeI18n() {
           common: {
             all: 'Semua',
             group: 'Kelompok',
-            program: 'Program',
             filterNoOptions: 'Belum ada pilihan untuk filter ini',
             notAvailable: 'Belum tersedia',
-          },
-          tutor: {
-            leaderboard: {
-              tabLabel: 'Tampilan',
-              tabGroup: 'Per Kelompok',
-              tabProgram: 'Per Program',
-            },
           },
         },
       },
@@ -172,10 +176,15 @@ async function mountView() {
           template:
             '<button data-testid="chip" :disabled="disabled" @click="$emit(\'click\')">{{ value }}</button>',
         },
+        // The retry button stands in for <AsyncView>'s own, so a test can
+        // re-run the loader the way the error state's button does.
         AsyncView: {
           props: ['state'],
+          emits: ['retry'],
           template:
-            '<div data-testid="async" :data-status="state?.status"><slot /></div>',
+            '<div data-testid="async" :data-status="state?.status">' +
+            '<button data-testid="retry" @click="$emit(\'retry\')"></button>' +
+            '<slot /></div>',
         },
         // FilterFacetPickerModal is NOT stubbed — only the Modal shell it
         // renders into, because Modal teleports to body.
@@ -188,8 +197,11 @@ async function mountView() {
   return w;
 }
 
-/** Chips render in template order: tab, scope. */
-const CHIP = { tab: 0, scope: 1 };
+/**
+ * Exactly one chip renders: the kelompok scope. The tab chip that used
+ * to sit at index 0 is gone — see the "Per Program" note in the header.
+ */
+const CHIP = { scope: 0 };
 
 function chips(w) {
   return w.findAll('[data-testid="chip"]');
@@ -211,14 +223,12 @@ describe('TutorTutoring2LeaderboardView scope chip', () => {
     (TutoringLeaderboardService.getProgram as any).mockResolvedValue({ items: ROWS });
   });
 
-  it('loads both scope lists on mount and names the auto-picked kelompok', async () => {
+  it('loads the kelompok list on mount and names the auto-picked kelompok', async () => {
     const w = await mountView();
 
     expect(TutoringBimbelService.listGroups).toHaveBeenCalled();
-    expect(TutoringBimbelService.listPrograms).toHaveBeenCalled();
 
     const c = chips(w);
-    expect(c).toHaveLength(2);
     expect(c[CHIP.scope].text()).toBe('UTBK Pagi A');
     expect(c[CHIP.scope].attributes('disabled')).toBeUndefined();
   });
@@ -268,25 +278,6 @@ describe('TutorTutoring2LeaderboardView scope chip', () => {
     expect(w.find('[data-testid="facet-modal"]').exists()).toBe(false);
   });
 
-  it('the program tab swaps the picker to programs and queries the program board', async () => {
-    const w = await mountView();
-    await chips(w)[CHIP.tab].trigger('click'); // → Per Program
-    await flushPromises();
-
-    expect(TutoringLeaderboardService.getProgram).toHaveBeenCalled();
-    expect(chips(w)[CHIP.scope].text()).toBe('Intensif UTBK');
-
-    await chips(w)[CHIP.scope].trigger('click');
-    const labels = optionRows(w).map((b) => b.text());
-    expect(labels).toHaveLength(PROGRAMS.length);
-    expect(labels.join(' ')).toContain('Reguler SMP');
-    expect(labels.join(' ')).not.toContain('UTBK Pagi A'); // that's a kelompok
-
-    await optionRows(w)[1].trigger('click');
-    await flushPromises();
-    expect(lastCallOf(TutoringLeaderboardService.getProgram as any)[0]).toBe('pr-2');
-  });
-
   it('an empty kelompok list disables the scope chip instead of leaving it dead', async () => {
     (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: [] });
 
@@ -298,16 +289,80 @@ describe('TutorTutoring2LeaderboardView scope chip', () => {
     expect(w.find('[data-testid="async"]').attributes('data-status')).not.toBe('error');
   });
 
-  it('a failing program list does not blank the kelompok chip or error the page', async () => {
-    // Pre-fix this ran through `Promise.all` inside the loader, so one
-    // rejected scope endpoint threw the whole view into its error state
-    // and neither tab had any options.
-    (TutoringBimbelService.listPrograms as any).mockRejectedValue(new Error('403'));
+  it('a failing kelompok list disables the chip but does NOT error the page', async () => {
+    // The loader runs INSIDE <AsyncView>, so a rejection escaping it
+    // paints the whole page red. A tutor whose kelompok list is
+    // ability-gated off should get the ordinary empty board and a dead
+    // chip instead. This tolerance came in with the picker as
+    // `Promise.allSettled`; collapsing that to a single awaited call must
+    // preserve it exactly, hence this test.
+    (TutoringBimbelService.listGroups as any).mockRejectedValue(new Error('403'));
 
     const w = await mountView();
 
-    expect(chips(w)[CHIP.scope].text()).toBe('UTBK Pagi A');
-    expect(chips(w)[CHIP.scope].attributes('disabled')).toBeUndefined();
     expect(w.find('[data-testid="async"]').attributes('data-status')).not.toBe('error');
+    expect(chips(w)[CHIP.scope].attributes('disabled')).toBeDefined();
+    expect(TutoringLeaderboardService.getGroup).not.toHaveBeenCalled();
+  });
+
+  it('recovers on retry after a failed kelompok load (scopeLoaded not latched)', async () => {
+    // A `finally`-style latch would make the first failure permanent for
+    // the life of the component and leave <AsyncView>'s retry button
+    // inert.
+    // beforeEach already resolves to GROUPS; this makes only the FIRST
+    // call reject, so the retry hits a healthy endpoint.
+    (TutoringBimbelService.listGroups as any).mockRejectedValueOnce(new Error('503'));
+
+    const w = await mountView();
+    expect(chips(w)[CHIP.scope].attributes('disabled')).toBeDefined();
+
+    await w.find('[data-testid="retry"]').trigger('click');
+    await flushPromises();
+
+    expect(chips(w)[CHIP.scope].text()).toBe('UTBK Pagi A');
+  });
+});
+
+// ─── "Per Program" tab removal ─────────────────────────────────────
+//
+// Negative anchors. The tab was unreachable for a default tutor
+// (`tutoring.program.view` is not in `tutorTutoringDefaults()`), and
+// granting the key was rejected because a program board spans other
+// tutors' groups. Both assertions fail against the template that still
+// carries the tab.
+
+describe('TutorTutoring2LeaderboardView has no program scope', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
+    (TutoringBimbelService.listPrograms as any).mockResolvedValue({ items: PROGRAMS });
+    (TutoringLeaderboardService.getGroup as any).mockResolvedValue({ items: ROWS });
+    (TutoringLeaderboardService.getProgram as any).mockResolvedValue({ items: ROWS });
+  });
+
+  it('renders EXACTLY ONE filter chip — the kelompok scope', async () => {
+    const w = await mountView();
+
+    // The tab chip ("Tampilan: Per Kelompok / Per Program") used to sit
+    // ahead of this one.
+    expect(chips(w)).toHaveLength(1);
+    expect(chips(w)[CHIP.scope].text()).toBe('UTBK Pagi A');
+  });
+
+  it('issues NO program request — not on mount, not after picking a kelompok', async () => {
+    const w = await mountView();
+
+    expect(TutoringBimbelService.listPrograms).not.toHaveBeenCalled();
+    expect(TutoringLeaderboardService.getProgram).not.toHaveBeenCalled();
+
+    // …and no interaction can coax one out of it either.
+    await chips(w)[CHIP.scope].trigger('click');
+    await optionRows(w)[2].trigger('click');
+    await flushPromises();
+
+    expect(TutoringBimbelService.listPrograms).not.toHaveBeenCalled();
+    expect(TutoringLeaderboardService.getProgram).not.toHaveBeenCalled();
+    // The kelompok board is the one that DID get queried.
+    expect(lastCallOf(TutoringLeaderboardService.getGroup as any)[0]).toBe('gr-3');
   });
 });

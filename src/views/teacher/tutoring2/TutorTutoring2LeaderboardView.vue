@@ -6,9 +6,7 @@
   Route: /teacher/tutoring2/leaderboard
   Endpoints:
     GET /tutoring-v2/learning-groups                    — scope picker
-    GET /tutoring-v2/programs                           — scope picker
     GET /tutoring-v2/learning-groups/{groupId}/leaderboard
-    GET /tutoring-v2/programs/{programId}/leaderboard
 
   Rank rendering (podium 1..3 + rank 4..N table, gold/silver/bronze
   ring + medal tokens, `anyStreak` column gating) is copied verbatim
@@ -42,12 +40,32 @@
      caller may view — the same behaviour the sibling tutor views
      already ship. See V2_GAPS.
 
-  The Kelompok/Program scope chip opens a <FilterFacetPickerModal>, the
-  same per-facet picker the admin twin and the Kelompok Belajar screen
-  use. It previously CYCLED one entry per click (`pickNextScope()`
-  advanced by modulo), which is tolerable at 3 kelompok and unreachable
-  at 30 — and every click re-fired the leaderboard endpoint on the way
-  past.
+  4. DROPPED: the "Per Program" tab. The screen was copied verbatim from
+     AdminTutoring2LeaderboardView (see dec3437e), which brought the
+     admin's program scope along with it — the v1 predecessor tutor
+     screen never had one. It could not work here and must not:
+
+       a. UNREACHABLE. `ProgramController::index` authorizes
+          `tutoring.program.view`, which
+          `PermissionCatalog::tutorTutoringDefaults()` does not grant.
+          The only backfill migration
+          (2026_08_07_140000_grant_program_view_to_parent_roles) is
+          PARENT-only on tutoring-center tenants. So
+          GET /tutoring-v2/programs 403s for a default tutor and the tab
+          could never populate.
+
+       b. GRANTING THE KEY WAS REJECTED. `LeaderboardController` scopes a
+          program board by `e.program_id` alone, with NO tutor predicate,
+          so a program board spans other tutors' groups. Granting the
+          ability would open a cross-tutor data leak.
+
+     Do not re-add the tab to "fix" the 403.
+
+  The Kelompok scope chip opens a <FilterFacetPickerModal>, the same
+  per-facet picker the admin twin and the Kelompok Belajar screen use. It
+  previously CYCLED one entry per click (`pickNextScope()` advanced by
+  modulo), which is tolerable at 3 kelompok and unreachable at 30 — and
+  every click re-fired the leaderboard endpoint on the way past.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -69,82 +87,67 @@ import type { LeaderboardRow } from '@/types/tutoring2/leaderboard';
 
 const { t } = useI18n();
 
-type Tab = 'group' | 'program';
-
-const tab = ref<Tab>('group');
 const groupId = ref<string>('');
-const programId = ref<string>('');
 
 const groupOptions = ref<Array<{ id: string; name: string }>>([]);
-const programOptions = ref<Array<{ id: string; name: string }>>([]);
 const scopeLoaded = ref(false);
 
 // Visibility of the per-facet scope picker.
 const showScopePicker = ref(false);
 
 /**
- * Groups + programs, fetched once so the scope chip can auto-select the
- * first entry — otherwise every tab switch renders an "empty" state that
- * is really just "nothing picked yet".
+ * Kelompok, fetched once so the scope chip can auto-select the first
+ * entry — otherwise the screen renders an "empty" state that is really
+ * just "nothing picked yet".
  *
- * Tolerantly, because the two lists are independent: one endpoint
- * failing (or being ability-gated off for this tutor) must not blank the
- * other tab's chip, and must not take the whole page to its error state
- * — which is exactly what the previous `Promise.all` did, since the
- * rejection escaped this loader into <AsyncView>.
+ * The rejection is SWALLOWED on purpose, and that is load-bearing: this
+ * runs INSIDE the <AsyncView> loader, so an error escaping here puts the
+ * whole page into its error state. A tutor whose kelompok list is
+ * ability-gated off should get the ordinary empty board and a disabled
+ * chip, not a red page.
  *
- * `scopeLoaded` is latched only when BOTH settled without rejecting, so
- * an <AsyncView> retry can still recover a transient failure. The old
- * `finally` latched it either way and made the failure permanent for the
- * life of the component.
+ * That property arrived with the scope picker as `Promise.allSettled`
+ * over [listGroups, listPrograms] — it had to be tolerant because the
+ * two lists were independent and either could 403 on its own. The
+ * program scope is gone (header note 4), leaving ONE promise, and
+ * `allSettled` over a single promise is just a settled-tuple ceremony
+ * around a try/catch. Same contract, less machinery.
+ *
+ * `scopeLoaded` is latched only on success, so an <AsyncView> retry can
+ * still recover a transient failure. A `finally` would latch it either
+ * way and make the first failure permanent for the life of the
+ * component.
  */
 async function loadScopeOptions() {
   if (scopeLoaded.value) return;
-  const [g, p] = await Promise.allSettled([
-    TutoringBimbelService.listGroups({ per_page: 50 }),
-    TutoringBimbelService.listPrograms({ per_page: 50 }),
-  ]);
-  if (g.status === 'fulfilled') {
-    groupOptions.value = g.value.items.map((it) => ({
-      id: it.id,
-      name: it.name,
-    }));
+  let items: Array<{ id: string; name: string }>;
+  try {
+    const res = await TutoringBimbelService.listGroups({ per_page: 50 });
+    items = res.items.map((it) => ({ id: it.id, name: it.name }));
+  } catch {
+    return;
   }
-  if (p.status === 'fulfilled') {
-    programOptions.value = p.value.items.map((it) => ({
-      id: it.id,
-      name: it.name,
-    }));
-  }
+  groupOptions.value = items;
   if (!groupId.value && groupOptions.value.length > 0) {
     groupId.value = groupOptions.value[0].id;
   }
-  if (!programId.value && programOptions.value.length > 0) {
-    programId.value = programOptions.value[0].id;
-  }
-  if (g.status === 'fulfilled' && p.status === 'fulfilled') {
-    scopeLoaded.value = true;
-  }
+  scopeLoaded.value = true;
 }
 
 const { state, reload } = useDataRefresh(async () => {
   await loadScopeOptions();
-  const scope = tab.value === 'group' ? groupId.value : programId.value;
-  if (!scope) return [] as LeaderboardRow[];
-  const res =
-    tab.value === 'group'
-      ? await TutoringLeaderboardService.getGroup(scope, { limit: 100 })
-      : await TutoringLeaderboardService.getProgram(scope, { limit: 100 });
+  if (!groupId.value) return [] as LeaderboardRow[];
+  const res = await TutoringLeaderboardService.getGroup(groupId.value, {
+    limit: 100,
+  });
   return res.items;
 });
 
-watch([tab, groupId, programId], () => reload());
+watch(groupId, () => reload());
 
-// The pickable scopes for whichever tab is active.
+// The pickable kelompok.
 const scopeOptions = computed<FacetOption[]>(() =>
-  (tab.value === 'group' ? groupOptions.value : programOptions.value).map(
-    (o) => ({ key: o.id, label: o.name }),
-  ),
+  groupOptions.value.map((o) => ({ key: o.id, label: o.name })),
 );
 
 const rows = computed<LeaderboardRow[]>(() =>
@@ -218,15 +221,8 @@ function medalLabel(rank: number): string {
 }
 
 function activeScopeLabel(): string {
-  const list = tab.value === 'group' ? groupOptions.value : programOptions.value;
-  const currentId = tab.value === 'group' ? groupId.value : programId.value;
-  const hit = list.find((o) => o.id === currentId);
+  const hit = groupOptions.value.find((o) => o.id === groupId.value);
   return hit ? hit.name : t('tutoring2.common.notAvailable');
-}
-
-function applyScope(id: string) {
-  if (tab.value === 'group') groupId.value = id;
-  else programId.value = id;
 }
 </script>
 
@@ -247,24 +243,10 @@ function applyScope(id: string) {
 
     <PageFilterToolbar :hide-default-search="true">
       <template #chips>
+        <!-- Scope chip: opens the kelompok picker. The ONLY chip here —
+             the board has exactly one scope. -->
         <AppFilterChip
-          :label="t('tutoring2.tutor.leaderboard.tabLabel')"
-          :value="
-            tab === 'group'
-              ? t('tutoring2.tutor.leaderboard.tabGroup')
-              : t('tutoring2.tutor.leaderboard.tabProgram')
-          "
-          icon-name="users"
-          :active="true"
-          @click="tab = tab === 'group' ? 'program' : 'group'"
-        />
-        <!-- Scope chip: opens the kelompok / program picker -->
-        <AppFilterChip
-          :label="
-            tab === 'group'
-              ? t('tutoring2.common.group')
-              : t('tutoring2.common.program')
-          "
+          :label="t('tutoring2.common.group')"
           :value="activeScopeLabel()"
           icon-name="book"
           :active="true"
@@ -392,21 +374,17 @@ function applyScope(id: string) {
     </AsyncView>
   </div>
 
-  <!-- Scope picker. It writes groupId/programId; the watcher above does
-       the reload, so nothing calls it here.
-       The scope is REQUIRED (no kelompok/program = no board), hence no
-       "Semua" reset row — that row could only ever blank the page. -->
+  <!-- Scope picker. It writes groupId; the watcher above does the
+       reload, so nothing calls it here.
+       The scope is REQUIRED (no kelompok = no board), hence no "Semua"
+       reset row — that row could only ever blank the page. -->
   <FilterFacetPickerModal
     v-if="showScopePicker"
-    :title="
-      tab === 'group'
-        ? t('tutoring2.common.group')
-        : t('tutoring2.common.program')
-    "
+    :title="t('tutoring2.common.group')"
     :options="scopeOptions"
-    :selected="tab === 'group' ? groupId : programId"
+    :selected="groupId"
     hide-all-reset
     @close="showScopePicker = false"
-    @apply="(v) => applyScope(v)"
+    @apply="(v) => (groupId = v)"
   />
 </template>
