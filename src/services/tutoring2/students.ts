@@ -17,6 +17,12 @@ import { api } from '@/lib/http';
 import type { Pagination } from '@/types/api';
 import type { StudentProgress } from '@/types/tutoring2/progress';
 import type {
+  StudentAttendanceParams,
+  StudentAttendanceResult,
+  StudentAttendanceRow,
+  StudentAttendanceSummary,
+} from '@/types/tutoring2/attendance';
+import type {
   BimbelStudent,
   BimbelStudentCreatePayload,
   BimbelStudentCreateResponse,
@@ -107,6 +113,33 @@ export const TutoringStudentsService = {
       { params },
     );
     return r.data.data;
+  },
+
+  /**
+   * `GET /tutoring-v2/students/{id}/attendance` — one child's attendance
+   * history plus a summary computed over the WHOLE range server-side.
+   *
+   * The wali "Kehadiran" screen used to fetch the last 100 SESSIONS and
+   * present them as attendance: it showed the ten most recent sessions
+   * as rows and counted `status === 'done'` as present, `'cancelled'`
+   * as excused. Those are facts about the centre's timetable, not about
+   * the child — a session the child missed still counts as "done", and
+   * a cancelled session is not an "izin" anyone applied for.
+   *
+   * Take the summary from the response rather than tallying `rows`:
+   * rows are paginated, so a client-side tally reports one page's
+   * attendance as the whole term's.
+   */
+  async getAttendance(
+    studentId: string,
+    params: StudentAttendanceParams = {},
+  ): Promise<StudentAttendanceResult> {
+    const r = await api.get<{
+      data: StudentAttendanceRow[];
+      summary: StudentAttendanceSummary;
+      meta: StudentAttendanceResult['meta'];
+    }>(`/tutoring-v2/students/${studentId}/attendance`, { params });
+    return { rows: r.data.data, summary: r.data.summary, meta: r.data.meta };
   },
 
   /**

@@ -1,18 +1,37 @@
 <!--
-  ParentTutoring2AssessmentsView.vue — Wali grades for one child (WEB-5).
+  ParentTutoring2AssessmentsView.vue — Wali grades for one child.
 
   Composition:
     1. BrandPageHeader (role="parent") — with meta line.
-    2. KpiStripCards          — Rata-rata / Tertinggi / Dikerjakan / Peringkat.
+    2. KpiStripCards          — Rata-rata / Tertinggi / Dinilai / Peringkat.
     3. AsyncView              — rounded-3xl surface with divide-y rows.
     4. Primary Button block   — "Unduh rapor bimbel (PDF)".
 
-  Parent sees only PUBLISHED assessments. MVP: no student-scoped scores
-  API yet; the list shows every published assessment for the tenant. Row
-  score cell is a placeholder derived from max_score.
+  ── What this replaces ──
 
-  // TODO WEB-5+ swap to /tutoring2/parent/assessments/:studentId to
-  //             filter to child-specific scores.
+  The screen listed every published assessment in the TENANT and derived
+  all of its numbers from `max_score`, which is the mark an assessment
+  is out of — not a mark anyone scored:
+
+      Rata-rata  = mean of max_score across assessments
+      Tertinggi  = the largest max_score
+      row cell   = `max_score / max_score`
+
+  That last one rendered as "100 / 100" on every row, so a wali was
+  shown their child scoring full marks on everything, including
+  assessments the child had never sat.
+
+  `GET /tutoring-v2/students/{id}/progress` has existed since BE-24 and
+  answers exactly this screen: one point per PUBLISHED, SCORED
+  assessment for THIS child, plus a summary. It applies the publish gate
+  server-side, so an unfinished mark cannot reach a wali.
+
+  ── What it no longer claims ──
+
+  Rows are the child's graded assessments, so an assessment with no mark
+  is absent rather than shown at full marks. `Peringkat` stays "—": rank
+  needs the leaderboard, and this screen does not fetch it — an empty
+  cell is honest where a number would not be.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
@@ -28,87 +47,113 @@ import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
-import { useToast } from '@/composables/useToast';
-import {
-  TutoringBimbelService,
-  type BimbelAssessment,
-} from '@/services/tutoring-bimbel.service';
+import { TutoringStudentsService } from '@/services/tutoring2/students';
+import type { ProgressPoint, StudentProgress } from '@/types/tutoring2/progress';
 
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
-// Wired in per the tutoring2 view contract; used by the future save flow
-// when we swap to /tutoring2/parent/assessments/:studentId.
-useToast();
 
 const studentId = String(route.params.studentId ?? '');
 
 // ── Data ──────────────────────────────────────────────────────────
-// TODO WEB-5+ swap to /tutoring2/parent/assessments/:studentId to
-//             filter to child-specific scores.
-const { state, reload } = useDataRefresh(async () => {
-  const { items } = await TutoringBimbelService.listAssessments({
-    per_page: 50,
-    published: true,
-  });
-  return items;
+const { state, reload } = useDataRefresh<StudentProgress>(async () => {
+  if (!studentId) {
+    throw new Error('studentId is required');
+  }
+  return TutoringStudentsService.getProgress(studentId);
 });
 useAcademicYearWatcher(reload);
 
-const items = computed<BimbelAssessment[]>(() => {
-  return state.value.status === 'content' || state.value.status === 'empty'
-    ? ((state.value.data as BimbelAssessment[] | undefined) ?? [])
-    : [];
+const progress = computed<StudentProgress | null>(() =>
+  state.value.status === 'content' || state.value.status === 'empty'
+    ? ((state.value as { data?: StudentProgress }).data ?? null)
+    : null,
+);
+
+/** The child's graded assessments, newest first. */
+const points = computed<ProgressPoint[]>(() => {
+  const list = progress.value?.points ?? [];
+  // The server returns oldest-first for the trend line; a wali reading
+  // a list wants the most recent mark at the top.
+  return [...list].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
 });
 
-// ── KPIs (placeholder aggregations from max_score) ────────────────
-const avgScore = computed<number>(() => {
-  const list = items.value;
-  if (list.length === 0) return 0;
-  const sum = list.reduce((acc, a) => acc + (a.max_score ?? 0), 0);
-  return Math.round(sum / list.length);
-});
-const maxScore = computed<number>(() => {
-  const list = items.value;
-  if (list.length === 0) return 0;
-  return Math.max(...list.map((a) => a.max_score ?? 0));
-});
-
+// ── KPIs ─────────────────────────────────────────────────────────
+// Straight from the server's summary — real marks, not the values the
+// assessments were out of.
 const kpiCards = computed<KpiCard[]>(() => {
+  const s = progress.value?.summary;
+  const num = (n: number | null | undefined) =>
+    n == null ? '—' : String(Math.round(n));
   return [
-    { icon: 'chart-bar', label: t('tutoring2.parent.assessments.kpiAverage'), value: avgScore.value > 0 ? String(avgScore.value) : '—', tone: 'brand' },
-    { icon: 'award', label: t('tutoring2.parent.assessments.kpiHighest'), value: maxScore.value > 0 ? String(maxScore.value) : '—', tone: 'green' },
-    { icon: 'check-circle', label: t('tutoring2.parent.assessments.kpiCompleted'), value: String(items.value.length) },
-    { icon: 'star', label: t('tutoring2.parent.assessments.kpiRank'), value: '—', tone: 'violet' },
+    {
+      icon: 'chart-bar',
+      label: t('tutoring2.parent.assessments.kpiAverage'),
+      value: num(s?.average),
+      tone: 'brand',
+    },
+    {
+      icon: 'award',
+      label: t('tutoring2.parent.assessments.kpiHighest'),
+      value: num(s?.highest),
+      tone: 'green',
+    },
+    {
+      icon: 'check-circle',
+      label: t('tutoring2.parent.assessments.kpiCompleted'),
+      // Graded, not "exists in the tenant".
+      value: s == null ? '—' : String(s.graded_count),
+    },
+    {
+      // Rank needs the leaderboard, which this screen does not call.
+      // "—" is the honest answer; a number here would be invented.
+      icon: 'star',
+      label: t('tutoring2.parent.assessments.kpiRank'),
+      value: '—',
+      tone: 'violet',
+    },
   ];
 });
 
-const metaLabel = computed(() =>
-  state.value.status === 'loading'
-    ? t('tutoring2.common.loading')
-    // TODO WEB-5+ once /parent/assessments/:studentId ships, replace avg
-    //             placeholder with the actual child's rolling average.
-    : t('tutoring2.parent.assessments.meta', {
-        avg: avgScore.value > 0 ? String(avgScore.value) : '—',
-        count: items.value.length,
-      }),
-);
+const metaLabel = computed(() => {
+  if (state.value.status === 'loading') return t('tutoring2.common.loading');
+  const s = progress.value?.summary;
+  return t('tutoring2.parent.assessments.meta', {
+    avg: s?.average == null ? '—' : String(Math.round(s.average)),
+    count: s?.graded_count ?? points.value.length,
+  });
+});
 
 // ── Helpers ──────────────────────────────────────────────────────
 function formatShortDate(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
-function publishedTone(a: BimbelAssessment): StatusBadgeTone {
-  return a.published_at ? 'success' : 'neutral';
+/**
+ * Pass/fail against the assessment's OWN kkm when it has one. An
+ * assessment with no threshold gets a neutral chip rather than being
+ * judged against a number nobody set.
+ */
+function kkmTone(p: ProgressPoint): StatusBadgeTone {
+  if (p.kkm_percent == null || p.percent == null) return 'neutral';
+  return p.percent >= p.kkm_percent ? 'success' : 'danger';
 }
-function publishedLabel(a: BimbelAssessment): string {
-  return a.published_at
-    ? t('tutoring2.status.published')
-    : t('tutoring2.status.draft');
+
+function kkmLabel(p: ProgressPoint): string {
+  if (p.kkm_percent == null || p.percent == null) {
+    return t('tutoring2.common.noKkm');
+  }
+  return p.percent >= p.kkm_percent
+    ? t('tutoring2.status.passed')
+    : t('tutoring2.status.failed');
 }
 
 // ── Navigation ───────────────────────────────────────────────────
@@ -135,39 +180,45 @@ function openReportCard() {
       :empty-title="t('tutoring2.parent.assessments.emptyTitle')"
       @retry="reload"
     >
-      <!-- TODO i18n key: tutoring2.parent.assessments.emptyDesc -->
       <template #default>
-        <div class="rounded-3xl border border-slate-100 bg-white shadow-sm divide-y divide-slate-100">
+        <div
+          class="rounded-3xl border border-slate-100 bg-white shadow-sm divide-y divide-slate-100"
+        >
           <div
-            v-for="a in items"
-            :key="a.id"
+            v-for="p in points"
+            :key="p.assessment_id"
             class="flex items-center gap-3 px-4 py-3"
           >
             <div class="min-w-0 flex-1 space-y-1.5">
               <div class="flex items-center gap-2 flex-wrap">
-                <p class="truncate text-sm font-bold text-slate-900">{{ a.title }}</p>
+                <p class="truncate text-sm font-bold text-slate-900">
+                  {{ p.title }}
+                </p>
                 <StatusBadge
-                  :label="a.kind_label ?? a.kind"
+                  v-if="p.program_name"
+                  :label="p.program_name"
                   tone="info"
                   uppercase
                 />
                 <StatusBadge
-                  :label="publishedLabel(a)"
-                  :tone="publishedTone(a)"
+                  :label="kkmLabel(p)"
+                  :tone="kkmTone(p)"
                   uppercase
                 />
               </div>
               <p class="text-2xs text-slate-500">
-                {{ formatShortDate(a.assessment_date) }}
+                {{ formatShortDate(p.date) }}
               </p>
             </div>
 
             <div class="shrink-0 text-right">
-              <p class="text-2xl font-black text-brand-azure leading-none">
-                {{ a.max_score ?? '—' }}
+              <p
+                class="text-2xl font-black text-brand-azure leading-none tabular-nums"
+              >
+                {{ p.score }}
               </p>
               <p class="text-2xs uppercase tracking-wide text-slate-400 mt-1">
-                / {{ a.max_score ?? '—' }}
+                / {{ p.max_score }}
               </p>
             </div>
           </div>

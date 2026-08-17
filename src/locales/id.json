@@ -6975,7 +6975,9 @@
       "champion": "Juara",
       "paused": "Dijeda",
       "closed": "Ditutup",
-      "in_progress": "Berlangsung"
+      "in_progress": "Berlangsung",
+      "passed": "Tuntas",
+      "failed": "Belum tuntas"
     },
     "bills": {
       "detail": {
@@ -7090,7 +7092,8 @@
       "delete": "Hapus",
       "startDate": "Mulai",
       "student": "Siswa",
-      "metaAssessments": "{count} penilaian"
+      "metaAssessments": "{count} penilaian",
+      "noKkm": "Tanpa KKM"
     },
     "nav": {
       "sectionPayouts": "Pendapatan Tutor",

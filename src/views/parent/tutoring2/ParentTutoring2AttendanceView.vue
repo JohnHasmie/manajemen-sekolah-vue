@@ -1,18 +1,40 @@
 <!--
-  ParentTutoring2AttendanceView.vue — Wali attendance history for one child (WEB-5).
+  ParentTutoring2AttendanceView.vue — Wali attendance history for one child.
 
   Composition:
     1. BrandPageHeader (role="parent") — with meta line.
     2. KpiStripCards          — Hadir / Izin / Sakit / Alpa.
     3. AsyncView              — rounded-3xl surface with divide-y rows.
 
-  MVP: TutoringBimbelService.listSessionAttendance requires a session_id
-  we don't have per-student aggregated. Until BE ships a proper endpoint
-  we fetch the last N sessions and render them as placeholder attendance
-  rows — session status mocks presence status.
+  ── What this replaces ──
 
-  // TODO WEB-5+ swap to /tutoring2/parent/attendance/:studentId when
-  //             the BE aggregates it.
+  The screen ignored `studentId` entirely (`void studentId`) and fetched
+  the last 100 SESSIONS, rendering the ten most recent as "attendance
+  rows". Every number a wali read here was about the centre's timetable,
+  not about their child:
+
+      Hadir  = sessions the centre had marked `done`
+      Izin   = sessions the centre had `cancelled`
+      Sakit  = 0, hardcoded
+      Alpa   = sessions still `scheduled`  ← FUTURE classes
+
+  The last one is the worst of them: a parent was shown lessons that
+  have not happened yet as their child's absences. A cancelled session
+  was shown as an excused absence nobody applied for, and a session the
+  child skipped still counted as attendance because the centre held it.
+
+  `GET /tutoring-v2/students/{id}/attendance` has existed since BE-24
+  and is scoped for exactly this caller: a wali reads their own child
+  through the `tutoring.attendance.view_own` branch, which resolves
+  ownership by `students.user_id` OR `students.guardian_email`.
+
+  ── The summary comes from the server ──
+
+  Rows are paginated; the summary is computed over the whole range. A
+  client-side tally of `rows` would report one page of attendance as the
+  entire term's. `attendance_rate` is null when nothing has been marked
+  and is rendered as "—", never as 0% — a register not yet taken is not
+  a child who attended nothing.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
@@ -27,108 +49,144 @@ import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
-import { useToast } from '@/composables/useToast';
-import {
-  TutoringBimbelService,
-  type BimbelSession,
-} from '@/services/tutoring-bimbel.service';
+import { TutoringStudentsService } from '@/services/tutoring2/students';
+import type {
+  StudentAttendanceResult,
+  StudentAttendanceRow,
+  StudentAttendanceSummary,
+} from '@/types/tutoring2/attendance';
 
 const { t } = useI18n();
 const route = useRoute();
-// Wired in per the tutoring2 view contract; used by the future save flow
-// when we swap to /tutoring2/parent/attendance/:studentId.
-useToast();
 
-// Route params (studentId reserved for the future per-child endpoint).
 const studentId = String(route.params.studentId ?? '');
-void studentId;
 
 // ── Data ──────────────────────────────────────────────────────────
-// TODO WEB-5+ swap to /tutoring2/parent/attendance/:studentId when the
-//             BE aggregates it. For MVP we fetch recent sessions and
-//             show the last 10 as placeholder attendance rows.
-const { state, reload } = useDataRefresh(async () => {
-  const { items } = await TutoringBimbelService.listSessions({ per_page: 100 });
-  return items;
+const { state, reload } = useDataRefresh<StudentAttendanceResult>(async () => {
+  // An empty id would read as "every student" to a careless endpoint;
+  // refuse locally rather than send it.
+  if (!studentId) {
+    throw new Error('studentId is required');
+  }
+  return TutoringStudentsService.getAttendance(studentId, { per_page: 50 });
 });
 useAcademicYearWatcher(reload);
 
-const allSessions = computed<BimbelSession[]>(() => {
-  return state.value.status === 'content' || state.value.status === 'empty'
-    ? ((state.value.data as BimbelSession[] | undefined) ?? [])
-    : [];
-});
+const result = computed<StudentAttendanceResult | null>(() =>
+  state.value.status === 'content' || state.value.status === 'empty'
+    ? ((state.value as { data?: StudentAttendanceResult }).data ?? null)
+    : null,
+);
 
-// Only the last 10 sessions (already-happened / in-progress) — placeholder
-// filter until the parent-scoped attendance endpoint ships.
-const rows = computed<BimbelSession[]>(() => {
-  return [...allSessions.value]
-    .sort((a, b) => b.starts_at.localeCompare(a.starts_at))
-    .slice(0, 10);
-});
+const rows = computed<StudentAttendanceRow[]>(() => result.value?.rows ?? []);
+
+const summary = computed<StudentAttendanceSummary | null>(
+  () => result.value?.summary ?? null,
+);
 
 // ── KPIs ─────────────────────────────────────────────────────────
-// MVP: derived from session status counts as placeholder buckets.
+// Straight from the server's summary. Not derived from `rows`, which is
+// one page, and not derived from session status, which is the centre's
+// calendar rather than the child's record.
 const kpiCards = computed<KpiCard[]>(() => {
-  const list = allSessions.value;
-  const present = list.filter((s) => s.status === 'done').length;
-  const permitted = list.filter((s) => s.status === 'cancelled').length;
-  const sick = 0;
-  const absent = list.filter((s) => s.status === 'scheduled').length;
+  const s = summary.value;
+  const v = (n: number | undefined) => (s == null ? '—' : String(n ?? 0));
   return [
-    { icon: 'user-check', label: t('tutoring2.parent.attendance.kpiPresent'), value: String(present), tone: 'green' },
-    { icon: 'clock', label: t('tutoring2.parent.attendance.kpiPermitted'), value: String(permitted), tone: 'amber' },
-    { icon: 'heart', label: t('tutoring2.parent.attendance.kpiSick'), value: String(sick), tone: 'brand' },
-    { icon: 'x-circle', label: t('tutoring2.parent.attendance.kpiAbsent'), value: String(absent), tone: 'red' },
+    {
+      icon: 'user-check',
+      label: t('tutoring2.parent.attendance.kpiPresent'),
+      value: v(s?.hadir),
+      tone: 'green',
+    },
+    {
+      icon: 'clock',
+      label: t('tutoring2.parent.attendance.kpiPermitted'),
+      value: v(s?.izin),
+      tone: 'amber',
+    },
+    {
+      icon: 'heart',
+      label: t('tutoring2.parent.attendance.kpiSick'),
+      value: v(s?.sakit),
+      tone: 'brand',
+    },
+    {
+      icon: 'x-circle',
+      label: t('tutoring2.parent.attendance.kpiAbsent'),
+      value: v(s?.alpa),
+      tone: 'red',
+    },
   ];
+});
+
+/** "92,5%" — or "—" when no register has been taken yet. */
+const attendanceRateLabel = computed<string>(() => {
+  const rate = summary.value?.attendance_rate;
+  if (rate == null) return '—';
+  return `${rate.toString().replace('.', ',')}%`;
 });
 
 const metaLabel = computed(() =>
   state.value.status === 'loading'
     ? t('tutoring2.common.loading')
-    : t('tutoring2.parent.attendance.meta', { count: rows.value.length }),
+    : t('tutoring2.parent.attendance.meta', {
+        count: summary.value?.total ?? rows.value.length,
+      }),
 );
 
 // ── Helpers ──────────────────────────────────────────────────────
-function formatShortDate(iso: string): string {
+function formatShortDate(iso: string | null): string {
+  if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('id-ID', {
-    hour: '2-digit',
-    minute: '2-digit',
+  return d.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
   });
 }
 
-// Session-status → placeholder presence mapping (MVP).
-function presenceLabel(status: BimbelSession['status']): string {
-  switch (status) {
-    case 'done':
+function formatTime(iso: string | null): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+
+/**
+ * The row's own attendance status. Prefers the server's label so a
+ * status added on the backend renders as itself.
+ */
+function presenceLabel(row: StudentAttendanceRow): string {
+  if (row.status_label) return row.status_label;
+  switch (row.status) {
+    case 'hadir':
       return t('tutoring2.parent.attendance.kpiPresent');
-    case 'cancelled':
+    case 'izin':
       return t('tutoring2.parent.attendance.kpiPermitted');
-    case 'in_progress':
+    case 'sakit':
       return t('tutoring2.parent.attendance.kpiSick');
-    case 'scheduled':
-    default:
+    case 'alpa':
       return t('tutoring2.parent.attendance.kpiAbsent');
+    default:
+      return row.status;
   }
 }
 
-function presenceTone(status: BimbelSession['status']): StatusBadgeTone {
-  switch (status) {
-    case 'done':
+function presenceTone(row: StudentAttendanceRow): StatusBadgeTone {
+  switch (row.status) {
+    case 'hadir':
       return 'success';
-    case 'cancelled':
+    case 'izin':
       return 'warning';
-    case 'in_progress':
+    case 'sakit':
       return 'info';
-    case 'scheduled':
-    default:
+    case 'alpa':
       return 'danger';
+    // An unrecognised status renders neutrally rather than borrowing
+    // the tone of one it is not.
+    default:
+      return 'neutral';
   }
 }
 </script>
@@ -144,6 +202,18 @@ function presenceTone(status: BimbelSession['status']): StatusBadgeTone {
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
+    <div
+      v-if="summary"
+      class="rounded-3xl border border-slate-100 bg-white px-4 py-3 shadow-sm"
+    >
+      <p class="text-2xs uppercase tracking-wide text-slate-400">
+        {{ t('tutoring2.parent.attendance.kpiPresent') }}
+      </p>
+      <p class="text-lg font-bold text-slate-900 tabular-nums">
+        {{ attendanceRateLabel }}
+      </p>
+    </div>
+
     <AsyncView
       :state="state"
       loading-variant="list"
@@ -151,30 +221,33 @@ function presenceTone(status: BimbelSession['status']): StatusBadgeTone {
       :empty-title="t('tutoring2.parent.attendance.emptyTitle')"
       @retry="reload"
     >
-      <!-- TODO i18n key: tutoring2.parent.attendance.emptyDesc -->
       <template #default>
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <ul class="divide-y divide-slate-100">
             <li
-              v-for="s in rows"
-              :key="s.id"
+              v-for="row in rows"
+              :key="row.id"
               class="flex items-center gap-3 px-4 py-3"
             >
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-bold text-slate-900">
-                  {{ formatShortDate(s.starts_at) }}
-                  <span class="mx-1 text-slate-300">·</span>
-                  {{ t('tutoring2.common.group') }} {{ s.learning_group_id.slice(0, 8) }}
+                  {{ formatShortDate(row.starts_at) }}
+                  <template v-if="row.learning_group_name">
+                    <span class="mx-1 text-slate-300">·</span>
+                    {{ row.learning_group_name }}
+                  </template>
                 </p>
                 <p class="truncate text-2xs text-slate-500">
-                  {{ formatTime(s.starts_at) }}
-                  <span class="mx-1 text-slate-300">·</span>
-                  {{ s.room ?? t('tutoring2.common.noRoom') }}
+                  {{ formatTime(row.starts_at) }}
+                  <template v-if="row.program_name">
+                    <span class="mx-1 text-slate-300">·</span>
+                    {{ row.program_name }}
+                  </template>
                 </p>
               </div>
               <StatusBadge
-                :label="presenceLabel(s.status)"
-                :tone="presenceTone(s.status)"
+                :label="presenceLabel(row)"
+                :tone="presenceTone(row)"
                 uppercase
               />
             </li>

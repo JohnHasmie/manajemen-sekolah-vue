@@ -7786,7 +7786,8 @@
       "year": "Year",
       "metaSessions": "{count} sessions",
       "thisMonth": "This month",
-      "thisWeek": "This week"
+      "thisWeek": "This week",
+      "noKkm": "No KKM"
     },
     "nav": {
       "sectionPayouts": "Tutor payouts",
@@ -7813,7 +7814,9 @@
       "cancelled": "Cancelled",
       "done": "Done",
       "closed": "Closed",
-      "in_progress": "In progress"
+      "in_progress": "In progress",
+      "passed": "Passed",
+      "failed": "Below KKM"
     },
     "parent": {
       "pay": {
