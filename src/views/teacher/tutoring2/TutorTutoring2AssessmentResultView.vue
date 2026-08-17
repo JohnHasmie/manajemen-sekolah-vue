@@ -70,9 +70,14 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
-// TODO WEB-4+ join with student profile (`student_name` already on the
-// row; kept truncated id here to match the score-entry view before the
-// backend guarantees name presence on all payloads).
+/**
+ * Last-resort label. Every row used to show this instead of a name —
+ * the note here even said `student_name` was "already on the row",
+ * and kept the id anyway to match the score-entry view, which was
+ * itself showing ids. BE !775 makes the score wire carry
+ * `student_name`, and the score-entry view was fixed in !1172, so the
+ * reason to keep hex here is gone.
+ */
 function truncateId(id: string, len = 8): string {
   if (!id) return '—';
   return id.length > len ? id.slice(0, len) : id;
@@ -116,7 +121,13 @@ const metaLabel = computed(() =>
               </div>
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-bold text-slate-900">
-                  {{ truncateId(row.student_id) }}
+                  {{ row.student_name || truncateId(row.student_id) }}
+                </p>
+                <p
+                  v-if="row.student_number"
+                  class="truncate text-2xs text-slate-500"
+                >
+                  NIS {{ row.student_number }}
                 </p>
               </div>
               <StatusBadge

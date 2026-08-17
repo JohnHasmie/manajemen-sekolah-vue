@@ -87,6 +87,13 @@ function statusLabel(status: BimbelLearningGroup['status']): string {
   return t(`tutoring2.status.${status}`);
 }
 
+/**
+ * Last-resort label for a row whose name the server did not send.
+ * The Program and Tutor columns used this for EVERY row even though
+ * `program_name` and `tutor_name` are eager-loaded by
+ * `LearningGroupController::index` and have been on the wire all
+ * along — so both columns read as hex under a human heading.
+ */
 function shortId(id: string | null | undefined): string {
   if (!id) return '—';
   return id.length > 8 ? id.slice(0, 8) : id;
@@ -161,9 +168,20 @@ function shortId(id: string | null | undefined): string {
               >
                 <td class="px-4 py-3 font-bold text-slate-900">{{ g.name }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ g.kind_label ?? (g.kind === 'private' ? t('tutoring2.admin.groups.kindPrivate') : t('tutoring2.admin.groups.kindGroup')) }}</td>
-                <td class="px-4 py-3 font-mono text-2xs text-slate-500">{{ shortId(g.program_id) }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ g.seated_count ?? 0 }} / {{ g.capacity }}</td>
-                <td class="px-4 py-3 font-mono text-2xs text-slate-500">{{ shortId(g.tutor_id) }}</td>
+                <td class="px-4 py-3 text-slate-600">
+                  <span v-if="g.program_name">{{ g.program_name }}</span>
+                  <span v-else class="font-mono text-2xs text-slate-500">{{ shortId(g.program_id) }}</span>
+                </td>
+                <td class="px-4 py-3 text-slate-600">
+                  <!-- `seated_count` is optional; absent means the server
+                       did not count, not that the group is empty. -->
+                  {{ g.seated_count == null ? '—' : g.seated_count }} / {{ g.capacity }}
+                </td>
+                <td class="px-4 py-3 text-slate-600">
+                  <span v-if="g.tutor_name">{{ g.tutor_name }}</span>
+                  <span v-else-if="g.tutor_id" class="font-mono text-2xs text-slate-500">{{ shortId(g.tutor_id) }}</span>
+                  <span v-else class="text-slate-400">—</span>
+                </td>
                 <td class="px-4 py-3">
                   <StatusBadge :label="g.status_label ?? statusLabel(g.status)" :tone="statusPillTone(g.status)" uppercase />
                 </td>

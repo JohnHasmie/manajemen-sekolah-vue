@@ -4,16 +4,14 @@
   Composition contract (mirrors WEB-5 exemplar):
     1. BrandPageHeader        — role="student".
     2. KpiStripCards          — 4 tiles (Total / PDF / Video / Lainnya).
-    3. AsyncView              — state machine (fake-loads sample so the
-                                state contract already matches BE-8).
+    3. AsyncView              — state machine over MaterialsService.list().
        Default slot renders a plain space-y-2 stack of TutoringMaterialRow.
 
-  Read-only — no upload CTA, no delete button. Downloads/opens are
-  stubbed to `notAvailable` toast until BE-8 exposes the endpoint.
+  Read-only — no upload CTA, no delete button. Open and download both
+  work: `file_url` is a short-lived signed link, so the row opens it in
+  a new tab rather than navigating.
 -->
 <script setup lang="ts">
-// TODO WEB-5+ swap sample materials to TutoringBimbelService.listMaterials({ student })
-// once BE-8 ships /tutoring-v2/materials.
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AsyncView from '@/components/data/AsyncView.vue';
