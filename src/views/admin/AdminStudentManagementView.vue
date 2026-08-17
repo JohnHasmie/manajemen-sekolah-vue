@@ -11,7 +11,7 @@
 import { computed, onMounted, reactive, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { StudentService } from '@/services/students.service';
+import { StudentService, type StudentStats } from '@/services/students.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import { AttendanceQrService } from '@/services/attendance-qr.service';
 import { useMe } from '@/composables/useMe';
@@ -337,17 +337,26 @@ async function reload(page = 1, opts: { skeleton?: boolean } = {}) {
   forceSkeleton.value = opts.skeleton ?? false;
   error.value = null;
   try {
-    const res = await StudentService.list({
-      page,
-      per_page: 10,
+    const query = {
       search: search.value || undefined,
       status: filters.status,
       class_ids: filters.class_ids,
       gender: filters.gender,
       guardian_name: filters.guardian_name,
-    });
-    students.value = res.items;
-    pagination.value = res.pagination ?? null;
+    };
+    // Stats alongside the page, on the SAME filters — the tiles used to be
+    // derived from `students.value`, i.e. one page, and said "/halaman".
+    // allSettled: the roster is the primary payload and a stats hiccup must
+    // not blank the table; the tiles then fall back to the page-derived
+    // numbers and keep the per-page label rather than claiming a total.
+    const [listRes, statsRes] = await Promise.allSettled([
+      StudentService.list({ page, per_page: 10, ...query }),
+      StudentService.stats(query),
+    ]);
+    if (listRes.status === 'rejected') throw listRes.reason;
+    students.value = listRes.value.items;
+    pagination.value = listRes.value.pagination ?? null;
+    stats.value = statsRes.status === 'fulfilled' ? statsRes.value : null;
   } catch (e) {
     error.value = (e as Error).message;
   } finally {
@@ -395,20 +404,30 @@ function clearAll() {
 }
 
 // ── KPI cards ──────────────────────────────────────────────────────
+const stats = ref<StudentStats | null>(null);
+const statsReady = computed(() => stats.value !== null);
+
 const totalStudents = computed(
-  () => pagination.value?.total_items ?? students.value.length,
+  () => stats.value?.total ?? pagination.value?.total_items ?? students.value.length,
 );
 
-const pageWithGuardian = computed(
-  () => students.value.filter((s) => Boolean(s.guardian_name)).length,
+const withGuardianCount = computed(
+  () => stats.value?.has_guardian
+    ?? students.value.filter((s) => Boolean(s.guardian_name)).length,
 );
 
-const pageWithoutGuardian = computed(
-  () => students.value.filter((s) => !s.guardian_name).length,
+const withoutGuardianCount = computed(
+  () => stats.value?.without_guardian
+    ?? students.value.filter((s) => !s.guardian_name).length,
 );
 
-const pageFemaleCount = computed(
-  () => students.value.filter((s) => s.gender === 'P').length,
+const femaleCount = computed(
+  // The page-derived fallback matched ONLY the legacy 'P', so a school
+  // whose rows had migrated to the canonical 'female' rendered 0 —
+  // exactly what the report screenshot showed. Fold both spellings here,
+  // and prefer the server figure, which already folds them.
+  () => stats.value?.female
+    ?? students.value.filter((s) => s.gender === 'P' || s.gender === 'female').length,
 );
 
 const kpiCards = computed<KpiCard[]>(() => [
@@ -416,23 +435,23 @@ const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'check-circle',
     label: t('admin.student.haveGuardian'),
-    value: pageWithGuardian.value,
-    suffix: t('admin.pagination.perPage'),
+    value: withGuardianCount.value,
+    ...(statsReady.value ? {} : { suffix: t('admin.pagination.perPage') }),
     tone: 'green',
   },
   {
     icon: 'alert-triangle',
     label: t('admin.student.noGuardian'),
-    value: pageWithoutGuardian.value,
-    suffix: t('admin.pagination.perPage'),
-    tone: pageWithoutGuardian.value > 0 ? 'amber' : 'slate',
-    accented: pageWithoutGuardian.value > 0,
+    value: withoutGuardianCount.value,
+    ...(statsReady.value ? {} : { suffix: t('admin.pagination.perPage') }),
+    tone: withoutGuardianCount.value > 0 ? 'amber' : 'slate',
+    accented: withoutGuardianCount.value > 0,
   },
   {
     icon: 'user',
     label: t('admin.gender.female'),
-    value: pageFemaleCount.value,
-    suffix: t('admin.pagination.perPage'),
+    value: femaleCount.value,
+    ...(statsReady.value ? {} : { suffix: t('admin.pagination.perPage') }),
     tone: 'violet',
   },
 ]);

@@ -6,6 +6,13 @@ import { api } from '@/lib/http';
 import type { Pagination } from '@/types/api';
 import { studentFromJson, type Student } from '@/types/entities';
 
+export interface StudentStats {
+  total: number;
+  female: number;
+  has_guardian: number;
+  without_guardian: number;
+}
+
 export interface StudentListParams {
   page?: number;
   per_page?: number;
@@ -38,6 +45,47 @@ function unwrap(body: unknown): { data: unknown[]; pagination?: Pagination } {
 }
 
 export const StudentService = {
+  /**
+   * GET /student/stats — aggregates over the WHOLE filtered set.
+   *
+   * The Manajemen Siswa tiles counted the rows on screen and said
+   * "/halaman", so "TANPA WALI 0" meant "none on this page" and the amber
+   * warning never fired for a child on page two. Same filters as `list()`
+   * on purpose: a KPI above a filtered table must describe that table.
+   *
+   * The server also folds both gender spellings — the live "PEREMPUAN 0"
+   * came from the client matching only the legacy 'P' while the school's
+   * rows had migrated to the canonical 'female'.
+   */
+  async stats(params: StudentListParams = {}): Promise<StudentStats> {
+    const classFilter: Record<string, string> = {};
+    if (params.class_ids && params.class_ids.length === 1) {
+      classFilter.class_id = params.class_ids[0];
+    } else if (params.class_ids && params.class_ids.length > 1) {
+      classFilter.class_ids = params.class_ids.join(',');
+    }
+    const res = await api.get('/student/stats', {
+      params: {
+        ...(params.search ? { search: params.search } : {}),
+        ...(params.status ? { status: params.status } : {}),
+        ...classFilter,
+        ...(params.gender ? { gender: params.gender } : {}),
+        ...(params.guardian_name ? { guardian_name: params.guardian_name } : {}),
+      },
+    });
+    const d = (res.data?.data ?? res.data ?? {}) as Record<string, unknown>;
+
+    // Default absent keys to 0: during the rollout window a browser can
+    // reach a backend without has_guardian/without_guardian, and
+    // `undefined` renders as a blank tile — the failure this replaces.
+    return {
+      total: Number(d.total ?? 0),
+      female: Number(d.female ?? 0),
+      has_guardian: Number(d.has_guardian ?? 0),
+      without_guardian: Number(d.without_guardian ?? 0),
+    };
+  },
+
   async list(params: StudentListParams = {}): Promise<ListResult> {
     // Backend StudentController previously only validated `class_id`
     // (singular UUID) and silently ignored `class_ids` plural — so
