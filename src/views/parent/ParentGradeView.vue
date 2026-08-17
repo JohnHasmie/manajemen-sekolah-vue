@@ -517,7 +517,10 @@ const activeSemesterLabel = computed(
                   <p class="text-xl font-black text-slate-900 leading-none">
                     {{ row.score != null ? row.score.toFixed(0) : '—' }}
                   </p>
-                  <p class="text-3xs font-medium text-slate-500 mt-1">
+                  <p
+                    v-if="row.kkm != null"
+                    class="text-3xs font-medium text-slate-500 mt-1"
+                  >
                     {{ t('wali.sekolah.grade.kkmPrefix') }} {{ row.kkm }}
                   </p>
                 </div>

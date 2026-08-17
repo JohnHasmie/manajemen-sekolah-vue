@@ -94,7 +94,7 @@ function parentGradeEntryFromJson(raw: any): ParentGradeEntry {
     title: String(title ?? ''),
     date: String(date ?? '').slice(0, 10),
     score: asNum(raw.score ?? raw.nilai ?? raw.value),
-    kkm: Number(raw.kkm ?? subject.kkm ?? 75),
+    kkm: asNum(raw.kkm) ?? asNum(subject.kkm),
     is_read:
       raw.is_read === true || raw.is_read === 1 || raw.is_read === '1',
   };
@@ -300,7 +300,7 @@ export const ParentService = {
         return entries.map((r: any) => ({
           subject_id: String(r.subject_id ?? r.id ?? ''),
           subject_name: String(r.subject_name ?? r.nama ?? ''),
-          kkm: Number(r.kkm ?? 75),
+          kkm: asNum(r.kkm),
           scores: Array.isArray(r.scores)
             ? r.scores.map((s: any) => ({
                 assessment: String(s.assessment ?? s.label ?? ''),
@@ -322,7 +322,7 @@ export const ParentService = {
             subject_name: String(
               e.subject_name ?? e.subject?.name ?? e.mata_pelajaran ?? '—',
             ),
-            kkm: Number(e.kkm ?? e.subject?.kkm ?? 75),
+            kkm: asNum(e.kkm) ?? asNum(e.subject?.kkm),
             scores: [] as ParentGradeRow['scores'],
             average: null as ParentGradeRow['average'],
           };
@@ -494,9 +494,9 @@ export const ParentService = {
         ? (body.entries ?? body.grades ?? body.subjects).map((e: any) => ({
             subject_id: String(e.subject_id ?? ''),
             subject_name: String(e.subject_name ?? e.name ?? ''),
-            score: Number(e.score ?? e.knowledge_score ?? 0),
-            kkm: Number(e.kkm ?? 75),
-            predicate: e.predicate ?? e.knowledge_predicate ?? 'C',
+            score: asNum(e.score) ?? asNum(e.knowledge_score),
+            kkm: asNum(e.kkm),
+            predicate: e.predicate ?? e.knowledge_predicate ?? null,
             notes: e.notes ?? e.knowledge_description ?? null,
           }))
         : [];

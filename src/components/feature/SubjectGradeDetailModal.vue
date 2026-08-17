@@ -30,18 +30,40 @@ const totalEntries = computed(() => props.row.scores.length);
 const entriesWithScore = computed(
   () => props.row.scores.filter((s) => typeof s.score === 'number').length,
 );
-const aboveKkm = computed(
-  () =>
-    props.row.scores.filter(
-      (s) => typeof s.score === 'number' && (s.score as number) >= props.row.kkm,
-    ).length,
-);
-const belowKkm = computed(
-  () =>
-    props.row.scores.filter(
-      (s) => typeof s.score === 'number' && (s.score as number) < props.row.kkm,
-    ).length,
-);
+// The KKM is optional: a school may never have set a passing threshold for
+// this subject. Without one there is nothing to count above or below, and no
+// tuntas/remedial verdict to state — so these all go null rather than being
+// measured against an invented 75.
+const kkm = computed<number | null>(() => props.row.kkm);
+
+const aboveKkm = computed<number | null>(() => {
+  const k = kkm.value;
+  if (k == null) return null;
+  return props.row.scores.filter(
+    (s) => typeof s.score === 'number' && (s.score as number) >= k,
+  ).length;
+});
+const belowKkm = computed<number | null>(() => {
+  const k = kkm.value;
+  if (k == null) return null;
+  return props.row.scores.filter(
+    (s) => typeof s.score === 'number' && (s.score as number) < k,
+  ).length;
+});
+
+/** How far the average sits below the KKM — null unless both are known. */
+const gapBelowKkm = computed<string | null>(() => {
+  const k = kkm.value;
+  if (k == null || props.row.average == null) return null;
+  return (k - props.row.average).toFixed(1);
+});
+
+/** true / false only when both the average and the KKM are known. */
+const isTuntas = computed<boolean | null>(() => {
+  const k = kkm.value;
+  if (k == null || props.row.average == null) return null;
+  return props.row.average >= k;
+});
 
 /** Letter grade derived from score ≥85/75/65/55. */
 function letterFor(score: number | null | undefined): string {
@@ -58,9 +80,10 @@ function scoreTone(score: number | null | undefined): {
   text: string;
   border: string;
 } {
-  if (typeof score !== 'number')
+  const k = props.row.kkm;
+  if (typeof score !== 'number' || k == null)
     return { bg: 'bg-slate-50', text: 'text-slate-400', border: 'border-slate-200' };
-  if (score >= props.row.kkm)
+  if (score >= k)
     return {
       bg: 'bg-emerald-50',
       text: 'text-emerald-700',
@@ -96,7 +119,8 @@ const headerTone = computed(() => {
           {{ row.subject_name }}
         </h2>
         <p class="text-2xs text-slate-500 mt-0.5">
-          {{ childLabel ? childLabel + ' · ' : '' }}KKM {{ row.kkm }} ·
+          {{ childLabel ? childLabel + ' · ' : '' }}
+          <template v-if="row.kkm != null">KKM {{ row.kkm }} · </template>
           {{ entriesWithScore }} dari {{ totalEntries }} asesmen dinilai
         </p>
       </div>
@@ -110,59 +134,60 @@ const headerTone = computed(() => {
         </p>
         <p
           class="text-lg font-black mt-1"
-          :class="
-            row.average === null
-              ? 'text-slate-400'
-              : (row.average ?? 0) >= row.kkm
-                ? 'text-emerald-700'
-                : 'text-red-700'
-          "
+          :class="{
+            'text-emerald-700': isTuntas === true,
+            'text-red-700': isTuntas === false,
+            'text-slate-400': isTuntas === null,
+          }"
         >
           {{ row.average ?? '—' }}
         </p>
       </div>
-      <div class="bg-emerald-50 rounded-xl p-3 text-center">
-        <p class="text-4xs font-bold text-emerald-700 uppercase tracking-widest">
-          Di atas KKM
+      <template v-if="row.kkm != null">
+        <div class="bg-emerald-50 rounded-xl p-3 text-center">
+          <p class="text-4xs font-bold text-emerald-700 uppercase tracking-widest">
+            Di atas KKM
+          </p>
+          <p class="text-lg font-black text-emerald-700 mt-1">{{ aboveKkm }}</p>
+        </div>
+        <div class="bg-red-50 rounded-xl p-3 text-center">
+          <p class="text-4xs font-bold text-red-700 uppercase tracking-widest">
+            Di bawah KKM
+          </p>
+          <p class="text-lg font-black text-red-700 mt-1">{{ belowKkm }}</p>
+        </div>
+      </template>
+      <div v-else class="col-span-2 bg-slate-50 rounded-xl p-3 text-center">
+        <p class="text-4xs font-bold text-slate-500 uppercase tracking-widest">
+          Ketuntasan
         </p>
-        <p class="text-lg font-black text-emerald-700 mt-1">{{ aboveKkm }}</p>
-      </div>
-      <div class="bg-red-50 rounded-xl p-3 text-center">
-        <p class="text-4xs font-bold text-red-700 uppercase tracking-widest">
-          Di bawah KKM
+        <p class="text-2xs font-bold text-slate-500 mt-1.5">
+          KKM belum diatur sekolah
         </p>
-        <p class="text-lg font-black text-red-700 mt-1">{{ belowKkm }}</p>
       </div>
     </div>
 
     <!-- Status banner -->
     <div
       class="flex items-center gap-2 px-3 py-2 rounded-lg text-2xs font-bold mb-3"
-      :class="
-        row.average === null
-          ? 'bg-slate-50 text-slate-500 border border-dashed border-slate-200'
-          : (row.average ?? 0) >= row.kkm
-            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-            : 'bg-red-50 text-red-700 border border-red-100'
-      "
+      :class="{
+        'bg-emerald-50 text-emerald-700 border border-emerald-100':
+          isTuntas === true,
+        'bg-red-50 text-red-700 border border-red-100': isTuntas === false,
+        'bg-slate-50 text-slate-500 border border-dashed border-slate-200':
+          isTuntas === null,
+      }"
     >
-      <NavIcon
-        :name="
-          row.average === null
-            ? 'bell'
-            : (row.average ?? 0) >= row.kkm
-              ? 'check-circle'
-              : 'bell'
-        "
-        :size="13"
-      />
+      <NavIcon :name="isTuntas === true ? 'check-circle' : 'bell'" :size="13" />
       <span v-if="row.average === null">Belum ada nilai untuk semester ini.</span>
-      <span v-else-if="(row.average ?? 0) >= row.kkm">
+      <span v-else-if="isTuntas === null">
+        Sudah dinilai — sekolah belum menetapkan KKM untuk mata pelajaran ini.
+      </span>
+      <span v-else-if="isTuntas">
         Tuntas — di atas KKM {{ row.kkm }}.
       </span>
       <span v-else>
-        Remedial — rata-rata
-        {{ (row.kkm - (row.average ?? 0)).toFixed(1) }} poin di bawah KKM.
+        Remedial — rata-rata {{ gapBelowKkm }} poin di bawah KKM.
       </span>
     </div>
 
@@ -189,7 +214,10 @@ const headerTone = computed(() => {
             <p class="text-[12.5px] font-bold text-slate-900 truncate">
               {{ s.assessment || `Asesmen ${idx + 1}` }}
             </p>
-            <p class="text-[10.5px] text-slate-400 mt-0.5">
+            <p
+              v-if="row.kkm != null"
+              class="text-[10.5px] text-slate-400 mt-0.5"
+            >
               KKM {{ row.kkm }}
             </p>
           </div>
