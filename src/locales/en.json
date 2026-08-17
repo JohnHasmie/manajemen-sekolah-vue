@@ -987,6 +987,8 @@
         "similarWarnTitle": "There are already {count} subjects named \"{name}\" in this school:",
         "gradeLabel": "Grade",
         "gradeOptional": "(optional)",
+        "gradeNotClassLinkHint": "This marks the subject's grade level, not its class list. Which classes learn it is set in the “Linked classes” panel.",
+        "gradeLinkedCountHint": "This marks the subject's grade level, not its class list. It is linked to {n} class(es) — change that in the “Linked classes” panel.",
         "gradeHint": "Which grade uses this subject? Leave blank if it's a universal subject taught across all grades (like PE, Counseling).",
         "similarWarnItem": "{name} (Grade {grade})"
       },

@@ -987,6 +987,8 @@
         "similarWarnTitle": "Sudah ada {count} mapel bernama \"{name}\" di sekolah ini:",
         "gradeLabel": "Kelas",
         "gradeOptional": "(opsional)",
+        "gradeNotClassLinkHint": "Pilihan ini menandai tingkat mapel, bukan daftar kelasnya. Kelas yang mempelajari mapel ini diatur di panel “Kelas tertaut”.",
+        "gradeLinkedCountHint": "Pilihan ini menandai tingkat mapel, bukan daftar kelasnya. Mapel ini tertaut ke {n} kelas — ubah lewat panel “Kelas tertaut”.",
         "gradeHint": "Kelas berapa yang belajar mapel ini? Kalau semua kelas belajar mapel yang sama (mis. Olahraga, Bimbingan Konseling), biarkan kosong.",
         "similarWarnItem": "{name} (Kelas {grade})"
       },
