@@ -250,6 +250,12 @@ function clearMaster() {
  * the grade dropdown so the empty state doesn't read as a broken form.
  * Returns null when no master picked, or its grade is single / agnostic.
  */
+/** Classes actually attached to this subject — the number the "Kelas"
+ *  field does NOT control. Null on create, where there is nothing yet. */
+const linkedClassCount = computed<number | null>(() =>
+  typeof props.subject?.class_count === 'number' ? props.subject.class_count : null,
+);
+
 const masterRangeHint = computed<string | null>(() => {
   const m = lastPickedMaster.value;
   if (!m) return null;
@@ -467,6 +473,18 @@ async function submit() {
         </p>
         <p v-else class="text-3xs text-slate-500 mt-1 leading-relaxed">
           {{ $t('admin.subjects.form.gradeHint') }}
+        </p>
+        <!-- The field above sets a TINGKAT and nothing else. It was read as
+             "which classes learn this subject" — a demo school picked Kelas
+             11 here and still found all 15 classes attached, because
+             attachment lives in a different panel entirely. Name that panel,
+             and show the number, so the misreading has nowhere to land. -->
+        <p class="text-3xs text-slate-500 mt-1 leading-relaxed">
+          {{
+            linkedClassCount === null
+              ? $t('admin.subjects.form.gradeNotClassLinkHint')
+              : $t('admin.subjects.form.gradeLinkedCountHint', { n: linkedClassCount })
+          }}
         </p>
       </div>
 
