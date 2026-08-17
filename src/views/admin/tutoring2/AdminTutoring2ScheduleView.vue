@@ -9,14 +9,24 @@
     3. `PageFilterToolbar` — search + `AppFilterChip`s.
     4. `AsyncView` state machine over `TutoringBimbelService.listSessions`.
     5. Floating "+ Buat sesi" CTA.
+
+  The Kelompok / Tutor chips each open a <FilterFacetPickerModal>, the
+  same per-facet picker the Manajemen Data screens use. They previously
+  only ever CLEARED their filter (`@click="x = ''"`) with no menu behind
+  them, so both were inert on prod ("semua button/filter tdk berfungsi")
+  even though the query + watcher below were wired correctly all along.
+  Same fix as AdminTutoring2GroupsView (!1191).
 -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -26,8 +36,11 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
+  type BimbelLearningGroup,
   type BimbelSession,
 } from '@/services/tutoring-bimbel.service';
+import { TutoringTutorsService } from '@/services/tutoring2/tutors';
+import type { Tutor } from '@/types/tutoring2/tutor';
 import type { StatusBadgeTone } from '@/types/status-badge';
 
 const { t } = useI18n();
@@ -56,6 +69,44 @@ const { state, reload } = useDataRefresh(async () => {
 
 watch([debouncedSearch, statusFilter, groupFilter, tutorFilter, periodFilter], () => reload());
 useAcademicYearWatcher(reload);
+
+// ── Facet option lists ─────────────────────────────────────────────
+// Both id-valued chips need the id→name list their picker renders.
+const groups = ref<BimbelLearningGroup[]>([]);
+const tutors = ref<Tutor[]>([]);
+
+const showGroupPicker = ref(false);
+const showTutorPicker = ref(false);
+
+const groupOptions = computed<FacetOption[]>(() =>
+  groups.value.map((g) => ({
+    key: g.id,
+    label: g.name,
+    meta: g.program_name ?? undefined,
+  })),
+);
+// `tu`, not `t` — the i18n `t` is in scope and must not be shadowed.
+const tutorOptions = computed<FacetOption[]>(() =>
+  tutors.value.map((tu) => ({ key: tu.id, label: tu.name })),
+);
+
+/**
+ * Load both option lists once, tolerantly: they are independent, so one
+ * endpoint failing (or being ability-gated off) must not blank the other
+ * chip. A list that stays empty leaves its own chip disabled rather than
+ * opening a picker with nothing to pick — that would be the same lie in
+ * a new shape.
+ */
+async function loadFacetOptions() {
+  const [groupRes, tutorRes] = await Promise.allSettled([
+    TutoringBimbelService.listGroups({ per_page: 200 }),
+    TutoringTutorsService.list({ per_page: 200 }),
+  ]);
+  if (groupRes.status === 'fulfilled') groups.value = groupRes.value.items;
+  if (tutorRes.status === 'fulfilled') tutors.value = tutorRes.value.items;
+}
+
+onMounted(loadFacetOptions);
 
 const kpiCards = computed<KpiCard[]>(() => {
   const items = (state.value.status === 'content' ? state.value.data : []) as BimbelSession[];
@@ -93,6 +144,21 @@ function truncateId(id: string | null | undefined, len = 8): string {
   if (!id) return '—';
   return id.length > len ? id.slice(0, len) : id;
 }
+
+/**
+ * What a filter chip reads: the picked option's NAME, or "Semua" when the
+ * facet is unset.
+ *
+ * Falls back to `truncateId` only when the id is genuinely not in the
+ * loaded list (options still in flight, or the row was archived away). An
+ * id fragment is ugly but honest there — "—" on a chip that is visibly
+ * ACTIVE would read as "no filter applied", which is the failure this
+ * screen just came out of.
+ */
+function chipValue(id: string, options: FacetOption[]): string {
+  if (!id) return t('tutoring2.common.all');
+  return options.find((o) => o.key === id)?.label ?? truncateId(id);
+}
 </script>
 
 <template>
@@ -117,17 +183,21 @@ function truncateId(id: string | null | undefined, len = 8): string {
         />
         <AppFilterChip
           :label="t('tutoring2.common.group')"
-          :value="groupFilter ? truncateId(groupFilter) : t('tutoring2.common.all')"
+          :value="chipValue(groupFilter, groupOptions)"
           icon-name="users"
           :active="!!groupFilter"
-          @click="groupFilter = ''"
+          :disabled="groupOptions.length === 0"
+          :title="groupOptions.length === 0 ? t('tutoring2.common.filterNoOptions') : undefined"
+          @click="showGroupPicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.tutor')"
-          :value="tutorFilter ? truncateId(tutorFilter) : t('tutoring2.common.all')"
+          :value="chipValue(tutorFilter, tutorOptions)"
           icon-name="user"
           :active="!!tutorFilter"
-          @click="tutorFilter = ''"
+          :disabled="tutorOptions.length === 0"
+          :title="tutorOptions.length === 0 ? t('tutoring2.common.filterNoOptions') : undefined"
+          @click="showTutorPicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.period')"
@@ -166,8 +236,13 @@ function truncateId(id: string | null | undefined, len = 8): string {
                 class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
               >
                 <td class="px-4 py-3 font-bold text-slate-900">{{ formatWaktu(s.starts_at) }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ truncateId(s.learning_group_id) }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ truncateId(s.tutor_id) }}</td>
+                <!-- Names, not ids: SessionController::index eager-loads
+                     `learningGroup:id,name` + `tutor:id,name` and
+                     SessionResource exposes both, so the name is already
+                     in this row. truncateId stays only as the fallback
+                     for a row that arrived without one. -->
+                <td class="px-4 py-3 text-slate-600">{{ s.learning_group_name ?? truncateId(s.learning_group_id) }}</td>
+                <td class="px-4 py-3 text-slate-600">{{ s.tutor_name ?? truncateId(s.tutor_id) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ s.room ?? '—' }}</td>
                 <td class="px-4 py-3">
                   <StatusBadge :label="s.status_label ?? statusLabel(s.status)" :tone="statusPillTone(s.status)" uppercase />
@@ -185,5 +260,27 @@ function truncateId(id: string | null | undefined, len = 8): string {
     >
       <span aria-hidden="true">+</span> {{ t('tutoring2.admin.schedule.newCta') }}
     </button>
+
+    <!-- Per-facet pickers. Each writes its ref; the existing watcher on
+         [status, group, tutor, period] does the reload, so nothing calls
+         it here. -->
+    <FilterFacetPickerModal
+      v-if="showGroupPicker"
+      :title="t('tutoring2.common.group')"
+      :options="groupOptions"
+      :selected="groupFilter"
+      :all-label="t('tutoring2.common.all')"
+      @close="showGroupPicker = false"
+      @apply="(v) => { groupFilter = v; }"
+    />
+    <FilterFacetPickerModal
+      v-if="showTutorPicker"
+      :title="t('tutoring2.common.tutor')"
+      :options="tutorOptions"
+      :selected="tutorFilter"
+      :all-label="t('tutoring2.common.all')"
+      @close="showTutorPicker = false"
+      @apply="(v) => { tutorFilter = v; }"
+    />
   </div>
 </template>
