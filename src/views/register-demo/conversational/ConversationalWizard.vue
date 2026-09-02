@@ -239,6 +239,16 @@ async function submit(): Promise<void> {
     const ok = await wizard.provision();
     if (ok) {
       router.push('/register-demo/identity');
+    } else {
+      // `provision()` CATCHES its own failure, stores the message on the
+      // store and returns false — so the `catch` below never runs for the
+      // most common failure path. Without this branch the button did
+      // nothing at all: no toast, no error, no navigation, while the real
+      // reason sat unread in `wizard.error`. Reported 2026-09-02 as
+      // "diklik kirim permintaan demo tidak terjadi apa-apa".
+      const msg = wizard.error ?? 'Terjadi kesalahan. Coba lagi sebentar.';
+      submitError.value = msg;
+      toast.error(msg);
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Terjadi kesalahan.';
