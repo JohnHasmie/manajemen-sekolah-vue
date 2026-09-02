@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 import {
   READINESS_ROUTE_MAP,
   canReachReadinessTarget,
+  readinessQuery,
   resolveReadinessTarget,
   type ReadinessAccess,
 } from './readiness-nav';
@@ -168,5 +169,37 @@ describe('destination paths', () => {
       expect(target.labelKey, hint).toBeTruthy();
       expect(target.icon, hint).toBeTruthy();
     }
+  });
+});
+
+describe('readinessQuery', () => {
+  it('forwards a lane item filter', () => {
+    // The reported case: "15 siswa belum masuk kelas" ships
+    // {filter: 'no_class'} and the panel dropped it, so PERBAIKI opened
+    // the unfiltered roster where the fifteen were invisible among the
+    // students who DO have a class.
+    expect(readinessQuery({ filter: 'no_class' })).toEqual({ filter: 'no_class' });
+  });
+
+  it('stringifies numbers so they survive a URL', () => {
+    expect(readinessQuery({ grade: 7 })).toEqual({ grade: '7' });
+  });
+
+  it('drops values a destination cannot honour', () => {
+    // A query is a promise the receiving screen can keep. Putting an
+    // object or an array in the URL would promise a filter that does
+    // nothing — which is exactly the failure being fixed, restated.
+    expect(
+      readinessQuery({ filter: 'no_class', extra: { a: 1 }, list: [1, 2], flag: true }),
+    ).toEqual({ filter: 'no_class' });
+  });
+
+  it('is empty rather than undefined when there is nothing to carry', () => {
+    // router.push({name, query}) must always get an object; an
+    // undefined query silently keeps the CURRENT url's query on some
+    // navigations, which would leak one item's filter onto the next.
+    expect(readinessQuery(undefined)).toEqual({});
+    expect(readinessQuery(null)).toEqual({});
+    expect(readinessQuery({})).toEqual({});
   });
 });

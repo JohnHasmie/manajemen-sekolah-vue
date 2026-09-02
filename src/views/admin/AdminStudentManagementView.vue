@@ -379,6 +379,16 @@ onMounted(() => {
   if (typeof initialClassId === 'string' && initialClassId) {
     filters.class_ids = [initialClassId];
   }
+  // Pusat Kendali sends `?filter=no_class` on "N siswa belum masuk
+  // kelas". `status=inactive` is the SAME question the readiness check
+  // asks — the API reads it as "no student_classes row for this
+  // academic year", and the year rides along automatically on every
+  // /student call. Landing here unfiltered is what made the count look
+  // wrong: every student on screen had a class, because the ones
+  // without were mixed in among hundreds who had one.
+  if (route.query.filter === 'no_class') {
+    filters.status = 'inactive';
+  }
   loadClasses();
   reload();
 });

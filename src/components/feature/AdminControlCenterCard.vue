@@ -55,6 +55,7 @@ import type {
 } from '@/services/readiness.service';
 import {
   canReachReadinessTarget,
+  readinessQuery,
   resolveReadinessTarget,
 } from '@/lib/readiness-nav';
 
@@ -123,7 +124,8 @@ interface AlertCard {
   title: string;
   subtitle: string;
   count: number;
-  route: string;
+  /** Path, or a {path, query} location when the alert carries a filter. */
+  route: string | { path: string; query: Record<string, string> };
   urgent: boolean;
 }
 
@@ -155,7 +157,15 @@ const alerts = computed<AlertCard[]>(() => {
       // on the screen that actually resolves it. Unknown hint (backend
       // schema drift mid-session) → the full Pusat Kendali page, which
       // is still actionable rather than a hard router error.
-      route: resolveReadinessTarget(item.target_route)?.path ?? '/admin/readiness',
+      // Same rule as the readiness panel: carry the item's filter into
+      // the URL, or the alert lands on an unfiltered screen where the
+      // thing it is pointing at is invisible.
+      route: resolveReadinessTarget(item.target_route)
+        ? {
+            path: resolveReadinessTarget(item.target_route)!.path,
+            query: readinessQuery(item.target_params),
+          }
+        : '/admin/readiness',
       urgent: item.severity === 'critical',
     });
   }
@@ -270,7 +280,7 @@ const chips = computed<Chip[]>(() => {
   return out;
 });
 
-function goto(route: string) {
+function goto(route: AlertCard['route']) {
   router.push(route);
 }
 

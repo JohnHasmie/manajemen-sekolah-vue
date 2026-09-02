@@ -229,6 +229,37 @@ export function resolveReadinessTarget(
 }
 
 /**
+ * Turn a lane item's `target_params` into a router QUERY.
+ *
+ * The backend has always sent them — "15 siswa belum masuk kelas" ships
+ * `{filter: 'no_class'}` — and the readiness panel forwarded them as
+ * route `params`. Every readiness destination is a static path with no
+ * dynamic segments, so Vue Router discarded them silently: PERBAIKI
+ * opened the UNFILTERED student list, where every student visibly has a
+ * class, and the count read as simply wrong. Reported 2026-09-02.
+ *
+ * A query is what the receiving screen can actually read, and what the
+ * user can drop by clearing the filter.
+ *
+ * Only string/number values survive. Anything else is a shape the
+ * destination has no way to honour, and putting it in the URL would
+ * promise a filter that silently does nothing — the very failure this
+ * fixes.
+ */
+export function readinessQuery(
+  targetParams?: Record<string, unknown> | null,
+): Record<string, string> {
+  const query: Record<string, string> = {};
+  for (const [k, v] of Object.entries(targetParams ?? {})) {
+    if (typeof v === 'string' || typeof v === 'number') {
+      query[k] = String(v);
+    }
+  }
+
+  return query;
+}
+
+/**
  * Whether this user can actually OPEN the destination a hint points at.
  *
  * The single gate every readiness surface uses:

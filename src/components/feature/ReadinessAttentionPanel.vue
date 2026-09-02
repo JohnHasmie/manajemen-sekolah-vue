@@ -54,6 +54,7 @@ import type {
 } from '@/services/readiness.service';
 import {
   canReachReadinessTarget,
+  readinessQuery,
   resolveReadinessRouteName,
 } from '@/lib/readiness-nav';
 
@@ -192,7 +193,13 @@ function goto(row: PanelRow) {
   if (!row.tappable) return;
   const name = resolveReadinessRouteName(row.targetRoute);
   if (name) {
-    router.push({ name, params: row.targetParams as Record<string, string> });
+    // QUERY, not params. `target_params` describes a FILTER for the
+    // destination ({filter: 'no_class'}), and every readiness
+    // destination is a static path with no dynamic segments — so Vue
+    // Router silently discarded them. "15 siswa belum masuk kelas" thus
+    // opened the unfiltered student list, where every student visibly
+    // has a class, and the count read as simply wrong (2026-09-02).
+    router.push({ name, query: readinessQuery(row.targetParams) });
   } else {
     // Unmapped hint → still actionable: send them to the full page.
     router.push({ name: 'admin.readiness' });
