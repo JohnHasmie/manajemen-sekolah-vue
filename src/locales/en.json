@@ -7020,7 +7020,8 @@
         "submit": "Send invitation",
         "saving": "Sending…",
         "success": "Invitation sent to {name}.",
-        "errorGeneric": "Failed to invite tutor."
+        "errorGeneric": "Failed to invite tutor.",
+        "noPermission": "You do not have permission to invite tutors."
       },
       "students": {
         "createSubtitle": "Fill in student and guardian identity. Guardian temp password is shown once after saving.",
@@ -7275,10 +7276,11 @@
         "meta": "{count} active programs",
         "kpiStartFrom": "Most expensive (from)",
         "newCta": "New program",
-        "emptyDesc": "Click + to add a new program.",
+        "emptyDesc": "No programs registered yet. Contact the KamilEdu team to add one.",
         "kpiActivePackages": "Active packages",
         "kpiActivePrograms": "Programs",
-        "searchPh": "Search programs…"
+        "searchPh": "Search programs…",
+        "newCtaUnavailable": "Creating a program is not available on the web yet. Contact the KamilEdu team to add one."
       },
       "payoutRates": {
         "title": "Tutor Payout Rates",
@@ -7569,6 +7571,21 @@
         "noTutor": "No tutor yet",
         "scoresCount": "{count} scores",
         "viewScores": "View scores"
+      },
+      "groupCreate": {
+        "title": "New group",
+        "subtitle": "Create a learning group under a program.",
+        "programPh": "Choose a program…",
+        "noPrograms": "No programs yet. Create a program before adding a group.",
+        "nameLabel": "Group name",
+        "namePh": "e.g. UTBK Morning A",
+        "capacityLabel": "Capacity",
+        "capacityPh": "Number of seats",
+        "submit": "Create group",
+        "errName": "Group name must be at least 3 characters.",
+        "errProgram": "Choose a program first.",
+        "success": "Group created.",
+        "errorGeneric": "Could not create the group."
       }
     },
     "student": {

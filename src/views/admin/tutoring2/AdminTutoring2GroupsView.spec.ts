@@ -36,7 +36,28 @@ vi.mock('@/services/tutoring-bimbel.service', () => ({
   TutoringBimbelService: {
     listGroups: vi.fn(),
     listPrograms: vi.fn(),
+    createGroup: vi.fn(),
   },
+}));
+
+/**
+ * Ability the "+ Kelompok baru" CTA is gated on. Mutable so the
+ * "hidden without the grant" case can flip it per test.
+ */
+let grantedAbilities: string[] = ['tutoring.group.manage'];
+
+vi.mock('@/composables/useMe', () => ({
+  useMe: () => ({
+    can: (ability: string) => grantedAbilities.includes(ability),
+    canAny: (abilities: Iterable<string>) =>
+      [...abilities].some((a) => grantedAbilities.includes(a)),
+  }),
+}));
+
+const toastSuccess = vi.fn();
+const toastError = vi.fn();
+vi.mock('@/composables/useToast', () => ({
+  useToast: () => ({ success: toastSuccess, error: toastError, info: vi.fn() }),
 }));
 
 vi.mock('@/services/tutoring2/terms', () => ({
@@ -285,5 +306,195 @@ describe('AdminTutoring2GroupsView filter chips', () => {
     expect(chips[CHIP.term].attributes('disabled')).toBeDefined();
     expect(chips[CHIP.program].attributes('disabled')).toBeUndefined();
     expect(chips[CHIP.tutor].attributes('disabled')).toBeUndefined();
+  });
+});
+
+/**
+ * ── "+ Kelompok baru" ────────────────────────────────────────────────
+ *
+ * The same class of bug as the chips above, one layer down: the floating
+ * CTA rendered a styled button with its i18n label in place and NO
+ * `@click` at all, so prod reported "tombol diklik tidak terjadi
+ * apa-apa".
+ *
+ * Every test below fails against that template — there is no create
+ * surface to find and `createGroup` is never called. The sheet mounted
+ * here is the real <AdminTutoring2GroupCreateSheet>; only the
+ * teleporting <Modal> shell is stubbed, so the fields filled below are
+ * the fields an admin fills and the payload asserted is the payload the
+ * browser would POST.
+ */
+function makeCtaI18n() {
+  return createI18n({
+    legacy: false,
+    locale: 'id',
+    fallbackLocale: 'id',
+    messages: {
+      id: {
+        tutoring2: {
+          common: { all: 'Semua', program: 'Program', term: 'Term', tutor: 'Tutor' },
+          admin: {
+            groups: { newCta: 'Kelompok baru' },
+            groupCreate: {
+              title: 'Kelompok baru',
+              subtitle: 'Buat kelompok belajar untuk sebuah program.',
+              programPh: 'Pilih program…',
+              noPrograms: 'Belum ada program.',
+              nameLabel: 'Nama kelompok',
+              namePh: 'Contoh: UTBK Pagi A',
+              capacityLabel: 'Kapasitas',
+              capacityPh: 'Jumlah kursi',
+              submit: 'Buat kelompok',
+              errName: 'Nama kelompok minimal 3 karakter.',
+              errProgram: 'Pilih program terlebih dahulu.',
+              success: 'Kelompok dibuat.',
+              errorGeneric: 'Gagal membuat kelompok.',
+            },
+          },
+        },
+      },
+    },
+    missingWarn: false,
+    fallbackWarn: false,
+  });
+}
+
+async function mountForCta() {
+  setActivePinia(createPinia());
+  const w = mount(AdminTutoring2GroupsView, {
+    global: {
+      plugins: [makeCtaI18n()],
+      stubs: {
+        BrandPageHeader: true,
+        KpiStripCards: true,
+        StatusBadge: true,
+        PageFilterToolbar: true,
+        AppFilterChip: true,
+        FilterFacetPickerModal: true,
+        AsyncView: {
+          props: ['state'],
+          template: '<div><slot :data="state?.data ?? []" /></div>',
+        },
+        // Modal teleports to body, which would escape the wrapper. The
+        // stub forwards `testid` so FormSheet's own id survives.
+        Modal: {
+          props: ['title', 'subtitle', 'size', 'testid'],
+          template: '<div :data-testid="testid || \'modal\'"><slot /></div>',
+        },
+      },
+    },
+  });
+  await flushPromises();
+  return w;
+}
+
+const sheetOf = (w) => w.find('[data-testid="form-sheet"]');
+const ctaOf = (w) => w.find('[data-testid="groups-new-cta"]');
+
+describe('AdminTutoring2GroupsView "+ Kelompok baru" CTA', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    grantedAbilities = ['tutoring.group.manage'];
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({
+      items: [makeGroup()],
+      pagination: undefined,
+    });
+    (TutoringBimbelService.listPrograms as any).mockResolvedValue({ items: PROGRAMS });
+    (TutoringBimbelService.createGroup as any).mockResolvedValue(
+      makeGroup({ id: 'gr-new', name: 'UTBK Sore C' }),
+    );
+    (TutoringTermsService.list as any).mockResolvedValue({ items: TERMS });
+    (TutoringTutorsService.list as any).mockResolvedValue({ items: TUTORS });
+  });
+
+  it('renders the CTA for an admin who may manage groups', async () => {
+    const w = await mountForCta();
+
+    expect(ctaOf(w).exists()).toBe(true);
+    expect(ctaOf(w).text()).toContain('Kelompok baru');
+  });
+
+  it('clicking the CTA OPENS a create surface', async () => {
+    const w = await mountForCta();
+    // The regression: nothing was bound, so nothing opened.
+    expect(sheetOf(w).exists()).toBe(false);
+
+    await ctaOf(w).trigger('click');
+
+    expect(sheetOf(w).exists()).toBe(true);
+  });
+
+  it('the sheet offers the programs the list already loaded', async () => {
+    const w = await mountForCta();
+    await ctaOf(w).trigger('click');
+
+    const labels = sheetOf(w)
+      .findAll('option')
+      .map((o) => o.text());
+    expect(labels).toContain('Intensif UTBK');
+    expect(labels).toContain('Reguler SMP');
+    // No extra round-trip — the picker reuses the filter-chip fetch.
+    expect(TutoringBimbelService.listPrograms).toHaveBeenCalledTimes(1);
+  });
+
+  it('submitting POSTs the group and refreshes the list', async () => {
+    const w = await mountForCta();
+    await ctaOf(w).trigger('click');
+
+    await sheetOf(w).find('select').setValue('pr-2');
+    await sheetOf(w).find('input[type="text"]').setValue('UTBK Sore C');
+    await sheetOf(w).find('input[type="number"]').setValue(15);
+
+    const listCallsBefore = (TutoringBimbelService.listGroups as any).mock.calls.length;
+    await sheetOf(w).find('[data-testid="sheet-submit"]').trigger('click');
+    await flushPromises();
+
+    expect(TutoringBimbelService.createGroup).toHaveBeenCalledTimes(1);
+    expect((TutoringBimbelService.createGroup as any).mock.calls[0][0]).toEqual({
+      program_id: 'pr-2',
+      name: 'UTBK Sore C',
+      capacity: 15,
+    });
+    // Sheet closes and the list re-queries so the new row appears.
+    expect(sheetOf(w).exists()).toBe(false);
+    expect((TutoringBimbelService.listGroups as any).mock.calls.length).toBeGreaterThan(
+      listCallsBefore,
+    );
+  });
+
+  it('refuses to POST without a program, and says why', async () => {
+    const w = await mountForCta();
+    await ctaOf(w).trigger('click');
+
+    await sheetOf(w).find('input[type="text"]').setValue('UTBK Sore C');
+    await sheetOf(w).find('[data-testid="sheet-submit"]').trigger('click');
+    await flushPromises();
+
+    expect(TutoringBimbelService.createGroup).not.toHaveBeenCalled();
+    // A refusal the admin can READ — not a silent no-op.
+    expect(sheetOf(w).exists()).toBe(true);
+    expect(sheetOf(w).text()).toContain('Pilih program terlebih dahulu.');
+  });
+
+  it('refuses a too-short name, and says why', async () => {
+    const w = await mountForCta();
+    await ctaOf(w).trigger('click');
+
+    await sheetOf(w).find('select').setValue('pr-1');
+    await sheetOf(w).find('input[type="text"]').setValue('AB');
+    await sheetOf(w).find('[data-testid="sheet-submit"]').trigger('click');
+    await flushPromises();
+
+    expect(TutoringBimbelService.createGroup).not.toHaveBeenCalled();
+    expect(sheetOf(w).text()).toContain('Nama kelompok minimal 3 karakter.');
+  });
+
+  it('hides the CTA entirely when the admin lacks tutoring.group.manage', async () => {
+    grantedAbilities = [];
+
+    const w = await mountForCta();
+
+    // Hidden, not inert: an admin never sees a button that would refuse.
+    expect(ctaOf(w).exists()).toBe(false);
   });
 });

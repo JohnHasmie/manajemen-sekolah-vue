@@ -12,6 +12,11 @@
     3. `PageFilterToolbar` + `AppFilterChip`s
     4. `AsyncView` → white rounded-3xl table card (row-click → detail)
     5. Floating "+ Undang tutor" CTA (gated on `tutoring.tutor.manage`).
+
+  Ability gate, for the record: `auth.hasAbility` resolves against the
+  /me snapshot (`useMeStore().snapshot.abilities`, scoped by the active
+  role) — NOT `roles[].permission_keys`. Missing ability HIDES the CTA
+  via `v-if` below; it never renders a button that would refuse.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -113,8 +118,22 @@ function goToDetail(tutor: Tutor) {
 const inviteOpen = ref(false);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
+/**
+ * The template already hides this CTA when `canManage` is false, so in
+ * practice this guard is unreachable — it is defence in depth for the
+ * day someone drops the `v-if`. It used to `return` in silence, which
+ * would have turned that day's regression into the exact "tombol
+ * diklik tidak terjadi apa-apa" report this file is being audited for.
+ * A refusal now says why.
+ */
 function openInvite() {
-  if (!canManage.value) return;
+  if (!canManage.value) {
+    toast.value = {
+      message: t('tutoring2.admin.tutorInvite.noPermission'),
+      tone: 'error',
+    };
+    return;
+  }
   inviteOpen.value = true;
 }
 
@@ -201,6 +220,7 @@ function onInvited(tutor: Tutor) {
     <button
       v-if="canManage"
       type="button"
+      data-testid="tutors-invite-cta"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
       @click="openInvite"
     >

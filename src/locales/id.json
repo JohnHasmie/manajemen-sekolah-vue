@@ -7384,10 +7384,11 @@
         "searchPh": "Cari program…",
         "meta": "{count} program aktif",
         "kpiDrafts": "Draft",
-        "emptyDesc": "Klik + untuk menambah program baru.",
+        "emptyDesc": "Belum ada program terdaftar. Hubungi tim KamilEdu untuk menambah program.",
         "kpiStartFrom": "Termahal (mulai)",
         "kpiActivePackages": "Paket aktif",
-        "newCta": "Program baru"
+        "newCta": "Program baru",
+        "newCtaUnavailable": "Membuat program belum tersedia di web. Hubungi tim KamilEdu untuk menambah program."
       },
       "students": {
         "createCta": "Tambah siswa",
@@ -7571,7 +7572,8 @@
         "submit": "Kirim undangan",
         "saving": "Mengirim…",
         "success": "Undangan terkirim ke {name}.",
-        "errorGeneric": "Gagal mengundang tutor."
+        "errorGeneric": "Gagal mengundang tutor.",
+        "noPermission": "Anda tidak punya izin untuk mengundang tutor."
       },
       "payoutRequests": {
         "title": "Pengajuan Honor",
@@ -7765,6 +7767,21 @@
         "noTutor": "Belum ada tutor",
         "scoresCount": "{count} nilai",
         "viewScores": "Lihat nilai"
+      },
+      "groupCreate": {
+        "title": "Kelompok baru",
+        "subtitle": "Buat kelompok belajar untuk sebuah program.",
+        "programPh": "Pilih program…",
+        "noPrograms": "Belum ada program. Buat program dulu sebelum menambah kelompok.",
+        "nameLabel": "Nama kelompok",
+        "namePh": "Contoh: UTBK Pagi A",
+        "capacityLabel": "Kapasitas",
+        "capacityPh": "Jumlah kursi",
+        "submit": "Buat kelompok",
+        "errName": "Nama kelompok minimal 3 karakter.",
+        "errProgram": "Pilih program terlebih dahulu.",
+        "success": "Kelompok dibuat.",
+        "errorGeneric": "Gagal membuat kelompok."
       }
     },
     "tutor": {

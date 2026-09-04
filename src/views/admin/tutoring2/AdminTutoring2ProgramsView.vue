@@ -5,6 +5,30 @@
   Indonesian string is fetched via `t('tutoring2.…')`; the display copy
   lives only in the i18n locale files (id.json / en.json). Follow this
   pattern in every other tutoring2/*View.vue.
+
+  ── THE "+ Program baru" CTA IS DISABLED ON PURPOSE ──────────────────
+
+  It shipped with no `@click` and no handler, so prod reported "tombol
+  diklik tidak terjadi apa-apa". The fix is NOT to wire it, because
+  there is nothing to wire it TO: **web-vue has never had a program
+  create surface.** `TutoringBimbelService.createProgram` exists and
+  wraps `POST /tutoring-v2/programs` (the route and
+  `ProgramController::store` are both live on the backend), but it has
+  zero call sites — and had zero in the retired legacy stack too
+  (`git log -S createProgram`). Packages and groups are created from
+  AdminTutoring2ProgramDetailView; the program itself is not created
+  anywhere.
+
+  So this is a MISSING FEATURE, not a missing handler, and inventing a
+  create form here would be a product decision made by a bug fix. Until
+  someone builds that form, the button states plainly that it is
+  unavailable instead of silently swallowing the click — a control that
+  renders and refuses without saying why is the bug being fixed, and
+  re-shipping it inert would only relocate the complaint.
+
+  To finish this: build the create sheet (mirror
+  <AdminTutoring2GroupCreateSheet>), call `createProgram`, gate on
+  `tutoring.program.manage`, then drop `disabled` + the `title` below.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -156,11 +180,22 @@ const activeCount = computed(() =>
       </template>
     </AsyncView>
 
+    <!-- Disabled, with the reason on the control itself — see docblock.
+         `title` carries it for a pointer, and the aria-describedby'd
+         line carries it for a screen reader, which never sees a
+         tooltip. -->
     <button
       type="button"
-      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
+      data-testid="programs-new-cta"
+      disabled
+      aria-describedby="programs-new-cta-reason"
+      :title="t('tutoring2.admin.programs.newCtaUnavailable')"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-300 text-white font-bold shadow-xl cursor-not-allowed"
     >
       <span aria-hidden="true">+</span> {{ t('tutoring2.admin.programs.newCta') }}
     </button>
+    <span id="programs-new-cta-reason" class="sr-only">
+      {{ t('tutoring2.admin.programs.newCtaUnavailable') }}
+    </span>
   </div>
 </template>

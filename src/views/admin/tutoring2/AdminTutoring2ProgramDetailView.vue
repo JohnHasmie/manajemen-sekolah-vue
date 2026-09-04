@@ -1,11 +1,18 @@
 <!--
   AdminTutoring2ProgramDetailView.vue — one program's packages,
-  learning groups and assessments, with the two inline create forms
-  (CLEAN-2 Phase 2 · greenfield replacement for
-  `admin/tutoring/AdminTutoringProgramDetailView.vue`).
+  learning groups and assessments (CLEAN-2 Phase 2 · greenfield
+  replacement for `admin/tutoring/AdminTutoringProgramDetailView.vue`).
 
   The list side is the pre-existing `AdminTutoring2ProgramsView.vue`;
   this is its drill-in.
+
+  PACKAGES still use an inline create form here. GROUPS no longer do:
+  that form was the only way to create a learning group anywhere in the
+  app, while the global AdminTutoring2GroupsView rendered a "+ Kelompok
+  baru" CTA with no `@click` at all. Rather than duplicate the form
+  there, it was lifted into <AdminTutoring2GroupCreateSheet> and both
+  screens now open that one component. Here the program is fixed by the
+  route, so the sheet is passed `:program-id` and shows no picker.
 
   Route: /admin/tutoring2/programs/:programId
   Endpoints:
@@ -85,6 +92,7 @@ import {
   type BimbelProgram,
 } from '@/services/tutoring-bimbel.service';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import AdminTutoring2GroupCreateSheet from './AdminTutoring2GroupCreateSheet.vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -255,34 +263,20 @@ async function createPackage(): Promise<void> {
   }
 }
 
-// ── Group create form ──────────────────────────────────────────────
+// ── Group create ───────────────────────────────────────────────────
+// The inline <form> that used to live here moved into
+// <AdminTutoring2GroupCreateSheet> so the global list view
+// (AdminTutoring2GroupsView, whose "+ Kelompok baru" CTA shipped with
+// no handler at all) can open the SAME surface instead of growing a
+// second copy that drifts. The program is fixed by the route here, so
+// the sheet is handed `:program-id` and renders no program picker.
 
 const showGroupForm = ref(false);
-const savingGroup = ref(false);
-const groupForm = ref({ name: '', capacity: 10 });
 
-async function createGroup(): Promise<void> {
-  const name = groupForm.value.name.trim();
-  if (name.length < 3) {
-    toast.error(t('tutoring2.admin.programDetail.errGroupName'));
-    return;
-  }
-  savingGroup.value = true;
-  try {
-    await TutoringBimbelService.createGroup({
-      program_id: programId.value,
-      name,
-      capacity: groupForm.value.capacity,
-    });
-    toast.success(t('tutoring2.admin.programDetail.groupCreated'));
-    showGroupForm.value = false;
-    groupForm.value = { name: '', capacity: 10 };
-    await reload();
-  } catch (e) {
-    toast.error(e instanceof Error ? e.message : t('tutoring2.admin.programDetail.saveFailed'));
-  } finally {
-    savingGroup.value = false;
-  }
+function onGroupCreated(): void {
+  // The sheet owns the POST + success toast; the drill-in only needs
+  // its group list re-fetched.
+  void reload();
 }
 
 // ── Display helpers ────────────────────────────────────────────────
@@ -513,49 +507,20 @@ const inputClass =
             </h2>
             <button
               type="button"
+              data-testid="program-detail-add-group"
               class="text-2xs font-bold text-brand-cobalt hover:underline"
-              @click="showGroupForm = !showGroupForm"
+              @click="showGroupForm = true"
             >
-              {{
-                showGroupForm
-                  ? t('tutoring2.admin.programDetail.close')
-                  : t('tutoring2.admin.programDetail.add')
-              }}
+              {{ t('tutoring2.admin.programDetail.add') }}
             </button>
           </div>
 
-          <form
+          <AdminTutoring2GroupCreateSheet
             v-if="showGroupForm"
-            class="mb-3 space-y-2 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm"
-            @submit.prevent="createGroup"
-          >
-            <input
-              v-model="groupForm.name"
-              type="text"
-              maxlength="120"
-              :placeholder="t('tutoring2.admin.programDetail.groupNamePh')"
-              :class="inputClass"
-            />
-            <input
-              v-model.number="groupForm.capacity"
-              type="number"
-              min="1"
-              max="500"
-              :placeholder="t('tutoring2.admin.programDetail.capacityPh')"
-              :class="inputClass"
-            />
-            <button
-              type="submit"
-              :disabled="savingGroup"
-              class="rounded-xl bg-brand-cobalt px-4 py-2 text-2xs font-bold text-white transition hover:bg-brand-cobalt/90 disabled:opacity-50"
-            >
-              {{
-                savingGroup
-                  ? t('tutoring2.admin.programDetail.saving')
-                  : t('tutoring2.admin.programDetail.save')
-              }}
-            </button>
-          </form>
+            :program-id="programId"
+            @close="showGroupForm = false"
+            @saved="onGroupCreated"
+          />
 
           <p
             v-if="groups.length === 0"

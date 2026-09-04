@@ -14,6 +14,20 @@
   menu behind them, so the whole toolbar was inert on prod ("semua
   button/filter tdk berfungsi") even though the query + watcher below
   had been wired correctly all along.
+
+  The floating "+ Kelompok baru" CTA was the SAME bug one layer down:
+  the docblock above advertised it, the i18n label existed, and the
+  button rendered — but it carried no `@click` whatsoever, so prod
+  reported "tombol diklik tidak terjadi apa-apa". It now opens
+  <AdminTutoring2GroupCreateSheet>, the create surface lifted out of
+  AdminTutoring2ProgramDetailView so both entry points POST through one
+  component. The sheet's program picker reuses `programs` — already
+  loaded above for the filter chip — so opening it costs no fetch.
+
+  Gate: `tutoring.group.manage`, read off the /me snapshot via
+  `useMe().can` (NEVER `roles[].permission_keys`). Missing ability
+  hides the CTA outright, matching AdminTutoring2StudentsView — an
+  admin never sees a button that would refuse them.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -31,6 +45,7 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { useMe } from '@/composables/useMe';
 import {
   TutoringBimbelService,
   type BimbelLearningGroup,
@@ -41,6 +56,10 @@ import { TutoringTutorsService } from '@/services/tutoring2/tutors';
 import type { BimbelTerm } from '@/types/tutoring2/term';
 import type { Tutor } from '@/types/tutoring2/tutor';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import AdminTutoring2GroupCreateSheet from './AdminTutoring2GroupCreateSheet.vue';
+
+const { can } = useMe();
+const canManage = computed(() => can('tutoring.group.manage'));
 
 const search = ref('');
 const programFilter = ref<string>(''); // '' = Semua
@@ -175,6 +194,22 @@ function chipValue(id: string, options: FacetOption[]): string {
   if (!id) return t('tutoring2.common.all');
   return options.find((o) => o.key === id)?.label ?? shortId(id);
 }
+
+// ── Create sheet ───────────────────────────────────────────────────
+// `v-if`-gated on open so the form state is fresh every time, the same
+// pattern AdminTutoring2StudentsView uses for its create sheet.
+
+const createOpen = ref(false);
+
+function openCreate() {
+  createOpen.value = true;
+}
+
+function onCreated() {
+  // The sheet already toasted; the list just re-fetches so the new row
+  // shows with its server-computed seat counts.
+  reload();
+}
 </script>
 
 <template>
@@ -276,11 +311,21 @@ function chipValue(id: string, options: FacetOption[]): string {
     </AsyncView>
 
     <button
+      v-if="canManage"
       type="button"
+      data-testid="groups-new-cta"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
+      @click="openCreate"
     >
       <span aria-hidden="true">+</span> {{ t('tutoring2.admin.groups.newCta') }}
     </button>
+
+    <AdminTutoring2GroupCreateSheet
+      v-if="createOpen && canManage"
+      :programs="programs"
+      @close="createOpen = false"
+      @saved="onCreated"
+    />
   </div>
 
   <!-- Per-facet pickers. Each writes its ref; the existing watcher on
