@@ -10,8 +10,11 @@
  * Also pinned: the Sesi column rendered `truncateId(s.learning_group_id)`
  * while `learning_group_name` was already on the same row.
  *
+ * Also pinned: the two attendance columns, which shipped as one number
+ * rendered twice — see the describe block at the bottom.
+ *
  * The KPI tiles are covered separately by the existing suite; this spec
- * deliberately touches only the toolbar and the row label.
+ * deliberately touches only the toolbar, the row label and those columns.
  *
  * The real <FilterFacetPickerModal> is mounted (only its <Modal> shell is
  * stubbed, because Modal teleports to body).
@@ -422,5 +425,154 @@ describe('AdminTutoring2AttendanceView "Ekspor rekap" action', () => {
 
     await cta.trigger('click');
     expect(downloadCsv).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The two attendance columns.
+ *
+ * Four defects were packed into two cells:
+ *
+ *   1. the fourth header was the hardcoded literal `Presensi` — the only
+ *      unkeyed header in a row where every sibling is keyed — with its
+ *      `TODO i18n key` comment still attached;
+ *   2. its cell read `${n} rows`: English in an Indonesian UI, and "rows"
+ *      is developer vocabulary for what the product calls presensi;
+ *   3. that cell rendered `attendances_count` — the SAME field as the
+ *      column beside it — so the two columns were one number twice, once
+ *      bare and once suffixed;
+ *   4. and the column beside it is headed `tutoring2.common.attended`
+ *      ("Hadir") while showing that marks total, so the number under
+ *      "Hadir" was never the hadir count. `exportCsv` in the same file
+ *      has always mapped the pair correctly, which left the screen and
+ *      the file it exports disagreeing about the same session.
+ *
+ * Each column now renders the field its header names — which is also what
+ * makes the two columns two different numbers. No new i18n key: the
+ * header reuses `tutoring2.admin.attendance.colMarks`, already shipped by
+ * !1215 and already the CSV's header for this very field.
+ *
+ * Absent-vs-zero is pinned here per row, matching the KPI strip: a row
+ * that reported no count is unknown ("—"), a row that reported exactly 0
+ * is a register nobody took ("Belum diambil"), and 0 present against a
+ * register that WAS taken is a real 0.
+ */
+const COL = { session: 0, date: 1, present: 2, marks: 3, status: 4 };
+
+function headerCells(w) {
+  return w.findAll('[data-testid="async"] thead th').map((th) => th.text());
+}
+
+function rowCells(w, i = 0) {
+  return w
+    .findAll('[data-testid="async"] tbody tr')
+    [i].findAll('td')
+    .map((td) => td.text());
+}
+
+describe('AdminTutoring2AttendanceView attendance columns', () => {
+  function givenSessions(...items) {
+    (TutoringBimbelService.listSessions as any).mockResolvedValue({
+      items,
+      pagination: undefined,
+    });
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
+    (TutoringTutorsService.list as any).mockResolvedValue({ items: TUTORS });
+    givenSessions(makeSession());
+  });
+
+  it('keys the marks header instead of the hardcoded literal', async () => {
+    const w = await mountView();
+
+    // Was the bare literal `Presensi` with a TODO comment above it.
+    expect(headerCells(w)[COL.marks]).toBe('Presensi tercatat');
+  });
+
+  it('leaks no English "rows" into an Indonesian table', async () => {
+    const w = await mountView();
+
+    expect(w.find('table').text()).not.toContain('rows');
+  });
+
+  it('shows the PRESENT count under Hadir and the MARKS count beside it', async () => {
+    givenSessions(makeSession({ attendances_count: 10, attendances_present_count: 9 }));
+    const w = await mountView();
+
+    const cells = rowCells(w);
+    // The whole defect: both cells used to carry the marks total, so
+    // "Hadir" read 10 for a session where 9 of 10 were hadir.
+    expect(cells[COL.present]).toBe('9');
+    expect(cells[COL.marks]).toBe('10');
+  });
+
+  it('the table and the CSV report the same two numbers for the same session', async () => {
+    const w = await mountView();
+    const cells = rowCells(w);
+
+    await w.find(EXPORT_CTA).trigger('click');
+    const [head, row] = exportedLines().map((l) => l.split(','));
+
+    // `indexOf` is exact, so 'Hadir' does not match the '% Hadir' column.
+    expect(cells[COL.present]).toBe(row[head.indexOf('Hadir')]);
+    expect(cells[COL.marks]).toBe(row[head.indexOf('Presensi tercatat')]);
+  });
+
+  it('reads a zero-marks row as a register nobody took, and its Hadir as unknown', async () => {
+    givenSessions(makeSession({ attendances_count: 0, attendances_present_count: 0 }));
+    const w = await mountView();
+
+    const cells = rowCells(w);
+    expect(cells[COL.marks]).toBe('Belum diambil');
+    // NOT '0': no register taken is not the same as nobody attending.
+    expect(cells[COL.present]).toBe('—');
+  });
+
+  it('reads a row that reported no counts at all as unknown in both cells', async () => {
+    givenSessions(
+      makeSession({ attendances_count: undefined, attendances_present_count: undefined }),
+    );
+    const w = await mountView();
+
+    const cells = rowCells(w);
+    expect(cells[COL.present]).toBe('—');
+    // Absent is not zero, so it is not "Belum diambil" either — we cannot
+    // tell an untaken register from an uncounted one.
+    expect(cells[COL.marks]).toBe('—');
+  });
+
+  it('still shows a real 0 when the register WAS taken and nobody came', async () => {
+    givenSessions(makeSession({ attendances_count: 6, attendances_present_count: 0 }));
+    const w = await mountView();
+
+    const cells = rowCells(w);
+    expect(cells[COL.present]).toBe('0');
+    expect(cells[COL.marks]).toBe('6');
+  });
+
+  it('falls back to unknown when only the present count is missing', async () => {
+    givenSessions(makeSession({ attendances_count: 4, attendances_present_count: undefined }));
+    const w = await mountView();
+
+    const cells = rowCells(w);
+    expect(cells[COL.present]).toBe('—');
+    expect(cells[COL.marks]).toBe('4');
+  });
+
+  it('labels "Belum diambil" on exactly the rows the KPI tile counts', async () => {
+    givenSessions(
+      makeSession({ id: 's-taken', attendances_count: 5, attendances_present_count: 4 }),
+      makeSession({ id: 's-untaken', attendances_count: 0, attendances_present_count: 0 }),
+      makeSession({ id: 's-uncounted', attendances_count: undefined }),
+    );
+    const w = await mountView();
+
+    const marks = [0, 1, 2].map((i) => rowCells(w, i)[COL.marks]);
+    // The KPI's `counted` filter draws exactly this line: the zero row is
+    // outstanding, the uncounted row is merely unknown.
+    expect(marks).toEqual(['5', 'Belum diambil', '—']);
   });
 });

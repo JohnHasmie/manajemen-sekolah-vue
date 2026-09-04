@@ -28,6 +28,22 @@
   range with no group or tutor filter, so its percentage would
   contradict the table beneath it as soon as an admin filtered.
 
+  ── Two columns, two numbers ──
+
+  The table renders exactly the pair the KPI strip aggregates and the
+  CSV exports, under the same two headers the CSV already uses:
+  `attendances_count` = marks recorded ("Presensi tercatat"),
+  `attendances_present_count` = how many of those were hadir ("Hadir").
+
+  Both cells used to read `attendances_count`. So the column headed
+  "Hadir" showed the MARKS total, and the column beside it showed that
+  same number a second time as `${n} rows` — English, and "rows" is
+  developer vocabulary for what the product calls presensi. An admin who
+  read "Hadir 10" on screen and exported that very session got "Hadir 9",
+  because `exportCsv` below has always mapped the two fields correctly.
+  `attendances_present_count` reached the KPIs and the CSV but never the
+  table.
+
   ── Absent is not zero ──
 
   Both counts are optional on the wire. A row that carries neither is
@@ -205,6 +221,40 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
+// ── Per-row attendance cells ───────────────────────────────────────
+// Same absent-vs-zero doctrine as the KPI strip above, applied per row.
+
+/**
+ * Marks recorded on this row.
+ *
+ * A row that reported no count at all is unknown — "—", never 0. A DONE
+ * session that reported exactly 0 is a register nobody took, so it reads
+ * with the same string the "Belum diambil" tile counts: the rows an
+ * admin can point at in the table now add up to that KPI.
+ */
+function marksCell(s: BimbelSession): string {
+  const marks = s.attendances_count;
+  if (typeof marks !== 'number') return '—';
+  return marks === 0
+    ? t('tutoring2.admin.attendance.kpiUnrecorded')
+    : String(marks);
+}
+
+/**
+ * How many of those marks were hadir.
+ *
+ * Meaningful only once a register exists: with no marks at all (absent
+ * or 0) a "0" here would claim nobody attended, the conflation this
+ * screen refuses everywhere else. A 0 against a register that WAS taken
+ * still renders 0 — that one really does mean nobody came.
+ */
+function presentCell(s: BimbelSession): string {
+  const marks = s.attendances_count;
+  const present = s.attendances_present_count;
+  if (typeof marks !== 'number' || marks === 0) return '—';
+  return typeof present === 'number' ? String(present) : '—';
+}
+
 function statusLabel(status: BimbelSession['status']): string {
   const key = status === 'in_progress' ? 'inProgress' : status;
   return t(`tutoring2.status.${key}`);
@@ -362,8 +412,7 @@ function exportCsv(): void {
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.session') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.date') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.attended') }}</th>
-                <!-- TODO i18n key for column header 'Presensi' -->
-                <th class="px-4 py-3 font-bold">Presensi</th>
+                <th class="px-4 py-3 font-bold">{{ t('tutoring2.admin.attendance.colMarks') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
               </tr>
             </thead>
@@ -380,10 +429,11 @@ function exportCsv(): void {
                   {{ formatWaktu(s.starts_at) }} · {{ s.learning_group_name ?? truncateId(s.learning_group_id) }}
                 </td>
                 <td class="px-4 py-3 text-slate-600">{{ formatTanggal(s.starts_at) }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ s.attendances_count ?? '—' }}</td>
-                <td class="px-4 py-3 text-slate-600">
-                  {{ s.attendances_count ? `${s.attendances_count} rows` : t('tutoring2.admin.attendance.kpiUnrecorded') }}
-                </td>
+                <!-- Each cell renders the field its header names, the same
+                     mapping exportCsv uses: Hadir = present, Presensi
+                     tercatat = marks. Both used to read the marks count. -->
+                <td class="px-4 py-3 text-slate-600">{{ presentCell(s) }}</td>
+                <td class="px-4 py-3 text-slate-600">{{ marksCell(s) }}</td>
                 <td class="px-4 py-3">
                   <StatusBadge :label="s.status_label ?? statusLabel(s.status)" :tone="statusPillTone(s.status)" uppercase />
                 </td>
