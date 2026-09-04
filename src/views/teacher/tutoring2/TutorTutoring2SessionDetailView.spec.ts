@@ -45,6 +45,24 @@ vi.mock('@/composables/useToast', () => ({
   useToast: () => ({ success: toastSuccess, error: toastError, info: vi.fn() }),
 }));
 
+/**
+ * Reschedule is gated on `tutoring.session.manage` (see the view's
+ * docblock). This file is about the WIRE FORMAT of a move that is
+ * allowed, so the grant is present here and the withheld case lives in
+ * `TutorTutoring2SessionDetailView.gate.spec.ts` — mixing the two would
+ * leave neither properly covered.
+ *
+ * Without this mock `useMe().can` fails closed on an unhydrated /me
+ * snapshot, the button is disabled, and every assertion below would
+ * fail for a reason that has nothing to do with time zones.
+ */
+vi.mock('@/composables/useMe', () => ({
+  useMe: () => ({
+    can: (ability: string) => ability === 'tutoring.session.manage',
+    canAny: () => true,
+  }),
+}));
+
 const SESSION = {
   id: 'ses-1',
   learning_group_id: 'grp-1',
@@ -92,10 +110,15 @@ async function mountView() {
   return w;
 }
 
-/** The Reschedule button is the second in the action row. */
+/**
+ * Opens the reschedule dialog.
+ *
+ * Addressed by `data-testid`, not by position: this used to be
+ * `findAll('button')[1]`, which silently re-pointed at a different
+ * control the moment the row gained or hid a button.
+ */
 async function openDialog(w: Awaited<ReturnType<typeof mountView>>) {
-  const buttons = w.findAll('button');
-  await buttons[1].trigger('click');
+  await w.get('[data-testid="session-reschedule"]').trigger('click');
   await flushPromises();
 }
 

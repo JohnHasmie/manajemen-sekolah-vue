@@ -6818,7 +6818,9 @@
         "rescheduled": "Session rescheduled.",
         "rescheduleFailed": "The session could not be rescheduled.",
         "startsAt": "Starts",
-        "endsAt": "Ends"
+        "endsAt": "Ends",
+        "manageDenied": "Only a tutoring centre admin can reschedule or close a session. The attendance you save is enough — an admin closes the session.",
+        "rescheduleClosed": "A session that is already done or cancelled cannot be rescheduled."
       },
       "earnings": {
         "title": "My Earnings",

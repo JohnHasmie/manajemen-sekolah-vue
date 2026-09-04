@@ -24,6 +24,7 @@ import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
 import {
   TutoringBimbelService,
@@ -49,6 +50,91 @@ const { state, reload } = useDataRefresh(async () => {
 
 const session = computed<BimbelSession | null>(() => {
   return state.value.status === 'content' ? (state.value.data as BimbelSession) : null;
+});
+
+/**
+ * ── Who may move or close a session ──
+ *
+ * `SessionController::reschedule` and `::complete` both open with
+ * `$this->authorize('tutoring.session.manage')`.
+ * `PermissionCatalog::tutorTutoringDefaults()` does NOT grant that key —
+ * a tutor gets `tutoring.session.view` + `tutoring.session.mark_attendance`,
+ * and the lifecycle keys live in `adminTutoringDefaults()`. So on a
+ * default bimbel tenant BOTH buttons below were a guaranteed 403, and
+ * Reschedule was the worse of the two: it had no condition at all, so
+ * the tutor filled in the whole date/time/room form before the server
+ * refused it.
+ *
+ * Read off the /me snapshot via `useMe().can` (which the backend scopes
+ * to the active role through `X-Active-Role`) — NEVER
+ * `roles[].permission_keys`, which is unscoped and exists only for the
+ * role switcher.
+ *
+ * Disabled, not deleted. The permission catalog is a SEED, not a
+ * ceiling: a tenant that grants `tutoring.session.manage` to its tutor
+ * role through the RBAC picker gets both buttons back with no code
+ * change — the same reasoning !1217 recorded for the two session-write
+ * ROUTES, and the same shape the mobile twin uses in
+ * `tutor_session_actions.dart`. Hiding them instead would make the row
+ * silently differ between two tutors at the same centre with nothing on
+ * screen to explain why.
+ *
+ * "Ambil presensi" is deliberately untouched: it posts to
+ * `SessionController::markAttendance`, which authorizes on
+ * `tutoring.session.mark_attendance` — a key every tutor really does
+ * hold.
+ */
+const { can } = useMe();
+const canManageSession = computed(() => can('tutoring.session.manage'));
+
+/**
+ * Why Reschedule refuses, or `null` when it works.
+ *
+ * The status half mirrors `RescheduleSessionAction` exactly, which
+ * refuses `DONE` and `CANCELLED` and nothing else — it is not a rule
+ * invented here. It is also knowable BEFORE the form opens, unlike
+ * "ends_at must follow starts_at", which depends on what the tutor
+ * types and therefore still travels back as a 422 (see
+ * `submitReschedule`). Duplicating only the state rule keeps the two
+ * from drifting on the part that can drift.
+ */
+const rescheduleBlockedReason = computed<string | null>(() => {
+  if (!canManageSession.value) {
+    return t('tutoring2.tutor.sessionDetail.manageDenied');
+  }
+  const s = session.value;
+  if (s && (s.status === 'done' || s.status === 'cancelled')) {
+    return t('tutoring2.tutor.sessionDetail.rescheduleClosed');
+  }
+  return null;
+});
+
+/**
+ * Why "Tandai selesai" refuses, or `null` when it works.
+ *
+ * The ability gate is ADDITIONAL to the `v-if` on the button: a tutor
+ * whose tenant granted the key still may not close a session that is
+ * not running. That half of the original condition was always correct.
+ */
+const completeBlockedReason = computed<string | null>(() =>
+  canManageSession.value ? null : t('tutoring2.tutor.sessionDetail.manageDenied'),
+);
+
+/**
+ * The reason lines printed under the row, de-duplicated.
+ *
+ * A default tutor blocks both buttons for the same reason, and printing
+ * "hanya admin" twice reads as a rendering bug rather than an
+ * explanation. Only reasons for controls that are actually on screen
+ * are listed — "Tandai selesai" is absent unless the session is
+ * running.
+ */
+const actionNotices = computed<string[]>(() => {
+  const shown = [rescheduleBlockedReason.value];
+  if (session.value?.status === 'in_progress') {
+    shown.push(completeBlockedReason.value);
+  }
+  return [...new Set(shown.filter((r): r is string => r !== null))];
 });
 
 function sessionTone(status: BimbelSession['status']): StatusBadgeTone {
@@ -125,6 +211,12 @@ function toLocalInput(iso: string | null | undefined): string {
 function rescheduleAction() {
   const s = session.value;
   if (!s) return;
+  // Also refused here, not only on the button. The dialog below is a
+  // SIBLING of the AsyncView branch that owns the button, so it is not
+  // covered by the button's own condition; keeping the check next to
+  // the only writer of `rescheduleOpen` is what actually keeps the form
+  // shut for a caller the server would refuse.
+  if (rescheduleBlockedReason.value) return;
   rescheduleForm.value = {
     starts_at: toLocalInput(s.starts_at),
     ends_at: toLocalInput(s.ends_at),
@@ -159,6 +251,7 @@ async function submitReschedule() {
 }
 
 async function completeSession() {
+  if (completeBlockedReason.value) return;
   try {
     await TutoringBimbelService.completeSession(sessionId.value);
     toast.success(t('tutoring2.tutor.sessionDetail.completed'));
@@ -230,16 +323,52 @@ const metaText = computed(() =>
             </dl>
           </div>
 
+          <!-- Blocked controls stay rendered and keep their label, with
+               the reason on `title` for a pointer and on an
+               `aria-describedby` line for a screen reader, which never
+               sees a tooltip. Same four properties the admin bimbel
+               CTAs are held to. -->
           <div class="flex flex-wrap items-center gap-2">
-            <Button variant="primary" @click="ambilPresensi">{{ t('tutoring2.common.takeAttendance') }}</Button>
-            <Button variant="secondary" @click="rescheduleAction">{{ t('tutoring2.common.reschedule') }}</Button>
+            <Button
+              variant="primary"
+              data-testid="session-take-attendance"
+              @click="ambilPresensi"
+            >
+              {{ t('tutoring2.common.takeAttendance') }}
+            </Button>
+            <Button
+              variant="secondary"
+              data-testid="session-reschedule"
+              :disabled="rescheduleBlockedReason !== null"
+              :title="rescheduleBlockedReason ?? undefined"
+              :aria-describedby="rescheduleBlockedReason ? 'session-action-notice' : undefined"
+              @click="rescheduleAction"
+            >
+              {{ t('tutoring2.common.reschedule') }}
+            </Button>
             <Button
               v-if="session.status === 'in_progress'"
               variant="success"
+              data-testid="session-complete"
+              :disabled="completeBlockedReason !== null"
+              :title="completeBlockedReason ?? undefined"
+              :aria-describedby="completeBlockedReason ? 'session-action-notice' : undefined"
               @click="completeSession"
             >
               {{ t('tutoring2.common.markDone') }}
             </Button>
+          </div>
+
+          <div
+            v-if="actionNotices.length"
+            id="session-action-notice"
+            data-testid="session-action-notice"
+            class="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800"
+          >
+            <span aria-hidden="true">&#9432;</span>
+            <div class="space-y-1">
+              <p v-for="reason in actionNotices" :key="reason">{{ reason }}</p>
+            </div>
           </div>
         </template>
       </template>

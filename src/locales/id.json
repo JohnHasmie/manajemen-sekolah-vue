@@ -7893,7 +7893,9 @@
         "rescheduled": "Sesi dijadwalkan ulang.",
         "rescheduleFailed": "Sesi tidak dapat dijadwalkan ulang.",
         "startsAt": "Mulai",
-        "endsAt": "Selesai"
+        "endsAt": "Selesai",
+        "manageDenied": "Hanya admin bimbel yang bisa menjadwal ulang atau menutup sesi. Presensi yang kamu simpan sudah cukup — admin yang menutup sesinya.",
+        "rescheduleClosed": "Sesi yang sudah selesai atau dibatalkan tidak bisa dijadwal ulang."
       },
       "activities": {
         "title": "Aktivitas",
