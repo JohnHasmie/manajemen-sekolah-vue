@@ -1928,17 +1928,53 @@ const routes: RouteRecordRaw[] = [
       // Shared with `admin.tutoring2.session-create` below — ONE view,
       // two role-scoped routes, the same pattern the wali/siswa
       // leaderboard pair uses. See Tutoring2CreateSessionView's docblock.
+      //
+      // ── Why this pair is ability-gated (and has no tutor CTA) ──
+      //
+      // Both views POST to endpoints that gate on
+      // `tutoring.session.manage`: SessionController::store for the
+      // one-off form, ::storeRecurring for the series form. That key is
+      // in `PermissionCatalog::adminTutoringDefaults()` but NOT in
+      // `tutorTutoringDefaults()`, which grants a tutor
+      // `tutoring.session.view` + `tutoring.session.mark_attendance`
+      // only — bimbel session LIFECYCLE is an admin scheduling act by
+      // design. `Gate::before` resolves strictly from the role-scoped
+      // ability list (super-admin is the sole bypass), so a default
+      // tutor reaching either form is refused at submit.
+      //
+      // So these carry the same gate the admin twin below already
+      // carries, for the same stated reason: bounce rather than show a
+      // form the server will refuse. `session-create` had no entry
+      // point at all and was reachable only by typing the URL;
+      // `sessions-recurring` is worse — useNavMenu advertises it in the
+      // tutor menu, so every tutor could walk into a form that always
+      // 403s. That nav row is gated on the same key now.
+      //
+      // Deliberately gated rather than deleted: the catalog is a SEED,
+      // not a ceiling. A tenant that grants its tutor role
+      // `tutoring.session.manage` through the RBAC picker gets both
+      // screens back automatically, and that grant is also the whole of
+      // the product decision if bimbel tutors should schedule their own
+      // sessions — no frontend change needed to honour it.
       {
         path: 'teacher/tutoring2/sessions/new',
         name: 'teacher.tutoring2.session-create',
         component: () => import('@/views/tutoring2/Tutoring2CreateSessionView.vue'),
-        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+        meta: {
+          role: 'teacher' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.session.manage',
+        },
       },
       {
         path: 'teacher/tutoring2/sessions/recurring',
         name: 'teacher.tutoring2.sessions-recurring',
         component: () => import('@/views/teacher/tutoring2/TutorTutoring2RecurringSessionsView.vue'),
-        meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+        meta: {
+          role: 'teacher' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.session.manage',
+        },
       },
       {
         path: 'teacher/tutoring2/leaderboard',

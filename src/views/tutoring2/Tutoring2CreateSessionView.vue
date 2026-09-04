@@ -22,14 +22,51 @@
   ever reachable behind `meta: { role: 'teacher' }`, so an admin could
   not get to it.
 
-  Worth knowing before you touch the tutor side: that route is
-  ORPHANED too. Nothing in the app navigates to
-  `teacher.tutoring2.session-create` — TutorTutoring2SessionsView has
-  no create CTA and useNavMenu has no entry — so it is reachable only
-  by typing the URL. This MR does not add one (a new tutor affordance
-  is a product decision, not part of fixing the admin CTAs), but the
-  admin route below is consequently this form's FIRST real entry point
-  in the UI. Do not read "the tutor flow uses it" into the code.
+  ── The tutor side: no CTA, on purpose ──
+
+  `teacher.tutoring2.session-create` has no entry point either —
+  TutorTutoring2SessionsView has no create CTA and useNavMenu has no
+  entry — and it is NOT getting one. That was left open when the admin
+  route landed; it has since been decided against, on evidence:
+
+    POST /tutoring-v2/sessions authorizes on
+    `tutoring.session.manage`. `tutorTutoringDefaults()` grants
+    `tutoring.session.view` + `tutoring.session.mark_attendance` and
+    stops there — the lifecycle keys (`.manage`, `.cancel`,
+    `.session_reminder.manage`) live in `adminTutoringDefaults()`
+    only. `Gate::before` answers from the role-scoped ability list
+    with no fallback, so a default tutor submitting this form is
+    refused. Scheduling a bimbel session is an admin act.
+
+  A tutor button would therefore be the "tombol diklik tidak terjadi
+  apa-apa" defect !1211/!1215 spent two MRs removing — and gating it
+  would ship an affordance no default tenant can see. The sibling
+  idiom does not transfer either: TutorTutoring2AssessmentsView's
+  floating <router-link> is UNGATED precisely because tutors DO hold
+  `tutoring.assessment.manage`.
+
+  Three more things point the same way:
+
+    - the greenfield Flutter app creates sessions on the ADMIN side
+      only (`tutoring2/.../admin_sessions_screen.dart` via
+      `AdminGrowthService.createSession`); no tutor screen there
+      creates one, and `design/redesign-2026-08/SIMULATOR-FINDINGS.md`
+      files "Buat sesi" under the admin hub;
+    - `docs/CLEAN-0-AUDIT-flutter.md` lists the legacy
+      `tutor_create_session` / `tutor_recurring_sessions` screens with
+      greenfield equivalent "none", and OPTION-A-MR-STACK carries no
+      backlog item for tutor session creation — only BE-30, the ADMIN
+      schedule;
+    - the recurring row in useNavMenu was never a decision to give
+      tutors this power: `3d01bf5e` mechanically REPOINTED a stale
+      legacy row (`/teacher/tutoring/recurring`) while repairing dead
+      nav entries.
+
+  What the tutor route got instead is the gate its admin twin already
+  carried (`ability: 'tutoring.session.manage'` in the router), so
+  typing the URL bounces rather than opening a form the server will
+  refuse. If product decides tutors should schedule after all, the
+  change is a backend grant — the gate then opens on its own.
 
   Nothing about the form is tutor-specific:
 
@@ -39,8 +76,14 @@
     - `tutor_id` is not sent by either role — CreateSessionAction
       defaults it from the learning group itself;
     - admin holds `tutoring.session.manage` in
-      `PermissionCatalog::adminTutoringDefaults()`, the same key the
-      tutor path uses, so the POST is authorized for both.
+      `PermissionCatalog::adminTutoringDefaults()`, so the POST is
+      authorized for the admin route.
+
+      (This bullet used to read "the same key the tutor path uses, so
+      the POST is authorized for both". It is not the same key: the
+      tutor path holds NO session-write key at all. The form being
+      role-neutral in its FIELDS says nothing about who may submit it —
+      see the section below.)
 
   So this is registered on a second, admin-scoped route instead of
   being copied — the same consolidation `Tutoring2LeaderboardView` uses

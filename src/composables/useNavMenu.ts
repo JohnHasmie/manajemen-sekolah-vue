@@ -1072,9 +1072,18 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
       // (was: /teacher/tutoring/tryout-generator — AI tryout generator
       // not yet re-implemented on greenfield.)
       {
+        // Gated: the view behind this row POSTs
+        // `/tutoring-v2/sessions/recurring`, which authorizes on
+        // `tutoring.session.manage` — a key `tutorTutoringDefaults()`
+        // does NOT grant (the tutor half is `session.view` +
+        // `session.mark_attendance`; lifecycle is admin-only by
+        // design). Ungated, this row showed every tutor a series form
+        // whose submit always 403s. Tenants that grant the key to
+        // their tutor role keep the row.
         to: '/teacher/tutoring2/sessions/recurring',
         labelKey: 'tutoring.nav.recurring',
         icon: 'calendar',
+        ability: 'tutoring.session.manage',
       },
       {
         // WEB-13 swap: repoint to greenfield tutor Activities

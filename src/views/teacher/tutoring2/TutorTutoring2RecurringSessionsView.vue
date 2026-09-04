@@ -44,6 +44,23 @@
 
   5. Weekday numbers are ISO (1 = Mon … 7 = Sun) on BOTH sides, so the
      v1 mapping carries over unchanged.
+
+  ── Who can actually submit this ──
+
+  `POST /tutoring-v2/sessions/recurring` authorizes on
+  `tutoring.session.manage`. That key is granted by
+  `PermissionCatalog::adminTutoringDefaults()` and NOT by
+  `tutorTutoringDefaults()`, whose session half is `session.view` +
+  `session.mark_attendance` — bimbel session lifecycle is an admin
+  scheduling act by design. So on a default tenant this form 403s for
+  the very role it was written for.
+
+  Until that was noticed, useNavMenu listed this route in the tutor
+  menu with no gate at all, so every tutor on every bimbel tenant could
+  fill in the whole series form and have the submit refused. Both the
+  nav row and the route now carry `ability: 'tutoring.session.manage'`,
+  which also means a tenant that grants the key to its tutor role gets
+  the screen back with no code change.
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
