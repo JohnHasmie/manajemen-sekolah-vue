@@ -45,7 +45,7 @@
      list is derived from `/tutoring-v2/enrollments?student_id=` instead,
      which is the same information minus the legacy per-group attendance /
      next-session / unread-announcement roll-up. Those extra fields are a
-     genuine v2 gap — see V2_GAPS in the MR description.
+     genuine v2 gap — see `docs/CLEAN-2-V2-GAPS.md` §G8.
   2. The v1 leaderboard score was a COMPOSITE (0.5 × attendance + 0.5 ×
      score). BE-21 is pure score: `AVG(score / max_score * 100)` over
      PUBLISHED, GRADED assessments, dense-ranked. So the numbers here will

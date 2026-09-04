@@ -37,18 +37,23 @@
      - POST /tutoring-v2/leads gates on `tutoring.lead.manage`
      - GET  /tutoring-v2/programs gates on `tutoring.program.view`
 
-     The wali default ability set holds NEITHER. The legacy v1
-     controllers (TutoringLegacy\...\TutoringLeadController /
-     TutoringProgramController) had no `authorize()` call at all, which
+     Of the two, the wali holds `tutoring.program.view` but NOT
+     `tutoring.lead.manage`. (An earlier revision of this comment said
+     NEITHER — that is now wrong: parentTutoringDefaults() grants
+     `tutoring.program.view` precisely so a wali can browse the
+     catalogue to self-enrol a child, which is this screen. The
+     programme dropdown is reachable; only the SUBMIT is not.)
+
+     The legacy v1 controllers (TutoringLegacy\...\TutoringLeadController
+     / TutoringProgramController) had no `authorize()` call at all, which
      is the only reason the legacy screen worked for a parent — an authz
      hole, not a feature.
 
      Rather than ship a form that 403s on submit, this view gates on the
      caller's real abilities (`/me`-scoped, per the standing rule) and
-     explains the situation. The backend fix is to grant the wali a
-     narrow write key — e.g. a new `tutoring.lead.create_own` on
-     LeadController::store plus `tutoring.program.view` (or a public
-     program catalogue endpoint) — reported under V2_GAPS.
+     explains the situation. The one remaining backend fix is a narrow
+     write key — e.g. a new `tutoring.lead.create_own` on
+     LeadController::store. See `docs/CLEAN-2-V2-GAPS.md` §G6.
 -->
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';

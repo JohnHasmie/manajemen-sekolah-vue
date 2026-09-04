@@ -29,16 +29,23 @@
      (LeaderboardController returns enrollment/student/avg_score/
      assessments_taken/rank). Rather than fake it from a second
      endpoint, the subtitle now shows the student number and the KPI
-     strip matches the admin one. See V2_GAPS.
+     strip matches the admin one. This is deliberate on the backend
+     side — v2's board is pure score, and greenfield attendance lives on
+     `bimbel_session_attendances`, which a leaderboard could only read
+     as a per-row fan-out. See `docs/CLEAN-2-V2-GAPS.md` §G7.
 
-  3. DROPPED: the "my groups only" filter. v1 narrowed the picker with
+  3. DROPPED: the "my groups only" filter — now REDUNDANT, not blocked.
+     v1 narrowed the picker with
      `groups.filter(g => g.tutor_user_id === auth.user.id)` because the
      v1 group payload carried the tutor's USER id. v2's
      BimbelLearningGroup carries `tutor_id` (a `teachers.id`) and no v2
      route hands the client its own `teachers.id`, so there is nothing
-     to compare against. The picker therefore lists every group the
-     caller may view — the same behaviour the sibling tutor views
-     already ship. See V2_GAPS.
+     to compare against client-side. That no longer matters:
+     `LearningGroupController::index` narrows to the caller server-side
+     via `ResolvesTutoringReadScope`, so for a tutor "every group the
+     caller may view" IS "my groups". The picker lists what the server
+     returns — the same behaviour the sibling tutor views already ship.
+     See `docs/CLEAN-2-V2-GAPS.md` §G1.
 
   4. DROPPED: the "Per Program" tab. The screen was copied verbatim from
      AdminTutoring2LeaderboardView (see dec3437e), which brought the

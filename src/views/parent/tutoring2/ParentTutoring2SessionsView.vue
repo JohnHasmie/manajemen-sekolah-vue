@@ -19,7 +19,7 @@
      child's enrollments to get `learning_group_id`, then list each
      group's sessions and merge. If BE later ships
      `GET /tutoring-v2/students/{id}/schedule` this collapses to one
-     call — reported under V2_GAPS.
+     call — see `docs/CLEAN-2-V2-GAPS.md` §G4.
 
   2. Sorted NEWEST-FIRST (the legacy view sorted ascending). Day groups
      descend too, so "hari ini" sits at the top and history runs down.
