@@ -16,15 +16,21 @@
   1. DROPPED: THE BANK-ACCOUNT BLOCK. v1 read the tutor's default bank
      details off the v1 payout-summary response and let them override
      `bank_name` / `bank_account_number` / `bank_account_holder` per
-     request (backed by v1 `GET /tutoring/payment-account`). v2 has NO
-     payment-account route, `SelfPayoutSummary` carries no bank fields,
-     and `SubmitPayoutRequestRequest` accepts ONLY
-     `{period_month, amount, note}` — any bank keys posted would be
-     dropped on the floor. Shipping the inputs would tell the tutor
+     request (backed by v1 `GET /tutoring/payment-account`). v2 has no
+     route for a TUTOR's payout destination at all: `SelfPayoutSummary`
+     carries no bank fields, and `SubmitPayoutRequestRequest` accepts
+     ONLY `{period_month, amount, note}` — any bank keys posted would
+     be dropped on the floor. Shipping the inputs would tell the tutor
      their transfer destination was saved when nothing was saved, so
      the whole section is gone. The `note` field is where a tutor can
      state a destination in free text until a backend account route
-     exists. See V2_GAPS.
+     exists.
+
+     Do not be misled by `GET /tutoring-v2/payment-account` — that
+     route DOES exist, but it is BillingSettingsController's TENANT
+     inbound account (where a wali pays the bimbel), gated on
+     `tutoring.bill.view*`. It is not a tutor's outbound destination.
+     See `docs/CLEAN-2-V2-GAPS.md` §G2.
 
   2. DROPPED: THE CUSTOM DATE-RANGE TAB. v1 offered "Per bulan" vs an
      arbitrary from/to range and posted `period_from` + `period_to`.

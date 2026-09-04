@@ -176,11 +176,16 @@ const emptyDesc = computed(() =>
 
 // ─── Group picker ─────────────────────────────────────────────────
 //
-// Scope note: `LearningGroupController::index` accepts an optional
-// `?tutor_id=` but does NOT auto-scope to the caller, and no v2 route
-// hands the client its own `teachers.id`. So, exactly like the sibling
-// tutor views (Activities, GroupAnnouncements), we list the active
-// groups the caller is allowed to see and let them pick. See V2_GAPS.
+// Scope note: we list the active groups the caller is allowed to see
+// and let them pick — exactly like the sibling tutor views (Activities,
+// GroupAnnouncements). That is correct by construction, NOT a
+// workaround: `LearningGroupController::index` narrows to the caller
+// server-side via `ResolvesTutoringReadScope`, so a tutor receives only
+// the groups they teach and `?tutor_id=` is honoured for admins alone.
+// Do not add a client-side "my groups" filter on top of it — no v2
+// route hands the client its own `teachers.id` to compare against, and
+// the server has already answered the question.
+// See `docs/CLEAN-2-V2-GAPS.md` §G1.
 const { state, reload } = useDataRefresh(async () => {
   const { items } = await TutoringBimbelService.listGroups({
     per_page: 100,

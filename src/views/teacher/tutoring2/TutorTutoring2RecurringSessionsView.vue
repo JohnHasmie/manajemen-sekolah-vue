@@ -36,7 +36,8 @@
      `/sessions/{id}/{reschedule,cancel}`. So this view can create a
      series but not list, edit, or bulk-cancel one; the tutor cancels
      the individual sessions from the session list instead. Restoring
-     it needs backend routes on `series_key` first (see V2_GAPS).
+     it needs backend routes on `series_key` first
+     (see `docs/CLEAN-2-V2-GAPS.md` §G3).
 
   4. DROPPED FIELDS: `meeting_url` and `topic` — same reason as the
      one-off create view: no column, no validation rule, no silent
@@ -83,9 +84,12 @@ const router = useRouter();
 const toast = useToast();
 
 // ─── Group picker ─────────────────────────────────────────────────
-// Same scope caveat as Tutoring2CreateSessionView: the v2 group
-// index has no server-side tutor auto-scope and no route hands the
-// client its own `teachers.id`. See V2_GAPS.
+// Same scope note as Tutoring2CreateSessionView: the v2 group index
+// DOES narrow to the caller server-side (`ResolvesTutoringReadScope`),
+// so a tutor is handed only the groups they teach. Do not layer a
+// client-side "my groups" filter on top — no v2 route hands the client
+// its own `teachers.id` to compare against, and it is not needed.
+// See `docs/CLEAN-2-V2-GAPS.md` §G1.
 const { state, reload } = useDataRefresh(async () => {
   const { items } = await TutoringBimbelService.listGroups({
     per_page: 100,

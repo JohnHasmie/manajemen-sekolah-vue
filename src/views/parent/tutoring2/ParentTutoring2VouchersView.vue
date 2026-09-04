@@ -44,10 +44,16 @@
      why the old screen rendered for a parent.
 
      We do not paper over this: when `.view` is missing the list is not
-     requested (a guaranteed 403) and the view explains why. Backend fix:
-     add `tutoring.voucher.view` — or a scoped `_view_own` twin that
-     returns only vouchers valid for the caller's children — to the wali
-     defaults. Reported under V2_GAPS.
+     requested (a guaranteed 403) and the view explains why.
+
+     Backend fix — note that HALF of this ask has been refused upstream.
+     PermissionCatalog now documents the omission as DELIBERATE: vouchers
+     carry no per-student targeting, so granting a flat
+     `tutoring.voucher.view` would hand every parent every promo code.
+     Do not re-propose it. The still-open option is a scoped `_view_own`
+     twin returning only vouchers valid for the caller's children, which
+     that reasoning does not foreclose.
+     See `docs/CLEAN-2-V2-GAPS.md` §G5.
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
