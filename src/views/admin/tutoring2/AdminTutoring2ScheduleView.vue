@@ -16,10 +16,34 @@
   them, so both were inert on prod ("semua button/filter tdk berfungsi")
   even though the query + watcher below were wired correctly all along.
   Same fix as AdminTutoring2GroupsView (!1191).
+
+  The floating "+ Buat sesi" CTA in slot 5 was the SAME bug one layer
+  down: the docblock above advertised it, the i18n label existed, and
+  the button rendered — but it carried no `@click` whatsoever, so prod
+  reported "tombol diklik tidak terjadi apa-apa". It now navigates to
+  `admin.tutoring2.session-create`.
+
+  That route renders <Tutoring2CreateSessionView>, the create surface
+  that already existed and already worked — it was simply parked behind
+  `meta: { role: 'teacher' }` where no admin could reach it. It was
+  lifted to `views/tutoring2/` and given a second, admin-scoped route
+  rather than copied, so both roles POST through one component. See its
+  docblock for why nothing in that form is tutor-specific.
+
+  (That tutor route has no entry point of its own either — nothing
+  navigates to it — so this CTA is the form's first real doorway in the
+  UI. Giving the tutor screen its own button is a separate decision and
+  is deliberately not made here.)
+
+  Gate: `tutoring.session.manage`, read off the /me snapshot via
+  `useMe().can` (NEVER `roles[].permission_keys`). Missing ability
+  hides the CTA outright, matching AdminTutoring2GroupsView — an admin
+  never sees a button that would refuse them.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -33,6 +57,7 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { useMe } from '@/composables/useMe';
 import {
   TutoringBimbelService,
   type BimbelLearningGroup,
@@ -43,6 +68,15 @@ import type { Tutor } from '@/types/tutoring2/tutor';
 import type { StatusBadgeTone } from '@/types/status-badge';
 
 const { t } = useI18n();
+const router = useRouter();
+
+const { can } = useMe();
+const canManage = computed(() => can('tutoring.session.manage'));
+
+/** Opens the shared create surface — see the docblock above. */
+function openCreate() {
+  router.push({ name: 'admin.tutoring2.session-create' });
+}
 
 const search = ref('');
 const statusFilter = ref<string>(''); // '' | 'scheduled' | 'done' | 'cancelled'
@@ -253,8 +287,11 @@ function chipValue(id: string, options: FacetOption[]): string {
     </AsyncView>
 
     <button
+      v-if="canManage"
       type="button"
+      data-testid="schedule-new-cta"
       class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
+      @click="openCreate"
     >
       <span aria-hidden="true">+</span> {{ t('tutoring2.admin.schedule.newCta') }}
     </button>

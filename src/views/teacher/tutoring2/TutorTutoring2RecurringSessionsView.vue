@@ -66,7 +66,7 @@ const router = useRouter();
 const toast = useToast();
 
 // ─── Group picker ─────────────────────────────────────────────────
-// Same scope caveat as TutorTutoring2CreateSessionView: the v2 group
+// Same scope caveat as Tutoring2CreateSessionView: the v2 group
 // index has no server-side tutor auto-scope and no route hands the
 // client its own `teachers.id`. See V2_GAPS.
 const { state, reload } = useDataRefresh(async () => {

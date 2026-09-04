@@ -7154,13 +7154,14 @@
       "term": {
         "kpiClosed": "Closed",
         "newCta": "New term",
-        "emptyDesc": "No terms detected from groups yet.",
+        "emptyDesc": "No terms yet. Contact the KamilEdu team to add one.",
         "kpiActive": "Active",
         "kpiDraft": "Draft",
         "title": "Terms / Batches",
         "emptyTitle": "No terms yet",
         "searchPh": "Search terms…",
-        "kpiGroupsTotal": "Total groups"
+        "kpiGroupsTotal": "Total groups",
+        "newCtaUnavailable": "Creating a term is not available on the web yet. Contact the KamilEdu team to add one."
       },
       "billing": {
         "kpiOverdueCount": "Overdue",
@@ -7169,10 +7170,11 @@
         "dayPrefix": "Day {day}",
         "kpiPaid": "Paid",
         "newCta": "Create bill",
-        "emptyDesc": "Click + to create a new bill.",
+        "emptyDesc": "No bills yet. Bills are raised automatically by enrolment and monthly billing.",
         "kpiBilled": "Billed",
         "emptyTitle": "No bills yet",
-        "searchPh": "Search students…"
+        "searchPh": "Search students…",
+        "newCtaUnavailable": "Creating a bill by hand is not available on the web yet. Bills are raised automatically by enrolment and monthly billing."
       },
       "payoutSettings": {
         "title": "Payout Settings",
@@ -7212,21 +7214,23 @@
         "kpiDrafts": "Unpublished",
         "kpiTryout": "Try-out",
         "newCta": "New try-out",
-        "emptyDesc": "Click + to create a new try-out or practice.",
+        "emptyDesc": "No assessments yet. Tutors create try-outs and exercises from their own Nilai screen.",
         "title": "Grades & Try-outs",
         "emptyTitle": "No assessments yet",
-        "searchPh": "Search try-outs…"
+        "searchPh": "Search try-outs…",
+        "newCtaUnavailable": "Creating an assessment is not available to admins on the web yet. Tutors create them from their own Nilai screen."
       },
       "enrollments": {
         "kpiThisMonth": "This month",
         "kpiTrial": "Trial",
         "kpiGraduated": "Graduated/withdrawn",
         "newCta": "Enroll student",
-        "emptyDesc": "Click + to enroll a new student.",
+        "emptyDesc": "No enrolments yet. Parents enrol their child from the app.",
         "kpiActive": "Active",
         "title": "Enrollments",
         "emptyTitle": "No enrollments yet",
-        "searchPh": "Search student name…"
+        "searchPh": "Search student name…",
+        "newCtaUnavailable": "Enrolling a student is not available on the web yet. Parents enrol from the app, or contact the KamilEdu team."
       },
       "tutorDetail": {
         "tabGroups": "Groups",
@@ -7267,7 +7271,8 @@
         "title": "Schedule",
         "emptyTitle": "No sessions yet",
         "searchPh": "Search sessions…",
-        "kpiInProgress": "In progress"
+        "kpiInProgress": "In progress",
+        "createEmptyDesc": "Sessions can only be created for active groups. Create or activate a learning group first."
       },
       "programs": {
         "emptyTitle": "No programs yet",
@@ -7333,7 +7338,10 @@
         "title": "Attendance",
         "emptyTitle": "No completed sessions yet",
         "searchPh": "Search sessions…",
-        "kpiCompleted": "Sessions completed"
+        "kpiCompleted": "Sessions completed",
+        "exportEmpty": "No completed sessions to export yet.",
+        "colMarks": "Attendance marks",
+        "colRate": "% Present"
       },
       "leaderboard": {
         "title": "Leaderboard",

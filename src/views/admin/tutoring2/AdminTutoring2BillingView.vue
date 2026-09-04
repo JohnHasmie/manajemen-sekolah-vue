@@ -5,6 +5,36 @@
   /api/tutoring-v2/bills* (BE-8). Drops the temporary
   FinanceService.listBills bridge that was in place while the
   greenfield endpoints didn't exist.
+
+  ── THE "+ Buat tagihan" CTA IS DISABLED ON PURPOSE ──────────────────
+
+  It shipped with no `@click` and no handler, so it joined the prod
+  reports of "tombol diklik tidak terjadi apa-apa". The fix is NOT to
+  wire it, because there is nothing to wire it TO: **web-vue has never
+  had a bill create surface.**
+
+  This is the same shape as the "+ Program baru" CTA !1211 disabled.
+  `TutoringBimbelService.createBill` exists and wraps
+  `POST /tutoring-v2/bills`, and `admin` even holds
+  `tutoring.bill.create` in `PermissionCatalog::
+  adminTutoringDefaults()` — but the method has ZERO call sites in the
+  app. Bills reach this list by being generated: enrollment intake
+  raises the first one and the monthly cron raises the rest. Nothing
+  anywhere lets a human compose one.
+
+  So this is a MISSING FEATURE, not a missing handler, and inventing a
+  create form here would be a product decision made by a bug fix —
+  a manual bill needs an amount, a due date, a source_type and a
+  student, and picking that field set is exactly the decision this MR
+  must not make. Until someone builds it, the button states plainly
+  that it is unavailable instead of silently swallowing the click.
+  `billing.emptyDesc` — which read "Klik + untuk membuat tagihan
+  baru." — no longer tells admins to press it either.
+
+  To finish this: build the create sheet (mirror
+  <AdminTutoring2GroupCreateSheet>), call `createBill`, gate on
+  `tutoring.bill.create`, then drop `disabled` + the `title` below and
+  restore the empty-state copy.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -192,11 +222,22 @@ function billStatusLabel(status: string): string {
       </template>
     </AsyncView>
 
+    <!-- Disabled, with the reason on the control itself — see docblock.
+         `title` carries it for a pointer, and the aria-describedby'd
+         line carries it for a screen reader, which never sees a
+         tooltip. -->
     <button
       type="button"
-      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
+      data-testid="billing-new-cta"
+      disabled
+      aria-describedby="billing-new-cta-reason"
+      :title="t('tutoring2.admin.billing.newCtaUnavailable')"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-300 text-white font-bold shadow-xl cursor-not-allowed"
     >
       <span aria-hidden="true">+</span> {{ t('tutoring2.admin.billing.newCta') }}
     </button>
+    <span id="billing-new-cta-reason" class="sr-only">
+      {{ t('tutoring2.admin.billing.newCtaUnavailable') }}
+    </span>
   </div>
 </template>

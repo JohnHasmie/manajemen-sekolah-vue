@@ -1,12 +1,57 @@
 <!--
-  TutorTutoring2CreateSessionView.vue — schedule ONE off-cycle bimbel
+  Tutoring2CreateSessionView.vue — schedule ONE off-cycle bimbel
   session for a learning group (CLEAN-2 Phase 2 · greenfield replacement
   for `teacher/tutoring/TutorCreateSessionView.vue`).
 
-  Route: /teacher/tutoring2/sessions/new
+  Routes:
+    /teacher/tutoring2/sessions/new   (tutor)
+    /admin/tutoring2/sessions/new     (admin bimbel)
   Endpoints:
     GET  /tutoring-v2/learning-groups   — the group picker
     POST /tutoring-v2/sessions          — create the session
+
+  ── Why ONE view for both roles ──
+
+  Was `TutorTutoring2CreateSessionView` under `views/teacher/`.
+  AdminTutoring2ScheduleView rendered a floating "+ Buat sesi" CTA with
+  NO `@click` at all — a convincing button that could not do anything,
+  reported from prod as "tombol diklik tidak terjadi apa-apa" (the same
+  defect !1211 fixed on the Kelompok and Program lists).
+
+  The create surface already existed and already worked; it was only
+  ever reachable behind `meta: { role: 'teacher' }`, so an admin could
+  not get to it.
+
+  Worth knowing before you touch the tutor side: that route is
+  ORPHANED too. Nothing in the app navigates to
+  `teacher.tutoring2.session-create` — TutorTutoring2SessionsView has
+  no create CTA and useNavMenu has no entry — so it is reachable only
+  by typing the URL. This MR does not add one (a new tutor affordance
+  is a product decision, not part of fixing the admin CTAs), but the
+  admin route below is consequently this form's FIRST real entry point
+  in the UI. Do not read "the tutor flow uses it" into the code.
+
+  Nothing about the form is tutor-specific:
+
+    - the group picker was NEVER caller-scoped (see the scope note
+      below — `LearningGroupController::index` does not narrow to the
+      caller, so both roles see the same active groups);
+    - `tutor_id` is not sent by either role — CreateSessionAction
+      defaults it from the learning group itself;
+    - admin holds `tutoring.session.manage` in
+      `PermissionCatalog::adminTutoringDefaults()`, the same key the
+      tutor path uses, so the POST is authorized for both.
+
+  So this is registered on a second, admin-scoped route instead of
+  being copied — the same consolidation `Tutoring2LeaderboardView` uses
+  for its wali/siswa pair. A second copy of the `toWireDateTime`
+  conversion below is exactly how the WIB off-by-one-day bug comes
+  back.
+
+  Role-dependent parts are confined to `roleKicker` / `listRouteName` /
+  the empty-state description; `BrandPageHeader` already falls back to
+  the auth store's active role when no `role` prop is passed, so the
+  gradient tints itself.
 
   CONTRACT DIFFERENCES vs the legacy v1 view — read before touching:
 
@@ -34,8 +79,10 @@
 
   4. `tutor_id` is deliberately NOT sent. CreateSessionAction defaults
      it to the learning group's own tutor, which is the right answer
-     for a tutor scheduling their own class; sending the caller's id
-     would need a `teachers.id` resolver the client does not have.
+     both for a tutor scheduling their own class and for an admin
+     scheduling on a group's behalf; sending the caller's id would need
+     a `teachers.id` resolver the client does not have — and for an
+     admin it would be the wrong id outright.
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -51,10 +98,38 @@ import {
   TutoringBimbelService,
   type BimbelLearningGroup,
 } from '@/services/tutoring-bimbel.service';
+import { useAuthStore } from '@/stores/auth';
 
 const { t } = useI18n();
 const router = useRouter();
 const toast = useToast();
+const auth = useAuthStore();
+
+// ─── Role adaptation ──────────────────────────────────────────────
+//
+// The only three things that differ between the tutor and the admin
+// entry point. Everything below this block is shared verbatim.
+const isAdmin = computed(() => auth.activeRole === 'admin');
+
+const roleKicker = computed(() =>
+  isAdmin.value ? t('tutoring2.common.roleAdmin') : t('tutoring2.common.roleTutor'),
+);
+
+/** Where "Batal" and a successful save return to. */
+const listRouteName = computed(() =>
+  isAdmin.value ? 'admin.tutoring2.schedule' : 'teacher.tutoring2.sessions',
+);
+
+/**
+ * "Contact your bimbel admin" is the right advice for a tutor with no
+ * active groups and nonsense for the admin who would BE that person —
+ * they are one screen away from creating the group themselves.
+ */
+const emptyDesc = computed(() =>
+  isAdmin.value
+    ? t('tutoring2.admin.schedule.createEmptyDesc')
+    : t('tutoring2.tutor.createSession.emptyDesc'),
+);
 
 // ─── Group picker ─────────────────────────────────────────────────
 //
@@ -137,7 +212,7 @@ async function submit() {
       materials_note: materialsNote.value.trim() || null,
     });
     toast.success(t('tutoring2.tutor.createSession.created'));
-    router.push({ name: 'teacher.tutoring2.sessions' });
+    router.push({ name: listRouteName.value });
   } catch (e) {
     toast.error((e as Error).message || t('tutoring2.tutor.createSession.createFailed'));
   } finally {
@@ -152,9 +227,11 @@ const inputCls =
 
 <template>
   <div class="space-y-md pb-24">
+    <!-- No `role` prop: BrandPageHeader falls back to the auth store's
+         active role, so the gradient tints itself for whichever role
+         reached this route. -->
     <BrandPageHeader
-      role="teacher"
-      :kicker="t('tutoring2.common.roleTutor')"
+      :kicker="roleKicker"
       :title="t('tutoring2.tutor.createSession.title')"
       :meta="t('tutoring2.tutor.createSession.meta')"
     />
@@ -164,11 +241,12 @@ const inputCls =
       loading-variant="cards"
       :loading-rows="3"
       :empty-title="t('tutoring2.tutor.createSession.emptyTitle')"
-      :empty-description="t('tutoring2.tutor.createSession.emptyDesc')"
+      :empty-description="emptyDesc"
       @retry="reload"
     >
       <template #default>
         <form
+          data-testid="session-create-form"
           class="rounded-3xl border border-slate-100 bg-white shadow-sm p-5 space-y-4"
           @submit.prevent="submit"
         >

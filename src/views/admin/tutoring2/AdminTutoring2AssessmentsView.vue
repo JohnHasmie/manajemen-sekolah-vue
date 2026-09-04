@@ -13,6 +13,45 @@
   it was inert on prod ("semua button/filter tdk berfungsi") even though
   the query + watcher below had been wired correctly all along. Same fix
   as AdminTutoring2GroupsView (!1191).
+
+  ── THE "+ Buat try-out" CTA IS DISABLED ON PURPOSE ──────────────────
+
+  It shipped with no `@click` and no handler, so it joined the prod
+  reports of "tombol diklik tidak terjadi apa-apa". It is NOT wired,
+  and the reason is narrower than the Program/Tagihan cases: a create
+  surface DOES exist, but it is not one an admin could use.
+
+  `TutoringBimbelService.createAssessment`'s only call site is
+  TutorTutoring2AssessmentCreateView, behind `meta: { role: 'teacher' }`.
+  Unlike the session form — which was role-neutral in substance and so
+  was lifted to `views/tutoring2/` and given an admin route in this same
+  MR — that view asks for its two foreign keys as RAW UUID TEXT INPUTS:
+
+      <input v-model="programId"       placeholder="UUID program" />
+      <input v-model="learningGroupId" placeholder="UUID learning group" />
+
+  (both still carrying `TODO i18n key` comments). Handing an admin a
+  sheet that demands a pasted UUID is not a working button; it is the
+  same dead end with more steps. Making it usable means replacing both
+  with real pickers — and since the tutor view loads no option lists at
+  all, that reshapes a second role's working screen too. That is
+  building the surface the tutor form should have had, which is a
+  product decision, not this bug fix.
+
+  The backend is ready: `admin` holds `tutoring.assessment.manage` in
+  `PermissionCatalog::adminTutoringDefaults()` and
+  `POST /tutoring-v2/assessments` is live. Only a usable surface is
+  missing. So the button states plainly that it is unavailable instead
+  of silently swallowing the click, and `assessments.emptyDesc` —
+  which read "Klik + untuk membuat try-out atau latihan baru." — no
+  longer tells admins to press it.
+
+  To finish this: give the shared form real program/group pickers
+  (this screen already loads `programs` for its filter chip; add
+  `listGroups` beside it exactly as AdminTutoring2ScheduleView does),
+  lift it to `views/tutoring2/` with an admin route the way
+  <Tutoring2CreateSessionView> was lifted here, then drop `disabled` +
+  the `title` below and restore the empty-state copy.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -248,12 +287,23 @@ function publishedLabel(publishedAt: string | null | undefined): string {
       </template>
     </AsyncView>
 
+    <!-- Disabled, with the reason on the control itself — see docblock.
+         `title` carries it for a pointer, and the aria-describedby'd
+         line carries it for a screen reader, which never sees a
+         tooltip. -->
     <button
       type="button"
-      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
+      data-testid="assessments-new-cta"
+      disabled
+      aria-describedby="assessments-new-cta-reason"
+      :title="t('tutoring2.admin.assessments.newCtaUnavailable')"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-300 text-white font-bold shadow-xl cursor-not-allowed"
     >
       <span aria-hidden="true">+</span> {{ t('tutoring2.admin.assessments.newCta') }}
     </button>
+    <span id="assessments-new-cta-reason" class="sr-only">
+      {{ t('tutoring2.admin.assessments.newCtaUnavailable') }}
+    </span>
 
     <!-- Per-facet picker. It writes its ref; the existing watcher on
          [kind, program, status] does the reload, so nothing calls it

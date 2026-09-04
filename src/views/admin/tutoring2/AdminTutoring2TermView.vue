@@ -18,6 +18,41 @@
 
   The `terms` table has held the real name, dates, `is_current` and
   status since BE-1. It is served now, so the derivation is gone.
+
+  ── THE "+ Term baru" CTA IS DISABLED ON PURPOSE ─────────────────────
+
+  It shipped with no `@click` and no handler, so it joined the prod
+  reports of "tombol diklik tidak terjadi apa-apa". This is the most
+  clear-cut of the set: there is not merely no create SURFACE, there is
+  no create METHOD. `TutoringTermsService` exposes `list` and nothing
+  else, and says so in its own docblock:
+
+      "Read-only, deliberately: the backend serves `index` only,
+       because the admin screen has no create or edit affordance.
+       `tutoring.term.manage` exists and is granted to admin, but
+       nothing calls it — when a term editor lands, the write methods
+       land with it."
+
+  That was written as a description of this screen. The floating CTA
+  contradicted it — the screen DID appear to offer the affordance, it
+  just could not deliver one. The button now matches the service.
+
+  The empty state told the same lie as the Pendaftaran / Keuangan /
+  Nilai lists — but hid it better. `empty-description` was a HARDCODED
+  Indonesian literal in the template ("Klik + untuk membuat term baru —
+  rombongan kelompok belajar per periode.") carrying a `TODO i18n key`
+  comment, so the sentence existed in no locale file and a sweep of the
+  copy could not find it. It reads `term.emptyDesc` now.
+
+  That key's own value was stale in a second way: "Belum ada term
+  terdeteksi dari kelompok." described the retired derivation this
+  docblock is about, not the served list. Both are corrected.
+
+  To finish this: add `create` to TutoringTermsService (the backend
+  needs a `store` route first — unlike programs, bills, enrolments and
+  assessments, this one is genuinely absent server-side too), build the
+  sheet, gate on `tutoring.term.manage`, then drop `disabled` + the
+  `title` below.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -140,10 +175,9 @@ const termCount = computed(() =>
       loading-variant="cards"
       :loading-rows="6"
       :empty-title="t('tutoring2.admin.term.emptyTitle')"
-      empty-description="Klik + untuk membuat term baru — rombongan kelompok belajar per periode."
+      :empty-description="t('tutoring2.admin.term.emptyDesc')"
       @retry="reload"
     >
-      <!-- TODO i18n key: term empty-description -->
       <template #default="{ data }">
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <table class="w-full text-sm">
@@ -183,11 +217,22 @@ const termCount = computed(() =>
       </template>
     </AsyncView>
 
+    <!-- Disabled, with the reason on the control itself — see docblock.
+         `title` carries it for a pointer, and the aria-describedby'd
+         line carries it for a screen reader, which never sees a
+         tooltip. -->
     <button
       type="button"
-      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
+      data-testid="term-new-cta"
+      disabled
+      aria-describedby="term-new-cta-reason"
+      :title="t('tutoring2.admin.term.newCtaUnavailable')"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-300 text-white font-bold shadow-xl cursor-not-allowed"
     >
       <span aria-hidden="true">+</span> {{ t('tutoring2.admin.term.newCta') }}
     </button>
+    <span id="term-new-cta-reason" class="sr-only">
+      {{ t('tutoring2.admin.term.newCtaUnavailable') }}
+    </span>
   </div>
 </template>

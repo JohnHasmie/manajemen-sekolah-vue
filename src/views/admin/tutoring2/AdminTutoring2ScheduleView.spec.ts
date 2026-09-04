@@ -44,6 +44,33 @@ vi.mock('@/composables/useAcademicYearWatcher', () => ({
   },
 }));
 
+/**
+ * Ability the "+ Buat sesi" CTA is gated on. Mutable so the "hidden
+ * without the grant" case can revoke it per test.
+ */
+let grantedAbilities: string[] = ['tutoring.session.manage'];
+
+/**
+ * Spied, not just stubbed: one test asserts the view asks `useMe` (the
+ * /me snapshot, scoped by X-Active-Role) rather than reaching into the
+ * auth store's unscoped `roles[].permission_keys`.
+ */
+const canSpy = vi.fn((ability: string) => grantedAbilities.includes(ability));
+
+vi.mock('@/composables/useMe', () => ({
+  useMe: () => ({
+    can: canSpy,
+    canAny: (abilities: Iterable<string>) =>
+      [...abilities].some((a) => grantedAbilities.includes(a)),
+  }),
+}));
+
+const push = vi.fn();
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push, back: vi.fn() }),
+  useRoute: () => ({ params: {}, query: {} }),
+}));
+
 function makeSession(overrides = {}) {
   return {
     id: 'se-1',
@@ -280,5 +307,85 @@ describe('AdminTutoring2ScheduleView table labels', () => {
 
     expect(row).toContain('gr-1');
     expect(row).toContain('tu-1');
+  });
+});
+
+/**
+ * The floating "+ Buat sesi" CTA.
+ *
+ * It shipped fully styled, with the right i18n label, and with NO
+ * `@click` at all — prod reported "tombol diklik tidak terjadi apa-apa".
+ * Same defect !1211 fixed on the Kelompok and Program lists.
+ *
+ * Each test here fails against that old template:
+ *
+ *   1. has a handler       — clicking must DO something. The old button
+ *                            swallowed the click silently.
+ *   2. goes to the shared  — and specifically to
+ *      create route          `admin.tutoring2.session-create`, the route
+ *                            added for <Tutoring2CreateSessionView>. A
+ *                            handler that navigated elsewhere would
+ *                            relocate the complaint, not fix it.
+ *   3. ability-gated       — no `tutoring.session.manage` → the CTA is
+ *                            not rendered at all, rather than rendered
+ *                            and refusing. Matches AdminTutoring2GroupsView.
+ *   4. gate reads /me      — via `useMe().can`, never
+ *                            `roles[].permission_keys`.
+ */
+const CTA = '[data-testid="schedule-new-cta"]';
+
+describe('AdminTutoring2ScheduleView "+ Buat sesi" CTA', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    grantedAbilities = ['tutoring.session.manage'];
+    (TutoringBimbelService.listSessions as any).mockResolvedValue({
+      items: [makeSession()],
+      pagination: undefined,
+    });
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
+    (TutoringTutorsService.list as any).mockResolvedValue({ items: TUTORS });
+  });
+
+  it('renders the CTA for an admin holding tutoring.session.manage', async () => {
+    const w = await mountView();
+
+    const cta = w.find(CTA);
+    expect(cta.exists()).toBe(true);
+    // Enabled — this one is genuinely wired, unlike the four CTAs on
+    // sibling screens that have no surface to open.
+    expect(cta.attributes('disabled')).toBeUndefined();
+  });
+
+  it('clicking it navigates somewhere — the click is not swallowed', async () => {
+    const w = await mountView();
+
+    await w.find(CTA).trigger('click');
+
+    // The whole bug: the old button had no @click, so this was 0.
+    expect(push).toHaveBeenCalledTimes(1);
+  });
+
+  it('navigates to the shared session-create route', async () => {
+    const w = await mountView();
+
+    await w.find(CTA).trigger('click');
+
+    expect(push).toHaveBeenCalledWith({ name: 'admin.tutoring2.session-create' });
+  });
+
+  it('hides the CTA entirely without tutoring.session.manage', async () => {
+    grantedAbilities = [];
+
+    const w = await mountView();
+
+    // Not rendered-and-refusing: absent. An admin never sees a button
+    // that would reject them.
+    expect(w.find(CTA).exists()).toBe(false);
+  });
+
+  it('reads the grant off the /me snapshot via useMe().can', async () => {
+    await mountView();
+
+    expect(canSpy).toHaveBeenCalledWith('tutoring.session.manage');
   });
 });

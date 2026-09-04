@@ -1542,6 +1542,22 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/tutoring2/AdminTutoring2ScheduleView.vue'),
         meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
       },
+      // The destination of the schedule list's floating "+ Buat sesi"
+      // CTA, which rendered with no handler at all until this route
+      // existed. Same component as `teacher.tutoring2.session-create`;
+      // admin holds `tutoring.session.manage` so the POST is theirs to
+      // make. Ability-gated so a staff tier without the key is bounced
+      // rather than shown a form the server will refuse.
+      {
+        path: 'admin/tutoring2/sessions/new',
+        name: 'admin.tutoring2.session-create',
+        component: () => import('@/views/tutoring2/Tutoring2CreateSessionView.vue'),
+        meta: {
+          role: 'admin' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.session.manage',
+        },
+      },
       {
         path: 'admin/tutoring2/attendance',
         name: 'admin.tutoring2.attendance',
@@ -1909,10 +1925,13 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/parent/tutoring2/ParentTutoring2VouchersView.vue'),
         meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
       },
+      // Shared with `admin.tutoring2.session-create` below — ONE view,
+      // two role-scoped routes, the same pattern the wali/siswa
+      // leaderboard pair uses. See Tutoring2CreateSessionView's docblock.
       {
         path: 'teacher/tutoring2/sessions/new',
         name: 'teacher.tutoring2.session-create',
-        component: () => import('@/views/teacher/tutoring2/TutorTutoring2CreateSessionView.vue'),
+        component: () => import('@/views/tutoring2/Tutoring2CreateSessionView.vue'),
         meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
       },
       {

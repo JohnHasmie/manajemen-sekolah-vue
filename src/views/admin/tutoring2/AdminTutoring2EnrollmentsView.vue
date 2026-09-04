@@ -13,6 +13,46 @@
   it was inert on prod ("semua button/filter tdk berfungsi") even though
   the query + watcher below had been wired correctly all along. Same fix
   as AdminTutoring2GroupsView (!1191).
+
+  ── THE "+ Daftarkan siswa" CTA IS DISABLED ON PURPOSE ───────────────
+
+  It shipped with no `@click` and no handler, so it joined the prod
+  reports of "tombol diklik tidak terjadi apa-apa". It is NOT wired,
+  because there is nothing admin-shaped to wire it to.
+
+  `TutoringBimbelService.createEnrollment` has exactly ONE call site in
+  the whole app: ParentTutoring2EnrollWizardView, the WALI's
+  self-service wizard. That is not this flow wearing a different hat:
+
+    - its subject comes from a `:studentId` route param, so the wali
+      never chooses a student — an admin starting from this list has no
+      student yet, and no student picker exists on this screen (it
+      loads `programs` for the filter chip and nothing else);
+    - it walks program → package → confirm, fetching each program's
+      packages as you go;
+    - it carries a documented authorization gap of its own (the wali
+      role holds none of the three keys it needs) and renders a
+      "not permitted yet" panel for it.
+
+  Reusing it would mean adding a student-search step and re-shelling
+  583 lines of wizard — that is building the admin enrollment flow, and
+  which students an admin may enrol on whose behalf is a product
+  question, not a bug fix. The backend is ready (`admin` holds
+  `tutoring.enrollment.manage` in `PermissionCatalog::
+  adminTutoringDefaults()` and `POST /tutoring-v2/enrollments` is
+  live) — only the surface is missing.
+
+  So the button states plainly that it is unavailable instead of
+  silently swallowing the click, and `enrollments.emptyDesc` — which
+  read "Klik + untuk mendaftarkan siswa baru." — no longer tells admins
+  to press it.
+
+  To finish this: build the create sheet (mirror
+  <AdminTutoring2GroupCreateSheet>, with a student picker over
+  `/tutoring-v2/students` and a package picker over the chosen
+  program), call `createEnrollment`, gate on
+  `tutoring.enrollment.manage`, then drop `disabled` + the `title`
+  below and restore the empty-state copy.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -240,12 +280,23 @@ function remainingQuota(e: BimbelEnrollment): string {
       </template>
     </AsyncView>
 
+    <!-- Disabled, with the reason on the control itself — see docblock.
+         `title` carries it for a pointer, and the aria-describedby'd
+         line carries it for a screen reader, which never sees a
+         tooltip. -->
     <button
       type="button"
-      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
+      data-testid="enrollments-new-cta"
+      disabled
+      aria-describedby="enrollments-new-cta-reason"
+      :title="t('tutoring2.admin.enrollments.newCtaUnavailable')"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-300 text-white font-bold shadow-xl cursor-not-allowed"
     >
       <span aria-hidden="true">+</span> {{ t('tutoring2.admin.enrollments.newCta') }}
     </button>
+    <span id="enrollments-new-cta-reason" class="sr-only">
+      {{ t('tutoring2.admin.enrollments.newCtaUnavailable') }}
+    </span>
 
     <!-- Per-facet picker. It writes its ref; the existing watcher on
          [status, program, billingMode] does the reload, so nothing calls

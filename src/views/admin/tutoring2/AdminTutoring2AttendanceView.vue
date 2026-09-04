@@ -44,6 +44,27 @@
   even though `listSessions` already forwarded learning_group_id /
   tutor_id and the watcher already reloaded. Same fix as
   AdminTutoring2GroupsView (!1191).
+
+  ── The "Ekspor rekap" action ──
+
+  It rendered with no `@click` at all, so the one thing this monitor
+  view offers beyond looking at it did nothing — the same defect !1211
+  fixed on the Kelompok and Program CTAs, in export shape.
+
+  It now writes a CSV client-side through `csvFrom` + `downloadCsv`,
+  the helpers `services/tutoring2/reports.ts` already exports and that
+  all three admin report views (Aktivitas / Kehadiran / Keuangan) use.
+  No new export machinery, and no `/reports/attendance` call: that
+  endpoint aggregates by enrollment over a date range with no group or
+  tutor filter, so its rows would contradict the table this button sits
+  under as soon as an admin filtered. The export is exactly the rows on
+  screen, filters included — what "Ekspor rekap" claims.
+
+  Absent stays absent, matching the KPIs above: a session that reported
+  no count exports an empty cell, never a 0, because no register taken
+  is not the same as nobody attending. With nothing loaded there is
+  nothing to export, so the button disables itself with a reason rather
+  than handing over a header-only file.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -66,7 +87,9 @@ import {
   type BimbelLearningGroup,
   type BimbelSession,
 } from '@/services/tutoring-bimbel.service';
+import { csvFrom, downloadCsv } from '@/services/tutoring2/reports';
 import { TutoringTutorsService } from '@/services/tutoring2/tutors';
+import { toLocalYmd } from '@/lib/local-date';
 import type { Tutor } from '@/types/tutoring2/tutor';
 import type { StatusBadgeTone } from '@/types/status-badge';
 
@@ -223,6 +246,63 @@ function chipValue(id: string, options: FacetOption[]): string {
   if (!id) return t('tutoring2.common.all');
   return options.find((o) => o.key === id)?.label ?? truncateId(id);
 }
+
+// ── Ekspor rekap ───────────────────────────────────────────────────
+// See the docblock: same csvFrom + downloadCsv path the three admin
+// report views use, over exactly the rows currently listed.
+
+/** The sessions the table is showing right now — filters applied. */
+const exportRows = computed<BimbelSession[]>(() =>
+  state.value.status === 'content' ? (state.value.data as BimbelSession[]) : [],
+);
+
+/** Nothing loaded → nothing to export, and the button says so. */
+const canExport = computed(() => exportRows.value.length > 0);
+
+function exportCsv(): void {
+  if (!canExport.value) return;
+
+  const rows = exportRows.value.map((s) => {
+    const marks = s.attendances_count;
+    const present = s.attendances_present_count;
+    return {
+      // `starts_at` is an ISO instant; render it the way the table does
+      // rather than slicing the string, so the CSV agrees with what the
+      // admin just read on screen.
+      date: formatTanggal(s.starts_at),
+      time: new Date(s.starts_at).toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      group_name: s.learning_group_name ?? '',
+      tutor_name: s.tutor_name ?? '',
+      // Blank, not 0, when the row reported no count at all — the same
+      // "absent is not zero" rule the KPI strip above follows.
+      attendances_count: marks ?? '',
+      attendances_present_count: present ?? '',
+      attendance_rate_pct:
+        typeof marks === 'number' && marks > 0 && typeof present === 'number'
+          ? Math.round((present / marks) * 100)
+          : '',
+      status: s.status_label ?? statusLabel(s.status),
+    };
+  });
+
+  const csv = csvFrom(rows, [
+    { key: 'date', header: t('tutoring2.common.date') },
+    { key: 'time', header: t('tutoring2.common.time') },
+    { key: 'group_name', header: t('tutoring2.common.group') },
+    { key: 'tutor_name', header: t('tutoring2.common.tutor') },
+    { key: 'attendances_count', header: t('tutoring2.admin.attendance.colMarks') },
+    { key: 'attendances_present_count', header: t('tutoring2.common.attended') },
+    { key: 'attendance_rate_pct', header: t('tutoring2.admin.attendance.colRate') },
+    { key: 'status', header: t('tutoring2.common.status') },
+  ]);
+
+  // Local date, never toISOString() — that names a WIB export before
+  // 07:00 after the previous day.
+  downloadCsv(csv, `rekap-kehadiran-${toLocalYmd()}.csv`);
+}
 </script>
 
 <template>
@@ -314,13 +394,30 @@ function chipValue(id: string, options: FacetOption[]): string {
       </template>
     </AsyncView>
 
+    <!-- Disabled only when the list is empty, and then with the reason
+         on the control itself: `title` for a pointer, the
+         aria-describedby'd line for a screen reader, which never sees a
+         tooltip. -->
     <button
       type="button"
+      data-testid="attendance-export-cta"
+      :disabled="!canExport"
       :aria-label="t('tutoring2.admin.attendance.exportCta')"
-      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
+      :aria-describedby="canExport ? undefined : 'attendance-export-reason'"
+      :title="canExport ? undefined : t('tutoring2.admin.attendance.exportEmpty')"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-white font-bold shadow-xl transition-colors"
+      :class="
+        canExport
+          ? 'bg-brand-cobalt shadow-brand-cobalt/30 hover:bg-brand-cobalt/90'
+          : 'bg-slate-300 cursor-not-allowed'
+      "
+      @click="exportCsv"
     >
       {{ t('tutoring2.admin.attendance.exportCta') }}
     </button>
+    <span v-if="!canExport" id="attendance-export-reason" class="sr-only">
+      {{ t('tutoring2.admin.attendance.exportEmpty') }}
+    </span>
 
     <!-- Per-facet pickers. Each writes its ref; the existing watcher on
          [date, group, tutor] does the reload, so nothing calls it here. -->
