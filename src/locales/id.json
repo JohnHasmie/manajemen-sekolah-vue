@@ -7109,7 +7109,10 @@
       "payoutRates": "Rate honor",
       "payoutRequests": "Pengajuan honor",
       "payoutSummary": "Ringkasan bulanan",
-      "payoutSettings": "Pengaturan honor"
+      "payoutSettings": "Pengaturan honor",
+      "reportsActivity": "Laporan Aktivitas",
+      "reportsAttendance": "Laporan Kehadiran",
+      "reportsFinancial": "Laporan Keuangan"
     },
     "admin": {
       "enrollments": {

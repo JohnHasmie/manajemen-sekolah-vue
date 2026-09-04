@@ -7800,7 +7800,10 @@
       "payoutRates": "Payout rates",
       "payoutRequests": "Payout requests",
       "payoutSummary": "Monthly summary",
-      "payoutSettings": "Payout settings"
+      "payoutSettings": "Payout settings",
+      "reportsActivity": "Activity Report",
+      "reportsAttendance": "Attendance Report",
+      "reportsFinancial": "Financial Report"
     },
     "status": {
       "inProgress": "In progress",
