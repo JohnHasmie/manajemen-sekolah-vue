@@ -30,7 +30,9 @@
  * gets both buttons back with no code change — which is why the
  * "with the grant" half below is a real assertion and not a formality.
  * Same reasoning !1217 recorded for the two session-write ROUTES, and
- * the same shape the mobile twin uses in `tutor_session_actions.dart`.
+ * the shape the mobile app takes for its own copy of this row in !1220
+ * (still unmerged at the time of writing, so there is no path on `main`
+ * to cite yet).
  *
  * ── Anti-vacuity notes ──
  *
@@ -46,11 +48,28 @@
  *    last describe block pins that copy to what `id.json`/`en.json`
  *    actually ship. vue-i18n echoes the KEY back for a missing message
  *    (and with `missingWarn: false` it does so silently), so asserting
- *    `toContain('tutoring2.tutor.sessionDetail.manageDenied')` would
- *    pass forever while proving nothing.
- * 5. The attribute checks are backed by BEHAVIOUR checks: a disabled
- *    control that still opened the dialog or still called the API would
- *    satisfy the markup assertions and fail the behavioural ones.
+ *    `toContain('tutoring2.tutor.sessionDetail.noManageAbility')`
+ *    would pass forever while proving nothing.
+ * 5. The attribute checks are backed by BEHAVIOUR checks — but NOT by
+ *    clicking the dead buttons. `@vue/test-utils` 2.4.11 refuses to
+ *    dispatch on a disabled element at all (`vue-test-utils.cjs.js`:
+ *    `if (this.element && !this.isDisabled())`), mirroring what a real
+ *    browser does with a disabled control, so `trigger('click')` on a
+ *    node this spec has already asserted is `disabled` is a guaranteed
+ *    no-op: it would re-assert the attribute and prove nothing. Two
+ *    such tests used to sit in the default-tutor block and have been
+ *    replaced. What pins the behaviour instead:
+ *      a. the handlers are invoked DIRECTLY off the component's
+ *         `<script setup>` bindings, bypassing the DOM, so the
+ *         in-function `if (…BlockedReason.value) return` guards — the
+ *         only thing standing between a blocked caller and the dialog
+ *         or the endpoint — are what has to hold; and
+ *      b. the "with the grant" block drives the very same two controls
+ *         while they are live, so none of the disabled-path assertions
+ *         can be passing merely because nothing is wired up at all.
+ * 6. `completeBlockedReason` is ability-ONLY by design; the status half
+ *    lives on the button's `v-if`. That `v-if` therefore needs its own
+ *    block, or removing it would fail no test here.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
@@ -106,9 +125,15 @@ vi.mock('@/composables/useToast', () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
 }));
 
-/** Copy the screen must actually render. Pinned to the locale files below. */
-const MANAGE_DENIED =
-  'Hanya admin bimbel yang bisa menjadwal ulang atau menutup sesi. Presensi yang kamu simpan sudah cukup — admin yang menutup sesinya.';
+/**
+ * Copy the screen must actually render. Pinned to the locale files below.
+ *
+ * It names the missing PERMISSION rather than a role: the catalog is a
+ * seed, not a ceiling, so "only an admin can do this" would be false the
+ * moment a tenant grants the key to its tutor role.
+ */
+const NO_MANAGE_ABILITY =
+  'Peran Anda belum diberi izin untuk menjadwal ulang atau menutup sesi. Presensi yang Anda simpan tetap tersimpan — mintalah pengelola bimbel menutup sesinya, atau menambahkan izin ini ke peran Anda.';
 const RESCHEDULE_CLOSED =
   'Sesi yang sudah selesai atau dibatalkan tidak bisa dijadwal ulang.';
 
@@ -144,7 +169,7 @@ function makeI18n() {
           },
           tutor: {
             sessionDetail: {
-              manageDenied: MANAGE_DENIED,
+              noManageAbility: NO_MANAGE_ABILITY,
               rescheduleClosed: RESCHEDULE_CLOSED,
             },
           },
@@ -187,6 +212,24 @@ async function mountView(status = 'in_progress') {
   });
   await flushPromises();
   return w;
+}
+
+/**
+ * The view's own `<script setup>` bindings.
+ *
+ * Reaching past the DOM is deliberate, not laziness: a click on a
+ * disabled node is a no-op under VTU (header note 5), so calling the
+ * handler is the ONLY way to exercise — and therefore to pin — the
+ * `if (…BlockedReason.value) return` guards inside them. Those guards
+ * are load-bearing beyond the button: the reschedule dialog is a
+ * SIBLING of the AsyncView branch that owns the row, so the button's
+ * own `disabled` does not cover it.
+ */
+function handlers(w: { vm: unknown }) {
+  return w.vm as {
+    rescheduleAction: () => void;
+    completeSession: () => Promise<void>;
+  };
 }
 
 describe('tutor session detail — write actions are gated on tutoring.session.manage', () => {
@@ -234,10 +277,10 @@ describe('tutor session detail — write actions are gated on tutoring.session.m
 
       const notice = w.find(NOTICE);
       expect(notice.exists()).toBe(true);
-      expect(notice.text()).toContain(MANAGE_DENIED);
+      expect(notice.text()).toContain(NO_MANAGE_ABILITY);
 
       // A key echoed back by vue-i18n would satisfy a naive
-      // `toContain('...manageDenied')`; it cannot satisfy this.
+      // `toContain('...noManageAbility')`; it cannot satisfy this.
       expect(notice.text()).not.toContain('tutoring2.');
 
       // VISIBLE, unlike the sr-only reason lines the admin CTAs use —
@@ -250,7 +293,7 @@ describe('tutor session detail — write actions are gated on tutoring.session.m
       const w = await mountView();
 
       for (const sel of [RESCHEDULE, COMPLETE]) {
-        expect(w.find(sel).attributes('title')).toBe(MANAGE_DENIED);
+        expect(w.find(sel).attributes('title')).toBe(NO_MANAGE_ABILITY);
         expect(w.find(sel).attributes('aria-describedby')).toBe('session-action-notice');
       }
 
@@ -263,27 +306,35 @@ describe('tutor session detail — write actions are gated on tutoring.session.m
 
       const lines = w.findAll(`${NOTICE} p`);
       expect(lines).toHaveLength(1);
-      expect(lines[0].text()).toBe(MANAGE_DENIED);
+      expect(lines[0].text()).toBe(NO_MANAGE_ABILITY);
     });
 
-    it('does not open the reschedule form when the dead button is pressed', async () => {
+    it('keeps the reschedule form shut even when its handler is called outright', async () => {
       const w = await mountView();
 
-      await w.get(RESCHEDULE).trigger('click');
+      // Nothing open to begin with — otherwise the assertion after the
+      // call could be describing a dialog that never opens for anyone.
+      expect(w.find('[data-testid="modal"]').exists()).toBe(false);
+
+      handlers(w).rescheduleAction();
       await flushPromises();
 
       // The behavioural half of the gate: the whole defect was a tutor
-      // filling in this form before the server refused it.
+      // filling in this form before the server refused it. Deleting the
+      // guard at the top of `rescheduleAction` turns this red; clicking
+      // the disabled button instead would not (header note 5).
       expect(w.find('[data-testid="modal"]').exists()).toBe(false);
       expect(TutoringBimbelService.rescheduleSession).not.toHaveBeenCalled();
     });
 
-    it('does not call the complete endpoint when the dead button is pressed', async () => {
+    it('never posts to the complete endpoint even when its handler is called outright', async () => {
       const w = await mountView();
 
-      await w.get(COMPLETE).trigger('click');
+      await handlers(w).completeSession();
       await flushPromises();
 
+      // Same shape: this is the guard inside `completeSession`, not the
+      // `disabled` attribute, being held to account.
       expect(TutoringBimbelService.completeSession).not.toHaveBeenCalled();
     });
 
@@ -377,6 +428,80 @@ describe('tutor session detail — write actions are gated on tutoring.session.m
       expect(w.find(RESCHEDULE).attributes('disabled')).toBeUndefined();
     });
   });
+
+  /**
+   * The `v-if="session.status === 'in_progress'"` on "Tandai selesai".
+   *
+   * `completeBlockedReason` is ability-ONLY on purpose — the status half
+   * is delegated to that `v-if`, and the view's docblock calls the
+   * ability gate ADDITIONAL to it. Nothing else in this file looks at
+   * it, so dropping the `v-if` would leave a live "Tandai selesai" on a
+   * session the backend refuses to close and fail no test.
+   *
+   * These run WITH the grant precisely so the ability gate cannot be
+   * what makes them pass.
+   */
+  describe('status rule for Tandai selesai, held by the v-if not by the ability', () => {
+    beforeEach(() => {
+      grantedAbilities = [...TUTOR_DEFAULTS, MANAGE];
+    });
+
+    it.each(['scheduled', 'done', 'cancelled'])(
+      'keeps Tandai selesai off a %s session even for a tutor holding the key',
+      async (status) => {
+        const w = await mountView(status);
+
+        // The row really rendered: without this the assertion below
+        // would also pass on a screen that drew nothing at all.
+        expect(w.find(ATTENDANCE).exists()).toBe(true);
+
+        expect(w.find(COMPLETE).exists()).toBe(false);
+      },
+    );
+
+    it('offers it on the one status that is actually running', async () => {
+      const w = await mountView('in_progress');
+
+      // The other half of the pair. Without it, a selector that matched
+      // nothing would satisfy every assertion above.
+      expect(w.find(COMPLETE).exists()).toBe(true);
+      expect(w.find(COMPLETE).attributes('disabled')).toBeUndefined();
+    });
+  });
+
+  /**
+   * No grant AND a closed session — the cell neither block above mounts.
+   *
+   * The default-tutor block only ever looked at `in_progress`, and the
+   * status block only ever ran WITH the grant, so the precedence inside
+   * `rescheduleBlockedReason` — ability first, status second — was
+   * never observed. `grantedAbilities` stays at the tutor defaults here.
+   */
+  describe('default tutor on a session that is already closed', () => {
+    it.each(['done', 'cancelled'])(
+      'names the missing permission, not the status, on a %s session',
+      async (status) => {
+        const w = await mountView(status);
+
+        expect(w.find(RESCHEDULE).exists()).toBe(true);
+        expect(w.find(RESCHEDULE).attributes('disabled')).toBeDefined();
+        expect(w.find(RESCHEDULE).attributes('title')).toBe(NO_MANAGE_ABILITY);
+
+        // One line, and it is the permission one. Telling this tutor
+        // the session is closed would send them to ask for the wrong
+        // thing — the grant is what they are missing, and it is what
+        // they would still be missing on a session that was open.
+        const lines = w.findAll(`${NOTICE} p`);
+        expect(lines).toHaveLength(1);
+        expect(lines[0].text()).toBe(NO_MANAGE_ABILITY);
+        expect(w.find(NOTICE).text()).not.toContain(RESCHEDULE_CLOSED);
+
+        // "Tandai selesai" is not on screen for a closed session, so no
+        // reason for it may be listed either.
+        expect(w.find(COMPLETE).exists()).toBe(false);
+      },
+    );
+  });
 });
 
 /**
@@ -385,7 +510,7 @@ describe('tutor session detail — write actions are gated on tutoring.session.m
  * green against strings that no longer exist in either locale file.
  */
 describe('the refusal copy ships in both locales', () => {
-  const KEYS = ['manageDenied', 'rescheduleClosed'] as const;
+  const KEYS = ['noManageAbility', 'rescheduleClosed'] as const;
 
   it.each(['id', 'en'])('%s.json carries every reason key', async (locale) => {
     const messages = (await import(`@/locales/${locale}.json`)).default;
@@ -402,7 +527,7 @@ describe('the refusal copy ships in both locales', () => {
     const messages = (await import('@/locales/id.json')).default;
     const block = messages.tutoring2.tutor.sessionDetail;
 
-    expect(block.manageDenied).toBe(MANAGE_DENIED);
+    expect(block.noManageAbility).toBe(NO_MANAGE_ABILITY);
     expect(block.rescheduleClosed).toBe(RESCHEDULE_CLOSED);
   });
 });

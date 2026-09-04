@@ -74,8 +74,9 @@ const session = computed<BimbelSession | null>(() => {
  * ceiling: a tenant that grants `tutoring.session.manage` to its tutor
  * role through the RBAC picker gets both buttons back with no code
  * change — the same reasoning !1217 recorded for the two session-write
- * ROUTES, and the same shape the mobile twin uses in
- * `tutor_session_actions.dart`. Hiding them instead would make the row
+ * ROUTES, and the shape the mobile app takes for its own copy of this
+ * row in !1220 (still unmerged at the time of writing, so there is no
+ * path on `main` to cite yet). Hiding them instead would make the row
  * silently differ between two tutors at the same centre with nothing on
  * screen to explain why.
  *
@@ -100,7 +101,7 @@ const canManageSession = computed(() => can('tutoring.session.manage'));
  */
 const rescheduleBlockedReason = computed<string | null>(() => {
   if (!canManageSession.value) {
-    return t('tutoring2.tutor.sessionDetail.manageDenied');
+    return t('tutoring2.tutor.sessionDetail.noManageAbility');
   }
   const s = session.value;
   if (s && (s.status === 'done' || s.status === 'cancelled')) {
@@ -115,19 +116,24 @@ const rescheduleBlockedReason = computed<string | null>(() => {
  * The ability gate is ADDITIONAL to the `v-if` on the button: a tutor
  * whose tenant granted the key still may not close a session that is
  * not running. That half of the original condition was always correct.
+ *
+ * Deliberately ability-ONLY: the status half stays on the `v-if`, so
+ * nothing in this computed would notice if that `v-if` were dropped.
+ * The gate spec pins it separately — see the "status rule for Tandai
+ * selesai, held by the v-if not by the ability" block.
  */
 const completeBlockedReason = computed<string | null>(() =>
-  canManageSession.value ? null : t('tutoring2.tutor.sessionDetail.manageDenied'),
+  canManageSession.value ? null : t('tutoring2.tutor.sessionDetail.noManageAbility'),
 );
 
 /**
  * The reason lines printed under the row, de-duplicated.
  *
  * A default tutor blocks both buttons for the same reason, and printing
- * "hanya admin" twice reads as a rendering bug rather than an
- * explanation. Only reasons for controls that are actually on screen
- * are listed — "Tandai selesai" is absent unless the session is
- * running.
+ * the same "peran Anda belum diberi izin" line twice reads as a
+ * rendering bug rather than an explanation. Only reasons for controls
+ * that are actually on screen are listed — "Tandai selesai" is absent
+ * unless the session is running.
  */
 const actionNotices = computed<string[]>(() => {
   const shown = [rescheduleBlockedReason.value];
