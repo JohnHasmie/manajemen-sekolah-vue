@@ -1,6 +1,34 @@
 /**
  * TeacherService — `/api/teacher` wrapper.
  * Mirrors `lib/features/teachers/data/teacher_service.dart`.
+ *
+ * ── The SINGULAR `/teacher/...` paths here are correct. Do not "fix"
+ *    them to `/teachers/...`. ──
+ *
+ * The backend registers BOTH resources, side by side and at the same
+ * nesting depth, in `routes/api.php`:
+ *
+ *   Route::post('teachers', …)->middleware('billing.seat-cap:staff');
+ *   Route::apiResource('teachers', TeacherController::class)
+ *       ->except(['store']);                              // plural
+ *   …
+ *   Route::apiResource('teacher', TeacherController::class);  // singular
+ *
+ * Both point at the same `TeacherController`, so `GET|PUT|DELETE
+ * /teacher/{id}` and `/teachers/{id}` reach identical handlers. The
+ * singular form is the one this service and the Flutter app have always
+ * used, and `TeacherController::show()` carries a comment naming
+ * `/teacher/{user_id}` in `resolveProfile` — our call — as a supported
+ * caller. Repointing is therefore a no-op at best; for `resolveProfile`
+ * it risks churning a contract the backend documents by name.
+ *
+ * A 404 from `/teacher/{id}` is NOT a missing route. `show()` ends in
+ * `firstOrFail()` scoped to the active school, so a 404 means "no
+ * teacher row in this school for that id" — see the note on
+ * `resolveProfile` for the benign case that fires on every admin login.
+ *
+ * `teachers.endpoints.spec.ts` pins these paths so a future sweep
+ * cannot silently rewrite them.
  */
 import { api } from '@/lib/http';
 import type { Pagination } from '@/types/api';
@@ -269,6 +297,12 @@ export const TeacherService = {
    * The Flutter app calls `GET /teacher/{user_id}` and reads
    * `response.data.id`. We do the same here. Returns null on failure
    * so callers can degrade gracefully.
+   *
+   * Passing a USER id to a path that otherwise carries a TEACHER id is
+   * deliberate and server-supported, not a bug: `TeacherController::show()`
+   * resolves `where('id', $id)->orWhere('user_id', $id)` scoped to the
+   * active school, precisely so this call works. Swapping in a
+   * teacher-id-only endpoint would break it.
    */
   async resolveProfileId(userId: string): Promise<string | null> {
     const p = await this.resolveProfile(userId);
@@ -303,6 +337,17 @@ export const TeacherService = {
    * us "matches the show endpoint when populated, otherwise matches
    * mobile exactly" — so the chip strip lights up regardless of
    * which relation flavour the deployed backend ships.
+   *
+   * EXPECTED 404: the auth store calls this for admins too
+   * (`isTeacherLike` includes ROLE_ADMIN, stores/auth.ts), because an
+   * admin is often also a teacher. An admin who is NOT a teacher at the
+   * active school has no `teachers` row, so `show()`'s `firstOrFail()`
+   * answers 404 and the browser console logs one
+   * `GET /api/teacher/{user id} 404`. That line is benign — it is
+   * swallowed here and again by `.catch(() => null)` at the call site,
+   * and the app carries on with `teacherProfileId = null`. Do not
+   * "repair" it by changing the path; the path is fine, the row is
+   * simply absent.
    */
   async resolveProfile(userId: string): Promise<{
     id: string;
