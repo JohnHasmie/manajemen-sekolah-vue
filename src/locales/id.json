@@ -5770,7 +5770,7 @@
       "payouts": "Penggajian",
       "payoutSettings": "Setelan Penarikan",
       "profile": "Profil",
-      "groupAnnouncementsV2": "Announcement Kelompok",
+      "groupAnnouncementsV2": "Pengumuman Kelompok",
       "jadwal": "Jadwal",
       "honor": "Honor",
       "payoutRequests": "Permintaan Penarikan",
@@ -7148,7 +7148,7 @@
         "newCta": "Tambah tutor"
       },
       "groupAnnouncements": {
-        "title": "Announcement Kelompok",
+        "title": "Pengumuman Kelompok",
         "meta": "{count} pengumuman",
         "searchPh": "Cari judul pengumuman…",
         "emptyTitle": "Belum ada pengumuman",
@@ -7157,7 +7157,7 @@
         "kpiPublished": "Terbit",
         "kpiDrafts": "Draft",
         "kpiGroupsCovered": "Kelompok terjangkau",
-        "composeCta": "Compose",
+        "composeCta": "Tulis",
         "composeTitle": "Buat pengumuman",
         "composeSubtitle": "Kirim ke semua siswa + wali di kelompok",
         "titlePh": "Contoh: Perubahan jadwal minggu depan",
@@ -7816,7 +7816,7 @@
         "emptyTitle": "Siswa belum punya pendaftaran"
       },
       "groupAnnouncements": {
-        "title": "Announcement",
+        "title": "Pengumuman",
         "meta": "{count} pengumuman",
         "searchPh": "Cari judul pengumuman…",
         "emptyTitle": "Belum ada pengumuman",
@@ -7825,7 +7825,7 @@
         "kpiPublished": "Terbit",
         "kpiDrafts": "Draft",
         "kpiGroups": "Kelompok saya",
-        "composeCta": "Compose",
+        "composeCta": "Tulis",
         "composeTitle": "Buat pengumuman",
         "composeSubtitle": "Untuk kelompok yang Anda ampu",
         "titlePh": "Contoh: Perubahan jadwal minggu depan",
