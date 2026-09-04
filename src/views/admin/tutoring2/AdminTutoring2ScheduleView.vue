@@ -32,8 +32,11 @@
 
   (That tutor route has no entry point of its own either — nothing
   navigates to it — so this CTA is the form's first real doorway in the
-  UI. Giving the tutor screen its own button is a separate decision and
-  is deliberately not made here.)
+  UI. Whether the tutor screen should get its own button was left open
+  here; it has since been decided AGAINST — `tutorTutoringDefaults()`
+  withholds `tutoring.session.manage`, so a tutor's submit would 403.
+  The tutor route carries this same ability gate now instead. See
+  Tutoring2CreateSessionView's docblock for the full argument.)
 
   Gate: `tutoring.session.manage`, read off the /me snapshot via
   `useMe().can` (NEVER `roles[].permission_keys`). Missing ability
