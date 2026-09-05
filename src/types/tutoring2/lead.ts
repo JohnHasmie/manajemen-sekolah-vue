@@ -169,3 +169,47 @@ export const LEAD_SOURCE_VALUES: readonly LeadSource[] = [
   'whatsapp',
   'other',
 ] as const;
+
+/**
+ * Which statuses the CONVERT endpoint will actually accept.
+ *
+ * Mirrors the server's inclusion set in
+ * `App\Modules\Tutoring\Actions\ConvertLeadAction`:
+ *
+ *   $allowed = [LeadStatus::CONTACTED, LeadStatus::TRIAL];
+ *
+ * Anything else is refused with a 422 carrying a `status` key. Note
+ * this is an INCLUSION set: `new` is refused just like the two
+ * terminal statuses, because the funnel deliberately makes an admin
+ * mark a lead "Dihubungi" before it can become an enrollment.
+ *
+ * Written as an exhaustive Record rather than a bare array on purpose:
+ * if someone adds a case to `LeadStatus`, the typecheck fails here
+ * until they decide whether it converts. A bare `['contacted','trial']`
+ * would silently classify every future status as non-convertible and
+ * drift away from the server without anyone noticing.
+ *
+ * This is deliberately NOT reused for Drop — the server's drop rule is
+ * a different, wider set (only `converted` is refused), so sharing one
+ * predicate between the two would remove a control that works.
+ */
+const LEAD_CONVERTIBLE_STATUS: Record<LeadStatus, boolean> = {
+  new: false,
+  contacted: true,
+  trial: true,
+  converted: false,
+  dropped: false,
+};
+
+/**
+ * True when the backend would accept this lead for conversion on
+ * status grounds alone. A `true` here is necessary but NOT sufficient:
+ * `ConvertLeadAction` checks `interest_program_id` FIRST and refuses a
+ * lead with no interest program with its own 422, so the caller must
+ * still surface server errors.
+ */
+export function isLeadConvertible(
+  status: LeadStatus | null | undefined,
+): boolean {
+  return status != null && LEAD_CONVERTIBLE_STATUS[status] === true;
+}

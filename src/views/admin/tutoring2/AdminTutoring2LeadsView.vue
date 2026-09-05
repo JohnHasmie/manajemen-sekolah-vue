@@ -54,6 +54,7 @@ import {
   LEAD_SOURCE_VALUES,
   LEAD_STATUS_LABEL,
   LEAD_STATUS_VALUES,
+  isLeadConvertible,
   type BimbelLead,
   type ConvertLeadPayload,
   type CreateLeadPayload,
@@ -91,6 +92,38 @@ watch(search, (v) => applyDebounced(v));
  *  translation-safe without a locale-bundle PR blocker. */
 function tOr(key: string, fallback: string): string {
   return te(key) ? t(key) : fallback;
+}
+
+/**
+ * Pull the server's own explanation out of a rejected request.
+ *
+ * `TutoringLeadsService` posts with a bare axios call and the http
+ * interceptor re-rejects the raw AxiosError, so `(e as Error).message`
+ * here is axios's own "Request failed with status code 422" — the
+ * validation bag never gets looked at. That is exactly what made the
+ * convert failure unreadable.
+ *
+ * Laravel's `ValidationException::summarize()` puts the FIRST error
+ * string into the top-level `message` (appending "(and N more errors)"
+ * when several fields failed), so reading `message` first is both the
+ * house idiom here (identical helper in the three PayoutRates /
+ * PayoutRequests / PayoutSettings views) and the most complete text
+ * available. The `errors` bag is the fallback for non-validation
+ * responses that only populate one or the other.
+ *
+ * Returns null when the payload carries no server-authored text, so
+ * the caller can decide its own fallback.
+ */
+function extractError(e: unknown): string | null {
+  const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
+  const msg = err?.response?.data?.message;
+  if (msg) return msg;
+  const errors = err?.response?.data?.errors;
+  if (errors) {
+    const first = Object.values(errors)[0];
+    if (Array.isArray(first) && first.length > 0) return first[0];
+  }
+  return null;
 }
 
 // ─── Data load ─────────────────────────────────────────────────────
@@ -311,11 +344,15 @@ const convertForm = ref<ConvertLeadPayload>({
 });
 function openConvert(lead: BimbelLead) {
   if (!canManage.value) return;
-  if (lead.status === 'converted' || lead.status === 'dropped') {
+  // Same inclusion set as the two Konversi buttons' v-if, so this
+  // defense-in-depth guard can't be looser than the affordance it
+  // backs. Deliberately NOT the exclusion set used by openDrop —
+  // dropping a `new` lead is legal server-side, converting one is not.
+  if (!isLeadConvertible(lead.status)) {
     toast.error(
       tOr(
-        'tutoring2.admin.leads.errTerminal',
-        'Lead sudah berada di status terminal',
+        'tutoring2.admin.leads.errNotConvertible',
+        'Lead hanya bisa dikonversi dari status Dihubungi atau Trial',
       ),
     );
     return;
@@ -353,7 +390,22 @@ async function submitConvert() {
     openSheet.value = 'none';
     await reload();
   } catch (e) {
-    toast.error((e as Error).message);
+    // The status gate above cannot make this unreachable: a lead that
+    // IS `contacted` but has no `interest_program_id` is still refused,
+    // with a different message — and CreateEnrollmentAction adds seven
+    // more 422s (archived program, seat-full group, duplicate active
+    // enrollment, …). Show whatever the server actually said.
+    // Ladder matches AdminTutoring2GroupCreateSheet: server-authored
+    // text first, then whatever the transport said (so a bare network
+    // failure still reads exactly as it does today), then a generic.
+    toast.error(
+      extractError(e) ??
+        (e as { message?: string })?.message ??
+        tOr(
+          'tutoring2.admin.leads.errConvertFailed',
+          'Gagal mengonversi lead',
+        ),
+    );
   } finally {
     submitting.value = false;
   }
@@ -498,7 +550,7 @@ function closeSheet() {
                         @click="openDetail(l)"
                       >{{ tOr('tutoring2.common.detail', 'Detail') }}</button>
                       <button
-                        v-if="canManage && l.status !== 'converted' && l.status !== 'dropped'"
+                        v-if="canManage && isLeadConvertible(l.status)"
                         type="button"
                         data-testid="lead-convert-btn"
                         class="px-2 py-1 rounded-lg text-xs font-semibold text-emerald-700 hover:bg-emerald-50"
@@ -507,6 +559,7 @@ function closeSheet() {
                       <button
                         v-if="canManage && l.status !== 'converted' && l.status !== 'dropped'"
                         type="button"
+                        data-testid="lead-drop-btn"
                         class="px-2 py-1 rounded-lg text-xs font-semibold text-red-700 hover:bg-red-50"
                         @click="openDrop(l)"
                       >{{ tOr('tutoring2.admin.leads.drop', 'Batalkan') }}</button>
@@ -658,9 +711,10 @@ function closeSheet() {
           <div class="flex flex-wrap justify-between gap-2 pt-md border-t border-slate-100">
             <div class="inline-flex gap-2">
               <Button
-                v-if="canManage && activeLead.status !== 'converted' && activeLead.status !== 'dropped'"
+                v-if="canManage && isLeadConvertible(activeLead.status)"
                 variant="ghost"
                 type="button"
+                data-testid="lead-detail-convert-btn"
                 @click="openConvert(activeLead)"
               >
                 {{ tOr('tutoring2.admin.leads.convert', 'Konversi ke pendaftaran') }}
@@ -669,6 +723,7 @@ function closeSheet() {
                 v-if="canManage && activeLead.status !== 'converted' && activeLead.status !== 'dropped'"
                 variant="ghost"
                 type="button"
+                data-testid="lead-detail-drop-btn"
                 @click="openDrop(activeLead)"
               >
                 {{ tOr('tutoring2.admin.leads.drop', 'Batalkan') }}
