@@ -68,6 +68,9 @@ vi.mock('@/services/tutoring2/tutors', () => ({
   TutoringTutorsService: { list: vi.fn() },
 }));
 
+const routerPush = vi.fn();
+vi.mock('vue-router', () => ({ useRouter: () => ({ push: routerPush }) }));
+
 vi.mock('@/composables/useAcademicYearWatcher', () => ({
   useAcademicYearWatcher: (_fn: () => void) => {
     /* noop in tests */
@@ -496,5 +499,86 @@ describe('AdminTutoring2GroupsView "+ Kelompok baru" CTA', () => {
 
     // Hidden, not inert: an admin never sees a button that would refuse.
     expect(ctaOf(w).exists()).toBe(false);
+  });
+});
+
+
+/**
+ * Third guard on this file, for the third incarnation of the same bug.
+ *
+ * The chips (describe #1) shipped inert, the CTA (describe #2) shipped
+ * with no `@click` at all, and the table rows shipped the same way:
+ * `hover:bg-slate-50` with no handler behind it, so a bimbel admin on
+ * prod reported that clicking a kelompok belajar did nothing. The
+ * destination route `admin.tutoring2.group-detail` already existed and
+ * was already reached from two other screens; only this list, which the
+ * detail view's own docblock names as its list side, never linked.
+ *
+ * Each test fails against the old template: with no `@click` on the
+ * `<tr>`, `routerPush` is never called.
+ */
+describe('AdminTutoring2GroupsView row drill-in', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    grantedAbilities = ['tutoring.group.manage'];
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({
+      items: [makeGroup(), makeGroup({ id: 'gr-2', name: 'UTBK Siang B' })],
+      pagination: undefined,
+    });
+    (TutoringBimbelService.listPrograms as any).mockResolvedValue({ items: PROGRAMS });
+    (TutoringTermsService.list as any).mockResolvedValue({ items: TERMS });
+    (TutoringTutorsService.list as any).mockResolvedValue({ items: TUTORS });
+  });
+
+  it('clicking a row opens THAT group detail', async () => {
+    const w = await mountForCta();
+    const rows = w.findAll('tbody tr');
+    expect(rows.length).toBe(2);
+
+    await rows[0].trigger('click');
+
+    expect(routerPush).toHaveBeenCalledTimes(1);
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'admin.tutoring2.group-detail',
+      params: { groupId: 'gr-1' },
+    });
+  });
+
+  it('carries the id of the row actually clicked, not the first row', async () => {
+    const w = await mountForCta();
+
+    await w.findAll('tbody tr')[1].trigger('click');
+
+    // A handler hard-wired to the first row would still pass the test
+    // above; this is what pins the per-row binding.
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'admin.tutoring2.group-detail',
+      params: { groupId: 'gr-2' },
+    });
+  });
+
+  it('advertises the row as clickable', async () => {
+    const w = await mountForCta();
+
+    // The original bug was a row that LOOKED clickable (hover tint) and
+    // was not. Hover tint and cursor must now travel together.
+    const cls = w.findAll('tbody tr')[0].classes();
+    expect(cls).toContain('cursor-pointer');
+    expect(cls).toContain('hover:bg-slate-50');
+  });
+
+  it('stays reachable for an admin who may not manage groups', async () => {
+    // Read-only drill-in: gated on the list route's own access, never on
+    // `tutoring.group.manage` (that ability guards the create CTA only).
+    grantedAbilities = [];
+    const w = await mountForCta();
+
+    await w.findAll('tbody tr')[0].trigger('click');
+
+    expect(ctaOf(w).exists()).toBe(false);
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'admin.tutoring2.group-detail',
+      params: { groupId: 'gr-1' },
+    });
   });
 });

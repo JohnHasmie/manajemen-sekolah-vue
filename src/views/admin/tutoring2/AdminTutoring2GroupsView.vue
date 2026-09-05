@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -67,6 +68,7 @@ const termFilter = ref<string>(''); // '' = Semua
 const tutorFilter = ref<string>(''); // '' = Semua
 
 const { t } = useI18n();
+const router = useRouter();
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -195,6 +197,28 @@ function chipValue(id: string, options: FacetOption[]): string {
   return options.find((o) => o.key === id)?.label ?? shortId(id);
 }
 
+/**
+ * Drill-in from a list row to that group's detail screen.
+ *
+ * The row carried `hover:bg-slate-50` but no handler, so it advertised
+ * itself as clickable and then did nothing — prod reported "list
+ * kelompok belajar di klik tidak terjadi apa-apa". The destination
+ * (`admin.tutoring2.group-detail`) was already routed and already
+ * reached from the dashboard and from a program's detail; only this
+ * list, the detail view's own designated parent, never linked to it.
+ *
+ * Deliberately NOT gated on `canManage`: that ability guards the create
+ * CTA, while this is a read-only drill-in whose route carries the same
+ * meta as the list route. The sibling AdminTutoring2TutorsView row is
+ * likewise ungated.
+ */
+function goToDetail(g: BimbelLearningGroup): void {
+  void router.push({
+    name: 'admin.tutoring2.group-detail',
+    params: { groupId: g.id },
+  });
+}
+
 // ── Create sheet ───────────────────────────────────────────────────
 // `v-if`-gated on open so the form state is fresh every time, the same
 // pattern AdminTutoring2StudentsView uses for its create sheet.
@@ -282,7 +306,8 @@ function onCreated() {
               <tr
                 v-for="g in (data as BimbelLearningGroup[])"
                 :key="g.id"
-                class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
+                class="border-b border-slate-100 last:border-0 hover:bg-slate-50 cursor-pointer"
+                @click="goToDetail(g)"
               >
                 <td class="px-4 py-3 font-bold text-slate-900">{{ g.name }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ g.kind_label ?? (g.kind === 'private' ? t('tutoring2.admin.groups.kindPrivate') : t('tutoring2.admin.groups.kindGroup')) }}</td>
