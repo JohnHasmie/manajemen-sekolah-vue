@@ -7283,11 +7283,29 @@
         "meta": "{count} active programs",
         "kpiStartFrom": "Most expensive (from)",
         "newCta": "New program",
-        "emptyDesc": "No programs registered yet. Contact the KamilEdu team to add one.",
+        "emptyDesc": "No programs registered yet. Click + to create one.",
         "kpiActivePackages": "Active packages",
         "kpiActivePrograms": "Programs",
-        "searchPh": "Search programs…",
-        "newCtaUnavailable": "Creating a program is not available on the web yet. Contact the KamilEdu team to add one."
+        "searchPh": "Search programs…"
+      },
+      "programCreate": {
+        "title": "New program",
+        "subtitle": "Create a tutoring program you can sell to students.",
+        "nameLabel": "Program name",
+        "namePh": "e.g. UTBK Science Intensive",
+        "gradeLevelPh": "e.g. SD, SMP, SMA, Umum",
+        "statusLabel": "Initial status",
+        "statusHint": "Draft cannot be sold yet; Active is enrollable straight away.",
+        "descriptionLabel": "Description",
+        "descriptionPh": "A short summary of what the program covers (optional).",
+        "submit": "Create program",
+        "errName": "Program name must be at least 3 characters.",
+        "errNameTooLong": "Program name must be at most 120 characters.",
+        "errGradeLevelTooLong": "Grade level must be at most 16 characters.",
+        "errDescriptionTooLong": "Description must be at most 2000 characters.",
+        "errDuplicate": "That program name is already used in this tutoring centre. Pick another one.",
+        "success": "Program created.",
+        "errorGeneric": "Could not create the program."
       },
       "payoutRates": {
         "title": "Tutor Payout Rates",

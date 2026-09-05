@@ -6,29 +6,27 @@
   lives only in the i18n locale files (id.json / en.json). Follow this
   pattern in every other tutoring2/*View.vue.
 
-  ── THE "+ Program baru" CTA IS DISABLED ON PURPOSE ──────────────────
+  ── THE "+ Program baru" CTA ─────────────────────────────────────────
 
-  It shipped with no `@click` and no handler, so prod reported "tombol
-  diklik tidak terjadi apa-apa". The fix is NOT to wire it, because
-  there is nothing to wire it TO: **web-vue has never had a program
-  create surface.** `TutoringBimbelService.createProgram` exists and
-  wraps `POST /tutoring-v2/programs` (the route and
-  `ProgramController::store` are both live on the backend), but it has
-  zero call sites — and had zero in the retired legacy stack too
-  (`git log -S createProgram`). Packages and groups are created from
-  AdminTutoring2ProgramDetailView; the program itself is not created
-  anywhere.
+  It first shipped with no `@click` at all ("tombol diklik tidak terjadi
+  apa-apa" from prod), then as a deliberately DISABLED placeholder,
+  because web-vue had never had a program create surface — packages and
+  groups are created from AdminTutoring2ProgramDetailView, but the
+  program itself was created nowhere, and `createProgram` wrapped a live
+  `POST /tutoring-v2/programs` with zero call sites.
 
-  So this is a MISSING FEATURE, not a missing handler, and inventing a
-  create form here would be a product decision made by a bug fix. Until
-  someone builds that form, the button states plainly that it is
-  unavailable instead of silently swallowing the click — a control that
-  renders and refuses without saying why is the bug being fixed, and
-  re-shipping it inert would only relocate the complaint.
+  That surface now exists: the CTA opens
+  <AdminTutoring2ProgramCreateSheet>, the same "floating CTA on a list
+  view opens a FormSheet" shape AdminTutoring2GroupsView uses. On a
+  successful POST the sheet closes and this list re-fetches, so the new
+  program appears with its server-computed package count.
 
-  To finish this: build the create sheet (mirror
-  <AdminTutoring2GroupCreateSheet>), call `createProgram`, gate on
-  `tutoring.program.manage`, then drop `disabled` + the `title` below.
+  Gate: `tutoring.program.manage`, read off the /me snapshot via
+  `useMe().can` (NEVER `roles[].permission_keys` — that list is unscoped
+  and exists only for the role switcher). Missing ability hides the CTA
+  outright, matching AdminTutoring2GroupsView and
+  AdminTutoring2StudentsView: an admin never sees a button that would
+  refuse them.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -43,13 +41,18 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { useMe } from '@/composables/useMe';
 import {
   TutoringBimbelService,
   type BimbelProgram,
 } from '@/services/tutoring-bimbel.service';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import AdminTutoring2ProgramCreateSheet from './AdminTutoring2ProgramCreateSheet.vue';
 
 const { t } = useI18n();
+
+const { can } = useMe();
+const canManage = computed(() => can('tutoring.program.manage'));
 
 const search = ref('');
 const statusFilter = ref<string>(''); // '' | 'draft' | 'active' | 'archived'
@@ -108,6 +111,22 @@ function formatRupiah(n: number | null | undefined): string {
 const activeCount = computed(() =>
   state.value.status === 'content' ? (state.value.data as BimbelProgram[]).length : 0,
 );
+
+// ── Create sheet ───────────────────────────────────────────────────
+// `v-if`-gated on open so the form state is fresh every time — the same
+// pattern AdminTutoring2GroupsView and AdminTutoring2StudentsView use.
+
+const createOpen = ref(false);
+
+function openCreate() {
+  createOpen.value = true;
+}
+
+function onCreated() {
+  // The sheet already toasted; the list just re-fetches so the new row
+  // shows with its server-computed package count and price.
+  reload();
+}
 </script>
 
 <template>
@@ -180,22 +199,20 @@ const activeCount = computed(() =>
       </template>
     </AsyncView>
 
-    <!-- Disabled, with the reason on the control itself — see docblock.
-         `title` carries it for a pointer, and the aria-describedby'd
-         line carries it for a screen reader, which never sees a
-         tooltip. -->
     <button
+      v-if="canManage"
       type="button"
       data-testid="programs-new-cta"
-      disabled
-      aria-describedby="programs-new-cta-reason"
-      :title="t('tutoring2.admin.programs.newCtaUnavailable')"
-      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-300 text-white font-bold shadow-xl cursor-not-allowed"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
+      @click="openCreate"
     >
       <span aria-hidden="true">+</span> {{ t('tutoring2.admin.programs.newCta') }}
     </button>
-    <span id="programs-new-cta-reason" class="sr-only">
-      {{ t('tutoring2.admin.programs.newCtaUnavailable') }}
-    </span>
+
+    <AdminTutoring2ProgramCreateSheet
+      v-if="createOpen && canManage"
+      @close="createOpen = false"
+      @saved="onCreated"
+    />
   </div>
 </template>

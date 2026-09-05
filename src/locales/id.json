@@ -7391,11 +7391,29 @@
         "searchPh": "Cari program…",
         "meta": "{count} program aktif",
         "kpiDrafts": "Draft",
-        "emptyDesc": "Belum ada program terdaftar. Hubungi tim KamilEdu untuk menambah program.",
+        "emptyDesc": "Belum ada program terdaftar. Klik + untuk membuat program baru.",
         "kpiStartFrom": "Termahal (mulai)",
         "kpiActivePackages": "Paket aktif",
-        "newCta": "Program baru",
-        "newCtaUnavailable": "Membuat program belum tersedia di web. Hubungi tim KamilEdu untuk menambah program."
+        "newCta": "Program baru"
+      },
+      "programCreate": {
+        "title": "Program baru",
+        "subtitle": "Buat program bimbel yang bisa dijual ke siswa.",
+        "nameLabel": "Nama program",
+        "namePh": "Contoh: Intensif UTBK Saintek",
+        "gradeLevelPh": "Contoh: SD, SMP, SMA, Umum",
+        "statusLabel": "Status awal",
+        "statusHint": "Draft belum bisa dijual; Aktif langsung bisa dipakai pendaftaran.",
+        "descriptionLabel": "Deskripsi",
+        "descriptionPh": "Ringkasan singkat isi program (opsional).",
+        "submit": "Buat program",
+        "errName": "Nama program minimal 3 karakter.",
+        "errNameTooLong": "Nama program maksimal 120 karakter.",
+        "errGradeLevelTooLong": "Jenjang maksimal 16 karakter.",
+        "errDescriptionTooLong": "Deskripsi maksimal 2000 karakter.",
+        "errDuplicate": "Nama program itu sudah dipakai di bimbel ini. Pakai nama lain.",
+        "success": "Program dibuat.",
+        "errorGeneric": "Gagal membuat program."
       },
       "students": {
         "createCta": "Tambah siswa",
