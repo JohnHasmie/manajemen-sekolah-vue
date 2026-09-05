@@ -35,6 +35,7 @@ import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
+import { extractError } from '@/lib/api-error';
 import { toLocalYm } from '@/lib/local-date';
 import { PayoutsService } from '@/services/tutoring2/payouts';
 import type {
@@ -170,18 +171,6 @@ async function confirmReopen() {
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────
-
-function extractError(e: unknown): string | null {
-  const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
-  const msg = err?.response?.data?.message;
-  if (msg) return msg;
-  const errors = err?.response?.data?.errors;
-  if (errors) {
-    const first = Object.values(errors)[0];
-    if (Array.isArray(first) && first.length > 0) return first[0];
-  }
-  return null;
-}
 
 function formatIsoDate(iso: string | null | undefined): string {
   if (!iso) return '—';

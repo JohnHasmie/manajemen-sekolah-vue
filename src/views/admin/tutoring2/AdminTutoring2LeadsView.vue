@@ -47,6 +47,7 @@ import Button from '@/components/ui/Button.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
+import { extractError } from '@/lib/api-error';
 import { toLocalYmd } from '@/lib/local-date';
 import { TutoringLeadsService } from '@/services/tutoring2/leads';
 import {
@@ -54,6 +55,7 @@ import {
   LEAD_SOURCE_VALUES,
   LEAD_STATUS_LABEL,
   LEAD_STATUS_VALUES,
+  isLeadConvertible,
   type BimbelLead,
   type ConvertLeadPayload,
   type CreateLeadPayload,
@@ -91,6 +93,31 @@ watch(search, (v) => applyDebounced(v));
  *  translation-safe without a locale-bundle PR blocker. */
 function tOr(key: string, fallback: string): string {
   return te(key) ? t(key) : fallback;
+}
+
+/**
+ * Every write path below reports failure through the same three-rung
+ * ladder, so no two of them read differently:
+ *
+ *   1. `extractError(e)`  — what the server said, when that text is
+ *                           author-written (see @/lib/api-error for
+ *                           which statuses are refused and why).
+ *   2. `e.message`        — what the transport said. Keeps an
+ *                           offline/timeout failure reading exactly as
+ *                           it does today.
+ *   3. a per-action generic.
+ *
+ * `extractError` used to be copy-pasted into this file and three
+ * payout views. It now lives in @/lib/api-error as a single
+ * implementation — fixing it in one copy would have left four that
+ * silently disagree.
+ */
+function reportFailure(e: unknown, genericKey: string, generic: string): void {
+  toast.error(
+    extractError(e) ??
+      (e as { message?: string })?.message ??
+      tOr(genericKey, generic),
+  );
 }
 
 // ─── Data load ─────────────────────────────────────────────────────
@@ -249,7 +276,11 @@ async function submitCreate() {
     openSheet.value = 'none';
     await reload();
   } catch (e) {
-    toast.error((e as Error).message);
+    reportFailure(
+      e,
+      'tutoring2.admin.leads.errCreateFailed',
+      'Gagal menambahkan lead',
+    );
   } finally {
     submitting.value = false;
   }
@@ -295,7 +326,20 @@ async function submitDetail() {
     openSheet.value = 'none';
     await reload();
   } catch (e) {
-    toast.error((e as Error).message);
+    // The status <select> in this sheet offers all five statuses while
+    // UpdateLeadAction only accepts the moves in LeadStatus's DAG, so
+    // "Tidak dapat pindah dari new ke converted." is a routine 422
+    // here. It used to be replaced by axios's "Request failed with
+    // status code 422", which told the admin nothing.
+    //
+    // The convert gate makes this the MORE important path, not the
+    // less: with Konversi correctly hidden on a `new` lead, this
+    // Select is the only way to move that lead forward.
+    reportFailure(
+      e,
+      'tutoring2.admin.leads.errUpdateFailed',
+      'Gagal menyimpan perubahan',
+    );
   } finally {
     submitting.value = false;
   }
@@ -311,11 +355,15 @@ const convertForm = ref<ConvertLeadPayload>({
 });
 function openConvert(lead: BimbelLead) {
   if (!canManage.value) return;
-  if (lead.status === 'converted' || lead.status === 'dropped') {
+  // Same inclusion set as the two Konversi buttons' v-if, so this
+  // defense-in-depth guard can't be looser than the affordance it
+  // backs. Deliberately NOT the exclusion set used by openDrop —
+  // dropping a `new` lead is legal server-side, converting one is not.
+  if (!isLeadConvertible(lead.status)) {
     toast.error(
       tOr(
-        'tutoring2.admin.leads.errTerminal',
-        'Lead sudah berada di status terminal',
+        'tutoring2.admin.leads.errNotConvertible',
+        'Lead hanya bisa dikonversi dari status Dihubungi atau Trial',
       ),
     );
     return;
@@ -353,7 +401,16 @@ async function submitConvert() {
     openSheet.value = 'none';
     await reload();
   } catch (e) {
-    toast.error((e as Error).message);
+    // The status gate above cannot make this unreachable: a lead that
+    // IS `contacted` but has no `interest_program_id` is still refused,
+    // with a different message — and CreateEnrollmentAction adds seven
+    // more 422s (archived program, seat-full group, duplicate active
+    // enrollment, …). Show whatever the server actually said.
+    reportFailure(
+      e,
+      'tutoring2.admin.leads.errConvertFailed',
+      'Gagal mengonversi lead',
+    );
   } finally {
     submitting.value = false;
   }
@@ -387,7 +444,11 @@ async function submitDrop() {
     openSheet.value = 'none';
     await reload();
   } catch (e) {
-    toast.error((e as Error).message);
+    reportFailure(
+      e,
+      'tutoring2.admin.leads.errDropFailed',
+      'Gagal membatalkan lead',
+    );
   } finally {
     submitting.value = false;
   }
@@ -498,7 +559,7 @@ function closeSheet() {
                         @click="openDetail(l)"
                       >{{ tOr('tutoring2.common.detail', 'Detail') }}</button>
                       <button
-                        v-if="canManage && l.status !== 'converted' && l.status !== 'dropped'"
+                        v-if="canManage && isLeadConvertible(l.status)"
                         type="button"
                         data-testid="lead-convert-btn"
                         class="px-2 py-1 rounded-lg text-xs font-semibold text-emerald-700 hover:bg-emerald-50"
@@ -507,6 +568,7 @@ function closeSheet() {
                       <button
                         v-if="canManage && l.status !== 'converted' && l.status !== 'dropped'"
                         type="button"
+                        data-testid="lead-drop-btn"
                         class="px-2 py-1 rounded-lg text-xs font-semibold text-red-700 hover:bg-red-50"
                         @click="openDrop(l)"
                       >{{ tOr('tutoring2.admin.leads.drop', 'Batalkan') }}</button>
@@ -605,7 +667,7 @@ function closeSheet() {
           </span>
         </div>
 
-        <form class="space-y-md" @submit.prevent="submitDetail">
+        <form class="space-y-md" @submit.prevent="submitDetail" data-testid="lead-detail-form">
           <FormField
             :model-value="detailForm.name ?? ''"
             :label="tOr('tutoring2.common.name', 'Nama lengkap')"
@@ -658,9 +720,10 @@ function closeSheet() {
           <div class="flex flex-wrap justify-between gap-2 pt-md border-t border-slate-100">
             <div class="inline-flex gap-2">
               <Button
-                v-if="canManage && activeLead.status !== 'converted' && activeLead.status !== 'dropped'"
+                v-if="canManage && isLeadConvertible(activeLead.status)"
                 variant="ghost"
                 type="button"
+                data-testid="lead-detail-convert-btn"
                 @click="openConvert(activeLead)"
               >
                 {{ tOr('tutoring2.admin.leads.convert', 'Konversi ke pendaftaran') }}
@@ -669,6 +732,7 @@ function closeSheet() {
                 v-if="canManage && activeLead.status !== 'converted' && activeLead.status !== 'dropped'"
                 variant="ghost"
                 type="button"
+                data-testid="lead-detail-drop-btn"
                 @click="openDrop(activeLead)"
               >
                 {{ tOr('tutoring2.admin.leads.drop', 'Batalkan') }}
