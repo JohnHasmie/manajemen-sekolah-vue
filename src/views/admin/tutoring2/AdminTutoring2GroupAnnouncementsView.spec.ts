@@ -84,7 +84,15 @@ function makeI18n() {
     messages: {
       id: {
         tutoring2: {
-          common: { all: 'Semua', group: 'Kelompok', status: 'Status' },
+          common: {
+            all: 'Semua',
+            group: 'Kelompok',
+            status: 'Status',
+            // Used by the preview-footer block at the bottom of this file.
+            detail: 'Detail',
+            back: 'Kembali',
+            cancel: 'Batal',
+          },
           status: { draft: 'Draft', published: 'Terbit', archived: 'Arsip' },
         },
       },
@@ -266,5 +274,107 @@ describe('AdminTutoring2GroupAnnouncementsView filter chips', () => {
 
     expect(chips[CHIP.group].attributes('disabled')).toBeDefined();
     expect(chips[CHIP.status].attributes('disabled')).toBeUndefined();
+  });
+});
+
+/**
+ * ── Preview modal footer ────────────────────────────────────────────
+ *
+ * A bimbel admin reported that the detail dialog on this screen carries a
+ * "Batal" button that should not be there (Slack 1788511561.654479). It was
+ * worse than redundant: the dialog is READ-ONLY, so the call site binds no
+ * `@secondary`, and BottomSheetFooter rendered its cancel button anyway with
+ * the hardcoded 'Batal' default. Clicking it did nothing at all.
+ *
+ * The block above stubs `BottomSheetFooter`, which is exactly why no test
+ * ever saw those buttons. These mount it for real.
+ */
+async function mountViewWithFooter() {
+  setActivePinia(createPinia());
+  const i18n = makeI18n();
+  const w = mount(AdminTutoring2GroupAnnouncementsView, {
+    global: {
+      plugins: [i18n],
+      stubs: {
+        BrandPageHeader: true,
+        KpiStripCards: true,
+        StatusBadge: true,
+        AppRichTextEditor: true,
+        // BottomSheetFooter is deliberately NOT stubbed here.
+        PageFilterToolbar: { template: '<div><slot name="chips" /></div>' },
+        AppFilterChip: true,
+        AsyncView: {
+          props: ['state'],
+          template: '<div data-testid="async"><slot :data="state?.data ?? []" /></div>',
+        },
+        Modal: { template: '<div data-testid="modal"><slot /></div>' },
+      },
+    },
+  });
+  await flushPromises();
+  return w;
+}
+
+const CANCEL = '[data-testid="sheet-cancel"]';
+const SUBMIT = '[data-testid="sheet-submit"]';
+
+/** The per-row "Detail" button — first action in the row's action cell. */
+function detailButton(w) {
+  return w
+    .findAll('[data-testid="async"] tbody tr button')
+    .find((b) => b.text() === 'Detail');
+}
+
+describe('AdminTutoring2GroupAnnouncementsView preview footer', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
+    (TutoringAnnouncementsService.list as any).mockImplementation((groupId: string) =>
+      Promise.resolve({ items: [makeAnnouncement(groupId)] }),
+    );
+  });
+
+  it('the detail dialog ends in ONE button, and it is "Kembali"', async () => {
+    const w = await mountViewWithFooter();
+
+    await detailButton(w).trigger('click');
+
+    const modal = w.find('[data-testid="modal"]');
+    expect(modal.exists()).toBe(true);
+    expect(modal.find(SUBMIT).text()).toBe('Kembali');
+    expect(modal.find(CANCEL).exists()).toBe(false);
+  });
+
+  it('renders no "Batal" anywhere in the detail dialog', async () => {
+    const w = await mountViewWithFooter();
+
+    await detailButton(w).trigger('click');
+
+    expect(w.find('[data-testid="modal"]').text()).not.toContain('Batal');
+  });
+
+  it('"Kembali" still closes the dialog', async () => {
+    const w = await mountViewWithFooter();
+
+    await detailButton(w).trigger('click');
+    expect(w.find('[data-testid="modal"]').exists()).toBe(true);
+
+    await w.find(`[data-testid="modal"] ${SUBMIT}`).trigger('click');
+
+    expect(w.find('[data-testid="modal"]').exists()).toBe(false);
+  });
+
+  it('the COMPOSE dialog on this same screen keeps its working Batal', async () => {
+    // Scope guard: the fix suppresses the cancel button on the read-only
+    // preview only. The editable compose sheet binds `@secondary` and must
+    // still render both buttons.
+    const w = await mountViewWithFooter();
+
+    await w.find('button.fixed').trigger('click');
+
+    const modal = w.find('[data-testid="modal"]');
+    expect(modal.find(CANCEL).exists()).toBe(true);
+    expect(modal.find(CANCEL).text()).toBe('Batal');
+    expect(modal.find(SUBMIT).exists()).toBe(true);
   });
 });
