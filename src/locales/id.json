@@ -7581,7 +7581,12 @@
           "per_session": "Per sesi",
           "monthly_salary": "Gaji bulanan",
           "percent_revenue": "Persen omzet"
-        }
+        },
+        "sheetEditTitle": "Ubah rate honor",
+        "sheetEditSubtitle": "Nilai, tanggal berakhir, dan catatan bisa diubah. Riwayat rate lama tetap tersimpan.",
+        "editLockedHint": "Tutor, jenis, dan tanggal berlaku sejak dikunci saat mengubah. Untuk menggantinya, akhiri rate ini lalu buat rate baru.",
+        "createdAt": "Dibuat",
+        "updatedAt": "Diperbarui"
       },
       "tutorInvite": {
         "title": "Undang tutor",
