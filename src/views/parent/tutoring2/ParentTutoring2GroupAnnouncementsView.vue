@@ -174,6 +174,7 @@ function openPreview(row: AnnouncementRow) { previewRow.value = row; }
         <span>{{ shortDate(previewRow.published_at) }}</span>
       </div>
       <BottomSheetFooter
+        hide-secondary
         :primary-label="t('tutoring2.common.back')"
         @primary="previewRow = null"
       />

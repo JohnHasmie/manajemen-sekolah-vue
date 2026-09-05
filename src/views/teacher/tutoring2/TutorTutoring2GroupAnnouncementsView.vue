@@ -429,6 +429,7 @@ const totalCount = computed(() =>
         <span>{{ shortDate(previewRow.published_at ?? previewRow.created_at) }}</span>
       </div>
       <BottomSheetFooter
+        hide-secondary
         :primary-label="t('tutoring2.common.back')"
         @primary="previewRow = null"
       />
