@@ -5475,7 +5475,7 @@
       "amountInvalid": "Invalid amount."
     },
     "invite": {
-      "emailHint": "tutor@example.id",
+      "emailHint": "tutor{'@'}example.id",
       "alreadyTutor": "Already a tutor",
       "created": "Tutor account created",
       "emailLabel": "EMAIL",
@@ -7009,7 +7009,7 @@
         "title": "Invite tutor",
         "subtitle": "We'll send an email with sign-in instructions.",
         "emailLabel": "Tutor email",
-        "emailPh": "name@school.id",
+        "emailPh": "name{'@'}school.id",
         "nameLabel": "Full name",
         "namePh": "e.g. Mr. Ali",
         "nameHint": "Leave blank to derive from the email.",
@@ -7061,7 +7061,7 @@
           "waliName": "Guardian name",
           "waliEmail": "Guardian email",
           "waliPhone": "Guardian phone",
-          "waliEmailPlaceholder": "guardian@example.com",
+          "waliEmailPlaceholder": "guardian{'@'}example.com",
           "waliHint": "Guardian will be linked as a parent account at this school. If the email already exists, the existing account is reused.",
           "waliCreateNote": "A new guardian account will be created automatically. Temp password is shown once after saving."
         },
@@ -8047,7 +8047,7 @@
         "phoneLabel": "WhatsApp number",
         "phonePh": "08xxxxxxxxxx",
         "emailLabel": "Email",
-        "emailPh": "name@email.com",
+        "emailPh": "name{'@'}email.com",
         "programSection": "Program of interest",
         "programsEmptyTitle": "No active programs",
         "programsEmptyDesc": "You can still submit; our team will help pick a program.",

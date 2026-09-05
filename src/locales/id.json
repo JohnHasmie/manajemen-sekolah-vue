@@ -5475,7 +5475,7 @@
       "amountInvalid": "Nominal tidak valid."
     },
     "invite": {
-      "emailHint": "tutor@contoh.id",
+      "emailHint": "tutor{'@'}contoh.id",
       "alreadyTutor": "Sudah jadi tutor",
       "created": "Akun tutor dibuat",
       "emailLabel": "EMAIL",
@@ -6777,7 +6777,7 @@
         "phoneLabel": "Nomor WhatsApp",
         "phonePh": "08xxxxxxxxxx",
         "emailLabel": "Email",
-        "emailPh": "nama@email.com",
+        "emailPh": "nama{'@'}email.com",
         "programSection": "Program yang diminati",
         "programsEmptyTitle": "Belum ada program aktif",
         "programsEmptyDesc": "Anda tetap bisa mengirim pendaftaran; tim kami akan bantu memilihkan program.",
@@ -7425,7 +7425,7 @@
           "waliName": "Nama wali",
           "waliEmail": "Email wali",
           "waliPhone": "No. HP wali",
-          "waliEmailPlaceholder": "wali@contoh.com",
+          "waliEmailPlaceholder": "wali{'@'}contoh.com",
           "waliHint": "Wali akan otomatis terhubung sebagai akun orang tua di sekolah ini. Jika email sudah terdaftar, akun yang ada akan dipakai ulang.",
           "waliCreateNote": "Akun wali baru akan dibuatkan otomatis. Password sementara ditampilkan sekali setelah tersimpan."
         },
@@ -7568,7 +7568,7 @@
         "title": "Undang tutor",
         "subtitle": "Kami kirim email undangan berisi cara masuk.",
         "emailLabel": "Email tutor",
-        "emailPh": "nama@sekolah.id",
+        "emailPh": "nama{'@'}sekolah.id",
         "nameLabel": "Nama lengkap",
         "namePh": "Cth. Ust. Ali",
         "nameHint": "Kosongkan untuk pakai nama dari email.",
