@@ -3449,6 +3449,7 @@
     }
   },
   "registerDemo": {
+    "scalePreview": "{perClass} students × {classes} classes ({grades} grades) = {students} students will be created",
     "requesterSocialThreads": "Threads",
     "stepCounter": "Step {current} of {total}",
     "accuracyNote": "Please fill in your data accurately and correctly so your demo request can be processed smoothly.",

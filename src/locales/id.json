@@ -3449,6 +3449,7 @@
     }
   },
   "registerDemo": {
+    "scalePreview": "{perClass} siswa × {classes} kelas ({grades} tingkat) = {students} siswa akan dibuat",
     "requesterSocialThreads": "Threads",
     "stepCounter": "Langkah {current} dari {total}",
     "accuracyNote": "Mohon isi data dengan aktual dan benar agar proses permintaan demo Anda berjalan lancar.",

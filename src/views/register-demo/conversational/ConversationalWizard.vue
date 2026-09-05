@@ -27,6 +27,7 @@ import {
   detectGibberish,
 } from '@/lib/gibberish';
 import { questionsFor, type Question } from './questions';
+import { projectDemoScale } from './demo-scale';
 import type { DemoWizardPayload } from '@/types/demo';
 import { tenantLabel } from '@/lib/tenantTokens';
 
@@ -220,6 +221,33 @@ function skip(): void {
   if (target == null) submit();
   else idx.value = target;
 }
+
+/**
+ * The running total under the scale questions.
+ *
+ * Shown only on the two questions that produce it, so it appears where
+ * the misreading happens rather than following the user around.
+ */
+const scalePreview = computed(() => {
+  const key = current.value?.key;
+  if (key !== 'classes.pattern' && key !== 'students.per_class') return null;
+
+  const p = wizard.payload;
+  const projection = projectDemoScale({
+    educationLevel: p.school?.education_level,
+    pattern: p.classes?.pattern,
+    // On the per-class step the committed payload still holds the OLD
+    // value while the user types, so read the live draft there.
+    perClass:
+      key === 'students.per_class' ? Number(draft.value) || 0 : p.students?.per_class,
+  });
+  if (!projection) return null;
+
+  return {
+    perClass: key === 'students.per_class' ? Number(draft.value) : p.students.per_class,
+    ...projection,
+  };
+});
 
 // ── submit ───────────────────────────────────────────────────────────
 
@@ -470,6 +498,28 @@ watch(
           </h1>
           <p v-if="current.helper" class="text-sm text-slate-500 mb-7 max-w-md mx-auto leading-relaxed">
             {{ current.helper }}
+          </p>
+
+          <!-- What the answers add up to.
+               "Rata-rata siswa per kelas?" asks PER CLASS, and a school
+               owner read it as a total: they typed 30 and found 450
+               students waiting for them. Nothing was wrong — the pattern
+               they chose makes 15 classes — but the consequence was never
+               shown before they pressed on. Reported 2026-08-17.
+               Silent when the tier or pattern cannot be projected: a
+               confident wrong number is the very surprise this prevents. -->
+          <p
+            v-if="scalePreview"
+            class="text-sm font-semibold text-brand-cobalt -mt-4 mb-7 max-w-md mx-auto leading-relaxed"
+          >
+            {{
+              $t('registerDemo.scalePreview', {
+                perClass: scalePreview.perClass,
+                classes: scalePreview.classes,
+                grades: scalePreview.grades,
+                students: scalePreview.students,
+              })
+            }}
           </p>
 
           <QuestionInput
