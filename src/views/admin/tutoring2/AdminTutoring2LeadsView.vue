@@ -47,6 +47,7 @@ import Button from '@/components/ui/Button.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
+import { extractError } from '@/lib/api-error';
 import { toLocalYmd } from '@/lib/local-date';
 import { TutoringLeadsService } from '@/services/tutoring2/leads';
 import {
@@ -95,35 +96,28 @@ function tOr(key: string, fallback: string): string {
 }
 
 /**
- * Pull the server's own explanation out of a rejected request.
+ * Every write path below reports failure through the same three-rung
+ * ladder, so no two of them read differently:
  *
- * `TutoringLeadsService` posts with a bare axios call and the http
- * interceptor re-rejects the raw AxiosError, so `(e as Error).message`
- * here is axios's own "Request failed with status code 422" — the
- * validation bag never gets looked at. That is exactly what made the
- * convert failure unreadable.
+ *   1. `extractError(e)`  — what the server said, when that text is
+ *                           author-written (see @/lib/api-error for
+ *                           which statuses are refused and why).
+ *   2. `e.message`        — what the transport said. Keeps an
+ *                           offline/timeout failure reading exactly as
+ *                           it does today.
+ *   3. a per-action generic.
  *
- * Laravel's `ValidationException::summarize()` puts the FIRST error
- * string into the top-level `message` (appending "(and N more errors)"
- * when several fields failed), so reading `message` first is both the
- * house idiom here (identical helper in the three PayoutRates /
- * PayoutRequests / PayoutSettings views) and the most complete text
- * available. The `errors` bag is the fallback for non-validation
- * responses that only populate one or the other.
- *
- * Returns null when the payload carries no server-authored text, so
- * the caller can decide its own fallback.
+ * `extractError` used to be copy-pasted into this file and three
+ * payout views. It now lives in @/lib/api-error as a single
+ * implementation — fixing it in one copy would have left four that
+ * silently disagree.
  */
-function extractError(e: unknown): string | null {
-  const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
-  const msg = err?.response?.data?.message;
-  if (msg) return msg;
-  const errors = err?.response?.data?.errors;
-  if (errors) {
-    const first = Object.values(errors)[0];
-    if (Array.isArray(first) && first.length > 0) return first[0];
-  }
-  return null;
+function reportFailure(e: unknown, genericKey: string, generic: string): void {
+  toast.error(
+    extractError(e) ??
+      (e as { message?: string })?.message ??
+      tOr(genericKey, generic),
+  );
 }
 
 // ─── Data load ─────────────────────────────────────────────────────
@@ -282,7 +276,11 @@ async function submitCreate() {
     openSheet.value = 'none';
     await reload();
   } catch (e) {
-    toast.error((e as Error).message);
+    reportFailure(
+      e,
+      'tutoring2.admin.leads.errCreateFailed',
+      'Gagal menambahkan lead',
+    );
   } finally {
     submitting.value = false;
   }
@@ -328,7 +326,20 @@ async function submitDetail() {
     openSheet.value = 'none';
     await reload();
   } catch (e) {
-    toast.error((e as Error).message);
+    // The status <select> in this sheet offers all five statuses while
+    // UpdateLeadAction only accepts the moves in LeadStatus's DAG, so
+    // "Tidak dapat pindah dari new ke converted." is a routine 422
+    // here. It used to be replaced by axios's "Request failed with
+    // status code 422", which told the admin nothing.
+    //
+    // The convert gate makes this the MORE important path, not the
+    // less: with Konversi correctly hidden on a `new` lead, this
+    // Select is the only way to move that lead forward.
+    reportFailure(
+      e,
+      'tutoring2.admin.leads.errUpdateFailed',
+      'Gagal menyimpan perubahan',
+    );
   } finally {
     submitting.value = false;
   }
@@ -395,16 +406,10 @@ async function submitConvert() {
     // with a different message — and CreateEnrollmentAction adds seven
     // more 422s (archived program, seat-full group, duplicate active
     // enrollment, …). Show whatever the server actually said.
-    // Ladder matches AdminTutoring2GroupCreateSheet: server-authored
-    // text first, then whatever the transport said (so a bare network
-    // failure still reads exactly as it does today), then a generic.
-    toast.error(
-      extractError(e) ??
-        (e as { message?: string })?.message ??
-        tOr(
-          'tutoring2.admin.leads.errConvertFailed',
-          'Gagal mengonversi lead',
-        ),
+    reportFailure(
+      e,
+      'tutoring2.admin.leads.errConvertFailed',
+      'Gagal mengonversi lead',
     );
   } finally {
     submitting.value = false;
@@ -439,7 +444,11 @@ async function submitDrop() {
     openSheet.value = 'none';
     await reload();
   } catch (e) {
-    toast.error((e as Error).message);
+    reportFailure(
+      e,
+      'tutoring2.admin.leads.errDropFailed',
+      'Gagal membatalkan lead',
+    );
   } finally {
     submitting.value = false;
   }
@@ -658,7 +667,7 @@ function closeSheet() {
           </span>
         </div>
 
-        <form class="space-y-md" @submit.prevent="submitDetail">
+        <form class="space-y-md" @submit.prevent="submitDetail" data-testid="lead-detail-form">
           <FormField
             :model-value="detailForm.name ?? ''"
             :label="tOr('tutoring2.common.name', 'Nama lengkap')"
