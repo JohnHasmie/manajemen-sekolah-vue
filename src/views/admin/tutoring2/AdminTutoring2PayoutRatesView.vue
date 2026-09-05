@@ -155,6 +155,21 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
+// ─── Row detail ─────────────────────────────────────────────────────
+
+/**
+ * Expanding a row costs no request: `notes`, `created_at` and
+ * `updated_at` already ride along on the LIST response (RateResource
+ * ships all three) and are already typed on PayoutRate — the table just
+ * never had a surface for them. There is no GET /payouts/rates/{id} to
+ * route to, so this mirrors the expandable row on Pengajuan Payout
+ * rather than inventing a second detail idiom.
+ */
+const expandedId = ref<string | null>(null);
+function toggleExpand(id: string) {
+  expandedId.value = expandedId.value === id ? null : id;
+}
+
 // ─── Sheet + confirm state ──────────────────────────────────────────
 
 const showSheet = ref(false);
@@ -169,6 +184,15 @@ const form = ref<UpsertPayoutRatePayload>({
 });
 const formError = ref<string | null>(null);
 
+/**
+ * `null` = the sheet is creating a rate; a rate id = it is editing that
+ * row. Only used to drive the title and to LOCK the three key fields —
+ * the id itself is never sent, because the write is an upsert (see
+ * openEditSheet).
+ */
+const editingId = ref<string | null>(null);
+const isEditing = computed(() => editingId.value !== null);
+
 function openNewSheet() {
   form.value = {
     tutor_id: '',
@@ -178,6 +202,44 @@ function openNewSheet() {
     effective_until: null,
     notes: '',
   };
+  editingId.value = null;
+  formError.value = null;
+  showSheet.value = true;
+}
+
+/**
+ * Open the SAME sheet, prefilled from an existing row.
+ *
+ * No new endpoint is involved. POST /payouts/rates is an upsert whose
+ * dedup key is (school_id, tutor_id, kind, effective_from) —
+ * UpsertPayoutRateAction runs updateOrCreate on exactly that tuple, with
+ * a partial unique index behind it. So re-submitting a row whose three
+ * key fields are untouched UPDATES it, and `submitSheet` needs no branch
+ * at all. Editing was already reachable end-to-end; the only thing
+ * missing was a button that filled the form in for you, which left an
+ * admin re-typing the tutor, jenis and start date from memory until the
+ * tuple happened to match.
+ *
+ * That is also exactly why the template disables those three fields in
+ * edit mode: change any one of them and updateOrCreate stops matching
+ * the original row and silently CREATES a second rate while the first
+ * stays live — a forked honorarium history, the precise failure the
+ * versioning design exists to prevent.
+ *
+ * Deliberately NOT gated on isRateLive. Fixing a mistyped value on a
+ * future-dated rate is the case with no control at all today: "Akhiri"
+ * is live-only, and there is no delete route.
+ */
+function openEditSheet(r: PayoutRate) {
+  form.value = {
+    tutor_id: r.tutor_id,
+    kind: r.kind,
+    value: r.value,
+    effective_from: r.effective_from,
+    effective_until: r.effective_until,
+    notes: r.notes ?? '',
+  };
+  editingId.value = r.id;
   formError.value = null;
   showSheet.value = true;
 }
@@ -243,6 +305,15 @@ function formatValue(r: PayoutRate): string {
 
 function truncateId(id: string): string {
   return id.length > 8 ? id.slice(0, 8) : id;
+}
+
+// Same formatter as Pengajuan Payout: the audit timestamps arrive as
+// ISO-8601 strings and are read by humans, not compared.
+function formatIsoDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function rateStatusLabel(r: PayoutRate): string {
@@ -321,32 +392,86 @@ const valueHint = computed(() => {
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-for="r in filteredRates"
-                :key="r.id"
-                class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
-              >
-                <td class="px-4 py-3 font-semibold text-slate-900">{{ r.tutor_name ?? truncateId(r.tutor_id) }}</td>
-                <td class="px-4 py-3">
-                  <StatusBadge :label="kindLabel(r.kind)" :tone="kindTone(r.kind)" uppercase />
-                </td>
-                <td class="px-4 py-3 font-semibold text-slate-900">{{ formatValue(r) }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ r.effective_from }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ r.effective_until ?? '—' }}</td>
-                <td class="px-4 py-3">
-                  <StatusBadge :label="rateStatusLabel(r)" :tone="rateStatusTone(r)" uppercase />
-                </td>
-                <td class="px-4 py-3 text-right">
-                  <Button
-                    v-if="canManage && isRateLive(r)"
-                    variant="secondary"
-                    size="sm"
-                    @click="endTarget = r"
-                  >
-                    {{ t('tutoring2.admin.payoutRates.endCta') }}
-                  </Button>
-                </td>
-              </tr>
+              <template v-for="r in filteredRates" :key="r.id">
+                <tr
+                  class="border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
+                  @click="toggleExpand(r.id)"
+                >
+                  <td class="px-4 py-3 font-semibold text-slate-900">{{ r.tutor_name ?? truncateId(r.tutor_id) }}</td>
+                  <td class="px-4 py-3">
+                    <StatusBadge :label="kindLabel(r.kind)" :tone="kindTone(r.kind)" uppercase />
+                  </td>
+                  <td class="px-4 py-3 font-semibold text-slate-900">{{ formatValue(r) }}</td>
+                  <td class="px-4 py-3 text-slate-600">{{ r.effective_from }}</td>
+                  <td class="px-4 py-3 text-slate-600">{{ r.effective_until ?? '—' }}</td>
+                  <td class="px-4 py-3">
+                    <StatusBadge :label="rateStatusLabel(r)" :tone="rateStatusTone(r)" uppercase />
+                  </td>
+                  <!--
+                    The "Aksi" header used to sit over a single button that
+                    only appeared for LIVE rates, so on a list of historical
+                    rates the column was a header over nothing. Detail is
+                    ungated (reading is not a write) and Ubah follows the
+                    same `tutoring.payout.rates.manage` ability as Akhiri and
+                    the FAB — the ability the sidebar entry itself gates on.
+                  -->
+                  <td class="px-4 py-3 text-right" @click.stop>
+                    <div class="inline-flex flex-wrap justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        :data-testid="`detail-${r.id}`"
+                        @click="toggleExpand(r.id)"
+                      >
+                        {{ t('tutoring2.common.detail') }}
+                      </Button>
+                      <Button
+                        v-if="canManage"
+                        variant="secondary"
+                        size="sm"
+                        :data-testid="`edit-${r.id}`"
+                        @click="openEditSheet(r)"
+                      >
+                        {{ t('tutoring2.common.edit') }}
+                      </Button>
+                      <Button
+                        v-if="canManage && isRateLive(r)"
+                        variant="secondary"
+                        size="sm"
+                        @click="endTarget = r"
+                      >
+                        {{ t('tutoring2.admin.payoutRates.endCta') }}
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+                <tr
+                  v-if="expandedId === r.id"
+                  :data-testid="`detail-panel-${r.id}`"
+                  class="bg-slate-50/60 border-b border-slate-100"
+                >
+                  <!-- 7 columns here, not the 6 of Pengajuan Payout. -->
+                  <td colspan="7" class="px-4 py-4">
+                    <div class="grid gap-3 md:grid-cols-2">
+                      <div>
+                        <p class="text-2xs uppercase tracking-wide text-slate-400 font-bold mb-1">
+                          {{ t('tutoring2.common.notes') }}
+                        </p>
+                        <p class="text-xs text-slate-600 whitespace-pre-line">{{ r.notes || '—' }}</p>
+                      </div>
+                      <div>
+                        <p class="text-2xs uppercase tracking-wide text-slate-400 font-bold mb-1">
+                          {{ t('tutoring2.common.detail') }}
+                        </p>
+                        <ul class="space-y-1 text-xs text-slate-600">
+                          <li>{{ t('tutoring2.admin.payoutRates.createdAt') }}: {{ formatIsoDate(r.created_at) }}</li>
+                          <li>{{ t('tutoring2.admin.payoutRates.updatedAt') }}: {{ formatIsoDate(r.updated_at) }}</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
@@ -364,8 +489,8 @@ const valueHint = computed(() => {
 
     <FormSheet
       v-if="showSheet"
-      :title="t('tutoring2.admin.payoutRates.sheetTitle')"
-      :subtitle="t('tutoring2.admin.payoutRates.sheetSubtitle')"
+      :title="isEditing ? t('tutoring2.admin.payoutRates.sheetEditTitle') : t('tutoring2.admin.payoutRates.sheetTitle')"
+      :subtitle="isEditing ? t('tutoring2.admin.payoutRates.sheetEditSubtitle') : t('tutoring2.admin.payoutRates.sheetSubtitle')"
       :saving="isSaving"
       :save-label="t('tutoring2.common.save')"
       @save="submitSheet"
@@ -373,6 +498,16 @@ const valueHint = computed(() => {
       @close="showSheet = false"
     >
       <div class="space-y-3">
+        <!--
+          Tutor / Jenis / Berlaku sejak are the upsert's dedup key, so in
+          EDIT mode they are locked: editing one of them would not move
+          the rate, it would quietly mint a second one alongside the
+          original. The hint below says so in words, because a disabled
+          field with no explanation is its own kind of lying control.
+        -->
+        <p v-if="isEditing" class="text-2xs text-slate-500">
+          {{ t('tutoring2.admin.payoutRates.editLockedHint') }}
+        </p>
         <!-- By name. An empty list disables the field and says why, in
              the error line, rather than opening a dropdown with nothing
              in it — the reason is worth reading, not hiding in a title
@@ -385,15 +520,17 @@ const valueHint = computed(() => {
           required
           :options="tutorOptions"
           :select-placeholder="t('tutoring2.admin.payoutRates.tutorSelectPh')"
-          :disabled="tutorOptions.length === 0"
-          :error="tutorOptions.length === 0 ? t('tutoring2.admin.payoutRates.errNoTutors') : ''"
+          :disabled="isEditing || tutorOptions.length === 0"
+          :error="!isEditing && tutorOptions.length === 0 ? t('tutoring2.admin.payoutRates.errNoTutors') : ''"
         />
         <FormField
           v-model="form.kind"
           :label="t('tutoring2.common.kind')"
           type="select"
+          field="kind"
           required
           :options="kindOptions"
+          :disabled="isEditing"
         />
         <FormField
           v-model.number="form.value"
@@ -409,8 +546,10 @@ const valueHint = computed(() => {
           v-model="form.effective_from"
           :label="t('tutoring2.admin.payoutRates.effectiveFrom')"
           type="text"
+          field="effective_from"
           required
           placeholder="YYYY-MM-DD"
+          :disabled="isEditing"
         />
         <FormField
           v-model="form.effective_until"

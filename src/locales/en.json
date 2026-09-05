@@ -7348,7 +7348,12 @@
           "per_session": "Per session",
           "monthly_salary": "Monthly salary",
           "percent_revenue": "Percent revenue"
-        }
+        },
+        "sheetEditTitle": "Edit honorarium rate",
+        "sheetEditSubtitle": "Value, end date and notes can be changed. Older rates stay in history.",
+        "editLockedHint": "Tutor, kind and start date are locked while editing. To change them, end this rate and create a new one.",
+        "createdAt": "Created",
+        "updatedAt": "Updated"
       },
       "attendance": {
         "exportCta": "Export report",
