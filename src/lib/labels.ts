@@ -128,6 +128,77 @@ export type EducationLevelWire =
   | EducationLevelDisplay;
 
 /**
+ * The `education_level` values the SERVER actually accepts, mirroring
+ * `EducationLevel::payloadValues()` in the backend.
+ *
+ * This is deliberately NARROWER than what the UI uses. The wizard keeps
+ * MI / MTs / MA / TK / PAUD as their own chips because those are the
+ * words schools recognise, but the backend folded them into the English
+ * tiers (its enum docblock: "MI → ELEMENTARY, MTs → JUNIOR_HIGH,
+ * MA → SENIOR_HIGH", and KINDERGARTEN "covering the pre-elementary
+ * block (TK / KB / RA / PAUD)"). Sending the UI value straight through
+ * is a guaranteed 422.
+ */
+export type EducationLevelPayload =
+  | 'KINDERGARTEN'
+  | 'ELEMENTARY'
+  | 'JUNIOR_HIGH'
+  | 'SENIOR_HIGH'
+  | 'VOCATIONAL_HIGH'
+  | 'Pesantren'
+  | 'PKBM';
+
+/**
+ * Fold a UI/display education_level into a value the server accepts.
+ *
+ * Reported 2026-09-07: the demo wizard reached 100% and then died on
+ * "The selected school.education level is invalid." — picking SD / SMP /
+ * SMA / SMK / Pesantren worked, while MI / MTs / MA / TK / PAUD always
+ * failed, because those five are UI-only spellings.
+ *
+ * This is the WRITE boundary, the mirror of `normalizeEducationLevel()`
+ * which is the read boundary. Keeping the fold here (rather than
+ * renaming the UI values) leaves the chips, `GRADE_LISTS` and the class
+ * templates keyed on the tiers they already use — re-keying TK to
+ * KINDERGARTEN without touching those would have made a TK school fall
+ * through to the JUNIOR_HIGH default and offer grades 7-9.
+ */
+export function toEducationLevelPayload(
+  raw: string | null | undefined,
+): EducationLevelPayload | null {
+  if (!raw) return null;
+  switch (String(raw).trim().toUpperCase()) {
+    case 'SD':
+    case 'MI':
+    case 'ELEMENTARY':
+      return 'ELEMENTARY';
+    case 'SMP':
+    case 'MTS':
+    case 'JUNIOR_HIGH':
+      return 'JUNIOR_HIGH';
+    case 'SMA':
+    case 'MA':
+    case 'SENIOR_HIGH':
+      return 'SENIOR_HIGH';
+    case 'SMK':
+    case 'VOCATIONAL_HIGH':
+      return 'VOCATIONAL_HIGH';
+    case 'TK':
+    case 'KB':
+    case 'RA':
+    case 'PAUD':
+    case 'KINDERGARTEN':
+      return 'KINDERGARTEN';
+    case 'PESANTREN':
+      return 'Pesantren';
+    case 'PKBM':
+      return 'PKBM';
+    default:
+      return null;
+  }
+}
+
+/**
  * Normalise any education_level value (server response, persisted
  * payload, UI option) into the canonical wire form. Accepts both old
  * Indonesian values (SD/SMP/SMA/SMK) and the new English equivalents

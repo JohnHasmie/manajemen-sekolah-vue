@@ -4,6 +4,7 @@
  * Pinia store expects (already-parsed objects, no axios leakage).
  */
 import { api } from '@/lib/http';
+import { toEducationLevelPayload, type EducationLevelPayload } from '@/lib/labels';
 import type {
   DemoPendingResponse,
   DemoWizardPayload,
@@ -58,6 +59,66 @@ interface ExpiryInfo {
   seconds_remaining: number;
   is_expired: boolean;
   severity: 'normal' | 'warning' | 'danger';
+}
+
+type DemoWirePayload = Omit<DemoWizardPayload, 'school'> & {
+  school: Omit<DemoWizardPayload['school'], 'education_level'> & {
+    // Deliberately NOT `EducationLevel`: the wire vocabulary is the
+    // backend's (it has KINDERGARTEN / PKBM), the UI's is the wizard's
+    // (it has MI / MTs / MA / TK / PAUD). They are different sets, and
+    // pretending otherwise is what let the mismatch ship.
+    education_level: EducationLevelPayload | DemoWizardPayload['school']['education_level'];
+  };
+};
+
+/**
+ * Last stop before the payload goes on the wire: fold the UI's
+ * education_level into a value the server's `Rule::in` accepts.
+ *
+ * The wizard keeps MI / MTs / MA / TK / PAUD as separate chips (those are
+ * the words schools use); the backend folded them into the English tiers.
+ * Sending the UI spelling straight through 422'd the submit at 100% —
+ * reported 2026-09-07 as "Ada bugs saat proses pendaftaran".
+ *
+ * Left untouched when the level is unrecognised: better the server
+ * rejects an unknown value than that we quietly rewrite it to something
+ * the user did not choose.
+ */
+function toWirePayload(payload: DemoWizardPayload): DemoWirePayload {
+  const folded = toEducationLevelPayload(payload.school?.education_level);
+  if (!folded || folded === payload.school?.education_level) return payload;
+  return { ...payload, school: { ...payload.school, education_level: folded } };
+}
+
+/** Field paths the API validates, in words a person can act on. */
+const DEMO_FIELD_LABELS: Record<string, string> = {
+  'school.education_level': 'Jenjang sekolah',
+  'school.name': 'Nama sekolah',
+  'school.city': 'Kota sekolah',
+  'school.npsn': 'NPSN',
+  'identity.full_name': 'Nama lengkap',
+  'identity.email': 'Email',
+  'identity.phone': 'Nomor telepon',
+};
+
+/**
+ * Turn a Laravel 422 into something a person can act on.
+ *
+ * The old code surfaced `response.data.message` verbatim, which is how
+ * "The selected school.education level is invalid." — English, with an
+ * internal dotted field path — ended up in front of an Indonesian user.
+ * Read the `errors` map instead: name the field in Indonesian when we
+ * recognise it, and otherwise fall back to the generic sentence rather
+ * than leaking a field path.
+ */
+function friendly422(errors: unknown, fallback: string): string {
+  if (!errors || typeof errors !== 'object') return fallback;
+  const first = Object.keys(errors as Record<string, unknown>)[0];
+  if (!first) return fallback;
+  const label = DEMO_FIELD_LABELS[first];
+  return label
+    ? `${label} tidak diterima server. Silakan pilih atau isi ulang bagian itu.`
+    : fallback;
 }
 
 export const DemoService = {
@@ -233,7 +294,7 @@ export const DemoService = {
       // Submit is a light insert now (no heavy seeding), but keep a
       // generous timeout so a slow network never trips ECONNABORTED
       // before the request lands.
-      const res = await api.post('/demo/provision', payload, {
+      const res = await api.post('/demo/provision', toWirePayload(payload), {
         timeout: 60_000,
       });
       const data = res.data?.data;
@@ -261,7 +322,12 @@ export const DemoService = {
         );
       }
       if (status === 422) {
-        throw new Error(backendMsg ?? 'Data belum lengkap. Cek kembali setiap langkah.');
+        throw new Error(
+          friendly422(
+            err.response?.data?.errors,
+            'Data belum lengkap. Cek kembali setiap langkah.',
+          ),
+        );
       }
       if (status === 500 || status === 503) {
         throw new Error(
