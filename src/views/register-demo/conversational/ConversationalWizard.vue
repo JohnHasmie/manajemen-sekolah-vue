@@ -124,7 +124,11 @@ const activePosition = computed(() => {
   let pos = 0;
   for (let i = 0; i <= idx.value && i < list.value.length; i++) {
     const q = list.value[i];
-    if (!q.skipIf?.(wizard.payload)) pos++;
+    // The question being LOOKED AT always counts, whatever skipIf says.
+    // Kembali can now land on an auto-filled question so the user can
+    // correct it; without this the bar would quietly step backwards on
+    // arrival, as if the visible question were not a step at all.
+    if (i === idx.value || !q.skipIf?.(wizard.payload)) pos++;
   }
   return Math.max(pos, 1);
 });
@@ -176,17 +180,22 @@ function applyPatch(patcher: (p: DemoWizardPayload) => DemoWizardPayload): void 
 }
 
 /**
- * Walk the question list from `start` in `dir` (+1 forward, -1 back)
- * and return the index of the first question whose `skipIf` is NOT
- * truthy. Returns null when every remaining question is skippable —
- * forward → fire submit, back → bounce to landing.
+ * Walk FORWARD from `start` and return the index of the first question
+ * whose `skipIf` is not truthy. Returns null when every remaining
+ * question is skippable, which means it is time to submit.
+ *
+ * Forward-only on purpose. This used to take a direction and `back()`
+ * passed -1, which meant a question auto-filled by an NPSN registry hit
+ * was skipped in BOTH directions and could never be corrected
+ * (2026-09-07). Skipping is about not asking something twice; it must
+ * never decide where the user is allowed to return to.
  */
-function findActiveIdx(start: number, dir: 1 | -1): number | null {
+function findActiveIdx(start: number): number | null {
   let i = start;
   while (i >= 0 && i < total.value) {
     const q = list.value[i];
     if (!q?.skipIf?.(wizard.payload)) return i;
-    i += dir;
+    i += 1;
   }
   return null;
 }
@@ -200,15 +209,29 @@ function next(): void {
     return;
   }
   commitDraft();
-  const target = findActiveIdx(idx.value + 1, 1);
+  const target = findActiveIdx(idx.value + 1);
   if (target == null) submit();
   else idx.value = target;
 }
 
 function back(): void {
   commitDraft();
-  const target = findActiveIdx(idx.value - 1, -1);
-  if (target == null) router.push('/register-demo');
+  // Going back is a DELIBERATE revisit, so `skipIf` does NOT apply here.
+  //
+  // `skipIf` means "don't ask this unprompted", not "seal this answer
+  // forever". Running it on the way back made an auto-filled question
+  // unreachable: pick a school from the NPSN registry on Q1 and it fills
+  // jenjang + kota, whose skipIf then turns true — so Kembali stepped
+  // straight over them and the jenjang could never be corrected.
+  // Reported 2026-09-07: "Setelah memilih jenjang, kemudian kembali lagi
+  // untuk menyesuaikan jenjang, pemilihan jenjang tdk tampil".
+  //
+  // Safe because every skipIf in questions.ts is an "already answered"
+  // test, never structural — the school/tutoring split is done by
+  // `questionsFor(tenant)` handing back two separate lists, so stepping
+  // back can never land on a question from the other path.
+  const target = idx.value - 1;
+  if (target < 0) router.push('/register-demo');
   else idx.value = target;
 }
 
@@ -217,7 +240,7 @@ function skip(): void {
   // Skipping commits whatever default is in the payload (defaults
   // are sensible). We do NOT clear the field so a user who skips a
   // billing question still has a coherent submission.
-  const target = findActiveIdx(idx.value + 1, 1);
+  const target = findActiveIdx(idx.value + 1);
   if (target == null) submit();
   else idx.value = target;
 }
