@@ -30,6 +30,7 @@ import {
   TutoringBimbelService,
   type BimbelSession,
 } from '@/services/tutoring-bimbel.service';
+import { bimbelGroupLabel } from '@/lib/bimbel-session-label';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -312,7 +313,10 @@ const metaText = computed(() =>
               </div>
               <div class="flex items-start gap-3 py-2">
                 <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">{{ t('tutoring2.common.group') }}</dt>
-                <dd class="flex-1 truncate text-slate-900">{{ t('tutoring2.common.group') }} {{ session.learning_group_id.slice(0, 8) }}</dd>
+                <!-- Name, not id — same helper the session LIST rows
+                     use, so a row and the detail it opens cannot
+                     disagree about what the group is called. -->
+                <dd class="flex-1 truncate text-slate-900">{{ bimbelGroupLabel(session, t('tutoring2.common.group')) }}</dd>
               </div>
               <div class="flex items-start gap-3 py-2">
                 <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">{{ t('tutoring2.common.room') }}</dt>

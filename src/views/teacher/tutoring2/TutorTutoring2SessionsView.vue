@@ -32,6 +32,7 @@ import {
   TutoringBimbelService,
   type BimbelSession,
 } from '@/services/tutoring-bimbel.service';
+import { bimbelGroupLabel } from '@/lib/bimbel-session-label';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -76,7 +77,16 @@ const filteredSessions = computed<BimbelSession[]>(() => {
       : null;
   return allSessions.value.filter((s) => {
     if (q) {
-      const hay = `${s.learning_group_id} ${s.room ?? ''} ${s.tutor_note ?? ''}`.toLowerCase();
+      // The group NAME belongs in the haystack: the toolbar invites
+      // "Cari grup…", and a tutor types the name they can see, not the
+      // UUID they cannot. Searching "UTBK" used to match nothing.
+      //
+      // The id STAYS alongside it, deliberately. Admins and support do
+      // paste a session/group id out of a ticket to find one row, and
+      // dropping the id would turn today's silent miss into a different
+      // silent miss. An 8-char hex fragment cannot realistically collide
+      // with a typed group name, so keeping both costs nothing.
+      const hay = `${s.learning_group_name ?? ''} ${s.learning_group_id} ${s.room ?? ''} ${s.tutor_note ?? ''}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     if (windowMs != null) {
@@ -276,8 +286,11 @@ const periodeChipValue = computed(() => {
                     <span class="text-sm font-bold text-brand-cobalt">{{ formatTime(s.starts_at) }}</span>
                   </div>
                   <div class="min-w-0 flex-1">
+                    <!-- Name, not id. `learning_group_name` is already on
+                         this very row; the old expression had no `??` in
+                         it and printed the UUID unconditionally. -->
                     <p class="truncate text-sm font-bold text-slate-900">
-                      {{ t('tutoring2.common.group') }} {{ s.learning_group_id.slice(0, 8) }}
+                      {{ bimbelGroupLabel(s, t('tutoring2.common.group')) }}
                     </p>
                     <p class="truncate text-2xs text-slate-500">
                       {{ s.room ?? t('tutoring2.common.noRoom') }}

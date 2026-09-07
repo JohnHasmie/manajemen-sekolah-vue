@@ -19,6 +19,7 @@ import {
   TutoringBimbelService,
   type BimbelSession,
 } from '@/services/tutoring-bimbel.service';
+import { bimbelGroupLabel } from '@/lib/bimbel-session-label';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -106,7 +107,8 @@ function statusLabel(status: BimbelSession['status']): string {
                 <span class="text-sm font-bold text-brand-cobalt">{{ formatTime(s.starts_at) }}</span>
               </div>
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-bold text-slate-900">{{ t('tutoring2.common.group') }} {{ s.learning_group_id.slice(0, 8) }}</p>
+                <!-- Name, not id — same helper as the sessions list. -->
+                <p class="truncate text-sm font-bold text-slate-900">{{ bimbelGroupLabel(s, t('tutoring2.common.group')) }}</p>
                 <p class="truncate text-2xs text-slate-500">{{ s.room ?? '—' }}</p>
               </div>
               <StatusBadge :label="s.status_label ?? statusLabel(s.status)" :tone="sessionTone(s.status)" uppercase />
