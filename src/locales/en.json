@@ -6978,7 +6978,8 @@
         },
         "redemptionsEmptyTitle": "No redemptions yet",
         "redemptionsEmptyDesc": "The log will appear when the first voucher is redeemed.",
-        "redemptionsHint": "Per-voucher redemption log endpoint is pending; showing a summary per voucher for now."
+        "redemptionsHint": "Per-voucher redemption log endpoint is pending; showing a summary per voucher for now.",
+        "kpiCountedSuffix": "{count} vouchers counted"
       },
       "groups": {
         "kindPrivate": "1-on-1",
@@ -6992,7 +6993,8 @@
         "newCta": "New group",
         "emptyDesc": "Create your first group for an active program.",
         "kpiFull": "Full",
-        "searchPh": "Search groups…"
+        "searchPh": "Search groups…",
+        "kpiCountedSuffix": "{count} groups counted"
       },
       "payoutSummary": {
         "title": "Payout Summary",
@@ -7604,7 +7606,8 @@
         "emptyAssessments": "No assessments in this program yet.",
         "noTutor": "No tutor yet",
         "scoresCount": "{count} scores",
-        "viewScores": "View scores"
+        "viewScores": "View scores",
+        "kpiCountedSuffix": "{count} groups counted"
       },
       "groupCreate": {
         "title": "New group",
@@ -8140,7 +8143,9 @@
         "redeemSuccess": "Voucher redeemed.",
         "redeemFailed": "Could not redeem the voucher. Please try again.",
         "noPermissionTitle": "Voucher list unavailable",
-        "noPermissionDesc": "Parent accounts do not currently have permission to list vouchers. Ask the tutoring admin for a voucher code, or to enable access."
+        "noPermissionDesc": "Parent accounts do not currently have permission to list vouchers. Ask the tutoring admin for a voucher code, or to enable access.",
+        "kpiCountedSuffix": "{count} vouchers counted",
+        "quotaUnlimitedUnknown": "No usage limit"
       }
     },
     "preferences": {

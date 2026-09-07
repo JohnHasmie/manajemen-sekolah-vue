@@ -28,6 +28,7 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
 import { createPinia, setActivePinia } from 'pinia';
 import AdminTutoring2GroupsView from './AdminTutoring2GroupsView.vue';
+import KpiStripCards from '@/components/feature/KpiStripCards.vue';
 import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
 import { TutoringTermsService } from '@/services/tutoring2/terms';
 import { TutoringTutorsService } from '@/services/tutoring2/tutors';
@@ -99,7 +100,12 @@ function makeGroup(overrides = {}) {
     room: null,
     status: 'active',
     status_label: 'Aktif',
-    seated_count: 8,
+    // NO `seated_count` by default. `GET /learning-groups` (index)
+    // never emits it — only `show()` sets the attribute, and the
+    // resource's `when()` omits the key rather than sending null. A
+    // fixture that carried it let this suite green-light numbers the
+    // real list response cannot produce. Tests that need a count pass
+    // one explicitly.
     ...overrides,
   };
 }
@@ -131,6 +137,15 @@ function makeI18n() {
             term: 'Term',
             tutor: 'Tutor',
             gradeLevel: 'Jenjang',
+          },
+          admin: {
+            groups: {
+              kpiGroups: 'Kelompok',
+              kpiPrivates: '1-on-1',
+              kpiAvgUtilization: 'Rata utilisasi',
+              kpiFull: 'Penuh',
+              kpiCountedSuffix: '{count} kelompok terdata',
+            },
           },
         },
       },
@@ -580,5 +595,208 @@ describe('AdminTutoring2GroupsView row drill-in', () => {
       name: 'admin.tutoring2.group-detail',
       params: { groupId: 'gr-1' },
     });
+  });
+});
+
+/**
+ * ─── Seat numbers: ABSENT is not ZERO ────────────────────────────────
+ *
+ * "Rata-rata utilisasi" read 0% and "Penuh" read 0 on every tenant, for
+ * every group, no matter how full. Not a maths bug: `seated_count` is
+ * simply not on the wire for a LIST response, and `(g.seated_count ?? 0)`
+ * turned "not sent" into "nobody seated".
+ *
+ * These mount the REAL <KpiStripCards> (the other describes stub it,
+ * which is exactly why the fake 0% survived to prod) and assert the card
+ * values an admin actually reads.
+ *
+ * The second test is the one that keeps the fix honest in the other
+ * direction: a group that reports zero students seated must still read
+ * "0", never "—".
+ */
+async function mountWithKpiStrip(groups: unknown[]) {
+  setActivePinia(createPinia());
+  (TutoringBimbelService.listGroups as any).mockResolvedValue({
+    items: groups,
+    pagination: undefined,
+  });
+  (TutoringBimbelService.listPrograms as any).mockResolvedValue({ items: PROGRAMS });
+  (TutoringTermsService.list as any).mockResolvedValue({ items: TERMS });
+  (TutoringTutorsService.list as any).mockResolvedValue({ items: TUTORS });
+
+  const w = mount(AdminTutoring2GroupsView, {
+    global: {
+      plugins: [makeI18n()],
+      stubs: {
+        // KpiStripCards is deliberately NOT stubbed here.
+        BrandPageHeader: true,
+        StatusBadge: true,
+        NavIcon: true,
+        AppFilterChip: true,
+        FilterFacetPickerModal: true,
+        PageFilterToolbar: { template: '<div><slot name="chips" /></div>' },
+        AsyncView: {
+          props: ['state'],
+          template: '<div data-testid="async"><slot :data="state?.data ?? []" /></div>',
+        },
+      },
+    },
+  });
+  await flushPromises();
+  return w;
+}
+
+/** The four card values in strip order: Kelompok, 1-on-1, Rata utilisasi, Penuh. */
+function kpiValues(w: any): string[] {
+  return w.findComponent(KpiStripCards).props('cards').map((c: any) => String(c.value));
+}
+
+function kpiSuffixes(w: any): (string | undefined)[] {
+  return w.findComponent(KpiStripCards).props('cards').map((c: any) => c.suffix);
+}
+
+/** Whitespace-normalised text of the rows table. */
+function rowsText(w: any): string {
+  return w.find('[data-testid="async"]').text().replace(/\s+/g, ' ');
+}
+
+const UTIL = 2;
+const FULL = 3;
+
+describe('AdminTutoring2GroupsView seat numbers — absent vs zero', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    grantedAbilities = ['tutoring.group.manage'];
+  });
+
+  it('says "—" for both seat tiles when the list carries no seat count', async () => {
+    // Today's real wire shape: the key is absent from every row.
+    const w = await mountWithKpiStrip([
+      makeGroup(),
+      makeGroup({ id: 'gr-2', name: 'UTBK Siang B' }),
+    ]);
+
+    const values = kpiValues(w);
+    expect(values[UTIL]).toBe('—');
+    expect(values[FULL]).toBe('—');
+    // The exact strings the old code printed, on a screen where two
+    // groups may well have been full.
+    expect(values[UTIL]).not.toBe('0%');
+    expect(values[FULL]).not.toBe('0');
+
+    // And it reaches the DOM, not just the props.
+    expect(w.findComponent(KpiStripCards).text()).toContain('—');
+  });
+
+  it('renders a row with no seat count as "— / 12"', async () => {
+    const w = await mountWithKpiStrip([makeGroup()]);
+
+    expect(rowsText(w)).toContain('— / 12');
+    expect(rowsText(w)).not.toContain('0 / 12');
+  });
+
+  it('THE INVARIANT: a group that reports zero seated still reads 0, not "—"', async () => {
+    // An empty group is a real answer, and the fix must not swallow it.
+    const w = await mountWithKpiStrip([makeGroup({ seated_count: 0, capacity: 12 })]);
+
+    const values = kpiValues(w);
+    expect(values[UTIL]).toBe('0%');
+    expect(values[FULL]).toBe('0');
+    expect(values[UTIL]).not.toBe('—');
+    expect(values[FULL]).not.toBe('—');
+
+    expect(rowsText(w)).toContain('0 / 12');
+    expect(rowsText(w)).not.toContain('— / 12');
+  });
+
+  it('computes real utilisation and a real "Penuh" count once the counts arrive', async () => {
+    const w = await mountWithKpiStrip([
+      makeGroup({ id: 'gr-1', seated_count: 6, capacity: 12 }), // 50%
+      makeGroup({ id: 'gr-2', seated_count: 12, capacity: 12 }), // 100%, full
+    ]);
+
+    const values = kpiValues(w);
+    expect(values[UTIL]).toBe('75%');
+    expect(values[FULL]).toBe('1');
+    expect(rowsText(w)).toContain('6 / 12');
+    expect(rowsText(w)).toContain('12 / 12');
+  });
+
+  it('averages over the groups that answered, and says how many did', async () => {
+    // Mixed payload. The old code divided 0.5 by TWO capacity-bearing
+    // groups and reported 25% — the uncounted row silently voting zero.
+    const w = await mountWithKpiStrip([
+      makeGroup({ id: 'gr-1', seated_count: 6, capacity: 12 }),
+      makeGroup({ id: 'gr-2', capacity: 12 }), // no seat count
+    ]);
+
+    const values = kpiValues(w);
+    expect(values[UTIL]).toBe('50%');
+    expect(values[UTIL]).not.toBe('25%');
+    expect(values[FULL]).toBe('0');
+
+    // Both seat tiles admit they cover 1 of the 2 groups.
+    expect(kpiSuffixes(w)[UTIL]).toBe('1 kelompok terdata');
+    expect(kpiSuffixes(w)[FULL]).toBe('1 kelompok terdata');
+  });
+
+  it('drops the coverage note when every group answered', async () => {
+    const w = await mountWithKpiStrip([
+      makeGroup({ id: 'gr-1', seated_count: 6, capacity: 12 }),
+      makeGroup({ id: 'gr-2', seated_count: 0, capacity: 12 }),
+    ]);
+
+    expect(kpiSuffixes(w)[UTIL]).toBeUndefined();
+    expect(kpiSuffixes(w)[FULL]).toBeUndefined();
+  });
+
+  /**
+   * ─── An EMPTY list is a known answer, not an unknown one ───────────
+   *
+   * The first pass at this fix returned `null` whenever no group
+   * reported a seat count — which swallowed the empty-list case too.
+   * With zero groups, "Penuh" is not a mystery: zero groups are full.
+   * Printing "—" there overshoots in the opposite direction, hiding a
+   * number we hold instead of inventing one we don't.
+   *
+   * "Rata-rata utilisasi" deliberately does NOT follow suit: an average
+   * over an empty set is undefined, not zero. The two tiles differ on
+   * purpose and both are pinned here so neither drifts into the other.
+   */
+  it('a tenant with NO groups reads "Penuh 0", not "—"', async () => {
+    const w = await mountWithKpiStrip([]);
+
+    expect(kpiValues(w)[FULL]).toBe('0');
+    expect(kpiValues(w)[FULL]).not.toBe('—');
+    // No subset to qualify.
+    expect(kpiSuffixes(w)[FULL]).toBeUndefined();
+  });
+
+  it('an empty list still has no AVERAGE utilisation to report', async () => {
+    const w = await mountWithKpiStrip([]);
+
+    expect(kpiValues(w)[UTIL]).toBe('—');
+    expect(kpiValues(w)[UTIL]).not.toBe('0%');
+  });
+
+  it('groups exist but none is capacity-bearing: "Penuh" is still a real 0', async () => {
+    const w = await mountWithKpiStrip([
+      makeGroup({ id: 'gr-1', capacity: 0 }),
+      makeGroup({ id: 'gr-2', capacity: 0 }),
+    ]);
+
+    expect(kpiValues(w)[FULL]).toBe('0');
+  });
+
+  it('THE INVARIANT HOLDS: groups WITH capacity but no counts stay "—"', async () => {
+    // The empty-list carve-out must not leak into the real bug: rows
+    // exist, they have capacity, and none reported. That is unknown.
+    const w = await mountWithKpiStrip([
+      makeGroup({ id: 'gr-1', capacity: 12 }),
+      makeGroup({ id: 'gr-2', capacity: 12 }),
+    ]);
+
+    expect(kpiValues(w)[FULL]).toBe('—');
+    expect(kpiValues(w)[FULL]).not.toBe('0');
   });
 });

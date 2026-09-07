@@ -83,6 +83,7 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
+import { countOrDash, isCounted } from '@/lib/absent-vs-zero';
 import { formatRupiah } from '@/lib/format';
 import {
   TutoringBimbelService,
@@ -158,8 +159,47 @@ const packages = computed<BimbelPackage[]>(() => payload.value?.packages ?? []);
 const groups = computed<BimbelLearningGroup[]>(() => payload.value?.groups ?? []);
 const assessments = computed<BimbelAssessment[]>(() => payload.value?.assessments ?? []);
 
-const seatedTotal = computed(() =>
-  groups.value.reduce((sum, g) => sum + (g.seated_count ?? 0), 0),
+/**
+ * Seats filled across this program's groups — `null` when NO group
+ * reported a count.
+ *
+ * `GET /learning-groups` omits `seated_count` entirely (only the
+ * single-group GET sets it), so the old `?? 0` reduce summed to 0 on
+ * every tenant and the "N siswa" suffix below never rendered at all.
+ * Summing only the groups that answered keeps the number true both
+ * before and after the server starts sending the field — and a real
+ * total of 0 (every group empty) still shows as "0 siswa" rather than
+ * disappearing.
+ */
+const seatedCounts = computed<number[]>(() =>
+  groups.value.flatMap((g) => (isCounted(g.seated_count) ? [g.seated_count] : [])),
+);
+
+/**
+ * No groups is not the same as no answer. A program with zero groups
+ * genuinely seats zero students, and "—" there would understate our own
+ * knowledge — the mirror image of the `?? 0` bug this MR exists to fix,
+ * and just as wrong. Only a NON-EMPTY set of groups that all withheld
+ * their count is truly unknown.
+ */
+const seatedTotal = computed<number | null>(() => {
+  if (groups.value.length === 0) return 0;
+  if (seatedCounts.value.length === 0) return null;
+  return seatedCounts.value.reduce((sum, n) => sum + n, 0);
+});
+
+/**
+ * Partial coverage, same idiom as AdminTutoring2GroupsView's seat tiles:
+ * when only some groups reported, `suffix` names the subset so the total
+ * is not read as the whole program. Without this, a payload where one of
+ * twelve groups answered would print an authoritative-looking "4 siswa".
+ */
+const seatedPartialSuffix = computed<string | undefined>(() =>
+  seatedCounts.value.length > 0 && seatedCounts.value.length < groups.value.length
+    ? t('tutoring2.admin.programDetail.kpiCountedSuffix', {
+        count: seatedCounts.value.length,
+      })
+    : undefined,
 );
 
 const kpiCards = computed<KpiCard[]>(() => [
@@ -174,10 +214,17 @@ const kpiCards = computed<KpiCard[]>(() => [
     icon: 'users',
     label: t('tutoring2.admin.programDetail.kpiGroups'),
     value: String(groups.value.length),
+    // "12 siswa" alone when every group answered; "12 siswa · 3 kelompok
+    // terdata" when only some did.
     suffix:
-      seatedTotal.value > 0
-        ? t('tutoring2.common.metaStudents', { count: seatedTotal.value })
-        : undefined,
+      seatedTotal.value == null
+        ? undefined
+        : [
+            t('tutoring2.common.metaStudents', { count: seatedTotal.value }),
+            seatedPartialSuffix.value,
+          ]
+            .filter(Boolean)
+            .join(' · '),
     tone: 'violet',
   },
   {
@@ -326,7 +373,9 @@ function packageSubtitle(pkg: BimbelPackage): string {
 
 function groupSubtitle(g: BimbelLearningGroup): string {
   return [
-    `${g.seated_count ?? 0} / ${g.capacity}`,
+    // "— / 12" when the server sent no seat count, "0 / 12" when it
+    // sent a real zero. See `@/lib/absent-vs-zero`.
+    `${countOrDash(g.seated_count)} / ${g.capacity}`,
     g.tutor_name ?? t('tutoring2.admin.programDetail.noTutor'),
     g.term_name,
   ]
@@ -338,7 +387,14 @@ function assessmentSubtitle(a: BimbelAssessment): string {
   return [
     a.kind_label ?? a.kind,
     a.assessment_date,
-    t('tutoring2.admin.programDetail.scoresCount', { count: a.scores_count ?? 0 }),
+    // `AssessmentController::index` runs no `withCount('scores')`, so
+    // this key is absent from every row here and `?? 0` rendered a
+    // confident "0 nilai" for assessments that may well have scores.
+    // Unknown drops the segment (`.filter(Boolean)` below); a reported
+    // 0 still reads "0 nilai".
+    isCounted(a.scores_count)
+      ? t('tutoring2.admin.programDetail.scoresCount', { count: a.scores_count })
+      : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -580,10 +636,12 @@ const inputClass =
                 <p class="truncate text-2xs font-bold text-slate-900">{{ a.title }}</p>
                 <p class="truncate text-2xs text-slate-500">{{ assessmentSubtitle(a) }}</p>
               </div>
-              <!-- Only offered when there ARE scores to look at; a row
-                   with none would otherwise be a link to an empty page. -->
+              <!-- Hidden only when the row reports zero scores. An
+                   ABSENT count is not zero — and `?? 0` made it one, so
+                   this shortcut never rendered for any row on any
+                   tenant. -->
               <button
-                v-if="(a.scores_count ?? 0) > 0"
+                v-if="!isCounted(a.scores_count) || a.scores_count > 0"
                 type="button"
                 class="shrink-0 text-2xs font-bold text-brand-cobalt hover:underline"
                 @click="goAssessments"

@@ -24,6 +24,7 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import { isCounted } from '@/lib/absent-vs-zero';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
@@ -97,6 +98,28 @@ const metaLabel = computed(() =>
 // show a real result without ever being able to collect one.
 //
 // Restore the button in the same MR that ships the backend, not before.
+
+// ── Participant count ─────────────────────────────────────────────
+/**
+ * "N peserta" — or nothing at all when the server did not say.
+ *
+ * `AssessmentController::index` (what `listAssessments()` calls) runs no
+ * `withCount('scores')`; only `show()` does. `AssessmentResource` emits
+ * `scores_count` through `when(isset(...))`, which OMITS the key rather
+ * than sending null, so EVERY row on this screen arrives without it and
+ * the old `?? 0` rendered a confident "0 peserta" for assessments that
+ * may well have plenty. Same defect the admin screens carried; see
+ * `@/lib/absent-vs-zero`.
+ *
+ * Unknown drops the segment (the separator is inside the same `v-if`)
+ * rather than printing "—" mid-sentence; a reported 0 is a real answer
+ * and still reads "0 peserta".
+ */
+function participantsLabel(a: BimbelAssessment): string | null {
+  return isCounted(a.scores_count)
+    ? t('tutoring2.common.metaParticipants', { count: a.scores_count })
+    : null;
+}
 </script>
 
 <template>
@@ -141,8 +164,10 @@ const metaLabel = computed(() =>
               </div>
               <p class="text-2xs text-slate-500">
                 {{ formatShortDate(a.assessment_date) }}
-                <span class="mx-1 text-slate-300">•</span>
-                {{ t('tutoring2.common.metaParticipants', { count: a.scores_count ?? 0 }) }}
+                <template v-if="participantsLabel(a)">
+                  <span class="mx-1 text-slate-300">•</span>
+                  {{ participantsLabel(a) }}
+                </template>
               </p>
             </div>
 

@@ -50,7 +50,9 @@ function makeAssessment(overrides = {}) {
     assessment_date: '2026-08-10',
     max_score: 100,
     published_at: '2026-08-11T09:00:00+07:00',
-    scores_count: 21,
+    // NO `scores_count` by default: `AssessmentController::index` runs
+    // no `withCount('scores')`, so the resource's `when()` drops the key
+    // from every row this screen loads. Tests that need a count pass one.
     ...overrides,
   };
 }
@@ -255,5 +257,59 @@ describe('AdminTutoring2AssessmentsView Program column', () => {
     const w = await mountView();
 
     expect(w.find('[data-testid="async"] tbody tr').text()).toContain('pr-gone');
+  });
+});
+
+/**
+ * ─── "Nilai" column: ABSENT is not ZERO ──────────────────────────────
+ *
+ * The cell read `{{ a.scores_count ?? 0 }}`, and the list endpoint never
+ * sends that field, so every assessment on this screen reported "0
+ * scores recorded" — including assessments that were fully marked.
+ */
+const SCORES_CELL = 4;
+
+function scoresCell(w) {
+  return w.find('[data-testid="async"] tbody tr').findAll('td')[SCORES_CELL].text();
+}
+
+describe('AdminTutoring2AssessmentsView scores column', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (TutoringBimbelService.listPrograms as any).mockResolvedValue({ items: PROGRAMS });
+  });
+
+  it('says "—" when the row carries no score count', async () => {
+    (TutoringBimbelService.listAssessments as any).mockResolvedValue({
+      items: [makeAssessment()],
+      pagination: undefined,
+    });
+
+    const w = await mountView();
+
+    expect(scoresCell(w)).toBe('—');
+    expect(scoresCell(w)).not.toBe('0');
+  });
+
+  it('THE INVARIANT: a reported zero still renders 0', async () => {
+    (TutoringBimbelService.listAssessments as any).mockResolvedValue({
+      items: [makeAssessment({ scores_count: 0 })],
+      pagination: undefined,
+    });
+
+    const w = await mountView();
+
+    expect(scoresCell(w)).toBe('0');
+  });
+
+  it('renders a reported positive count verbatim', async () => {
+    (TutoringBimbelService.listAssessments as any).mockResolvedValue({
+      items: [makeAssessment({ scores_count: 21 })],
+      pagination: undefined,
+    });
+
+    const w = await mountView();
+
+    expect(scoresCell(w)).toBe('21');
   });
 });

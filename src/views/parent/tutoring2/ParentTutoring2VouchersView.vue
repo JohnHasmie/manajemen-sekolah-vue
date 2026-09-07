@@ -73,6 +73,7 @@ import Modal from '@/components/ui/Modal.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
+import { isCounted, countOrDash, EM_DASH } from '@/lib/absent-vs-zero';
 import { toLocalYmd } from '@/lib/local-date';
 import { useAuthStore } from '@/stores/auth';
 import { VouchersService } from '@/services/tutoring2/vouchers';
@@ -159,8 +160,23 @@ function isNotYetValid(v: BimbelVoucher): boolean {
   return v.valid_from != null && v.valid_from > toLocalYmd();
 }
 
+/**
+ * Quota exhausted — a VERDICT, so an unknown count must not produce one.
+ *
+ * `VoucherResource` emits `redemption_count` through
+ * `whenLoaded('redemptions')` and no controller eager-loads that
+ * relation, so the key is absent from every voucher the wire carries.
+ * `?? 0` happened to land on the safe answer here (false), but it landed
+ * there by arithmetic accident rather than by intent, and the next
+ * person tightening this predicate would have had nothing to read. Say
+ * it outright: with no count we cannot conclude the quota is spent, so
+ * the voucher stays listed and `POST /vouchers/{id}/redeem` — which
+ * re-checks the real cap server-side — remains the authority.
+ */
 function isQuotaUsedUp(v: BimbelVoucher): boolean {
-  return v.max_redemptions != null && (v.redemption_count ?? 0) >= v.max_redemptions;
+  if (v.max_redemptions == null) return false;
+  if (!isCounted(v.redemption_count)) return false;
+  return v.redemption_count >= v.max_redemptions;
 }
 
 /** Usable right now: active, in-window, and with quota left. */
@@ -206,6 +222,38 @@ const visibleVouchers = computed<BimbelVoucher[]>(() =>
 );
 
 // ── KPIs ──────────────────────────────────────────────────────────
+/**
+ * Total redemptions across the wallet — summed over the vouchers that
+ * actually reported a count, `null` when a NON-EMPTY set reported none.
+ *
+ * Three different facts, three different renderings:
+ *
+ *   • no vouchers at all      → 0. Nothing has been redeemed, and that
+ *                               is knowledge, not silence. An empty
+ *                               collection has a real sum.
+ *   • vouchers, none counted  → "—". The server withheld the field
+ *                               (`whenLoaded('redemptions')`), so any
+ *                               number here would be invented.
+ *   • some counted            → their sum, with `suffix` naming the
+ *                               subset so a partial total never passes
+ *                               itself off as the whole wallet.
+ */
+const usedCounts = computed<number[]>(() =>
+  vouchers.value.flatMap((v) => (isCounted(v.redemption_count) ? [v.redemption_count] : [])),
+);
+
+const usedTotal = computed<number | null>(() => {
+  if (vouchers.value.length === 0) return 0;
+  if (usedCounts.value.length === 0) return null;
+  return usedCounts.value.reduce((sum, n) => sum + n, 0);
+});
+
+const usedPartialSuffix = computed<string | undefined>(() =>
+  usedCounts.value.length > 0 && usedCounts.value.length < vouchers.value.length
+    ? t('tutoring2.parent.vouchers.kpiCountedSuffix', { count: usedCounts.value.length })
+    : undefined,
+);
+
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'wallet',
@@ -222,9 +270,8 @@ const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'check-circle',
     label: t('tutoring2.parent.vouchers.kpiUsed'),
-    value: String(
-      vouchers.value.reduce((sum, v) => sum + (v.redemption_count ?? 0), 0),
-    ),
+    value: usedTotal.value == null ? EM_DASH : String(usedTotal.value),
+    suffix: usedPartialSuffix.value,
     tone: 'green',
   },
   {
@@ -262,14 +309,24 @@ function validityLabel(v: BimbelVoucher): string {
   return t('tutoring2.parent.vouchers.noExpiry');
 }
 
+/**
+ * "Terpakai 3 dari 50" — with "—" standing in for a usage the server
+ * never sent, never a fabricated 0.
+ *
+ * The uncapped case needs its own string: "Terpakai —×" is nonsense,
+ * and the fact worth telling a wali about an uncapped voucher whose
+ * usage is unknown is simply that it has no limit.
+ */
 function quotaLabel(v: BimbelVoucher): string {
-  const used = v.redemption_count ?? 0;
-  return v.max_redemptions == null
-    ? t('tutoring2.parent.vouchers.quotaUnlimited', { used })
-    : t('tutoring2.parent.vouchers.quotaLimited', {
-        used,
-        max: v.max_redemptions,
-      });
+  if (v.max_redemptions == null) {
+    return isCounted(v.redemption_count)
+      ? t('tutoring2.parent.vouchers.quotaUnlimited', { used: v.redemption_count })
+      : t('tutoring2.parent.vouchers.quotaUnlimitedUnknown');
+  }
+  return t('tutoring2.parent.vouchers.quotaLimited', {
+    used: countOrDash(v.redemption_count),
+    max: v.max_redemptions,
+  });
 }
 
 function statusLabel(v: BimbelVoucher): string {

@@ -69,6 +69,7 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { countOrDash } from '@/lib/absent-vs-zero';
 import {
   TutoringBimbelService,
   type BimbelAssessment,
@@ -275,7 +276,11 @@ function publishedLabel(publishedAt: string | null | undefined): string {
                      were the intended content. -->
                 <td class="px-4 py-3 text-slate-600">{{ programLabel(a) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ formatShortDate(a.assessment_date) }}</td>
-                <td class="px-4 py-3 text-slate-600">{{ a.scores_count ?? 0 }}</td>
+                <!-- `AssessmentController::index` does no
+                     `withCount('scores')`, so this key is absent from
+                     every row and `?? 0` printed a confident "0". A
+                     reported 0 still prints 0. -->
+                <td class="px-4 py-3 text-slate-600">{{ countOrDash(a.scores_count) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ a.max_score }}</td>
                 <td class="px-4 py-3">
                   <StatusBadge :label="publishedLabel(a.published_at)" :tone="publishedTone(a.published_at)" uppercase />

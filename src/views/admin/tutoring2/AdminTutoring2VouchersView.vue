@@ -26,6 +26,7 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { countOrDash, EM_DASH, isCounted } from '@/lib/absent-vs-zero';
 import { toLocalYmd } from '@/lib/local-date';
 import { useAuthStore } from '@/stores/auth';
 import { VouchersService } from '@/services/tutoring2/vouchers';
@@ -72,6 +73,14 @@ const activeCount = computed(() =>
   state.value.status === 'content' ? (state.value.data as BimbelVoucher[]).length : 0,
 );
 
+/**
+ * The screen's glyph for "no cap". Used both per-row (`usesLabel`) and
+ * by the "Sisa kuota" tile, so an admin reads the same mark for the same
+ * fact in both places. Deliberately NOT `EM_DASH`: "unlimited" and "not
+ * reported" are different answers and must not share a symbol.
+ */
+const UNLIMITED = '∞';
+
 // ─── KPI derivation ───────────────────────────────────────────────
 // Everything is derived from the loaded page — matches the pattern in
 // AdminTutoring2ProgramsView.vue (server-side aggregate endpoints for
@@ -86,15 +95,73 @@ const kpiCards = computed<KpiCard[]>(() => {
   const expired = items.filter(
     (v) => v.valid_until != null && v.valid_until < today,
   );
-  const usedThisMonth = items.reduce(
-    (sum, v) => sum + (v.redemption_count ?? 0),
-    0,
+  // `VoucherController::index` never eager-loads `redemptions`, so
+  // `VoucherResource`'s `whenLoaded` drops `redemption_count` from every
+  // row on this screen. `?? 0` turned that silence into "nobody redeemed
+  // anything": the usage tile read 0 forever and the quota tile reported
+  // every voucher as untouched. Count only the vouchers that answered,
+  // and say "—" when none did.
+  const redemptionCounts = items.flatMap((v) =>
+    isCounted(v.redemption_count) ? [v.redemption_count] : [],
   );
-  const remainingQuota = items.reduce<number>((sum, v) => {
-    if (v.max_redemptions == null) return sum;
-    const used = v.redemption_count ?? 0;
-    return sum + Math.max(0, v.max_redemptions - used);
-  }, 0);
+  // An EMPTY list has a real answer: nothing has been redeemed, so 0.
+  // "—" is reserved for a non-empty list that told us nothing — the
+  // over-correction of rendering "—" for a knowable zero is the same
+  // conflation as `?? 0`, just pointing the other way.
+  const used =
+    items.length === 0
+      ? 0
+      : redemptionCounts.length === 0
+        ? null
+        : redemptionCounts.reduce((sum, n) => sum + n, 0);
+  const usedPartialSuffix =
+    redemptionCounts.length > 0 && redemptionCounts.length < items.length
+      ? t('tutoring2.admin.vouchers.kpiCountedSuffix', {
+          count: redemptionCounts.length,
+        })
+      : undefined;
+
+  // ── Remaining quota ─────────────────────────────────────────────
+  // Only CAPPED vouchers have a quota to have any of left, so they are
+  // the population for this tile — and they separate three facts a
+  // single number cannot carry:
+  //
+  //   • no vouchers at all       → 0. Nothing is on offer.
+  //   • vouchers, none capped    → ∞. Every code is uncapped, so the
+  //                                remaining quota is unlimited. This is
+  //                                KNOWN, and rendering "—" for it was
+  //                                the same two-facts-merged error in a
+  //                                third direction: "no cap exists"
+  //                                reported as "the server didn't say".
+  //                                `∞` is already this screen's glyph
+  //                                for an absent cap (see `usesLabel`).
+  //   • capped, none counted     → "—". Genuinely unknown: we know the
+  //                                caps but not how much is spent.
+  const capped = items.filter(
+    (v): v is BimbelVoucher & { max_redemptions: number } => v.max_redemptions != null,
+  );
+  // Project to the remaining-seats numbers themselves rather than
+  // filtering and asserting later — `isCounted` is a type guard, so this
+  // arithmetic needs no `!`.
+  const cappedRemaining = capped.flatMap((v) =>
+    isCounted(v.redemption_count)
+      ? [Math.max(0, v.max_redemptions - v.redemption_count)]
+      : [],
+  );
+  const remainingQuota: number | null | typeof UNLIMITED =
+    items.length === 0
+      ? 0
+      : capped.length === 0
+        ? UNLIMITED
+        : cappedRemaining.length === 0
+          ? null
+          : cappedRemaining.reduce((sum, n) => sum + n, 0);
+  const quotaPartialSuffix =
+    cappedRemaining.length > 0 && cappedRemaining.length < capped.length
+      ? t('tutoring2.admin.vouchers.kpiCountedSuffix', {
+          count: cappedRemaining.length,
+        })
+      : undefined;
   return [
     {
       icon: 'tag',
@@ -111,12 +178,19 @@ const kpiCards = computed<KpiCard[]>(() => {
     {
       icon: 'check-circle',
       label: t('tutoring2.admin.vouchers.kpiUsedThisMonth'),
-      value: String(usedThisMonth),
+      value: used == null ? EM_DASH : String(used),
+      suffix: usedPartialSuffix,
     },
     {
       icon: 'wallet',
       label: t('tutoring2.admin.vouchers.kpiRemainingQuota'),
-      value: String(remainingQuota),
+      value:
+        remainingQuota == null
+          ? EM_DASH
+          : remainingQuota === UNLIMITED
+            ? UNLIMITED
+            : String(remainingQuota),
+      suffix: quotaPartialSuffix,
     },
   ];
 });
@@ -154,9 +228,11 @@ function validRange(v: BimbelVoucher): string {
 }
 
 function usesLabel(v: BimbelVoucher): string {
-  const used = v.redemption_count ?? 0;
+  // "—" while the list withholds the count; a redeemed-zero voucher
+  // still reads "0 / 50".
+  const used = countOrDash(v.redemption_count);
   const max = v.max_redemptions;
-  return max == null ? `${used} / ∞` : `${used} / ${max}`;
+  return max == null ? `${used} / ${UNLIMITED}` : `${used} / ${max}`;
 }
 
 // ─── Create / Edit sheet ──────────────────────────────────────────

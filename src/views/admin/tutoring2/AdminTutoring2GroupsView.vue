@@ -47,6 +47,7 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
+import { countOrDash, EM_DASH, isCounted } from '@/lib/absent-vs-zero';
 import {
   TutoringBimbelService,
   type BimbelLearningGroup,
@@ -140,21 +141,91 @@ async function loadFacetOptions() {
 
 onMounted(loadFacetOptions);
 
+/**
+ * The two SEAT tiles are the ones that used to lie.
+ *
+ * `seated_count` is emitted by `LearningGroupController::show()` only —
+ * `index()`, which is what `listGroups()` calls, never sets it, and
+ * `LearningGroupResource`'s `when()` OMITS the key rather than sending
+ * null. So every row here arrived with no seat count at all, `?? 0`
+ * turned "not sent" into "nobody seated", and both tiles were pinned at
+ * `0%` / `0` on every tenant no matter how full the groups were.
+ *
+ * The fix is not to hide them. It is to average over the groups that
+ * ACTUALLY reported a count and say "—" when none did — which is
+ * correct today (nothing reports) and stays correct once the server
+ * starts sending the field, including for a group that genuinely has
+ * zero students seated.
+ */
 const kpiCards = computed<KpiCard[]>(() => {
   const items = (state.value.status === 'content' ? state.value.data : []) as BimbelLearningGroup[];
   const privateCount = items.filter((g) => g.kind === 'private').length;
-  const totalUtil = items.reduce((sum, g) => {
-    if (!g.capacity || g.capacity <= 0) return sum;
-    return sum + ((g.seated_count ?? 0) / g.capacity);
-  }, 0);
-  const withCapacity = items.filter((g) => g.capacity && g.capacity > 0).length;
-  const avgUtil = withCapacity > 0 ? Math.round((totalUtil / withCapacity) * 100) : 0;
-  const fullCount = items.filter((g) => (g.seated_count ?? 0) >= (g.capacity ?? 0) && (g.capacity ?? 0) > 0).length;
+
+  // Numerator and denominator MUST come from the same subset. The old
+  // code divided by every capacity-bearing group while an uncounted one
+  // contributed 0 to the sum, so each unknown row dragged the average
+  // down instead of staying out of it.
+  const seatable = items.filter(
+    (g): g is BimbelLearningGroup & { seated_count: number } =>
+      isCounted(g.seated_count) && g.capacity > 0,
+  );
+  const withCapacity = items.filter((g) => g.capacity > 0).length;
+
+  // An AVERAGE over an empty set is undefined, not zero — there is no
+  // utilisation figure to report when no group carries a capacity, so
+  // this one stays "—" in the empty case. Contrast `fullCount` below:
+  // a COUNT over an empty set is a real 0. The two tiles differ here on
+  // purpose.
+  const avgUtil =
+    seatable.length === 0
+      ? null
+      : Math.round(
+          (seatable.reduce((sum, g) => sum + g.seated_count / g.capacity, 0) /
+            seatable.length) *
+            100,
+        );
+
+  // An unknown seat count cannot make a group "penuh" — and it must not
+  // be counted as not-full either, so the tile stays unknown while rows
+  // exist that never reported. A reported 0 is a real answer: with
+  // counts on the wire and nobody at capacity this correctly reads 0.
+  //
+  // But with NO capacity-bearing groups at all there is nothing left to
+  // be ignorant about: zero of them are full, and that is knowledge.
+  // Rendering "—" there overshot the fix — it hid a number we hold, the
+  // mirror image of `?? 0` inventing one we don't.
+  const fullCount =
+    withCapacity === 0
+      ? 0
+      : seatable.length === 0
+        ? null
+        : seatable.filter((g) => g.seated_count >= g.capacity).length;
+
+  // `suffix` is this strip's only channel for qualifying a number, so
+  // partial coverage says so rather than passing itself off as the
+  // whole list (same shape as AdminStudentManagementView's page-scoped
+  // KPIs).
+  const partialSuffix =
+    seatable.length > 0 && seatable.length < withCapacity
+      ? t('tutoring2.admin.groups.kpiCountedSuffix', { count: seatable.length })
+      : undefined;
+
   return [
     { icon: 'users', label: t('tutoring2.admin.groups.kpiGroups'), value: String(items.length) },
     { icon: 'user', label: t('tutoring2.admin.groups.kpiPrivates'), value: String(privateCount) },
-    { icon: 'chart-bar', label: t('tutoring2.admin.groups.kpiAvgUtilization'), value: `${avgUtil}%` },
-    { icon: 'circle-check', label: t('tutoring2.admin.groups.kpiFull'), value: String(fullCount), tone: fullCount > 0 ? 'amber' : undefined },
+    {
+      icon: 'chart-bar',
+      label: t('tutoring2.admin.groups.kpiAvgUtilization'),
+      value: avgUtil == null ? EM_DASH : `${avgUtil}%`,
+      suffix: partialSuffix,
+    },
+    {
+      icon: 'circle-check',
+      label: t('tutoring2.admin.groups.kpiFull'),
+      value: fullCount == null ? EM_DASH : String(fullCount),
+      suffix: partialSuffix,
+      tone: fullCount != null && fullCount > 0 ? 'amber' : undefined,
+    },
   ];
 });
 
@@ -317,8 +388,9 @@ function onCreated() {
                 </td>
                 <td class="px-4 py-3 text-slate-600">
                   <!-- `seated_count` is optional; absent means the server
-                       did not count, not that the group is empty. -->
-                  {{ g.seated_count == null ? '—' : g.seated_count }} / {{ g.capacity }}
+                       did not count, not that the group is empty. A real
+                       0 still renders as "0 / 12". -->
+                  {{ countOrDash(g.seated_count) }} / {{ g.capacity }}
                 </td>
                 <td class="px-4 py-3 text-slate-600">
                   <span v-if="g.tutor_name">{{ g.tutor_name }}</span>

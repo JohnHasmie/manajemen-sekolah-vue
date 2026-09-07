@@ -43,6 +43,7 @@ import {
 } from '@/services/tutoring-bimbel.service';
 import type { Tutor, DeactivateTutorConflict } from '@/types/tutoring2/tutor';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import { countOrDash } from '@/lib/absent-vs-zero';
 import { formatDateTime } from '@/lib/format';
 import { toLocalYmd } from '@/lib/local-date';
 
@@ -283,7 +284,11 @@ function goToGroup(g: BimbelLearningGroup) {
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
                   <span class="text-xs text-slate-500">
-                    {{ g.seated_count ?? 0 }} / {{ g.capacity }}
+                    <!-- The groups list never carries `seated_count`
+                         today, so `?? 0` showed "0 / 12" for every
+                         group. "—" while unknown; a reported 0 still
+                         reads "0". -->
+                    {{ countOrDash(g.seated_count) }} / {{ g.capacity }}
                   </span>
                   <StatusBadge
                     :label="g.status_label ?? t(`tutoring2.status.${g.status}`)"

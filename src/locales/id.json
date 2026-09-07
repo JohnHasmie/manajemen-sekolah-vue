@@ -6845,7 +6845,9 @@
         "redeemSuccess": "Voucher berhasil ditukar.",
         "redeemFailed": "Voucher gagal ditukar. Coba lagi.",
         "noPermissionTitle": "Daftar voucher belum tersedia",
-        "noPermissionDesc": "Akun wali belum memiliki izin melihat daftar voucher. Minta kode voucher ke admin bimbel, atau hubungi admin untuk mengaktifkan akses."
+        "noPermissionDesc": "Akun wali belum memiliki izin melihat daftar voucher. Minta kode voucher ke admin bimbel, atau hubungi admin untuk mengaktifkan akses.",
+        "kpiCountedSuffix": "{count} kupon terdata",
+        "quotaUnlimitedUnknown": "Tanpa batas pemakaian"
       }
     },
     "student": {
@@ -7267,7 +7269,8 @@
         },
         "redemptionsEmptyTitle": "Belum ada penggunaan",
         "redemptionsEmptyDesc": "Log akan muncul saat voucher pertama diredeem.",
-        "redemptionsHint": "Endpoint log per-voucher menyusul; sementara ini menampilkan ringkasan per voucher."
+        "redemptionsHint": "Endpoint log per-voucher menyusul; sementara ini menampilkan ringkasan per voucher.",
+        "kpiCountedSuffix": "{count} kupon terdata"
       },
       "reports": {
         "meta": "{count} baris",
@@ -7486,7 +7489,8 @@
         "kindGroup": "Grup",
         "emptyDescShort": "Klik + untuk membuat kelompok baru.",
         "emptyDesc": "Buat kelompok pertama untuk program aktif.",
-        "newCta": "Kelompok baru"
+        "newCta": "Kelompok baru",
+        "kpiCountedSuffix": "{count} kelompok terdata"
       },
       "leaderboard": {
         "title": "Peringkat",
@@ -7798,7 +7802,8 @@
         "emptyAssessments": "Belum ada penilaian di program ini.",
         "noTutor": "Belum ada tutor",
         "scoresCount": "{count} nilai",
-        "viewScores": "Lihat nilai"
+        "viewScores": "Lihat nilai",
+        "kpiCountedSuffix": "{count} kelompok terdata"
       },
       "groupCreate": {
         "title": "Kelompok baru",

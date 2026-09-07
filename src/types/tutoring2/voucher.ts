@@ -34,7 +34,12 @@ export interface BimbelVoucher {
   value: number;
   /** null = unlimited redemptions. */
   max_redemptions?: number | null;
-  /** Only populated when the backend eager-loaded the redemptions relation. */
+  /**
+   * Only populated when the backend eager-loaded the redemptions
+   * relation — which `VoucherController::index` does NOT, so every row
+   * on the vouchers list arrives without this key. `?? 0` would report
+   * an untouched voucher; use `@/lib/absent-vs-zero`.
+   */
   redemption_count?: number;
   /** YYYY-MM-DD (backend emits toDateString()). null = no lower bound. */
   valid_from?: string | null;

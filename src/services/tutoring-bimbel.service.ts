@@ -72,6 +72,19 @@ export interface BimbelLearningGroup {
   room?: string | null;
   status: 'draft' | 'active' | 'closed';
   status_label?: string;
+  /**
+   * Students currently seated in this group.
+   *
+   * OPTIONAL ON PURPOSE, and the `?` is load-bearing: only
+   * `LearningGroupController::show()` sets the attribute, and
+   * `LearningGroupResource` emits it through `when()`, which OMITS the
+   * key entirely rather than sending null. Every row from
+   * `listGroups()` therefore arrives WITHOUT it.
+   *
+   * `seated_count ?? 0` is a bug, not a default — it renders "not sent"
+   * as "nobody seated". Use `countOrDash` / `isCounted` from
+   * `@/lib/absent-vs-zero`, which keep a real 0 rendering as 0.
+   */
   seated_count?: number;
 }
 
@@ -152,6 +165,12 @@ export interface BimbelAssessment {
   kkm?: number | null;
   description?: string | null;
   published_at?: string | null;
+  /**
+   * Scores recorded for this assessment. Absent from `listAssessments()`
+   * rows — `AssessmentController::index` runs no `withCount('scores')`,
+   * and the resource's `when()` drops the key. Read it with
+   * `@/lib/absent-vs-zero`, never with `?? 0`.
+   */
   scores_count?: number;
 }
 
