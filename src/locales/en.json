@@ -6832,7 +6832,24 @@
         "kpiSessions": "Sessions taught",
         "notOnboarded": "Your account is not registered as a tutor at this tutoring center yet, so there are no earnings to calculate. Ask the admin to add you.",
         "requestsTitle": "Recent withdrawal requests",
-        "requestsEmpty": "No withdrawal requests yet."
+        "requestsEmpty": "No withdrawal requests yet.",
+        "detailTitle": "Withdrawal request detail",
+        "timeline": "Timeline",
+        "details": "Details",
+        "requestedAt": "Submitted",
+        "approvedAt": "Approved",
+        "rejectedAt": "Rejected",
+        "paidAt": "Paid",
+        "reviewer": "Reviewed by",
+        "paymentReference": "Payment reference",
+        "close": "Close",
+        "status": {
+          "pending": "Pending",
+          "approved": "Approved",
+          "rejected": "Rejected",
+          "paid": "Paid",
+          "rolled_back": "Rolled back"
+        }
       },
       "createSession": {
         "title": "Create Session",

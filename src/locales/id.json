@@ -8073,7 +8073,24 @@
         "kpiSessions": "Sesi diajar",
         "notOnboarded": "Akun kamu belum terdaftar sebagai tutor di bimbel ini, jadi belum ada honor yang bisa dihitung. Hubungi admin bimbel untuk didaftarkan.",
         "requestsTitle": "Pengajuan pencairan terakhir",
-        "requestsEmpty": "Belum ada pengajuan pencairan."
+        "requestsEmpty": "Belum ada pengajuan pencairan.",
+        "detailTitle": "Detail pengajuan pencairan",
+        "timeline": "Linimasa",
+        "details": "Detail",
+        "requestedAt": "Diajukan",
+        "approvedAt": "Disetujui",
+        "rejectedAt": "Ditolak",
+        "paidAt": "Dibayar",
+        "reviewer": "Ditinjau oleh",
+        "paymentReference": "Referensi pembayaran",
+        "close": "Tutup",
+        "status": {
+          "pending": "Menunggu",
+          "approved": "Disetujui",
+          "rejected": "Ditolak",
+          "paid": "Dibayar",
+          "rolled_back": "Dibatalkan"
+        }
       },
       "createSession": {
         "title": "Buat Sesi",
