@@ -6953,6 +6953,7 @@
         "colActions": "Actions",
         "colLastValid": "Valid until",
         "archive": "Archive",
+        "unarchive": "Reactivate",
         "alwaysValid": "Always valid",
         "createTitle": "New voucher",
         "editTitle": "Edit voucher",
@@ -6971,6 +6972,8 @@
         "formMaxRedemptionsPh": "Leave blank for unlimited",
         "errorRequired": "Code and value are required.",
         "errorSaveFailed": "Could not save voucher. Please try again.",
+        "errorArchiveFailed": "Could not archive voucher. Please try again.",
+        "errorUnarchiveFailed": "Could not reactivate voucher. Please try again.",
         "statusExpired": "Expired",
         "status": {
           "active": "Active",

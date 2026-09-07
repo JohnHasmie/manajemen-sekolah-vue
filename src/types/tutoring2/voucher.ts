@@ -18,6 +18,25 @@ export type VoucherKind = 'percent' | 'fixed';
 export type VoucherStatus = 'active' | 'archived';
 
 /**
+ * Runtime counterpart of `VoucherStatus`, mirroring the backend enum
+ * `App\Modules\Tutoring\Enums\VoucherStatus`.
+ *
+ * `VoucherStatus` is a type, so it evaporates at runtime — a call site
+ * that needs to SEND a status (e.g. flipping an archived voucher back to
+ * active through `PUT /tutoring-v2/vouchers/{id}`) would otherwise have
+ * to retype the literal, and a backend rename would then fail silently
+ * as a 422 instead of loudly at compile time.
+ *
+ * `satisfies Record<VoucherStatus, VoucherStatus>` makes the map
+ * exhaustive in both directions: adding a case to the union without
+ * adding it here is a compile error, and so is a typo in a value.
+ */
+export const VOUCHER_STATUS = {
+  active: 'active',
+  archived: 'archived',
+} as const satisfies Record<VoucherStatus, VoucherStatus>;
+
+/**
  * Kept as an alias so callers who read the WEB-9 brief still find the
  * expected identifier. Under the hood it is `VoucherKind`.
  */

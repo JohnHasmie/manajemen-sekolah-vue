@@ -76,8 +76,15 @@ vi.mock('@/services/tutoring2/vouchers', () => ({
   },
 }));
 
+// Flippable so the `tutoring.voucher.manage` gate on the row controls can
+// be exercised without re-importing the SFC (which would hand the
+// component a different VouchersService instance than the one stubbed
+// above). `hasAbility` is the app-wide gate and reads /me abilities for
+// the ACTIVE role — never `roles[].permission_keys`.
+const abilities = vi.hoisted(() => ({ granted: new Set<string>() }));
+
 vi.mock('@/stores/auth', () => ({
-  useAuthStore: () => ({ hasAbility: () => true }),
+  useAuthStore: () => ({ hasAbility: (p: string) => abilities.granted.has(p) }),
 }));
 
 vi.mock('@/composables/useAcademicYearWatcher', () => ({
@@ -110,6 +117,13 @@ function makeVoucher(overrides = {}) {
 
 async function mountVouchers(items) {
   setActivePinia(createPinia());
+  if (abilities.granted.size === 0) {
+    abilities.granted = new Set([
+      'tutoring.voucher.view',
+      'tutoring.voucher.manage',
+      'tutoring.voucher.redeem',
+    ]);
+  }
   (VouchersService.list as any).mockResolvedValue({ items });
 
   const w = mount(AdminTutoring2VouchersView, {
@@ -127,8 +141,16 @@ async function mountVouchers(items) {
           messages: {
             id: {
               tutoring2: {
+                common: { edit: 'Ubah' },
                 admin: {
-                  vouchers: { kpiCountedSuffix: '{count} kupon terdata' },
+                  vouchers: {
+                    kpiCountedSuffix: '{count} kupon terdata',
+                    archive: 'Arsipkan',
+                    unarchive: 'Aktifkan kembali',
+                    errorArchiveFailed: 'Gagal mengarsipkan voucher. Coba lagi.',
+                    errorUnarchiveFailed:
+                      'Gagal mengaktifkan kembali voucher. Coba lagi.',
+                  },
                 },
               },
             },
@@ -338,5 +360,277 @@ describe('AdminTutoring2VouchersView usage tiles — known zeros and infinities'
     expect(values[USED_TILE]).toBe('—');
     expect(values[QUOTA_TILE]).toBe('—');
     expect(values[QUOTA_TILE]).not.toBe('100');
+  });
+});
+
+
+/**
+ * ─── Un-archiving: the missing half of a one-way door ────────────────
+ *
+ * Reported by Luay: "pada halaman Voucher kenapa setelah diarsipkan
+ * tidak dapat diaktifkan kembali/di unarchive".
+ *
+ * Nothing was broken server-side and no voucher was lost. The list has
+ * always carried archived rows (the default request sends no `status`
+ * filter at all) and `PUT /tutoring-v2/vouchers/{id}` has always
+ * accepted `status`. The row simply rendered one direction of a
+ * two-direction toggle: "Arsipkan" existed, its counterpart did not.
+ *
+ * Same family as the dead filter chips of !1191/!1195/!1196/!1197 — the
+ * capability shipped, the control did not.
+ */
+import { VOUCHER_STATUS } from '@/types/tutoring2/voucher';
+
+/**
+ * ─── Reading the row-actions cell ────────────────────────────────────
+ *
+ * Both helpers take a row index, because the sharpest assertions here
+ * are about TWO rows at once: a control that is present on one status
+ * and absent on the other cannot be proved by looking at either row
+ * alone. Asserting only "absent on an active voucher" is satisfied just
+ * as well by a screen with no such button anywhere.
+ */
+const ACTIONS_CELL = 5;
+
+function actionCell(w, row = 0) {
+  return w.findAll('[data-testid="async"] tbody tr')[row].findAll('td')[
+    ACTIONS_CELL
+  ];
+}
+
+function rowActionLabels(w, row = 0) {
+  return actionCell(w, row)
+    .findAll('button')
+    .map((b) => b.text());
+}
+
+function rowActionButton(w, label: string, row = 0) {
+  return actionCell(w, row)
+    .findAll('button')
+    .find((b) => b.text() === label);
+}
+
+function rowActionError(w) {
+  const el = w.find('[data-testid="row-action-error"]');
+  return el.exists() ? el.text() : null;
+}
+
+const ALL_VOUCHER_ABILITIES = [
+  'tutoring.voucher.view',
+  'tutoring.voucher.manage',
+  'tutoring.voucher.redeem',
+];
+
+describe('AdminTutoring2VouchersView unarchive control', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    abilities.granted = new Set(ALL_VOUCHER_ABILITIES);
+  });
+
+  it('offers "Aktifkan kembali" on an ARCHIVED voucher', async () => {
+    const w = await mountVouchers([makeVoucher({ status: 'archived' })]);
+
+    expect(rowActionLabels(w)).toContain('Aktifkan kembali');
+  });
+
+  it('THE FIX: clicking it PUTs the active status for that voucher', async () => {
+    (VouchersService.update as any).mockResolvedValue(
+      makeVoucher({ status: 'active' }),
+    );
+
+    const w = await mountVouchers([makeVoucher({ id: 'v-arc', status: 'archived' })]);
+    await rowActionButton(w, 'Aktifkan kembali').trigger('click');
+    await flushPromises();
+
+    expect(VouchersService.update).toHaveBeenCalledTimes(1);
+    expect((VouchersService.update as any).mock.calls[0][0]).toBe('v-arc');
+    expect((VouchersService.update as any).mock.calls[0][1]).toEqual({
+      status: 'active',
+    });
+    // The value must come from the shared constant, not a loose literal
+    // that could drift away from the backend enum.
+    expect((VouchersService.update as any).mock.calls[0][1].status).toBe(
+      VOUCHER_STATUS.active,
+    );
+  });
+
+  it('refreshes the list afterwards, exactly as Arsipkan does', async () => {
+    (VouchersService.update as any).mockResolvedValue(
+      makeVoucher({ status: 'active' }),
+    );
+
+    const w = await mountVouchers([makeVoucher({ status: 'archived' })]);
+    expect(VouchersService.list).toHaveBeenCalledTimes(1);
+
+    await rowActionButton(w, 'Aktifkan kembali').trigger('click');
+    await flushPromises();
+
+    expect(VouchersService.list).toHaveBeenCalledTimes(2);
+  });
+
+  // Was: "is ABSENT on an already-active voucher, which offers Arsipkan
+  // instead" — one row, one status, and therefore green on a build with
+  // no Aktifkan kembali button anywhere. Mounting BOTH statuses in one
+  // list turns it into a real statement about the toggle: each row shows
+  // exactly one direction, and the archived row must show the other one.
+  it('each row shows exactly one direction of the toggle', async () => {
+    const w = await mountVouchers([
+      makeVoucher({ id: 'v-act', status: 'active' }),
+      makeVoucher({ id: 'v-arc', code: 'ARSIP', status: 'archived' }),
+    ]);
+
+    expect(rowActionLabels(w, 0)).toEqual(['Ubah', 'Arsipkan']);
+    expect(rowActionLabels(w, 1)).toEqual(['Ubah', 'Aktifkan kembali']);
+  });
+
+  // Was: "an archived voucher does NOT also offer Arsipkan" — a pure
+  // absence assertion, satisfied by a row with no buttons at all.
+  // Asserting the EXACT label list says both halves of the claim: the
+  // archived row drops Arsipkan *and* gains its counterpart.
+  it('the archived row offers Ubah + Aktifkan kembali, and nothing else', async () => {
+    const w = await mountVouchers([makeVoucher({ status: 'archived' })]);
+
+    expect(rowActionLabels(w)).toEqual(['Ubah', 'Aktifkan kembali']);
+  });
+
+  // Was: "hides it without the manage ability" — green on origin/main,
+  // where it is hidden from everyone. A gate test has to show the gate
+  // OPENING as well as closing, so both mounts live in one test.
+  it('the manage ability is what gates it — present with, absent without', async () => {
+    abilities.granted = new Set(ALL_VOUCHER_ABILITIES);
+    const withManage = await mountVouchers([makeVoucher({ status: 'archived' })]);
+    expect(rowActionLabels(withManage)).toContain('Aktifkan kembali');
+
+    abilities.granted = new Set(['tutoring.voucher.view']);
+    const withoutManage = await mountVouchers([makeVoucher({ status: 'archived' })]);
+    expect(rowActionLabels(withoutManage)).not.toContain('Aktifkan kembali');
+  });
+});
+
+/**
+ * ─── The premise the control rests on ────────────────────────────────
+ *
+ * NOT evidence for the button, and deliberately not filed with it: this
+ * assertion is green with or without the control, because it is about
+ * the LIST REQUEST, not the row. What it guards is the reachability
+ * premise — the default request sends no `status`, so archived rows
+ * arrive on the first page and the reactivate control is reachable
+ * without the admin ever touching the status filter. If someone later
+ * makes the screen default to `status=active`, the button becomes
+ * unreachable in practice while every test above stays green; this one
+ * would go red and say why.
+ */
+describe('AdminTutoring2VouchersView default list request', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    abilities.granted = new Set(ALL_VOUCHER_ABILITIES);
+  });
+
+  it('sends no status filter, so archived rows reach the default page', async () => {
+    await mountVouchers([makeVoucher({ status: 'archived' })]);
+
+    expect((VouchersService.list as any).mock.calls[0][0].status).toBeUndefined();
+  });
+});
+
+/**
+ * ─── A refused write must say so ─────────────────────────────────────
+ *
+ * Both row controls used to be a bare `await Service.x(id)`. A 403 (the
+ * manage ability revoked between page load and click), a 422, or a 500
+ * became an unhandled rejection: `reload()` never ran, nothing appeared
+ * on screen, and the row kept its old status — a button that did
+ * nothing and said nothing. The two are fixed together and asserted
+ * together so they cannot drift apart again.
+ */
+describe('AdminTutoring2VouchersView row-action failures', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    abilities.granted = new Set(ALL_VOUCHER_ABILITIES);
+  });
+
+  it('a failed Aktifkan kembali shows the backend message and does not refresh', async () => {
+    (VouchersService.update as any).mockRejectedValue({
+      response: { data: { message: 'Anda tidak berwenang mengubah voucher.' } },
+    });
+
+    const w = await mountVouchers([makeVoucher({ status: 'archived' })]);
+    expect(VouchersService.list).toHaveBeenCalledTimes(1);
+
+    await rowActionButton(w, 'Aktifkan kembali').trigger('click');
+    await flushPromises();
+
+    expect(rowActionError(w)).toBe('Anda tidak berwenang mengubah voucher.');
+    // No second fetch: the screen must not perform a refresh that would
+    // read as "done" when the write was refused.
+    expect(VouchersService.list).toHaveBeenCalledTimes(1);
+    // And the row is still archived, still offering the same door.
+    expect(rowActionLabels(w)).toEqual(['Ubah', 'Aktifkan kembali']);
+  });
+
+  it('a failed Arsipkan shows the backend message and does not refresh', async () => {
+    (VouchersService.archive as any).mockRejectedValue({
+      response: { data: { message: 'Voucher sedang dipakai.' } },
+    });
+
+    const w = await mountVouchers([makeVoucher({ status: 'active' })]);
+
+    await rowActionButton(w, 'Arsipkan').trigger('click');
+    await flushPromises();
+
+    expect(rowActionError(w)).toBe('Voucher sedang dipakai.');
+    expect(VouchersService.list).toHaveBeenCalledTimes(1);
+    expect(rowActionLabels(w)).toEqual(['Ubah', 'Arsipkan']);
+  });
+
+  it('falls back to a translated sentence when the failure carries no message', async () => {
+    // A network drop or a 500 with an empty body: there is no backend
+    // text to borrow, and silence is the one thing we are fixing.
+    (VouchersService.update as any).mockRejectedValue(new Error('Network Error'));
+
+    const w = await mountVouchers([makeVoucher({ status: 'archived' })]);
+    await rowActionButton(w, 'Aktifkan kembali').trigger('click');
+    await flushPromises();
+
+    expect(rowActionError(w)).toBe('Gagal mengaktifkan kembali voucher. Coba lagi.');
+  });
+
+  it('SYMMETRY: Arsipkan falls back too — neither half is left silent', async () => {
+    (VouchersService.archive as any).mockRejectedValue(new Error('Network Error'));
+
+    const w = await mountVouchers([makeVoucher({ status: 'active' })]);
+    await rowActionButton(w, 'Arsipkan').trigger('click');
+    await flushPromises();
+
+    expect(rowActionError(w)).toBe('Gagal mengarsipkan voucher. Coba lagi.');
+  });
+
+  it('a later success clears the stale failure banner', async () => {
+    (VouchersService.update as any)
+      .mockRejectedValueOnce(new Error('Network Error'))
+      .mockResolvedValueOnce(makeVoucher({ status: 'active' }));
+
+    const w = await mountVouchers([makeVoucher({ status: 'archived' })]);
+
+    await rowActionButton(w, 'Aktifkan kembali').trigger('click');
+    await flushPromises();
+    expect(rowActionError(w)).not.toBeNull();
+
+    await rowActionButton(w, 'Aktifkan kembali').trigger('click');
+    await flushPromises();
+
+    expect(rowActionError(w)).toBeNull();
+    expect(VouchersService.list).toHaveBeenCalledTimes(2);
+  });
+
+  // Also NOT evidence for the fix — green with or without it, since a
+  // screen that never surfaces an error also never surfaces a stale one.
+  // It is kept as the negative control for the assertions above: without
+  // it, a banner hard-coded to render always would satisfy every one of
+  // them.
+  it('no banner is rendered before anything has failed', async () => {
+    const w = await mountVouchers([makeVoucher({ status: 'archived' })]);
+
+    expect(rowActionError(w)).toBeNull();
   });
 });

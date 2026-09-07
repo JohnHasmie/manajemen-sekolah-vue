@@ -30,6 +30,7 @@ import { countOrDash, EM_DASH, isCounted } from '@/lib/absent-vs-zero';
 import { toLocalYmd } from '@/lib/local-date';
 import { useAuthStore } from '@/stores/auth';
 import { VouchersService } from '@/services/tutoring2/vouchers';
+import { VOUCHER_STATUS } from '@/types/tutoring2/voucher';
 import type {
   BimbelVoucher,
   VoucherCreatePayload,
@@ -270,6 +271,30 @@ const form = reactive<EditForm>(emptyForm());
 const saveError = ref<string | null>(null);
 const saving = ref(false);
 
+/**
+ * Error surface for the row-level status toggle (Arsipkan / Aktifkan
+ * kembali).
+ *
+ * It cannot be `saveError`: that one renders *inside* the Ubah sheet,
+ * and the sheet is closed when an admin presses a row button — the
+ * message would land in a panel nobody is looking at. So this reuses
+ * `submit()`'s idiom (catch → prefer the backend `message` → fall back
+ * to a translated sentence) and gives it a home the admin can actually
+ * see, above the table.
+ */
+const rowActionError = ref<string | null>(null);
+
+/**
+ * The unwrap `submit()` has always done, lifted out so all three write
+ * paths read a 403/422/500 the same way. Axios puts the backend body on
+ * `error.response.data`; anything else (a network drop, a thrown
+ * non-error) yields `undefined` and the caller's fallback wins.
+ */
+function backendMessage(e: unknown): string | undefined {
+  return (e as { response?: { data?: { message?: string } } })?.response?.data
+    ?.message;
+}
+
 function openCreate() {
   if (!canManage.value) return;
   Object.assign(form, emptyForm());
@@ -340,17 +365,67 @@ async function submit() {
     // Backend surfaces the duplicate-code case as a 422 with the field
     // "code" filled in. Surface a friendly message here; a full field
     // renderer is deferred to the next iteration.
-    const msg = (e as { response?: { data?: { message?: string } } })
-      ?.response?.data?.message;
-    saveError.value = msg ?? t('tutoring2.admin.vouchers.errorSaveFailed');
+    saveError.value =
+      backendMessage(e) ?? t('tutoring2.admin.vouchers.errorSaveFailed');
   } finally {
     saving.value = false;
   }
 }
 
+/**
+ * ─── Why both halves carry a catch ───────────────────────────────────
+ *
+ * `archiveVoucher` shipped as a bare `await` with nothing around it, and
+ * `unarchiveVoucher` was written to mirror it exactly rather than
+ * quietly upgrading one side of a two-way toggle. That symmetry was the
+ * right instinct and the wrong resting place: an unhandled rejection
+ * skips `reload()`, so a 403 (ability revoked between page load and
+ * click), a 422, or a 500 produced a button that did nothing and said
+ * nothing — the row kept its old status and the admin had no way to
+ * tell a refused write from a slow one.
+ *
+ * Both now surface into `rowActionError` and both `return` before
+ * `reload()`, so a failed write never leaves the screen looking like it
+ * succeeded. Keep them symmetric: whatever one does, the other does.
+ */
 async function archiveVoucher(v: BimbelVoucher) {
   if (!canManage.value) return;
-  await VouchersService.archive(v.id);
+  rowActionError.value = null;
+  try {
+    await VouchersService.archive(v.id);
+  } catch (e: unknown) {
+    rowActionError.value =
+      backendMessage(e) ?? t('tutoring2.admin.vouchers.errorArchiveFailed');
+    return;
+  }
+  await reload();
+}
+
+/**
+ * The counterpart to `archiveVoucher` — archiving shipped with no way
+ * back, so an archived voucher was a one-way door on this screen even
+ * though the backend has always accepted the reverse.
+ *
+ * There is no `/vouchers/{id}/unarchive` route; the flip goes through
+ * the ordinary update endpoint, whose `UpdateVoucherRequest` validates
+ * `status` against the backend `VoucherStatus` enum and whose
+ * `UpdateVoucherAction` writes it in its key-by-key loop. So this is a
+ * one-field PUT, not a new endpoint.
+ *
+ * Deliberately mirrors `archiveVoucher` beat for beat — same manage
+ * gate, no confirm step, same `reload()` afterwards — so the two halves
+ * of one toggle cannot drift apart.
+ */
+async function unarchiveVoucher(v: BimbelVoucher) {
+  if (!canManage.value) return;
+  rowActionError.value = null;
+  try {
+    await VouchersService.update(v.id, { status: VOUCHER_STATUS.active });
+  } catch (e: unknown) {
+    rowActionError.value =
+      backendMessage(e) ?? t('tutoring2.admin.vouchers.errorUnarchiveFailed');
+    return;
+  }
   await reload();
 }
 </script>
@@ -401,6 +476,20 @@ async function archiveVoucher(v: BimbelVoucher) {
           />
         </template>
       </PageFilterToolbar>
+
+      <!--
+        Row-action failures land here rather than in the Ubah sheet: the
+        sheet is closed when Arsipkan / Aktifkan kembali are pressed, so
+        `saveError`'s slot would never be on screen at that moment.
+      -->
+      <p
+        v-if="rowActionError"
+        data-testid="row-action-error"
+        role="alert"
+        class="mb-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600"
+      >
+        {{ rowActionError }}
+      </p>
 
       <AsyncView
         :state="state"
@@ -460,6 +549,22 @@ async function archiveVoucher(v: BimbelVoucher) {
                         @click="archiveVoucher(v)"
                       >
                         {{ t('tutoring2.admin.vouchers.archive') }}
+                      </button>
+                      <!--
+                        Mutually exclusive with Arsipkan above: the row
+                        always offers exactly one direction of the
+                        toggle. The status literals are checked against
+                        the `VoucherStatus` union, so a renamed case is
+                        a compile error here rather than a button that
+                        never appears.
+                      -->
+                      <button
+                        v-if="canManage && v.status === 'archived'"
+                        type="button"
+                        class="text-xs font-bold text-slate-500 hover:text-emerald-600"
+                        @click="unarchiveVoucher(v)"
+                      >
+                        {{ t('tutoring2.admin.vouchers.unarchive') }}
                       </button>
                     </div>
                   </td>

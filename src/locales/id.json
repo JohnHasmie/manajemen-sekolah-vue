@@ -7244,6 +7244,7 @@
         "colActions": "Aksi",
         "colLastValid": "Berlaku hingga",
         "archive": "Arsipkan",
+        "unarchive": "Aktifkan kembali",
         "alwaysValid": "Selalu berlaku",
         "createTitle": "Voucher baru",
         "editTitle": "Ubah voucher",
@@ -7262,6 +7263,8 @@
         "formMaxRedemptionsPh": "Kosongkan untuk tak terbatas",
         "errorRequired": "Kode dan nilai wajib diisi.",
         "errorSaveFailed": "Gagal menyimpan voucher. Coba lagi.",
+        "errorArchiveFailed": "Gagal mengarsipkan voucher. Coba lagi.",
+        "errorUnarchiveFailed": "Gagal mengaktifkan kembali voucher. Coba lagi.",
         "statusExpired": "Kadaluarsa",
         "status": {
           "active": "Aktif",
