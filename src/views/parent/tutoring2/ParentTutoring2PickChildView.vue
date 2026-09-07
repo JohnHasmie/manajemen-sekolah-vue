@@ -17,6 +17,7 @@ import { useRoute, useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { bimbelStudentLabel } from '@/lib/bimbel-session-label';
 import {
   TutoringBimbelService,
   type BimbelEnrollment,
@@ -64,6 +65,12 @@ const { state, reload } = useDataRefresh(async () => {
 
 interface ChildRow {
   student_id: string;
+  /**
+   * The sibling ParentTutoring2HomeView has copied this off the same
+   * `listEnrollments` payload since it shipped; this screen dropped it,
+   * so the two parent screens disagreed about the child's own name.
+   */
+  student_name?: string | null;
   active_count: number;
 }
 
@@ -71,7 +78,25 @@ const children = computed<ChildRow[]>(() => {
   const items = (state.value.status === 'content' ? state.value.data : []) as BimbelEnrollment[];
   const byStudent = new Map<string, ChildRow>();
   for (const e of items) {
-    const row = byStudent.get(e.student_id) ?? { student_id: e.student_id, active_count: 0 };
+    const row = byStudent.get(e.student_id) ?? {
+      student_id: e.student_id,
+      active_count: 0,
+    };
+    /**
+     * Outside the `??`, so it runs on the EXISTING row too. A child's
+     * enrollments are not uniform: `whenLoaded` omits `student_name`
+     * per row, so the first enrollment can be nameless while the second
+     * carries the name. Copying the name only when the row is created
+     * would leave every child with more than one programme showing an
+     * id fragment whenever their first row happened to be the unnamed
+     * one — a named sibling next to an unnamed one, on the same list.
+     *
+     * A name already taken is never overwritten (first non-blank wins,
+     * matching TutorTutoring2StudentDetailView's `find`), and the trim
+     * is what makes `"   "` count as still-unnamed rather than as an
+     * answer.
+     */
+    if (!String(row.student_name ?? '').trim()) row.student_name = e.student_name;
     if (e.status === 'active' || e.status === 'trial') row.active_count += 1;
     byStudent.set(e.student_id, row);
   }
@@ -109,11 +134,11 @@ function openChild(studentId: string) {
               @click="openChild(c.student_id)"
             >
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-azure/10 text-xs font-bold uppercase text-brand-azure">
-                {{ c.student_id.slice(0, 2).toUpperCase() }}
+                {{ bimbelStudentLabel(c).slice(0, 2).toUpperCase() }}
               </div>
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-bold text-slate-900">
-                  {{ t('tutoring2.common.studentId') }} {{ c.student_id.slice(0, 8) }}
+                  {{ bimbelStudentLabel(c, t('tutoring2.common.studentId')) }}
                 </p>
                 <p class="truncate text-2xs text-slate-500">
                   {{ t('tutoring2.common.metaActiveEnrolls', { count: c.active_count }) }}

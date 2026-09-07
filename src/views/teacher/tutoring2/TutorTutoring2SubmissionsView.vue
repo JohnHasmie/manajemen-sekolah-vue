@@ -27,6 +27,7 @@ import KpiStripCards, {
 } from '@/components/feature/KpiStripCards.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
+import { bimbelStudentLabel } from '@/lib/bimbel-session-label';
 import { useMeStore } from '@/stores/me';
 import { ActivitiesService } from '@/services/tutoring2/activities';
 import { SubmissionsService } from '@/services/tutoring2/submissions';
@@ -273,7 +274,7 @@ function goBack() {
               <tbody class="divide-y divide-slate-100">
                 <tr v-for="row in rows" :key="row.id" class="hover:bg-slate-50">
                   <td class="px-4 py-3 min-w-[160px]">
-                    <p class="font-bold text-slate-900 truncate">{{ row.student_name ?? row.student_id ?? row.enrollment_id.slice(0, 8) }}</p>
+                    <p class="font-bold text-slate-900 truncate">{{ bimbelStudentLabel(row) }}</p>
                     <p v-if="row.body" class="text-2xs text-slate-500 truncate max-w-xs">
                       {{ row.body }}
                     </p>

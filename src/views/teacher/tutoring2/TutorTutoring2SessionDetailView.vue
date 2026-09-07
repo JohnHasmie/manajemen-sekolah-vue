@@ -30,7 +30,7 @@ import {
   TutoringBimbelService,
   type BimbelSession,
 } from '@/services/tutoring-bimbel.service';
-import { bimbelGroupLabel } from '@/lib/bimbel-session-label';
+import { bimbelGroupLabel, bimbelTutorLabel } from '@/lib/bimbel-session-label';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -324,7 +324,7 @@ const metaText = computed(() =>
               </div>
               <div class="flex items-start gap-3 py-2">
                 <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">{{ t('tutoring2.common.tutor') }}</dt>
-                <dd class="flex-1 truncate text-slate-900">{{ session.tutor_id ?? '—' }}</dd>
+                <dd class="flex-1 truncate text-slate-900">{{ bimbelTutorLabel(session, t('tutoring2.common.tutor')) }}</dd>
               </div>
               <div v-if="session.tutor_note" class="flex items-start gap-3 py-2">
                 <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">{{ t('tutoring2.common.notes') }}</dt>

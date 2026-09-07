@@ -14,6 +14,7 @@ import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { bimbelProgramLabel, bimbelStudentLabel } from '@/lib/bimbel-session-label';
 import {
   TutoringBimbelService,
   type BimbelEnrollment,
@@ -45,9 +46,34 @@ const activeEnrollmentCount = computed(
   () => enrollments.value.filter((e) => e.status === 'active').length,
 );
 
-function shortId(id: string): string {
-  return id.length > 8 ? id.slice(0, 8) : id;
-}
+/**
+ * The route hands this screen an id and nothing else, so the header used
+ * to be an id fragment by necessity. It is not any more: every loaded
+ * enrollment for this student carries `student_name`, so the first row
+ * that has one names the header. Until the request settles the ladder
+ * falls back to the id fragment exactly as before — the header must not
+ * flash blank while loading.
+ */
+const studentSource = computed(() => ({
+  student_id: studentId.value,
+  student_name: enrollments.value.find((e) =>
+    String(e.student_name ?? '').trim(),
+  )?.student_name,
+}));
+
+/** Page-header meta. Stands alone with no adjacent label, so the id
+ *  fragment needs the "ID siswa" prefix to say what it is. */
+const studentLabel = computed(() =>
+  bimbelStudentLabel(studentSource.value, t('tutoring2.common.studentId')),
+);
+
+/**
+ * The same label for the info card, WITHOUT the prefix: the card prints
+ * its own kicker directly above the value, so a prefixed fragment read
+ * "ID SISWA / ID siswa 01a00e34". The kicker says which field this is;
+ * the value says what it holds.
+ */
+const studentLabelBare = computed(() => bimbelStudentLabel(studentSource.value));
 
 function statusPillTone(status: BimbelEnrollment['status']): StatusBadgeTone {
   switch (status) {
@@ -74,7 +100,7 @@ function statusPillTone(status: BimbelEnrollment['status']): StatusBadgeTone {
       role="teacher"
       :kicker="t('tutoring2.common.roleTutor')"
       :title="t('tutoring2.tutor.studentDetail.title')"
-      :meta="shortId(studentId)"
+      :meta="studentLabel"
     />
 
     <AsyncView
@@ -90,11 +116,14 @@ function statusPillTone(status: BimbelEnrollment['status']): StatusBadgeTone {
       <template #default>
         <!-- Info card -->
         <section class="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
+          <!-- Kicker is "Siswa", not "ID siswa": the value below is the
+               student's NAME whenever the loaded enrollments carry one,
+               and only falls back to an id fragment when they do not. -->
           <p class="text-2xs font-bold uppercase tracking-widest text-slate-400">
-            {{ t('tutoring2.common.studentId') }}
+            {{ t('tutoring2.common.student') }}
           </p>
           <p class="mt-1 text-lg font-bold text-slate-900">
-            {{ shortId(studentId) }}
+            {{ studentLabelBare }}
           </p>
           <p class="mt-2 text-2xs text-slate-500">
             {{ t('tutoring2.common.metaActiveEnrolls', { count: activeEnrollmentCount }) }}
@@ -119,11 +148,11 @@ function statusPillTone(status: BimbelEnrollment['status']): StatusBadgeTone {
                 class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-cobalt/10 text-brand-cobalt text-xs font-bold uppercase"
                 aria-hidden="true"
               >
-                {{ shortId(e.program_id).slice(0, 2) }}
+                {{ bimbelProgramLabel(e).slice(0, 2) }}
               </span>
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-bold text-slate-900 truncate">
-                  {{ shortId(e.program_id) }}
+                  {{ bimbelProgramLabel(e, t('tutoring2.common.program')) }}
                 </p>
                 <p class="text-2xs text-slate-500 mt-0.5">
                   {{ e.billing_mode_label ?? e.billing_mode }}

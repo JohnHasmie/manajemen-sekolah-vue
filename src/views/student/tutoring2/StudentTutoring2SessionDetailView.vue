@@ -22,6 +22,7 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { bimbelGroupLabel, bimbelTutorLabel } from '@/lib/bimbel-session-label';
 import {
   TutoringBimbelService,
   type BimbelSession,
@@ -132,7 +133,7 @@ const metaText = computed(() =>
                   {{ t('tutoring2.common.group') }}
                 </dt>
                 <dd class="flex-1 truncate text-slate-900">
-                  {{ t('tutoring2.common.group') }} {{ session.learning_group_id.slice(0, 8) }}
+                  {{ bimbelGroupLabel(session, t('tutoring2.common.group')) }}
                 </dd>
               </div>
               <div class="flex items-start gap-3 py-2">
@@ -145,7 +146,7 @@ const metaText = computed(() =>
                 <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">
                   {{ t('tutoring2.common.tutor') }}
                 </dt>
-                <dd class="flex-1 truncate text-slate-900">{{ session.tutor_id ?? '—' }}</dd>
+                <dd class="flex-1 truncate text-slate-900">{{ bimbelTutorLabel(session, t('tutoring2.common.tutor')) }}</dd>
               </div>
               <div v-if="session.materials_note" class="flex items-start gap-3 py-2">
                 <dt class="w-24 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">

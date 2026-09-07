@@ -22,6 +22,7 @@ import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { toLocalYmd } from '@/lib/local-date';
+import { bimbelGroupLabel } from '@/lib/bimbel-session-label';
 import {
   TutoringBimbelService,
   type BimbelSession,
@@ -111,7 +112,7 @@ function openSession(id: string) {
                 <span class="text-sm font-bold text-brand-azure">{{ formatTime(s.starts_at) }}</span>
               </div>
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-bold text-slate-900">{{ t('tutoring2.common.group') }} {{ s.learning_group_id.slice(0, 8) }}</p>
+                <p class="truncate text-sm font-bold text-slate-900">{{ bimbelGroupLabel(s, t('tutoring2.common.group')) }}</p>
                 <p class="truncate text-2xs text-slate-500">{{ s.room ?? '—' }}</p>
               </div>
               <StatusBadge :label="s.status_label ?? statusLabel(s.status)" :tone="sessionTone(s.status)" uppercase />

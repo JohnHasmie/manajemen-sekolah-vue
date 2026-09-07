@@ -32,6 +32,7 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { bimbelStudentLabel } from '@/lib/bimbel-session-label';
 import { useToast } from '@/composables/useToast';
 import {
   TutoringBimbelService,
@@ -68,6 +69,13 @@ watch([debouncedSearch, statusFilter, programFilter], () => reload());
 // ── Derive unique students ──────────────────────────────────────────
 interface StudentRow {
   student_id: string;
+  /**
+   * `BimbelEnrollment` has carried this all along — the mapping below
+   * simply never copied it, so the template had nothing but the uuid
+   * left to render. Optional because the server omits the key when the
+   * `student` relation was not eager-loaded (absent ≠ unnamed).
+   */
+  student_name?: string | null;
   program_count: number;
   has_active: boolean;
   has_trial: boolean;
@@ -90,6 +98,7 @@ const studentRows = computed<StudentRow[]>(() => {
     if (!existing) {
       byStudent.set(e.student_id, {
         student_id: e.student_id,
+        student_name: e.student_name,
         program_count: 1,
         has_active: e.status === 'active',
         has_trial: e.status === 'trial',
@@ -98,6 +107,21 @@ const studentRows = computed<StudentRow[]>(() => {
       });
     } else {
       existing.program_count += 1;
+      /**
+       * The EXISTING-row branch, reached from a student's second
+       * enrollment onwards. `whenLoaded` omits `student_name` per row,
+       * so rows are not uniform: without this, a student whose FIRST
+       * enrollment came back nameless would stay an id fragment even
+       * though a later row names them — one named student and one
+       * "ID siswa 01a00e34" side by side in the same list.
+       *
+       * First non-blank wins, so a name already taken is never
+       * overwritten; the trim is what stops `"   "` from counting as
+       * an answer and blocking a real name behind it.
+       */
+      if (!String(existing.student_name ?? '').trim()) {
+        existing.student_name = e.student_name;
+      }
       if (e.status === 'active') {
         existing.has_active = true;
         // Promote 'active' to primary if primary isn't already active.
@@ -164,10 +188,6 @@ function statusPillLabel(row: StudentRow): string {
   if (row.has_active) return t('tutoring2.status.active');
   if (row.has_trial) return t('tutoring2.status.trial');
   return row.primary_status_label ?? t(`tutoring2.status.${row.primary_status}`);
-}
-
-function shortId(id: string): string {
-  return id.length > 8 ? id.slice(0, 8) : id;
 }
 
 function openStudent(row: StudentRow) {
@@ -275,11 +295,11 @@ const headerMeta = computed(() =>
               class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-cobalt/10 text-brand-cobalt text-xs font-bold uppercase"
               aria-hidden="true"
             >
-              {{ shortId(row.student_id).slice(0, 2) }}
+              {{ bimbelStudentLabel(row).slice(0, 2) }}
             </span>
             <div class="min-w-0 flex-1">
               <p class="text-sm font-bold text-slate-900 truncate">
-                {{ shortId(row.student_id) }}
+                {{ bimbelStudentLabel(row, t('tutoring2.common.studentId')) }}
               </p>
               <p class="text-2xs text-slate-500 mt-0.5">
                 {{ t('tutoring2.common.metaProgramsActive', { count: row.program_count }) }}
