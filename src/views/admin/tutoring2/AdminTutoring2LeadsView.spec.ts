@@ -18,6 +18,31 @@
  *                            with the exact payload shape.
  *   4. the convert STATUS GATE, mirroring ConvertLeadAction.
  *   5. the convert ERROR SURFACING, so a 422 explains itself.
+ *   6. the convert IDENTIFIER PICKERS — that every id on the wire is
+ *      one the API handed us, never one a human typed.
+ *
+ * ── On (6), and why case 3 had to change ──
+ *
+ * This spec used to type 'st-42' into the first input of the convert
+ * form and assert `payload.student_id === 'st-42'`. That asserted the
+ * BUG: `st-…` is not a uuid, ConvertLeadRequest validates
+ * `['required','uuid']`, and the admin's every attempt came back "the
+ * student id field must be a valid uuid". The test agreed with the
+ * placeholder instead of with the server, so the screen shipped green
+ * while being impossible to complete.
+ *
+ * Two habits kept it invisible and are corrected below:
+ *
+ *   • the FormField stub rendered a bare <input> whatever `type` said,
+ *     so `setValue()` would still "work" against a <select> or a
+ *     picker — a fixed UI would not have gone red. The stub now
+ *     renders its default SLOT when one is passed, and the picker is
+ *     driven through its own emit, so what the test exercises is the
+ *     control the admin actually sees.
+ *
+ *   • ids were indexed positionally (`findAll('input')[0]`), which
+ *     silently retargets whenever a field is added or reordered.
+ *     Everything below reaches for a data-testid instead.
  *
  * ── Anti-vacuity notes for (4) and (5) ──
  *
@@ -49,6 +74,8 @@ import { createI18n } from 'vue-i18n';
 import { createPinia, setActivePinia } from 'pinia';
 import AdminTutoring2LeadsView from './AdminTutoring2LeadsView.vue';
 import { TutoringLeadsService } from '@/services/tutoring2/leads';
+import { TutoringStudentsService } from '@/services/tutoring2/students';
+import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
 import type { BimbelLead } from '@/types/tutoring2/lead';
 
 vi.mock('@/services/tutoring2/leads', () => ({
@@ -60,6 +87,29 @@ vi.mock('@/services/tutoring2/leads', () => ({
     convert: vi.fn(),
     drop: vi.fn(),
     destroy: vi.fn(),
+  },
+}));
+
+// The convert sheet's three pickers read three real endpoints. They
+// MUST be mocked: an unmocked module pulls in the axios layer, and the
+// view's Promise.allSettled loaders would swallow the failure into an
+// empty dropdown — which is exactly the state this MR exists to
+// eliminate, so a test running against it would prove nothing.
+vi.mock('@/services/tutoring2/students', () => ({
+  TutoringStudentsService: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    deactivate: vi.fn(),
+  },
+}));
+
+vi.mock('@/services/tutoring-bimbel.service', () => ({
+  TutoringBimbelService: {
+    listPrograms: vi.fn(),
+    listPackages: vi.fn(),
+    listGroups: vi.fn(),
   },
 }));
 
@@ -103,6 +153,95 @@ vi.mock('@/composables/useToast', () => ({
     info: vi.fn(),
   }),
 }));
+
+/**
+ * Real v4 uuids, because their SHAPE is the thing under test. The old
+ * 'st-42' / 'pk-1' fixtures matched the placeholders the form used to
+ * show and matched nothing the API has ever returned.
+ */
+const PROGRAM_ID = '3f1c9a70-6b2e-4c5a-9d81-2b7f0e4a1c33';
+const STUDENT_ID = '9f0d7f5c-3b21-4f7c-bb2a-1c6a2d4e88aa';
+const PACKAGE_ID = 'c41b8e02-7d55-4a9b-8f10-6e2c3a5b7d99';
+const GROUP_ID = '5a7e2d13-9c48-4b6f-a021-8d3f1e6c4b77';
+
+/** Mirrors ConvertLeadRequest's `uuid` rule — the one Luay's POST failed. */
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function makeStudent(overrides: Record<string, unknown> = {}) {
+  return {
+    id: STUDENT_ID,
+    school_id: 'sc-1',
+    name: 'Rani Kusuma',
+    student_number: 'B-0091',
+    guardian_name: 'Ibu Sari',
+    active: true,
+    ...overrides,
+  };
+}
+
+/**
+ * Default happy-path reference data for the three picker endpoints.
+ * Called from every test that opens the convert sheet, so a test that
+ * forgets one doesn't silently exercise the "endpoint unavailable"
+ * branch and pass for the wrong reason.
+ */
+function mockPickerEndpoints() {
+  (TutoringStudentsService.list as any).mockResolvedValue({
+    items: [makeStudent()],
+    pagination: undefined,
+  });
+  (TutoringBimbelService.listPrograms as any).mockResolvedValue({
+    items: [{ id: PROGRAM_ID, name: 'Intensif SMA', status: 'active' }],
+    pagination: undefined,
+  });
+  (TutoringBimbelService.listPackages as any).mockResolvedValue({
+    items: [
+      {
+        id: PACKAGE_ID,
+        program_id: PROGRAM_ID,
+        name: 'Paket 12 sesi',
+        price: 1200000,
+        allowed_billing_modes: ['monthly', 'prepaid'],
+        status: 'active',
+      },
+    ],
+    pagination: undefined,
+  });
+  (TutoringBimbelService.listGroups as any).mockResolvedValue({
+    items: [
+      {
+        id: GROUP_ID,
+        program_id: PROGRAM_ID,
+        name: 'Kelas A',
+        kind: 'group',
+        capacity: 10,
+        // No `seated_count`: GET /learning-groups (index) never emits
+        // it — only show() does. A fixture carrying it would let this
+        // suite green-light a label the real list response can never
+        // produce.
+        status: 'active',
+      },
+    ],
+    pagination: undefined,
+  });
+}
+
+/**
+ * A lead the server would actually accept for conversion: `contacted`
+ * (the status gate) AND carrying an interest program (ConvertLeadAction's
+ * first guard). Both are needed — a fixture missing the program now
+ * exercises the client-side block, not the POST.
+ */
+function makeConvertibleLead(overrides: Partial<BimbelLead> = {}): BimbelLead {
+  return makeLead({
+    status: 'contacted',
+    status_label: 'Dihubungi',
+    interest_program_id: PROGRAM_ID,
+    interest_program_name: 'Intensif SMA',
+    ...overrides,
+  });
+}
 
 function makeLead(overrides: Partial<BimbelLead> = {}): BimbelLead {
   return {
@@ -220,14 +359,71 @@ async function mountView() {
         Modal: {
           template: '<div data-testid="modal"><slot /></div>',
         },
+        // Slot-aware: FormField's documented escape hatch renders a
+        // caller-supplied control (the student trigger, the date
+        // input). A stub that always rendered its own <input> made
+        // those controls invisible to the suite while `setValue()`
+        // kept "working" — which is how a form nobody could complete
+        // stayed green.
         FormField: {
-          props: ['modelValue'],
+          props: ['modelValue', 'options', 'disabled', 'error', 'field'],
           emits: ['update:modelValue'],
           template:
-            '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            '<div class="ff"><slot>' +
+            '<select v-if="options && options.length" :data-testid="field ? \'field-\' + field : undefined" ' +
+            ':disabled="disabled" :value="modelValue" ' +
+            '@change="$emit(\'update:modelValue\', $event.target.value)">' +
+            '<option value=""></option>' +
+            '<option v-for="o in options" :key="o.value" :value="o.value">{{ o.label }}</option>' +
+            '</select>' +
+            '<input v-else :data-testid="field ? \'field-\' + field : undefined" :value="modelValue" ' +
+            '@input="$emit(\'update:modelValue\', $event.target.value)" />' +
+            '</slot><span class="ff-error">{{ error }}</span></div>',
         },
+        // Forwards `disabled` so "the button is off until a student is
+        // picked" is a real assertion rather than a prop nobody reads.
         Button: {
-          template: '<button><slot /></button>',
+          props: ['disabled', 'loading'],
+          template: '<button :disabled="disabled"><slot /></button>',
+        },
+        // Renders one button per option and emits `apply` with that
+        // option's KEY — so the id the view receives is the id the
+        // service returned, never a string the test invented.
+        //
+        // The search box is part of the stub because `search` is the
+        // emit this MR's headline mechanism hangs off: the real modal
+        // watches its own input and re-emits every keystroke when
+        // `server-search` is on (FilterFacetPickerModal.vue — `watch(
+        // search, v => { if (props.serverSearch) emit('search', v) })`).
+        // Without it the stub could declare `emits: ['search']` and
+        // nothing would ever fire it, leaving `applyStudentSearch`,
+        // the debounce and `loadStudents(q)` entirely unproven. It
+        // reuses the REAL component's `facet-picker-search` testid so
+        // the selector survives the stub being dropped.
+        FilterFacetPickerModal: {
+          props: {
+            options: { type: Array, default: () => [] },
+            selected: { type: String, default: '' },
+            loading: { type: Boolean, default: false },
+            emptyText: { type: String, default: '' },
+            // Typed Boolean on purpose: `server-search` is passed
+            // valueless, and an untyped (array-form) prop would hand
+            // the stub the empty string — falsy — so the mode
+            // assertion below would read '0' on a correctly wired
+            // view. Vue's own boolean casting is what the real
+            // component gets, so the stub takes it too.
+            serverSearch: { type: Boolean, default: false },
+          },
+          emits: ['apply', 'close', 'search'],
+          template:
+            '<div data-testid="student-picker" :data-server-search="serverSearch ? \'1\' : \'0\'">' +
+            '<input data-testid="facet-picker-search" type="search" ' +
+            '@input="$emit(\'search\', $event.target.value)" />' +
+            '<p data-testid="student-picker-empty">{{ emptyText }}</p>' +
+            '<button v-for="o in options" :key="o.key" type="button" ' +
+            'data-testid="student-option" :data-key="o.key" ' +
+            '@click="$emit(\'apply\', o.key)">{{ o.label }}</button>' +
+            '</div>',
         },
       },
     },
@@ -236,9 +432,34 @@ async function mountView() {
   return w;
 }
 
+/**
+ * Open the student picker and choose the first row it offers, then
+ * return the id that was chosen.
+ *
+ * Deliberately returns the id the PICKER carried rather than taking
+ * one from the test: that is the whole contract under repair. The old
+ * helpers typed 'st-1' into `findAll('input')[0]` and asserted the
+ * same string came back, which proved only that the box echoed itself.
+ */
+async function pickFirstStudent(w: any): Promise<string> {
+  await w.get('[data-testid="lead-convert-student-trigger"]').trigger('click');
+  await flushPromises();
+  const option = w.get('[data-testid="student-option"]');
+  const key = option.attributes('data-key') as string;
+  await option.trigger('click');
+  await flushPromises();
+  return key;
+}
+
 describe('AdminTutoring2LeadsView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Sane defaults for the three picker endpoints, for EVERY test.
+    // `loadPrograms` runs on mount, so a test that only cares about
+    // the table would otherwise resolve it to `undefined` and throw an
+    // unhandled rejection into whichever test happened to be running.
+    // Cases that want a failing endpoint override the mock they mean.
+    mockPickerEndpoints();
   });
 
   it('mounts and renders one row per lead returned by the service', async () => {
@@ -274,8 +495,8 @@ describe('AdminTutoring2LeadsView', () => {
     expect(last.status).toBe('new');
   });
 
-  it('convert flow: clicking Konversi opens the modal and submitting posts the payload', async () => {
-    const lead = makeLead({ id: 'ld-9', status: 'contacted' });
+  it('convert flow: clicking Konversi opens the modal and submitting posts the picked uuid', async () => {
+    const lead = makeConvertibleLead({ id: 'ld-9' });
     (TutoringLeadsService.list as any).mockResolvedValue({
       items: [lead],
       pagination: undefined,
@@ -298,21 +519,303 @@ describe('AdminTutoring2LeadsView', () => {
     const form = w.find('[data-testid="lead-convert-form"]');
     expect(form.exists()).toBe(true);
 
-    // Fill student_id (the first stubbed FormField input in the form).
-    const inputs = form.findAll('input');
-    expect(inputs.length).toBeGreaterThan(0);
-    await inputs[0].setValue('st-42');
-    await form.trigger('submit.prevent');
+    // The student list is fetched from the real endpoint, not typed.
+    expect(TutoringStudentsService.list).toHaveBeenCalled();
+
+    const chosen = await pickFirstStudent(w);
+    await w.get('[data-testid="lead-convert-form"]').trigger('submit.prevent');
     await flushPromises();
 
     expect(TutoringLeadsService.convert).toHaveBeenCalledTimes(1);
     const [id, payload] = (TutoringLeadsService.convert as any).mock.calls[0];
     expect(id).toBe('ld-9');
-    expect(payload.student_id).toBe('st-42');
+    // The id on the wire is the id the SERVICE returned, and it is a
+    // uuid — the exact rule Luay's POST failed.
+    expect(chosen).toBe(STUDENT_ID);
+    expect(payload.student_id).toBe(STUDENT_ID);
+    expect(payload.student_id).toMatch(UUID_RE);
     expect(payload.billing_mode).toBe('monthly');
     // program_id is NEVER sent — BE reads it from the lead's
     // interest_program_id. See ConvertLeadRequest.
     expect(payload).not.toHaveProperty('program_id');
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // THE REPORTED BUG. Every id the convert sheet can put on the wire
+  // has to be one the API issued. Before this MR all three were typed
+  // into free-text boxes whose placeholders ('st-…', 'pk-…') described
+  // a format the API never emits.
+  // ─────────────────────────────────────────────────────────────────
+  describe('convert identifier pickers', () => {
+    async function openConvertSheet(overrides: Partial<BimbelLead> = {}) {
+      (TutoringLeadsService.list as any).mockResolvedValue({
+        items: [makeConvertibleLead({ id: 'ld-pick', ...overrides })],
+        pagination: undefined,
+      });
+        const w = await mountView();
+      await w.get('[data-testid="lead-convert-btn"]').trigger('click');
+      await flushPromises();
+      return w;
+    }
+
+    it('offers no free-text identifier box — student is a picker', async () => {
+      const w = await openConvertSheet();
+      const form = w.get('[data-testid="lead-convert-form"]');
+
+      // The affordance that exists.
+      expect(
+        form.find('[data-testid="lead-convert-student-trigger"]').exists(),
+      ).toBe(true);
+      // The affordances that must NOT: package and group are selects
+      // fed by the program-scoped endpoints, so a stubbed FormField
+      // renders them as <select>, never as a typing box.
+      expect(form.find('[data-testid="field-package_id"]').element.tagName).toBe(
+        'SELECT',
+      );
+      expect(
+        form.find('[data-testid="field-learning_group_id"]').element.tagName,
+      ).toBe('SELECT');
+    });
+
+    it('keeps Konversi disabled until a student has been picked', async () => {
+      const w = await openConvertSheet();
+
+      const submit = () => w.get('[data-testid="lead-convert-submit"]');
+      expect(submit().attributes('disabled')).toBeDefined();
+
+      await pickFirstStudent(w);
+      expect(submit().attributes('disabled')).toBeUndefined();
+    });
+
+    it('refuses to submit with no student, without troubling the server', async () => {
+      const w = await openConvertSheet();
+      await w.get('[data-testid="lead-convert-form"]').trigger('submit.prevent');
+      await flushPromises();
+
+      expect(TutoringLeadsService.convert).not.toHaveBeenCalled();
+      expect(toastError).toHaveBeenCalledWith('Siswa wajib dipilih');
+    });
+
+    // ── SERVER-SIDE STUDENT SEARCH ────────────────────────────────
+    //
+    // The headline mechanism of this MR, and the one thing the rest of
+    // this block cannot reach: every other case picks the FIRST option
+    // the picker happens to be holding, which a purely client-side
+    // filter would satisfy just as well. A bimbel with 400 students
+    // returns one page; if the box only filtered that page, the other
+    // 380 would be unreachable and the admin would be back to being
+    // unable to complete the form — the exact failure this MR exists
+    // to end, wearing a different mask.
+    //
+    // So: fire the modal's `search` emit and assert the QUERY reaches
+    // the service. Non-vacuity was checked by dropping the argument
+    // (`void loadStudents()`), which turns both cases red.
+    describe('server-side student search', () => {
+      /** 300ms in the view; wait past it, then let the promise settle. */
+      async function afterDebounce(): Promise<void> {
+        await new Promise((resolve) => setTimeout(resolve, 350));
+        await flushPromises();
+      }
+
+      async function openStudentPicker(w: any) {
+        await w.get('[data-testid="lead-convert-student-trigger"]').trigger('click');
+        await flushPromises();
+        // The initial unfiltered load already happened when the sheet
+        // opened; forget it so the assertions below can only be
+        // satisfied by a NEW, query-carrying call.
+        (TutoringStudentsService.list as any).mockClear();
+        return w.get('[data-testid="facet-picker-search"]');
+      }
+
+      it('asks the API for the typed query instead of filtering one loaded page', async () => {
+        const w = await openConvertSheet();
+        const box = await openStudentPicker(w);
+
+        // The modal must be in server-search mode, or it would filter
+        // `options` locally and never emit `search` at all — the emit
+        // the assertions below depend on.
+        expect(
+          w.get('[data-testid="student-picker"]').attributes('data-server-search'),
+        ).toBe('1');
+
+        await box.setValue('rani');
+
+        // Held by the 300ms debounce — one request per burst, not one
+        // per keystroke.
+        expect(TutoringStudentsService.list).not.toHaveBeenCalled();
+
+        await afterDebounce();
+
+        expect(TutoringStudentsService.list).toHaveBeenCalledTimes(1);
+        expect(TutoringStudentsService.list).toHaveBeenCalledWith(
+          expect.objectContaining({ search: 'rani', active: true }),
+        );
+      });
+
+      it('collapses a burst of keystrokes into one request carrying the last query', async () => {
+        const w = await openConvertSheet();
+        const box = await openStudentPicker(w);
+
+        await box.setValue('r');
+        await box.setValue('ra');
+        await box.setValue('ran');
+        await box.setValue('rani');
+
+        await afterDebounce();
+
+        // The debounce must COLLAPSE the burst, not swallow it: exactly
+        // one call, and it carries the final text.
+        expect(TutoringStudentsService.list).toHaveBeenCalledTimes(1);
+        expect(TutoringStudentsService.list).toHaveBeenCalledWith(
+          expect.objectContaining({ search: 'rani' }),
+        );
+      });
+
+      it('drops the search param when the box is cleared', async () => {
+        const w = await openConvertSheet();
+        const box = await openStudentPicker(w);
+
+        await box.setValue('rani');
+        await afterDebounce();
+        (TutoringStudentsService.list as any).mockClear();
+
+        await box.setValue('   ');
+        await afterDebounce();
+
+        // Blank must mean "no filter", not `search: '   '` — the API
+        // would match nothing and the picker would look empty.
+        expect(TutoringStudentsService.list).toHaveBeenCalledWith(
+          expect.objectContaining({ search: undefined }),
+        );
+      });
+
+      it('explains an empty result set as "no match", not as "no students"', async () => {
+        const w = await openConvertSheet();
+        const box = await openStudentPicker(w);
+        (TutoringStudentsService.list as any).mockResolvedValue({
+          items: [],
+          pagination: undefined,
+        });
+
+        await box.setValue('zzz');
+        await afterDebounce();
+
+        expect(w.get('[data-testid="student-picker-empty"]').text()).toContain(
+          'cocok dengan pencarian',
+        );
+      });
+    });
+
+    it('scopes the package + group lists to the lead\'s interest program', async () => {
+      await openConvertSheet();
+
+      // A package from another program is refused by
+      // CreateEnrollmentAction ("Paket bukan milik program ini."), so
+      // scoping the LIST is what stops one ever being offered.
+      expect(TutoringBimbelService.listPackages).toHaveBeenCalledWith(
+        PROGRAM_ID,
+        expect.any(Object),
+      );
+      expect(TutoringBimbelService.listGroups).toHaveBeenCalledWith(
+        expect.objectContaining({ program_id: PROGRAM_ID }),
+      );
+    });
+
+    it('sends the picked package + group as uuids', async () => {
+      const w = await openConvertSheet();
+      (TutoringLeadsService.convert as any).mockResolvedValue(
+        makeConvertibleLead({ id: 'ld-pick', status: 'converted' }),
+      );
+
+      await pickFirstStudent(w);
+      await w
+        .get('[data-testid="field-package_id"]')
+        .setValue(PACKAGE_ID);
+      await w
+        .get('[data-testid="field-learning_group_id"]')
+        .setValue(GROUP_ID);
+      await w.get('[data-testid="lead-convert-form"]').trigger('submit.prevent');
+      await flushPromises();
+
+      const [, payload] = (TutoringLeadsService.convert as any).mock.calls[0];
+      expect(payload.package_id).toBe(PACKAGE_ID);
+      expect(payload.learning_group_id).toBe(GROUP_ID);
+      expect(payload.package_id).toMatch(UUID_RE);
+      expect(payload.learning_group_id).toMatch(UUID_RE);
+    });
+
+    it('prunes the optional ids when nothing was picked', async () => {
+      const w = await openConvertSheet();
+      (TutoringLeadsService.convert as any).mockResolvedValue(
+        makeConvertibleLead({ id: 'ld-pick', status: 'converted' }),
+      );
+
+      await pickFirstStudent(w);
+      await w.get('[data-testid="lead-convert-form"]').trigger('submit.prevent');
+      await flushPromises();
+
+      const [, payload] = (TutoringLeadsService.convert as any).mock.calls[0];
+      expect(payload).not.toHaveProperty('package_id');
+      expect(payload).not.toHaveProperty('learning_group_id');
+      // start_date is prefilled with today, so it SHOULD still be sent —
+      // this pairs with the two above so "nothing is sent" can't pass
+      // for a form that failed to build a payload at all.
+      expect(payload.start_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    // The lead has no interest program, so ConvertLeadAction's first
+    // guard would refuse the POST. The screen now says so where the
+    // fix is (the Detail sheet's "Program yang diminati" select, which
+    // did not exist before this MR) instead of relaying a 422.
+    it('blocks conversion of a lead with no interest program, and explains where to set it', async () => {
+      (TutoringLeadsService.list as any).mockResolvedValue({
+        items: [
+          makeLead({ id: 'ld-np', status: 'contacted', interest_program_id: null }),
+        ],
+        pagination: undefined,
+      });
+  
+      const w = await mountView();
+      await w.get('[data-testid="lead-convert-btn"]').trigger('click');
+      await flushPromises();
+
+      const blocked = w.get('[data-testid="lead-convert-blocked"]');
+      expect(blocked.text()).toContain('Program yang diminati');
+      expect(w.get('[data-testid="lead-convert-submit"]').attributes('disabled'))
+        .toBeDefined();
+
+      await w.get('[data-testid="lead-convert-form"]').trigger('submit.prevent');
+      await flushPromises();
+      expect(TutoringLeadsService.convert).not.toHaveBeenCalled();
+    });
+
+    // The exit from the block above. Without this the previous test
+    // would just be documenting a nicer dead end.
+    it('lets the admin set the interest program from the detail sheet', async () => {
+      const lead = makeLead({ id: 'ld-np', status: 'contacted', interest_program_id: null });
+      (TutoringLeadsService.list as any).mockResolvedValue({
+        items: [lead],
+        pagination: undefined,
+      });
+      (TutoringLeadsService.get as any).mockResolvedValue(lead);
+      (TutoringLeadsService.update as any).mockResolvedValue({
+        ...lead,
+        interest_program_id: PROGRAM_ID,
+      });
+  
+      const w = await mountView();
+      await w.get('[data-testid="lead-row"]').findAll('button')[0].trigger('click');
+      await flushPromises();
+
+      const form = w.get('[data-testid="lead-detail-form"]');
+      const select = form.get('[data-testid="field-interest_program_id"]');
+      await select.setValue(PROGRAM_ID);
+      await form.trigger('submit.prevent');
+      await flushPromises();
+
+      const [, payload] = (TutoringLeadsService.update as any).mock.calls[0];
+      expect(payload.interest_program_id).toBe(PROGRAM_ID);
+    });
   });
 
   // ─────────────────────────────────────────────────────────────────
@@ -429,21 +932,30 @@ describe('AdminTutoring2LeadsView', () => {
   // check does not make the endpoint 422-proof.
   // ─────────────────────────────────────────────────────────────────
   describe('convert failure messages', () => {
-    /** Open the convert modal on a convertible lead and submit it. */
+    /**
+     * Open the convert modal on a convertible lead, pick a student
+     * from the picker, and submit.
+     *
+     * The lead MUST carry an interest program: the sheet now refuses
+     * to POST without one, so a fixture missing it would never reach
+     * the server and every assertion here would pass vacuously.
+     */
     async function submitConvert(lead: BimbelLead) {
       (TutoringLeadsService.list as any).mockResolvedValue({
         items: [lead],
         pagination: undefined,
       });
-
+  
       const w = await mountView();
       await w.get('[data-testid="lead-convert-btn"]').trigger('click');
       await flushPromises();
 
-      const form = w.get('[data-testid="lead-convert-form"]');
-      await form.findAll('input')[0].setValue('st-1');
-      await form.trigger('submit.prevent');
+      await pickFirstStudent(w);
+      await w.get('[data-testid="lead-convert-form"]').trigger('submit.prevent');
       await flushPromises();
+      // Anti-vacuity: these cases assert what the SERVER said, so the
+      // request has to have been made.
+      expect(TutoringLeadsService.convert).toHaveBeenCalledTimes(1);
       return w;
     }
 
@@ -457,7 +969,7 @@ describe('AdminTutoring2LeadsView', () => {
         axios422('status', text),
       );
 
-      await submitConvert(makeLead({ id: 'ld-s', status: 'contacted' }));
+      await submitConvert(makeConvertibleLead({ id: 'ld-s' }));
 
       expect(toastError).toHaveBeenCalledWith(text);
       expect(toastError).not.toHaveBeenCalledWith(
@@ -465,20 +977,19 @@ describe('AdminTutoring2LeadsView', () => {
       );
     });
 
-    // Proves the two halves of the fix are independent. This lead IS
-    // `contacted`, so the new gate is satisfied and the button is
-    // correctly offered — and the request is STILL refused, because
-    // ConvertLeadAction checks interest_program_id first. Had we only
-    // tightened the gate, this admin would still be stuck.
+    // Previously this case sent a lead with interest_program_id: null
+    // and checked the 422 came back readable. The sheet now stops that
+    // POST before it leaves the browser (see "blocks conversion of a
+    // lead with no interest program" above), so the case is kept for
+    // the RACE it still covers: the row said the lead had a program,
+    // and by the time the POST landed it did not.
     it('surfaces the real reason when the 422 bag names `interest_program_id`', async () => {
       const text = 'Lead belum menentukan program yang diminati.';
       (TutoringLeadsService.convert as any).mockRejectedValue(
         axios422('interest_program_id', text),
       );
 
-      await submitConvert(
-        makeLead({ id: 'ld-p', status: 'contacted', interest_program_id: null }),
-      );
+      await submitConvert(makeConvertibleLead({ id: 'ld-p' }));
 
       expect(toastError).toHaveBeenCalledWith(text);
     });
@@ -490,7 +1001,7 @@ describe('AdminTutoring2LeadsView', () => {
         response: { status: 422, data: { errors: { learning_group_id: [text] } } },
       });
 
-      await submitConvert(makeLead({ id: 'ld-g', status: 'trial' }));
+      await submitConvert(makeConvertibleLead({ id: 'ld-g', status: 'trial' }));
 
       expect(toastError).toHaveBeenCalledWith(text);
     });
@@ -502,7 +1013,7 @@ describe('AdminTutoring2LeadsView', () => {
         new Error('Network Error'),
       );
 
-      await submitConvert(makeLead({ id: 'ld-n', status: 'contacted' }));
+      await submitConvert(makeConvertibleLead({ id: 'ld-n' }));
 
       expect(toastError).toHaveBeenCalledWith('Network Error');
     });
@@ -531,19 +1042,21 @@ describe('AdminTutoring2LeadsView', () => {
     /** Open the convert modal on a convertible lead and submit it. */
     async function submitConvertWith(rejection: unknown) {
       (TutoringLeadsService.list as any).mockResolvedValue({
-        items: [makeLead({ id: 'ld-mx', status: 'contacted' })],
+        items: [makeConvertibleLead({ id: 'ld-mx' })],
         pagination: undefined,
       });
-      (TutoringLeadsService.convert as any).mockRejectedValue(rejection);
+        (TutoringLeadsService.convert as any).mockRejectedValue(rejection);
 
       const w = await mountView();
       await w.get('[data-testid="lead-convert-btn"]').trigger('click');
       await flushPromises();
 
-      const form = w.get('[data-testid="lead-convert-form"]');
-      await form.findAll('input')[0].setValue('st-1');
-      await form.trigger('submit.prevent');
+      await pickFirstStudent(w);
+      await w.get('[data-testid="lead-convert-form"]').trigger('submit.prevent');
       await flushPromises();
+      // The whole matrix asserts what a REJECTED request shows, so a
+      // request that was never sent would pass every row silently.
+      expect(TutoringLeadsService.convert).toHaveBeenCalledTimes(1);
       return w;
     }
 
