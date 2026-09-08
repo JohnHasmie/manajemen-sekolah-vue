@@ -33,6 +33,12 @@ vi.mock('@/services/tutoring2/announcements', () => ({
     create: vi.fn(),
     publish: vi.fn(),
     destroy: vi.fn(),
+    // Flat/tenant-wide surface (BE !856) — the only list that can carry
+    // a group-less, tutor-addressed row.
+    listAll: vi.fn(),
+    createForTutors: vi.fn(),
+    publishById: vi.fn(),
+    destroyById: vi.fn(),
   },
 }));
 
@@ -44,8 +50,15 @@ vi.mock('@/composables/useConfirm', () => ({
   useConfirm: () => ({ confirm: vi.fn().mockResolvedValue(true) }),
 }));
 
+/**
+ * A TUTOR's abilities. `tutoring.announcement.create` yes (their own
+ * groups); the admin-only `tutoring.tutor.view` deliberately NOT — that
+ * is the key that separates "may write announcements" from "may act on a
+ * tenant-wide broadcast".
+ */
+const abilities = new Set<string>(['tutoring.announcement.create']);
 vi.mock('@/stores/auth', () => ({
-  useAuthStore: () => ({ hasAbility: () => true }),
+  useAuthStore: () => ({ hasAbility: (k: string) => abilities.has(k) }),
 }));
 
 /** The tutor's own groups — BE scopes listGroups by tutor for this role. */
@@ -54,10 +67,47 @@ const GROUPS = [
   { id: 'gr-2', program_id: 'pr-2', program_name: 'Reguler SMP', name: 'SMP Sore B', kind: 'group', capacity: 10, status: 'active' },
 ];
 
+/**
+ * Default flat-list stub. Honours `learning_group_id` the way the server
+ * does, which necessarily excludes the group-less broadcasts.
+ */
+function stubListAll(items: any[]) {
+  (TutoringAnnouncementsService.listAll as any).mockImplementation(
+    (params: any = {}) =>
+      Promise.resolve({
+        items: params.learning_group_id
+          ? items.filter((a) => a.learning_group_id === params.learning_group_id)
+          : items,
+      }),
+  );
+}
+
+/**
+ * An admin's tenant-wide broadcast, as a tutor receives it: no group,
+ * and always already published (the server pins the tutor read arm to
+ * `published_at IS NOT NULL`, so a tutor never sees an admin's draft).
+ */
+function makeTutorBroadcast(overrides = {}) {
+  return {
+    id: 'an-tutor-1',
+    learning_group_id: null,
+    audience: 'tutor',
+    audience_label: 'Semua tutor',
+    title: 'Rapat koordinasi tutor',
+    body: '<p>Senin 08.00.</p>',
+    author_name: 'Admin Satu',
+    published_at: '2026-08-12T09:00:00+07:00',
+    created_at: '2026-08-12T08:00:00+07:00',
+    ...overrides,
+  };
+}
+
 function makeAnnouncement(groupId: string, overrides = {}) {
   return {
     id: `an-${groupId}`,
     learning_group_id: groupId,
+    audience: 'learning_group',
+    audience_label: 'Kelompok belajar',
     title: `Pengumuman ${groupId}`,
     body: '<p>isi</p>',
     author_name: 'Pak Rahmat',
@@ -82,8 +132,16 @@ function makeI18n() {
             detail: 'Detail',
             back: 'Kembali',
             cancel: 'Batal',
+            delete: 'Hapus',
           },
           status: { draft: 'Draft', published: 'Terbit', archived: 'Arsip' },
+          tutor: {
+            groupAnnouncements: {
+              audienceGroup: 'Kelompok belajar',
+              audienceTutor: 'Semua tutor',
+              publishCta: 'Terbitkan',
+            },
+          },
         },
       },
     },
@@ -138,9 +196,7 @@ describe('TutorTutoring2GroupAnnouncementsView Kelompok chip', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
-    (TutoringAnnouncementsService.list as any).mockImplementation((groupId: string) =>
-      Promise.resolve({ items: [makeAnnouncement(groupId)] }),
-    );
+    stubListAll(GROUPS.map((g) => makeAnnouncement(g.id)));
   });
 
   it('the chip starts at "Semua" and is enabled once groups arrive', async () => {
@@ -278,9 +334,7 @@ describe('TutorTutoring2GroupAnnouncementsView preview footer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
-    (TutoringAnnouncementsService.list as any).mockImplementation((groupId: string) =>
-      Promise.resolve({ items: [makeAnnouncement(groupId)] }),
-    );
+    stubListAll(GROUPS.map((g) => makeAnnouncement(g.id)));
   });
 
   it('the detail dialog ends in ONE button, and it is "Kembali"', async () => {
@@ -324,5 +378,127 @@ describe('TutorTutoring2GroupAnnouncementsView preview footer', () => {
     expect(modal.find(CANCEL).exists()).toBe(true);
     expect(modal.find(CANCEL).text()).toBe('Batal');
     expect(modal.find(SUBMIT).exists()).toBe(true);
+  });
+});
+
+/**
+ * ── Tutor-addressed announcements (BE !856) ─────────────────────────
+ *
+ * This screen used to load the tutor's groups and fire one nested
+ * `GET /learning-groups/{id}/announcements` per group. That loader could
+ * not show an admin's tenant-wide broadcast at ALL — the nested route
+ * filters `where('learning_group_id', {groupId})`, and a broadcast has
+ * no group — so the feature Luay asked for had a write path and no
+ * reader on the tutor side.
+ *
+ * It now makes one flat call, which the server scopes to the tutor's own
+ * groups PLUS published tutor-addressed rows.
+ */
+describe('TutorTutoring2GroupAnnouncementsView tutor-addressed rows', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
+    stubListAll([...GROUPS.map((g) => makeAnnouncement(g.id)), makeTutorBroadcast()]);
+  });
+
+  it('loads in ONE flat call — the per-group fan-out is gone', async () => {
+    await mountView();
+
+    expect(TutoringAnnouncementsService.listAll).toHaveBeenCalledTimes(1);
+    expect(TutoringAnnouncementsService.list).not.toHaveBeenCalled();
+  });
+
+  it('shows the tenant-wide broadcast ALONGSIDE the group announcements', async () => {
+    const w = await mountView();
+    const list = rows(w);
+
+    expect(list).toHaveLength(3); // 2 group rows + 1 broadcast
+    expect(list.join(' ')).toContain('Rapat koordinasi tutor');
+    // Group rows must keep working — this is a superset, not a swap.
+    expect(list.join(' ')).toContain('Pengumuman gr-1');
+    expect(list.join(' ')).toContain('Pengumuman gr-2');
+  });
+
+  it('labels the broadcast with the server label instead of a group name', async () => {
+    const w = await mountView();
+    const broadcast = w
+      .findAll('[data-testid="async"] li')
+      .find((r) => r.text().includes('Rapat koordinasi tutor'));
+
+    expect(broadcast!.text()).toContain('Semua tutor');
+    // Never the literal null a group-name lookup would have produced.
+    expect(broadcast!.text()).not.toContain('null');
+  });
+
+  it('a group row still reads its group name', async () => {
+    const w = await mountView();
+    const groupRow = w
+      .findAll('[data-testid="async"] li')
+      .find((r) => r.text().includes('Pengumuman gr-1'));
+
+    expect(groupRow!.text()).toContain('UTBK Pagi A');
+  });
+
+  it('offers NO delete on a broadcast — a tutor cannot act on one', async () => {
+    const w = await mountView();
+    const broadcast = w
+      .findAll('[data-testid="async"] li')
+      .find((r) => r.text().includes('Rapat koordinasi tutor'));
+
+    // The server pins a non-admin to `audience = 'learning_group'` and
+    // answers anything else with a 404. Rendering Hapus here would be a
+    // control advertising an action it cannot perform.
+    expect(broadcast!.text()).not.toContain('Hapus');
+
+    // The tutor's OWN group announcements keep their actions — the gate
+    // is per row, not a blanket read-only mode.
+    const groupRow = w
+      .findAll('[data-testid="async"] li')
+      .find((r) => r.text().includes('Pengumuman gr-1'));
+    expect(groupRow!.text()).toContain('Hapus');
+  });
+
+  it('deletes a group row through the id-only route', async () => {
+    (TutoringAnnouncementsService.destroyById as any).mockResolvedValue(undefined);
+    const w = await mountView();
+
+    const groupRow = w
+      .findAll('[data-testid="async"] li')
+      .find((r) => r.text().includes('Pengumuman gr-1'));
+    await groupRow!.findAll('button').find((b) => b.text() === 'Hapus')!.trigger('click');
+    await flushPromises();
+
+    expect(TutoringAnnouncementsService.destroyById).toHaveBeenCalledWith('an-gr-1');
+    expect(TutoringAnnouncementsService.destroy).not.toHaveBeenCalled();
+  });
+
+  it('a tutor with no groups still receives the broadcast', async () => {
+    // The old loader iterated groups, so zero groups meant zero rows —
+    // and a tenant-wide announcement is addressed to the tutor whatever
+    // they currently teach.
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: [] });
+    stubListAll([makeTutorBroadcast()]);
+
+    const w = await mountView();
+
+    expect(rows(w).join(' ')).toContain('Rapat koordinasi tutor');
+  });
+
+  it('picking a group narrows server-side and drops the group-less rows', async () => {
+    const w = await mountView();
+    expect(rows(w)).toHaveLength(3);
+
+    await w.findAll('[data-testid="chip"]')[0].trigger('click');
+    await optionRows(w)[2].trigger('click'); // row 0 = "Semua", row 2 = gr-2
+    await flushPromises();
+
+    expect(TutoringAnnouncementsService.listAll).toHaveBeenLastCalledWith(
+      expect.objectContaining({ learning_group_id: 'gr-2' }),
+    );
+    const list = rows(w);
+    expect(list).toHaveLength(1);
+    expect(list[0]).toContain('gr-2');
+    // "Show me this group" cannot also mean "and the tenant-wide posts".
+    expect(list.join(' ')).not.toContain('Rapat koordinasi tutor');
   });
 });

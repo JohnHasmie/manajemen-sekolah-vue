@@ -7189,7 +7189,14 @@
         "confirmDeleteTitle": "Hapus pengumuman?",
         "confirmDeleteMsg": "Pengumuman akan hilang untuk semua siswa+wali. Aksi ini tidak dapat dibatalkan.",
         "pickGroupFirst": "Pilih kelompok dulu",
-        "validationLen": "Judul dan isi minimal 3 karakter"
+        "validationLen": "Judul dan isi minimal 3 karakter",
+        "audience": "Tujuan",
+        "audienceGroup": "Kelompok belajar",
+        "audienceTutor": "Semua tutor",
+        "audienceHelp": "Pilih siapa yang menerima pengumuman ini",
+        "composeSubtitleTutor": "Kirim ke seluruh tutor di lembaga ini",
+        "confirmPublishTutorMsg": "Ini akan mengirim notifikasi ke SELURUH tutor di lembaga ini. Lanjutkan?",
+        "confirmDeleteTutorMsg": "Pengumuman akan hilang untuk seluruh tutor. Aksi ini tidak dapat dibatalkan."
       },
       "attendance": {
         "emptyTitle": "Belum ada sesi selesai",
@@ -7890,7 +7897,9 @@
         "confirmDeleteTitle": "Hapus pengumuman?",
         "confirmDeleteMsg": "Pengumuman akan hilang untuk semua siswa+wali. Aksi ini tidak dapat dibatalkan.",
         "pickGroupFirst": "Pilih kelompok dulu",
-        "validationLen": "Judul dan isi minimal 3 karakter"
+        "validationLen": "Judul dan isi minimal 3 karakter",
+        "audienceGroup": "Kelompok belajar",
+        "audienceTutor": "Semua tutor"
       },
       "attendance": {
         "meta": "{count} siswa terdaftar",

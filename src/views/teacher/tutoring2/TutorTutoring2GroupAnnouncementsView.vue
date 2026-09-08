@@ -1,12 +1,36 @@
 <!--
   TutorTutoring2GroupAnnouncementsView.vue — Tutor "Announcement"
-  surface (WEB-12 / BE-22). Tutor sees only the groups they teach —
-  the backend already scopes /tutoring-v2/learning-groups by tutor when
-  the active role is tutor, so listGroups() returns their groups only.
+  surface (WEB-12 / BE-22, extended by BE !856).
 
-  Same compose flow as the admin view; the group picker defaults to
-  the first of the tutor's active groups so the modal is one-tap-away
-  from typing.
+  ── What a tutor reads here ──
+
+  TWO kinds of row, and they are bounded by different things:
+
+    · group-addressed rows, bounded by WHICH GROUP the tutor teaches;
+    · tutor-addressed rows — an admin's tenant-wide broadcast — bounded
+      by WHO the caller is. Those carry `learning_group_id: null`.
+
+  This screen used to load the tutor's groups and fire one nested
+  `GET /learning-groups/{id}/announcements` per group. That loader
+  structurally could not show the second kind: the nested route filters
+  `where('learning_group_id', {groupId})`, which excludes a NULL group
+  whatever id is in the URL. It now makes ONE flat
+  `GET /tutoring-v2/announcements` call, which the server scopes to
+  exactly those two arms (and, for the tutor arm, to PUBLISHED rows only
+  — a tutor must not read an admin's half-written broadcast).
+
+  `listGroups` survives only to resolve group NAMES for the rows and to
+  fill the Kelompok chip; the flat resource emits `learning_group_id`
+  but no group name.
+
+  ── What a tutor may DO here ──
+
+  Compose stays group-only. Addressing every tutor needs the admin-only
+  `tutoring.tutor.view` on top of `tutoring.announcement.create`, so the
+  compose flow is unchanged. Publish/delete are hidden on tutor-addressed
+  rows: the server pins a non-admin to `audience = 'learning_group'` and
+  answers anything else with a 404, so those buttons would advertise an
+  action that cannot run.
 
   ── The filter chip ──
 
@@ -48,6 +72,7 @@ import {
 import { TutoringAnnouncementsService } from '@/services/tutoring2/announcements';
 import {
   announcementStatus,
+  isTutorAudience,
   type GroupAnnouncement,
   type GroupAnnouncementStatus,
 } from '@/types/tutoring2/announcement';
@@ -60,6 +85,32 @@ const auth = useAuthStore();
 
 const canWrite = computed(() => auth.hasAbility('tutoring.announcement.create'));
 
+/**
+ * May this caller publish/delete THIS row?
+ *
+ * `tutoring.announcement.create` answers "may you write announcements",
+ * never "which". On a tutor-addressed broadcast the tutor is the
+ * RECIPIENT, not a manager — acting on one additionally requires the
+ * admin-only `tutoring.tutor.view`, which no tutor holds, and the server
+ * fails a non-admin closed with a 404 rather than a 403.
+ */
+function canManageRow(row: GroupAnnouncement): boolean {
+  return canWrite.value && !isTutorAudience(row);
+}
+
+/**
+ * What the row is addressed to, as text: the group's name, or — for a
+ * group-less broadcast — the SERVER's `audience_label`, preferred over
+ * anything derived here so the two vocabularies cannot drift.
+ */
+function rowContext(row: AnnouncementRow): string {
+  if (row.group_name) return row.group_name;
+  if (row.audience_label) return row.audience_label;
+  return isTutorAudience(row)
+    ? t('tutoring2.tutor.groupAnnouncements.audienceTutor')
+    : t('tutoring2.tutor.groupAnnouncements.audienceGroup');
+}
+
 const groupFilter = ref<string>(''); // '' = All of tutor's groups
 const search = ref('');
 const debouncedSearch = ref('');
@@ -67,7 +118,12 @@ const applyDebounced = useDebounceFn((v: string) => { debouncedSearch.value = v;
 watch(search, (v) => applyDebounced(v));
 
 interface AnnouncementRow extends GroupAnnouncement {
-  group_name: string;
+  /**
+   * Resolved group name, or null — null for a tutor-addressed row (no
+   * group exists) and for a group we could not resolve a name for.
+   * Rendered through {@link rowContext}, never assumed to be a string.
+   */
+  group_name: string | null;
 }
 
 const groups = ref<BimbelLearningGroup[]>([]);
@@ -109,15 +165,25 @@ function chipValue(id: string, options: FacetOption[]): string {
 }
 
 const { state, reload } = useDataRefresh<AnnouncementRow[]>(async () => {
+  // Names + chip options. A tutor with NO groups still reaches the list
+  // below on purpose: tenant-wide broadcasts are addressed to them
+  // regardless of what they currently teach.
   if (groups.value.length === 0) await loadGroups();
-  const targets = groupFilter.value
-    ? groups.value.filter((g) => g.id === groupFilter.value)
-    : groups.value;
-  const all: AnnouncementRow[] = [];
-  for (const g of targets) {
-    const { items } = await TutoringAnnouncementsService.list(g.id, { per_page: 100 });
-    for (const ann of items) all.push({ ...ann, group_name: g.name });
-  }
+
+  const { items } = await TutoringAnnouncementsService.listAll({
+    per_page: 100,
+    // Server-side. Picking a group necessarily excludes the group-less
+    // tutor broadcasts, which is what "show me this group" should mean.
+    ...(groupFilter.value ? { learning_group_id: groupFilter.value } : {}),
+  });
+
+  const names = new Map<string, string>(groups.value.map((g) => [g.id, g.name]));
+
+  const all: AnnouncementRow[] = items.map((ann) => ({
+    ...ann,
+    group_name: ann.learning_group_id ? (names.get(ann.learning_group_id) ?? null) : null,
+  }));
+
   const q = debouncedSearch.value.trim().toLowerCase();
   return all
     .filter((a) => (q ? a.title.toLowerCase().includes(q) : true))
@@ -211,6 +277,7 @@ async function submitCompose() {
 }
 
 async function publishRow(row: AnnouncementRow) {
+  if (!canManageRow(row)) return;
   const ok = await confirm({
     title: t('tutoring2.tutor.groupAnnouncements.confirmPublishTitle'),
     message: t('tutoring2.tutor.groupAnnouncements.confirmPublishMsg'),
@@ -218,7 +285,9 @@ async function publishRow(row: AnnouncementRow) {
   });
   if (!ok) return;
   try {
-    await TutoringAnnouncementsService.publish(row.learning_group_id, row.id);
+    // Flat, id-only: `row.learning_group_id` is null on a broadcast and
+    // the nested URL would read `/learning-groups/null/announcements/…`.
+    await TutoringAnnouncementsService.publishById(row.id);
     toast.success(t('tutoring2.tutor.groupAnnouncements.publishedToast'));
     reload();
   } catch {
@@ -227,6 +296,7 @@ async function publishRow(row: AnnouncementRow) {
 }
 
 async function deleteRow(row: AnnouncementRow) {
+  if (!canManageRow(row)) return;
   const ok = await confirm({
     title: t('tutoring2.tutor.groupAnnouncements.confirmDeleteTitle'),
     message: t('tutoring2.tutor.groupAnnouncements.confirmDeleteMsg'),
@@ -235,7 +305,7 @@ async function deleteRow(row: AnnouncementRow) {
   });
   if (!ok) return;
   try {
-    await TutoringAnnouncementsService.destroy(row.learning_group_id, row.id);
+    await TutoringAnnouncementsService.destroyById(row.id);
     toast.success(t('tutoring2.tutor.groupAnnouncements.deletedToast'));
     reload();
   } catch {
@@ -307,7 +377,7 @@ const totalCount = computed(() =>
                   />
                 </div>
                 <p class="mt-1 text-2xs text-slate-500">
-                  {{ row.group_name }} · {{ shortDate(row.published_at ?? row.created_at) }}
+                  {{ rowContext(row) }} · {{ shortDate(row.published_at ?? row.created_at) }}
                 </p>
               </div>
               <div class="flex shrink-0 flex-col items-end gap-1">
@@ -318,8 +388,10 @@ const totalCount = computed(() =>
                 >
                   {{ t('tutoring2.common.detail') }}
                 </button>
+                <!-- Per-ROW. A tenant-wide broadcast is read-only for a
+                     tutor; the server 404s these, so they must not render. -->
                 <button
-                  v-if="canWrite && announcementStatus(row) === 'draft'"
+                  v-if="canManageRow(row) && announcementStatus(row) === 'draft'"
                   type="button"
                   class="text-2xs font-bold text-emerald-600 hover:underline"
                   @click="publishRow(row)"
@@ -327,7 +399,7 @@ const totalCount = computed(() =>
                   {{ t('tutoring2.tutor.groupAnnouncements.publishCta') }}
                 </button>
                 <button
-                  v-if="canWrite"
+                  v-if="canManageRow(row)"
                   type="button"
                   class="text-2xs font-bold text-red-600 hover:underline"
                   @click="deleteRow(row)"
@@ -420,7 +492,7 @@ const totalCount = computed(() =>
       v-if="previewRow"
       size="lg"
       :title="previewRow.title"
-      :subtitle="previewRow.group_name"
+      :subtitle="rowContext(previewRow)"
       @close="previewRow = null"
     >
       <article class="prose prose-sm max-w-none text-slate-700" v-html="previewRow.body" />

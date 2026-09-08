@@ -37,6 +37,12 @@ vi.mock('@/services/tutoring2/announcements', () => ({
     create: vi.fn(),
     publish: vi.fn(),
     destroy: vi.fn(),
+    // Flat/tenant-wide surface (BE !856). `listAll` is what this screen
+    // reads now — the per-group fan-out is gone.
+    listAll: vi.fn(),
+    createForTutors: vi.fn(),
+    publishById: vi.fn(),
+    destroyById: vi.fn(),
   },
 }));
 
@@ -54,9 +60,22 @@ vi.mock('@/composables/useConfirm', () => ({
   useConfirm: () => ({ confirm: vi.fn().mockResolvedValue(true) }),
 }));
 
+/**
+ * Abilities are per-test. The compose gate is TWO keys server-side
+ * (`tutoring.announcement.create` + the admin-only `tutoring.tutor.view`),
+ * so a spec that hardcodes `() => true` cannot see a gate that checks
+ * only the first.
+ */
+const abilities = new Set<string>();
 vi.mock('@/stores/auth', () => ({
-  useAuthStore: () => ({ hasAbility: () => true }),
+  useAuthStore: () => ({ hasAbility: (k: string) => abilities.has(k) }),
 }));
+
+function grantAllAbilities() {
+  abilities.clear();
+  abilities.add('tutoring.announcement.create');
+  abilities.add('tutoring.tutor.view');
+}
 
 const GROUPS = [
   { id: 'gr-1', program_id: 'pr-1', program_name: 'Intensif UTBK', name: 'UTBK Pagi A', kind: 'group', capacity: 12, status: 'active' },
@@ -67,6 +86,8 @@ function makeAnnouncement(groupId: string, overrides = {}) {
   return {
     id: `an-${groupId}`,
     learning_group_id: groupId,
+    audience: 'learning_group',
+    audience_label: 'Kelompok belajar',
     title: `Pengumuman ${groupId}`,
     body: '<p>isi</p>',
     author_name: 'Admin Satu',
@@ -74,6 +95,44 @@ function makeAnnouncement(groupId: string, overrides = {}) {
     created_at: '2026-08-10T09:00:00+07:00',
     ...overrides,
   };
+}
+
+/**
+ * A tenant-wide broadcast: NO learning group at all.
+ *
+ * The null is the point. This row cannot be produced by any nested
+ * `/learning-groups/{id}/announcements` response, so the fan-out loader
+ * this screen used to run could never render one.
+ */
+function makeTutorBroadcast(overrides = {}) {
+  return {
+    id: 'an-tutor-1',
+    learning_group_id: null,
+    audience: 'tutor',
+    audience_label: 'Semua tutor',
+    title: 'Rapat koordinasi tutor',
+    body: '<p>Senin 08.00.</p>',
+    author_name: 'Admin Satu',
+    published_at: '2026-08-12T09:00:00+07:00',
+    created_at: '2026-08-12T08:00:00+07:00',
+    ...overrides,
+  };
+}
+
+/**
+ * Default flat-list stub: one announcement per group. Honours
+ * `learning_group_id` the way the server does — which necessarily
+ * EXCLUDES the group-less broadcasts.
+ */
+function stubListAll(items: any[]) {
+  (TutoringAnnouncementsService.listAll as any).mockImplementation(
+    (params: any = {}) =>
+      Promise.resolve({
+        items: params.learning_group_id
+          ? items.filter((a) => a.learning_group_id === params.learning_group_id)
+          : items,
+      }),
+  );
 }
 
 function makeI18n() {
@@ -92,8 +151,26 @@ function makeI18n() {
             detail: 'Detail',
             back: 'Kembali',
             cancel: 'Batal',
+            delete: 'Hapus',
+            title: 'Judul',
           },
           status: { draft: 'Draft', published: 'Terbit', archived: 'Arsip' },
+          admin: {
+            groupAnnouncements: {
+              audience: 'Tujuan',
+              audienceGroup: 'Kelompok belajar',
+              audienceTutor: 'Semua tutor',
+              audienceHelp: 'Pilih siapa yang menerima pengumuman ini',
+              composeCta: 'Tulis',
+              composeTitle: 'Buat pengumuman',
+              composeSubtitle: 'Kirim ke semua siswa + wali di kelompok',
+              composeSubtitleTutor: 'Kirim ke seluruh tutor di lembaga ini',
+              publishCta: 'Terbitkan',
+              saveDraftCta: 'Simpan draft',
+              validationLen: 'Judul dan isi minimal 3 karakter',
+              pickGroupFirst: 'Pilih kelompok dulu',
+            },
+          },
         },
       },
     },
@@ -153,10 +230,9 @@ function rowTitles(w) {
 describe('AdminTutoring2GroupAnnouncementsView filter chips', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    grantAllAbilities();
     (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
-    (TutoringAnnouncementsService.list as any).mockImplementation((groupId: string) =>
-      Promise.resolve({ items: [makeAnnouncement(groupId)] }),
-    );
+    stubListAll(GROUPS.map((g) => makeAnnouncement(g.id)));
   });
 
   it('chips start at "Semua"', async () => {
@@ -215,16 +291,14 @@ describe('AdminTutoring2GroupAnnouncementsView filter chips', () => {
 
   it('picking a status actually narrows the rows', async () => {
     // One published, one draft — a working status filter must split them.
-    (TutoringAnnouncementsService.list as any).mockImplementation((groupId: string) =>
-      Promise.resolve({
-        items: [
-          makeAnnouncement(groupId),
-          makeAnnouncement(`${groupId}-draft`, {
-            learning_group_id: groupId,
-            published_at: null,
-          }),
-        ],
-      }),
+    stubListAll(
+      GROUPS.flatMap((g) => [
+        makeAnnouncement(g.id),
+        makeAnnouncement(`${g.id}-draft`, {
+          learning_group_id: g.id,
+          published_at: null,
+        }),
+      ]),
     );
 
     const w = await mountView();
@@ -328,10 +402,9 @@ function detailButton(w) {
 describe('AdminTutoring2GroupAnnouncementsView preview footer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    grantAllAbilities();
     (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
-    (TutoringAnnouncementsService.list as any).mockImplementation((groupId: string) =>
-      Promise.resolve({ items: [makeAnnouncement(groupId)] }),
-    );
+    stubListAll(GROUPS.map((g) => makeAnnouncement(g.id)));
   });
 
   it('the detail dialog ends in ONE button, and it is "Kembali"', async () => {
@@ -376,5 +449,208 @@ describe('AdminTutoring2GroupAnnouncementsView preview footer', () => {
     expect(modal.find(CANCEL).exists()).toBe(true);
     expect(modal.find(CANCEL).text()).toBe('Batal');
     expect(modal.find(SUBMIT).exists()).toBe(true);
+  });
+});
+
+/**
+ * ── Tutor-addressed announcements (BE !856) ─────────────────────────
+ *
+ * Luay: a bimbel admin had no way to post an announcement aimed at
+ * TUTORS. The backend gained a flat `/tutoring-v2/announcements` whose
+ * rows carry `audience` + `audience_label` and a NULLABLE
+ * `learning_group_id`.
+ *
+ * Three things had to be true on this screen, and the third is the one
+ * that makes the other two visible at all:
+ *
+ *   1. an admin can compose one, and it posts to the FLAT endpoint;
+ *   2. the list renders both audiences, including the null-group row;
+ *   3. the loader no longer fans out per group — a group-less row can
+ *      never appear in a per-group fan-out, so without the collapse the
+ *      new rows exist in the database and on no screen.
+ */
+async function mountComposable(open = true) {
+  setActivePinia(createPinia());
+  const i18n = makeI18n();
+  const w = mount(AdminTutoring2GroupAnnouncementsView, {
+    global: {
+      plugins: [i18n],
+      stubs: {
+        BrandPageHeader: true,
+        KpiStripCards: true,
+        StatusBadge: true,
+        PageFilterToolbar: { template: '<div><slot name="chips" /></div>' },
+        AppFilterChip: true,
+        AsyncView: {
+          props: ['state'],
+          template: '<div data-testid="async"><slot :data="state?.data ?? []" /></div>',
+        },
+        Modal: { template: '<div data-testid="modal"><slot /></div>' },
+        // Real v-model:html seam so the body can actually be typed.
+        AppRichTextEditor: {
+          props: ['html'],
+          emits: ['update:html'],
+          template:
+            '<textarea data-testid="body" :value="html" @input="$emit(\'update:html\', $event.target.value)" />',
+        },
+      },
+    },
+  });
+  await flushPromises();
+  if (open) {
+    await w.find('button.fixed').trigger('click');
+  }
+  return w;
+}
+
+const AUDIENCE = '[data-testid="compose-audience"]';
+
+describe('AdminTutoring2GroupAnnouncementsView tutor audience', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    grantAllAbilities();
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
+    stubListAll([...GROUPS.map((g) => makeAnnouncement(g.id)), makeTutorBroadcast()]);
+    (TutoringAnnouncementsService.createForTutors as any).mockResolvedValue(
+      makeTutorBroadcast(),
+    );
+    (TutoringAnnouncementsService.create as any).mockResolvedValue(makeAnnouncement('gr-1'));
+  });
+
+  // ── The collapse ────────────────────────────────────────────────
+
+  it('loads the list in ONE flat call, not one per group', async () => {
+    await mountComposable(false);
+
+    expect(TutoringAnnouncementsService.listAll).toHaveBeenCalledTimes(1);
+    // The per-group fan-out must be gone entirely. It is not a slower
+    // route to the same data — it cannot carry a group-less row at all.
+    expect(TutoringAnnouncementsService.list).not.toHaveBeenCalled();
+  });
+
+  it('renders BOTH audiences, including the null-group broadcast', async () => {
+    const w = await mountComposable(false);
+    const rows = w.findAll('[data-testid="async"] tbody tr');
+
+    expect(rows).toHaveLength(3); // 2 group rows + 1 tenant-wide
+    const broadcast = rows.find((r) => r.text().includes('Rapat koordinasi tutor'));
+    expect(broadcast).toBeDefined();
+    // The audience column reads the SERVER's label, not a re-derived one.
+    expect(broadcast!.text()).toContain('Semua tutor');
+    // …and the group column is an honest dash, not "null" or a blank.
+    expect(broadcast!.text()).toContain('—');
+  });
+
+  it('a group-addressed row still names its group', async () => {
+    const w = await mountComposable(false);
+    const row = w
+      .findAll('[data-testid="async"] tbody tr')
+      .find((r) => r.text().includes('Pengumuman gr-1'));
+
+    expect(row!.text()).toContain('UTBK Pagi A');
+    expect(row!.text()).toContain('Kelompok belajar');
+  });
+
+  // ── Compose ─────────────────────────────────────────────────────
+
+  it('composing to tutors posts the FLAT payload and never the nested one', async () => {
+    const w = await mountComposable();
+
+    await w.find(AUDIENCE).setValue('tutor');
+    await w.find('input[type="text"]').setValue('Rapat koordinasi tutor');
+    await w.find('[data-testid="body"]').setValue('<p>Senin 08.00.</p>');
+    await w.find('[data-testid="sheet-submit"]').trigger('click');
+    await flushPromises();
+
+    expect(TutoringAnnouncementsService.createForTutors).toHaveBeenCalledWith({
+      title: 'Rapat koordinasi tutor',
+      body: '<p>Senin 08.00.</p>',
+      publish: false,
+    });
+    // The flat POST refuses `audience: 'learning_group'` with a 422, and
+    // the nested route is the only door for a group announcement — so a
+    // tutor broadcast must not travel through it.
+    expect(TutoringAnnouncementsService.create).not.toHaveBeenCalled();
+  });
+
+  it('the group picker disappears once the audience is "tutor"', async () => {
+    const w = await mountComposable();
+    // A group announcement still picks a group.
+    expect(w.find('[data-testid="modal"] select[class]').exists()).toBe(true);
+
+    await w.find(AUDIENCE).setValue('tutor');
+
+    // Exactly one select remains: the audience one. A broadcast has no
+    // group, so offering the picker would imply a choice that is ignored.
+    const selects = w.findAll('[data-testid="modal"] select');
+    expect(selects).toHaveLength(1);
+    expect(selects[0].attributes('data-testid')).toBe('compose-audience');
+  });
+
+  it('composing to a group still uses the NESTED endpoint', async () => {
+    const w = await mountComposable();
+
+    await w.find('input[type="text"]').setValue('Perubahan jadwal');
+    await w.find('[data-testid="body"]').setValue('<p>Rabu ke Kamis.</p>');
+    await w.find('[data-testid="sheet-submit"]').trigger('click');
+    await flushPromises();
+
+    expect(TutoringAnnouncementsService.create).toHaveBeenCalledWith('gr-1', {
+      title: 'Perubahan jadwal',
+      body: '<p>Rabu ke Kamis.</p>',
+      publish: false,
+    });
+    expect(TutoringAnnouncementsService.createForTutors).not.toHaveBeenCalled();
+  });
+
+  // ── The gate ────────────────────────────────────────────────────
+
+  it('without tutoring.tutor.view the audience selector is not rendered', async () => {
+    // The server gate is TWO keys. This actor holds the create key — and
+    // a screen that gated on that alone would show the control and let
+    // the admin write a post the server answers with 403.
+    abilities.clear();
+    abilities.add('tutoring.announcement.create');
+
+    const w = await mountComposable();
+
+    expect(w.find(AUDIENCE).exists()).toBe(false);
+    // …but the group compose flow they DO hold is untouched.
+    expect(w.find('[data-testid="modal"] select').exists()).toBe(true);
+  });
+
+  it('a tutor-addressed row offers no delete without tutoring.tutor.view', async () => {
+    abilities.clear();
+    abilities.add('tutoring.announcement.create');
+
+    const w = await mountComposable(false);
+    const broadcast = w
+      .findAll('[data-testid="async"] tbody tr')
+      .find((r) => r.text().includes('Rapat koordinasi tutor'));
+
+    // Server pins a non-admin to `audience = 'learning_group'` and 404s
+    // anything else, so a Hapus here would be a button that cannot work.
+    expect(broadcast!.text()).not.toContain('Hapus');
+    // The group rows keep theirs — the gate is per row, not per page.
+    const groupRow = w
+      .findAll('[data-testid="async"] tbody tr')
+      .find((r) => r.text().includes('Pengumuman gr-1'));
+    expect(groupRow!.text()).toContain('Hapus');
+  });
+
+  it('publish/delete go through the id-only routes, never a null group URL', async () => {
+    (TutoringAnnouncementsService.destroyById as any).mockResolvedValue(undefined);
+    const w = await mountComposable(false);
+
+    const broadcast = w
+      .findAll('[data-testid="async"] tbody tr')
+      .find((r) => r.text().includes('Rapat koordinasi tutor'));
+    await broadcast!.findAll('button').find((b) => b.text() === 'Hapus')!.trigger('click');
+    await flushPromises();
+
+    expect(TutoringAnnouncementsService.destroyById).toHaveBeenCalledWith('an-tutor-1');
+    // The nested twin takes a groupId first. On this row that is null,
+    // which would build `/learning-groups/null/announcements/…`.
+    expect(TutoringAnnouncementsService.destroy).not.toHaveBeenCalled();
   });
 });

@@ -6766,7 +6766,9 @@
         "confirmDeleteTitle": "Delete announcement?",
         "confirmDeleteMsg": "The announcement will disappear for every student + parent. This cannot be undone.",
         "pickGroupFirst": "Pick a group first",
-        "validationLen": "Title and body must be at least 3 characters"
+        "validationLen": "Title and body must be at least 3 characters",
+        "audienceGroup": "Learning group",
+        "audienceTutor": "All tutors"
       },
       "studentDetail": {
         "sectionEnrollments": "Enrollments",
@@ -7444,7 +7446,14 @@
         "confirmDeleteTitle": "Delete announcement?",
         "confirmDeleteMsg": "The announcement will disappear for every student + parent. This cannot be undone.",
         "pickGroupFirst": "Pick a group first",
-        "validationLen": "Title and body must be at least 3 characters"
+        "validationLen": "Title and body must be at least 3 characters",
+        "audience": "Audience",
+        "audienceGroup": "Learning group",
+        "audienceTutor": "All tutors",
+        "audienceHelp": "Choose who receives this announcement",
+        "composeSubtitleTutor": "Sends to every tutor at this institution",
+        "confirmPublishTutorMsg": "This will notify EVERY tutor at this institution. Continue?",
+        "confirmDeleteTutorMsg": "The announcement will disappear for every tutor. This cannot be undone."
       },
       "payoutRequests": {
         "title": "Payout Requests",
