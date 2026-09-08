@@ -17,6 +17,16 @@
  * The real <FilterFacetPickerModal> is mounted (only its <Modal> shell is
  * stubbed, because Modal teleports to body and would escape the wrapper);
  * the option rows clicked here are the ones an admin clicks.
+ *
+ * The STATUS chip was missed by that pass and stayed broken after the
+ * screen was reported fixed to the customer. Its handler was
+ * `statusFilter = statusFilter ? '' : 'scheduled'` — a two-value toggle
+ * over the four-value `BimbelSession['status']` lifecycle — so
+ * `in_progress`, `done` and `cancelled` were unreachable however often
+ * the chip was pressed, and the chip rendered the raw enum
+ * (`scheduled`) where a label belongs. The last describe block below
+ * pins all of that, plus the reload count, since a picker that refetches
+ * twice per pick is its own defect.
  */
 // @ts-nocheck — vitest types not installed yet
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -27,7 +37,17 @@ import AdminTutoring2ScheduleView from './AdminTutoring2ScheduleView.vue';
 import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
 import { TutoringTutorsService } from '@/services/tutoring2/tutors';
 
-vi.mock('@/services/tutoring-bimbel.service', () => ({
+/**
+ * Only the SERVICE object is faked. The module's constants — notably
+ * `BIMBEL_SESSION_STATUSES`, the runtime spelling of the canonical
+ * `BimbelSession['status']` union — come through untouched via
+ * `importOriginal`, so the Status picker under test renders the real
+ * lifecycle list. A hand-written copy in this mock would let the two
+ * drift apart and still go green, which is the exact class of lie this
+ * screen is being fixed for.
+ */
+vi.mock('@/services/tutoring-bimbel.service', async (importOriginal) => ({
+  ...(await importOriginal()),
   TutoringBimbelService: {
     listSessions: vi.fn(),
     listGroups: vi.fn(),
@@ -110,6 +130,14 @@ function makeI18n() {
             tutor: 'Tutor',
             status: 'Status',
             period: 'Periode',
+          },
+          // The real id.json values. The Status chip and its picker must
+          // render THESE, never the wire enums they key off.
+          status: {
+            scheduled: 'Terjadwal',
+            inProgress: 'Berlangsung',
+            done: 'Selesai',
+            cancelled: 'Dibatalkan',
           },
         },
       },
@@ -387,5 +415,180 @@ describe('AdminTutoring2ScheduleView "+ Buat sesi" CTA', () => {
     await mountView();
 
     expect(canSpy).toHaveBeenCalledWith('tutoring.session.manage');
+  });
+});
+
+/**
+ * The Status chip.
+ *
+ * Verified red against the shipped
+ * `@click="statusFilter = statusFilter ? '' : 'scheduled'"`: 10 of the
+ * 11 tests below fail on it.
+ *
+ *   - opens a picker      — the toggle opened nothing at all.
+ *   - lists all four      — the toggle could reach exactly one status.
+ *   - each state queries  — `in_progress` / `done` / `cancelled` never
+ *                           once reached `listSessions` under the toggle.
+ *   - human label         — the toggle chip printed `scheduled`.
+ *   - Semua clears        — the toggle could clear, but only by pressing
+ *                           the chip a second time; there was no "Semua"
+ *                           row to click, so this fails on it too.
+ *   - exactly one refetch — counted, so a double-fire watcher fails as
+ *                           loudly as a dead one.
+ *   - same pick, no work  — re-picking the current status must not
+ *                           re-hit the API.
+ *
+ * The one that passes either way is the rest-state check ("Semua", no
+ * `status` on the query) — deliberately so: it is the baseline the
+ * others move away from, not a defect pin.
+ */
+const STATUS_LABELS = {
+  scheduled: 'Terjadwal',
+  in_progress: 'Berlangsung',
+  done: 'Selesai',
+  cancelled: 'Dibatalkan',
+} as const;
+
+function listSessionsCalls() {
+  return (TutoringBimbelService.listSessions as any).mock.calls;
+}
+
+/** Open the Status picker and click the row carrying `label`. */
+async function pickStatus(w, label: string) {
+  await w.findAll('[data-testid="chip"]')[CHIP.status].trigger('click');
+  const row = optionRows(w).find((b) => b.text() === label);
+  if (!row) {
+    throw new Error(
+      `no "${label}" row in the Status picker; saw: ${optionRows(w)
+        .map((b) => b.text())
+        .join(' | ')}`,
+    );
+  }
+  await row.trigger('click');
+  await flushPromises();
+}
+
+describe('AdminTutoring2ScheduleView Status chip', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (TutoringBimbelService.listSessions as any).mockResolvedValue({
+      items: [makeSession()],
+      pagination: undefined,
+    });
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
+    (TutoringTutorsService.list as any).mockResolvedValue({ items: TUTORS });
+  });
+
+  it('reads "Semua" at rest and sends no status', async () => {
+    const w = await mountView();
+
+    expect(w.findAll('[data-testid="chip"]')[CHIP.status].text()).toBe('Semua');
+    expect(lastListSessionsArg().status).toBeUndefined();
+  });
+
+  it('clicking the chip OPENS a picker instead of toggling the filter', async () => {
+    const w = await mountView();
+    expect(w.find('[data-testid="facet-modal"]').exists()).toBe(false);
+
+    await w.findAll('[data-testid="chip"]')[CHIP.status].trigger('click');
+
+    // The regression: the old handler set the ref and opened nothing.
+    expect(w.find('[data-testid="facet-modal"]').exists()).toBe(true);
+    // ...and the filter must NOT have moved just because the menu opened.
+    expect(w.findAll('[data-testid="chip"]')[CHIP.status].text()).toBe('Semua');
+  });
+
+  it('the picker lists Semua plus every lifecycle state, by label', async () => {
+    const w = await mountView();
+    await w.findAll('[data-testid="chip"]')[CHIP.status].trigger('click');
+
+    const labels = optionRows(w).map((b) => b.text());
+
+    expect(labels).toEqual([
+      'Semua',
+      STATUS_LABELS.scheduled,
+      STATUS_LABELS.in_progress,
+      STATUS_LABELS.done,
+      STATUS_LABELS.cancelled,
+    ]);
+    // No wire enum leaks into the menu.
+    expect(labels.join(' ')).not.toContain('in_progress');
+  });
+
+  // The heart of the customer report: three of these four were
+  // unreachable, so the API never once saw them.
+  for (const [value, label] of Object.entries(STATUS_LABELS)) {
+    it(`picking "${label}" queries the API with status=${value}`, async () => {
+      const w = await mountView();
+
+      await pickStatus(w, label);
+
+      expect(lastListSessionsArg().status).toBe(value);
+      // And the chip reports the pick in words, not in enum.
+      const chip = w.findAll('[data-testid="chip"]')[CHIP.status];
+      expect(chip.text()).toBe(label);
+      expect(chip.text()).not.toContain(value);
+    });
+  }
+
+  it('the "Semua" row clears status back off the query', async () => {
+    const w = await mountView();
+
+    await pickStatus(w, STATUS_LABELS.cancelled);
+    expect(lastListSessionsArg().status).toBe('cancelled');
+
+    await pickStatus(w, 'Semua');
+
+    expect(lastListSessionsArg().status).toBeUndefined();
+    expect(w.findAll('[data-testid="chip"]')[CHIP.status].text()).toBe('Semua');
+  });
+
+  /**
+   * Exactly once — counted, not merely "called".
+   *
+   * `toHaveBeenCalled()` would pass on a watcher that fires twice per
+   * pick (a doubled reload is a real defect on this screen: it doubles
+   * the 100-row query and can land the responses out of order). An exact
+   * length fails on both a double-fire and a zero-fire.
+   */
+  it('one pick triggers exactly one refetch', async () => {
+    const w = await mountView();
+    // Mount itself loads once, via useDataRefresh's onMounted.
+    expect(listSessionsCalls()).toHaveLength(1);
+
+    await pickStatus(w, STATUS_LABELS.done);
+    expect(listSessionsCalls()).toHaveLength(2);
+
+    await pickStatus(w, STATUS_LABELS.scheduled);
+    expect(listSessionsCalls()).toHaveLength(3);
+  });
+
+  it('re-picking the SAME status refetches zero times', async () => {
+    const w = await mountView();
+
+    await pickStatus(w, STATUS_LABELS.done);
+    expect(listSessionsCalls()).toHaveLength(2);
+
+    // Same value written to the same ref: Vue's watcher must not fire,
+    // so the API count is unchanged.
+    await pickStatus(w, STATUS_LABELS.done);
+    await pickStatus(w, STATUS_LABELS.done);
+
+    expect(listSessionsCalls()).toHaveLength(2);
+    expect(lastListSessionsArg().status).toBe('done');
+  });
+
+  it('leaves the sibling chips alone', async () => {
+    const w = await mountView();
+
+    await pickStatus(w, STATUS_LABELS.done);
+
+    const chips = w.findAll('[data-testid="chip"]');
+    expect(chips[CHIP.group].text()).toBe('Semua');
+    expect(chips[CHIP.tutor].text()).toBe('Semua');
+    expect(chips[CHIP.period].text()).toBe('Semua');
+    const arg = lastListSessionsArg();
+    expect(arg.learning_group_id).toBeUndefined();
+    expect(arg.tutor_id).toBeUndefined();
   });
 });

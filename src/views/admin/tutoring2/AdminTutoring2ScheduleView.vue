@@ -10,12 +10,23 @@
     4. `AsyncView` state machine over `TutoringBimbelService.listSessions`.
     5. Floating "+ Buat sesi" CTA.
 
-  The Kelompok / Tutor chips each open a <FilterFacetPickerModal>, the
-  same per-facet picker the Manajemen Data screens use. They previously
-  only ever CLEARED their filter (`@click="x = ''"`) with no menu behind
-  them, so both were inert on prod ("semua button/filter tdk berfungsi")
-  even though the query + watcher below were wired correctly all along.
-  Same fix as AdminTutoring2GroupsView (!1191).
+  The Status / Kelompok / Tutor chips each open a
+  <FilterFacetPickerModal>, the same per-facet picker the Manajemen Data
+  screens use. They previously only ever CLEARED their filter
+  (`@click="x = ''"`) with no menu behind them, so they were inert on
+  prod ("semua button/filter tdk berfungsi") even though the query +
+  watcher below were wired correctly all along. Same fix as
+  AdminTutoring2GroupsView (!1191).
+
+  Status was left behind by that pass and stayed broken after the screen
+  was reported fixed: its handler was
+  `statusFilter = statusFilter ? '' : 'scheduled'` — a TWO-value toggle
+  over a FOUR-value lifecycle, so "Berlangsung", "Selesai" and
+  "Dibatalkan" were unreachable no matter how often the chip was
+  pressed — and the chip printed the raw enum (`scheduled`) rather than
+  a label. It now renders BIMBEL_SESSION_STATUSES, the runtime spelling
+  of the canonical `BimbelSession['status']` union, through the same
+  picker and the same `chipValue()` label resolver as its siblings.
 
   The floating "+ Buat sesi" CTA in slot 5 was the SAME bug one layer
   down: the docblock above advertised it, the i18n label existed, and
@@ -62,9 +73,11 @@ import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import {
+  BIMBEL_SESSION_STATUSES,
   TutoringBimbelService,
   type BimbelLearningGroup,
   type BimbelSession,
+  type BimbelSessionStatus,
 } from '@/services/tutoring-bimbel.service';
 import { TutoringTutorsService } from '@/services/tutoring2/tutors';
 import type { Tutor } from '@/types/tutoring2/tutor';
@@ -82,7 +95,9 @@ function openCreate() {
 }
 
 const search = ref('');
-const statusFilter = ref<string>(''); // '' | 'scheduled' | 'done' | 'cancelled'
+// '' = "Semua". Typed against the canonical union rather than a bare
+// string, so a value the API has no status for cannot be assigned here.
+const statusFilter = ref<'' | BimbelSessionStatus>('');
 const groupFilter = ref<string>('');  // '' | learning_group_id
 const tutorFilter = ref<string>('');  // '' | tutor_id
 const periodFilter = ref<'all' | 'week' | 'month'>('all'); // nominal, UI-only
@@ -110,8 +125,23 @@ watch([debouncedSearch, statusFilter, groupFilter, tutorFilter, periodFilter], (
 const groups = ref<BimbelLearningGroup[]>([]);
 const tutors = ref<Tutor[]>([]);
 
+const showStatusPicker = ref(false);
 const showGroupPicker = ref(false);
 const showTutorPicker = ref(false);
+
+/**
+ * Every lifecycle state, labelled. Built from BIMBEL_SESSION_STATUSES so
+ * the list cannot drift from the union the API actually returns: a
+ * status added server-side appears here the moment the type is updated,
+ * instead of silently becoming unfilterable the way `in_progress`,
+ * `done` and `cancelled` already were.
+ *
+ * `statusLabel` is a hoisted function declaration further down; this
+ * getter only runs once the chip renders.
+ */
+const statusOptions = computed<FacetOption[]>(() =>
+  BIMBEL_SESSION_STATUSES.map((s) => ({ key: s, label: statusLabel(s) })),
+);
 
 const groupOptions = computed<FacetOption[]>(() =>
   groups.value.map((g) => ({
@@ -194,6 +224,19 @@ function chipValue(id: string, options: FacetOption[]): string {
   if (!id) return t('tutoring2.common.all');
   return options.find((o) => o.key === id)?.label ?? truncateId(id);
 }
+
+/**
+ * The picker emits a bare string; `statusFilter` is the narrower
+ * `'' | BimbelSessionStatus`. Narrow here rather than casting in the
+ * template, so an option key that stops being a valid status fails
+ * closed to "Semua" instead of pinning the list to a value the backend
+ * can never match.
+ */
+function applyStatusFilter(v: string) {
+  statusFilter.value = (BIMBEL_SESSION_STATUSES as string[]).includes(v)
+    ? (v as BimbelSessionStatus)
+    : '';
+}
 </script>
 
 <template>
@@ -211,10 +254,10 @@ function chipValue(id: string, options: FacetOption[]): string {
       <template #chips>
         <AppFilterChip
           :label="t('tutoring2.common.status')"
-          :value="statusFilter || t('tutoring2.common.all')"
+          :value="chipValue(statusFilter, statusOptions)"
           icon-name="circle-check"
           :active="!!statusFilter"
-          @click="statusFilter = statusFilter ? '' : 'scheduled'"
+          @click="showStatusPicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.group')"
@@ -302,6 +345,15 @@ function chipValue(id: string, options: FacetOption[]): string {
     <!-- Per-facet pickers. Each writes its ref; the existing watcher on
          [status, group, tutor, period] does the reload, so nothing calls
          it here. -->
+    <FilterFacetPickerModal
+      v-if="showStatusPicker"
+      :title="t('tutoring2.common.status')"
+      :options="statusOptions"
+      :selected="statusFilter"
+      :all-label="t('tutoring2.common.all')"
+      @close="showStatusPicker = false"
+      @apply="applyStatusFilter"
+    />
     <FilterFacetPickerModal
       v-if="showGroupPicker"
       :title="t('tutoring2.common.group')"

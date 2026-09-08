@@ -145,6 +145,34 @@ export interface BimbelSession {
   attendances_present_count?: number;
 }
 
+/** One session lifecycle state. Alias of the canonical union above. */
+export type BimbelSessionStatus = BimbelSession['status'];
+
+/**
+ * The same lifecycle, enumerable at RUNTIME.
+ *
+ * `BimbelSession['status']` is the canonical union — it mirrors the
+ * backend `App\Modules\Tutoring\Enums\SessionStatus` case for case —
+ * but a TypeScript union is erased at build time, and a filter picker
+ * needs a real array to render rows from. This is that union made
+ * iterable, NOT a second copy of it: the `Record<BimbelSessionStatus,
+ * true>` below is exhaustive in BOTH directions, so the build fails if a
+ * status is ever added to the union and forgotten here, and equally if a
+ * value here stops being a valid status.
+ *
+ * Same role as `PAYOUT_REQUEST_STATUSES` in `@/types/tutoring2/payout`.
+ */
+const SESSION_STATUS_SET: Record<BimbelSessionStatus, true> = {
+  scheduled: true,
+  in_progress: true,
+  done: true,
+  cancelled: true,
+};
+
+export const BIMBEL_SESSION_STATUSES = Object.keys(
+  SESSION_STATUS_SET,
+) as BimbelSessionStatus[];
+
 // ─── Assessments + Scores (BE-5) ───────────────────────────────────
 
 export interface BimbelAssessment {
