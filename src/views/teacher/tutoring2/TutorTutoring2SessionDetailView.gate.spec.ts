@@ -107,7 +107,7 @@ vi.mock('@/composables/useMe', () => ({
 
 vi.mock('@/services/tutoring-bimbel.service', () => ({
   TutoringBimbelService: {
-    listSessions: vi.fn(),
+    getSession: vi.fn(),
     rescheduleSession: vi.fn(),
     completeSession: vi.fn(),
   },
@@ -183,13 +183,12 @@ function makeI18n() {
 
 async function mountView(status = 'in_progress') {
   setActivePinia(createPinia());
-  // The view destructures `{ items }`; a bare array makes `items.find`
-  // throw inside the loader and the screen renders its error branch
-  // with no buttons at all — every assertion below would then pass or
-  // fail for the wrong reason.
-  vi.mocked(TutoringBimbelService.listSessions).mockResolvedValue({
-    items: [session(status)],
-  } as never);
+  // `getSession` resolves the record directly — no `{ items }` page.
+  // A wrapped value would render an empty panel and every assertion
+  // below would then pass or fail for the wrong reason.
+  vi.mocked(TutoringBimbelService.getSession).mockResolvedValue(
+    session(status) as never,
+  );
 
   const w = mount(SessionDetail, {
     global: {

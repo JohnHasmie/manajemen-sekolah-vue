@@ -29,7 +29,7 @@ const toastSuccess = vi.fn();
 
 vi.mock('@/services/tutoring-bimbel.service', () => ({
   TutoringBimbelService: {
-    listSessions: vi.fn(),
+    getSession: vi.fn(),
     rescheduleSession: vi.fn(),
     completeSession: vi.fn(),
   },
@@ -76,12 +76,13 @@ const SESSION = {
 
 async function mountView() {
   setActivePinia(createPinia());
-  // The view destructures `{ items }` — returning a bare array makes
-  // `items.find` throw inside the loader and the screen renders its
-  // error branch with no buttons at all.
-  vi.mocked(TutoringBimbelService.listSessions).mockResolvedValue({
-    items: [SESSION],
-  } as never);
+  // Resolves the session DIRECTLY: `getSession` returns the record,
+  // not a `{ items }` page. Wrapping it would put an object with no
+  // `starts_at` on screen and every assertion below would fail for a
+  // reason that has nothing to do with time zones.
+  vi.mocked(TutoringBimbelService.getSession).mockResolvedValue(
+    SESSION as never,
+  );
 
   const w = mount(SessionDetail, {
     global: {
@@ -193,7 +194,7 @@ describe('TutorTutoring2SessionDetailView — reschedule', () => {
     // Twice: the initial load, then the refresh. Patching the row
     // locally would show the new time even if the server had stored
     // something else.
-    expect(TutoringBimbelService.listSessions).toHaveBeenCalledTimes(2);
+    expect(TutoringBimbelService.getSession).toHaveBeenCalledTimes(2);
     expect(toastSuccess).toHaveBeenCalled();
   });
 

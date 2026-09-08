@@ -396,11 +396,15 @@ export const TutoringBimbelService = {
    * detail page for session 101 renders "not found" for a row the list
    * above it just displayed.
    *
-   * `show` is also strictly richer than a list row. It adds
-   * `attendances_count` / `attendances_present_count` via `withCount`,
-   * which `index` does not carry, and it applies the SAME
-   * `narrowToCaller` scope as the list before `findOrFail`, so an
-   * out-of-scope id 404s rather than leaking the room, the tutor and
+   * `show` does NOT return more fields than a list row: `index` and
+   * `show` run an identical `withCount(['attendances', 'attendances as
+   * attendances_present_count'])` — `index` has since 2026-08-17 — and
+   * both render the same `SessionResource`. An earlier version of this
+   * note claimed `index` lacked those counts; it never did.
+   *
+   * What `show` does add is scope enforcement on a single id: it applies
+   * the SAME `narrowToCaller` scope as the list BEFORE `findOrFail`, so
+   * an out-of-scope id 404s rather than leaking the room, the tutor and
    * the private `tutor_note`.
    */
   async getSession(id: string) {

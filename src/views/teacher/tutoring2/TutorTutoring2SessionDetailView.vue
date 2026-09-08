@@ -3,22 +3,30 @@
 
   Composition:
     1. BrandPageHeader     — role="teacher".
-    2. AsyncView           — state machine.
+    2. AsyncView           — state machine over
+       `TutoringBimbelService.getSession(id)`.
        Default slot renders one info panel + button row.
     3. No KPIs, no filter toolbar, no floating CTA.
 
-  Data path: `TutoringBimbelService.listSessions({})` filtered client-
-  side to `s.id === route.params.id`.
+  ── Why one fetch by id, not a page of a hundred ──
 
-  `TutoringBimbelService.getSession(id)` now EXISTS — it was added with
-  the admin session detail, which uses it. This screen has deliberately
-  not been switched over in that change: swapping the data path here is
-  a behaviour change to a tutor screen that was not part of the reported
-  defect, and it would rewrite the service mock in all four of this
-  view's spec files. It remains the right follow-up, and it is a real
-  bug rather than a tidy-up — the client-side filter returns "not found"
-  for any session past the first 100 on a busy centre, and it cannot see
-  `attendances_count`, which only `show` counts.
+  This screen used to page `listSessions({ per_page: 100 })` and filter
+  client-side for `route.params.id`. That is wrong on any centre with
+  more than 100 sessions: the detail page for the 101st rendered "Sesi
+  tidak ditemukan" for a row the list above it had just displayed. It
+  also fetched a hundred rows to render one.
+
+  `GET /tutoring-v2/sessions/{id}` applies the same `narrowToCaller`
+  scope as the list before `findOrFail`, so an id outside this tutor's
+  scope 404s instead of being silently filtered out of a page. That
+  changes which AsyncView branch a missing session lands on — see the
+  note on the loader.
+
+  It does NOT change which fields arrive. `index` and `show` run an
+  identical `withCount(['attendances', 'attendances as
+  attendances_present_count'])` (SessionController, both since
+  2026-08-17), so the list rows already carried the attendance counts.
+  This is a pagination and payload-size fix, nothing more.
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -55,14 +63,14 @@ const toast = useToast();
 
 const sessionId = computed<string>(() => String(route.params.id));
 
-// Pages `listSessions` and filters client-side. See the header
-// docblock for why this was left alone when `getSession` landed, and
-// why switching it is still worth doing.
-const { state, reload } = useDataRefresh(async () => {
-  const { items } = await TutoringBimbelService.listSessions({ per_page: 100 });
-  const match = items.find((s) => s.id === sessionId.value);
-  return match ?? null;
-});
+// A missing or out-of-scope id now REJECTS (404) where the old
+// client-side `find` returned `undefined`, so `useDataRefresh` lands on
+// its `error` branch rather than `empty`. The `empty-*` labels on the
+// AsyncView below stay for the envelope-without-data case; the admin
+// session detail this screen mirrors is wired exactly the same way.
+const { state, reload } = useDataRefresh(() =>
+  TutoringBimbelService.getSession(sessionId.value),
+);
 
 const session = computed<BimbelSession | null>(() => {
   return state.value.status === 'content' ? (state.value.data as BimbelSession) : null;

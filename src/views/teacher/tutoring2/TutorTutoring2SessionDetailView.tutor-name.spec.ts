@@ -25,7 +25,7 @@ import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
 
 vi.mock('@/services/tutoring-bimbel.service', () => ({
   TutoringBimbelService: {
-    listSessions: vi.fn(),
+    getSession: vi.fn(),
     rescheduleSession: vi.fn(),
     completeSession: vi.fn(),
   },
@@ -63,9 +63,9 @@ function makeSession(overrides: Record<string, unknown> = {}) {
 
 async function mountView(session: Record<string, unknown>) {
   setActivePinia(createPinia());
-  vi.mocked(TutoringBimbelService.listSessions).mockResolvedValue({
-    items: [session],
-  } as never);
+  vi.mocked(TutoringBimbelService.getSession).mockResolvedValue(
+    session as never,
+  );
 
   const w = mount(SessionDetail, {
     global: {
