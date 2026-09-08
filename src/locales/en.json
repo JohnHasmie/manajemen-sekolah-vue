@@ -8320,6 +8320,13 @@
       "skippedCount": "{count} already registered"
     },
     "close": "Close",
+    "monthPicker": {
+      "title": "Select Month",
+      "thisMonth": "This month",
+      "prevYear": "Previous year",
+      "nextYear": "Next year",
+      "openLabel": "Select month: {month}"
+    },
     "noItemsInCategory": "No items in this category",
     "materials": "Materials",
     "sessions": "sessions",

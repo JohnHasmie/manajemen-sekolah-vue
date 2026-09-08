@@ -15,9 +15,9 @@ import { useI18n } from 'vue-i18n';
 import AsyncView from '@/components/data/AsyncView.vue';
 import KpiStripCards, { type KpiCard } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import FormField from '@/components/ui/FormField.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { toLocalYm } from '@/lib/local-date';
+import MonthPickerField from '@/components/feature/MonthPickerField.vue';
 import { PayoutsService } from '@/services/tutoring2/payouts';
 import type { PayoutSummaryMeta, PayoutSummaryRow } from '@/types/tutoring2/payout';
 
@@ -81,11 +81,14 @@ function truncateId(id: string): string {
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
     <div class="flex items-end gap-3">
-      <FormField
+      <!-- Was a free-text `YYYY-MM` box — no picker in any browser, and
+           nothing stopped an admin typing a month the API cannot read. -->
+      <MonthPickerField
         v-model="month"
         :label="t('tutoring2.common.period')"
-        type="text"
-        placeholder="YYYY-MM"
+        accent="admin"
+        field="payout-summary-month"
+        class="min-w-[190px]"
       />
     </div>
 

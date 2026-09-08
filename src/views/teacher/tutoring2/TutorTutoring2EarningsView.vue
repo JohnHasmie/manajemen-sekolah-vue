@@ -68,6 +68,7 @@ import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import TutorTutoring2WithdrawalDialog from '@/components/tutoring2/TutorTutoring2WithdrawalDialog.vue';
+import MonthPickerField from '@/components/feature/MonthPickerField.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { PayoutsService } from '@/services/tutoring2/payouts';
@@ -77,6 +78,7 @@ import type {
   SelfPayoutSummary,
 } from '@/types/tutoring2/payout';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import { formatYmLabel, toLocalYm } from '@/lib/local-date';
 
 const { t } = useI18n();
 const { canAny } = useMe();
@@ -94,15 +96,12 @@ const canViewRequestDetail = computed(() =>
 /**
  * Selected period. Defaults to the current month in LOCAL time — not
  * `toISOString().slice(0,7)`, which is UTC and rolls a WIB user back
- * into the previous month for the first 7 hours of every 1st.
+ * into the previous month for the first 7 hours of every 1st. This used
+ * to be a private `currentLocalMonth()` copy; it is the shared
+ * `toLocalYm()` now, which carries that same guarantee and its own
+ * regression test.
  */
-function currentLocalMonth(): string {
-  const d = new Date();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  return `${d.getFullYear()}-${mm}`;
-}
-
-const month = ref<string>(currentLocalMonth());
+const month = ref<string>(toLocalYm());
 
 const { state, reload } = useDataRefresh(async () => {
   const [summary, requests] = await Promise.all([
@@ -162,13 +161,9 @@ function formatIdr(amount?: number | null): string {
   }).format(amount);
 }
 
+/** Shared helper; keeps the same LOCAL-time day-1 guarantee. */
 function formatMonthLabel(ym: string): string {
-  const [y, m] = ym.split('-');
-  if (!y || !m) return ym;
-  // Day 1 in LOCAL time — `new Date('2026-08')` parses as UTC and can
-  // render the previous month for negative-offset locales.
-  const d = new Date(Number(y), Number(m) - 1, 1);
-  return d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  return formatYmLabel(ym);
 }
 
 /**
@@ -351,15 +346,17 @@ const detailNoteRows = computed<DetailRow[]>(() => {
       "
     />
 
-    <div class="flex items-center gap-2">
-      <label class="text-sm font-medium" for="earnings-month">
-        {{ t('tutoring2.tutor.earnings.monthLabel') }}
-      </label>
-      <input
-        id="earnings-month"
+    <div class="flex flex-wrap items-end gap-3">
+      <!-- Was `<input type="month">`. Desktop Safari renders no picker
+           for that type and degrades it to a bare text box, which is
+           what a tutor on macOS reported: a "Periode" field showing
+           `2026-09` that could only be typed into. -->
+      <MonthPickerField
         v-model="month"
-        type="month"
-        class="rounded-md border px-3 py-1.5 text-sm"
+        :label="t('tutoring2.tutor.earnings.monthLabel')"
+        accent="teacher"
+        field="earnings-month"
+        class="min-w-[190px]"
       />
       <button
         v-if="isOnboarded"

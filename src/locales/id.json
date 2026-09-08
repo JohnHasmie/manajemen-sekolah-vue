@@ -8320,6 +8320,13 @@
       "skippedCount": "{count} sudah terdaftar"
     },
     "close": "Tutup",
+    "monthPicker": {
+      "title": "Pilih Bulan",
+      "thisMonth": "Bulan ini",
+      "prevYear": "Tahun sebelumnya",
+      "nextYear": "Tahun berikutnya",
+      "openLabel": "Pilih bulan: {month}"
+    },
     "noItemsInCategory": "Tidak ada item di kategori ini",
     "materials": "Materi",
     "sessions": "sesi",

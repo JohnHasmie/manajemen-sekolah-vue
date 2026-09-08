@@ -36,7 +36,8 @@ import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
 import { extractError } from '@/lib/api-error';
-import { toLocalYm } from '@/lib/local-date';
+import { isValidYm, toLocalYm } from '@/lib/local-date';
+import MonthPickerField from '@/components/feature/MonthPickerField.vue';
 import { PayoutsService } from '@/services/tutoring2/payouts';
 import type {
   PayoutClose,
@@ -121,7 +122,7 @@ const closeError = ref<string | null>(null);
 
 async function closeMonth() {
   closeError.value = null;
-  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(closeMonthInput.value)) {
+  if (!isValidYm(closeMonthInput.value)) {
     closeError.value = t('tutoring2.admin.payoutSettings.errMonthFormat');
     return;
   }
@@ -279,12 +280,16 @@ const defaultKindOptions = [
           </div>
 
           <div class="flex flex-wrap items-end gap-3">
-            <FormField
+            <!-- Was a free-text `YYYY-MM` box. The `isValidYm` guard in
+                 `closeMonth` stays as defence-in-depth, but the picker
+                 means an admin can no longer reach it by typing. -->
+            <MonthPickerField
               v-model="closeMonthInput"
               :label="t('tutoring2.common.period')"
-              type="text"
-              placeholder="YYYY-MM"
+              accent="admin"
+              field="close-month"
               :disabled="!canClose"
+              class="min-w-[190px]"
             />
             <FormField
               v-model="closeNote"

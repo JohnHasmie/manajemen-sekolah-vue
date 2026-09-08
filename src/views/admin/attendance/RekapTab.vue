@@ -18,8 +18,19 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
 import { useMeStore } from '@/stores/me';
 import { useToast } from '@/composables/useToast';
+import {
+  addMonths,
+  clampYm,
+  compareYm,
+  defaultMaxMonth,
+  defaultMinMonth,
+  formatYmLabel,
+  toLocalYm,
+  toLocalYmd,
+} from '@/lib/local-date';
 
 import NavIcon from '@/components/feature/NavIcon.vue';
+import MonthPickerModal from '@/components/feature/MonthPickerModal.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 
 const me = useMeStore();
@@ -28,8 +39,22 @@ const toast = useToast();
 
 const canExport = computed(() => me.can('attendance.student.export'));
 
-// month picker (YYYY-MM)
-const month = ref(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`);
+// month picker (YYYY-MM). LOCAL parts via the shared helper — a UTC
+// round-trip shows the previous month to a WIB admin before 07:00.
+const month = ref(toLocalYm());
+const monthPickerOpen = ref(false);
+
+/**
+ * Bounds shared with <MonthPickerModal>. The stepper arrows below MUST
+ * honour the same range, otherwise "next" walks past a ceiling the
+ * picker refuses to show and the two controls disagree about what is
+ * selectable.
+ */
+const minMonth = computed(() => defaultMinMonth());
+const maxMonth = computed(() => defaultMaxMonth());
+
+const canStepBack = computed(() => compareYm(addMonths(month.value, -1), minMonth.value) >= 0);
+const canStepForward = computed(() => compareYm(addMonths(month.value, 1), maxMonth.value) <= 0);
 const classId = ref<string>('');
 const search = ref('');
 const view = ref<'kalender' | 'heatmap'>('kalender');
@@ -43,14 +68,29 @@ const heatmap = ref<StudentHeatmapResponse | null>(null);
 const exportBusy = ref(false);
 const classes = ref<Classroom[]>([]);
 
-// End-date of the selected month (or today if the month is the current one)
+/**
+ * End-date of the selected month (or today, if the month is the current
+ * one).
+ *
+ * Both branches used to end in `.toISOString().slice(0, 10)`, which is
+ * the UTC day — the exact shortcut `toLocalYmd` exists to replace, and
+ * both were wrong in WIB:
+ *
+ *   • `new Date(y, m, 0)` is the last day of the month at LOCAL
+ *     midnight, so the UTC slice rolled it back one day. The recap
+ *     window for every PAST month silently dropped its final day
+ *     (March asked for 2026-03-30, not 2026-03-31).
+ *   • `today` hit the original MTs Muhammadiyah bug: before 07:00 WIB,
+ *     UTC has not rolled over, so the window ended YESTERDAY and the
+ *     day's check-ins were invisible.
+ */
 const endDate = computed(() => {
   const [y, m] = month.value.split('-').map(Number) as [number, number];
   const today = new Date();
   if (y === today.getFullYear() && m === today.getMonth() + 1) {
-    return today.toISOString().slice(0, 10);
+    return toLocalYmd(today);
   }
-  return new Date(y, m, 0).toISOString().slice(0, 10);
+  return toLocalYmd(new Date(y, m, 0));
 });
 
 const monthDays = computed(() => {
@@ -58,8 +98,7 @@ const monthDays = computed(() => {
   return new Date(y, m, 0).getDate();
 });
 const monthName = computed(() => {
-  const [y, m] = month.value.split('-').map(Number) as [number, number];
-  return new Date(y, m - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  return formatYmLabel(month.value);
 });
 
 function isWeekend(day: number): boolean {
@@ -185,9 +224,17 @@ async function exportReport() {
 }
 
 function stepMonth(delta: number) {
-  const [y, m] = month.value.split('-').map(Number) as [number, number];
-  const d = new Date(y, m - 1 + delta, 1);
-  month.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const next = clampYm(addMonths(month.value, delta), minMonth.value, maxMonth.value);
+  // Clamping can land back on the current value at a bound; assigning it
+  // anyway would be a no-op for `watch` (same value), but returning
+  // early keeps the intent explicit.
+  if (next === month.value) return;
+  month.value = next;
+}
+
+function onMonthPicked(ym: string) {
+  if (ym === month.value) return;
+  month.value = ym;
 }
 
 onMounted(async () => {
@@ -206,11 +253,22 @@ useAcademicYearWatcher(() => void load());
     <!-- Toolbar -->
     <div class="flex flex-wrap items-center gap-2">
       <div class="inline-flex rounded-lg border border-slate-200 bg-white overflow-hidden">
-        <button type="button" class="px-2 py-2 text-slate-500 hover:bg-slate-50" @click="stepMonth(-1)" aria-label="Bulan sebelumnya">
+        <button type="button" class="px-2 py-2 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed" :disabled="!canStepBack" @click="stepMonth(-1)" aria-label="Bulan sebelumnya">
           <NavIcon name="chevron-left" :size="14" />
         </button>
-        <input v-model="month" type="month" class="border-l border-r border-slate-200 px-3 py-2 text-[12px] font-semibold text-slate-900 focus:outline-none tabular-nums" />
-        <button type="button" class="px-2 py-2 text-slate-500 hover:bg-slate-50" @click="stepMonth(1)" aria-label="Bulan berikutnya">
+        <!-- Was `<input type="month">`: desktop Safari ships no picker
+             for that type and degrades it to a text box. -->
+        <button
+          type="button"
+          data-testid="rekap-month-trigger"
+          class="border-l border-r border-slate-200 px-3 py-2 text-[12px] font-semibold text-slate-900 focus:outline-none tabular-nums capitalize hover:bg-slate-50"
+          aria-haspopup="dialog"
+          :aria-expanded="monthPickerOpen"
+          @click="monthPickerOpen = true"
+        >
+          {{ monthName }}
+        </button>
+        <button type="button" class="px-2 py-2 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed" :disabled="!canStepForward" @click="stepMonth(1)" aria-label="Bulan berikutnya">
           <NavIcon name="chevron-right" :size="14" />
         </button>
       </div>
@@ -445,5 +503,15 @@ useAcademicYearWatcher(() => void load());
         </div>
       </div>
     </div>
+
+    <MonthPickerModal
+      v-if="monthPickerOpen"
+      :model-value="month"
+      :min="minMonth"
+      :max="maxMonth"
+      accent="admin"
+      @apply="onMonthPicked"
+      @close="monthPickerOpen = false"
+    />
   </div>
 </template>
