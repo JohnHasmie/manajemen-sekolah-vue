@@ -5033,6 +5033,10 @@
   },
   "superAdmin": {
     "discountCodes": {
+      "errCodeMin": "The code must be at least 4 characters.",
+      "errDescriptionMin": "The description must be at least 5 characters.",
+      "errPercentRange": "A percentage discount must be between 1% and 90%.",
+      "errValueRange": "The value must be between 1 and {max}.",
       "errUntilNotAfterFrom": "The \"valid until\" date must be after the \"valid from\" date — at least one day later."
     },
     "kicker": "Platform Super Admin",
