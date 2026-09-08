@@ -1272,16 +1272,26 @@ function closeSheet() {
         <!-- A native date control. The old free-text box with a
              'YYYY-MM-DD' placeholder was the same shape of problem as
              the id boxes, one size smaller: `start_date` validates as
-             `date`, so a typo 422d. -->
-        <FormField :label="tOr('tutoring2.admin.leads.startDate', 'Tanggal mulai')">
-          <input
-            type="date"
-            data-testid="field-start_date"
-            :value="convertForm.start_date ?? ''"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-            @input="convertForm.start_date = ($event.target as HTMLInputElement).value || null"
-          />
-        </FormField>
+             `date`, so a typo 422d.
+
+             Bound the long way round — `:model-value` plus an explicit
+             handler, the same idiom as the two id selects above —
+             rather than with a plain `v-model`. A date input reports a
+             CLEARED field as `''`, and this form's contract is that a
+             missing start date is `null`: emptiness here means "let the
+             backend default it", not "the empty string". `submitConvert`
+             prunes a falsy `start_date` out of the payload as a second
+             guard, so neither `''` nor `null` can reach the wire — but
+             that pruning is one `!` away from being the only thing
+             holding the meaning up, which is why the normalisation is
+             also spelled out here. -->
+        <FormField
+          field="start_date"
+          type="date"
+          :model-value="convertForm.start_date ?? ''"
+          :label="tOr('tutoring2.admin.leads.startDate', 'Tanggal mulai')"
+          @update:model-value="convertForm.start_date = String($event ?? '') || null"
+        />
         <FormField
           :model-value="convertForm.notes ?? ''"
           :label="tOr('tutoring2.common.notes', 'Catatan')"
