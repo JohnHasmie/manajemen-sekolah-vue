@@ -32,6 +32,21 @@
   toggle an unrelated filter, then hand-type a UUID. That box is gone;
   the chip does the job by name. Part of the "semua button/filter tdk
   berfungsi" report a bimbel admin filed on prod.
+
+  ── The Periode filter ──
+
+  Same shape, same report. The Periode chip's handler was
+  `@click="monthFilter = monthFilter ? '' : toLocalYm()"` — a two-value
+  toggle between THIS month and no month, with no path to any other one
+  even though the requests endpoint takes an arbitrary `month`. It also
+  rendered the raw `2026-09`. It now opens <MonthPickerModal>, used
+  directly rather than through its <MonthPickerField> wrapper: the chip
+  is already the trigger, so the wrapper's labeled FormField button
+  would be a second one inside the toolbar. `clearable` keeps the
+  "Semua bulan" reset the old toggle did provide.
+
+  The Status chip is NOT this bug and is deliberately untouched — see
+  the comment on the advanced status row below.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -43,6 +58,7 @@ import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
 import FilterFacetPickerModal, {
   type FacetOption,
 } from '@/components/feature/FilterFacetPickerModal.vue';
+import MonthPickerModal from '@/components/feature/MonthPickerModal.vue';
 import KpiStripCards, { type KpiCard } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Button from '@/components/ui/Button.vue';
@@ -53,7 +69,7 @@ import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
 import { extractError } from '@/lib/api-error';
-import { toLocalYm } from '@/lib/local-date';
+import { formatYmLabel, toLocalYm } from '@/lib/local-date';
 import { PayoutsService } from '@/services/tutoring2/payouts';
 import { TutoringTutorsService } from '@/services/tutoring2/tutors';
 import type { StatusBadgeTone } from '@/types/status-badge';
@@ -61,7 +77,7 @@ import type { PayoutRequest, PayoutRequestStatus } from '@/types/tutoring2/payou
 import { PAYOUT_REQUEST_STATUSES } from '@/types/tutoring2/payout';
 import type { Tutor } from '@/types/tutoring2/tutor';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const toast = useToast();
 const { can } = useMe();
 
@@ -99,6 +115,20 @@ watch([statusFilter, monthFilter, tutorFilter], () => reload());
 // picker renders. Status and Period are enum/date toggles: no fetch.
 const tutors = ref<Tutor[]>([]);
 const showTutorPicker = ref(false);
+
+const showMonthPicker = ref(false);
+
+const localeTag = computed(() => (locale.value === 'en' ? 'en-US' : 'id-ID'));
+
+/**
+ * The chip shows a month NAME, via the shared `formatYmLabel` the
+ * picker's own cells use — never the raw `YYYY-MM` wire value.
+ */
+const monthChipValue = computed(() =>
+  monthFilter.value
+    ? formatYmLabel(monthFilter.value, localeTag.value)
+    : t('tutoring2.common.all'),
+);
 
 // `tu`, not `t` — the i18n `t` is in scope and must not be shadowed.
 const tutorOptions = computed<FacetOption[]>(() =>
@@ -301,10 +331,10 @@ const statusOptions = PAYOUT_REQUEST_STATUSES.map((s) => ({ value: s, label: sta
         />
         <AppFilterChip
           :label="t('tutoring2.common.period')"
-          :value="monthFilter || t('tutoring2.common.all')"
+          :value="monthChipValue"
           icon-name="calendar"
           :active="!!monthFilter"
-          @click="monthFilter = monthFilter ? '' : toLocalYm()"
+          @click="showMonthPicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.tutor')"
@@ -500,6 +530,19 @@ const statusOptions = PAYOUT_REQUEST_STATUSES.map((s) => ({ value: s, label: sta
       :all-label="t('tutoring2.common.all')"
       @close="showTutorPicker = false"
       @apply="(v) => { tutorFilter = v; }"
+    />
+
+    <!-- Periode picker. Same rule as the facet picker above: it writes
+         its ref and nothing else, so the [status, month, tutor] watcher
+         stays the ONE thing that reloads. -->
+    <MonthPickerModal
+      v-if="showMonthPicker"
+      :model-value="monthFilter"
+      :title="t('tutoring2.common.period')"
+      accent="admin"
+      clearable
+      @apply="(v) => { monthFilter = v; }"
+      @close="showMonthPicker = false"
     />
   </div>
 </template>
