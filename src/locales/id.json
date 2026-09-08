@@ -7585,6 +7585,7 @@
         "ended": "Rate diakhiri.",
         "errFill": "Isi tutor dan nilai terlebih dulu.",
         "errPercentBounds": "Nilai persen harus 1–100.",
+        "errUntilBeforeFrom": "Tanggal berakhir tidak boleh lebih awal dari tanggal berlaku sejak.",
         "endConfirmTitle": "Akhiri rate?",
         "endConfirmMsg": "Rate {name} akan diakhiri per hari ini. Riwayat sebelumnya tetap dipakai untuk perhitungan lampau.",
         "impactStopFuture": "Sesi mulai besok tidak lagi memakai rate ini.",

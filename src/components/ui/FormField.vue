@@ -1,7 +1,7 @@
 <!--
   FormField — the single labeled-control unit that every admin edit
-  sheet repeats: a `<label>`, one control (text/number/email/tel input,
-  textarea, or select), and an optional red error line beneath it.
+  sheet repeats: a `<label>`, one control (text/number/email/tel/date
+  input, textarea, or select), and an optional red error line beneath it.
 
   Before this component, StudentEditSheet / TeacherEditSheet /
   ClassroomEditSheet / SubjectEditSheet each hand-rolled the SAME three
@@ -40,8 +40,24 @@ const props = withDefaults(
     label?: string;
     /** v-model value. Number inputs still bind through here. */
     modelValue?: string | number | null;
-    /** Which control to render. */
-    type?: 'text' | 'number' | 'email' | 'tel' | 'textarea' | 'select';
+    /**
+     * Which control to render.
+     *
+     * `'date'` renders a native `<input type="date">` — a real calendar
+     * picker over a `YYYY-MM-DD` model. Unlike `type="month"` (see
+     * MonthPickerModal.vue, which exists precisely because desktop
+     * Safari ships no month picker), `type="date"` IS implemented in
+     * every desktop browser this app targets, Safari 14.1+ included, so
+     * no bespoke component is warranted. 40-odd raw `<input type="date">`
+     * elements across the app already rely on that.
+     *
+     * The emitted value is the browser's normalised `YYYY-MM-DD`, or
+     * `''` when the field is empty OR the user typed something the
+     * browser could not parse — a date input never emits a half-typed
+     * string. Hosts that treat empty as "open ended" must map that `''`
+     * to `null` before it reaches the wire.
+     */
+    type?: 'text' | 'number' | 'email' | 'tel' | 'date' | 'textarea' | 'select';
     /** Adds the required asterisk to the label (visual only). */
     required?: boolean;
     disabled?: boolean;
@@ -54,7 +70,11 @@ const props = withDefaults(
     options?: FormFieldOption[];
     /** Placeholder <option> for select (empty-value first entry). */
     selectPlaceholder?: string;
-    /** min/max forwarded to number inputs. */
+    /**
+     * min/max forwarded to number inputs — and, unchanged, to `date`
+     * ones, where the bound is a `YYYY-MM-DD` string that greys out
+     * everything outside it in the native picker.
+     */
     min?: number | string;
     max?: number | string;
     /**

@@ -245,6 +245,27 @@ function openEditSheet(r: PayoutRate) {
   showSheet.value = true;
 }
 
+/**
+ * An empty "Berakhir" means OPEN ENDED, and has to stay distinguishable
+ * from a real date all the way to the wire.
+ *
+ * `<input type="date">` — like the text box before it — reports a
+ * cleared field as `''`, so binding it straight into the payload posts
+ * `effective_until: ''`. That is not the same request as omitting it:
+ * it leans on Laravel's ConvertEmptyStringsToNull middleware to mean
+ * "no end date", and the day anything strips or reorders that
+ * middleware, `''` starts failing the `date` rule — or worse, lands as
+ * a non-null end stamp. A rate with a wrongly-stamped `effective_until`
+ * drops out of the LIVE set silently: no error, the tutor simply stops
+ * being paid at that rate.
+ *
+ * So normalise here, at the one place the payload is built.
+ */
+function normalizeOpenEnded(v: string | null | undefined): string | null {
+  const s = (v ?? '').trim();
+  return s === '' ? null : s;
+}
+
 async function submitSheet() {
   formError.value = null;
   if (!form.value.tutor_id || form.value.value <= 0) {
@@ -255,9 +276,18 @@ async function submitSheet() {
     formError.value = t('tutoring2.admin.payoutRates.errPercentBounds');
     return;
   }
+  const effectiveUntil = normalizeOpenEnded(form.value.effective_until);
+  // The `min` attribute greys out earlier days in the picker but does
+  // not stop a TYPED one, and the backend answers that with a 422 whose
+  // wording an admin has to decode. Say it here instead. Equal dates are
+  // fine — `after_or_equal` — a one-day rate is legitimate.
+  if (effectiveUntil && effectiveUntil < form.value.effective_from) {
+    formError.value = t('tutoring2.admin.payoutRates.errUntilBeforeFrom');
+    return;
+  }
   isSaving.value = true;
   try {
-    await PayoutsService.upsertRate(form.value);
+    await PayoutsService.upsertRate({ ...form.value, effective_until: effectiveUntil });
     toast.success(t('tutoring2.admin.payoutRates.saved'));
     showSheet.value = false;
     await reload();
@@ -560,20 +590,44 @@ const valueHint = computed(() => {
           :placeholder="valueHint"
         />
         <p class="text-2xs text-slate-500">{{ valueHint }}</p>
+        <!--
+          Both dates are `type="date"`, not a text box over a
+          `YYYY-MM-DD` placeholder. The old form asked an admin to hand-
+          type a machine format with no picker in ANY browser, and
+          nothing stopped `2026-9-1` — a shape the API rejects — from
+          being submitted. `type="date"` has a real calendar in every
+          desktop browser this app targets (Safari 14.1+ included; it is
+          `type="month"` that Safari leaves as a bare box, hence
+          MonthPickerModal), and it can only ever emit a normalised
+          `YYYY-MM-DD` or the empty string.
+
+          `effective_from` stays LOCKED while editing: the write is an
+          upsert keyed on (school_id, tutor_id, kind, effective_from), so
+          moving the start date would not move the rate — it would mint a
+          second one beside the still-live original.
+        -->
         <FormField
           v-model="form.effective_from"
           :label="t('tutoring2.admin.payoutRates.effectiveFrom')"
-          type="text"
+          type="date"
           field="effective_from"
           required
-          placeholder="YYYY-MM-DD"
           :disabled="isEditing"
         />
+        <!--
+          `min` mirrors the backend's `after_or_equal:effective_from` so
+          the picker greys the impossible days out instead of letting the
+          admin discover the rule via a 422. Same idiom as the voucher
+          valid_from/valid_until pair. It is a courtesy, not the guard:
+          a date input still accepts a TYPED out-of-range day, which is
+          what the submit-time check below is for.
+        -->
         <FormField
           v-model="form.effective_until"
           :label="t('tutoring2.admin.payoutRates.effectiveUntil') + ' (' + t('tutoring2.common.optional') + ')'"
-          type="text"
-          placeholder="YYYY-MM-DD"
+          type="date"
+          field="effective_until"
+          :min="form.effective_from || undefined"
         />
         <FormField
           v-model="form.notes"

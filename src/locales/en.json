@@ -7356,6 +7356,7 @@
         "ended": "Rate ended.",
         "errFill": "Fill tutor and value first.",
         "errPercentBounds": "Percent must be 1–100.",
+        "errUntilBeforeFrom": "The end date cannot be earlier than the effective-from date.",
         "endConfirmTitle": "End this rate?",
         "endConfirmMsg": "Rate for {name} will be ended today. History is preserved.",
         "impactStopFuture": "Sessions from tomorrow won't use this rate.",

@@ -106,6 +106,9 @@ function makeI18n() {
               value: 'Nilai',
               effectiveFrom: 'Berlaku dari',
               effectiveUntil: 'Berlaku sampai',
+              errFill: 'Isi tutor dan nilai terlebih dulu.',
+              errUntilBeforeFrom:
+                'Tanggal berakhir tidak boleh lebih awal dari tanggal berlaku sejak.',
               newCta: 'Tambah rate',
               endCta: 'Akhiri',
               sheetTitle: 'Set rate honor',
@@ -453,5 +456,277 @@ describe('AdminTutoring2PayoutRatesView row actions', () => {
     const labels = rowLabels(w);
     expect(labels).toContain('Detail');
     expect(labels).not.toContain('Ubah');
+  });
+});
+
+/**
+ * The two DAY fields — the day-granularity twin of the month-picker
+ * problem (MonthPickerModal / MR !1262).
+ *
+ * Both shipped as `<FormField type="text" placeholder="YYYY-MM-DD">`:
+ * an admin asked to hand-type a machine format, with no picker in any
+ * browser and nothing stopping `2026-9-1` from reaching the API. The
+ * fix is a native `type="date"` — supported in every desktop browser
+ * this app targets, Safari 14.1+ included, which is exactly why the
+ * bespoke MonthPickerModal (written because Safari has NO `type="month"`
+ * picker) does not apply here.
+ *
+ * The load-bearing test in this block is the open-ended one. A rate
+ * whose `effective_until` gets a wrongly-stamped value drops out of the
+ * LIVE set with no error at all — the tutor just quietly stops being
+ * paid at that rate — so "empty means open ended" has to survive all
+ * the way onto the wire as `null`, never `''`.
+ */
+describe('AdminTutoring2PayoutRatesView date fields', () => {
+  const ENDED = makeRate({
+    id: 'ra-old',
+    effective_from: '2020-01-01',
+    effective_until: '2020-06-30',
+    notes: 'Naik dari 60rb setelah evaluasi semester.',
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    abilities.canManage = true;
+    (TutoringTutorsService.list as any).mockResolvedValue({ items: TUTORS });
+    (PayoutsService.listRates as any).mockResolvedValue({
+      items: [makeRate()],
+      pagination: undefined,
+    });
+    (PayoutsService.upsertRate as any).mockResolvedValue(makeRate());
+  });
+
+  function fromField(w) {
+    return w.find('[data-testid="field-effective_from"]');
+  }
+  function untilField(w) {
+    return w.find('[data-testid="field-effective_until"]');
+  }
+  /** The single payload handed to PayoutsService.upsertRate. */
+  function sentPayload() {
+    return (PayoutsService.upsertRate as any).mock.calls[0][0];
+  }
+  /** Fill the two fields submitSheet insists on before it will proceed. */
+  async function fillRequired(w) {
+    await w.find('[data-testid="field-tutor_id"]').setValue('tu-1');
+    await w.find('[data-testid="field-value"]').setValue('90000');
+    await flushPromises();
+  }
+  async function save(w) {
+    await w.findComponent({ name: 'FormSheet' }).vm.$emit('save');
+    await flushPromises();
+  }
+
+  // ── Real date inputs ──────────────────────────────────────────────
+
+  it('renders BOTH day fields as native date inputs, not text boxes', async () => {
+    const w = await mountView();
+    await openSheet(w);
+
+    expect(fromField(w).exists()).toBe(true);
+    expect(untilField(w).exists()).toBe(true);
+    // The regression: both were <input type="text">.
+    expect(fromField(w).attributes('type')).toBe('date');
+    expect(untilField(w).attributes('type')).toBe('date');
+    expect(fromField(w).element.tagName).toBe('INPUT');
+    expect(untilField(w).element.tagName).toBe('INPUT');
+  });
+
+  it('drops the YYYY-MM-DD placeholder — a date input has its own hint', async () => {
+    // FormField always renders the attribute (its default is ''), so the
+    // assertion is that no wire-format hint is left in it, not that the
+    // attribute is gone.
+    const w = await mountView();
+    await openSheet(w);
+
+    expect(fromField(w).attributes('placeholder')).toBe('');
+    expect(untilField(w).attributes('placeholder')).toBe('');
+    // Scoped to the controls: the SFC's explanatory template comments
+    // legitimately mention the format and survive into the sheet HTML.
+    expect((fromField(w).element as any).outerHTML).not.toContain('YYYY-MM-DD');
+    expect((untilField(w).element as any).outerHTML).not.toContain('YYYY-MM-DD');
+  });
+
+  it('still renders as date inputs on the EDIT sheet, prefilled from the row', async () => {
+    (PayoutsService.listRates as any).mockResolvedValue({ items: [ENDED], pagination: undefined });
+    const w = await mountView();
+    await w.find('[data-testid="edit-ra-old"]').trigger('click');
+    await flushPromises();
+
+    expect(fromField(w).attributes('type')).toBe('date');
+    expect(untilField(w).attributes('type')).toBe('date');
+    expect((fromField(w).element as any).value).toBe('2020-01-01');
+    expect((untilField(w).element as any).value).toBe('2020-06-30');
+  });
+
+  // ── Empty means OPEN ENDED ────────────────────────────────────────
+
+  it('sends effective_until as NULL when it was never filled in', async () => {
+    const w = await mountView();
+    await openSheet(w);
+    await fillRequired(w);
+    await save(w);
+
+    expect(PayoutsService.upsertRate).toHaveBeenCalledTimes(1);
+    const payload = sentPayload();
+    // `null`, never '' — an empty string is a different request that
+    // leans on Laravel's ConvertEmptyStringsToNull to mean open-ended.
+    expect(payload.effective_until).toBeNull();
+    expect(payload.effective_until).not.toBe('');
+  });
+
+  it('sends NULL when the admin CLEARS a date they had already picked', async () => {
+    // The path that actually produces '': the input holds a value, the
+    // user empties it, and the browser reports el.value === ''.
+    const w = await mountView();
+    await openSheet(w);
+    await fillRequired(w);
+
+    await untilField(w).setValue('2027-01-31');
+    await flushPromises();
+    expect((untilField(w).element as any).value).toBe('2027-01-31');
+
+    await untilField(w).setValue('');
+    await flushPromises();
+
+    await save(w);
+
+    const payload = sentPayload();
+    expect(payload.effective_until).toBeNull();
+    expect(payload.effective_until).not.toBe('');
+  });
+
+  it('clearing effective_until on an EDIT reopens the rate rather than stamping it', async () => {
+    // Re-opening an ended rate is a real admin action, and it must not
+    // round-trip '' back to the API.
+    (PayoutsService.listRates as any).mockResolvedValue({ items: [ENDED], pagination: undefined });
+    const w = await mountView();
+    await w.find('[data-testid="edit-ra-old"]').trigger('click');
+    await flushPromises();
+
+    await untilField(w).setValue('');
+    await flushPromises();
+    await save(w);
+
+    const payload = sentPayload();
+    expect(payload.effective_until).toBeNull();
+    // The upsert key tuple must survive untouched.
+    expect(payload.effective_from).toBe('2020-01-01');
+    expect(payload.tutor_id).toBe('tu-1');
+    expect(payload.kind).toBe('per_session');
+  });
+
+  it('passes a filled effective_until through verbatim', async () => {
+    const w = await mountView();
+    await openSheet(w);
+    await fillRequired(w);
+
+    await untilField(w).setValue('2027-03-31');
+    await flushPromises();
+    await save(w);
+
+    expect(sentPayload().effective_until).toBe('2027-03-31');
+  });
+
+  it('sends effective_from as the picked YYYY-MM-DD day', async () => {
+    const w = await mountView();
+    await openSheet(w);
+    await fillRequired(w);
+
+    await fromField(w).setValue('2026-11-01');
+    await flushPromises();
+    await save(w);
+
+    expect(sentPayload().effective_from).toBe('2026-11-01');
+  });
+
+  // ── effective_from stays locked while editing ─────────────────────
+
+  it('keeps effective_from DISABLED while editing — the upsert key cannot move', async () => {
+    // Changing it would not move the rate; updateOrCreate would stop
+    // matching and mint a SECOND rate beside the still-live original.
+    (PayoutsService.listRates as any).mockResolvedValue({ items: [ENDED], pagination: undefined });
+    const w = await mountView();
+    await w.find('[data-testid="edit-ra-old"]').trigger('click');
+    await flushPromises();
+
+    expect(fromField(w).attributes('disabled')).toBeDefined();
+    // The end date is deliberately NOT locked — it is the one key-safe
+    // date an admin is meant to be able to amend.
+    expect(untilField(w).attributes('disabled')).toBeUndefined();
+  });
+
+  it('leaves effective_from enabled on CREATE — the lock is edit-only', async () => {
+    const w = await mountView();
+    await openSheet(w);
+
+    expect(fromField(w).attributes('disabled')).toBeUndefined();
+    expect(untilField(w).attributes('disabled')).toBeUndefined();
+  });
+
+  // ── The min bound ─────────────────────────────────────────────────
+
+  it('bounds effective_until at effective_from so the picker greys out the impossible days', async () => {
+    // Mirrors the backend's after_or_equal:effective_from rule.
+    const w = await mountView();
+    await openSheet(w);
+
+    await fromField(w).setValue('2026-05-10');
+    await flushPromises();
+
+    expect(untilField(w).attributes('min')).toBe('2026-05-10');
+  });
+
+  it('follows effective_from when it changes', async () => {
+    const w = await mountView();
+    await openSheet(w);
+
+    await fromField(w).setValue('2026-05-10');
+    await flushPromises();
+    await fromField(w).setValue('2026-08-20');
+    await flushPromises();
+
+    expect(untilField(w).attributes('min')).toBe('2026-08-20');
+  });
+
+  it('omits min entirely rather than emitting min="" when effective_from is blank', async () => {
+    const w = await mountView();
+    await openSheet(w);
+
+    await fromField(w).setValue('');
+    await flushPromises();
+
+    expect(untilField(w).attributes('min')).toBeUndefined();
+  });
+
+  it('refuses an end date BEFORE the start date instead of posting it for a 422', async () => {
+    // `min` greys the day out in the picker but does not stop a typed
+    // one, so the submit path has to say it too.
+    const w = await mountView();
+    await openSheet(w);
+    await fillRequired(w);
+
+    await fromField(w).setValue('2026-05-10');
+    await untilField(w).setValue('2026-05-01');
+    await flushPromises();
+    await save(w);
+
+    expect(PayoutsService.upsertRate).not.toHaveBeenCalled();
+    expect(w.find('[data-testid="sheet"]').text()).toContain('tidak boleh lebih awal');
+  });
+
+  it('accepts an end date EQUAL to the start date — a one-day rate is legitimate', async () => {
+    // The backend rule is after_or_equal, not after.
+    const w = await mountView();
+    await openSheet(w);
+    await fillRequired(w);
+
+    await fromField(w).setValue('2026-05-10');
+    await untilField(w).setValue('2026-05-10');
+    await flushPromises();
+    await save(w);
+
+    expect(PayoutsService.upsertRate).toHaveBeenCalledTimes(1);
+    expect(sentPayload().effective_until).toBe('2026-05-10');
   });
 });
