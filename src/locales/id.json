@@ -5033,6 +5033,10 @@
   },
   "superAdmin": {
     "discountCodes": {
+      "errCodeMin": "Kode minimal 4 karakter.",
+      "errDescriptionMin": "Deskripsi minimal 5 karakter.",
+      "errPercentRange": "Diskon persen harus antara 1-90%.",
+      "errValueRange": "Nilai harus antara 1 dan {max}.",
       "errUntilNotAfterFrom": "Tanggal \"Berlaku sampai\" harus setelah \"Berlaku sejak\" — minimal satu hari sesudahnya."
     },
     "kicker": "Platform Super Admin",

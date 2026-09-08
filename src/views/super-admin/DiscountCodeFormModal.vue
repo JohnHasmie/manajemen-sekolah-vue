@@ -18,6 +18,7 @@ import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Modal from '@/components/ui/Modal.vue';
 import { addDays } from '@/lib/local-date';
+import { formatNumber } from '@/lib/format';
 import MoneyInput from '@/components/ui/MoneyInput.vue';
 import { useMoneyModel } from '@/composables/useMoneyModel';
 import { DiscountCodeService } from '@/services/discount-code.service';
@@ -170,22 +171,33 @@ async function submit() {
   // still driven by the backend on save() failure — this only
   // catches the pre-flight cases.
   if (form.value.code.trim().length < 4) {
-    errorMessage.value = 'Kode minimal 4 karakter.';
+    errorMessage.value = t('superAdmin.discountCodes.errCodeMin');
     return;
   }
   if (form.value.description.trim().length < 5) {
-    errorMessage.value = 'Deskripsi minimal 5 karakter.';
+    errorMessage.value = t('superAdmin.discountCodes.errDescriptionMin');
     return;
   }
   if (form.value.type === 'percent' && (form.value.value < 1 || form.value.value > 90)) {
-    errorMessage.value = 'Diskon persen harus antara 1-90%.';
+    errorMessage.value = t('superAdmin.discountCodes.errPercentRange');
     return;
   }
   // `valueMax` used to be enforced only by the number input's `max`
   // attribute, which browsers never applied to typing anyway. The
   // control is a text field now, so the cap is checked for real.
+  //
+  // The cap is interpolated as `{max}` rather than baked into the
+  // sentence, and formatted with `formatNumber` — which resolves its
+  // BCP-47 tag from the ACTIVE i18n locale — rather than the
+  // `toLocaleString('id-ID')` this line used to hardcode. A hardcoded
+  // tag survives a translation unnoticed: the sentence flips to English
+  // while the number keeps Indonesian grouping, so an English reader is
+  // told the limit is `100.000.000`, which they read as one hundred
+  // million and a fraction, or as a typo.
   if (form.value.value < 1 || form.value.value > valueMax.value) {
-    errorMessage.value = `Nilai harus antara 1 dan ${valueMax.value.toLocaleString('id-ID')}.`;
+    errorMessage.value = t('superAdmin.discountCodes.errValueRange', {
+      max: formatNumber(valueMax.value),
+    });
     return;
   }
   // `min` greys the impossible days out of the picker but does nothing

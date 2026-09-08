@@ -21,12 +21,29 @@
  *     blank.
  *   • a submit guard — `min` constrains the CALENDAR, not the KEYBOARD,
  *     and a typed date sails straight past it into a 422.
+ *
+ * ── Second concern: the client-side messages are translated ──
+ *
+ * submit() gates five things before it will hit the API. Four of them
+ * carried a hardcoded Indonesian string literal; only the date one went
+ * through `t()`. They are all keys now, and the last block below pins
+ * each in BOTH locales.
+ *
+ * The value-cap message is the one worth the extra care. It interpolates
+ * a number, and that number used to be formatted with a hardcoded
+ * `toLocaleString('id-ID')`. Moving only the SENTENCE into i18n would
+ * have produced an English message carrying Indonesian digit grouping —
+ * "between 1 and 100.000.000", which an English reader parses as a
+ * decimal point. So the en cases assert the grouping too, and one of
+ * them asserts the id-grouped form is ABSENT: a regression that reverts
+ * the formatter while keeping the key would still render the right
+ * words, and only that negative catches it.
  */
 // @ts-nocheck — vitest types not installed in this workspace
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { createI18n } from 'vue-i18n';
 import DiscountCodeFormModal from './DiscountCodeFormModal.vue';
+import { i18n } from '@/lib/i18n';
 import { DiscountCodeService } from '@/services/discount-code.service';
 
 vi.mock('@/services/discount-code.service', () => ({
@@ -39,21 +56,30 @@ vi.mock('@/services/discount-code.service', () => ({
 const ERR_UNTIL =
   'Tanggal "Berlaku sampai" harus setelah "Berlaku sejak" — minimal satu hari sesudahnya.';
 
-function makeI18n() {
-  return createI18n({
-    legacy: false,
-    locale: 'id',
-    fallbackLocale: 'id',
-    messages: {
-      id: {
-        superAdmin: {
-          discountCodes: { errUntilNotAfterFrom: ERR_UNTIL },
-        },
-      },
-    },
-    missingWarn: false,
-    fallbackWarn: false,
-  });
+/**
+ * Mounts get the APP's i18n instance, not a hand-written stub, and that
+ * is deliberate on two counts.
+ *
+ * 1. A stub tree makes `t()` echo whatever the stub happens to contain.
+ *    An assertion against it proves the component calls SOME key, not
+ *    that the key exists in `id.json` and `en.json` — the exact gap
+ *    `locale-messages-render.spec.ts` was written about. Here the
+ *    messages come from the shipped files, so a key that is missing
+ *    from either locale renders as its own path and fails loudly.
+ *
+ * 2. `formatNumber` (`@/lib/format`) resolves its BCP-47 tag from this
+ *    singleton, not from whatever instance happens to be installed on
+ *    the app. In the browser those are the same object; under a stub
+ *    instance they are not, and the locale switch below would move the
+ *    words while leaving the digits on id-ID — i.e. the spec would go
+ *    green on precisely the bug it exists to catch. One instance, one
+ *    locale to set.
+ *
+ * The singleton is module-level state, so the locale is restored after
+ * every case.
+ */
+function setLocale(locale) {
+  i18n.global.locale.value = locale;
 }
 
 /**
@@ -68,7 +94,7 @@ const STUBS = {
 function mountModal(code = null) {
   return mount(DiscountCodeFormModal, {
     props: { code },
-    global: { plugins: [makeI18n()], stubs: STUBS },
+    global: { plugins: [i18n], stubs: STUBS },
   });
 }
 
@@ -84,6 +110,10 @@ async function submitForm(wrapper) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+});
+
+afterEach(() => {
+  setLocale('id');
 });
 
 describe('DiscountCodeFormModal — valid_until lower bound', () => {
@@ -240,5 +270,132 @@ describe('DiscountCodeFormModal — submit-time date guard', () => {
 
     expect(DiscountCodeService.create).toHaveBeenCalledTimes(1);
     expect(DiscountCodeService.create.mock.calls[0][0].valid_from).toBeNull();
+  });
+});
+
+describe('DiscountCodeFormModal — client validation messages are translated', () => {
+  /**
+   * Drive submit() into one specific guard and read back what the user
+   * is shown. Each helper stops at the FIRST failing check, which is why
+   * the earlier fields are filled in ascending order.
+   */
+  async function submitWithShortCode(wrapper) {
+    // `code` starts empty — 0 characters is already under the minimum.
+    await wrapper.find('#dc-desc').setValue('Diskon onboarding sekolah baru.');
+    await submitForm(wrapper);
+  }
+
+  async function submitWithShortDescription(wrapper) {
+    await wrapper.find('#dc-code').setValue('WELCOME20');
+    await wrapper.find('#dc-desc').setValue('abc');
+    await submitForm(wrapper);
+  }
+
+  async function submitWithOutOfRangePercent(wrapper) {
+    await fillRequired(wrapper);
+    // Type is 'percent' by default; clearing the amount lands on 0,
+    // which the 1-90 guard rejects.
+    await wrapper.find('#dc-value').setValue('');
+    await submitForm(wrapper);
+  }
+
+  async function submitWithOutOfRangeValue(wrapper) {
+    await fillRequired(wrapper);
+    // 'fixed' skips the percent guard and raises the cap to 100,000,000
+    // — the branch whose message interpolates a formatted number.
+    await wrapper.find('#dc-type').setValue('fixed');
+    await wrapper.find('#dc-value').setValue('');
+    await submitForm(wrapper);
+  }
+
+  it('shows the code-length error in Indonesian', async () => {
+    const wrapper = mountModal();
+    await submitWithShortCode(wrapper);
+
+    expect(DiscountCodeService.create).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('Kode minimal 4 karakter.');
+  });
+
+  it('shows the code-length error in English under the en locale', async () => {
+    setLocale('en');
+    const wrapper = mountModal();
+    await submitWithShortCode(wrapper);
+
+    expect(DiscountCodeService.create).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('The code must be at least 4 characters.');
+    expect(wrapper.text()).not.toContain('Kode minimal 4 karakter.');
+  });
+
+  it('shows the description-length error in Indonesian', async () => {
+    const wrapper = mountModal();
+    await submitWithShortDescription(wrapper);
+
+    expect(DiscountCodeService.create).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('Deskripsi minimal 5 karakter.');
+  });
+
+  it('shows the description-length error in English under the en locale', async () => {
+    setLocale('en');
+    const wrapper = mountModal();
+    await submitWithShortDescription(wrapper);
+
+    expect(DiscountCodeService.create).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('The description must be at least 5 characters.');
+    expect(wrapper.text()).not.toContain('Deskripsi minimal 5 karakter.');
+  });
+
+  it('shows the percent-range error in Indonesian', async () => {
+    const wrapper = mountModal();
+    await submitWithOutOfRangePercent(wrapper);
+
+    expect(DiscountCodeService.create).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('Diskon persen harus antara 1-90%.');
+  });
+
+  it('shows the percent-range error in English under the en locale', async () => {
+    setLocale('en');
+    const wrapper = mountModal();
+    await submitWithOutOfRangePercent(wrapper);
+
+    expect(DiscountCodeService.create).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('A percentage discount must be between 1% and 90%.');
+    expect(wrapper.text()).not.toContain('Diskon persen harus antara 1-90%.');
+  });
+
+  it('interpolates the cap with Indonesian grouping under the id locale', async () => {
+    const wrapper = mountModal();
+    await submitWithOutOfRangeValue(wrapper);
+
+    expect(DiscountCodeService.create).not.toHaveBeenCalled();
+    // Verbatim the sentence this branch shipped with, dots and all.
+    expect(wrapper.text()).toContain('Nilai harus antara 1 dan 100.000.000.');
+  });
+
+  it('interpolates the cap with ENGLISH grouping under the en locale', async () => {
+    setLocale('en');
+    const wrapper = mountModal();
+    await submitWithOutOfRangeValue(wrapper);
+
+    expect(DiscountCodeService.create).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('The value must be between 1 and 100,000,000.');
+
+    // The load-bearing half. Translating the sentence while leaving the
+    // old `toLocaleString('id-ID')` in place still renders every English
+    // word above — only the absence of the id-grouped number separates a
+    // real fix from that half-migration.
+    expect(wrapper.text()).not.toContain('100.000.000');
+  });
+
+  it('keeps the percent cap out of the fixed-amount message and vice versa', async () => {
+    // Same key, two caps: the message must follow `valueMax`, not a
+    // constant someone inlined. A percent code that is out of range is
+    // caught by the earlier guard, so the only way to see '90' here is
+    // through the shared branch — assert the fixed case says 100.000.000
+    // and not 90.
+    const wrapper = mountModal();
+    await submitWithOutOfRangeValue(wrapper);
+
+    expect(wrapper.text()).toContain('100.000.000');
+    expect(wrapper.text()).not.toContain('antara 1 dan 90.');
   });
 });
