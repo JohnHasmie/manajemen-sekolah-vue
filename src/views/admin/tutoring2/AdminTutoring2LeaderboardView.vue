@@ -21,10 +21,19 @@
   of assessments was loaded anywhere in this file, so nothing could
   ever set it. It also rendered a raw id fragment for a state that was
   unreachable.
+
+  Podium cards and rank-4..N rows OPEN that student's graded-score
+  history (`admin.tutoring2.student-scores`), rendered by the same
+  <Tutoring2StudentScores> component the wali screen uses. Both row sets
+  previously carried `hover:bg-slate-50` with no `@click` at all, so they
+  lit up under the cursor and then did nothing. The tap is gated on
+  `tutoring.score.view` AND a non-empty `student_id`; where it is not
+  offered the row now renders no hover or pointer either.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
@@ -41,9 +50,12 @@ import {
   TutoringBimbelService,
   type BimbelAssessment,
 } from '@/services/tutoring-bimbel.service';
+import { useAuthStore } from '@/stores/auth';
 import type { LeaderboardRow } from '@/types/tutoring2/leaderboard';
 
 const { t } = useI18n();
+const router = useRouter();
+const auth = useAuthStore();
 
 type Tab = 'group' | 'program';
 
@@ -314,6 +326,50 @@ function medalLabel(rank: number): string {
   return `#${rank}`;
 }
 
+// ── Row → one student's scores ───────────────────────────────────
+/**
+ * Does the reader hold the key that the destination reads behind?
+ *
+ * `tutoring.score.view`, NOT `tutoring.leaderboard.view`: the board
+ * says who ranks where, the drill-in says what they actually scored,
+ * and those are different disclosures. Gating the tap on the board's
+ * own key would offer marks to a reader who may only see the ranking.
+ *
+ * Read off `/me` abilities (scoped to the ACTIVE role) rather than
+ * `roles[].permission_keys`, which is unscoped and exists only for the
+ * role switcher.
+ */
+const canViewStudentScores = computed(() =>
+  auth.hasAbility('tutoring.score.view'),
+);
+
+/**
+ * Can this particular row be opened?
+ *
+ * Two conditions, and they are different questions: the reader must
+ * hold the ability, AND the row must carry an id to ask the server
+ * about. A row with a blank `student_id` would build
+ * `/students//scores` — a malformed URL that resolves to no route.
+ * Copied from the Flutter board's `_openStudent`, which gates on
+ * exactly this pair.
+ */
+function canOpenStudent(row: LeaderboardRow): boolean {
+  return canViewStudentScores.value && (row.student_id ?? '').trim() !== '';
+}
+
+function openStudent(row: LeaderboardRow) {
+  if (!canOpenStudent(row)) return;
+  const name = (row.student_name ?? '').trim();
+  router.push({
+    name: 'admin.tutoring2.student-scores',
+    params: { studentId: row.student_id.trim() },
+    // The destination cannot look this up (see its header), so it is
+    // handed over. Omitted when blank so the destination renders its
+    // own honest placeholder instead of an empty title.
+    query: name ? { name } : undefined,
+  });
+}
+
 function activeScopeLabel(): string {
   const list = tab.value === 'group' ? groupOptions.value : programOptions.value;
   const currentId = tab.value === 'group' ? groupId.value : programId.value;
@@ -421,7 +477,16 @@ function assessmentChipValue(): string {
               'rounded-3xl border border-slate-100 bg-white shadow-sm p-4 flex items-center gap-3 ring-2',
               podiumRingClass(row.rank),
               row.rank === 1 ? 'md:order-2' : row.rank === 2 ? 'md:order-1' : 'md:order-3',
+              // The pointer is a PROMISE that something opens; it
+              // appears only where the tap actually does.
+              canOpenStudent(row) ? 'cursor-pointer hover:bg-slate-50' : '',
             ]"
+            :role="canOpenStudent(row) ? 'button' : undefined"
+            :tabindex="canOpenStudent(row) ? 0 : undefined"
+            :data-testid="canOpenStudent(row) ? 'podium-openable' : 'podium-inert'"
+            @click="openStudent(row)"
+            @keydown.enter="openStudent(row)"
+            @keydown.space.prevent="openStudent(row)"
           >
             <div
               :class="[
@@ -493,7 +558,20 @@ function assessmentChipValue(): string {
               <tr
                 v-for="row in tail"
                 :key="row.enrollment_id"
-                class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
+                :class="[
+                  'border-b border-slate-100 last:border-0',
+                  // A row that lights up under the cursor and then does
+                  // nothing advertises an affordance it does not have —
+                  // which is what this table did before the drill-in
+                  // existed. Hover and pointer now travel WITH the tap.
+                  canOpenStudent(row) ? 'hover:bg-slate-50 cursor-pointer' : '',
+                ]"
+                :role="canOpenStudent(row) ? 'button' : undefined"
+                :tabindex="canOpenStudent(row) ? 0 : undefined"
+                :data-testid="canOpenStudent(row) ? 'row-openable' : 'row-inert'"
+                @click="openStudent(row)"
+                @keydown.enter="openStudent(row)"
+                @keydown.space.prevent="openStudent(row)"
               >
                 <td class="px-4 py-3 font-bold text-slate-900">#{{ row.rank }}</td>
                 <td class="px-4 py-3 text-slate-700">

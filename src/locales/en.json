@@ -7869,6 +7869,25 @@
       "thisWeek": "This week",
       "noKkm": "No KKM"
     },
+    "studentScores": {
+      "meta": "{count} assessments graded",
+      "emptyTitle": "No progress data yet",
+      "emptyDesc": "Data appears once the student is enrolled and the first assessment is graded.",
+      "noGradedYet": "No graded assessments for this scope yet.",
+      "kpiAverage": "Average",
+      "kpiHighest": "Highest",
+      "kpiLowest": "Lowest",
+      "kpiGraded": "Graded",
+      "chartTitle": "Score trend",
+      "chartNeedsMorePoints": "At least two dated assessments are needed to draw a trend.",
+      "legendPeer": "Program peer average ({value})",
+      "passed": "Passed",
+      "belowKkm": "Below KKM",
+      "noKkm": "No KKM",
+      "legendStudent": "Student score",
+      "titleFallback": "Unnamed",
+      "kicker": "Student score detail"
+    },
     "nav": {
       "sectionPayouts": "Tutor payouts",
       "payoutRates": "Payout rates",
@@ -8064,20 +8083,7 @@
       "progress": {
         "title": "Score progress",
         "meta": "{count} graded assessments",
-        "emptyTitle": "No progress data yet",
-        "emptyDesc": "Data appears once your child is enrolled and the first assessment is graded.",
-        "noGradedYet": "No graded assessments for this scope yet.",
-        "kpiAverage": "Average",
-        "kpiHighest": "Highest",
-        "kpiLowest": "Lowest",
-        "kpiGraded": "Graded",
-        "chartTitle": "Score trend",
-        "chartNeedsMorePoints": "At least two dated assessments are needed to draw a trend.",
-        "legendChild": "Child's score",
-        "legendPeer": "Program peer average ({value})",
-        "passed": "Passed",
-        "belowKkm": "Below KKM",
-        "noKkm": "No KKM"
+        "legendChild": "Child's score"
       },
       "registerLead": {
         "title": "Register a Prospective Student",

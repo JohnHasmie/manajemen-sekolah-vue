@@ -69,6 +69,13 @@ vi.mock('@/composables/useLocaleWatcher', () => ({
   },
 }));
 
+// The board now navigates into the student drill-in, so the view calls
+// `useRouter()` at setup. Without this the mount logs an injection
+// warning and any future click test would fail confusingly.
+const push = vi.fn();
+vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }));
+
+
 describe('AdminTutoring2LeaderboardView contract', () => {
   it('exports a Vue component', () => {
     const c: DefineComponent = AdminTutoring2LeaderboardView as unknown as DefineComponent;

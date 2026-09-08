@@ -6746,20 +6746,7 @@
       "progress": {
         "title": "Perkembangan nilai",
         "meta": "{count} penilaian dinilai",
-        "emptyTitle": "Belum ada data perkembangan",
-        "emptyDesc": "Data muncul setelah anak Anda terdaftar dan penilaian pertama dinilai.",
-        "noGradedYet": "Belum ada penilaian yang dinilai untuk lingkup ini.",
-        "kpiAverage": "Rata-rata",
-        "kpiHighest": "Tertinggi",
-        "kpiLowest": "Terendah",
-        "kpiGraded": "Dinilai",
-        "chartTitle": "Tren nilai",
-        "chartNeedsMorePoints": "Butuh minimal dua penilaian bertanggal untuk menggambar tren.",
-        "legendChild": "Nilai anak",
-        "legendPeer": "Rata-rata peserta program ({value})",
-        "passed": "Tuntas",
-        "belowKkm": "Di bawah KKM",
-        "noKkm": "Tanpa KKM"
+        "legendChild": "Nilai anak"
       },
       "registerLead": {
         "title": "Daftar Calon Siswa",
@@ -7106,6 +7093,25 @@
       "student": "Siswa",
       "metaAssessments": "{count} penilaian",
       "noKkm": "Tanpa KKM"
+    },
+    "studentScores": {
+      "meta": "{count} penilaian dinilai",
+      "emptyTitle": "Belum ada data perkembangan",
+      "emptyDesc": "Data muncul setelah siswa terdaftar dan penilaian pertama dinilai.",
+      "noGradedYet": "Belum ada penilaian yang dinilai untuk lingkup ini.",
+      "kpiAverage": "Rata-rata",
+      "kpiHighest": "Tertinggi",
+      "kpiLowest": "Terendah",
+      "kpiGraded": "Dinilai",
+      "chartTitle": "Tren nilai",
+      "chartNeedsMorePoints": "Butuh minimal dua penilaian bertanggal untuk menggambar tren.",
+      "legendPeer": "Rata-rata peserta program ({value})",
+      "passed": "Tuntas",
+      "belowKkm": "Di bawah KKM",
+      "noKkm": "Tanpa KKM",
+      "legendStudent": "Nilai siswa",
+      "titleFallback": "Tanpa nama",
+      "kicker": "Detail nilai siswa"
     },
     "nav": {
       "sectionPayouts": "Pendapatan Tutor",
