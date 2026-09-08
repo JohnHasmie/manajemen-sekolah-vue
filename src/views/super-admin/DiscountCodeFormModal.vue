@@ -15,7 +15,9 @@
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Modal from '@/components/ui/Modal.vue';
+import { addDays } from '@/lib/local-date';
 import MoneyInput from '@/components/ui/MoneyInput.vue';
 import { useMoneyModel } from '@/composables/useMoneyModel';
 import { DiscountCodeService } from '@/services/discount-code.service';
@@ -36,6 +38,8 @@ const emit = defineEmits<{
   close: [];
   saved: [detail: DiscountCodeDetail];
 }>();
+
+const { t } = useI18n();
 
 const isEdit = computed(() => props.code !== null);
 
@@ -132,6 +136,32 @@ const isRenameLocked = computed(() =>
   isEdit.value && (props.code?.used_count ?? 0) > 0,
 );
 
+/**
+ * Lower bound offered by the "Berlaku sampai" picker.
+ *
+ * The backend rule is `valid_until => ['nullable', 'date', 'after:valid_from']`
+ * — STRICTLY after, in both CreateDiscountCodeRequest and
+ * UpdateDiscountCodeRequest. A same-day window is rejected with a 422.
+ *
+ * That is why this is `valid_from + 1 day` and not the bare
+ * `:min="form.valid_from || undefined"` the tutoring vouchers use. Their
+ * rule is `after_or_equal:valid_from`, so for them an inclusive `min` is
+ * an exact mirror; here it would leave the first permitted-looking day in
+ * the picker — `valid_from` itself — as the one day the API refuses. A
+ * bound that offers an invalid value is worse than no bound, because the
+ * user reasonably reads "not greyed out" as "allowed".
+ *
+ * Empty `valid_from` yields `undefined` so the attribute is OMITTED
+ * rather than rendered as `min=""`, which a browser parses as "no bound"
+ * only by accident.
+ *
+ * `addDays` does the carry on the LOCAL calendar — see local-date.ts for
+ * why the `new Date(ymd).toISOString()` shortcut is not used.
+ */
+const validUntilMin = computed<string | undefined>(() =>
+  form.value.valid_from ? addDays(form.value.valid_from, 1) : undefined,
+);
+
 // ── Submit ─────────────────────────────────────────────────────
 async function submit() {
   errorMessage.value = null;
@@ -156,6 +186,23 @@ async function submit() {
   // control is a text field now, so the cap is checked for real.
   if (form.value.value < 1 || form.value.value > valueMax.value) {
     errorMessage.value = `Nilai harus antara 1 dan ${valueMax.value.toLocaleString('id-ID')}.`;
+    return;
+  }
+  // `min` greys the impossible days out of the picker but does nothing
+  // about a TYPED one — a date input accepts any well-formed day the
+  // keyboard produces. Without this the backend answers a same-day or
+  // reversed window with a 422 the super-admin has to decode.
+  //
+  // Deliberately STRICT (`<=`, not `<`) to mirror `after:valid_from`:
+  // equal dates are a validation error here, unlike the voucher pair.
+  // Both parts are zero-padded fixed-width, so string ordering is date
+  // ordering — no Date parsing needed, and none of its UTC hazards.
+  if (
+    form.value.valid_from !== ''
+    && form.value.valid_until !== ''
+    && form.value.valid_until <= form.value.valid_from
+  ) {
+    errorMessage.value = t('superAdmin.discountCodes.errUntilNotAfterFrom');
     return;
   }
 
@@ -291,7 +338,18 @@ async function submit() {
         </div>
         <div class="dcform-row">
           <label class="dcform-lbl" for="dc-until">Berlaku sampai</label>
-          <input id="dc-until" v-model="form.valid_until" type="date" class="dcform-in" />
+          <!--
+            `min` is valid_from + 1 DAY, not valid_from: the API rule is
+            `after:valid_from` (strict), so the start day itself is not a
+            legal end day. See `validUntilMin` for the full reasoning.
+          -->
+          <input
+            id="dc-until"
+            v-model="form.valid_until"
+            type="date"
+            :min="validUntilMin"
+            class="dcform-in"
+          />
         </div>
       </div>
 

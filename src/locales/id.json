@@ -5032,6 +5032,9 @@
     "categoryImportant": "Penting"
   },
   "superAdmin": {
+    "discountCodes": {
+      "errUntilNotAfterFrom": "Tanggal \"Berlaku sampai\" harus setelah \"Berlaku sejak\" — minimal satu hari sesudahnya."
+    },
     "kicker": "Platform Super Admin",
     "schools": {
       "subtitle": "Daftar tenant platform beserta status langganan dan masa berlaku.",

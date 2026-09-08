@@ -49,6 +49,53 @@ export function toLocalYm(d: Date = new Date()): string {
 }
 
 /* ------------------------------------------------------------------ *
+ * `YYYY-MM-DD` day arithmetic
+ *
+ * The day-granularity sibling of the `YYYY-MM` block below, and it
+ * exists for the same reason: every step has to stay on the LOCAL
+ * calendar. The tempting one-liner —
+ *
+ *     new Date(ymd).toISOString().slice(0, 10)
+ *
+ * — crosses UTC twice. `new Date('2026-09-01')` is parsed as UTC
+ * midnight *by spec* (a date-only string is treated as UTC, unlike the
+ * date-time form), which is already 07:00 WIB on the 1st; serialising
+ * it back through `toISOString()` then re-reads it in UTC. The round
+ * trip happens to cancel out, so it looks correct — right up until a
+ * caller in a NEGATIVE offset (or any arithmetic in between) lands the
+ * intermediate Date on the wrong side of a midnight and the result is
+ * silently a day off.
+ *
+ * The local-component constructor has none of that ambiguity, and it
+ * normalises overflow for free: day 32 rolls into the next month, day 0
+ * into the previous one.
+ * ------------------------------------------------------------------ */
+
+/** A well-formed `YYYY-MM-DD`: 4-digit year, 01–12 month, 01–31 day. */
+export const YMD_PATTERN = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+
+export function isValidYmd(ymd: string): boolean {
+  return YMD_PATTERN.test(ymd);
+}
+
+/**
+ * Shift a `YYYY-MM-DD` by whole days, crossing month and year
+ * boundaries. Malformed input passes through unchanged — same contract
+ * as `addMonths`, so a half-typed value in a bound `v-model` degrades to
+ * "no bound" rather than to the string `NaN-aN-aN`.
+ *
+ *   addDays('2026-09-30', 1) === '2026-10-01'
+ *   addDays('2026-12-31', 1) === '2027-01-01'
+ *   addDays('2026-03-01', -1) === '2026-02-28'
+ */
+export function addDays(ymd: string, delta: number): string {
+  if (!isValidYmd(ymd)) return ymd;
+  const [y, m, d] = ymd.split('-').map(Number);
+  // Local midnight in, local calendar components out — never a UTC hop.
+  return toLocalYmd(new Date(y, m - 1, d + delta));
+}
+
+/* ------------------------------------------------------------------ *
  * `YYYY-MM` month arithmetic
  *
  * Added with the Safari month-picker fix. `<input type="month">` has no

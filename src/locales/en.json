@@ -5032,6 +5032,9 @@
     "categoryImportant": "Important"
   },
   "superAdmin": {
+    "discountCodes": {
+      "errUntilNotAfterFrom": "The \"valid until\" date must be after the \"valid from\" date — at least one day later."
+    },
     "kicker": "Platform Super Admin",
     "schools": {
       "subtitle": "All platform tenants with their subscription status and expiry.",

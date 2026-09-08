@@ -179,3 +179,77 @@ describe('toLocalYm across a UTC month boundary', () => {
     }
   });
 });
+
+/* ------------------------------------------------------------------ *
+ * `YYYY-MM-DD` day arithmetic, added with the discount-code
+ * valid_from/valid_until bound.
+ *
+ * `addDays` computes the lower bound a date picker offers, so an
+ * off-by-one here is an off-by-one in what the user is allowed to
+ * select — and the backend rule it mirrors (`after:valid_from`) has no
+ * slack: the day either is or is not legal.
+ * ------------------------------------------------------------------ */
+import { addDays, isValidYmd } from './local-date';
+
+describe('YYYY-MM-DD helpers', () => {
+  it('validates the wire shape and rejects the near-misses', () => {
+    expect(isValidYmd('2026-09-01')).toBe(true);
+    expect(isValidYmd('2026-12-31')).toBe(true);
+
+    expect(isValidYmd('2026-9-1')).toBe(false); // unpadded — what a text box used to allow
+    expect(isValidYmd('2026-13-01')).toBe(false);
+    expect(isValidYmd('2026-00-01')).toBe(false);
+    expect(isValidYmd('2026-09-00')).toBe(false);
+    expect(isValidYmd('2026-09-32')).toBe(false);
+    expect(isValidYmd('2026-09')).toBe(false);
+    expect(isValidYmd('')).toBe(false);
+  });
+
+  it('steps a day forward and back', () => {
+    expect(addDays('2026-09-01', 1)).toBe('2026-09-02');
+    expect(addDays('2026-09-02', -1)).toBe('2026-09-01');
+    expect(addDays('2026-09-01', 0)).toBe('2026-09-01');
+  });
+
+  it('carries across month, year, and leap-day boundaries', () => {
+    expect(addDays('2026-09-30', 1)).toBe('2026-10-01');
+    expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
+    expect(addDays('2026-01-01', -1)).toBe('2025-12-31');
+    expect(addDays('2026-03-01', -1)).toBe('2026-02-28'); // 2026 is not a leap year
+    expect(addDays('2024-02-28', 1)).toBe('2024-02-29'); // 2024 is
+    expect(addDays('2024-03-01', -1)).toBe('2024-02-29');
+  });
+
+  it('passes malformed input through unchanged, like addMonths', () => {
+    // A half-typed value in a bound v-model must degrade to "no bound",
+    // never to the string 'NaN-aN-aN' landing in a `min` attribute.
+    expect(addDays('2026-9-1', 1)).toBe('2026-9-1');
+    expect(addDays('', 1)).toBe('');
+    expect(addDays('rubbish', 1)).toBe('rubbish');
+  });
+
+  it('never routes through UTC — correct even where the naive parse is off by a day', () => {
+    // `addDays` reads no clock, so the hazard is not "what time is it"
+    // but "how was the STRING parsed". `new Date('2026-09-01')` is UTC
+    // midnight by spec (date-only strings are treated as UTC, unlike the
+    // date-time form) — which in any NEGATIVE offset is still the 31st
+    // locally. Anything that then reads local components off that Date
+    // silently loses a day.
+    const REAL_TZ = process.env.TZ;
+    process.env.TZ = 'America/New_York'; // UTC-4 in September
+    try {
+      // Premise, asserted so the test cannot pass vacuously if the TZ
+      // override stops taking effect.
+      const utcParsed = new Date('2026-09-01');
+      expect(utcParsed.getTimezoneOffset()).toBe(240);
+      expect(utcParsed.getDate()).toBe(31); // the trap: 31 Aug, not 1 Sep
+
+      // The helper is unaffected: it never hands the string to Date.
+      expect(addDays('2026-09-01', 1)).toBe('2026-09-02');
+      expect(addDays('2026-09-30', 1)).toBe('2026-10-01');
+      expect(addDays('2026-01-01', -1)).toBe('2025-12-31');
+    } finally {
+      process.env.TZ = REAL_TZ;
+    }
+  });
+});
