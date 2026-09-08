@@ -206,3 +206,55 @@ export function defaultMinMonth(): string {
 export function defaultMaxMonth(): string {
   return toLocalYm();
 }
+
+/* ------------------------------------------------------------------ *
+ * `<input type="datetime-local">` values
+ *
+ * Same rule as everything above, one granularity finer: the string in a
+ * datetime-local box is a LOCAL wall-clock reading with no zone, and it
+ * has to be produced from local calendar components. The tempting
+ * `iso.slice(0, 16)` and `d.toISOString().slice(0, 16)` are both wrong —
+ * they hand the user the UTC instant, so a session that starts at 08:00
+ * WIB opens its edit form showing 01:00. That is the bug that had every
+ * bimbel session time on mobile rendering seven hours early.
+ *
+ * These live here rather than beside the one screen that first needed
+ * them because a private copy in a view is how this codebase ended up
+ * with four `groupLabel()` functions that had drifted apart. There is
+ * one local-time helper module; this is it.
+ * ------------------------------------------------------------------ */
+
+/**
+ * An ISO instant → the `YYYY-MM-DDTHH:mm` a `datetime-local` input
+ * binds to, read in the browser's LOCAL zone.
+ *
+ *   '2026-09-08T08:00:00+07:00' → '2026-09-08T08:00'   (in WIB)
+ *
+ * Empty / unparseable input yields `''`, which a bound input renders as
+ * a blank box — the honest result for "we were not told when this is",
+ * and never the string `NaN-aN-aNTaN:aN`.
+ */
+export function toLocalDateTimeInput(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  );
+}
+
+/**
+ * The inverse, for the wire: `'2026-09-08T16:00'` → `'2026-09-08 16:00'`.
+ *
+ * Deliberately still zone-LESS. Laravel's `date` validation accepts this
+ * form and resolves it in the application timezone, which is what an
+ * admin means when they type 16:00. Converting to an ISO instant here
+ * would re-introduce the offset shift these helpers exist to prevent,
+ * and it is the form the shipped tutor reschedule flow already sends —
+ * so the two surfaces cannot disagree about what 16:00 means.
+ */
+export function localDateTimeInputToWire(value: string): string {
+  return value.replace('T', ' ');
+}

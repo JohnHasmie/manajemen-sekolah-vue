@@ -7306,7 +7306,8 @@
         "emptyTitle": "No sessions yet",
         "searchPh": "Search sessions…",
         "kpiInProgress": "In progress",
-        "createEmptyDesc": "Sessions can only be created for active groups. Create or activate a learning group first."
+        "createEmptyDesc": "Sessions can only be created for active groups. Create or activate a learning group first.",
+        "openDetail": "Open session detail"
       },
       "programs": {
         "emptyTitle": "No programs yet",
@@ -7660,6 +7661,21 @@
         "errProgram": "Choose a program first.",
         "success": "Group created.",
         "errorGeneric": "Could not create the group."
+      },
+      "sessionDetail": {
+        "title": "Session detail",
+        "editTitle": "Edit session",
+        "editCta": "Edit session",
+        "notFound": "Session not found",
+        "notFoundHint": "This session may have been deleted.",
+        "startsAt": "Starts",
+        "endsAt": "Ends",
+        "materialsNote": "Materials note",
+        "tutorNote": "Tutor note",
+        "saved": "Session changes saved.",
+        "scheduleLocked": "A session that is done or cancelled cannot be rescheduled. Notes can still be edited.",
+        "statusResetWarning": "This session is in progress. Changing its schedule will set its status back to Scheduled.",
+        "noManageAbility": "Your role has not been given permission to edit sessions. Ask a bimbel manager to make the change, or to add this permission to your role."
       }
     },
     "student": {

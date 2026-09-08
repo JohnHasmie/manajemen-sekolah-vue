@@ -94,6 +94,19 @@ function openCreate() {
   router.push({ name: 'admin.tutoring2.session-create' });
 }
 
+/**
+ * Opens one session's detail.
+ *
+ * Deliberately NOT gated on `tutoring.session.manage`: the detail is a
+ * read surface (`SessionController::show` authorizes on
+ * `tutoring.session.view`), and only the edit control inside it is a
+ * write. Gating the row would hide a session's room, tutor and notes
+ * from a staff tier that is entitled to read them.
+ */
+function openDetail(id: string) {
+  router.push({ name: 'admin.tutoring2.session.detail', params: { id } });
+}
+
 const search = ref('');
 // '' = "Semua". Typed against the canonical union rather than a bare
 // string, so a value the API has no status for cannot be assigned here.
@@ -308,10 +321,23 @@ function applyStatusFilter(v: string) {
               </tr>
             </thead>
             <tbody>
+              <!-- Row click opens the detail. This table had no way into
+                   one at all, which is the defect reported from prod:
+                   "list sesinya belum ada detail sesi dan edit sesi".
+                   Keyboard-reachable (`tabindex` + Enter) because a
+                   `<tr>` is not focusable on its own, and the row is the
+                   only affordance here. -->
               <tr
                 v-for="s in (data as BimbelSession[])"
                 :key="s.id"
-                class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
+                data-testid="schedule-row"
+                tabindex="0"
+                role="link"
+                :aria-label="t('tutoring2.admin.schedule.openDetail')"
+                class="cursor-pointer border-b border-slate-100 last:border-0 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cobalt"
+                @click="openDetail(s.id)"
+                @keydown.enter.prevent="openDetail(s.id)"
+                @keydown.space.prevent="openDetail(s.id)"
               >
                 <td class="px-4 py-3 font-bold text-slate-900">{{ formatWaktu(s.starts_at) }}</td>
                 <!-- Names, not ids: SessionController::index eager-loads

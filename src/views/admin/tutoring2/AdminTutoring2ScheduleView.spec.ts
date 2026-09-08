@@ -592,3 +592,69 @@ describe('AdminTutoring2ScheduleView Status chip', () => {
     expect(arg.tutor_id).toBeUndefined();
   });
 });
+
+/**
+ * Row → detail.
+ *
+ * The reported defect: "pada website di halaman sesi, list sesinya belum
+ * ada detail sesi dan edit sesi". `GET /sessions/{id}` had shipped long
+ * before, but this table offered no way to reach it — the rows carried
+ * a `hover:bg-slate-50` class and no handler at all, which reads as
+ * clickable and is not.
+ *
+ * The row is deliberately NOT ability-gated. `SessionController::show`
+ * authorizes on `tutoring.session.view`; only the EDIT control inside
+ * the detail is a write. Gating the row would hide a session's room,
+ * tutor and notes from a staff tier entitled to read them — which is
+ * why the "without manage" case below is a real assertion.
+ */
+describe('AdminTutoring2ScheduleView row → detail', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    grantedAbilities = ['tutoring.session.manage'];
+    (TutoringBimbelService.listSessions as any).mockResolvedValue({
+      items: [makeSession()],
+      pagination: undefined,
+    });
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
+    (TutoringTutorsService.list as any).mockResolvedValue({ items: TUTORS });
+  });
+
+  it('opens the session detail when a row is clicked', async () => {
+    const w = await mountView();
+
+    const row = w.find('[data-testid="schedule-row"]');
+    expect(row.exists()).toBe(true);
+
+    await row.trigger('click');
+
+    expect(push).toHaveBeenCalledWith({
+      name: 'admin.tutoring2.session.detail',
+      params: { id: makeSession().id },
+    });
+  });
+
+  it('opens it from the keyboard too', async () => {
+    const w = await mountView();
+
+    // A <tr> is not focusable on its own and the row is the only
+    // affordance here, so without `tabindex` + Enter the whole feature
+    // is mouse-only.
+    const row = w.find('[data-testid="schedule-row"]');
+    expect(row.attributes('tabindex')).toBe('0');
+
+    await row.trigger('keydown.enter');
+
+    expect(push).toHaveBeenCalledTimes(1);
+  });
+
+  it('stays reachable for a role without tutoring.session.manage', async () => {
+    grantedAbilities = [];
+    const w = await mountView();
+
+    await w.find('[data-testid="schedule-row"]').trigger('click');
+
+    // Read access is not the write gate.
+    expect(push).toHaveBeenCalledTimes(1);
+  });
+});

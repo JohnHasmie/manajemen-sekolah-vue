@@ -149,6 +149,45 @@ export interface BimbelSession {
 export type BimbelSessionStatus = BimbelSession['status'];
 
 /**
+ * The fields `PUT /tutoring-v2/sessions/{id}` may carry FROM THIS APP.
+ *
+ * `UpdateSessionRequest::rules()` also accepts `tutor_id`. It is
+ * excluded on purpose and the exclusion is enforced twice — see
+ * `TutoringBimbelService.updateSession` for the full reasoning.
+ *
+ * Every field is optional and an ABSENT key is not the same as `null`:
+ * the controller writes a column only when the key is present, so
+ * omitting `room` leaves the room untouched while sending
+ * `room: null` clears it. Callers must therefore build this object
+ * from what actually changed, not from the whole form.
+ */
+export interface BimbelSessionUpdatePayload {
+  room?: string | null;
+  materials_note?: string | null;
+  tutor_note?: string | null;
+  /**
+   * Reassigning the tutor is not part of any edit surface in this app.
+   * `never` makes `{ tutor_id: '…' }` a compile error at every call
+   * site; `BIMBEL_SESSION_UPDATE_FIELDS` stops it on the wire even when
+   * the type is cast away.
+   */
+  tutor_id?: never;
+}
+
+/**
+ * The same allowlist at RUNTIME — the half that survives an `as any`.
+ *
+ * Typed as `readonly (keyof BimbelSessionUpdatePayload)[]` so a field
+ * added to the payload interface but forgotten here is a type error at
+ * the point of use rather than a value that silently never ships.
+ */
+export const BIMBEL_SESSION_UPDATE_FIELDS = [
+  'room',
+  'materials_note',
+  'tutor_note',
+] as const satisfies readonly (keyof BimbelSessionUpdatePayload)[];
+
+/**
  * The same lifecycle, enumerable at RUNTIME.
  *
  * `BimbelSession['status']` is the canonical union — it mirrors the
@@ -345,6 +384,76 @@ export const TutoringBimbelService = {
   },
   async createSession(payload: Partial<BimbelSession>) {
     const r = await api.post<OneEnvelope<BimbelSession>>('/tutoring-v2/sessions', payload);
+    return r.data.data;
+  },
+  /**
+   * One session by id.
+   *
+   * `GET /tutoring-v2/sessions/{id}` shipped with BE-4 and had no
+   * caller: every screen that wanted a single session paged
+   * `listSessions({ per_page: 100 })` and filtered client-side, which
+   * is wrong the moment a centre has more than 100 sessions — the
+   * detail page for session 101 renders "not found" for a row the list
+   * above it just displayed.
+   *
+   * `show` is also strictly richer than a list row. It adds
+   * `attendances_count` / `attendances_present_count` via `withCount`,
+   * which `index` does not carry, and it applies the SAME
+   * `narrowToCaller` scope as the list before `findOrFail`, so an
+   * out-of-scope id 404s rather than leaking the room, the tutor and
+   * the private `tutor_note`.
+   */
+  async getSession(id: string) {
+    const r = await api.get<OneEnvelope<BimbelSession>>(`/tutoring-v2/sessions/${id}`);
+    return r.data.data;
+  },
+  /**
+   * Field edits on a session — NOT its schedule.
+   *
+   * ── Why this is a separate call from `rescheduleSession` ──
+   *
+   * The two halves of "edit a session" genuinely live on two endpoints,
+   * and neither accepts the other's fields:
+   *
+   *   PUT  /sessions/{id}             room, materials_note, tutor_note
+   *                                   (+ tutor_id — see below)
+   *   POST /sessions/{id}/reschedule  starts_at, ends_at (+ room)
+   *
+   * `SessionController::update` copies a key ONLY when
+   * `$request->has($k)`, so an omitted key is genuinely left alone in
+   * the database. That is what makes a partial payload safe here and
+   * why callers should send only what the user actually changed —
+   * sending the whole form back would re-stamp fields nobody touched.
+   *
+   * ── `room` deliberately belongs to THIS call, never to reschedule ──
+   *
+   * `room` is the one field both endpoints accept. Routing it through
+   * whichever call happens to be firing would give one field two
+   * possible writers depending on unrelated state, and when both calls
+   * fire the second would silently overwrite the first. It is pinned
+   * here instead: one field, one writer, always. `RescheduleSessionAction`
+   * only assigns room when it is non-null (`if ($room !== null)`), so
+   * omitting it there is a genuine no-op rather than a blanking.
+   *
+   * ── `tutor_id` is accepted by the endpoint and refused here ──
+   *
+   * The FormRequest allows `tutor_id`, but reassigning a session's tutor
+   * is out of scope for the edit surfaces that call this (product
+   * decision: schedule / room / notes only, because moving the tutor or
+   * the group disturbs attendance already recorded against the session).
+   * `tutor_id?: never` blocks it at compile time, and the runtime
+   * allowlist below blocks it even for a caller that cast the type away.
+   * Both halves are deliberate: the type alone would not survive an
+   * `as any`, and the allowlist alone would fail silently.
+   */
+  async updateSession(id: string, payload: BimbelSessionUpdatePayload) {
+    const body: Record<string, unknown> = {};
+    for (const k of BIMBEL_SESSION_UPDATE_FIELDS) {
+      // `in`, not a truthiness test: `null` clears a note and is a
+      // meaningful value, while an ABSENT key means "leave it alone".
+      if (k in payload) body[k] = payload[k];
+    }
+    const r = await api.put<OneEnvelope<BimbelSession>>(`/tutoring-v2/sessions/${id}`, body);
     return r.data.data;
   },
   async createRecurringSessions(payload: Record<string, unknown>) {

@@ -8,9 +8,17 @@
     3. No KPIs, no filter toolbar, no floating CTA.
 
   Data path: `TutoringBimbelService.listSessions({})` filtered client-
-  side to `s.id === route.params.id`. TODO: promote to a dedicated
-  `getSession(id)` when the service gains it (matches the pattern the
-  other tutoring-v2 endpoints already use).
+  side to `s.id === route.params.id`.
+
+  `TutoringBimbelService.getSession(id)` now EXISTS — it was added with
+  the admin session detail, which uses it. This screen has deliberately
+  not been switched over in that change: swapping the data path here is
+  a behaviour change to a tutor screen that was not part of the reported
+  defect, and it would rewrite the service mock in all four of this
+  view's spec files. It remains the right follow-up, and it is a real
+  bug rather than a tidy-up — the client-side filter returns "not found"
+  for any session past the first 100 on a busy centre, and it cannot see
+  `attendances_count`, which only `show` counts.
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -31,6 +39,14 @@ import {
   type BimbelSession,
 } from '@/services/tutoring-bimbel.service';
 import { bimbelGroupLabel, bimbelTutorLabel } from '@/lib/bimbel-session-label';
+// Shared with the admin session detail. Was a private copy here; the
+// canonical local-time helpers live in `@/lib/local-date`, and a second
+// copy of this exact ladder is how four `groupLabel()` functions once
+// drifted apart in this same feature.
+import {
+  localDateTimeInputToWire,
+  toLocalDateTimeInput,
+} from '@/lib/local-date';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -39,10 +55,9 @@ const toast = useToast();
 
 const sessionId = computed<string>(() => String(route.params.id));
 
-// TODO: swap for `TutoringBimbelService.getSession(id)` once the
-// service exposes a single-fetch endpoint. For now we page through
-// `listSessions` and filter client-side — matches the interim
-// contract the admin views use.
+// Pages `listSessions` and filters client-side. See the header
+// docblock for why this was left alone when `getSession` landed, and
+// why switching it is still worth doing.
 const { state, reload } = useDataRefresh(async () => {
   const { items } = await TutoringBimbelService.listSessions({ per_page: 100 });
   const match = items.find((s) => s.id === sessionId.value);
@@ -203,18 +218,6 @@ const rescheduleOpen = ref(false);
 const rescheduleSaving = ref(false);
 const rescheduleForm = ref({ starts_at: '', ends_at: '', room: '' });
 
-/** `2026-07-18T09:00:00+07:00` → `2026-07-18T09:00`, in LOCAL time. */
-function toLocalInput(iso: string | null | undefined): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return (
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
-    `T${pad(d.getHours())}:${pad(d.getMinutes())}`
-  );
-}
-
 function rescheduleAction() {
   const s = session.value;
   if (!s) return;
@@ -225,8 +228,8 @@ function rescheduleAction() {
   // shut for a caller the server would refuse.
   if (rescheduleBlockedReason.value) return;
   rescheduleForm.value = {
-    starts_at: toLocalInput(s.starts_at),
-    ends_at: toLocalInput(s.ends_at),
+    starts_at: toLocalDateTimeInput(s.starts_at),
+    ends_at: toLocalDateTimeInput(s.ends_at),
     room: s.room ?? '',
   };
   rescheduleOpen.value = true;
@@ -240,8 +243,8 @@ async function submitReschedule() {
   rescheduleSaving.value = true;
   try {
     await TutoringBimbelService.rescheduleSession(sessionId.value, {
-      starts_at: f.starts_at.replace('T', ' '),
-      ends_at: f.ends_at.replace('T', ' '),
+      starts_at: localDateTimeInputToWire(f.starts_at),
+      ends_at: localDateTimeInputToWire(f.ends_at),
       room: f.room.trim() || null,
     });
     rescheduleOpen.value = false;

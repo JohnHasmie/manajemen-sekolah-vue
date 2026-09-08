@@ -1558,6 +1558,38 @@ const routes: RouteRecordRaw[] = [
           ability: 'tutoring.session.manage',
         },
       },
+      // Admin session detail — the destination of a row click on the
+      // schedule list above, which had no way into a detail at all
+      // ("list sesinya belum ada detail sesi dan edit sesi").
+      //
+      // Declared AFTER `sessions/new` so the two cannot be confused by
+      // a reader: `/admin/tutoring2/sessions/new` must resolve to the
+      // create form, not to a detail for a session whose id is the
+      // literal string "new". Vue Router ranks a static segment above a
+      // param regardless of declaration order, so this ordering is for
+      // the human — `route-names-resolve.spec.ts` pins the behaviour.
+      //
+      // ── Why this route carries no `meta.ability` ──
+      //
+      // It is a READ surface. `SessionController::show` authorizes on
+      // `tutoring.session.view`, which every admin holds; the write
+      // controls INSIDE the view are gated separately on
+      // `tutoring.session.manage` through `useMe().can`, and rendered
+      // disabled-with-a-reason rather than hidden. That is exactly the
+      // shape `teacher.tutoring2.session-detail` already takes, and it
+      // is why this route is deliberately NOT added to
+      // `SESSION_WRITE_ROUTES` in `tutoring2-session-write-gate.spec.ts`:
+      // that list is for routes that ARE a write form end to end, where
+      // bouncing beats showing a form the server will refuse. Gating
+      // this one would hide the session's details from a read-only
+      // staff tier that is entitled to see them.
+      {
+        path: 'admin/tutoring2/sessions/:id',
+        name: 'admin.tutoring2.session.detail',
+        component: () => import('@/views/admin/tutoring2/AdminTutoring2SessionDetailView.vue'),
+        meta: { role: 'admin' satisfies Role, needs: 'tutoring-module' },
+        props: true,
+      },
       {
         path: 'admin/tutoring2/attendance',
         name: 'admin.tutoring2.attendance',

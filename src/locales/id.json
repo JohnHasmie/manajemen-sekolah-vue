@@ -7409,7 +7409,8 @@
         "newCta": "Buat sesi",
         "emptyTitle": "Belum ada sesi",
         "searchPh": "Cari sesi…",
-        "createEmptyDesc": "Sesi hanya bisa dibuat untuk kelompok yang aktif. Buat atau aktifkan kelompok belajar dulu."
+        "createEmptyDesc": "Sesi hanya bisa dibuat untuk kelompok yang aktif. Buat atau aktifkan kelompok belajar dulu.",
+        "openDetail": "Buka detail sesi"
       },
       "programs": {
         "title": "Program & Paket",
@@ -7843,6 +7844,21 @@
         "errProgram": "Pilih program terlebih dahulu.",
         "success": "Kelompok dibuat.",
         "errorGeneric": "Gagal membuat kelompok."
+      },
+      "sessionDetail": {
+        "title": "Detail Sesi",
+        "editTitle": "Ubah Sesi",
+        "editCta": "Ubah sesi",
+        "notFound": "Sesi tidak ditemukan",
+        "notFoundHint": "Sesi ini mungkin sudah dihapus.",
+        "startsAt": "Mulai",
+        "endsAt": "Selesai",
+        "materialsNote": "Catatan materi",
+        "tutorNote": "Catatan tutor",
+        "saved": "Perubahan sesi tersimpan.",
+        "scheduleLocked": "Sesi yang sudah selesai atau dibatalkan tidak bisa dijadwal ulang. Catatan masih bisa diubah.",
+        "statusResetWarning": "Sesi ini sedang berlangsung. Mengubah jadwal akan mengembalikan statusnya menjadi Terjadwal.",
+        "noManageAbility": "Peran Anda belum diberi izin untuk mengubah sesi. Mintalah pengelola bimbel mengubahnya, atau menambahkan izin ini ke peran Anda."
       }
     },
     "tutor": {
