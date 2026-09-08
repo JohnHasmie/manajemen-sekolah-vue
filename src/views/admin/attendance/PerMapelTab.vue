@@ -15,12 +15,21 @@ import { useRouter } from 'vue-router';
 import { AttendanceService } from '@/services/attendance.service';
 import type { AdminAttendanceSummary } from '@/types/attendance';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { toLocalYmd } from '@/lib/local-date';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 
 const router = useRouter();
 
-const date = ref<string>(new Date().toISOString().slice(0, 10));
+/**
+ * The day this tab reports on — it goes straight out as both
+ * `date_start` and `date_end`. LOCAL calendar, never
+ * `toISOString().slice(0, 10)`: the UTC day is one behind for the first
+ * seven hours of every WIB morning, so the tab would open listing
+ * YESTERDAY's sessions and the "Belum diinput guru" reminder card would
+ * chase teachers about a day they already closed.
+ */
+const date = ref<string>(toLocalYmd());
 const search = ref('');
 const filter = ref<'all' | 'filled' | 'pending'>('all');
 
@@ -92,6 +101,12 @@ async function load() {
   }
 }
 
+/**
+ * Prev/next day. The `toISOString()` pairing here is correct — see the
+ * long note on the identical stepper in `HarianTab.vue`: the UTC-midnight
+ * parse and the UTC serialization cancel out exactly, and replacing only
+ * one half of the pair introduces a bug rather than removing one.
+ */
 function stepDate(delta: number) {
   const d = new Date(date.value);
   d.setDate(d.getDate() + delta);

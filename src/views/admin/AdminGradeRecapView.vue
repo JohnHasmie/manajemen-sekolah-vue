@@ -36,6 +36,7 @@ import FilterFacetPickerModal, {
   type FacetOption,
 } from '@/components/feature/FilterFacetPickerModal.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { toLocalYmd } from '@/lib/local-date';
 
 const router = useRouter();
 const { t } = useI18n();
@@ -339,7 +340,7 @@ function exportCsv() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `rekap_nilai_overview_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `rekap_nilai_overview_${toLocalYmd()}.csv`;
   document.body.appendChild(a);
   a.click();
   a.remove();

@@ -44,6 +44,7 @@ import SubscriptionUsageBanner from '@/components/billing/SubscriptionUsageBanne
 import Toast from '@/components/ui/Toast.vue';
 import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
+import { toLocalYmd } from '@/lib/local-date';
 
 const route = useRoute();
 const { t } = useI18n();
@@ -76,7 +77,7 @@ async function printCardsForStudents(studentIds: string[], label: string) {
   if (single) printingRow.value = true;
   else printingBulk.value = true;
   try {
-    const ts = new Date().toISOString().slice(0, 10);
+    const ts = toLocalYmd();
     const filename = single
       ? `kartu-qr-${label
           .toLowerCase()

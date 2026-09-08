@@ -11,6 +11,7 @@
  * 4 views don't repeat the boilerplate.
  */
 import { api } from '@/lib/http';
+import { toLocalYmd } from '@/lib/local-date';
 
 export type AdminEntity = 'student' | 'teacher' | 'class' | 'subject' | 'staff';
 
@@ -144,7 +145,7 @@ export const AdminDataExcelService = {
       const res = await api.post(`/${entity}/export`, undefined, {
         responseType: 'blob',
       });
-      const ts = new Date().toISOString().slice(0, 10);
+      const ts = toLocalYmd();
       triggerBlobDownload(res.data as Blob, `${LABELS[entity]}-${ts}.xlsx`);
     } catch (e) {
       throw new Error(humanError(e, 'Gagal mengekspor data.'));

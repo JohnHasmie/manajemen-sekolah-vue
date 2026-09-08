@@ -33,6 +33,7 @@ import type {
   StudentCardListParams,
   StudentCardListRow,
 } from '@/types/attendance-qr';
+import { toLocalYmd } from '@/lib/local-date';
 
 const Endpoints = {
   gateQrCurrent: '/attendance/gate-qr/current',
@@ -526,7 +527,7 @@ export const AttendanceQrService = {
     // personnel-cards convention and gives the school a dated file
     // without having to rename it after download.
     const filename = suggestedName ??
-      `kartu-qr-siswa-${new Date().toISOString().slice(0, 10)}.pdf`;
+      `kartu-qr-siswa-${toLocalYmd()}.pdf`;
     try {
       const res = await api.get(Endpoints.studentCardsExportPdf, {
         params: { student_ids: studentIds },

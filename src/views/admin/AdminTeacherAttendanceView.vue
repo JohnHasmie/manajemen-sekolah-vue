@@ -490,7 +490,7 @@ async function runExport(scope: TeacherAttendanceExportScope) {
       teacher_id: undefined,
       status: filterStatus.value || undefined,
     });
-    const stamp = new Date().toISOString().slice(0, 10);
+    const stamp = toLocalYmd();
     const fallback = `Kehadiran-Pegawai-${scope}-${stamp}.xlsx`;
     triggerBlobDownload(blob, filename || fallback);
     toast.success('Export selesai. Cek folder unduhan.');

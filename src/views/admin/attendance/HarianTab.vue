@@ -29,6 +29,7 @@ import type { GateQrTokenInfo } from '@/types/attendance-qr';
 import { useMeStore } from '@/stores/me';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useToast } from '@/composables/useToast';
+import { toLocalYmd } from '@/lib/local-date';
 
 import QrcodeVue from 'qrcode.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
@@ -37,7 +38,15 @@ import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 const me = useMeStore();
 const toast = useToast();
 
-const date = ref<string>(new Date().toISOString().slice(0, 10));
+/**
+ * The day this tab reports on. LOCAL calendar, never
+ * `toISOString().slice(0, 10)` — that is the UTC day, so for the first
+ * seven hours of every WIB morning it returns YESTERDAY and the page
+ * opens on the wrong roster: today's gate check-ins are already in the
+ * database but the admin sees an empty "belum absen" list for a day
+ * that has ended.
+ */
+const date = ref<string>(toLocalYmd());
 const search = ref('');
 const statusFilter = ref<'all' | 'recorded' | 'unrecorded'>('all');
 const gradeLevel = ref<'all' | number>('all');
@@ -148,6 +157,19 @@ async function remindAll() {
   );
 }
 
+/**
+ * Prev/next day.
+ *
+ * The `toISOString()` here is deliberate and is NOT the bug fixed above
+ * — do not "sweep" it into `toLocalYmd`. `new Date('YYYY-MM-DD')` parses
+ * a date-only string as UTC midnight (ES spec), `setDate` shifts the
+ * local calendar day while preserving the local wall-clock time, and in
+ * a DST-free zone that moves the instant by exactly `delta * 24h`. The
+ * value therefore stays on UTC midnight and the round-trip is exact.
+ * Swapping in `toLocalYmd(d)` while the parse stays UTC would break the
+ * pairing: at a negative UTC offset the parsed instant lands on the
+ * PREVIOUS local day and stepping +1 would return the same date twice.
+ */
 function stepDate(delta: number) {
   const d = new Date(date.value);
   d.setDate(d.getDate() + delta);

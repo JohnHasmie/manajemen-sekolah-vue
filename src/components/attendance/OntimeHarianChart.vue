@@ -30,6 +30,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { TeacherAttendanceTimeseriesDay } from '@/types/teacher-attendance';
+import { toLocalYmd } from '@/lib/local-date';
 
 const props = withDefaults(
   defineProps<{
@@ -64,9 +65,25 @@ function barStroke(day: TeacherAttendanceTimeseriesDay): string {
   return day.is_workday ? 'transparent' : '#94a3b8'; // slate-400
 }
 
-const TODAY_ISO = new Date().toISOString().slice(0, 10);
+/**
+ * Which bar gets the dashed "today" outline.
+ *
+ * Two things were wrong with the `const TODAY_ISO = new
+ * Date().toISOString().slice(0, 10)` this replaces:
+ *
+ *   1. UTC. Before 07:00 WIB the UTC day is still yesterday, so the
+ *      marker outlined the WRONG BAR — it sat on yesterday's column
+ *      while the admin read it as "today", which is exactly backwards
+ *      on a panel whose job is to show whether today's staff have
+ *      checked in on time yet.
+ *   2. Module scope. It was evaluated once when the chunk was parsed,
+ *      so a dashboard left open overnight kept outlining the day the
+ *      tab was loaded. The `date` prop stream refreshes; the marker did
+ *      not. Resolving it per render costs one `Date` per bar and keeps
+ *      the two in step.
+ */
 function isToday(day: TeacherAttendanceTimeseriesDay): boolean {
-  return day.date === TODAY_ISO;
+  return day.date === toLocalYmd();
 }
 
 // ── Geometry ──────────────────────────────────────────────────────

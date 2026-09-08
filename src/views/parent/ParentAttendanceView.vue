@@ -25,6 +25,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
 import { useParentAttendance } from '@/composables/useParentAttendance';
 import { ParentService } from '@/services/parent.service';
+import { toLocalYm } from '@/lib/local-date';
 import type {
   ParentAttendanceEntry,
   ParentAttendanceStatus,
@@ -61,7 +62,17 @@ const isLoading = ref(true);
 const isFirstLoad = ref(true);
 const error = ref<string | null>(null);
 
-const month = ref(new Date().toISOString().slice(0, 7));
+/**
+ * Selected KPI period, `YYYY-MM`. LOCAL calendar month.
+ *
+ * `toISOString().slice(0, 7)` is the `slice(0, 10)` bug's sibling and
+ * was live here: it returns the UTC month, so between 00:00 and 06:59
+ * WIB on the 1st of any month a wali opened Kehadiran and saw LAST
+ * month — its name in the period chip, its counts in the KPI ring, and
+ * `previousMonth` shifted back with it so the delta compared the two
+ * wrong months against each other.
+ */
+const month = ref(toLocalYm());
 
 // ── Filters ───────────────────────────────────────────────────
 type StatusFilter = 'all' | ParentAttendanceStatus;

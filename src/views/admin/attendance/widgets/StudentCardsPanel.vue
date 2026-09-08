@@ -59,6 +59,7 @@ import KpiStripCards, {
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
 import EntityRow from '@/components/feature/EntityRow.vue';
 import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
+import { toLocalYmd } from '@/lib/local-date';
 
 const toast = useToast();
 const ayStore = useAcademicYearStore();
@@ -375,7 +376,7 @@ async function exportSelected() {
       // simpler toast instead of blocking the print.
       summary = '';
     }
-    const ts = new Date().toISOString().slice(0, 10);
+    const ts = toLocalYmd();
     await AttendanceQrService.exportStudentCardsPdf(
       ids,
       `kartu-qr-siswa-${ts}.pdf`,

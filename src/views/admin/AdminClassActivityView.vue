@@ -46,6 +46,7 @@ import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { subjectLabel } from '@/lib/labels';
+import { toLocalYmd } from '@/lib/local-date';
 
 // ── Reference data (filter pickers) ──
 const classes = ref<Classroom[]>([]);
@@ -323,7 +324,7 @@ function exportCsv() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `kegiatan_kelas_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `kegiatan_kelas_${toLocalYmd()}.csv`;
   document.body.appendChild(a);
   a.click();
   a.remove();

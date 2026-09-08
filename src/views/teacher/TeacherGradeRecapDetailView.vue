@@ -45,6 +45,7 @@ import GradeRecapSourcePickerModal, {
   type RecapColumnKind,
 } from '@/components/feature/GradeRecapSourcePickerModal.vue';
 import LinkMasterBanner from '@/components/feature/LinkMasterBanner.vue';
+import { toLocalYmd } from '@/lib/local-date';
 
 const route = useRoute();
 const router = useRouter();
@@ -546,7 +547,7 @@ async function exportExcel() {
       /[^A-Za-z0-9_-]/g,
       '_',
     );
-    a.download = `rekap_${safe}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    a.download = `rekap_${safe}_${toLocalYmd()}.xlsx`;
     document.body.appendChild(a);
     a.click();
     a.remove();

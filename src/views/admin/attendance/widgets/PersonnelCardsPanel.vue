@@ -37,6 +37,7 @@ import SkeletonList from '@/components/data/SkeletonList.vue';
 import PaginationWidget from '@/components/data/Pagination.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import { toLocalYmd } from '@/lib/local-date';
 
 const props = defineProps<{
   /** Server-side role filter. Teacher tab passes 'teacher', Staf passes 'staff'. */
@@ -195,7 +196,7 @@ async function exportSelectedPdf() {
   exporting.value = true;
   try {
     const ids = Array.from(selected.value);
-    const ts = new Date().toISOString().slice(0, 10);
+    const ts = toLocalYmd();
     await AttendanceQrService.exportPersonnelCardsPdf(
       ids,
       `kartu-qr-personel-${ts}.pdf`,

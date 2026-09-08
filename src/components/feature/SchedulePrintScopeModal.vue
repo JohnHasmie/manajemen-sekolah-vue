@@ -17,6 +17,7 @@ import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import { formatDayName } from '@/lib/day-name';
+import { toLocalYmd } from '@/lib/local-date';
 
 defineProps<{
   filterOptions?: ScheduleFilterOptions | null;
@@ -68,7 +69,7 @@ async function print() {
         academic_year_id: ayStore.selectedYearId ?? undefined,
         orientation: orientation.value,
       },
-      `jadwal-${scope.value}-${new Date().toISOString().slice(0, 10)}.pdf`,
+      `jadwal-${scope.value}-${toLocalYmd()}.pdf`,
     );
     emit('done');
     emit('close');
