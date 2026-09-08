@@ -130,18 +130,13 @@ function submit() {
         :options="genderOptions"
         :disabled="isSaving"
       />
-      <!-- Bespoke control through the default slot, so FormField's own
-           `field` prop never reaches an element — the id goes on the
-           input this component supplies instead. -->
-      <FormField v-model="form.date_of_birth" :label="t('common.dateOfBirth')">
-        <input
-          v-model="form.date_of_birth"
-          data-testid="field-date_of_birth"
-          type="date"
-          class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
-          :disabled="isSaving"
-        />
-      </FormField>
+      <FormField
+        field="date_of_birth"
+        v-model="form.date_of_birth"
+        type="date"
+        :label="t('common.dateOfBirth')"
+        :disabled="isSaving"
+      />
     </div>
 
     <FormField

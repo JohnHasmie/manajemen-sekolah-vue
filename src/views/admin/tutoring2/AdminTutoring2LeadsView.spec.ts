@@ -366,10 +366,15 @@ async function mountView() {
         // kept "working" — which is how a form nobody could complete
         // stayed green.
         FormField: {
-          props: ['modelValue', 'options', 'disabled', 'error', 'field'],
+          props: ['modelValue', 'options', 'disabled', 'error', 'field', 'type'],
           emits: ['update:modelValue'],
+          // `data-ff-*` mirror the props onto the DOM: a stub's props
+          // are not reachable through findComponent (VTU does not name
+          // object stubs after the key they are registered under), and
+          // "this control is FormField's own, configured by prop" is
+          // exactly what the date-field tests at the bottom assert.
           template:
-            '<div class="ff"><slot>' +
+            '<div class="ff" :data-ff-field="field" :data-ff-type="type"><slot>' +
             '<select v-if="options && options.length" :data-testid="field ? \'field-\' + field : undefined" ' +
             ':disabled="disabled" :value="modelValue" ' +
             '@change="$emit(\'update:modelValue\', $event.target.value)">' +
@@ -1222,5 +1227,113 @@ describe('AdminTutoring2LeadsView', () => {
       expect(w.find('[data-testid="lead-detail-form"]').exists()).toBe(true);
       expect(TutoringLeadsService.list).toHaveBeenCalledTimes(1); // no reload()
     });
+  });
+});
+
+/**
+ * The convert sheet's "Tanggal mulai" field.
+ *
+ * It used to supply its own `<input type="date">` through FormField's
+ * default slot, with a hand-pasted copy of FormField's control classes
+ * — written that way because `type="date"` did not exist on FormField
+ * at the time (!1267 added it).
+ *
+ * ── WHY THIS FIELD IS THE DANGEROUS ONE TO CONVERT ──
+ *
+ * Its old handler read `.value || null`, deliberately mapping an EMPTY
+ * date to `null` rather than `''`. Collapsing that to a plain
+ * `v-model` would have made a cleared field `''` instead. So the
+ * conversion keeps the long form — `:model-value` plus an explicit
+ * `@update:model-value` handler, the same idiom the package and group
+ * selects two fields up already use — rather than a bare `v-model`.
+ *
+ * ── WHAT THE WIRE TESTS BELOW DO AND DO NOT PROVE ──
+ *
+ * Be precise about this. `submitConvert` prunes a FALSY `start_date`
+ * out of the payload (`if (!payload.start_date) delete …`), and both
+ * `''` and `null` are falsy — so on the wire the cleared case is a
+ * MISSING KEY either way, and no wire assertion can tell a correct
+ * conversion from a careless one. These tests therefore do NOT go red
+ * against a naive `v-model` collapse; they pin the contract so that a
+ * future edit to either half — the handler here or the prune there —
+ * cannot quietly start sending `''` to a `date` validator.
+ *
+ * The assertion that DOES distinguish the two is the first one: the
+ * control is FormField's own now, addressed by props, with no
+ * caller-supplied input at all. That, plus the repo-wide guard in
+ * `form-field-control-chrome.spec.ts` (which names this exact line
+ * when the chrome is pasted back), is what pins the conversion itself.
+ */
+describe('AdminTutoring2LeadsView convert start date', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPickerEndpoints();
+  });
+
+  async function openConvert() {
+    (TutoringLeadsService.list as any).mockResolvedValue({
+      items: [makeConvertibleLead({ id: 'ld-date' })],
+      pagination: undefined,
+    });
+    (TutoringLeadsService.convert as any).mockResolvedValue(
+      makeConvertibleLead({ id: 'ld-date', status: 'converted' }),
+    );
+    const w = await mountView();
+    await w.get('[data-testid="lead-convert-btn"]').trigger('click');
+    await flushPromises();
+    return w;
+  }
+
+  async function submitAndReadPayload(w: any) {
+    await w.get('[data-testid="lead-convert-form"]').trigger('submit.prevent');
+    await flushPromises();
+    expect(TutoringLeadsService.convert).toHaveBeenCalledTimes(1);
+    return (TutoringLeadsService.convert as any).mock.calls[0][1];
+  }
+
+  it('renders the start date as a FormField date control, not a hand-rolled input', async () => {
+    // RED BEFORE: the sheet passed this FormField neither `field` nor
+    // `type` — it wrapped its own input — so there was no component
+    // here to find by those props.
+    const w = await openConvert();
+    const ff = w.get('[data-ff-field="start_date"]');
+    expect(ff.attributes('data-ff-type')).toBe('date');
+    // No caller-supplied control inside it — the input is the one
+    // FormField renders, and it still carries the E2E handle.
+    const inputs = ff.findAll('input');
+    expect(inputs).toHaveLength(1);
+    expect(inputs[0].attributes('data-testid')).toBe('field-start_date');
+  });
+
+  it('sends a chosen start date verbatim', async () => {
+    const w = await openConvert();
+    await pickFirstStudent(w);
+    await w.get('[data-testid="field-start_date"]').setValue('2026-10-01');
+
+    const payload = await submitAndReadPayload(w);
+    expect(payload.start_date).toBe('2026-10-01');
+  });
+
+  it('sends NO start_date when the field is cleared — never an empty string', async () => {
+    // `openConvert` prefills today's date, so this really is a clear,
+    // not a field that was never touched.
+    const w = await openConvert();
+    await pickFirstStudent(w);
+    expect(
+      (w.get('[data-testid="field-start_date"]').element as HTMLInputElement).value,
+    ).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+    await w.get('[data-testid="field-start_date"]').setValue('');
+
+    const payload = await submitAndReadPayload(w);
+    // The key is absent entirely — that is what "let the backend
+    // default it" looks like on this endpoint.
+    expect(payload).not.toHaveProperty('start_date');
+    // And explicitly not the empty string, which `start_date`'s `date`
+    // rule would reject were the prune ever loosened.
+    expect(payload.start_date).not.toBe('');
+    // Paired with a positive assertion so a payload that failed to
+    // build at all cannot pass this test.
+    expect(payload.student_id).toBe(STUDENT_ID);
   });
 });
