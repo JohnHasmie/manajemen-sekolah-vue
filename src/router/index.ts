@@ -1627,6 +1627,26 @@ const routes: RouteRecordRaw[] = [
           ability: 'tutoring.leaderboard.view',
         },
       },
+      // The Peringkat drill-in: one student's graded-score history.
+      // Reached by clicking a row on the board above, which passes the
+      // student's name in `?name=` — see the view for why the name
+      // cannot be fetched.
+      //
+      // Gated on `tutoring.score.view`, NOT on `leaderboard.view`: the
+      // payload IS scores, and the board's own key says nothing about
+      // who may read the marks behind a rank. This mirrors
+      // `StudentProgressController`, which gates on the same key and
+      // additionally narrows a tutor to the students they teach.
+      {
+        path: 'admin/tutoring2/students/:studentId/scores',
+        name: 'admin.tutoring2.student-scores',
+        component: () => import('@/views/tutoring2/Tutoring2StudentScoresView.vue'),
+        meta: {
+          role: 'admin' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.score.view',
+        },
+      },
 
       // ── Admin reports (WEB-15, BE-28) ─────────────────────────────
       // Namespace: `admin.tutoring2.reports.*` — activity/attendance/
@@ -1981,6 +2001,25 @@ const routes: RouteRecordRaw[] = [
         name: 'teacher.tutoring2.leaderboard',
         component: () => import('@/views/teacher/tutoring2/TutorTutoring2LeaderboardView.vue'),
         meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
+      },
+      // The tutor twin of `admin.tutoring2.student-scores` — same view,
+      // same ability, tinted by `meta.role`.
+      //
+      // Safe to offer even though the id travels in the URL: the tutor
+      // board is group-scoped and `LearningGroupController::index`
+      // narrows the picker to the caller's own groups, so the rows a
+      // tutor can click are exactly the students
+      // `ResolvesTutoringReadScope::tutorTeachesStudent` will authorise.
+      // A hand-typed id outside that set is a 403 from the server.
+      {
+        path: 'teacher/tutoring2/students/:studentId/scores',
+        name: 'teacher.tutoring2.student-scores',
+        component: () => import('@/views/tutoring2/Tutoring2StudentScoresView.vue'),
+        meta: {
+          role: 'teacher' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.score.view',
+        },
       },
       {
         // CLEAN-2 Phase 2 — greenfield replacement for
