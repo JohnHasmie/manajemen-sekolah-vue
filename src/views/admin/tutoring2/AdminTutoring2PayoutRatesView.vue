@@ -48,6 +48,7 @@ import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
 import { extractError } from '@/lib/api-error';
 import { toLocalYmd } from '@/lib/local-date';
+import { useMoneyModel } from '@/composables/useMoneyModel';
 import { PayoutsService } from '@/services/tutoring2/payouts';
 import { TutoringTutorsService } from '@/services/tutoring2/tutors';
 import type { StatusBadgeTone } from '@/types/status-badge';
@@ -330,6 +331,23 @@ function rateStatusTone(r: PayoutRate): StatusBadgeTone {
 
 const kindOptions = PAYOUT_RATE_KINDS.map((k) => ({ value: k, label: kindLabel(k) }));
 
+/**
+ * `per_session` and `monthly_salary` are rupiah amounts and get the
+ * thousand separators; `percent_revenue` is a 1-100 share and must not.
+ * The field is the same control either way — only the grouping differs.
+ */
+const isRupiahRate = computed(() => form.value.kind !== 'percent_revenue');
+
+// `UpsertPayoutRatePayload.value` is a plain `number`, so the empty
+// field MoneyInput reports as `null` is absorbed back to 0 here; the
+// `value <= 0` guard in submitSheet() still rejects it.
+const rateValueModel = useMoneyModel(
+  () => form.value.value,
+  (n) => {
+    form.value.value = n;
+  },
+);
+
 const valueHint = computed(() => {
   switch (form.value.kind) {
     case 'per_session': return t('tutoring2.admin.payoutRates.hintPerSession');
@@ -533,12 +551,12 @@ const valueHint = computed(() => {
           :disabled="isEditing"
         />
         <FormField
-          v-model.number="form.value"
+          v-model="rateValueModel"
           :label="t('tutoring2.admin.payoutRates.value')"
-          type="number"
+          money
+          field="value"
+          :money-grouping="isRupiahRate"
           required
-          :min="1"
-          number-model
           :placeholder="valueHint"
         />
         <p class="text-2xs text-slate-500">{{ valueHint }}</p>

@@ -262,7 +262,7 @@ describe('AdminTutoring2PayoutRatesView tutor field', () => {
 
     await tutorSelect(w).setValue('tu-2');
     // A rate also needs a positive value before submitSheet will proceed.
-    await w.find('input[type="number"]').setValue('90000');
+    await w.find('[data-testid="field-value"]').setValue('90000');
     await flushPromises();
 
     await w.findComponent({ name: 'FormSheet' }).vm.$emit('save');
@@ -383,7 +383,7 @@ describe('AdminTutoring2PayoutRatesView row actions', () => {
     expect((w.find('[data-testid="field-tutor_id"]').element as any).value).toBe('tu-1');
     expect((w.find('[data-testid="field-kind"]').element as any).value).toBe('per_session');
     expect((w.find('[data-testid="field-effective_from"]').element as any).value).toBe('2020-01-01');
-    expect((w.find('input[type="number"]').element as any).value).toBe('75000');
+    expect((w.find('[data-testid="field-value"]').element as any).value).toBe('75.000');
     // Title read off the component: the Modal stub does not render props.
     expect(w.findComponent({ name: 'FormSheet' }).props('title')).toBe('Ubah rate honor');
   });
@@ -421,7 +421,7 @@ describe('AdminTutoring2PayoutRatesView row actions', () => {
     await w.find('[data-testid="edit-ra-old"]').trigger('click');
     await flushPromises();
 
-    await w.find('input[type="number"]').setValue('90000');
+    await w.find('[data-testid="field-value"]').setValue('90000');
     await w.findComponent({ name: 'FormSheet' }).vm.$emit('save');
     await flushPromises();
 

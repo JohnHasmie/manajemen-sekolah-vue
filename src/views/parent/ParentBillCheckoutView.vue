@@ -25,6 +25,7 @@ import type { Bill, CheckoutSession, ManualBankAccount } from '@/types/billing';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import MoneyInput from '@/components/ui/MoneyInput.vue';
 import StickyActionBar from '@/components/ui/StickyActionBar.vue';
 import Toast from '@/components/ui/Toast.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
@@ -563,9 +564,8 @@ const adminFee = computed(() => {
                 <label class="text-3xs font-bold text-slate-400 uppercase tracking-widest">
                   {{ t('wali.sekolah.billCheckout.transferAmount') }}
                 </label>
-                <input
-                  v-model.number="uploadAmount"
-                  type="number"
+                <MoneyInput
+                  v-model="uploadAmount"
                   class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[14px] font-bold text-slate-900 outline-none focus:border-role-wali"
                 />
               </div>

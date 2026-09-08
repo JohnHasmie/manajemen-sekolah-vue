@@ -80,6 +80,7 @@ import AsyncView from '@/components/data/AsyncView.vue';
 import KpiStripCards, { type KpiCard } from '@/components/feature/KpiStripCards.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import MoneyInput from '@/components/ui/MoneyInput.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
@@ -250,7 +251,9 @@ const showPackageForm = ref(false);
 const savingPackage = ref(false);
 const packageForm = ref({
   name: '',
-  price: '' as string,
+  // Rupiah, so <MoneyInput> owns it: the field shows 1.500.000 while
+  // this stays 1500000, and `null` means the admin left it blank.
+  price: null as number | null,
   totalSessions: '' as string,
   modes: ['prepaid'] as BillingMode[],
 });
@@ -258,7 +261,7 @@ const packageForm = ref({
 function resetPackageForm(): void {
   packageForm.value = {
     name: '',
-    price: '',
+    price: null,
     totalSessions: '',
     modes: ['prepaid'] as BillingMode[],
   };
@@ -282,9 +285,10 @@ async function createPackage(): Promise<void> {
     return;
   }
   // v2 made `price` required (v1 allowed a priceless package) — catch
-  // it here rather than eating a 422.
-  const price = Number(packageForm.value.price);
-  if (!packageForm.value.price.trim() || !Number.isFinite(price) || price < 0) {
+  // it here rather than eating a 422. MoneyInput guarantees a whole
+  // non-negative number or null, so "blank" is the only case left.
+  const price = packageForm.value.price;
+  if (price === null) {
     toast.error(t('tutoring2.admin.programDetail.errPackagePrice'));
     return;
   }
@@ -480,10 +484,8 @@ const inputClass =
               :class="inputClass"
             />
             <div class="flex gap-2">
-              <input
+              <MoneyInput
                 v-model="packageForm.price"
-                type="number"
-                min="0"
                 :placeholder="t('tutoring2.admin.programDetail.pricePh')"
                 :class="inputClass"
               />

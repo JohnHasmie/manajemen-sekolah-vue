@@ -24,6 +24,7 @@ import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import MoneyInput from '@/components/ui/MoneyInput.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { countOrDash, EM_DASH, isCounted } from '@/lib/absent-vs-zero';
@@ -701,11 +702,12 @@ async function unarchiveVoucher(v: BimbelVoucher) {
               <span class="text-xs font-bold uppercase text-slate-500">
                 {{ form.kind === 'percent' ? t('tutoring2.admin.vouchers.formValuePercent') : t('tutoring2.admin.vouchers.formValueFixed') }}
               </span>
-              <input
-                v-model.number="form.value"
-                type="number"
-                min="1"
-                :max="form.kind === 'percent' ? 100 : undefined"
+              <!-- One control, two meanings: a `fixed` voucher is a
+                   rupiah amount and gets the thousand separators, a
+                   `percent` one is a 1-100 share and must not. -->
+              <MoneyInput
+                v-model="form.value"
+                :grouping="form.kind === 'fixed'"
                 required
                 class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-brand-cobalt focus:outline-none"
               />

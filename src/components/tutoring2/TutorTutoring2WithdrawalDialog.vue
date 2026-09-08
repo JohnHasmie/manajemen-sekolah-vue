@@ -53,6 +53,8 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
+import MoneyInput from '@/components/ui/MoneyInput.vue';
+import { useMoneyModel } from '@/composables/useMoneyModel';
 import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
 import { PayoutsService } from '@/services/tutoring2/payouts';
@@ -97,6 +99,19 @@ const errorMessage = ref<string | null>(null);
 
 const month = ref<string>(props.initialMonth ?? currentLocalMonth());
 const amount = ref<number>(props.initialEligible ?? 0);
+/**
+ * The rupiah field, grouped as the tutor types. `amount` stays a plain
+ * `number` because the quick-amount chips and the `Math.floor` on
+ * submit both write to it directly; the adapter only absorbs the `null`
+ * MoneyInput reports for a cleared field (the `amount <= 0` submit
+ * guard still catches the 0 it lands on).
+ */
+const amountModel = useMoneyModel(
+  () => amount.value,
+  (n) => {
+    amount.value = n;
+  },
+);
 const note = ref('');
 
 /** Last 6 months, newest first — all built from LOCAL date parts. */
@@ -251,12 +266,9 @@ const inputCls =
           <label for="withdrawal-amount" :class="fieldLabelCls">
             {{ t('tutoring2.common.amount') }}
           </label>
-          <input
+          <MoneyInput
             id="withdrawal-amount"
-            v-model.number="amount"
-            type="number"
-            min="1"
-            step="1"
+            v-model="amountModel"
             :class="inputCls"
           />
         </div>

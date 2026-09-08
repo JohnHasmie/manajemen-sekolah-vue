@@ -20,6 +20,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
+import MoneyInput from '@/components/ui/MoneyInput.vue';
 import { TutoringTutorsService } from '@/services/tutoring2/tutors';
 import type { Tutor } from '@/types/tutoring2/tutor';
 
@@ -33,7 +34,9 @@ const { t } = useI18n();
 const email = ref('');
 const name = ref('');
 const phone = ref('');
-const initialRate = ref<string>(''); // string-in-input; parsed on submit
+// Rupiah rate. <MoneyInput> parses as it goes, so this is already the
+// integer the invite payload wants — `null` when left blank.
+const initialRate = ref<number | null>(null);
 
 const isSaving = ref(false);
 const errorMsg = ref<string | null>(null);
@@ -55,12 +58,11 @@ async function submit() {
   isSaving.value = true;
   errorMsg.value = null;
   try {
-    const rate = initialRate.value.trim() === '' ? null : Number(initialRate.value);
     const tutor = await TutoringTutorsService.invite({
       email: email.value.trim().toLowerCase(),
       name: name.value.trim() || null,
       phone: phone.value.trim() || null,
-      initial_rate: rate != null && !Number.isNaN(rate) ? rate : null,
+      initial_rate: initialRate.value,
     });
     emit('saved', tutor);
     emit('close');
@@ -141,12 +143,8 @@ async function submit() {
           <span class="text-2xs font-bold text-slate-500 uppercase tracking-wide">
             {{ t('tutoring2.admin.tutorInvite.rateLabel') }}
           </span>
-          <input
+          <MoneyInput
             v-model="initialRate"
-            type="number"
-            min="0"
-            step="1000"
-            inputmode="numeric"
             class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
             :placeholder="t('tutoring2.admin.tutorInvite.ratePh')"
           />

@@ -234,12 +234,13 @@ const defaultKindOptions = [
               :options="defaultKindOptions"
               :disabled="!canManage"
             />
+            <!-- Rupiah threshold: `money` groups the digits as they are
+                 typed (500000 shows as 500.000) and still hands us the
+                 plain integer the PATCH body wants. -->
             <FormField
-              v-model.number="form.minimum_payout"
+              v-model="form.minimum_payout"
               :label="t('tutoring2.admin.payoutSettings.minPayoutLabel') + ' (Rp)'"
-              type="number"
-              :min="0"
-              number-model
+              money
               :disabled="!canManage"
               :placeholder="t('tutoring2.admin.payoutSettings.minPayoutPh')"
             />

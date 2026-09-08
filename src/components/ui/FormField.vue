@@ -25,6 +25,8 @@
   bespoke field as hand-rolled markup. Don't force an awkward fit.
 -->
 <script setup lang="ts">
+import MoneyInput from './MoneyInput.vue';
+
 export interface FormFieldOption {
   /** The value bound to `modelValue` when this option is chosen. */
   value: string | number;
@@ -68,6 +70,21 @@ const props = withDefaults(
     field?: string;
     /** Coerce the emitted value to a Number (mirrors v-model.number). */
     numberModel?: boolean;
+    /**
+     * Render a rupiah field: thousand separators appear as the user
+     * types while the emitted value stays a plain integer (or `null`
+     * when the field is cleared). Delegates to `<MoneyInput>`, which
+     * owns the caret handling — see that component for the contract.
+     *
+     * Implies numeric input, so `type` is ignored when this is set.
+     */
+    money?: boolean;
+    /**
+     * Turn the thousand separators off for a `money` field that is
+     * currently in a non-rupiah mode — a payout rate switched to
+     * `percent_revenue`, say. The digits-only behaviour is kept.
+     */
+    moneyGrouping?: boolean;
   }>(),
   {
     label: '',
@@ -83,11 +100,15 @@ const props = withDefaults(
     min: undefined,
     max: undefined,
     numberModel: false,
+    money: false,
+    moneyGrouping: true,
     field: '',
   },
 );
 
-const emit = defineEmits<{ 'update:modelValue': [value: string | number] }>();
+// `null` joins the union for the `money` variant: an empty rupiah field
+// must stay distinguishable from a zero one. See MoneyInput.vue.
+const emit = defineEmits<{ 'update:modelValue': [value: string | number | null] }>();
 
 // Shared control chrome — copied verbatim from the edit sheets so the
 // look is byte-for-byte identical after migration.
@@ -149,6 +170,17 @@ function onInput(event: Event) {
           {{ opt.label }}
         </option>
       </select>
+
+      <MoneyInput
+        v-else-if="money"
+        :data-testid="field ? `field-${field}` : undefined"
+        :model-value="typeof modelValue === 'number' ? modelValue : null"
+        :grouping="moneyGrouping"
+        :placeholder="placeholder"
+        :disabled="disabled"
+        :class="CONTROL_BASE"
+        @update:model-value="emit('update:modelValue', $event)"
+      />
 
       <input
         v-else

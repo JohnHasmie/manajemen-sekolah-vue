@@ -16,6 +16,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import Modal from '@/components/ui/Modal.vue';
+import MoneyInput from '@/components/ui/MoneyInput.vue';
+import { useMoneyModel } from '@/composables/useMoneyModel';
 import { DiscountCodeService } from '@/services/discount-code.service';
 import type {
   CreateDiscountCodePayload,
@@ -110,6 +112,22 @@ const valueLabel = computed(() =>
 );
 const valueMax = computed(() => (form.value.type === 'percent' ? 90 : 100_000_000));
 
+// Both fields are declared as plain `number`, so the adapter absorbs the
+// `null` MoneyInput reports for a cleared field. The `value < 1` guard
+// in submit() still rejects the 0 it lands on.
+const valueModel = useMoneyModel(
+  () => form.value.value,
+  (n) => {
+    form.value.value = n;
+  },
+);
+const minAmountModel = useMoneyModel(
+  () => form.value.min_amount_monthly,
+  (n) => {
+    form.value.min_amount_monthly = n;
+  },
+);
+
 const isRenameLocked = computed(() =>
   isEdit.value && (props.code?.used_count ?? 0) > 0,
 );
@@ -131,6 +149,13 @@ async function submit() {
   }
   if (form.value.type === 'percent' && (form.value.value < 1 || form.value.value > 90)) {
     errorMessage.value = 'Diskon persen harus antara 1-90%.';
+    return;
+  }
+  // `valueMax` used to be enforced only by the number input's `max`
+  // attribute, which browsers never applied to typing anyway. The
+  // control is a text field now, so the cap is checked for real.
+  if (form.value.value < 1 || form.value.value > valueMax.value) {
+    errorMessage.value = `Nilai harus antara 1 dan ${valueMax.value.toLocaleString('id-ID')}.`;
     return;
   }
 
@@ -222,12 +247,12 @@ async function submit() {
         </div>
         <div class="dcform-row">
           <label class="dcform-lbl" for="dc-value">{{ valueLabel }}</label>
-          <input
+          <!-- Rupiah for a `fixed` code, a 1-90 percentage otherwise;
+               only the former carries thousand separators. -->
+          <MoneyInput
             id="dc-value"
-            v-model.number="form.value"
-            type="number"
-            min="1"
-            :max="valueMax"
+            v-model="valueModel"
+            :grouping="form.type === 'fixed'"
             class="dcform-in"
           />
         </div>
@@ -272,7 +297,7 @@ async function submit() {
 
       <div class="dcform-row">
         <label class="dcform-lbl" for="dc-min">Min. belanja (Rp / bulan)</label>
-        <input id="dc-min" v-model.number="form.min_amount_monthly" type="number" min="0" class="dcform-in" />
+        <MoneyInput id="dc-min" v-model="minAmountModel" class="dcform-in" />
       </div>
 
       <div class="dcform-row">

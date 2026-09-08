@@ -6,12 +6,13 @@
     PUT    /payment-types/{id}     (edit)
 -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { FinanceService } from '@/services/finance.service';
-import { formatThousands, parseDigits } from '@/lib/format';
+import { useMoneyModel } from '@/composables/useMoneyModel';
 import type { PaymentType, PaymentTypePayload } from '@/types/billing';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
+import MoneyInput from '@/components/ui/MoneyInput.vue';
 
 const props = defineProps<{
   paymentType?: PaymentType | null;
@@ -54,18 +55,19 @@ const isSaving = ref(false);
 const err = ref<string | null>(null);
 
 /**
- * Nominal money input — shows Indonesian thousand separators as the
- * user types (`500000` → `500.000`) while `form.amount` stays the RAW
- * integer that gets submitted to the API. `amountDisplay` is the
- * formatted string bound to the (text) input; the setter strips dots
- * back to a plain int. Mirrors Flutter's `CurrencyInputFormatter`.
+ * Nominal money input. This modal grew the app's first grouped-rupiah
+ * field as a local `computed` get/set pair, which formatted correctly
+ * but pushed the caret to the end of the string on every keystroke —
+ * `<MoneyInput>` is that same idea with the caret handling it was
+ * missing, shared with every other rupiah field. `PaymentTypePayload`
+ * types `amount` as a plain `number`, hence the adapter.
  */
-const amountDisplay = computed<string>({
-  get: () => (form.value.amount ? formatThousands(form.value.amount) : ''),
-  set: (raw: string) => {
-    form.value.amount = parseDigits(raw);
+const amountModel = useMoneyModel(
+  () => form.value.amount,
+  (n) => {
+    form.value.amount = n;
   },
-});
+);
 
 // Backend stores `payment_types.period` as canonical English (monthly /
 // yearly / once). Labels stay Indonesian.
@@ -148,10 +150,8 @@ async function save() {
             <span
               class="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-bold text-slate-400 pointer-events-none"
             >Rp</span>
-            <input
-              v-model="amountDisplay"
-              type="text"
-              inputmode="numeric"
+            <MoneyInput
+              v-model="amountModel"
               placeholder="0"
               class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
             />
