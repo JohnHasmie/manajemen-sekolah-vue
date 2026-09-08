@@ -41,6 +41,7 @@ const YEAR = '[data-testid="month-picker-year"]';
 const PREV = '[data-testid="month-picker-prev-year"]';
 const NEXT = '[data-testid="month-picker-next-year"]';
 const THIS_MONTH = '[data-testid="month-picker-this-month"]';
+const ALL_ROW = '[data-testid="month-picker-all"]';
 
 /** The real shipped copy — `missingWarn: false` would hide a typo'd key. */
 function makeI18n() {
@@ -195,5 +196,50 @@ describe('MonthPickerModal', () => {
     // Never a UTC-derived year: system time is 15 Sep 2026 local.
     const w = mountPicker({ modelValue: 'not-a-month', min: '2024-01', max: '2026-09' });
     expect(w.get(YEAR).text()).toBe('2026');
+  });
+});
+
+/**
+ * `clearable` — the FILTER hosts' third state.
+ *
+ * A month field always holds a value; a month FILTER also has "none".
+ * The reset is opt-in precisely so the field hosts keep the guarantee
+ * that `apply` never hands them something their API cannot take, so
+ * both halves of that are pinned here.
+ */
+describe('MonthPickerModal · clearable', () => {
+  it('renders no reset row by default, so `apply` stays a valid YYYY-MM', async () => {
+    const w = mountPicker();
+    expect(w.find(ALL_ROW).exists()).toBe(false);
+
+    await w.findAll(CELL)[2].trigger('click');
+    expect(w.emitted('apply')[0][0]).toMatch(YM_PATTERN);
+  });
+
+  it('renders a reset row when asked, and it emits the empty string', async () => {
+    const w = mountPicker({ clearable: true, modelValue: '2026-03' });
+    expect(w.get(ALL_ROW).text()).toBe('Semua bulan');
+
+    await w.get(ALL_ROW).trigger('click');
+
+    expect(w.emitted('apply')[0][0]).toBe('');
+    // Closes behind the choice, exactly like picking a cell does.
+    expect(w.emitted('close')).toHaveLength(1);
+  });
+
+  it('marks the reset row pressed only while no month is selected', () => {
+    const chosen = mountPicker({ clearable: true, modelValue: '2026-03' });
+    expect(chosen.get(ALL_ROW).attributes('aria-pressed')).toBe('false');
+
+    const cleared = mountPicker({ clearable: true, modelValue: '' });
+    expect(cleared.get(ALL_ROW).attributes('aria-pressed')).toBe('true');
+  });
+
+  it('still opens on the current LOCAL year when the model is empty', () => {
+    const w = mountPicker({ clearable: true, modelValue: '' });
+    expect(w.get(YEAR).text()).toBe('2026');
+    expect(w.findAll(CELL)).toHaveLength(12);
+    // Nothing selected — an empty model must not light a cell up.
+    expect(w.findAll(CELL).filter((c) => c.attributes('aria-pressed') === 'true')).toHaveLength(0);
   });
 });

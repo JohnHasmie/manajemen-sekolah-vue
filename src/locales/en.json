@@ -8336,6 +8336,7 @@
     "monthPicker": {
       "title": "Select Month",
       "thisMonth": "This month",
+      "allMonths": "All months",
       "prevYear": "Previous year",
       "nextYear": "Next year",
       "openLabel": "Select month: {month}"

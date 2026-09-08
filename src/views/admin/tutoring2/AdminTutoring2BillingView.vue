@@ -35,6 +35,22 @@
   <AdminTutoring2GroupCreateSheet>), call `createBill`, gate on
   `tutoring.bill.create`, then drop `disabled` + the `title` below and
   restore the empty-state copy.
+
+  ── The Periode chip ──────────────────────────────────────────────────
+
+  It now opens <MonthPickerModal>, the same chip → per-facet-modal shape
+  the Tutor chip on AdminTutoring2PayoutRequestsView uses. Its handler
+  was `@click="monthFilter = monthFilter ? '' : toLocalYm()"`, a
+  two-value toggle: an admin could filter to THIS month or to no month
+  and could never reach any other one, even though
+  `GET /tutoring-v2/bills` takes an arbitrary `month`. The chip also
+  displayed the raw wire value ("2026-09") rather than a month name.
+
+  <MonthPickerModal> is used directly rather than through its
+  <MonthPickerField> wrapper because the chip already IS the trigger
+  chrome — the wrapper would render a second labeled button inside the
+  toolbar. `clearable` puts "Semua bulan" back, so the one thing the old
+  toggle did right (clearing) survives.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -43,13 +59,14 @@ import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import MonthPickerModal from '@/components/feature/MonthPickerModal.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
-import { toLocalYm } from '@/lib/local-date';
+import { formatYmLabel } from '@/lib/local-date';
 import {
   TutoringBimbelService,
   type BimbelBill,
@@ -57,12 +74,26 @@ import {
 } from '@/services/tutoring-bimbel.service';
 import type { StatusBadgeTone } from '@/types/status-badge';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const search = ref('');
 const statusFilter = ref<string>(''); // '' | 'unpaid' | 'paid' | 'pending' | 'partial'
 const sourceFilter = ref<string>(''); // '' | 'TUTORING_PREPAID' | 'TUTORING_MONTHLY' | 'TUTORING_SESSION'
 const monthFilter = ref<string>(''); // '' | 'YYYY-MM'
+const showMonthPicker = ref(false);
+
+const localeTag = computed(() => (locale.value === 'en' ? 'en-US' : 'id-ID'));
+
+/**
+ * The chip shows a month NAME. `formatYmLabel` is the single formatter
+ * for that, so the chip, the picker's cell labels and every other
+ * "Periode" surface in the app agree on the wording.
+ */
+const monthChipValue = computed(() =>
+  monthFilter.value
+    ? formatYmLabel(monthFilter.value, localeTag.value)
+    : t('tutoring2.common.all'),
+);
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -174,10 +205,10 @@ function billStatusLabel(status: string): string {
         />
         <AppFilterChip
           :label="t('tutoring2.common.period')"
-          :value="monthFilter || t('tutoring2.common.all')"
+          :value="monthChipValue"
           icon-name="calendar"
           :active="!!monthFilter"
-          @click="monthFilter = monthFilter ? '' : toLocalYm()"
+          @click="showMonthPicker = true"
         />
       </template>
     </PageFilterToolbar>
@@ -239,5 +270,19 @@ function billStatusLabel(status: string): string {
     <span id="billing-new-cta-reason" class="sr-only">
       {{ t('tutoring2.admin.billing.newCtaUnavailable') }}
     </span>
+
+    <!-- Periode picker. It only writes `monthFilter`; the existing
+         watcher on [search, status, source, month] does the reload, so
+         nothing calls `reload()` here — that second path is exactly how
+         a filter change ends up fetching twice. -->
+    <MonthPickerModal
+      v-if="showMonthPicker"
+      :model-value="monthFilter"
+      :title="t('tutoring2.common.period')"
+      accent="admin"
+      clearable
+      @apply="(v) => { monthFilter = v; }"
+      @close="showMonthPicker = false"
+    />
   </div>
 </template>

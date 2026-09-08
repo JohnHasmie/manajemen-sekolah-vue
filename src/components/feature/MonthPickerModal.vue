@@ -36,6 +36,23 @@
 
   Keyboard access is not lost: the trigger is a button, every month is a
   button in tab order, and Modal already closes on ESC.
+
+  ── `clearable`: the picker as a FILTER, opt-in ──
+
+  A month FIELD ("which month am I paying out?") always holds a value.
+  A month FILTER ("show me only September") has a third state: none —
+  "Semua". Filter hosts therefore need a way to emit the empty string,
+  which the grid alone can never produce.
+
+  That reset is opt-in via `clearable` rather than always-on, because
+  the field hosts (Honor Saya, Ringkasan Payout, Setelan Payout, Rekap
+  Kehadiran) rely on `apply` never handing them a value their API
+  cannot take. With the flag off, `apply` is still always a valid
+  `YYYY-MM`; only a host that asked for the reset can be given `''`.
+
+  It renders as the first row of the body, highlighted when nothing is
+  selected — the same shape and placement as FilterFacetPickerModal's
+  "Semua" row, so the two per-facet pickers read as one family.
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -71,6 +88,12 @@ const props = withDefaults(
     max?: string;
     /** Tints the selected cell to match the host page's role. */
     accent?: 'admin' | 'teacher';
+    /**
+     * Show a "Semua bulan" reset row that emits `''`.
+     * Filter hosts only — see the docblock. Off by default so field
+     * hosts keep the "`apply` is always a valid `YYYY-MM`" guarantee.
+     */
+    clearable?: boolean;
   }>(),
   {
     title: '',
@@ -78,12 +101,16 @@ const props = withDefaults(
     min: '',
     max: '',
     accent: 'admin',
+    clearable: false,
   },
 );
 
 const emit = defineEmits<{
   close: [];
-  /** The picked month, always a valid `YYYY-MM`. */
+  /**
+   * The picked month — a valid `YYYY-MM`, or `''` from the reset row,
+   * which only exists when the host passed `clearable`.
+   */
   apply: [string];
 }>();
 
@@ -176,6 +203,12 @@ function jumpToThisMonth() {
   pick(thisMonth);
 }
 
+/** "Semua bulan" — the no-month-selected state. `clearable` hosts only. */
+function clearSelection() {
+  emit('apply', '');
+  emit('close');
+}
+
 /** Left/right arrows walk months; the grid is a calendar, not a list. */
 function onGridKeydown(event: KeyboardEvent, ym: string) {
   const delta = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
@@ -201,6 +234,24 @@ function onGridKeydown(event: KeyboardEvent, ym: string) {
     @close="emit('close')"
   >
     <div class="space-y-3">
+      <!-- "Semua bulan" reset. First row + selected-when-empty styling
+           mirrors FilterFacetPickerModal's "Semua". -->
+      <button
+        v-if="clearable"
+        type="button"
+        data-testid="month-picker-all"
+        class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
+        :class="
+          modelValue === ''
+            ? 'bg-role-admin/10 text-role-admin'
+            : 'text-slate-700 hover:bg-slate-50'
+        "
+        :aria-pressed="modelValue === ''"
+        @click="clearSelection"
+      >
+        {{ t('common.monthPicker.allMonths') }}
+      </button>
+
       <!-- Year header -->
       <div class="flex items-center justify-between">
         <button

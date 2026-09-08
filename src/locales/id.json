@@ -8336,6 +8336,7 @@
     "monthPicker": {
       "title": "Pilih Bulan",
       "thisMonth": "Bulan ini",
+      "allMonths": "Semua bulan",
       "prevYear": "Tahun sebelumnya",
       "nextYear": "Tahun berikutnya",
       "openLabel": "Pilih bulan: {month}"
