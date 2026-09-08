@@ -22,6 +22,7 @@ import { TeacherService } from '@/services/teachers.service';
 import { useMeStore } from '@/stores/me';
 import { canonicalRole, ROLE_ADMIN, ROLE_TEACHER } from '@/utils/role';
 import { storage, StorageKeys } from '@/lib/storage';
+import { clearTenantScope } from '@/lib/google-redirect';
 import type { AuthResponse, AuthStep, Role, School, User } from '@/types/auth';
 
 /**
@@ -559,28 +560,81 @@ export const useAuthStore = defineStore('auth', {
 
     /**
      * Hydrate the store from a token that arrived via the Google
-     * "redirect mode" callback (App.vue's kg_token fragment
-     * handler). Unlike `restore()`, we DON'T have a cached user in
-     * local storage — the redirect callback only gives us the token.
+     * "redirect mode" callback (the kg_token fragment consumed in
+     * `lib/google-redirect.ts`). Unlike `restore()`, we do NOT have a
+     * cached user in local storage — the callback only gives us the token.
      *
      * Flow:
      *   1. Set token so subsequent /me + /user/* calls carry the
      *      Bearer header
-     *   2. Fetch /me — bare-minimum user shape (id + email + name)
+     *   2. Fetch the accessible-tenant list and drop a remembered tenant
+     *      that isn't on it (see the long comment below — this is what
+     *      keeps a previous session's `X-Tenant-ID` from 403-ing /me)
+     *   3. Fetch /me — bare-minimum user shape (id + email + name)
      *      + abilities + is_super_admin
-     *   3. Synthesize a User row with a placeholder role. Real
+     *   4. Synthesize a User row with a placeholder role. Real
      *      role/schools resolution happens in the background via
      *      hydrateSchoolsRoles(); the SubscribeView flow only needs
      *      isAuthenticated=true to render the tenant-picker banner
-     *   4. Persist to storage so a page refresh follows the normal
+     *   5. Persist to storage so a page refresh follows the normal
      *      `restore()` fast path
      *
-     * Any failure clears the token + throws — the App.vue caller
-     * shows a generic auth error and the user can retry Google.
+     * On failure this tears the half-built session down, clears the
+     * cached tenant scope, publishes a user-facing message on `this.error`
+     * (LoginView's watcher renders it as a toast) and rethrows. It also
+     * forces `step` back to 'login', the only step whose card body is an
+     * interactive form, so the user can retry immediately — the previous
+     * version threw with no visible trace at all, which is how Google
+     * sign-ins dead-ended silently on the login page.
      */
     async hydrateFromToken(token: string) {
       this.token = token;
       storage.set(StorageKeys.token, token);
+
+      // ── Tenant scope first, /me second ──────────────────────────────
+      //
+      // `storage.ts` keeps the token in sessionStorage but the school id
+      // in localStorage, so the tenant id routinely OUTLIVES the session
+      // that chose it: close the tab and the token is gone while
+      // `kamiledu.school_id` stays. `http.ts` injects that leftover as
+      // `X-Tenant-ID` on every request, and the backend's
+      // `EnsureSchoolContext` (appended to the whole `api` group) answers
+      // 403 "Anda tidak memiliki akses ke tenant ini" whenever the caller
+      // isn't an active member of it. `/me` is NOT on that middleware's
+      // bypass list, so a Google sign-in from a browser that last held a
+      // DIFFERENT account had its very first authenticated call rejected.
+      //
+      // `/user/schools` IS on the bypass list, so it answers regardless of
+      // what the stale header says. Asking it first lets us drop an
+      // unusable tenant scope before it can reach /me. Costs no extra
+      // round-trip: this list was already being fetched, just later.
+      let schools: School[] | null = null;
+      try {
+        const list = await AuthService.listSchools();
+        schools = Array.isArray(list) ? list.map(normalizeSchool) : null;
+      } catch {
+        schools = null;
+      }
+
+      const rememberedSchoolId = storage.get<string>(StorageKeys.schoolId);
+      if (schools && rememberedSchoolId) {
+        const stillAMember = schools.some(
+          (s) => (s.id ?? s.school_id) === rememberedSchoolId,
+        );
+        if (!stillAMember) {
+          // Belongs to a previous account, or to a membership that has
+          // since been deactivated. Drop the whole cached tenant scope —
+          // role and academic year are equally stale and equally sent on
+          // the wire — so the next call goes out tenant-less.
+          clearTenantScope();
+          this.schoolId = null;
+          this.role = null;
+        }
+      }
+      // Deliberately NOT pruned when the list call itself failed: without
+      // an authoritative answer, silently dropping the tenant would hand
+      // the user a working-looking dashboard with an empty ability set.
+      // Better to let /me speak, and let the failure path below recover.
 
       const meStore = useMeStore();
       let snap = null;
@@ -591,9 +645,22 @@ export const useAuthStore = defineStore('auth', {
         snap = null;
       }
       if (!snap) {
+        // Hard stop. Wipe every trace of the half-built session — most
+        // importantly the tenant scope, so the user's retry doesn't send
+        // the same rejected header and fail identically forever.
         this.token = null;
+        this.user = null;
+        this.schoolId = null;
+        this.role = null;
+        this.schools = [];
+        this.roles = [];
+        this.step = 'login';
         storage.remove(StorageKeys.token);
-        throw new Error('Gagal memuat profil pengguna setelah masuk Google.');
+        clearTenantScope();
+        const message =
+          'Gagal memuat profil pengguna setelah masuk Google. Silakan coba masuk lagi.';
+        this.error = message;
+        throw new Error(message);
       }
 
       // Synthesize the User row. Placeholder `role: 'admin'` — the
@@ -634,16 +701,8 @@ export const useAuthStore = defineStore('auth', {
       // and expects to work THERE, that reads as "the app ignored
       // what I paid for".
       //
-      // Fetch the schools list synchronously (blocking hydrateFromToken
-      // by ~one round-trip is acceptable for a login moment) so we can
-      // route into the SchoolPicker instead of the wrong dashboard.
-      let schools: School[] | null = null;
-      try {
-        const list = await AuthService.listSchools();
-        schools = Array.isArray(list) ? list.map(normalizeSchool) : null;
-      } catch {
-        schools = null;
-      }
+      // The list was already fetched above (before /me, so a stale tenant
+      // header couldn't 403 it) — reuse it here for the routing decision.
 
       if (schools && schools.length > 0) {
         this.user.schools = schools;
@@ -669,9 +728,26 @@ export const useAuthStore = defineStore('auth', {
         // the http layer will send it as X-Tenant-ID and the backend
         // resolves the tenant.
         const only = schools[0];
-        this.schoolId = only.id ?? only.school_id ?? this.schoolId;
+        const onlyId = only.id ?? only.school_id ?? this.schoolId;
+        const tenantChanged = Boolean(onlyId) && onlyId !== snap.schoolId;
+        this.schoolId = onlyId;
         if (this.schoolId) storage.set(StorageKeys.schoolId, this.schoolId);
         this.step = 'done';
+
+        if (tenantChanged) {
+          // /me answered a moment ago for a DIFFERENT tenant context than
+          // the one we just settled on — usually none at all, because a
+          // first-time Google user has no remembered school (and, since
+          // the prune above, neither does one arriving with a stale one).
+          // Its ability set is therefore empty, and `me.can()` fails
+          // closed by design: the user would reach the dashboard with an
+          // empty sidebar. Re-ask now that the tenant header will be sent.
+          const scoped = await meStore.refresh().catch(() => null);
+          if (scoped && this.user) {
+            this.user.abilities = Array.from(scoped.abilities);
+            storage.set(StorageKeys.user, this.user);
+          }
+        }
       } else {
         this.step = 'done';
       }

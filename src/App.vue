@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useTutoringThemeStore } from '@/stores/tutoring-theme';
 import { storage, StorageKeys } from '@/lib/storage';
+import { takeGoogleRedirect } from '@/lib/google-redirect';
 import SeatHardCapModal from '@/components/billing/SeatHardCapModal.vue';
 import ConfirmHost from '@/components/ui/ConfirmHost.vue';
 
@@ -11,82 +12,59 @@ const auth = useAuthStore();
 const tutoringTheme = useTutoringThemeStore();
 const router = useRouter();
 
-/**
- * Parse Google Identity Services redirect-mode fragments.
- *
- * When the backend's /auth/google-redirect endpoint finishes handling
- * a GIS redirect, it 302s the browser back to us with either
- *   #kg_token=<sanctum-pat>  → success
- *   #kg_error=<code>          → failure
- *
- * We consume the fragment here, BEFORE the auth store's restore()
- * runs, so the newly-issued token is picked up by restore() as if
- * it had been sitting in local storage the whole time.
- *
- * The fragment is stripped from the URL immediately (via history
- * replace) so a copy-paste of the URL doesn't leak the token, and
- * a page reload doesn't re-consume the same token.
- */
-function consumeGoogleRedirectFragment(): 'token_ok' | 'error' | 'none' {
-  const raw = window.location.hash;
-  if (!raw || raw.length < 2) return 'none';
-  const params = new URLSearchParams(raw.slice(1));
-  const token = params.get('kg_token');
-  const err = params.get('kg_error');
-
-  if (!token && !err) return 'none';
-
-  // Strip the fragment before doing anything else so a mid-flight
-  // exception can't leave the token visible in the URL bar.
-  history.replaceState(
-    null,
-    '',
-    window.location.pathname + window.location.search,
-  );
-
-  if (token) {
-    try {
-      storage.set(StorageKeys.token, token);
-
-      // The backend now sends routing flags alongside the token so we
-      // know BEFORE calling /me whether this user needs the demo wizard,
-      // school picker, etc.  Persist them as the sessionStorage flags
-      // that the existing onMounted routing logic already reads.
-      if (params.get('kg_dapat_buat_demo')) {
-        try { sessionStorage.setItem('demo_intent_v1', '1'); } catch { /* non-fatal */ }
-      }
-
-      return 'token_ok';
-    } catch {
-      // storage full / private mode — surface as error
-      return 'error';
-    }
-  }
-
-  // Any error branch: log for diagnostics but don't block boot.
-  // eslint-disable-next-line no-console
-  console.warn('[auth] Google redirect error:', err);
-  return 'error';
-}
-
 // Rehydrate token / user from localStorage (persisted by Pinia plugin)
 // and verify it's still valid on app boot. Mirrors Flutter's startup check
 // in main.dart → TokenService.isLoggedIn().
+//
+// The Google "redirect mode" fragment (`#kg_token=` / `#kg_error=`) was
+// already read + stripped at module scope in main.ts — BEFORE LogRocket and
+// before the router existed, so neither ever saw the PAT. Here we only act
+// on the parsed outcome. See `lib/google-redirect.ts`.
 //
 // Also kick off the bimbel theme auto-tick so the tutor surface flips
 // from dark → light at 06:00 and back at 18:30 (defaults) while the
 // app is foregrounded. No-op for users who never touch a bimbel page;
 // it's just a 60s setInterval that updates a Date ref.
 onMounted(async () => {
-  const status = consumeGoogleRedirectFragment();
-  if (status === 'token_ok') {
+  const redirect = takeGoogleRedirect();
+
+  if (redirect.kind === 'error') {
+    // Google (or the backend) refused the sign-in. This used to be a bare
+    // console.warn, which left the user staring at an unchanged login form
+    // with no idea anything had happened. Publish it to the store so
+    // LoginView's `auth.error` watcher raises the toast.
+    // eslint-disable-next-line no-console
+    console.warn('[auth] Google redirect error:', redirect.code);
+    auth.error = redirect.message;
+    auth.restore();
+    tutoringTheme.startAutoTick();
+    return;
+  }
+
+  if (redirect.kind === 'token') {
     // Fresh token from Google redirect → NO cached user in storage
     // yet, so restore()'s `token && user` guard would silently no-op.
     // hydrateFromToken fetches /me + synthesizes the user row so the
     // /subscribe page (or wherever the redirect landed) can render
     // as authenticated on this same tick.
     const token = storage.get<string>(StorageKeys.token) ?? '';
-    if (token) {
+    if (!token) {
+      // The fragment carried a token but it did not survive the round-trip
+      // through storage (blocked site data / private mode). Nothing left to
+      // authenticate with — say so rather than leaving the user staring at
+      // an unchanged login form.
+      auth.error =
+        'Sesi masuk Google tidak bisa disimpan di browser ini. Izinkan penyimpanan situs atau keluar dari mode penyamaran, lalu coba lagi.';
+    } else {
+      if (redirect.canCreateDemo) {
+        // Backend flagged the account as demo-eligible. Persist as the
+        // sessionStorage marker the routing logic below already reads.
+        try {
+          sessionStorage.setItem('demo_intent_v1', '1');
+        } catch {
+          /* non-fatal */
+        }
+      }
       try {
         await auth.hydrateFromToken(token);
         // If Google brought us back to a self-serve marketing route
@@ -138,19 +116,55 @@ onMounted(async () => {
             await router.replace('/subscribe');
           } else if (auth.step === 'school') {
             await router.replace('/login');
+          } else if (auth.step === 'done' && path === '/login') {
+            // Belt-and-braces for the success path. LoginView's own
+            // `auth.step` watcher normally does this navigation, but it
+            // only fires on a step CHANGE observed by a MOUNTED view —
+            // and LoginView is lazily imported, so a slow chunk against a
+            // fast /me leaves nobody watching. Without this branch that
+            // race ends where the failure path used to: authenticated,
+            // but parked on the login form forever. `router.replace` to
+            // the same target is a no-op, so the normal ordering costs
+            // nothing.
+            //
+            // Scoped to /login on purpose: `state` round-trips whatever
+            // path the user started from, and a deep link that came back
+            // authenticated should stay where it is, not be yanked to the
+            // dashboard.
+            await router.replace('/');
           }
         }
       } catch (err) {
+        // Hydration failed (most often /me refusing the request). The
+        // store has already torn the half-built session down, cleared the
+        // stale tenant scope that usually caused it, and published a
+        // user-facing message on `auth.error` — LoginView's watcher turns
+        // that into a toast, and the login form is interactive again so
+        // the user can retry Google immediately.
+        //
+        // The one thing the store can't do is guarantee we're on a screen
+        // that RENDERS that form: a Google round-trip can return to
+        // /subscribe or /register-demo, where a dead login attempt has
+        // nothing to show. Send those cases to /login.
         // eslint-disable-next-line no-console
         console.error('[auth] hydrateFromToken failed after Google redirect', err);
+        if (!auth.error) {
+          auth.error =
+            (err as Error)?.message ||
+            'Masuk dengan Google gagal. Silakan coba lagi.';
+        }
+        if (window.location.pathname !== '/login') {
+          await router.replace('/login');
+        }
       }
     }
-  } else {
-    // Normal boot path — either no redirect happened, or a
-    // #kg_error= arrived (already logged). restore() picks up any
-    // pre-existing session from localStorage.
-    auth.restore();
+    tutoringTheme.startAutoTick();
+    return;
   }
+
+  // Normal boot path — no redirect happened. restore() picks up any
+  // pre-existing session from storage.
+  auth.restore();
   tutoringTheme.startAutoTick();
 });
 </script>

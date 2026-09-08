@@ -237,8 +237,8 @@ function ensureInit(): Promise<void> {
         throw new Error('GIS not available after load');
       }
       if (!initialized) {
-        // GIS "redirect mode" — see App.vue's kg_token/kg_error hash
-        // handler for the return leg. Popup mode was silently failing
+        // GIS "redirect mode" — `lib/google-redirect.ts` handles the
+        // kg_token/kg_error return leg. Popup mode was silently failing
         // on some Chrome M120+ environments due to COOP enforcement on
         // the popup↔opener postMessage channel; redirect mode avoids
         // that channel entirely by navigating the whole browser to

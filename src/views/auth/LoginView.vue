@@ -151,11 +151,18 @@ watch(
 );
 
 // Surface errors raised by the store as a toast.
+//
+// `immediate` matters: a failed Google-redirect hydration is published on
+// `auth.error` from App.vue's onMounted, and this view is lazily imported,
+// so the error can already be sitting in the store by the time the view
+// mounts. A change-only watcher would never see it and the user would be
+// left on a login form that silently swallowed the failure.
 watch(
   () => auth.error,
   (msg) => {
     if (msg) toast.value = { message: msg, tone: 'error' };
   },
+  { immediate: true },
 );
 
 </script>

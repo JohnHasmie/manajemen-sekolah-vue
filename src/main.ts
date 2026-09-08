@@ -16,12 +16,32 @@ import { i18n } from './lib/i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useMeStore } from '@/stores/me';
 import { storage, StorageKeys } from '@/lib/storage';
+import { consumeGoogleRedirectFragment } from '@/lib/google-redirect';
 import {
   CHUNK_INCIDENT_EVENT,
   isChunkLoadError,
   recoverFromChunkError,
   type ChunkIncident,
 } from '@/lib/chunk-recovery';
+
+// ⚠️ ORDER IS LOAD-BEARING — this must stay the FIRST statement in main.ts.
+//
+// A Google "redirect mode" sign-in lands us on `<path>#kg_token=<sanctum-pat>`.
+// That fragment holds a live 30-day bearer token, and two things downstream
+// would otherwise record it:
+//
+//   - `LogRocket.init()` below captures the page URL as it is at init time,
+//     putting the PAT into session replay (and thus into anyone's replay of
+//     that session).
+//   - `app.use(router)` starts vue-router's initial navigation, which resolves
+//     the current location INCLUDING the hash and writes it back via
+//     history.replace when finalising. Stripping the fragment any later (it
+//     used to happen in App.vue's onMounted) got undone by that replace, which
+//     is why users stranded on /login could still see `#kg_token=` in the bar.
+//
+// Consuming it here — before both — means neither ever sees the token.
+// App.vue picks up the parsed outcome with `takeGoogleRedirect()`.
+consumeGoogleRedirectFragment();
 
 // LogRocket session replay + monitoring. Initialised as early as possible
 // so the full session is captured. Guarded to production builds only, so
