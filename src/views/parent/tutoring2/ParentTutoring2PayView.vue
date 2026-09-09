@@ -305,6 +305,17 @@ async function copyAccountNumber() {
               {{ focused.student_name }}
               <span v-if="focused.student_number" class="text-slate-400"> · {{ focused.student_number }}</span>
             </div>
+            <!-- The admin's "Keterangan". A wali paying a one-off bill
+                 has the strongest claim on knowing what it is for. Only
+                 manual bills carry one. -->
+            <div
+              v-if="focused.description"
+              data-testid="bill-description"
+              class="mt-2 whitespace-pre-line text-sm text-slate-600"
+            >
+              <span class="font-semibold text-slate-500">{{ t('tutoring2.common.billNote') }}:</span>
+              {{ focused.description }}
+            </div>
           </section>
 
           <!--

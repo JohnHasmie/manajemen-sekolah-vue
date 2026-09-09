@@ -261,7 +261,24 @@ function billStatusLabel(status: string): string {
                 :key="b.id"
                 class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
               >
-                <td class="px-4 py-3 font-semibold text-slate-900">{{ b.student_name ?? truncateId(b.student_id) }}</td>
+                <td class="px-4 py-3">
+                  <div class="font-semibold text-slate-900">{{ b.student_name ?? truncateId(b.student_id) }}</div>
+                  <!-- The admin's own "Keterangan", read back where they
+                       typed it. Without this the manual Tambah Tagihan
+                       box is write-only: the note reaches the database
+                       and is never shown again anywhere on web. Only
+                       manual bills carry one — the enrollment hook and
+                       the monthly cron raise theirs with none, so this
+                       renders nothing at all for them rather than an
+                       empty line. -->
+                  <div
+                    v-if="b.description"
+                    data-testid="bill-description"
+                    class="mt-0.5 text-xs text-slate-500"
+                  >
+                    {{ b.description }}
+                  </div>
+                </td>
                 <td class="px-4 py-3 text-slate-600">{{ b.source_label ?? b.source_type }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ b.due_date ?? '—' }}</td>
                 <td class="px-4 py-3 font-semibold text-slate-900">{{ formatRupiah(b.amount) }}</td>

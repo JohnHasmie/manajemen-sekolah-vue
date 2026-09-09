@@ -147,6 +147,17 @@ function openCheckout() {
               {{ bill.student_name }}
               <span v-if="bill.student_number" class="text-slate-400"> · {{ bill.student_number }}</span>
             </div>
+            <!-- Why this bill exists, in the admin's own words. Present
+                 only on manually-raised bills; the generated ones carry
+                 no note, so the row is omitted rather than shown blank. -->
+            <div
+              v-if="bill.description"
+              data-testid="bill-description"
+              class="mt-2 whitespace-pre-line text-sm text-slate-600"
+            >
+              <span class="font-semibold text-slate-500">{{ t('tutoring2.common.billNote') }}:</span>
+              {{ bill.description }}
+            </div>
           </section>
 
           <!-- Payment history — empty until BE-11 lands -->

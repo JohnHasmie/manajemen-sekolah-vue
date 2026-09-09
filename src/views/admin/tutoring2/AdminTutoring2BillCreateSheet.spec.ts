@@ -12,18 +12,24 @@
  *     its wire values. A test that only counted fields would not have
  *     caught it.
  *
- *  2. NO `description` KEY. The mobile form has a Deskripsi box whose
- *     value goes nowhere: no rule in `StoreBillRequest`, absent from
- *     the controller's explicit `Bill::create([…])` allowlist, no
- *     column on `bills`, no key in `BillResource`. It is omitted here
- *     on purpose, and this asserts the omission so a future "parity
- *     with mobile" pass cannot quietly re-add a field that discards
- *     what the admin types.
+ *  2. `description` — "Keterangan" — NOW REACHES THE WIRE, AND IS
+ *     BOUNDED AT THE SERVER'S OWN LIMIT. This field was deliberately
+ *     absent when the sheet shipped, because the value went nowhere:
+ *     no rule in `StoreBillRequest`, no column on `bills`, no key in
+ *     `BillResource`. All three now exist (`nullable|string|max:1000`),
+ *     so the omission is over. What is locked instead is the shape of
+ *     what gets sent, and that 1000 is read off the FormRequest rather
+ *     than picked — the sheet must refuse exactly what the server would.
  *
- *  3. A CLEARED OPTIONAL FIELD IS ABSENT, NOT `''`.
+ *  3. A CLEARED OPTIONAL FIELD IS ABSENT, NOT `''` — and that now
+ *     covers BOTH optional fields, for two different reasons.
  *     `bimbel_enrollment_id` is `nullable|uuid`; `''` is not a uuid, so
  *     posting one turns a field the admin deliberately left blank into
- *     a 422.
+ *     a 422 — a LOUD failure. `description` is `nullable|string`, which
+ *     ACCEPTS `''`, so the same mistake there is SILENT: the empty
+ *     string is stored and read back, and "no note" becomes
+ *     indistinguishable from "a note that is blank". The quiet one is
+ *     the one worth a test.
  *
  *  4. THE NOMINAL PREFILL NEVER OVERWRITES A TYPED FIGURE. A one-off
  *     bill for an amount other than the catalogue default is the
@@ -151,6 +157,9 @@ function makeI18n() {
               amountLabel: 'Nominal (Rp)',
               amountPh: 'Contoh: 350.000',
               dueDateLabel: 'Jatuh tempo',
+              descriptionLabel: 'Keterangan',
+              descriptionPh: 'Opsional',
+              errDescriptionTooLong: 'Keterangan maksimal {max} karakter.',
               errStudent: 'Pilih siswa.',
               errPaymentType: 'Pilih jenis pembayaran.',
               errAmount: 'Masukkan nominal lebih dari 0.',
@@ -188,6 +197,12 @@ async function fillValid(w, { amount = 350_000, dueDate = '2026-09-30' } = {}) {
   await sel(w, 'payment_type_id').setValue('pt-2');
   await setAmount(w, amount);
   await sel(w, 'due_date').setValue(dueDate);
+  await flushPromises();
+}
+
+/** Types into the Keterangan textarea. */
+async function setDescription(w, value) {
+  await sel(w, 'description').setValue(value);
   await flushPromises();
 }
 
@@ -257,14 +272,37 @@ describe('the submitted payload is exactly StoreBillRequest', () => {
     ]);
   });
 
-  it('never sends `description` — the field is deliberately not on this form', async () => {
+  it('offers a Keterangan box, using the mobile form\'s word', async () => {
+    const w = await mountSheet();
+
+    const field = sel(w, 'description');
+    expect(field.exists()).toBe(true);
+    // A textarea, as on mobile (`maxLines: 2`) — it holds a sentence.
+    expect(field.element.tagName).toBe('TEXTAREA');
+    // The label is KETERANGAN, not "Deskripsi": the two surfaces have
+    // to agree, and mobile's `FormTextField` says Keterangan.
+    expect(w.text()).toContain('Keterangan');
+    expect(w.text()).not.toContain('Deskripsi');
+  });
+
+  it('posts `description` once the admin types one', async () => {
     const w = await mountSheet();
     await fillValid(w);
+    await setDescription(w, 'Tambahan sesi privat 5 Sep');
     await submit(w);
 
-    expect(lastPayload()).not.toHaveProperty('description');
-    // And there is no input for it to come from.
-    expect(w.find('[data-testid="field-description"]').exists()).toBe(false);
+    expect(lastPayload().description).toBe('Tambahan sesi privat 5 Sep');
+  });
+
+  it('trims the note before sending it', async () => {
+    const w = await mountSheet();
+    await fillValid(w);
+    await setDescription(w, '   Biaya modul cetak   ');
+    await submit(w);
+
+    // The trimmed string is what `max:1000` is measured against on the
+    // server, so it is what the client must both bound and send.
+    expect(lastPayload().description).toBe('Biaya modul cetak');
   });
 
   it('omits a cleared optional field entirely rather than sending an empty string', async () => {
@@ -276,6 +314,38 @@ describe('the submitted payload is exactly StoreBillRequest', () => {
     // '' is not a uuid — sending the key at all would 422 a field the
     // admin left blank on purpose.
     expect(lastPayload()).not.toHaveProperty('bimbel_enrollment_id');
+  });
+
+  it('omits `description` entirely when the box was never touched', async () => {
+    const w = await mountSheet();
+    await fillValid(w);
+    await submit(w);
+
+    // `nullable|string` ACCEPTS `''`, so this failure mode is silent:
+    // the empty string would be stored and read back, and the bill
+    // would carry a note that is blank rather than no note at all.
+    expect(lastPayload()).not.toHaveProperty('description');
+  });
+
+  it('omits `description` when the admin types and then CLEARS it', async () => {
+    const w = await mountSheet();
+    await fillValid(w);
+    await setDescription(w, 'salah ketik');
+    await setDescription(w, '');
+    await submit(w);
+
+    expect(lastPayload()).not.toHaveProperty('description');
+  });
+
+  it('omits `description` when the box holds only whitespace', async () => {
+    const w = await mountSheet();
+    await fillValid(w);
+    await setDescription(w, '   \n  ');
+    await submit(w);
+
+    // A box that looks empty must BE empty on the wire. Trimming to ''
+    // and then sending the key would store whitespace.
+    expect(lastPayload()).not.toHaveProperty('description');
   });
 
   it('includes bimbel_enrollment_id once a pendaftaran IS chosen', async () => {
@@ -573,5 +643,73 @@ describe('after submit', () => {
 
     expect(toasts.error).toHaveBeenCalledWith('The selected payment type id is invalid.');
     expect(w.emitted('saved')).toBeFalsy();
+  });
+
+  it("puts a 422's per-field message under the field it names", async () => {
+    // A toast alone leaves the admin hunting for which of eight boxes
+    // the sentence is about.
+    TutoringBimbelService.createBill.mockRejectedValue({
+      response: {
+        status: 422,
+        data: {
+          message: 'The description may not be greater than 1000 characters.',
+          errors: {
+            description: ['The description may not be greater than 1000 characters.'],
+          },
+        },
+      },
+    });
+    const w = await mountSheet();
+    await fillValid(w);
+    await submit(w);
+
+    const field = sel(w, 'description');
+    expect(field.exists()).toBe(true);
+    expect(w.text()).toContain('The description may not be greater than 1000 characters.');
+    // The sheet stays open holding what was typed.
+    expect(w.emitted('close')).toBeFalsy();
+  });
+});
+
+// ── 8 · the Keterangan length bound ─────────────────────────────────
+
+describe('the Keterangan length bound is the server\'s own', () => {
+  /**
+   * 1000 is `StoreBillRequest`'s `description => ['nullable',
+   * 'string', 'max:1000']`, read off the FormRequest on origin/main.
+   * A client bound that disagreed with it would either refuse a note
+   * the server would have taken, or wave one through into a 422.
+   */
+  const MAX = 1000;
+
+  it('accepts a note of exactly the maximum length', async () => {
+    const w = await mountSheet();
+    await fillValid(w);
+    await setDescription(w, 'a'.repeat(MAX));
+    await submit(w);
+
+    expect(TutoringBimbelService.createBill).toHaveBeenCalledTimes(1);
+    expect(lastPayload().description).toHaveLength(MAX);
+  });
+
+  it('refuses one character over, without a round trip', async () => {
+    const w = await mountSheet();
+    await fillValid(w);
+    await setDescription(w, 'a'.repeat(MAX + 1));
+    await submit(w);
+
+    expect(TutoringBimbelService.createBill).not.toHaveBeenCalled();
+    expect(w.text()).toContain('Keterangan maksimal 1000 karakter.');
+  });
+
+  it('measures the TRIMMED text, not the raw box', async () => {
+    const w = await mountSheet();
+    await fillValid(w);
+    // 1000 real characters wrapped in whitespace the server never sees.
+    await setDescription(w, '   ' + 'a'.repeat(MAX) + '   ');
+    await submit(w);
+
+    expect(TutoringBimbelService.createBill).toHaveBeenCalledTimes(1);
+    expect(lastPayload().description).toHaveLength(MAX);
   });
 });

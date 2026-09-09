@@ -7724,7 +7724,10 @@
         "errPaymentType": "Choose a payment type.",
         "errAmount": "Enter an amount greater than 0.",
         "errDueDate": "Choose a due date.",
-        "studentSearchLabel": "Search students"
+        "studentSearchLabel": "Search students",
+        "descriptionLabel": "Note",
+        "descriptionPh": "Optional — e.g. why this bill was raised",
+        "errDescriptionTooLong": "The note may be at most {max} characters."
       },
       "groupAddStudent": {
         "title": "Add student to group",
@@ -7974,7 +7977,8 @@
       "metaSessions": "{count} sessions",
       "thisMonth": "This month",
       "thisWeek": "This week",
-      "noKkm": "No KKM"
+      "noKkm": "No KKM",
+      "billNote": "Note"
     },
     "studentScores": {
       "meta": "{count} assessments graded",

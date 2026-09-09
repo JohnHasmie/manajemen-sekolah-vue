@@ -23,6 +23,7 @@
     bimbel_enrollment_id nullable, uuid
     bimbel_session_id    nullable, uuid
     month                nullable, string max 7 (YYYY-MM)
+    description          nullable, string max 1000
     status               nullable, in unpaid|pending|partial|paid
 
   `source_type` is REQUIRED — omitting it is a 422, not a server
@@ -38,17 +39,38 @@
   bookkeeping fields is a product decision this MR does not make.
   `status` is server-defaulted to `unpaid`.
 
-  ── NO "DESKRIPSI" FIELD, DELIBERATELY ──────────────────────────────
-  The mobile sheet has one and its value goes NOWHERE. `description` has
-  no rule in `StoreBillRequest`, so `validated()` drops the key before
-  the controller sees it; the controller's explicit `Bill::create([…])`
-  allowlist omits it too; the `bills` table has no such column (the
-  controller comments say it is dropped so postgres does not 42703);
-  and `BillResource` has no such key. It survives only as a lie in
-  `Bill::$fillable`, whose docblock calls it "WRITEABLE ON EDIT".
-  Porting it here would knowingly build a SECOND input that silently
-  discards what an admin types. Whether to remove it from the mobile
-  form is a separate call and is not touched here.
+  ── "KETERANGAN", AND WHY IT WAS ABSENT UNTIL NOW ───────────────────
+  This field shipped LAST, on purpose. When this sheet was built,
+  `description` went nowhere: no rule in `StoreBillRequest`, absent
+  from the controller's `Bill::create([…])` allowlist, no column on
+  `bills`, no key in `BillResource`. The mobile sheet already had the
+  box, so its value was silently discarded; adding a second such input
+  here would have doubled the defect rather than fixed it.
+
+  That is all now live. `StoreBillRequest` validates
+  `nullable|string|max:1000` and `BillResource` emits the key
+  unconditionally, so the value survives the round trip and is read
+  back on index and show alike.
+
+  The label says KETERANGAN, matching the mobile form's `FormTextField`
+  (`admin_bills_screen.dart`) word for word. The wire key stays
+  `description` because that is what the server validates; the
+  Indonesian noun lives only in the translation VALUE.
+
+  MAX_DESCRIPTION_LENGTH is 1000, read off `StoreBillRequest` rather
+  than assumed. The bound is enforced HERE so an over-long note is
+  refused before a round trip, and the server's own 422 is mapped back
+  onto the field if one arrives anyway — see `applyServerFieldErrors`.
+
+  ── AN EMPTY OPTIONAL FIELD IS ABSENT, NOT `''` ─────────────────────
+  Both optional fields on this sheet leave the key OFF the payload when
+  blank, via the same conditional spread. `bimbel_enrollment_id` needs
+  it because `''` is not a uuid and a blank the admin left on purpose
+  would come back a 422. `description` needs it for the opposite
+  reason: `nullable|string` ACCEPTS `''`, so a cleared box would be
+  stored as an empty string and read back as one, which is not the same
+  row as "this bill has no note". Absent is the only spelling that
+  means nothing was typed.
 
   ── PICKERS, NOT TYPED IDS — AND NOT MODALS EITHER ──────────────────
   Siswa / Pendaftaran / Jenis pembayaran all choose from real API rows,
@@ -120,6 +142,13 @@ const toast = useToast();
 /** One page of picker rows. Mirrors the mobile picker's page size. */
 const PICKER_PAGE_SIZE = 50;
 
+/**
+ * Mirrors `StoreBillRequest`'s `description => max:1000`. Read off the
+ * FormRequest, not guessed — the sheet must refuse exactly what the
+ * server would, no earlier and no later.
+ */
+const MAX_DESCRIPTION_LENGTH = 1000;
+
 // ── Chosen values ───────────────────────────────────────────────────
 
 const studentId = ref('');
@@ -135,6 +164,8 @@ const paymentType = ref<BimbelPaymentTypeOption | null>(null);
 const sourceType = ref<string>('TUTORING_PREPAID');
 const amount = ref<number | null>(null);
 const dueDate = ref<string>('');
+/** Free-text "Keterangan". Optional; blank means the key is not sent. */
+const description = ref<string>('');
 
 const isSaving = ref(false);
 const errors = ref<Record<string, string>>({});
@@ -416,8 +447,41 @@ function validate(): boolean {
     next.amount = t('tutoring2.admin.billCreate.errAmount');
   }
   if (!dueDate.value) next.due_date = t('tutoring2.admin.billCreate.errDueDate');
+  // Measured on the TRIMMED text, because that is the string `submit`
+  // actually posts — bounding the raw box would refuse a note whose
+  // only excess is trailing whitespace the server never sees.
+  if (description.value.trim().length > MAX_DESCRIPTION_LENGTH) {
+    next.description = t('tutoring2.admin.billCreate.errDescriptionTooLong', {
+      max: MAX_DESCRIPTION_LENGTH,
+    });
+  }
   errors.value = next;
   return Object.keys(next).length === 0;
+}
+
+/**
+ * Put a 422's per-field wording back under the field it belongs to.
+ *
+ * `extractError` already lifts the server's FIRST message into the
+ * toast, which is the right banner-level behaviour and stays. This adds
+ * the missing half: a bag like `{description: ["…may not be greater
+ * than 1000 characters."]}` should mark the Keterangan box, not just
+ * float a sentence over a form whose fields all look fine.
+ *
+ * Keys are WIRE names, which is exactly how `errors` is keyed, so an
+ * unrecognised field simply never renders rather than needing a map.
+ */
+function applyServerFieldErrors(err: unknown): void {
+  const bag = (
+    err as { response?: { data?: { errors?: Record<string, string[]> } } }
+  )?.response?.data?.errors;
+  if (!bag) return;
+  const next = { ...errors.value };
+  for (const [field, messages] of Object.entries(bag)) {
+    const first = Array.isArray(messages) ? messages[0] : String(messages);
+    if (first) next[field] = first;
+  }
+  errors.value = next;
 }
 
 async function submit(): Promise<void> {
@@ -438,6 +502,12 @@ async function submit(): Promise<void> {
       // pendaftaran chosen" into a 422 on a field the admin left blank
       // on purpose.
       ...(enrollmentId.value ? { bimbel_enrollment_id: enrollmentId.value } : {}),
+      // ABSENT, not `''`, for the reason the header records: the server
+      // would STORE an empty string, and a bill whose note is `''`
+      // reads back differently from one that has no note at all.
+      ...(description.value.trim()
+        ? { description: description.value.trim() }
+        : {}),
     });
     toast.success(t('tutoring2.admin.billCreate.success'));
     emit('saved', bill);
@@ -447,6 +517,9 @@ async function submit(): Promise<void> {
     // missed should explain itself rather than collapse into a generic
     // failure. `extractError` is the single implementation of that.
     toast.error(extractError(err) ?? t('tutoring2.admin.billCreate.errorGeneric'));
+    // …and mark the offending field, so the admin can see WHICH box the
+    // sentence is about. The sheet stays open holding what they typed.
+    applyServerFieldErrors(err);
   } finally {
     isSaving.value = false;
   }
@@ -567,6 +640,21 @@ async function submit(): Promise<void> {
         :min="dueDateMin"
         :max="dueDateMax"
         :error="errors.due_date"
+      />
+
+      <!-- Keterangan — optional free text, the mobile sheet's wording.
+           A textarea for the same reason mobile gives it `maxLines: 2`:
+           it is a sentence about why this one-off bill exists, not a
+           label. Blank means the key never reaches the wire. -->
+      <FormField
+        v-model="description"
+        type="textarea"
+        field="description"
+        :rows="2"
+        :label="t('tutoring2.admin.billCreate.descriptionLabel')"
+        :disabled="isSaving"
+        :placeholder="t('tutoring2.admin.billCreate.descriptionPh')"
+        :error="errors.description"
       />
     </div>
   </FormSheet>

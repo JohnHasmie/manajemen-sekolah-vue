@@ -296,6 +296,14 @@ export interface BimbelBill {
   source_label?: string;
   due_date?: string | null;
   month?: string | null;
+  /**
+   * The admin's free-text "Keterangan" — why this particular bill
+   * exists. Written by the manual Tambah Tagihan sheet and read back by
+   * `BillResource`, which emits the key unconditionally (null when the
+   * column is null), so it is present on index AND show. Bills raised by
+   * the enrollment hook or the monthly cron carry none.
+   */
+  description?: string | null;
   reminder_count?: number;
   last_reminded_at?: string | null;
   created_at?: string;
@@ -647,6 +655,11 @@ export const TutoringBimbelService = {
     due_date: string;
     source_type: string;
     month?: string | null;
+    /**
+     * `nullable|string|max:1000` on `StoreBillRequest`. Callers must
+     * send it ABSENT or `null` when blank — never `''`. See the sheet.
+     */
+    description?: string | null;
     status?: string;
   }) {
     const r = await api.post<OneEnvelope<BimbelBill>>('/tutoring-v2/bills', payload);

@@ -7100,7 +7100,8 @@
       "startDate": "Mulai",
       "student": "Siswa",
       "metaAssessments": "{count} penilaian",
-      "noKkm": "Tanpa KKM"
+      "noKkm": "Tanpa KKM",
+      "billNote": "Keterangan"
     },
     "studentScores": {
       "meta": "{count} penilaian dinilai",
@@ -7908,7 +7909,10 @@
         "errPaymentType": "Pilih jenis pembayaran.",
         "errAmount": "Masukkan nominal lebih dari 0.",
         "errDueDate": "Pilih tanggal jatuh tempo.",
-        "studentSearchLabel": "Cari siswa"
+        "studentSearchLabel": "Cari siswa",
+        "descriptionLabel": "Keterangan",
+        "descriptionPh": "Opsional — misalnya alasan tagihan ini dibuat",
+        "errDescriptionTooLong": "Keterangan maksimal {max} karakter."
       },
       "groupAddStudent": {
         "title": "Tambah siswa ke kelompok",
