@@ -48,6 +48,10 @@ import Modal from '@/components/ui/Modal.vue';
 import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import {
+  bimbelSessionStatusLabel,
+  bimbelSessionStatusTone,
+} from '@/lib/bimbel-session-status';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
@@ -301,22 +305,20 @@ async function submitEdit() {
 
 // ── Display helpers ─────────────────────────────────────────────────
 
-function sessionTone(status: BimbelSession['status']): StatusBadgeTone {
-  switch (status) {
-    case 'done':
-      return 'success';
-    case 'in_progress':
-      return 'info';
-    case 'scheduled':
-      return 'neutral';
-    case 'cancelled':
-      return 'danger';
-  }
+function sessionTone(s: BimbelSession): StatusBadgeTone {
+  return bimbelSessionStatusTone(s);
 }
 
-/** Backend snake_case → the camelCase `tutoring2.status.*` keys. */
-function sessionStatusKey(status: BimbelSession['status']): string {
-  return status === 'in_progress' ? 'inProgress' : status;
+/**
+ * The status as the reader sees it, Terlewat included.
+ *
+ * Replaces a local `sessionStatusKey()` snake→camel mapper plus an
+ * inline `session.status_label ?? t(...)` in the template: the
+ * status_label precedence rule now lives in one module rather than
+ * being restated at each of a dozen badges.
+ */
+function sessionStatusText(s: BimbelSession): string {
+  return bimbelSessionStatusLabel(s, t);
 }
 
 /**
@@ -385,8 +387,8 @@ function goBack() {
               <div class="mt-1">
                 <StatusBadge
                   data-testid="session-detail-status"
-                  :label="session.status_label ?? t(`tutoring2.status.${sessionStatusKey(session.status)}`)"
-                  :tone="sessionTone(session.status)"
+                  :label="sessionStatusText(session)"
+                  :tone="sessionTone(session)"
                   uppercase
                 />
               </div>

@@ -107,6 +107,10 @@ import { TutoringLeaderboardService } from '@/services/tutoring2/leaderboard';
 import type { Activity } from '@/types/tutoring2/activity';
 import type { LeaderboardRow } from '@/types/tutoring2/leaderboard';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import {
+  bimbelSessionStatusLabel,
+  bimbelSessionStatusTone,
+} from '@/lib/bimbel-session-status';
 import AdminTutoring2GroupAddStudentSheet from './AdminTutoring2GroupAddStudentSheet.vue';
 
 const { t } = useI18n();
@@ -293,18 +297,21 @@ function enrollmentStatusTone(status: BimbelEnrollment['status']): StatusBadgeTo
   }
 }
 
-/** ⇄ AdminTutoring2ScheduleView.statusPillTone — keep in lockstep. */
-function sessionStatusTone(status: BimbelSession['status']): StatusBadgeTone {
-  switch (status) {
-    case 'scheduled':
-      return 'neutral';
-    case 'in_progress':
-      return 'info';
-    case 'done':
-      return 'success';
-    case 'cancelled':
-      return 'danger';
-  }
+/**
+ * Session status → tone.
+ *
+ * The comment that used to sit here asked the reader to keep this "in
+ * lockstep" with AdminTutoring2ScheduleView.statusPillTone. There were
+ * eleven copies, not two, so the instruction could not be followed even
+ * in principle; both now delegate to `@/lib/bimbel-session-status`.
+ */
+function sessionStatusTone(s: BimbelSession): StatusBadgeTone {
+  return bimbelSessionStatusTone(s);
+}
+
+/** Session status → label, Terlewat included. */
+function sessionStatusText(s: BimbelSession): string {
+  return bimbelSessionStatusLabel(s, t);
 }
 
 /**
@@ -506,8 +513,8 @@ function onStudentAdded(): void {
                   {{ [formatWhen(s.starts_at), durationLabel(s)].filter(Boolean).join(' · ') }}
                 </span>
                 <StatusBadge
-                  :label="s.status_label ?? t(`tutoring2.status.${s.status}`)"
-                  :tone="sessionStatusTone(s.status)"
+                  :label="sessionStatusText(s)"
+                  :tone="sessionStatusTone(s)"
                   uppercase
                 />
               </div>

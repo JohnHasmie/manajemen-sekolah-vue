@@ -114,6 +114,11 @@ import {
 import { TutoringTutorsService } from '@/services/tutoring2/tutors';
 import type { Tutor } from '@/types/tutoring2/tutor';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import {
+  bimbelSessionStatusLabel,
+  bimbelSessionStatusTone,
+  bimbelStatusLabel,
+} from '@/lib/bimbel-session-status';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -280,18 +285,24 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
-function statusLabel(status: BimbelSession['status']): string {
-  const key = status === 'in_progress' ? 'inProgress' : status;
-  return t(`tutoring2.status.${key}`);
+/**
+ * Label for one of the statuses the FILTER may query for.
+ *
+ * Takes a bare status because that is what the picker lists. It cannot
+ * produce "Terlewat" and must not: `missed` is a display state, not a
+ * value `listSessions({ status })` accepts.
+ */
+function statusLabel(status: BimbelSessionStatus): string {
+  return bimbelStatusLabel(status, t);
 }
 
-function statusPillTone(status: BimbelSession['status']): StatusBadgeTone {
-  switch (status) {
-    case 'scheduled': return 'neutral';
-    case 'in_progress': return 'info';
-    case 'done': return 'success';
-    case 'cancelled': return 'danger';
-  }
+/** Label for one ROW, which is where Terlewat can appear. */
+function rowStatusLabel(s: BimbelSession): string {
+  return bimbelSessionStatusLabel(s, t);
+}
+
+function statusPillTone(s: BimbelSession): StatusBadgeTone {
+  return bimbelSessionStatusTone(s);
 }
 
 function formatWaktu(iso: string): string {
@@ -456,7 +467,7 @@ function applyStatusFilter(v: string) {
                 <td class="px-4 py-3 text-slate-600">{{ s.tutor_name ?? truncateId(s.tutor_id) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ s.room ?? '—' }}</td>
                 <td class="px-4 py-3">
-                  <StatusBadge :label="s.status_label ?? statusLabel(s.status)" :tone="statusPillTone(s.status)" uppercase />
+                  <StatusBadge :label="rowStatusLabel(s)" :tone="statusPillTone(s)" uppercase />
                 </td>
               </tr>
             </tbody>

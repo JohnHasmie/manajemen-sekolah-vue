@@ -21,6 +21,10 @@ import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import {
+  bimbelSessionStatusLabel,
+  bimbelSessionStatusTone,
+} from '@/lib/bimbel-session-status';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { bimbelGroupLabel, bimbelTutorLabel } from '@/lib/bimbel-session-label';
 import {
@@ -46,21 +50,13 @@ const session = computed<BimbelSession | null>(() => {
   return state.value.status === 'content' ? (state.value.data as BimbelSession) : null;
 });
 
-function sessionTone(status: BimbelSession['status']): StatusBadgeTone {
-  switch (status) {
-    case 'done':
-      return 'success';
-    case 'in_progress':
-      return 'info';
-    case 'scheduled':
-      return 'neutral';
-    case 'cancelled':
-      return 'danger';
-  }
+function sessionTone(s: BimbelSession): StatusBadgeTone {
+  return bimbelSessionStatusTone(s);
 }
 
-function sessionStatusKey(status: BimbelSession['status']): string {
-  return status === 'in_progress' ? 'inProgress' : status;
+/** The status as the reader sees it, Terlewat included. */
+function sessionStatusText(s: BimbelSession): string {
+  return bimbelSessionStatusLabel(s, t);
 }
 
 function formatDateTime(iso: string): string {
@@ -111,8 +107,8 @@ const metaText = computed(() =>
                 </p>
                 <div class="mt-1">
                   <StatusBadge
-                    :label="session.status_label ?? t(`tutoring2.status.${sessionStatusKey(session.status)}`)"
-                    :tone="sessionTone(session.status)"
+                    :label="sessionStatusText(session)"
+                    :tone="sessionTone(session)"
                     uppercase
                   />
                 </div>

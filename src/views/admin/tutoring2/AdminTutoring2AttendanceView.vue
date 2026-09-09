@@ -108,6 +108,10 @@ import { TutoringTutorsService } from '@/services/tutoring2/tutors';
 import { toLocalYmd } from '@/lib/local-date';
 import type { Tutor } from '@/types/tutoring2/tutor';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import {
+  bimbelSessionStatusLabel,
+  bimbelSessionStatusTone,
+} from '@/lib/bimbel-session-status';
 
 const { t } = useI18n();
 
@@ -255,18 +259,12 @@ function presentCell(s: BimbelSession): string {
   return typeof present === 'number' ? String(present) : '—';
 }
 
-function statusLabel(status: BimbelSession['status']): string {
-  const key = status === 'in_progress' ? 'inProgress' : status;
-  return t(`tutoring2.status.${key}`);
+function statusLabel(s: BimbelSession): string {
+  return bimbelSessionStatusLabel(s, t);
 }
 
-function statusPillTone(status: BimbelSession['status']): StatusBadgeTone {
-  switch (status) {
-    case 'scheduled': return 'neutral';
-    case 'in_progress': return 'info';
-    case 'done': return 'success';
-    case 'cancelled': return 'danger';
-  }
+function statusPillTone(s: BimbelSession): StatusBadgeTone {
+  return bimbelSessionStatusTone(s);
 }
 
 function formatWaktu(iso: string): string {
@@ -334,7 +332,7 @@ function exportCsv(): void {
         typeof marks === 'number' && marks > 0 && typeof present === 'number'
           ? Math.round((present / marks) * 100)
           : '',
-      status: s.status_label ?? statusLabel(s.status),
+      status: statusLabel(s),
     };
   });
 
@@ -435,7 +433,7 @@ function exportCsv(): void {
                 <td class="px-4 py-3 text-slate-600">{{ presentCell(s) }}</td>
                 <td class="px-4 py-3 text-slate-600">{{ marksCell(s) }}</td>
                 <td class="px-4 py-3">
-                  <StatusBadge :label="s.status_label ?? statusLabel(s.status)" :tone="statusPillTone(s.status)" uppercase />
+                  <StatusBadge :label="statusLabel(s)" :tone="statusPillTone(s)" uppercase />
                 </td>
               </tr>
             </tbody>

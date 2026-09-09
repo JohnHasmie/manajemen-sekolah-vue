@@ -39,6 +39,10 @@ import Modal from '@/components/ui/Modal.vue';
 import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import {
+  bimbelSessionStatusLabel,
+  bimbelSessionStatusTone,
+} from '@/lib/bimbel-session-status';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
@@ -167,22 +171,13 @@ const actionNotices = computed<string[]>(() => {
   return [...new Set(shown.filter((r): r is string => r !== null))];
 });
 
-function sessionTone(status: BimbelSession['status']): StatusBadgeTone {
-  switch (status) {
-    case 'done':
-      return 'success';
-    case 'in_progress':
-      return 'info';
-    case 'scheduled':
-      return 'neutral';
-    case 'cancelled':
-      return 'danger';
-  }
+function sessionTone(s: BimbelSession): StatusBadgeTone {
+  return bimbelSessionStatusTone(s);
 }
 
-// Map backend status snake_case to the tutoring2.status.* camelCase keys.
-function sessionStatusKey(status: BimbelSession['status']): string {
-  return status === 'in_progress' ? 'inProgress' : status;
+/** The status as the reader sees it, Terlewat included. */
+function sessionStatusText(s: BimbelSession): string {
+  return bimbelSessionStatusLabel(s, t);
 }
 
 function formatDateTime(iso: string): string {
@@ -309,8 +304,8 @@ const metaText = computed(() =>
                 <p class="text-2xs font-bold uppercase tracking-wide text-slate-400">{{ t('tutoring2.common.status') }}</p>
                 <div class="mt-1">
                   <StatusBadge
-                    :label="session.status_label ?? t(`tutoring2.status.${sessionStatusKey(session.status)}`)"
-                    :tone="sessionTone(session.status)"
+                    :label="sessionStatusText(session)"
+                    :tone="sessionTone(session)"
                     uppercase
                   />
                 </div>

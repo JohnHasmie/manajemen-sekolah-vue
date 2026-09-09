@@ -43,6 +43,10 @@ import {
 } from '@/services/tutoring-bimbel.service';
 import type { Tutor, DeactivateTutorConflict } from '@/types/tutoring2/tutor';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import {
+  bimbelSessionStatusLabel,
+  bimbelSessionStatusTone,
+} from '@/lib/bimbel-session-status';
 import { countOrDash } from '@/lib/absent-vs-zero';
 import { formatDateTime } from '@/lib/format';
 import { toLocalYmd } from '@/lib/local-date';
@@ -173,6 +177,27 @@ async function onConfirmDeactivate() {
   } finally {
     isDeactivating.value = false;
   }
+}
+
+/**
+ * Status of ONE SESSION in the "sesi mendatang" list.
+ *
+ * Distinct names from `statusLabel` / `statusTone` above, which describe
+ * the TUTOR. The badge here used to hardcode `tone="info"` for every
+ * status and interpolate the raw snake_case key — so a cancelled session
+ * and a running one wore the same colour.
+ *
+ * This list is the surface Terlewat matters most on: it queries
+ * `listSessions({ status: 'scheduled', from: toLocalYmd() })`, so a
+ * session earlier TODAY that nobody marked still comes back and used to
+ * sit under a "mendatang" heading reading Terjadwal.
+ */
+function sessionStatusText(s: BimbelSession): string {
+  return bimbelSessionStatusLabel(s, t);
+}
+
+function sessionStatusTone(s: BimbelSession): StatusBadgeTone {
+  return bimbelSessionStatusTone(s);
 }
 
 function goToGroup(g: BimbelLearningGroup) {
@@ -329,8 +354,8 @@ function goToGroup(g: BimbelLearningGroup) {
                     </p>
                   </div>
                   <StatusBadge
-                    :label="s.status_label ?? t(`tutoring2.status.${s.status}`)"
-                    tone="info"
+                    :label="sessionStatusText(s)"
+                    :tone="sessionStatusTone(s)"
                     uppercase
                   />
                 </div>

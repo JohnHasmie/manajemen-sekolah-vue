@@ -27,6 +27,10 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Button from '@/components/ui/Button.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import {
+  bimbelSessionStatusLabel,
+  bimbelSessionStatusTone,
+} from '@/lib/bimbel-session-status';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
   TutoringBimbelService,
@@ -161,21 +165,12 @@ const grouped = computed<DayGroup[]>(() => {
     }));
 });
 
-function sessionTone(status: BimbelSession['status']): StatusBadgeTone {
-  switch (status) {
-    case 'done':
-      return 'success';
-    case 'in_progress':
-      return 'info';
-    case 'scheduled':
-      return 'neutral';
-    case 'cancelled':
-      return 'danger';
-  }
+function sessionTone(s: BimbelSession): StatusBadgeTone {
+  return bimbelSessionStatusTone(s);
 }
 
-function statusLabel(status: BimbelSession['status']): string {
-  return t(`tutoring2.status.${status === 'in_progress' ? 'inProgress' : status}`);
+function statusLabel(s: BimbelSession): string {
+  return bimbelSessionStatusLabel(s, t);
 }
 
 function openDetail(id: string) {
@@ -297,8 +292,8 @@ const periodeChipValue = computed(() => {
                     </p>
                   </div>
                   <StatusBadge
-                    :label="s.status_label ?? statusLabel(s.status)"
-                    :tone="sessionTone(s.status)"
+                    :label="statusLabel(s)"
+                    :tone="sessionTone(s)"
                     uppercase
                   />
                   <Button variant="secondary" size="sm" @click="openDetail(s.id)">

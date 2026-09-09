@@ -6966,6 +6966,7 @@
       "withdrawn": "Keluar",
       "inProgress": "Berlangsung",
       "scheduled": "Terjadwal",
+      "missed": "Terlewat",
       "published": "Terbit",
       "cancelled": "Dibatalkan",
       "overdue": "Menunggak",

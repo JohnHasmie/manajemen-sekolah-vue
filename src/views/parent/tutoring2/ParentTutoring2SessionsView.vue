@@ -66,6 +66,10 @@ import {
   type BimbelSession,
 } from '@/services/tutoring-bimbel.service';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import {
+  bimbelSessionStatusLabel,
+  bimbelSessionStatusTone,
+} from '@/lib/bimbel-session-status';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -324,40 +328,31 @@ function subtitle(s: BimbelSession): string {
   );
 }
 
-function statusLabel(status: BimbelSession['status']): string {
-  switch (status) {
-    case 'done':
-      return t('tutoring2.status.done');
-    case 'in_progress':
-      return t('tutoring2.status.inProgress');
-    case 'cancelled':
-      return t('tutoring2.status.cancelled');
-    case 'scheduled':
-      return t('tutoring2.status.scheduled');
-  }
+/**
+ * Session status → label.
+ *
+ * Also fixes a quieter bug: this was the ONE session badge in the app
+ * that never consulted `s.status_label`, so a label the server took the
+ * trouble to send was dropped for the wali and nobody else.
+ */
+function statusLabel(s: BimbelSession): string {
+  return bimbelSessionStatusLabel(s, t);
 }
 
 /**
- * Session-status → tone. Kept byte-identical to `sessionTone` in
- * TutorTutoring2SessionsView and `statusPillTone` in
- * AdminTutoring2ScheduleView so one session reads the same colour to
- * wali, tutor and admin. If you change one, change all three.
+ * Session status → tone.
  *
- * (Note the sibling ParentTutoring2AttendanceView maps these same four
- * values differently on purpose — there they stand in for PRESENCE
- * buckets, not for the session's own lifecycle.)
+ * The comment that used to sit here asked the reader to keep this
+ * "byte-identical" to two named siblings and to "change all three"
+ * together. There were eleven, so that could not be done; all of them
+ * now delegate to `@/lib/bimbel-session-status`.
+ *
+ * (The sibling ParentTutoring2AttendanceView maps these same four values
+ * differently on purpose — there they stand in for PRESENCE buckets, not
+ * for the session's own lifecycle.)
  */
-function statusTone(status: BimbelSession['status']): StatusBadgeTone {
-  switch (status) {
-    case 'done':
-      return 'success';
-    case 'in_progress':
-      return 'info';
-    case 'scheduled':
-      return 'neutral';
-    case 'cancelled':
-      return 'danger';
-  }
+function statusTone(s: BimbelSession): StatusBadgeTone {
+  return bimbelSessionStatusTone(s);
 }
 </script>
 
@@ -421,8 +416,8 @@ function statusTone(status: BimbelSession['status']): StatusBadgeTone {
                     <p class="truncate text-2xs text-slate-500">{{ subtitle(s) }}</p>
                   </div>
                   <StatusBadge
-                    :label="statusLabel(s.status)"
-                    :tone="statusTone(s.status)"
+                    :label="statusLabel(s)"
+                    :tone="statusTone(s)"
                     uppercase
                   />
                 </li>

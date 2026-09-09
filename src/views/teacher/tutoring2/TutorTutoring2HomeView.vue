@@ -13,6 +13,10 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Button from '@/components/ui/Button.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import {
+  bimbelSessionStatusLabel,
+  bimbelSessionStatusTone,
+} from '@/lib/bimbel-session-status';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { toLocalYmd } from '@/lib/local-date';
 import {
@@ -52,13 +56,8 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
-function sessionTone(status: BimbelSession['status']): StatusBadgeTone {
-  switch (status) {
-    case 'done': return 'success';
-    case 'in_progress': return 'info';
-    case 'scheduled': return 'neutral';
-    case 'cancelled': return 'danger';
-  }
+function sessionTone(s: BimbelSession): StatusBadgeTone {
+  return bimbelSessionStatusTone(s);
 }
 
 function formatTime(iso: string): string {
@@ -69,8 +68,8 @@ function openSession(id: string) {
   router.push({ name: 'teacher.tutoring2.session-detail', params: { id } });
 }
 
-function statusLabel(status: BimbelSession['status']): string {
-  return t(`tutoring2.status.${status === 'in_progress' ? 'inProgress' : status}`);
+function statusLabel(s: BimbelSession): string {
+  return bimbelSessionStatusLabel(s, t);
 }
 </script>
 
@@ -111,7 +110,7 @@ function statusLabel(status: BimbelSession['status']): string {
                 <p class="truncate text-sm font-bold text-slate-900">{{ bimbelGroupLabel(s, t('tutoring2.common.group')) }}</p>
                 <p class="truncate text-2xs text-slate-500">{{ s.room ?? '—' }}</p>
               </div>
-              <StatusBadge :label="s.status_label ?? statusLabel(s.status)" :tone="sessionTone(s.status)" uppercase />
+              <StatusBadge :label="statusLabel(s)" :tone="sessionTone(s)" uppercase />
               <Button
                 v-if="s.status === 'in_progress' || s.status === 'scheduled'"
                 variant="primary"
