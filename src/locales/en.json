@@ -7613,7 +7613,8 @@
         "durationMinutes": "{count} min",
         "submissionsCount": "{count} submissions",
         "thAvgScore": "Average",
-        "thAssessmentsTaken": "Assessments taken"
+        "thAssessmentsTaken": "Assessments taken",
+        "addStudentCta": "+ Add student"
       },
       "programDetail": {
         "kicker": "Program detail",
@@ -7719,6 +7720,31 @@
         "errAmount": "Enter an amount greater than 0.",
         "errDueDate": "Choose a due date.",
         "studentSearchLabel": "Search students"
+      },
+      "groupAddStudent": {
+        "title": "Add student to group",
+        "subtitle": "The student is enrolled straight into {group}.",
+        "submit": "Add",
+        "studentSearchLabel": "Search students",
+        "studentSearchPh": "Name, student number, or guardian name…",
+        "studentPh": "Choose a student",
+        "studentsNone": "No students left to add. Everyone in these search results is already enrolled in this group.",
+        "studentsAlreadyEnrolled": "{count} student(s) hidden — already enrolled in this group.",
+        "studentsTruncated": "Showing the first 50 students. Use the search box to narrow it down.",
+        "loading": "Loading students…",
+        "unnamed": "Unnamed",
+        "packageLabel": "Package (optional)",
+        "packagePh": "No package",
+        "billingModePh": "Choose a billing mode",
+        "billingPrepaid": "Prepaid",
+        "billingMonthly": "Monthly fee",
+        "billingPerSession": "Per session",
+        "monthlyRateHint": "Monthly billing does not take a rate from the package. Without a rate no monthly bill is generated — set it on the Enrollments page after adding the student.",
+        "trialNote": "The student is added with Trial status. Promote to Active with the Convert action on the Enrollments page.",
+        "errStudent": "Choose a student first.",
+        "errBillingMode": "Choose a billing mode first.",
+        "success": "Student added to the group.",
+        "errorGeneric": "Could not add the student. Please try again."
       }
     },
     "student": {

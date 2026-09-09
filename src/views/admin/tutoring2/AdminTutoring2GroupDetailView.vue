@@ -58,13 +58,23 @@
      scalar is likewise gone — v2 ships `starts_at` + `ends_at` and the
      client subtracts (see `durationLabel`).
 
-  ── DROPPED ──────────────────────────────────────────────────────────
+  ── DROPPED, AND ONE OF THEM NOW REBUILT ─────────────────────────────
   The legacy hero's "Ubah" and "+ Siswa" buttons were dead chrome — no
-  click handler was ever bound to either. They are not ported rather
-  than shipped as buttons that still do nothing. Group editing lives
-  behind `PUT /tutoring-v2/learning-groups/{id}`
-  (`TutoringBimbelService.updateGroup`) and enrolling lives on the
-  Enrollments screen; both are separate MRs.
+  click handler was ever bound to either. They were not ported rather
+  than shipped as buttons that still do nothing.
+
+  "+ Siswa" is back as "Tambah siswa", this time with a destination:
+  <AdminTutoring2GroupAddStudentSheet>, which POSTs a real enrollment.
+  It is a FORM rather than a one-click add because
+  `StoreEnrollmentRequest` requires `billing_mode` and nothing can
+  derive it — see that sheet's header for the full argument. The button
+  is `v-if`-gated on `tutoring.enrollment.manage`, the key
+  `EnrollmentController::store` authorizes, so an admin without it sees
+  no button rather than one that 403s.
+
+  "Ubah" is still not ported. Group editing lives behind
+  `PUT /tutoring-v2/learning-groups/{id}`
+  (`TutoringBimbelService.updateGroup`) and remains a separate MR.
 
   ── PARTIAL-FAILURE POLICY ───────────────────────────────────────────
   The group header is the page; if it fails, the page fails. The four
@@ -84,6 +94,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { useMe } from '@/composables/useMe';
 import { toLocalYmd } from '@/lib/local-date';
 import {
   TutoringBimbelService,
@@ -96,10 +107,20 @@ import { TutoringLeaderboardService } from '@/services/tutoring2/leaderboard';
 import type { Activity } from '@/types/tutoring2/activity';
 import type { LeaderboardRow } from '@/types/tutoring2/leaderboard';
 import type { StatusBadgeTone } from '@/types/status-badge';
+import AdminTutoring2GroupAddStudentSheet from './AdminTutoring2GroupAddStudentSheet.vue';
 
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
+const { can } = useMe();
+
+/**
+ * `tutoring.enrollment.manage` — the key `EnrollmentController::store`
+ * authorizes, which is a DIFFERENT key from the `tutoring.group.view`
+ * that lets a caller read this page. Fails closed while `/me` is
+ * unloaded, so the CTA is withheld rather than offered.
+ */
+const canAddStudent = computed(() => can('tutoring.enrollment.manage'));
 
 const groupId = computed(() => String(route.params.groupId ?? ''));
 
@@ -332,6 +353,29 @@ function activityIcon(kind: Activity['kind']): string {
 function goBack(): void {
   void router.push({ name: 'admin.tutoring2.groups' });
 }
+
+// ── Tambah siswa ───────────────────────────────────────────────────
+// `v-if`-gated on open so the form state is fresh every time, the same
+// pattern AdminTutoring2GroupsView uses for its create sheet.
+
+const addStudentOpen = ref(false);
+
+function openAddStudent(): void {
+  if (!canAddStudent.value) return;
+  addStudentOpen.value = true;
+}
+
+/**
+ * ONE reload, not two. The sheet emits `saved` and then `close`, and
+ * `close` only flips `addStudentOpen` — it must never also refetch, or
+ * every add would cost two round trips of five parallel requests each.
+ * `reload()` re-runs the whole `useDataRefresh` loader, so the Peserta
+ * table picks the new enrollment up with its server-computed labels
+ * without a manual refresh.
+ */
+function onStudentAdded(): void {
+  reload();
+}
 </script>
 
 <template>
@@ -386,6 +430,21 @@ function goBack(): void {
       <template #default>
         <!-- Peserta -->
         <template v-if="tab === 'students'">
+          <!-- Section-header CTA, the placement AdminTutoring2ProgramDetailView
+               uses for its own "add" affordance on a drill-in. Hidden —
+               not disabled — without the ability: an admin never sees a
+               button that would refuse. -->
+          <div v-if="canAddStudent" class="mb-2 flex items-center justify-end">
+            <button
+              type="button"
+              data-testid="group-detail-add-student"
+              class="text-2xs font-bold text-brand-cobalt hover:underline"
+              @click="openAddStudent"
+            >
+              {{ t('tutoring2.admin.groupDetail.addStudentCta') }}
+            </button>
+          </div>
+
           <p
             v-if="roster.length === 0"
             class="rounded-3xl border border-slate-100 bg-white p-8 text-center text-2xs text-slate-400"
@@ -544,5 +603,16 @@ function goBack(): void {
         </template>
       </template>
     </AsyncView>
+
+    <!-- Gated a second time (belt and braces) and on `group` besides:
+         the sheet reads `program_id` off it, and until the fetch lands
+         there is nothing to enrol into. -->
+    <AdminTutoring2GroupAddStudentSheet
+      v-if="addStudentOpen && canAddStudent && group"
+      :group="group"
+      :roster="roster"
+      @close="addStudentOpen = false"
+      @saved="onStudentAdded"
+    />
   </div>
 </template>

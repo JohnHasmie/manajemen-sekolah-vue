@@ -7796,7 +7796,8 @@
         "durationMinutes": "{count} menit",
         "submissionsCount": "{count} pengumpulan",
         "thAvgScore": "Rata-rata",
-        "thAssessmentsTaken": "Penilaian diikuti"
+        "thAssessmentsTaken": "Penilaian diikuti",
+        "addStudentCta": "+ Tambah siswa"
       },
       "programDetail": {
         "kicker": "Detail program",
@@ -7902,6 +7903,31 @@
         "errAmount": "Masukkan nominal lebih dari 0.",
         "errDueDate": "Pilih tanggal jatuh tempo.",
         "studentSearchLabel": "Cari siswa"
+      },
+      "groupAddStudent": {
+        "title": "Tambah siswa ke kelompok",
+        "subtitle": "Siswa didaftarkan langsung ke {group}.",
+        "submit": "Tambahkan",
+        "studentSearchLabel": "Cari siswa",
+        "studentSearchPh": "Nama, NIS, atau nama wali…",
+        "studentPh": "Pilih siswa",
+        "studentsNone": "Tidak ada siswa yang bisa ditambahkan. Semua siswa pada hasil pencarian ini sudah terdaftar di kelompok ini.",
+        "studentsAlreadyEnrolled": "{count} siswa disembunyikan karena sudah terdaftar di kelompok ini.",
+        "studentsTruncated": "Daftar dibatasi 50 siswa pertama. Gunakan kolom cari untuk mempersempit.",
+        "loading": "Memuat siswa…",
+        "unnamed": "Tanpa nama",
+        "packageLabel": "Paket (opsional)",
+        "packagePh": "Tanpa paket",
+        "billingModePh": "Pilih mode tagihan",
+        "billingPrepaid": "Prabayar",
+        "billingMonthly": "SPP bulanan",
+        "billingPerSession": "Per sesi",
+        "monthlyRateHint": "SPP bulanan tidak mengambil tarif dari paket. Tanpa tarif, tagihan bulanan tidak akan dibuat — atur tarifnya lewat halaman Pendaftaran setelah siswa ditambahkan.",
+        "trialNote": "Siswa ditambahkan dengan status Trial. Ubah ke Aktif lewat tombol Konversi di halaman Pendaftaran.",
+        "errStudent": "Pilih siswa terlebih dahulu.",
+        "errBillingMode": "Pilih mode tagihan terlebih dahulu.",
+        "success": "Siswa ditambahkan ke kelompok.",
+        "errorGeneric": "Gagal menambahkan siswa. Coba lagi."
       }
     },
     "tutor": {
