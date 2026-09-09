@@ -289,7 +289,7 @@ describe('AdminTutoring2GroupAddStudentSheet · already enrolled', () => {
     const w = await mountSheet({ roster: [enrollment('st-1', 'active')] });
 
     expect(optionValues(w, 'student_id')).toEqual(['st-2', 'st-3']);
-    expect(w.find('[data-testid="students-already-enrolled"]').text()).toContain('2 siswa');
+    expect(w.find('[data-testid="students-already-enrolled"]').text()).toContain('1 siswa');
   });
 
   it('KEEPS graduated and withdrawn students pickable — that membership ended', async () => {

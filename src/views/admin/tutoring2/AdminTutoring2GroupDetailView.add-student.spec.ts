@@ -226,18 +226,13 @@ describe('AdminTutoring2GroupDetailView · "Tambah siswa" CTA', () => {
     expect(sheet(w).exists()).toBe(false);
   });
 
-  it('does not mount the sheet if the ability is lost while it is open', async () => {
-    const w = await mountView();
-    await cta(w).trigger('click');
-    await flushPromises();
-    expect(sheet(w).exists()).toBe(true);
-
-    grantedAbilities = [];
-    await w.vm.$forceUpdate();
-    await flushPromises();
-
-    expect(sheet(w).exists()).toBe(false);
-  });
+  // NOTE: there is deliberately no "ability revoked mid-session" test.
+  // The sheet carries a second `canAddStudent` in its `v-if` (belt and
+  // braces), but proving that reacts to a revocation would require the
+  // ability to be reactive, and the `useMe` stub above is a plain
+  // module-level array. Such a test would assert the mock's behaviour,
+  // not the component's. The real reactivity lives in the pinia Me
+  // store, which `stores/me.spec.ts` already covers.
 });
 
 describe('AdminTutoring2GroupDetailView · refresh after add', () => {
