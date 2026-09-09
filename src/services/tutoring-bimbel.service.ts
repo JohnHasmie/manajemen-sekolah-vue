@@ -272,6 +272,39 @@ export interface BimbelBill {
   updated_at?: string;
 }
 
+/**
+ * One row of `/api/tutoring-v2/payment-types` — the picker feed for the
+ * Tambah Tagihan sheet.
+ *
+ * This is NOT the school-side `/payment-types` shape. That endpoint is
+ * unreachable from a bimbel tenant twice over (it sits inside
+ * `module:finance`, and it authorizes `finance.bill_type.manage`, whose
+ * `finance.` prefix the entitlement filter strips from every tenant on
+ * the bimbel bundle), which is why a bimbel-owned read exists at all.
+ * It is gated on `tutoring.payment_type.view`.
+ *
+ * The BE deliberately does NOT filter to active rows: issuing a one-off
+ * bill against a paused type is a real thing to want, and a picker that
+ * silently omits rows is the harder failure to diagnose. So `status` is
+ * on every row and the picker must SHOW it rather than assume it.
+ */
+export interface BimbelPaymentTypeOption {
+  id: string;
+  name: string;
+  description?: string | null;
+  /** Default nominal, already coerced to a number — see `listPaymentTypes`. */
+  amount: number;
+  /** `PaymentPeriod` backed value. Kept wide so an unseen period still renders. */
+  period: 'monthly' | 'yearly' | 'once' | string;
+  status: 'active' | 'inactive' | string;
+  /**
+   * The tenant's SYSTEM type (`schools.tenant_config.bimbel_payment_type_id`)
+   * — the row the enrollment and per-session billing hooks anchor their
+   * automatic bills to. Server-computed; zero or one row per tenant.
+   */
+  is_default: boolean;
+}
+
 export interface BimbelBillsSummary {
   tertagih: number;
   terbayar: number;
@@ -549,6 +582,31 @@ export const TutoringBimbelService = {
   async getBillsSummary(params: { source_type?: string; month?: string } = {}) {
     const r = await api.get<OneEnvelope<BimbelBillsSummary>>('/tutoring-v2/bills/summary', { params });
     return r.data.data;
+  },
+  /**
+   * Picker feed for Tambah Tagihan. `search` is forwarded to the SERVER,
+   * which runs the same case-insensitive name/description filter the
+   * school catalogue uses, so typing reaches rows this page never held.
+   *
+   * `amount` is coerced HERE, once. `payment_types.amount` is
+   * `decimal(15,2)` and `PaymentTypeOptionResource` passes it through
+   * with no `(float)` cast, so postgres hands it over as the string
+   * `"150000.00"`. `<MoneyInput>` takes `number | null` and nothing
+   * else — an uncoerced string reaches it as a non-number and the
+   * Nominal prefill silently does nothing.
+   */
+  async listPaymentTypes(
+    params: { search?: string; status?: string; period?: string } = {},
+  ) {
+    const r = await api.get<ListEnvelope<BimbelPaymentTypeOption>>(
+      '/tutoring-v2/payment-types',
+      { params },
+    );
+    return r.data.data.map((row) => ({
+      ...row,
+      amount: Number(row.amount) || 0,
+      is_default: Boolean(row.is_default),
+    }));
   },
   async createBill(payload: {
     student_id: string;

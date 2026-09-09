@@ -1,9 +1,15 @@
 /**
- * Vitest contract spec for the four bimbel admin CTAs that have NO
- * create surface behind them.
+ * Vitest contract spec for the bimbel admin CTAs that have NO create
+ * surface behind them.
  *
- * All four shipped fully styled, with correct i18n labels, and with no
- * `@click` — they looked exactly like the two CTAs wired in this same
+ * "+ Buat tagihan" (billing) GRADUATED out of this file: it now opens
+ * <AdminTutoring2BillCreateSheet> and is gated on
+ * `tutoring.bill.create`, so its case moved to a wiring spec of its own
+ * — AdminTutoring2BillingView.create-cta.spec.ts — exactly as the
+ * closing note below prescribes. Three remain.
+ *
+ * All of them shipped fully styled, with correct i18n labels, and with
+ * no `@click` — they looked exactly like the two CTAs wired in the same
  * MR, and prod reported them as "tombol diklik tidak terjadi apa-apa".
  *
  * They are NOT wired, because there is nothing admin-shaped to wire
@@ -34,7 +40,6 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
 import { createPinia, setActivePinia } from 'pinia';
 import AdminTutoring2EnrollmentsView from './AdminTutoring2EnrollmentsView.vue';
-import AdminTutoring2BillingView from './AdminTutoring2BillingView.vue';
 import AdminTutoring2AssessmentsView from './AdminTutoring2AssessmentsView.vue';
 import AdminTutoring2TermView from './AdminTutoring2TermView.vue';
 import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
@@ -44,15 +49,12 @@ vi.mock('@/services/tutoring-bimbel.service', () => ({
   TutoringBimbelService: {
     listEnrollments: vi.fn(),
     listPrograms: vi.fn(),
-    listBills: vi.fn(),
-    getBillsSummary: vi.fn(),
     listAssessments: vi.fn(),
     // Deliberately present-but-unused: these are the create methods the
     // buttons would call if a surface existed. If a future change wires
     // one, the assertions below start failing and force this file to be
     // revisited rather than quietly bypassed.
     createEnrollment: vi.fn(),
-    createBill: vi.fn(),
     createAssessment: vi.fn(),
   },
 }));
@@ -80,14 +82,12 @@ vi.mock('@/composables/useLocaleWatcher', () => ({
 
 const REASONS = {
   enrollments: 'Mendaftarkan siswa belum tersedia.',
-  billing: 'Membuat tagihan belum tersedia.',
   assessments: 'Membuat penilaian belum tersedia.',
   term: 'Membuat term belum tersedia.',
 };
 
 const LABELS = {
   enrollments: 'Daftarkan siswa',
-  billing: 'Buat tagihan',
   assessments: 'Buat try-out',
   term: 'Term baru',
 };
@@ -95,7 +95,6 @@ const LABELS = {
 /** Empty-state copy must not instruct pressing a button that cannot work. */
 const EMPTY_DESCS = {
   enrollments: 'Belum ada pendaftaran. Wali mendaftarkan anaknya lewat aplikasi.',
-  billing: 'Belum ada tagihan. Terbit otomatis.',
   assessments: 'Belum ada penilaian. Tutor membuatnya.',
   // Term's AsyncView used to carry a HARDCODED Indonesian literal here
   // ("Klik + untuk membuat term baru — …") with a `TODO i18n key`
@@ -121,7 +120,6 @@ function makeI18n() {
           common: { all: 'Semua', program: 'Program', status: 'Status', term: 'Term' },
           admin: {
             enrollments: section('enrollments'),
-            billing: section('billing'),
             assessments: section('assessments'),
             term: section('term'),
           },
@@ -166,7 +164,6 @@ async function mountView(component) {
 
 const CASES = [
   { name: 'enrollments', component: AdminTutoring2EnrollmentsView, testid: 'enrollments-new-cta' },
-  { name: 'billing', component: AdminTutoring2BillingView, testid: 'billing-new-cta' },
   { name: 'assessments', component: AdminTutoring2AssessmentsView, testid: 'assessments-new-cta' },
   { name: 'term', component: AdminTutoring2TermView, testid: 'term-new-cta' },
 ];
@@ -176,8 +173,6 @@ describe('bimbel admin CTAs with no create surface', () => {
     vi.clearAllMocks();
     (TutoringBimbelService.listEnrollments as any).mockResolvedValue({ items: [], pagination: undefined });
     (TutoringBimbelService.listPrograms as any).mockResolvedValue({ items: [] });
-    (TutoringBimbelService.listBills as any).mockResolvedValue({ items: [], pagination: undefined });
-    (TutoringBimbelService.getBillsSummary as any).mockResolvedValue({});
     (TutoringBimbelService.listAssessments as any).mockResolvedValue({ items: [], pagination: undefined });
     (TutoringTermsService.list as any).mockResolvedValue({ items: [], pagination: undefined });
   });
@@ -239,7 +234,7 @@ describe('bimbel admin CTAs with no create surface', () => {
  * honest and is included to keep it that way.
  */
 describe('shipped empty-state copy for the disabled CTAs', () => {
-  const SECTIONS = ['enrollments', 'billing', 'assessments', 'term'];
+  const SECTIONS = ['enrollments', 'assessments', 'term'];
 
   it.each(['id', 'en'])('%s.json does not tell admins to press a dead CTA', async (locale) => {
     const messages = (await import(`@/locales/${locale}.json`)).default;

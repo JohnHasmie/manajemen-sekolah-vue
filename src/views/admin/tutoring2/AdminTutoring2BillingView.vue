@@ -6,35 +6,31 @@
   FinanceService.listBills bridge that was in place while the
   greenfield endpoints didn't exist.
 
-  ── THE "+ Buat tagihan" CTA IS DISABLED ON PURPOSE ──────────────────
+  ── THE "+ Buat tagihan" CTA IS NOW WIRED ────────────────────────────
 
-  It shipped with no `@click` and no handler, so it joined the prod
-  reports of "tombol diklik tidak terjadi apa-apa". The fix is NOT to
-  wire it, because there is nothing to wire it TO: **web-vue has never
-  had a bill create surface.**
+  It shipped with no `@click` and no handler, joining the prod reports
+  of "tombol diklik tidak terjadi apa-apa", and was then disabled with
+  the reason on the control (!1211's honesty pattern) because there was
+  nothing to wire it TO: web-vue had never had a bill create surface.
+  Bills reached this list only by being generated — enrollment intake
+  raises the first one, the monthly cron raises the rest.
 
-  This is the same shape as the "+ Program baru" CTA !1211 disabled.
-  `TutoringBimbelService.createBill` exists and wraps
-  `POST /tutoring-v2/bills`, and `admin` even holds
-  `tutoring.bill.create` in `PermissionCatalog::
-  adminTutoringDefaults()` — but the method has ZERO call sites in the
-  app. Bills reach this list by being generated: enrollment intake
-  raises the first one and the monthly cron raises the rest. Nothing
-  anywhere lets a human compose one.
+  <AdminTutoring2BillCreateSheet> is that surface. It mirrors the mobile
+  "Tambah Tagihan" sheet, which grew the form first and is therefore the
+  spec. The CTA is gated on `tutoring.bill.create` — the ability
+  `Tutoring\BillController::store` itself authorizes, NOT the
+  `tutoring.bill.view` this list reads with. Hiding it without the key
+  keeps the affordance honest; the server re-checks regardless.
 
-  So this is a MISSING FEATURE, not a missing handler, and inventing a
-  create form here would be a product decision made by a bug fix —
-  a manual bill needs an amount, a due date, a source_type and a
-  student, and picking that field set is exactly the decision this MR
-  must not make. Until someone builds it, the button states plainly
-  that it is unavailable instead of silently swallowing the click.
-  `billing.emptyDesc` — which read "Klik + untuk membuat tagihan
-  baru." — no longer tells admins to press it either.
+  Gating reads `/me` abilities via `useMe().can()`, which the backend
+  scopes to the role named by `X-Active-Role`, so an account that is
+  both admin and tutor gets the answer for the hat it is wearing. Never
+  `roles[].permission_keys`: that list is unscoped and exists only to
+  drive the role switcher.
 
-  To finish this: build the create sheet (mirror
-  <AdminTutoring2GroupCreateSheet>), call `createBill`, gate on
-  `tutoring.bill.create`, then drop `disabled` + the `title` below and
-  restore the empty-state copy.
+  `billing.emptyDesc` stays honest too — it describes where bills come
+  from rather than telling admins to press a button, and now that the
+  button works it names it as an option instead.
 
   ── The Periode chip ──────────────────────────────────────────────────
 
@@ -65,7 +61,9 @@ import KpiStripCards, {
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
+import AdminTutoring2BillCreateSheet from './AdminTutoring2BillCreateSheet.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { useMe } from '@/composables/useMe';
 import { formatYmLabel } from '@/lib/local-date';
 import {
   TutoringBimbelService,
@@ -75,6 +73,30 @@ import {
 import type { StatusBadgeTone } from '@/types/status-badge';
 
 const { t, locale } = useI18n();
+const { can } = useMe();
+
+/**
+ * `tutoring.bill.create` — the ability `BillController::store`
+ * authorizes, which is a DIFFERENT key from the `tutoring.bill.view`
+ * that lets a caller read this list. Fails closed while `/me` is
+ * unloaded, so the CTA is withheld rather than offered.
+ */
+const canCreateBill = computed(() => can('tutoring.bill.create'));
+
+/** Create sheet visibility. Mounted only while open so it resets. */
+const showCreateSheet = ref(false);
+
+/**
+ * `tutoring.payment_type.view` — what `Tutoring\PaymentTypeController::
+ * index` authorizes. Resolved here and injected so the sheet stays a
+ * plain form with one boolean, mirroring the mobile sheet.
+ */
+const canViewPaymentTypes = computed(() => can('tutoring.payment_type.view'));
+
+function openCreateSheet(): void {
+  if (!canCreateBill.value) return;
+  showCreateSheet.value = true;
+}
 
 const search = ref('');
 const statusFilter = ref<string>(''); // '' | 'unpaid' | 'paid' | 'pending' | 'partial'
@@ -253,23 +275,26 @@ function billStatusLabel(status: string): string {
       </template>
     </AsyncView>
 
-    <!-- Disabled, with the reason on the control itself — see docblock.
-         `title` carries it for a pointer, and the aria-describedby'd
-         line carries it for a screen reader, which never sees a
-         tooltip. -->
+    <!-- Wired, and hidden outright without `tutoring.bill.create` — the
+         key BillController::store authorizes. An admin who cannot
+         create is shown no control at all rather than one whose only
+         possible outcome is a 403. -->
     <button
+      v-if="canCreateBill"
       type="button"
       data-testid="billing-new-cta"
-      disabled
-      aria-describedby="billing-new-cta-reason"
-      :title="t('tutoring2.admin.billing.newCtaUnavailable')"
-      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-300 text-white font-bold shadow-xl cursor-not-allowed"
+      class="fixed bottom-6 right-6 z-30 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-cobalt text-white font-bold shadow-xl shadow-brand-cobalt/30 hover:bg-brand-cobalt/90 transition-colors"
+      @click="openCreateSheet"
     >
       <span aria-hidden="true">+</span> {{ t('tutoring2.admin.billing.newCta') }}
     </button>
-    <span id="billing-new-cta-reason" class="sr-only">
-      {{ t('tutoring2.admin.billing.newCtaUnavailable') }}
-    </span>
+
+    <AdminTutoring2BillCreateSheet
+      v-if="showCreateSheet"
+      :can-view-payment-types="canViewPaymentTypes"
+      @close="showCreateSheet = false"
+      @saved="reload"
+    />
 
     <!-- Periode picker. It only writes `monthFilter`; the existing
          watcher on [search, status, source, month] does the reload, so
