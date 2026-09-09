@@ -263,6 +263,96 @@ describe('wali bimbel sidebar', () => {
     });
   });
 
+  /**
+   * The rows this MR added, and the two it deliberately did NOT.
+   *
+   * Everything above iterates whatever `parentTutoringNav` happens to
+   * return, so it stays green if a row is DELETED — "every destination
+   * resolves" is vacuously true of a menu that lost the item. These
+   * tests name the destinations, which is the only way a removal fails.
+   */
+  describe('the per-child screens that earned a row', () => {
+    beforeEach(() => {
+      activeChildId = CHILD_ID;
+    });
+
+    it.each([
+      ['Kehadiran', `/parent/tutoring2/attendance/${CHILD_ID}`],
+      ['Nilai', `/parent/tutoring2/assessments/${CHILD_ID}`],
+      ['Riwayat Pembayaran', '/parent/tutoring2/history'],
+    ])('the wali can find %s in the sidebar', async (_label, path) => {
+      expect(await parentNavPaths()).toContain(path);
+    });
+
+    /**
+     * Rapor renders an amber "no rapor exists yet" notice whose only
+     * control forwards to Perkembangan nilai — there is no rapor
+     * endpoint. Daftar program 403s for a default wali (it needs
+     * `tutoring.program.view` / `.package.view` / `.enrollment.manage`,
+     * none of which `parentTutoringDefaults()` grants) and is an ACTION
+     * reached from the More tiles, not a place.
+     *
+     * A sidebar row is a standing promise that a destination exists.
+     * Neither of these can keep it, so neither gets one — and this test
+     * is why re-adding one has to be a deliberate argument rather than a
+     * tidy-up that looks like completeness.
+     */
+    it.each([
+      ['Rapor', 'report-card'],
+      ['Daftar program', 'enroll'],
+    ])('deliberately keeps %s out of the sidebar', async (_label, segment) => {
+      const found = (await parentNavPaths()).filter((to) => to.includes(`/${segment}`));
+      expect(found).toEqual([]);
+    });
+
+    /**
+     * Two rows reading "Nilai" is the defect that adding the assessment
+     * list would otherwise ship: `tutoring.nav.progress` was itself
+     * labelled "Nilai" while pointing at the TREND screen, whose own
+     * header says "Perkembangan nilai".
+     *
+     * Asserts on labelKey rather than resolved text so it does not
+     * depend on the i18n runtime being mounted.
+     */
+    it('gives no two rows the same label', async () => {
+      const keys = (await parentNavItems()).map((i) => i.labelKey);
+      const dupes = keys.filter((k, i) => keys.indexOf(k) !== i);
+      expect(dupes, `duplicate sidebar labels: ${dupes.join(', ')}`).toEqual([]);
+    });
+
+    /**
+     * NavIcon matches on `name === '…'` and falls through to a default
+     * hollow circle for anything it does not know — which is how the
+     * Prestasi surfaces shipped visible "O" placeholders to prod. A
+     * typo'd icon is therefore silent: the row renders, just wrong.
+     *
+     * `receipt` (the obvious name for payment history) is one of the
+     * names NavIcon does NOT define, and this test is what caught it.
+     * Read from the component's source so deleting a glyph fails here.
+     */
+    it('names an icon NavIcon actually draws', async () => {
+      const source = readFileSync(
+        join(process.cwd(), 'src/components/feature/NavIcon.vue'),
+        'utf8',
+      );
+      const drawn = new Set(
+        [...source.matchAll(/name === '([a-z0-9-]+)'/g)].map((m) => m[1]),
+      );
+      expect(drawn.size, 'failed to parse NavIcon glyph names').toBeGreaterThan(50);
+
+      const missing = (await parentNavItems())
+        .map((i) => i.icon)
+        .filter((icon) => !drawn.has(icon));
+
+      expect(
+        missing,
+        `NavIcon has no glyph for these — they render as a hollow circle:\n${missing
+          .map((m) => `  ${m}`)
+          .join('\n')}`,
+      ).toEqual([]);
+    });
+  });
+
   describe('ability gating', () => {
     beforeEach(() => {
       activeChildId = CHILD_ID;

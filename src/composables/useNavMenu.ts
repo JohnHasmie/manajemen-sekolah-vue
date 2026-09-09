@@ -1159,7 +1159,14 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
  * entry in this menu used to land on NotFound — the v1 paths were never
  * registered in the router at all, not even before CLEAN-2.
  */
-const PARENT_CHILD_SCREENS = ['sessions', 'activities', 'progress', 'leaderboard'] as const;
+const PARENT_CHILD_SCREENS = [
+  'sessions',
+  'attendance',
+  'assessments',
+  'activities',
+  'progress',
+  'leaderboard',
+] as const;
 type ParentChildScreen = (typeof PARENT_CHILD_SCREENS)[number];
 
 /**
@@ -1246,6 +1253,30 @@ function parentTutoringNav(activeChildId: string): NavSection[] {
           ability: 'tutoring.session.view',
         },
         {
+          // The other half of "did my child actually go?" — Sesi is the
+          // timetable, this is the register. Reachable before now only
+          // by tapping a child card on the bimbel dashboard, or as the
+          // picker's silent FALLBACK target; neither is a thing a wali
+          // finds by looking. `GET /tutoring-v2/students/{id}/attendance`
+          // scopes to the caller's own child.
+          //
+          // Labelled "Kehadiran", not "Presensi". This codebase splits
+          // the two consistently: "Presensi" is the ACT of marking a
+          // register (`nav.myAttendance` = "Presensi Saya",
+          // `nav.attendanceQrSection`), "Kehadiran" is the RECORD read
+          // by someone else (`nav.attendance` = "Kehadiran Siswa",
+          // `nav.teacherAttendance`, `tutoring2.nav.reportsAttendance`).
+          // A wali reads; they never mark. The screen's own header
+          // (`tutoring2.parent.attendance.title`) already says Kehadiran.
+          //
+          // No `ability`: `parent.tutoring2.attendance` declares no
+          // `meta.ability`, and a nav gate stricter than its route hides
+          // a screen that opens fine. See the section docblock above.
+          to: at('attendance'),
+          labelKey: 'tutoring.nav.attendance',
+          icon: 'check-circle',
+        },
+        {
           // Param-free by design: the payment inbox lists unpaid +
           // overdue bills across ALL of the wali's children in one list
           // (the backend scopes by `tutoring.bill.view_own`), so routing
@@ -1255,12 +1286,61 @@ function parentTutoringNav(activeChildId: string): NavSection[] {
           labelKey: 'tutoring.nav.bills',
           icon: 'wallet',
         },
+        {
+          // Tagihan above is the OPEN inbox (unpaid + overdue); this is
+          // the settled archive (`/tutoring-v2/bills?status=paid`), and
+          // "did my January payment actually register?" is a question
+          // the open inbox cannot answer by construction — a paid bill
+          // has left it.
+          //
+          // Of the wali screens this MR looked at, this was the only one
+          // with ZERO inbound links anywhere in the app: not the picker,
+          // not the dashboard, not the More tiles. It was reachable by
+          // typing the URL and no other way.
+          //
+          // Param-free, exactly like Tagihan: the backend scopes by
+          // `tutoring.bill.view_own`, so the list already spans every
+          // child and routing it through the picker would NARROW a
+          // screen meant to be consolidated.
+          //
+          // No `ability`: `parent.tutoring2.history` declares no
+          // `meta.ability`.
+          to: '/parent/tutoring2/history',
+          labelKey: 'tutoring.nav.paymentHistory',
+          // `receipt` does NOT exist in NavIcon — unknown names fall
+          // through to the default hollow circle, which is exactly how
+          // the Prestasi surfaces shipped visible "O" placeholders.
+          icon: 'file-clock',
+        },
       ],
     },
     {
       titleKey: 'tutoring.nav.sectionExtra',
       items: [
         { to: at('activities'), labelKey: 'tutoring.nav.activities', icon: 'book' },
+        {
+          // "Nilai" — the per-assessment LIST: one row per published,
+          // scored assessment with the real mark, the programme, and a
+          // KKM band. Distinct from Perkembangan nilai below, which
+          // renders the same `/students/{id}/progress` payload as a
+          // TREND (a chart with a peer baseline). Same endpoint, two
+          // genuinely different questions: "what did she get?" versus
+          // "is she improving?".
+          //
+          // It sat in the picker's TARGETS allow-list with nothing in
+          // the entire app linking to it — an allow-list entry no code
+          // path could reach.
+          //
+          // No `ability`: `parent.tutoring2.assessments` declares no
+          // `meta.ability`.
+          to: at('assessments'),
+          labelKey: 'tutoring.nav.assessments',
+          icon: 'award',
+        },
+        // Label moved to "Perkembangan nilai" (its own screen title) in
+        // this MR: it read "Nilai", which is what the row above is now
+        // called and what THAT screen calls itself. Two rows reading
+        // "Nilai" is the defect adding the list would otherwise ship.
         { to: at('progress'), labelKey: 'tutoring.nav.progress', icon: 'bar-chart' },
         { to: at('leaderboard'), labelKey: 'tutoring.nav.leaderboard', icon: 'check-square' },
         {

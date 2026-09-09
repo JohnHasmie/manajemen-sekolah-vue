@@ -5786,7 +5786,7 @@
       "leaderboardV2": "Leaderboard",
       "programs": "Programs",
       "leaderboard": "Leaderboard",
-      "progress": "Grades",
+      "progress": "Score progress",
       "leads": "Leads",
       "myVouchers": "Vouchers",
       "sectionPrograms": "Programs & sessions",
@@ -5820,7 +5820,9 @@
       "moreHub": "More",
       "classes": "Classes",
       "attendance": "Attendance",
-      "billingSettings": "Billing settings"
+      "billingSettings": "Billing settings",
+      "assessments": "Grades",
+      "paymentHistory": "Payment history"
     }
   },
   "classActivity": {

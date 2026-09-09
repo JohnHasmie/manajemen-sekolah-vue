@@ -5786,7 +5786,7 @@
       "leaderboardV2": "Peringkat",
       "programs": "Program",
       "leaderboard": "Peringkat",
-      "progress": "Nilai",
+      "progress": "Perkembangan nilai",
       "leads": "Lead / Calon",
       "myVouchers": "Voucher",
       "sectionPrograms": "Program & Sesi",
@@ -5819,8 +5819,10 @@
       "vouchers": "Voucher / Promo",
       "moreHub": "Lainnya",
       "classes": "Kelas",
-      "attendance": "Presensi",
-      "billingSettings": "Pengaturan billing"
+      "attendance": "Kehadiran",
+      "billingSettings": "Pengaturan billing",
+      "assessments": "Nilai",
+      "paymentHistory": "Riwayat Pembayaran"
     }
   },
   "classActivity": {
