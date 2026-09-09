@@ -33,11 +33,21 @@ import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
 import { TutoringTermsService } from '@/services/tutoring2/terms';
 import { TutoringTutorsService } from '@/services/tutoring2/tutors';
 
-vi.mock('@/services/tutoring-bimbel.service', () => ({
+/**
+ * Only the SERVICE object is stubbed. The module's real value exports
+ * come through `importOriginal`, so the status literals the quick
+ * action sends (`LEARNING_GROUP_STATUS`) are the ones the app ships —
+ * a hand-written copy here would let the test and the backend enum
+ * drift apart and still go green. Same reasoning, same module, as
+ * AdminTutoring2ScheduleView.spec.ts.
+ */
+vi.mock('@/services/tutoring-bimbel.service', async (importOriginal) => ({
+  ...(await importOriginal()),
   TutoringBimbelService: {
     listGroups: vi.fn(),
     listPrograms: vi.fn(),
     createGroup: vi.fn(),
+    updateGroup: vi.fn(),
   },
 }));
 
@@ -137,9 +147,15 @@ function makeI18n() {
             term: 'Term',
             tutor: 'Tutor',
             gradeLevel: 'Jenjang',
+            actions: 'Aksi',
+            status: 'Status',
           },
           admin: {
             groups: {
+              activate: 'Aktifkan',
+              makeDraft: 'Jadikan Draf',
+              errorActivateFailed: 'Gagal mengaktifkan kelompok. Coba lagi.',
+              errorMakeDraftFailed: 'Gagal mengubah kelompok menjadi draf. Coba lagi.',
               kpiGroups: 'Kelompok',
               kpiPrivates: '1-on-1',
               kpiAvgUtilization: 'Rata utilisasi',
@@ -798,5 +814,195 @@ describe('AdminTutoring2GroupsView seat numbers — absent vs zero', () => {
 
     expect(kpiValues(w)[FULL]).toBe('—');
     expect(kpiValues(w)[FULL]).not.toBe('0');
+  });
+});
+
+/**
+ * ─── Draf ⇄ Aktif quick action ───────────────────────────────────────
+ *
+ * A group created as a draft had no way back to Aktif anywhere on the
+ * web app: this list rendered its status as a read-only badge, and the
+ * detail screen has no edit form. `TutoringBimbelService.updateGroup`
+ * existed and no screen called it.
+ *
+ * Every test in this block is RED against the pre-change template —
+ * there was no button of any kind in the row, so the queries below find
+ * nothing and `updateGroup` is never called.
+ *
+ * The exception is 'a CLOSED group is offered neither direction', which
+ * passes either way: with no buttons at all, a closed row trivially has
+ * none. It is kept deliberately — it is the regression guard for the
+ * third status. `BimbelLearningGroupStatus` has three cases and a
+ * future edit that reaches for a boolean `status !== 'active'` toggle
+ * would turn this test red, which is exactly when it needs to speak.
+ */
+describe('AdminTutoring2GroupsView status quick action', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    grantedAbilities = ['tutoring.group.manage'];
+    (TutoringBimbelService.listPrograms as any).mockResolvedValue({ items: PROGRAMS });
+    (TutoringTermsService.list as any).mockResolvedValue({ items: TERMS });
+    (TutoringTutorsService.list as any).mockResolvedValue({ items: TUTORS });
+    (TutoringBimbelService.updateGroup as any).mockResolvedValue({});
+  });
+
+  /** Mounts the list showing exactly the rows given. */
+  async function mountWithGroups(items: unknown[]) {
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({
+      items,
+      pagination: undefined,
+    });
+    return mountView();
+  }
+
+  const activateBtn = (w: any) => w.find('[data-testid="group-activate"]');
+  const draftBtn = (w: any) => w.find('[data-testid="group-make-draft"]');
+
+  it('a DRAF group offers "Aktifkan" and only that', async () => {
+    const w = await mountWithGroups([makeGroup({ status: 'draft', status_label: 'Draft' })]);
+
+    expect(activateBtn(w).exists()).toBe(true);
+    expect(activateBtn(w).text()).toBe('Aktifkan');
+    expect(draftBtn(w).exists()).toBe(false);
+  });
+
+  it('an AKTIF group offers "Jadikan Draf" and only that', async () => {
+    const w = await mountWithGroups([makeGroup({ status: 'active' })]);
+
+    expect(draftBtn(w).exists()).toBe(true);
+    expect(draftBtn(w).text()).toBe('Jadikan Draf');
+    expect(activateBtn(w).exists()).toBe(false);
+  });
+
+  it('a CLOSED group is offered neither direction', async () => {
+    // `closed` ("Ditutup") is terminal. Promoting it to Aktif or
+    // demoting it to Draf are both nonsense, so the cell stays empty
+    // rather than advertising an action.
+    const w = await mountWithGroups([
+      makeGroup({ status: 'closed', status_label: 'Ditutup' }),
+    ]);
+
+    expect(activateBtn(w).exists()).toBe(false);
+    expect(draftBtn(w).exists()).toBe(false);
+  });
+
+  it('each row shows exactly one direction, across a mixed list', async () => {
+    const w = await mountWithGroups([
+      makeGroup({ id: 'gr-draft', status: 'draft' }),
+      makeGroup({ id: 'gr-active', status: 'active' }),
+      makeGroup({ id: 'gr-closed', status: 'closed' }),
+    ]);
+
+    expect(w.findAll('[data-testid="group-activate"]')).toHaveLength(1);
+    expect(w.findAll('[data-testid="group-make-draft"]')).toHaveLength(1);
+  });
+
+  it('THE FIX: "Aktifkan" PUTs the active status for that group', async () => {
+    const w = await mountWithGroups([
+      makeGroup({ id: 'gr-7', status: 'draft' }),
+    ]);
+
+    await activateBtn(w).trigger('click');
+    await flushPromises();
+
+    expect(TutoringBimbelService.updateGroup).toHaveBeenCalledTimes(1);
+    expect(TutoringBimbelService.updateGroup).toHaveBeenCalledWith('gr-7', {
+      status: 'active',
+    });
+  });
+
+  it('"Jadikan Draf" PUTs the draft status for that group', async () => {
+    const w = await mountWithGroups([
+      makeGroup({ id: 'gr-9', status: 'active' }),
+    ]);
+
+    await draftBtn(w).trigger('click');
+    await flushPromises();
+
+    expect(TutoringBimbelService.updateGroup).toHaveBeenCalledTimes(1);
+    expect(TutoringBimbelService.updateGroup).toHaveBeenCalledWith('gr-9', {
+      status: 'draft',
+    });
+  });
+
+  it('refreshes the list EXACTLY ONCE, so the row shows its new status', async () => {
+    // Counted, not read off the source: `useDataRefresh` also owns the
+    // academic-year and locale watchers, so "reload is called" and
+    // "the list re-fetches once" are different claims. The mount fetch
+    // is call 1; a correct action makes it 2 and no more.
+    const w = await mountWithGroups([makeGroup({ id: 'gr-7', status: 'draft' })]);
+    expect(TutoringBimbelService.listGroups).toHaveBeenCalledTimes(1);
+
+    await activateBtn(w).trigger('click');
+    await flushPromises();
+
+    expect(TutoringBimbelService.listGroups).toHaveBeenCalledTimes(2);
+  });
+
+  it('does NOT navigate away when the action is pressed', async () => {
+    // The whole <tr> is a drill-in to the detail screen. Without
+    // `@click.stop` the press would refresh a list nobody is looking at.
+    const w = await mountWithGroups([makeGroup({ id: 'gr-7', status: 'draft' })]);
+
+    await activateBtn(w).trigger('click');
+    await flushPromises();
+
+    expect(routerPush).not.toHaveBeenCalled();
+  });
+
+  it('the row is still a drill-in when the action is NOT what was clicked', async () => {
+    // Guards the other half of `.stop`: stopping propagation on the
+    // button must not disable navigation from the rest of the row.
+    const w = await mountWithGroups([makeGroup({ id: 'gr-7', status: 'draft' })]);
+
+    await w.find('tbody tr').trigger('click');
+
+    expect(routerPush).toHaveBeenCalledTimes(1);
+    expect(routerPush).toHaveBeenCalledWith(
+      expect.objectContaining({ params: { groupId: 'gr-7' } }),
+    );
+  });
+
+  it('the manage ability is what gates it — present with, absent without', async () => {
+    const withGrant = await mountWithGroups([makeGroup({ status: 'draft' })]);
+    expect(activateBtn(withGrant).exists()).toBe(true);
+
+    grantedAbilities = [];
+    const without = await mountWithGroups([makeGroup({ status: 'draft' })]);
+    expect(activateBtn(without).exists()).toBe(false);
+    expect(draftBtn(without).exists()).toBe(false);
+  });
+
+  it('a failed write shows the backend message and does NOT refresh', async () => {
+    const w = await mountWithGroups([makeGroup({ id: 'gr-7', status: 'draft' })]);
+    expect(TutoringBimbelService.listGroups).toHaveBeenCalledTimes(1);
+
+    (TutoringBimbelService.updateGroup as any).mockRejectedValueOnce({
+      response: { data: { message: 'Grup tidak boleh diaktifkan tanpa tutor.' } },
+    });
+
+    await activateBtn(w).trigger('click');
+    await flushPromises();
+
+    expect(w.find('[data-testid="groups-row-error"]').text()).toBe(
+      'Grup tidak boleh diaktifkan tanpa tutor.',
+    );
+    // The row keeps its old status: no re-fetch pretended it worked.
+    expect(TutoringBimbelService.listGroups).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to a translated sentence when the backend sends no message', async () => {
+    const w = await mountWithGroups([makeGroup({ id: 'gr-7', status: 'draft' })]);
+
+    (TutoringBimbelService.updateGroup as any).mockRejectedValueOnce(
+      new Error('Network Error'),
+    );
+
+    await activateBtn(w).trigger('click');
+    await flushPromises();
+
+    expect(w.find('[data-testid="groups-row-error"]').text()).toBe(
+      'Gagal mengaktifkan kelompok. Coba lagi.',
+    );
   });
 });

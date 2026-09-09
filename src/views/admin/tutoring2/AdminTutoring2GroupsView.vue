@@ -49,8 +49,10 @@ import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { countOrDash, EM_DASH, isCounted } from '@/lib/absent-vs-zero';
 import {
+  LEARNING_GROUP_STATUS,
   TutoringBimbelService,
   type BimbelLearningGroup,
+  type BimbelLearningGroupStatus,
   type BimbelProgram,
 } from '@/services/tutoring-bimbel.service';
 import { TutoringTermsService } from '@/services/tutoring2/terms';
@@ -229,7 +231,7 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
-function statusPillTone(status: BimbelLearningGroup['status']): StatusBadgeTone {
+function statusPillTone(status: BimbelLearningGroupStatus): StatusBadgeTone {
   switch (status) {
     case 'active': return 'success';
     case 'draft': return 'neutral';
@@ -237,7 +239,7 @@ function statusPillTone(status: BimbelLearningGroup['status']): StatusBadgeTone 
   }
 }
 
-function statusLabel(status: BimbelLearningGroup['status']): string {
+function statusLabel(status: BimbelLearningGroupStatus): string {
   return t(`tutoring2.status.${status}`);
 }
 
@@ -288,6 +290,82 @@ function goToDetail(g: BimbelLearningGroup): void {
     name: 'admin.tutoring2.group-detail',
     params: { groupId: g.id },
   });
+}
+
+/**
+ * ─── Draf ⇄ Aktif quick action ───────────────────────────────────────
+ *
+ * A group could be CREATED as a draft and never promoted: the list had
+ * no control for it, and the detail screen has no edit form either, so
+ * "Draf" was a one-way door on the web app even though
+ * `LearningGroupController::update` has always accepted `status`.
+ *
+ * Deliberately shaped after the Arsipkan / Aktifkan-kembali pair on
+ * AdminTutoring2VouchersView: one row button per direction, mutually
+ * exclusive, no confirm step, a shared error line above the table, and
+ * a `reload()` that only runs when the write actually landed.
+ *
+ * THE THIRD STATE. `BimbelLearningGroupStatus` has three cases, and
+ * `closed` is terminal — "Ditutup", a group that has finished. Neither
+ * "Aktifkan" nor "Jadikan Draf" is a sensible thing to offer it, so a
+ * closed row gets NO button rather than a wrong one: the guards below
+ * test for the specific status that each direction starts from, never
+ * `!== 'active'`, which would have swept `closed` in.
+ */
+const rowActionError = ref<string | null>(null);
+
+/**
+ * Axios puts the backend body on `error.response.data`; anything else
+ * (a network drop, a thrown non-error) yields `undefined` and the
+ * caller's translated fallback wins. Same unwrap the vouchers screen
+ * uses, so a 403/422/500 reads the same way on both.
+ */
+function backendMessage(e: unknown): string | undefined {
+  return (e as { response?: { data?: { message?: string } } })?.response?.data
+    ?.message;
+}
+
+/**
+ * One writer for both directions — the vouchers screen kept two
+ * near-identical functions and had to warn future editors to keep them
+ * in step. Folding the pair into one call path means they cannot drift:
+ * the only things that differ are the target status and the failure
+ * copy, both passed in.
+ *
+ * `reload()` is awaited exactly once, and only after a successful PUT.
+ * A rejected write returns early, so the row keeps its old status and
+ * the admin sees why instead of a button that silently did nothing.
+ */
+async function setGroupStatus(
+  g: BimbelLearningGroup,
+  status: BimbelLearningGroupStatus,
+  errorKey: string,
+): Promise<void> {
+  if (!canManage.value) return;
+  rowActionError.value = null;
+  try {
+    await TutoringBimbelService.updateGroup(g.id, { status });
+  } catch (e: unknown) {
+    rowActionError.value = backendMessage(e) ?? t(errorKey);
+    return;
+  }
+  await reload();
+}
+
+function activateGroup(g: BimbelLearningGroup): Promise<void> {
+  return setGroupStatus(
+    g,
+    LEARNING_GROUP_STATUS.active,
+    'tutoring2.admin.groups.errorActivateFailed',
+  );
+}
+
+function makeGroupDraft(g: BimbelLearningGroup): Promise<void> {
+  return setGroupStatus(
+    g,
+    LEARNING_GROUP_STATUS.draft,
+    'tutoring2.admin.groups.errorMakeDraftFailed',
+  );
 }
 
 // ── Create sheet ───────────────────────────────────────────────────
@@ -361,6 +439,20 @@ function onCreated() {
       @retry="reload"
     >
       <template #default="{ data }">
+        <!--
+          The row buttons live inside the table and the create sheet is
+          closed when they are pressed, so a refused write needs a home
+          the admin is actually looking at. Mirrors the vouchers
+          screen's `rowActionError` banner.
+        -->
+        <p
+          v-if="rowActionError"
+          data-testid="groups-row-error"
+          class="mb-3 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+          role="alert"
+        >
+          {{ rowActionError }}
+        </p>
         <div class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <table class="w-full text-sm">
             <thead>
@@ -371,6 +463,7 @@ function onCreated() {
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.capacity') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.tutor') }}</th>
                 <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
+                <th v-if="canManage" class="px-4 py-3 font-bold text-right">{{ t('tutoring2.common.actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -399,6 +492,37 @@ function onCreated() {
                 </td>
                 <td class="px-4 py-3">
                   <StatusBadge :label="g.status_label ?? statusLabel(g.status)" :tone="statusPillTone(g.status)" uppercase />
+                </td>
+                <!--
+                  Quick action. `@click.stop` is load-bearing: the whole
+                  <tr> is a drill-in to the detail screen, so without it
+                  every press would ALSO navigate away and the reloaded
+                  list would never be seen.
+
+                  The two buttons are mutually exclusive and each is
+                  keyed to the status it starts FROM, so a `closed`
+                  group renders neither — an empty cell rather than a
+                  control that looks actionable and would mean nothing.
+                -->
+                <td v-if="canManage" class="px-4 py-3 text-right">
+                  <button
+                    v-if="g.status === 'draft'"
+                    type="button"
+                    data-testid="group-activate"
+                    class="text-xs font-bold text-slate-500 hover:text-emerald-600"
+                    @click.stop="activateGroup(g)"
+                  >
+                    {{ t('tutoring2.admin.groups.activate') }}
+                  </button>
+                  <button
+                    v-else-if="g.status === 'active'"
+                    type="button"
+                    data-testid="group-make-draft"
+                    class="text-xs font-bold text-slate-500 hover:text-amber-600"
+                    @click.stop="makeGroupDraft(g)"
+                  >
+                    {{ t('tutoring2.admin.groups.makeDraft') }}
+                  </button>
                 </td>
               </tr>
             </tbody>

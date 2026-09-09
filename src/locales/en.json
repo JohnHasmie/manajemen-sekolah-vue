@@ -7023,7 +7023,11 @@
         "emptyDesc": "Create your first group for an active program.",
         "kpiFull": "Full",
         "searchPh": "Search groups…",
-        "kpiCountedSuffix": "{count} groups counted"
+        "kpiCountedSuffix": "{count} groups counted",
+        "activate": "Activate",
+        "makeDraft": "Make draft",
+        "errorActivateFailed": "Could not activate the group. Please try again.",
+        "errorMakeDraftFailed": "Could not turn the group into a draft. Please try again."
       },
       "payoutSummary": {
         "title": "Payout Summary",

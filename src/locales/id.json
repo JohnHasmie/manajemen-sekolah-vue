@@ -7513,7 +7513,11 @@
         "emptyDescShort": "Klik + untuk membuat kelompok baru.",
         "emptyDesc": "Buat kelompok pertama untuk program aktif.",
         "newCta": "Kelompok baru",
-        "kpiCountedSuffix": "{count} kelompok terdata"
+        "kpiCountedSuffix": "{count} kelompok terdata",
+        "activate": "Aktifkan",
+        "makeDraft": "Jadikan Draf",
+        "errorActivateFailed": "Gagal mengaktifkan kelompok. Coba lagi.",
+        "errorMakeDraftFailed": "Gagal mengubah kelompok menjadi draf. Coba lagi."
       },
       "leaderboard": {
         "title": "Peringkat",

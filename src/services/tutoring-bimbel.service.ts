@@ -57,6 +57,36 @@ export interface BimbelPackage {
 
 // ─── Learning groups (BE-3) ─────────────────────────────────────────
 
+/**
+ * Lifecycle of a learning group, mirroring the backend enum
+ * `App\Modules\Tutoring\Enums\LearningGroupStatus` — THREE cases, not
+ * two. `closed` ("Ditutup") is a real terminal state, not a synonym for
+ * `draft`, so any UI that offers a status flip has to decide what it
+ * does about the third case rather than assuming a boolean toggle.
+ *
+ * Named and exported rather than left inline on the interface so a call
+ * site can say which status it means without re-typing the literal.
+ */
+export type BimbelLearningGroupStatus = 'draft' | 'active' | 'closed';
+
+/**
+ * Runtime counterpart of `BimbelLearningGroupStatus`, the same idea as
+ * `VOUCHER_STATUS` in `@/types/tutoring2/voucher`: the type evaporates
+ * at compile time, so a caller that needs to SEND a status through
+ * `updateGroup()` would otherwise hand-type the string, and a backend
+ * rename would surface as a runtime 422 instead of a build error.
+ *
+ * `satisfies Record<...>` makes the map exhaustive in both directions —
+ * adding a case to the union without adding it here fails to compile,
+ * and so does a typo in a value.
+ */
+export const LEARNING_GROUP_STATUS = {
+  draft: 'draft',
+  active: 'active',
+  closed: 'closed',
+} as const satisfies Record<BimbelLearningGroupStatus, BimbelLearningGroupStatus>;
+
+
 export interface BimbelLearningGroup {
   id: string;
   program_id: string;
@@ -70,7 +100,7 @@ export interface BimbelLearningGroup {
   kind_label?: string;
   capacity: number;
   room?: string | null;
-  status: 'draft' | 'active' | 'closed';
+  status: BimbelLearningGroupStatus;
   status_label?: string;
   /**
    * Students currently seated in this group.
