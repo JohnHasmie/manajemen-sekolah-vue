@@ -29,7 +29,8 @@
  * twice per pick is its own defect.
  */
 // @ts-nocheck — vitest types not installed yet
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { reactive } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
 import { createPinia, setActivePinia } from 'pinia';
@@ -86,9 +87,28 @@ vi.mock('@/composables/useMe', () => ({
 }));
 
 const push = vi.fn();
+const replace = vi.fn();
+
+/**
+ * Mutable so the Laporan Aktivitas drill-in (`?date=YYYY-MM-DD`) can be
+ * simulated per test. `useRoute()` returns the SAME object every call,
+ * which is what lets the view's `watch(() => route.query.date, …)` see a
+ * later mutation.
+ */
+// REACTIVE, because the view watches `() => route.query.date`. A plain
+// object would never notify, and the "follows the URL" test would be
+// asserting nothing.
+const route = reactive({ params: {}, query: {} as Record<string, unknown> });
+const routeQuery = route.query;
+
+function setDateQuery(value?: string) {
+  for (const k of Object.keys(routeQuery)) delete routeQuery[k];
+  if (value !== undefined) routeQuery.date = value;
+}
+
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push, back: vi.fn() }),
-  useRoute: () => ({ params: {}, query: {} }),
+  useRouter: () => ({ push, replace, back: vi.fn() }),
+  useRoute: () => route,
 }));
 
 function makeSession(overrides = {}) {
@@ -130,6 +150,13 @@ function makeI18n() {
             tutor: 'Tutor',
             status: 'Status',
             period: 'Periode',
+          },
+          admin: {
+            schedule: {
+              // The real id.json values for the drill-in context bar.
+              dateFilterActive: 'Menampilkan sesi pada {date}',
+              dateFilterClear: 'Tampilkan semua tanggal',
+            },
           },
           // The real id.json values. The Status chip and its picker must
           // render THESE, never the wire enums they key off.
@@ -180,8 +207,23 @@ async function mountView() {
     },
   });
   await flushPromises();
+  mounted.push(w);
   return w;
 }
+
+/**
+ * Every wrapper this file mounts, torn down after each test.
+ *
+ * Mandatory now that `route` is a shared reactive object: a view left
+ * mounted keeps its `watch(() => route.query.date, …)` alive, so the
+ * NEXT test's `setDateQuery()` reloads every zombie from every earlier
+ * test as well as the one under test. That is how the refetch counters
+ * in this file went from 1 to 69.
+ */
+const mounted: ReturnType<typeof mount>[] = [];
+afterEach(() => {
+  for (const w of mounted.splice(0)) w.unmount();
+});
 
 /** Chips render in template order: status, group, tutor, period. */
 const CHIP = { status: 0, group: 1, tutor: 2, period: 3 };
@@ -198,6 +240,7 @@ function lastListSessionsArg() {
 describe('AdminTutoring2ScheduleView filter chips', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setDateQuery();
     (TutoringBimbelService.listSessions as any).mockResolvedValue({
       items: [makeSession()],
       pagination: undefined,
@@ -304,6 +347,7 @@ describe('AdminTutoring2ScheduleView filter chips', () => {
 describe('AdminTutoring2ScheduleView table labels', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setDateQuery();
     (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
     (TutoringTutorsService.list as any).mockResolvedValue({ items: TUTORS });
   });
@@ -365,6 +409,7 @@ const CTA = '[data-testid="schedule-new-cta"]';
 describe('AdminTutoring2ScheduleView "+ Buat sesi" CTA', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setDateQuery();
     grantedAbilities = ['tutoring.session.manage'];
     (TutoringBimbelService.listSessions as any).mockResolvedValue({
       items: [makeSession()],
@@ -471,6 +516,7 @@ async function pickStatus(w, label: string) {
 describe('AdminTutoring2ScheduleView Status chip', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setDateQuery();
     (TutoringBimbelService.listSessions as any).mockResolvedValue({
       items: [makeSession()],
       pagination: undefined,
@@ -611,6 +657,7 @@ describe('AdminTutoring2ScheduleView Status chip', () => {
 describe('AdminTutoring2ScheduleView row → detail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setDateQuery();
     grantedAbilities = ['tutoring.session.manage'];
     (TutoringBimbelService.listSessions as any).mockResolvedValue({
       items: [makeSession()],
@@ -656,5 +703,279 @@ describe('AdminTutoring2ScheduleView row → detail', () => {
 
     // Read access is not the write gate.
     expect(push).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * `?date=YYYY-MM-DD` — the Laporan Aktivitas drill-in.
+ *
+ * ── What already existed, and what did not ──────────────────────────
+ *
+ * `SessionController::index` has supported the narrowing since BE-4:
+ *
+ *     ->when($request->filled('from'), … where('starts_at', '>=', from))
+ *     ->when($request->filled('to'),   … where('starts_at', '<',  to))
+ *
+ * and `TutoringBimbelService.listSessions` has always declared
+ * `from?: string; to?: string` in its params type. Neither had a
+ * caller — this screen passed neither, so a report row had nowhere to
+ * land. Nothing new was built server-side; this block pins the caller.
+ *
+ * ── The exclusive upper bound ───────────────────────────────────────
+ *
+ * `to` is `<`, not `<=`, so one day D is the half-open `[D, D+1)`. That
+ * matches the report's `starts_at::date = D` bucketing exactly, which
+ * is what stops the two screens disagreeing about which sessions belong
+ * to a day. `D+1` comes from `addDays()`; a `new Date(D)` +
+ * `toISOString().slice(0, 10)` round-trip is the bug the TZ block below
+ * exists to catch.
+ *
+ * Every test in this block is RED against the shipped view: it read no
+ * query at all and sent neither bound. The one that passes either way
+ * is the no-`?date=` baseline — deliberately, since it is what the
+ * others move away from.
+ */
+describe('AdminTutoring2ScheduleView ?date= drill-in', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setDateQuery();
+    (TutoringBimbelService.listSessions as any).mockResolvedValue({
+      items: [makeSession()],
+      pagination: undefined,
+    });
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
+    (TutoringTutorsService.list as any).mockResolvedValue({ items: TUTORS });
+  });
+
+  it('sends no date bounds when no ?date= is present', async () => {
+    await mountView();
+
+    const arg = lastListSessionsArg();
+    expect(arg.from).toBeUndefined();
+    expect(arg.to).toBeUndefined();
+  });
+
+  it('narrows the query to [D, D+1) — the exclusive bound the API wants', async () => {
+    setDateQuery('2026-09-09');
+
+    await mountView();
+
+    const arg = lastListSessionsArg();
+    expect(arg.from).toBe('2026-09-09');
+    expect(arg.to).toBe('2026-09-10');
+  });
+
+  it('carries the day across a month boundary', async () => {
+    setDateQuery('2026-09-30');
+
+    await mountView();
+
+    expect(lastListSessionsArg().to).toBe('2026-10-01');
+  });
+
+  it('carries the day across a year boundary', async () => {
+    setDateQuery('2026-12-31');
+
+    await mountView();
+
+    const arg = lastListSessionsArg();
+    expect(arg.from).toBe('2026-12-31');
+    expect(arg.to).toBe('2027-01-01');
+  });
+
+  it('leaves the other facets alone', async () => {
+    setDateQuery('2026-09-09');
+
+    await mountView();
+
+    const arg = lastListSessionsArg();
+    expect(arg.status).toBeUndefined();
+    expect(arg.learning_group_id).toBeUndefined();
+    expect(arg.tutor_id).toBeUndefined();
+  });
+
+  it('composes with a facet picked afterwards, in ONE refetch', async () => {
+    setDateQuery('2026-09-09');
+    const w = await mountView();
+    expect(listSessionsCalls()).toHaveLength(1);
+
+    await w.findAll('[data-testid="chip"]')[CHIP.group].trigger('click');
+    await optionRows(w)[2].trigger('click');
+    await flushPromises();
+
+    expect(listSessionsCalls()).toHaveLength(2);
+    const arg = lastListSessionsArg();
+    expect(arg.learning_group_id).toBe('gr-2');
+    // The day must survive the pick — narrowing by group must not widen
+    // the window back to "every day".
+    expect(arg.from).toBe('2026-09-09');
+    expect(arg.to).toBe('2026-09-10');
+  });
+
+  it('drops a malformed ?date= rather than forwarding it to the API', async () => {
+    // A value the API can never match would render as "no sessions" —
+    // a lie about the data, rather than a visibly ignored parameter.
+    for (const bad of ['2026-9-9', '2026-13-01', 'kemarin', '']) {
+      vi.clearAllMocks();
+      setDateQuery(bad);
+
+      await mountView();
+
+      const arg = lastListSessionsArg();
+      expect(arg.from, `?date=${bad}`).toBeUndefined();
+      expect(arg.to, `?date=${bad}`).toBeUndefined();
+    }
+  });
+
+  it('follows the URL when it changes under a mounted view', async () => {
+    setDateQuery('2026-09-09');
+    const w = await mountView();
+
+    // Back/Forward, or a second drill-in from the report, reuses this
+    // same component instance.
+    routeQuery.date = '2026-09-10';
+    await flushPromises();
+
+    const arg = lastListSessionsArg();
+    expect(arg.from).toBe('2026-09-10');
+    expect(arg.to).toBe('2026-09-11');
+  });
+});
+
+/**
+ * The day must survive the hop as the SAME calendar day.
+ *
+ * `addDays` never hands the string to `Date`, so both bounds stay on
+ * the local calendar. The premise is asserted inside each test so
+ * neither can pass vacuously on a UTC CI runner — same pattern as
+ * `local-date.spec.ts`.
+ */
+describe('AdminTutoring2ScheduleView ?date= round-trip in WIB', () => {
+  const REAL_TZ = process.env.TZ;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setDateQuery();
+    (TutoringBimbelService.listSessions as any).mockResolvedValue({
+      items: [makeSession()],
+      pagination: undefined,
+    });
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
+    (TutoringTutorsService.list as any).mockResolvedValue({ items: TUTORS });
+  });
+  afterEach(() => {
+    process.env.TZ = REAL_TZ;
+  });
+
+  it('asks for 9 Sep, not 8 Sep, for a WIB admin', async () => {
+    process.env.TZ = 'Asia/Jakarta';
+    expect(new Date('2026-09-09T00:00:00Z').getTimezoneOffset()).toBe(-420);
+    // The trap this is guarding: local midnight on the 9th serialises
+    // through UTC as the 8th, so a `toISOString().slice(0, 10)` step
+    // anywhere in the chain hands a WIB reader the previous day.
+    expect(new Date(2026, 8, 9).toISOString().slice(0, 10)).toBe('2026-09-08');
+
+    setDateQuery('2026-09-09');
+    await mountView();
+
+    const arg = lastListSessionsArg();
+    expect(arg.from).toBe('2026-09-09');
+    expect(arg.to).toBe('2026-09-10');
+  });
+
+  it('is correct in a NEGATIVE offset too, where the naive parse loses a day', async () => {
+    process.env.TZ = 'America/New_York'; // UTC-4 in September
+    const utcParsed = new Date('2026-09-09');
+    expect(utcParsed.getTimezoneOffset()).toBe(240);
+    expect(utcParsed.getDate()).toBe(8); // the trap: 8 Sep, not 9 Sep
+
+    setDateQuery('2026-09-09');
+    await mountView();
+
+    const arg = lastListSessionsArg();
+    expect(arg.from).toBe('2026-09-09');
+    expect(arg.to).toBe('2026-09-10');
+  });
+});
+
+/**
+ * The context bar.
+ *
+ * A filter the reader did not set on this screen has to say so, and has
+ * to be undoable. Deliberately NOT an <AppFilterChip>: that chip has no
+ * menu of its own, and a chip whose only behaviour is clearing itself is
+ * the dead-control pattern !1191 spent four MRs removing from exactly
+ * these screens.
+ */
+const BAR = '[data-testid="schedule-date-filter"]';
+const BAR_CLEAR = '[data-testid="schedule-date-filter-clear"]';
+
+describe('AdminTutoring2ScheduleView date filter bar', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setDateQuery();
+    (TutoringBimbelService.listSessions as any).mockResolvedValue({
+      items: [makeSession()],
+      pagination: undefined,
+    });
+    (TutoringBimbelService.listGroups as any).mockResolvedValue({ items: GROUPS });
+    (TutoringTutorsService.list as any).mockResolvedValue({ items: TUTORS });
+  });
+
+  it('is absent when no day is applied', async () => {
+    const w = await mountView();
+
+    expect(w.find(BAR).exists()).toBe(false);
+  });
+
+  it('names the day in words, not as the wire string', async () => {
+    process.env.TZ = 'Asia/Jakarta';
+    setDateQuery('2026-09-09');
+
+    const w = await mountView();
+
+    expect(w.find(BAR).exists()).toBe(true);
+    expect(w.find(BAR).text()).toContain('9 September 2026');
+    expect(w.find(BAR).text()).not.toContain('2026-09-09');
+  });
+
+  it('clearing it widens the query back to every day', async () => {
+    setDateQuery('2026-09-09');
+    const w = await mountView();
+    expect(lastListSessionsArg().from).toBe('2026-09-09');
+
+    await w.find(BAR_CLEAR).trigger('click');
+    await flushPromises();
+
+    const arg = lastListSessionsArg();
+    expect(arg.from).toBeUndefined();
+    expect(arg.to).toBeUndefined();
+    expect(w.find(BAR).exists()).toBe(false);
+  });
+
+  it('clearing it also strips ?date= off the URL', async () => {
+    setDateQuery('2026-09-09');
+    const w = await mountView();
+
+    await w.find(BAR_CLEAR).trigger('click');
+
+    // Otherwise a refresh silently re-applies the filter the reader
+    // just dismissed. `replace`, not `push` — dismissing a filter is
+    // not a place in history worth returning to.
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(push).not.toHaveBeenCalled();
+    const arg = replace.mock.calls[0][0];
+    expect(arg.name).toBe('admin.tutoring2.schedule');
+    expect(arg.query.date).toBeUndefined();
+  });
+
+  it('keeps the sibling query params it did not own', async () => {
+    setDateQuery('2026-09-09');
+    routeQuery.tab = 'sesi';
+    const w = await mountView();
+
+    await w.find(BAR_CLEAR).trigger('click');
+
+    expect(replace.mock.calls[0][0].query).toEqual({ tab: 'sesi' });
   });
 });

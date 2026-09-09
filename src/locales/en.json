@@ -7157,7 +7157,10 @@
           "colCancelled": "Cancelled",
           "colAttendance": "Attendance",
           "emptyTitle": "No activity yet",
-          "emptyDesc": "No sessions or attendance recorded in this range."
+          "emptyDesc": "No sessions or attendance recorded in this range.",
+          "openDay": "View sessions on this day",
+          "noSessionsThatDay": "No sessions on this day",
+          "openDayForbidden": "You do not have access to the session list"
         },
         "attendance": {
           "title": "Attendance report",
@@ -7310,7 +7313,9 @@
         "searchPh": "Search sessions…",
         "kpiInProgress": "In progress",
         "createEmptyDesc": "Sessions can only be created for active groups. Create or activate a learning group first.",
-        "openDetail": "Open session detail"
+        "openDetail": "Open session detail",
+        "dateFilterActive": "Showing sessions on {date}",
+        "dateFilterClear": "Show all dates"
       },
       "programs": {
         "emptyTitle": "No programs yet",

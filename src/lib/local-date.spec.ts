@@ -9,7 +9,7 @@
  * caller's timezone is.
  */
 // @ts-nocheck — vitest types optional in this workspace
-import { afterAll, beforeAll, describe, it, expect, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, it, expect, vi } from 'vitest';
 import { toLocalYmd } from './local-date';
 
 describe('toLocalYmd', () => {
@@ -189,7 +189,7 @@ describe('toLocalYm across a UTC month boundary', () => {
  * select — and the backend rule it mirrors (`after:valid_from`) has no
  * slack: the day either is or is not legal.
  * ------------------------------------------------------------------ */
-import { addDays, isValidYmd } from './local-date';
+import { addDays, formatYmdLabel, isValidYmd } from './local-date';
 
 describe('YYYY-MM-DD helpers', () => {
   it('validates the wire shape and rejects the near-misses', () => {
@@ -251,5 +251,51 @@ describe('YYYY-MM-DD helpers', () => {
     } finally {
       process.env.TZ = REAL_TZ;
     }
+  });
+});
+
+/**
+ * `formatYmdLabel` — the day label behind the schedule screen's
+ * "Menampilkan sesi pada …" bar.
+ *
+ * The hazard is the same one `formatYmLabel` documents, one granularity
+ * finer: `new Date('2026-09-09')` is UTC midnight BY SPEC, so handing
+ * the wire string straight to `toLocaleDateString` renders the PREVIOUS
+ * day for every reader west of Greenwich. The helper splits the parts
+ * and materialises local midnight instead.
+ */
+describe('formatYmdLabel', () => {
+  const REAL_TZ = process.env.TZ;
+  afterEach(() => {
+    process.env.TZ = REAL_TZ;
+  });
+
+  it('names the day, the month in words, and the year', () => {
+    expect(formatYmdLabel('2026-09-09', 'id-ID')).toBe('9 September 2026');
+    expect(formatYmdLabel('2026-01-01', 'en-US')).toBe('January 1, 2026');
+  });
+
+  it('echoes malformed input back instead of rendering "Invalid Date"', () => {
+    expect(formatYmdLabel('2026-9-9')).toBe('2026-9-9');
+    expect(formatYmdLabel('')).toBe('');
+  });
+
+  it('names the SAME day west of Greenwich, where the naive parse loses one', () => {
+    process.env.TZ = 'America/New_York'; // UTC-4 in September
+    // Premise + the trap, so this cannot pass vacuously.
+    const utcParsed = new Date('2026-09-09');
+    expect(utcParsed.getTimezoneOffset()).toBe(240);
+    expect(utcParsed.toLocaleDateString('en-US', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    })).toBe('September 8, 2026'); // the buggy form
+
+    expect(formatYmdLabel('2026-09-09', 'en-US')).toBe('September 9, 2026');
+  });
+
+  it('is stable in WIB, the timezone every tenant is in', () => {
+    process.env.TZ = 'Asia/Jakarta';
+    expect(new Date('2026-09-09T00:00:00Z').getTimezoneOffset()).toBe(-420);
+
+    expect(formatYmdLabel('2026-09-09', 'id-ID')).toBe('9 September 2026');
   });
 });

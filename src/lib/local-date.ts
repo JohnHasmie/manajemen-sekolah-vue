@@ -95,6 +95,30 @@ export function addDays(ymd: string, delta: number): string {
   return toLocalYmd(new Date(y, m - 1, d + delta));
 }
 
+/**
+ * Human day label for a `YYYY-MM-DD` — e.g. `'2026-09-09'` →
+ * "9 September 2026". The day-granularity sibling of `formatYmLabel`,
+ * and it exists for exactly the same reason.
+ *
+ * `new Date('2026-09-09')` is parsed as UTC midnight BY SPEC, so
+ * handing the wire string straight to `toLocaleDateString` renders
+ * "8 September 2026" for every reader west of Greenwich. The parts are
+ * split out and materialised in LOCAL time instead, which has no such
+ * ambiguity.
+ *
+ * Malformed input is echoed back rather than rendered as
+ * "Invalid Date" — same contract as `formatYmLabel`.
+ */
+export function formatYmdLabel(ymd: string, localeTag = 'id-ID'): string {
+  if (!isValidYmd(ymd)) return ymd;
+  const [y, m, d] = ymd.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(localeTag, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
 /* ------------------------------------------------------------------ *
  * `YYYY-MM` month arithmetic
  *

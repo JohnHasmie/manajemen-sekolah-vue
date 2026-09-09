@@ -53,11 +53,42 @@
   `useMe().can` (NEVER `roles[].permission_keys`). Missing ability
   hides the CTA outright, matching AdminTutoring2GroupsView — an admin
   never sees a button that would refuse them.
+
+  ── `?date=YYYY-MM-DD` — the Laporan Aktivitas drill-in ──────────────
+
+  This screen is the destination of a row click on
+  AdminTutoring2ActivityReportView. A report row is a calendar DAY (the
+  rollup groups by `starts_at::date` and the row carries no id), so
+  "open the row" can only mean "the sessions on that day" — which is
+  this list, narrowed.
+
+  Nothing new was built for it. `SessionController::index` has always
+  supported the narrowing:
+
+      ->when($request->filled('from'), … where('starts_at', '>=', from))
+      ->when($request->filled('to'),   … where('starts_at', '<',  to))
+
+  and `TutoringBimbelService.listSessions` has always declared
+  `from?: string; to?: string`. Both were simply unused — this screen
+  passed neither. All that was missing was a caller.
+
+  Note `to` is EXCLUSIVE (`<`, not `<=`). One day D is therefore
+  `[D, D+1)`, and `D+1` comes from `addDays()` — the local-calendar
+  helper — never from `new Date(D)` + `toISOString().slice(0, 10)`,
+  which round-trips through UTC and hands a WIB reader the wrong day.
+  That bound matches the report's `starts_at::date = D` bucketing
+  exactly, so the two screens cannot disagree about which sessions
+  belong to the day.
+
+  A malformed `?date=` is dropped rather than forwarded: an unparseable
+  value would otherwise reach the API as a filter nothing can match and
+  render as "no sessions" — a lie about the data instead of a visibly
+  ignored parameter.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -72,6 +103,7 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
+import { addDays, formatYmdLabel, isValidYmd } from '@/lib/local-date';
 import {
   BIMBEL_SESSION_STATUSES,
   TutoringBimbelService,
@@ -85,6 +117,7 @@ import type { StatusBadgeTone } from '@/types/status-badge';
 
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 
 const { can } = useMe();
 const canManage = computed(() => can('tutoring.session.manage'));
@@ -107,6 +140,50 @@ function openDetail(id: string) {
   router.push({ name: 'admin.tutoring2.session.detail', params: { id } });
 }
 
+/**
+ * The day this list is narrowed to, or '' for "every day".
+ *
+ * Seeded from `?date=` so the Laporan Aktivitas drill-in survives a
+ * refresh and a shared link, and validated on the way in — see the
+ * docblock on why a malformed value is dropped rather than forwarded.
+ */
+function readDateQuery(): string {
+  const raw = route.query.date;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return typeof value === 'string' && isValidYmd(value) ? value : '';
+}
+
+const dateFilter = ref<string>(readDateQuery());
+
+/** Human label for the context bar — "9 September 2026", built locally. */
+const dateFilterLabel = computed(() => formatYmdLabel(dateFilter.value));
+
+/**
+ * Back to every day.
+ *
+ * Also strips `date` off the URL, so a refresh (or the browser Back
+ * button landing here again) does not silently re-apply a filter the
+ * reader just dismissed. `replace`, not `push`: dismissing a filter is
+ * not a place in history worth returning to.
+ */
+function clearDateFilter() {
+  dateFilter.value = '';
+  const { date: _dropped, ...rest } = route.query;
+  router.replace({ name: 'admin.tutoring2.schedule', query: rest });
+}
+
+/**
+ * Follow the URL when it changes underneath us — a second drill-in from
+ * the report, or Back/Forward between two days, reuses this same mounted
+ * component and would otherwise keep showing the first day's sessions.
+ */
+watch(
+  () => route.query.date,
+  () => {
+    dateFilter.value = readDateQuery();
+  },
+);
+
 const search = ref('');
 // '' = "Semua". Typed against the canonical union rather than a bare
 // string, so a value the API has no status for cannot be assigned here.
@@ -127,11 +204,14 @@ const { state, reload } = useDataRefresh(async () => {
     status: statusFilter.value || undefined,
     learning_group_id: groupFilter.value || undefined,
     tutor_id: tutorFilter.value || undefined,
+    // [D, D+1) — `to` is exclusive server-side (`starts_at < to`).
+    from: dateFilter.value || undefined,
+    to: dateFilter.value ? addDays(dateFilter.value, 1) : undefined,
   });
   return items;
 });
 
-watch([debouncedSearch, statusFilter, groupFilter, tutorFilter, periodFilter], () => reload());
+watch([debouncedSearch, statusFilter, groupFilter, tutorFilter, periodFilter, dateFilter], () => reload());
 
 // ── Facet option lists ─────────────────────────────────────────────
 // Both id-valued chips need the id→name list their picker renders.
@@ -299,6 +379,33 @@ function applyStatusFilter(v: string) {
         />
       </template>
     </PageFilterToolbar>
+
+    <!--
+      Context bar for the drill-in, rendered only while a day is
+      actually applied. Deliberately NOT an <AppFilterChip>: that chip
+      has no menu of its own, and a chip whose only behaviour is to
+      clear itself is the exact dead-control pattern !1191 spent four
+      MRs removing from these screens. This states what is filtered and
+      offers the one action that makes sense — undo it.
+    -->
+    <section
+      v-if="dateFilter"
+      data-testid="schedule-date-filter"
+      class="flex items-center gap-3 flex-wrap rounded-2xl border border-brand-cobalt/30 bg-role-admin-soft px-4 py-3"
+    >
+      <span class="text-sm font-bold text-slate-900">
+        {{ t('tutoring2.admin.schedule.dateFilterActive', { date: dateFilterLabel }) }}
+      </span>
+      <span class="flex-1"></span>
+      <button
+        type="button"
+        data-testid="schedule-date-filter-clear"
+        class="inline-flex items-center rounded-xl border border-brand-cobalt bg-white px-3 py-1.5 text-sm font-bold text-brand-cobalt transition-colors hover:bg-brand-cobalt hover:text-white"
+        @click="clearDateFilter"
+      >
+        {{ t('tutoring2.admin.schedule.dateFilterClear') }}
+      </button>
+    </section>
 
     <AsyncView
       :state="state"
