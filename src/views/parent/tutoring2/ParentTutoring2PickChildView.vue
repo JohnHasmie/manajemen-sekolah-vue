@@ -49,6 +49,11 @@ const TARGETS: Record<string, string> = {
   activities: 'parent.tutoring2.activities',
   assessments: 'parent.tutoring2.assessments',
   sessions: 'parent.tutoring2.sessions',
+  // Added with the sidebar repoint: the wali "Peringkat" menu item
+  // routes here whenever no child is active, and an absent key would
+  // have silently fallen through to `attendance` — landing the wali on
+  // Kehadiran after they clicked Peringkat.
+  leaderboard: 'parent.tutoring2.leaderboard',
 };
 
 const targetRouteName = computed(() => {

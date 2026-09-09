@@ -1145,37 +1145,113 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
 ];
 
 /**
- * Parent bimbel sidebar. "Monitoring Anak" is the only per-anak route
- * (it embeds activeChildId from useChildPicker). Schedule / Grade /
- * Kehadiran all live inside that same overview screen, so they're
- * NOT separate entries — adding them would just duplicate the
- * Monitoring path and light up three rows at once.
+ * Per-child wali (parent) bimbel screens.
  *
- * When activeChildId is empty (initial load, or parent never opened the
- * picker), Monitoring falls back to /parent so the parent lands on the
- * dashboard child-switcher instead of a broken /parent/tutoring/
- * route.
+ * Key = the `?target=` token ParentTutoring2PickChildView validates
+ * against its own allow-list; value = the `parent/tutoring2/<value>/:studentId`
+ * path segment. They are spelled the same today, and the record exists
+ * so a future rename of either half is a one-line change in one place
+ * rather than a silent mismatch between the menu and the picker.
+ *
+ * NOTE the path SHAPE: greenfield wali routes are thing-then-id
+ * (`/parent/tutoring2/sessions/<id>`). The retired v1 routes were
+ * id-then-thing (`/parent/tutoring/<id>/sessions`), which is why every
+ * entry in this menu used to land on NotFound — the v1 paths were never
+ * registered in the router at all, not even before CLEAN-2.
+ */
+const PARENT_CHILD_SCREENS = ['sessions', 'activities', 'progress', 'leaderboard'] as const;
+type ParentChildScreen = (typeof PARENT_CHILD_SCREENS)[number];
+
+/**
+ * Where a per-child wali menu item points.
+ *
+ * With a child active: straight to that child's screen. Without one:
+ * the child picker, carrying `?target=` so that picking a child lands
+ * the wali on the screen they actually clicked — the same mechanism the
+ * Voucher entry has used since review-round-1, and the reason
+ * ParentTutoring2PickChildView takes a target at all.
+ *
+ * These items are never HIDDEN while no child is selected, deliberately.
+ * `activeChildId` is empty on every first paint (useChildPicker resolves
+ * it from an async /dashboard/stats call, and a wali who has never
+ * opened the picker has nothing in storage either), so hiding would make
+ * most of the sidebar pop in a moment after load — a new visible defect
+ * in place of the old one. Routing through the picker keeps the menu one
+ * fixed shape and every row clickable from the first frame.
+ *
+ * What must NOT happen — and what this function exists to prevent — is
+ * the previous behaviour: `activeChildId || ':studentId'` interpolated
+ * the literal placeholder into the URL, so with no child selected every
+ * item pointed at a path containing a real colon character. That matches
+ * no route; Vue Router resolved it to NotFound.
+ */
+function parentChildPath(screen: ParentChildScreen, activeChildId: string): string {
+  return activeChildId
+    ? `/parent/tutoring2/${screen}/${activeChildId}`
+    : `/parent/tutoring2/children?target=${screen}`;
+}
+
+/**
+ * Wali (parent) bimbel sidebar.
+ *
+ * Every `to` here resolves to a registered `parent/tutoring2/*` route —
+ * asserted against the real router in `useNavMenu.parent-tutoring.spec.ts`,
+ * because path-based nav targets are exactly what the existing
+ * `route-names-resolve.spec.ts` guard skips by design (it only reads
+ * `{ name: '…' }` pushes).
+ *
+ * ── Ability gates mirror the ROUTE ──
+ *
+ * An item carries `ability` when, and only when, its destination route
+ * carries the same `meta.ability`. Anything looser shows a row whose
+ * click the router guard bounces; anything stricter hides a screen the
+ * wali can actually open. The spec asserts the two sides agree, so a
+ * gate added to a route without its menu twin fails the suite.
+ *
+ * Gating only works because `useNavMenu` now runs this menu through
+ * `applyGates` like every other role. It previously returned straight
+ * out of the composable, which made the one `ability` declared here
+ * inert: a wali whose tenant had revoked `tutoring.announcement.view`
+ * still saw Pengumuman Kelompok, and clicking it bounced.
+ *
+ * ── Why there is no "Kelas" row ──
+ *
+ * There is no wali-facing class/group screen in v2, and that is by
+ * design, not an omission: learning groups are listed by
+ * `GET /learning-groups`, gated on `tutoring.group.view`, which
+ * `PermissionCatalog::parentTutoringDefaults()` does not grant. The
+ * child's group NAME is what a wali actually needs, and it arrives
+ * denormalised on the session and enrollment resources that Sesi
+ * already renders. The old row pointed at `/parent/tutoring/<id>/classes`
+ * — a path no router entry has ever defined — so it has never once
+ * opened a screen.
  */
 function parentTutoringNav(activeChildId: string): NavSection[] {
-  const child = activeChildId || ':studentId';
-  const homePath = activeChildId ? `/parent/tutoring/${child}` : '/parent';
+  const at = (screen: ParentChildScreen) => parentChildPath(screen, activeChildId);
   return [
     {
       titleKey: '',
       items: [
-        { to: homePath, labelKey: 'tutoring.nav.home', icon: 'home' },
+        // Param-free: the wali bimbel dashboard lists every linked child
+        // itself, so it needs no active child and no `/parent` fallback.
+        // The old fallback sent a bimbel wali to `/parent`, which is the
+        // SCHOOL parent dashboard (ParentDashboardView) — the wrong
+        // tenant surface entirely.
+        { to: '/parent/tutoring2/home', labelKey: 'tutoring.nav.home', icon: 'home' },
         {
-          to: `/parent/tutoring/${child}/classes`,
-          labelKey: 'tutoring.nav.classes',
-          icon: 'layers',
-        },
-        {
-          to: `/parent/tutoring/${child}/sessions`,
+          to: at('sessions'),
           labelKey: 'tutoring.nav.sessions',
           icon: 'calendar',
+          // Mirrors `parent.tutoring2.sessions` meta.ability.
+          ability: 'tutoring.session.view',
         },
         {
-          to: `/parent/tutoring/${child}/bills`,
+          // Param-free by design: the payment inbox lists unpaid +
+          // overdue bills across ALL of the wali's children in one list
+          // (the backend scopes by `tutoring.bill.view_own`), so routing
+          // it through the child picker would narrow a screen that is
+          // meant to be consolidated.
+          to: '/parent/tutoring2/pay',
           labelKey: 'tutoring.nav.bills',
           icon: 'wallet',
         },
@@ -1184,40 +1260,32 @@ function parentTutoringNav(activeChildId: string): NavSection[] {
     {
       titleKey: 'tutoring.nav.sectionExtra',
       items: [
-        {
-          to: `/parent/tutoring/${child}/activities`,
-          labelKey: 'tutoring.nav.activities',
-          icon: 'book',
-        },
-        {
-          to: `/parent/tutoring/${child}/progress`,
-          labelKey: 'tutoring.nav.progress',
-          icon: 'bar-chart',
-        },
-        {
-          to: `/parent/tutoring/${child}/leaderboard`,
-          labelKey: 'tutoring.nav.leaderboard',
-          icon: 'check-square',
-        },
-        {
-          to: `/parent/tutoring/${child}/announcements`,
-          labelKey: 'nav.announcements',
-          icon: 'megaphone',
-        },
+        { to: at('activities'), labelKey: 'tutoring.nav.activities', icon: 'book' },
+        { to: at('progress'), labelKey: 'tutoring.nav.progress', icon: 'bar-chart' },
+        { to: at('leaderboard'), labelKey: 'tutoring.nav.leaderboard', icon: 'check-square' },
         {
           // WEB-12 wali entry — greenfield BE-22 wali-facing feed of
           // published announcements across every enrolled child's
           // group. Path is child-agnostic (feed derives children from
           // the wali-scoped enrollments query on the server).
+          //
+          // The second, `nav.announcements` row that used to sit above
+          // this one is gone: it pointed at
+          // `/parent/tutoring/<id>/announcements`, an unregistered v1
+          // path, and repointing it here would have produced two rows
+          // with two labels and one destination. Same call CLEAN-2 made
+          // for the tutor nav.
           to: '/parent/tutoring2/announcements',
           labelKey: 'tutoring.nav.groupAnnouncementsV2',
           icon: 'megaphone',
+          // Mirrors `parent.tutoring2.group-announcements` meta.ability.
           ability: 'tutoring.announcement.view',
         },
         {
-          // review-round-1: legacy route was preserved but under the
-          // singular path `parent/tutoring/voucher` — the plural form
-          // used here landed on NotFound. Corrected below.
+          // Per-child, but with no "current child" concept of its own —
+          // vouchers are redeemed against one enrollment. Goes through
+          // the picker unconditionally; `parentChildPath` is not used
+          // because `vouchers` is not a sidebar screen in its own right.
           to: '/parent/tutoring2/children?target=vouchers',
           labelKey: 'tutoring.nav.myVouchers',
           icon: 'sparkles',
@@ -1228,25 +1296,18 @@ function parentTutoringNav(activeChildId: string): NavSection[] {
       titleKey: 'tutoring.nav.sectionAccount',
       items: [
         {
-          // review-round-1: legacy route was preserved but under the
-          // Indonesian path `parent/tutoring/notifikasi` — the English
-          // form used here landed on NotFound. Corrected below.
+          // Legacy path, still registered as `parent.tutoring.notifications`
+          // and still the only wali notification screen wired into the
+          // shell. The Indonesian segment is the REAL one — an English
+          // `/notifications` lands on NotFound.
           to: '/parent/tutoring/notifikasi',
           labelKey: 'tutoring.nav.notifications',
           icon: 'bell',
         },
+        { to: '/parent/tutoring2/profile', labelKey: 'tutoring.nav.profile', icon: 'user' },
         {
-          // review-round-1: repointed to greenfield WEB-5 wali profile
-          // view; no legacy `/parent/tutoring/profile` route ever
-          // existed (was already landing on NotFound before CLEAN-2).
-          to: '/parent/tutoring2/profile',
-          labelKey: 'tutoring.nav.profile',
-          icon: 'user',
-        },
-        {
-          // review-round-1: legacy route was preserved but under the
-          // Indonesian path `parent/tutoring/tampilan` — the English
-          // form used here landed on NotFound. Corrected below.
+          // As above: `parent.tutoring.appearance` is registered under
+          // the Indonesian segment `tampilan`.
           to: '/parent/tutoring/tampilan',
           labelKey: 'tutoring.nav.appearance',
           icon: 'sun',
@@ -1351,11 +1412,24 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
     // own the tutoring module shouldn't see 175 broken bimbel routes;
     // it falls through to the empty-nav path below.
     if (isTutoringCenter.value && tutoringCtx) {
-      // Parent nav is dynamic — Monitoring/Schedule/Grade entries embed
-      // the active child id so a single click lands directly on the
-      // overview without a child-picker detour.
+      // Parent nav is dynamic — per-child entries embed the active
+      // child id so a single click lands directly on that child's
+      // screen, and fall back to the child picker (`?target=`) when no
+      // child is selected yet.
+      //
+      // It goes through `applyGates` like every other role. It used to
+      // return straight from here, which meant the `ability` declared on
+      // its announcement entry was never read: the row rendered for a
+      // wali who lacked `tutoring.announcement.view`, and the router
+      // guard then bounced the click on the route's own meta.ability.
       if (canonicalRole(role) === ROLE_PARENT)
-        return parentTutoringNav(activeChildId.value);
+        return applyGates(
+          parentTutoringNav(activeChildId.value),
+          auth.hasAbility,
+          studentCtx,
+          academicCtx,
+          tutoringCtx,
+        );
       if (TUTORING_MENUS[role]) {
         return applyGates(
           TUTORING_MENUS[role]!,
