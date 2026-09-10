@@ -1052,6 +1052,43 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
         icon: 'calendar',
       },
       {
+        // Web/app parity: the Flutter tutor shell has carried this list
+        // since MOB-2 (`ShellTab.tutClasses` → TutorTutoring2StudentsScreen,
+        // labelled "Siswa saya"); the web route has existed just as long
+        // with NOTHING linking to it — no nav row, and no inbound
+        // `router.push`/`RouterLink` anywhere in `src/`. The screen was
+        // reachable only by typing the URL. Its drill-in
+        // (`teacher.tutoring2.student-detail`) is opened from this list
+        // alone, so it was unreachable too and this row restores both.
+        //
+        // No `ability`: `teacher.tutoring2.students` declares only
+        // `role` + `needs: 'tutoring-module'` in its route meta. A gate
+        // here that the route does not have would hide a screen the
+        // tutor can actually open — the mirror is asserted in
+        // useNavMenu.teacher-tutoring.spec.ts.
+        to: '/teacher/tutoring2/students',
+        labelKey: 'tutoring.nav.tutorStudents',
+        icon: 'users',
+      },
+      {
+        // Web/app parity: "Penilaian" is a tutor quick action on the
+        // Flutter home screen (tutor_home_screen.dart) and was the only
+        // greenfield tutor surface with no web entry point at all.
+        // Same story as Siswa saya — the route existed, nothing linked
+        // to it. It is also the ONLY door to three further screens:
+        // assessment-create (the "+" button), scores, and
+        // assessment-result are each pushed from this list and from
+        // nowhere else, so all four were dead until this row.
+        //
+        // No `ability`, for the same reason as Siswa saya above: the
+        // route's meta carries none. Note the contrast with the
+        // announcements row further down, whose route DOES declare
+        // `tutoring.announcement.view` — that row mirrors it.
+        to: '/teacher/tutoring2/assessments',
+        labelKey: 'tutoring.nav.tutorAssessments',
+        icon: 'clipboard-list',
+      },
+      {
         to: '/teacher/tutoring2/earnings',
         labelKey: 'tutoring.nav.honor',
         icon: 'wallet',

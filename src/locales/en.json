@@ -5822,6 +5822,8 @@
       "attendance": "Attendance",
       "billingSettings": "Billing settings",
       "assessments": "Grades",
+      "tutorAssessments": "Assessments",
+      "tutorStudents": "My students",
       "paymentHistory": "Payment history"
     }
   },

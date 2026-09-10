@@ -5822,6 +5822,8 @@
       "attendance": "Kehadiran",
       "billingSettings": "Pengaturan billing",
       "assessments": "Nilai",
+      "tutorAssessments": "Penilaian",
+      "tutorStudents": "Siswa saya",
       "paymentHistory": "Riwayat Pembayaran"
     }
   },
