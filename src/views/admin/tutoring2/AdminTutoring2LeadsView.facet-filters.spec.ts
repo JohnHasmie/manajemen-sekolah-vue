@@ -386,9 +386,14 @@ describe('Leads bimbel · Status chip', () => {
     await optionRows(w)[0].trigger('click'); // "Semua"
     await flushPromises();
 
-    // Absent, not ''. An empty string would be forwarded as
-    // `where('status', '')` and match nothing — `pruneParams` in
-    // services/tutoring2/leads.ts drops undefined, never the key itself.
+    // Absent, not ''. This is a VIEW->SERVICE contract, not a claim about
+    // what reaches the wire: `pruneParams` (services/tutoring2/leads.ts:49)
+    // already drops '' alongside undefined and null, so an empty string
+    // could never arrive as `where('status', '')`. An earlier version of
+    // this comment asserted the opposite and was simply wrong.
+    // The assertion still earns its place: it pins the VIEW to hand the
+    // service an already-cleared filter instead of leaning on the service
+    // to launder one, so the two layers cannot both assume the other prunes.
     expect(lastListArg().status).toBeUndefined();
     expect(lastListArg().status).not.toBe('');
     expect(statusChip(w).props('value')).toBe('Semua');
