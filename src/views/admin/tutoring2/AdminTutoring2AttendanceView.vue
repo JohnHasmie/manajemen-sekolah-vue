@@ -61,6 +61,22 @@
   tutor_id and the watcher already reloaded. Same fix as
   AdminTutoring2GroupsView (!1191).
 
+  The Tanggal chip was WORSE than inert, and was left behind by that
+  pass. It cycled Semua → Hari ini → Minggu ini → Bulan ini, lit itself
+  up as active, and sat in the reload watcher — so every press fired a
+  refetch and the table visibly re-rendered, with the same rows, because
+  `dateFilter` was never passed to `listSessions` and no client-side
+  predicate read it either. Its own author labelled it `// nominal,
+  UI-only`. A control that reloads and changes nothing is not a dead
+  button; it is a button that lies about having filtered.
+
+  It now opens the same picker as its siblings and sends real bounds.
+  The window arithmetic is `dateRangeForFacet()` in `lib/local-date`,
+  NOT a copy here: AdminTutoring2ScheduleView offers the same windows
+  over the same endpoint, and two copies are how the two screens would
+  come to disagree about which sessions are "minggu ini". Note `to` is
+  EXCLUSIVE there (`starts_at < to`) — see that helper's docblock.
+
   ── The "Ekspor rekap" action ──
 
   It rendered with no `@click` at all, so the one thing this monitor
@@ -105,7 +121,7 @@ import {
 } from '@/services/tutoring-bimbel.service';
 import { csvFrom, downloadCsv } from '@/services/tutoring2/reports';
 import { TutoringTutorsService } from '@/services/tutoring2/tutors';
-import { toLocalYmd } from '@/lib/local-date';
+import { dateRangeForFacet, toLocalYmd, type DateRangeFacet } from '@/lib/local-date';
 import type { Tutor } from '@/types/tutoring2/tutor';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import {
@@ -116,9 +132,23 @@ import {
 const { t } = useI18n();
 
 const search = ref('');
-const dateFilter = ref<'all' | 'today' | 'week' | 'month'>('all'); // nominal, UI-only
+// '' = "Semua", matching the id-valued chips beside it and the empty
+// key <FilterFacetPickerModal> emits from its reset row.
+const dateFilter = ref<'' | DateRangeFacet>('');
 const groupFilter = ref<string>(''); // '' | learning_group_id
 const tutorFilter = ref<string>(''); // '' | tutor_id
+
+/**
+ * The window the date chip stands for, as the half-open `[from, to)`
+ * the sessions endpoint wants — `null` while the chip says "Semua".
+ *
+ * The arithmetic lives in `dateRangeForFacet` rather than here because
+ * the Jadwal sesi screen offers the same windows over the same
+ * endpoint; a second copy is how the two would come to disagree about
+ * which sessions are "minggu ini". See its docblock for why `to` is
+ * EXCLUSIVE (`SessionController::index` filters `starts_at < to`).
+ */
+const dateRange = computed(() => dateRangeForFacet(dateFilter.value));
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -132,6 +162,10 @@ const { state, reload } = useDataRefresh(async () => {
     status: 'done',
     learning_group_id: groupFilter.value || undefined,
     tutor_id: tutorFilter.value || undefined,
+    // Spread, not two `?? undefined` keys: "Semua" must send NO date
+    // params at all, and an empty-string bound would reach the API as a
+    // filter nothing can match.
+    ...(dateRange.value ?? {}),
   });
   return items;
 });
@@ -143,8 +177,23 @@ watch([debouncedSearch, dateFilter, groupFilter, tutorFilter], () => reload());
 const groups = ref<BimbelLearningGroup[]>([]);
 const tutors = ref<Tutor[]>([]);
 
+const showDatePicker = ref(false);
 const showGroupPicker = ref(false);
 const showTutorPicker = ref(false);
+
+/**
+ * The date windows, worded the way `dateRangeForFacet` applies them:
+ * the calendar day / Monday-start week / calendar month the reader is
+ * currently in. A `computed`, so switching app language relabels the
+ * open picker rather than freezing the Indonesian strings in place.
+ *
+ * The keys are English wire-ish tokens; only the labels are translated.
+ */
+const dateOptions = computed<FacetOption[]>(() => [
+  { key: 'today', label: t('tutoring2.common.today') },
+  { key: 'week', label: t('tutoring2.common.thisWeek') },
+  { key: 'month', label: t('tutoring2.common.thisMonth') },
+]);
 
 const groupOptions = computed<FacetOption[]>(() =>
   groups.value.map((g) => ({
@@ -295,6 +344,17 @@ function chipValue(id: string, options: FacetOption[]): string {
   return options.find((o) => o.key === id)?.label ?? truncateId(id);
 }
 
+/**
+ * The picker emits a bare string; `dateFilter` is the narrower
+ * `'' | DateRangeFacet`. Narrowing here rather than casting in the
+ * template means a key that stops being a valid window fails closed to
+ * "Semua" instead of reaching `dateRangeForFacet` as a window it has no
+ * arithmetic for.
+ */
+function applyDateFilter(v: string) {
+  dateFilter.value = v === 'today' || v === 'week' || v === 'month' ? v : '';
+}
+
 // ── Ekspor rekap ───────────────────────────────────────────────────
 // See the docblock: same csvFrom + downloadCsv path the three admin
 // report views use, over exactly the rows currently listed.
@@ -368,10 +428,10 @@ function exportCsv(): void {
       <template #chips>
         <AppFilterChip
           :label="t('tutoring2.common.date')"
-          :value="dateFilter === 'all' ? t('tutoring2.common.all') : dateFilter === 'today' ? t('tutoring2.common.today') : dateFilter === 'week' ? t('tutoring2.common.thisWeek') : t('tutoring2.common.thisMonth')"
+          :value="chipValue(dateFilter, dateOptions)"
           icon-name="calendar"
-          :active="dateFilter !== 'all'"
-          @click="dateFilter = dateFilter === 'all' ? 'today' : dateFilter === 'today' ? 'week' : dateFilter === 'week' ? 'month' : 'all'"
+          :active="!!dateFilter"
+          @click="showDatePicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.group')"
@@ -469,6 +529,15 @@ function exportCsv(): void {
 
     <!-- Per-facet pickers. Each writes its ref; the existing watcher on
          [date, group, tutor] does the reload, so nothing calls it here. -->
+    <FilterFacetPickerModal
+      v-if="showDatePicker"
+      :title="t('tutoring2.common.date')"
+      :options="dateOptions"
+      :selected="dateFilter"
+      :all-label="t('tutoring2.common.all')"
+      @close="showDatePicker = false"
+      @apply="applyDateFilter"
+    />
     <FilterFacetPickerModal
       v-if="showGroupPicker"
       :title="t('tutoring2.common.group')"
