@@ -109,6 +109,8 @@ const canManage = computed(() => can('tutoring.lead.manage'));
 const search = ref('');
 const statusFilter = ref<LeadStatus | ''>('');
 const sourceFilter = ref<LeadSource | ''>('');
+const showStatusPicker = ref(false);
+const showSourcePicker = ref(false);
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -239,6 +241,75 @@ function statusLabel(l: BimbelLead): string {
 
 function sourceLabel(l: BimbelLead): string {
   return l.source_label ?? (l.source ? LEAD_SOURCE_LABEL[l.source] : '—');
+}
+
+// ─── Filter facets ─────────────────────────────────────────────────
+//
+// Both chips used to be two-value toggles:
+//
+//   @click="statusFilter = statusFilter ? '' : 'new'"
+//   @click="sourceFilter = sourceFilter ? '' : 'whatsapp'"
+//
+// <AppFilterChip> is a plain button with no menu of its own, so each
+// chip could reach exactly ONE of its five wire values. An admin could
+// ask for `new` or for nothing, and could never filter on `contacted`,
+// `trial`, `converted` or `dropped` — even though the funnel's own KPI
+// cards count `converted` and `dropped`, the table renders all five,
+// and `GET /tutoring-v2/leads` matches any one of them. Sumber was the
+// same shape: `whatsapp` reachable, `website` / `walkin` / `referral` /
+// `other` not. The chevron the chip paints promised a picker that did
+// not exist.
+//
+// Both are now <FilterFacetPickerModal> facets, the shape
+// AdminTutoring2BillingView's Status chip uses.
+//
+// The option lists are built FROM `LEAD_STATUS_VALUES` /
+// `LEAD_SOURCE_VALUES` rather than hand-listed here, so a sixth status
+// added to `LeadStatus` becomes filterable the moment that constant
+// grows — a second, hand-kept copy is precisely how a status goes
+// missing. `computed` rather than a bare const so the lists rebuild if
+// the labels ever move behind i18n.
+//
+// NOTE the deliberate name: the file already has `statusOptions` /
+// `sourceOptions` in the `{ value, label }` shape <FormField> wants for
+// the Create and Detail selects. `FacetOption` keys on `key`, so these
+// are separate arrays, not a rename.
+const statusFacetOptions = computed<FacetOption[]>(() =>
+  LEAD_STATUS_VALUES.map((v) => ({ key: v, label: LEAD_STATUS_LABEL[v] })),
+);
+const sourceFacetOptions = computed<FacetOption[]>(() =>
+  LEAD_SOURCE_VALUES.map((v) => ({ key: v, label: LEAD_SOURCE_LABEL[v] })),
+);
+
+// The chips show the same Indonesian words the table cells do — the
+// label maps `statusLabel()` / `sourceLabel()` fall back to — so a chip
+// never puts a wire token like `whatsapp` in front of an admin.
+const statusChipValue = computed(() =>
+  statusFilter.value
+    ? LEAD_STATUS_LABEL[statusFilter.value]
+    : tOr('tutoring2.common.all', 'Semua'),
+);
+const sourceChipValue = computed(() =>
+  sourceFilter.value
+    ? LEAD_SOURCE_LABEL[sourceFilter.value]
+    : tOr('tutoring2.common.all', 'Semua'),
+);
+
+// The picker emits a bare string; these refs are the narrower
+// `LeadStatus | ''` / `LeadSource | ''`. Narrow HERE rather than casting
+// in the template, so a key that stops being a real value fails CLOSED
+// to "Semua" instead of reaching the wire as a word the API never
+// stores (which would come back 200 + an empty page, reading as
+// "belum ada lead" rather than "bukan status").
+function applyStatusFilter(v: string): void {
+  statusFilter.value = (LEAD_STATUS_VALUES as readonly string[]).includes(v)
+    ? (v as LeadStatus)
+    : '';
+}
+function applySourceFilter(v: string): void {
+  sourceFilter.value = (LEAD_SOURCE_VALUES as readonly string[]).includes(v)
+    ? (v as LeadSource)
+    : '';
 }
 
 function fmtDate(iso: string | null | undefined): string {
@@ -860,21 +931,17 @@ function closeSheet() {
         <template #chips>
           <AppFilterChip
             :label="tOr('tutoring2.common.status', 'Status')"
-            :value="statusFilter
-              ? LEAD_STATUS_LABEL[statusFilter]
-              : tOr('tutoring2.common.all', 'Semua')"
+            :value="statusChipValue"
             icon-name="circle-check"
             :active="!!statusFilter"
-            @click="statusFilter = statusFilter ? '' : 'new'"
+            @click="showStatusPicker = true"
           />
           <AppFilterChip
             :label="tOr('tutoring2.admin.leads.source', 'Sumber')"
-            :value="sourceFilter
-              ? LEAD_SOURCE_LABEL[sourceFilter]
-              : tOr('tutoring2.common.all', 'Semua')"
+            :value="sourceChipValue"
             icon-name="megaphone"
             :active="!!sourceFilter"
-            @click="sourceFilter = sourceFilter ? '' : 'whatsapp'"
+            @click="showSourcePicker = true"
           />
         </template>
       </PageFilterToolbar>
@@ -1364,5 +1431,32 @@ function closeSheet() {
         </div>
       </form>
     </Modal>
+
+    <!-- Per-facet pickers for the toolbar chips. Each writes its own
+         ref and NOTHING else: the existing watcher on
+         [debouncedSearch, statusFilter, sourceFilter] does the one
+         reload, and a `reload()` call here would be the second path
+         that makes a single filter change fetch twice.
+         `all-label` is the row that clears back to "Semua" — it emits
+         '', which the loader turns into `undefined` so the key leaves
+         the request entirely rather than going out as `status=`. -->
+    <FilterFacetPickerModal
+      v-if="showStatusPicker"
+      :title="tOr('tutoring2.common.status', 'Status')"
+      :options="statusFacetOptions"
+      :selected="statusFilter"
+      :all-label="tOr('tutoring2.common.all', 'Semua')"
+      @close="showStatusPicker = false"
+      @apply="applyStatusFilter"
+    />
+    <FilterFacetPickerModal
+      v-if="showSourcePicker"
+      :title="tOr('tutoring2.admin.leads.source', 'Sumber')"
+      :options="sourceFacetOptions"
+      :selected="sourceFilter"
+      :all-label="tOr('tutoring2.common.all', 'Semua')"
+      @close="showSourcePicker = false"
+      @apply="applySourceFilter"
+    />
   </div>
 </template>

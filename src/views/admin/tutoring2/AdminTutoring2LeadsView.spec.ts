@@ -10,8 +10,10 @@
  *   1. mount()             — the view mounts with the service list
  *                            call unwrapping the {data, meta} envelope
  *                            and the table renders one row per lead.
- *   2. filter interaction  — flipping the status chip re-triggers the
- *                            list call with the new query param.
+ *   2. filter interaction  — clicking the status chip opens its picker
+ *                            rather than applying a filter; which
+ *                            option sends which wire value is pinned in
+ *                            AdminTutoring2LeadsView.facet-filters.spec.ts.
  *   3. convert flow        — clicking Konversi on a convertible lead
  *                            opens the convert modal + submitting it
  *                            POSTs /tutoring-v2/leads/{id}/convert
@@ -483,21 +485,32 @@ describe('AdminTutoring2LeadsView', () => {
     expect(rows).toHaveLength(2);
   });
 
-  it('re-fetches with the status filter when the status chip flips', async () => {
+  it('a filter chip OPENS a picker — it no longer applies a filter on click', async () => {
+    // This test used to assert `status: 'new'` after one chip click,
+    // because both chips were two-value toggles
+    // (`statusFilter = statusFilter ? '' : 'new'`) and 'new' was the only
+    // status an admin could ever reach. They are now
+    // <FilterFacetPickerModal> facets: the click opens the menu and
+    // changes nothing, and the pick that follows is what reaches the
+    // wire. Which option sends which value is pinned, against the REAL
+    // chip and the REAL picker, in
+    // AdminTutoring2LeadsView.facet-filters.spec.ts — <AppFilterChip> is
+    // stubbed here as an empty button, so no assertion in THIS file
+    // could observe what a chip displays.
     (TutoringLeadsService.list as any).mockResolvedValue({ items: [], pagination: undefined });
 
     const w = await mountView();
-    // Initial call already made (immediate load) — one chip click flips
-    // statusFilter from '' → 'new' which the watcher observes.
+    const callsBefore = (TutoringLeadsService.list as any).mock.calls.length;
+    expect(callsBefore).toBe(1); // the mount load
+
     const chips = w.findAll('[data-testid="chip"]');
     expect(chips.length).toBeGreaterThan(0);
     await chips[0].trigger('click');
     await flushPromises();
 
-    // The last call must carry status: 'new'.
     const calls = (TutoringLeadsService.list as any).mock.calls;
-    const last = calls[calls.length - 1][0];
-    expect(last.status).toBe('new');
+    expect(calls).toHaveLength(callsBefore); // opening a menu is not a filter change
+    expect(calls[calls.length - 1][0].status).toBeUndefined();
   });
 
   it('convert flow: clicking Konversi opens the modal and submitting posts the picked uuid', async () => {

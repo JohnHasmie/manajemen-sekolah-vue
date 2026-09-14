@@ -18,18 +18,51 @@ import type {
 
 // ─── Programs (BE-2) ────────────────────────────────────────────────
 
+/**
+ * Mirrors `App\Modules\Tutoring\Enums\ProgramStatus` case for case:
+ * DRAFT (belum terbit, tidak bisa dijual), ACTIVE (bisa dipakai
+ * pendaftaran), ARCHIVED (dikunci, disimpan untuk riwayat).
+ * `StoreProgramRequest` validates `Rule::in(ProgramStatus::values())`,
+ * so these three are the whole vocabulary the API accepts.
+ */
+export type BimbelProgramStatus = 'draft' | 'active' | 'archived';
+
 export interface BimbelProgram {
   id: string;
   name: string;
   grade_level?: string | null;
   description?: string | null;
-  status: 'draft' | 'active' | 'archived';
+  status: BimbelProgramStatus;
   status_label?: string;
   packages_count?: number;
   min_price?: number | null;
   created_at?: string;
   updated_at?: string;
 }
+
+/**
+ * The same three statuses, enumerable at RUNTIME.
+ *
+ * `BimbelProgramStatus` is the canonical union, but a TypeScript union
+ * is erased at build time and a filter picker needs a real array to
+ * render rows from. This is that union made iterable, NOT a second copy
+ * of it: the `Record<BimbelProgramStatus, true>` below is exhaustive in
+ * BOTH directions, so the build fails if a status is added to the union
+ * and forgotten here, and equally if a value here stops being a real
+ * status. A bare hand-written array is exactly how a status goes
+ * missing from a picker and becomes unfilterable.
+ *
+ * Same construction as `BIMBEL_SESSION_STATUSES` below.
+ */
+const PROGRAM_STATUS_SET: Record<BimbelProgramStatus, true> = {
+  draft: true,
+  active: true,
+  archived: true,
+};
+
+export const BIMBEL_PROGRAM_STATUSES = Object.keys(
+  PROGRAM_STATUS_SET,
+) as BimbelProgramStatus[];
 
 export interface ProgramListParams {
   page?: number;

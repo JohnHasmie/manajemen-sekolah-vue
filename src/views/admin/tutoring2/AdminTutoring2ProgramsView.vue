@@ -38,13 +38,18 @@ import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import {
+  BIMBEL_PROGRAM_STATUSES,
   TutoringBimbelService,
   type BimbelProgram,
+  type BimbelProgramStatus,
 } from '@/services/tutoring-bimbel.service';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import AdminTutoring2ProgramCreateSheet from './AdminTutoring2ProgramCreateSheet.vue';
@@ -55,7 +60,16 @@ const { can } = useMe();
 const canManage = computed(() => can('tutoring.program.manage'));
 
 const search = ref('');
-const statusFilter = ref<string>(''); // '' | 'draft' | 'active' | 'archived'
+/**
+ * '' = "Semua". Typed against the canonical union rather than a bare
+ * string, so a word the API has no status for cannot be assigned here
+ * and silently pin the list to an empty page — `ProgramController::index`
+ * does an unvalidated exact `where('status', ...)`, so an unknown token
+ * comes back 200 with zero rows, which reads as "belum ada program"
+ * rather than "bukan status".
+ */
+const statusFilter = ref<'' | BimbelProgramStatus>('');
+const showStatusPicker = ref(false);
 const gradeLevelFilter = ref<string>(''); // '' | 'SD' | 'SMP' | 'SMA' | 'Umum'
 
 const debouncedSearch = ref('');
@@ -104,6 +118,54 @@ function statusLabel(status: BimbelProgram['status']): string {
   return t(`tutoring2.status.${status}`);
 }
 
+// ─── Status facet ──────────────────────────────────────────────────
+//
+// This chip used to be a two-value toggle:
+//
+//   @click="statusFilter = statusFilter ? '' : 'active'"
+//
+// <AppFilterChip> is a plain button with no menu of its own, so the
+// only status an admin could ever filter on was `active`. `draft` was
+// unreachable even though this page's own KPI tile counts drafts, and
+// `archived` was unreachable even though the archive endpoint exists to
+// produce it. The chip also bound `statusFilter` itself, which put the
+// raw English wire word `active` in front of an Indonesian admin.
+//
+// Now a <FilterFacetPickerModal>, the shape
+// AdminTutoring2BillingView's Status chip uses.
+//
+// Options come FROM `BIMBEL_PROGRAM_STATUSES` — the union made
+// iterable — so a fourth status added to `ProgramStatus.php` and
+// mirrored into the union appears here automatically instead of being
+// unfilterable. `computed`, so switching app language relabels an
+// already-open picker rather than freezing the Indonesian strings.
+const statusOptions = computed<FacetOption[]>(() =>
+  BIMBEL_PROGRAM_STATUSES.map((s) => ({ key: s, label: statusLabel(s) })),
+);
+
+/**
+ * The chip shows the TRANSLATED status — the same `statusLabel()` the
+ * table's own pills fall back to (`tutoring2.status.draft` = "Draft",
+ * `.active` = "Aktif", `.archived` = "Arsip"), so the control and the
+ * rows it produced cannot read differently.
+ */
+const statusChipValue = computed(() =>
+  statusFilter.value ? statusLabel(statusFilter.value) : t('tutoring2.common.all'),
+);
+
+/**
+ * The picker emits a bare string; `statusFilter` is the narrower
+ * `'' | BimbelProgramStatus`. Narrow here rather than casting in the
+ * template, so an option key that stops being a real status fails
+ * CLOSED to "Semua" instead of asking the server for a word it never
+ * stores.
+ */
+function applyStatusFilter(v: string): void {
+  statusFilter.value = (BIMBEL_PROGRAM_STATUSES as readonly string[]).includes(v)
+    ? (v as BimbelProgramStatus)
+    : '';
+}
+
 function formatRupiah(n: number | null | undefined): string {
   return n != null ? `Rp ${n.toLocaleString('id-ID')}` : '—';
 }
@@ -144,10 +206,10 @@ function onCreated() {
       <template #chips>
         <AppFilterChip
           :label="t('tutoring2.common.status')"
-          :value="statusFilter || t('tutoring2.common.all')"
+          :value="statusChipValue"
           icon-name="circle-check"
           :active="!!statusFilter"
-          @click="statusFilter = statusFilter ? '' : 'active'"
+          @click="showStatusPicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.gradeLevel')"
@@ -213,6 +275,23 @@ function onCreated() {
       v-if="createOpen && canManage"
       @close="createOpen = false"
       @saved="onCreated"
+    />
+
+    <!-- Status picker. It writes `statusFilter` and nothing else: the
+         existing watcher on [search, status, gradeLevel] does the one
+         reload, and a `reload()` call here would be the second path
+         that makes a single filter change fetch twice.
+         `all-label` is the row that clears back to "Semua" — it emits
+         '', which the loader turns into `undefined` so the key leaves
+         the request entirely rather than going out as `status=`. -->
+    <FilterFacetPickerModal
+      v-if="showStatusPicker"
+      :title="t('tutoring2.common.status')"
+      :options="statusOptions"
+      :selected="statusFilter"
+      :all-label="t('tutoring2.common.all')"
+      @close="showStatusPicker = false"
+      @apply="applyStatusFilter"
     />
   </div>
 </template>
