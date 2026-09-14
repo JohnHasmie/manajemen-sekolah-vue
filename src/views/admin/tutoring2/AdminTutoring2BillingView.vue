@@ -47,7 +47,40 @@
   chrome — the wrapper would render a second labeled button inside the
   toolbar. `clearable` puts "Semua bulan" back, so the one thing the old
   toggle did right (clearing) survives.
+
+  ── The Status chip ───────────────────────────────────────────────────
+
+  Same defect, same shape of fix. Its handler was
+  `@click="statusFilter = statusFilter ? '' : 'unpaid'"` — a two-value
+  toggle between "semua" and the single hardcoded word `unpaid`. An admin
+  could never filter to `pending` (bukti transfer sudah diunggah,
+  menunggu verifikasi), `partial` or `paid`, even though all four exist
+  in `BillStatus.php` and `GET /tutoring-v2/bills` matches any one of
+  them. It also rendered the RAW ENGLISH WIRE WORD to an Indonesian
+  admin: `:value="statusFilter || t(...)"` printed the literal `unpaid`.
+
+  The option list is built from `BIMBEL_BILL_STATUSES` and labelled
+  through `bimbelBillStatusI18nKey`, both out of `lib/bimbel-bill-rules`
+  — the module that exists precisely so no screen re-types this
+  vocabulary. Typing the four words here again would be the fifth copy
+  that module was created to end, and the row pills below now read the
+  same map, so the chip and the Status column cannot disagree.
+
+  `overdue` is deliberately NOT offered. The server stores no such
+  status: `BillStatus.php` has four cases and `BillController::index`
+  forwards `?status=` as an exact unwhitelisted `where('status', …)`, so
+  `status=overdue` would return 200 + an empty page — "tidak ada
+  tagihan", which reads as data rather than as a bad filter. Menunggak is
+  derived from `due_date` (see `isBimbelBillOverdue`) and stays out of
+  anything that reaches the wire.
+
+  One honest limit: `GET /tutoring-v2/bills/summary` accepts only
+  `source_type` and `month`, so the KPI strip above is NOT narrowed by
+  this chip. Its own docblock claims otherwise; the code does not apply
+  status. The list narrows, the four tiles keep counting the whole
+  (source/month-filtered) set.
 -->
+
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -56,6 +89,9 @@ import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
 import MonthPickerModal from '@/components/feature/MonthPickerModal.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -65,6 +101,13 @@ import AdminTutoring2BillCreateSheet from './AdminTutoring2BillCreateSheet.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { formatYmLabel } from '@/lib/local-date';
+import {
+  BIMBEL_BILL_STATUSES,
+  bimbelBillDisplayStatus,
+  bimbelBillStatusI18nKey,
+  bimbelBillStatusTone,
+  type BimbelBillStatus,
+} from '@/lib/bimbel-bill-rules';
 import {
   TutoringBimbelService,
   type BimbelBill,
@@ -99,10 +142,16 @@ function openCreateSheet(): void {
 }
 
 const search = ref('');
-const statusFilter = ref<string>(''); // '' | 'unpaid' | 'paid' | 'pending' | 'partial'
+/**
+ * '' = "Semua". Typed against the canonical union rather than a bare
+ * string, so a word the API has no status for cannot be assigned here
+ * and silently pin the list to an empty result.
+ */
+const statusFilter = ref<'' | BimbelBillStatus>('');
 const sourceFilter = ref<string>(''); // '' | 'TUTORING_PREPAID' | 'TUTORING_MONTHLY' | 'TUTORING_SESSION'
 const monthFilter = ref<string>(''); // '' | 'YYYY-MM'
 const showMonthPicker = ref(false);
+const showStatusPicker = ref(false);
 
 const localeTag = computed(() => (locale.value === 'en' ? 'en-US' : 'id-ID'));
 
@@ -116,6 +165,45 @@ const monthChipValue = computed(() =>
     ? formatYmLabel(monthFilter.value, localeTag.value)
     : t('tutoring2.common.all'),
 );
+
+/**
+ * Every status a bill can actually be filtered to, labelled.
+ *
+ * Built from `BIMBEL_BILL_STATUSES` so the picker cannot drift from the
+ * vocabulary `BillStatus.php` writes — a fifth status added server-side
+ * appears here the moment that constant is updated, rather than becoming
+ * unfilterable the way `pending`, `partial` and `paid` already were.
+ *
+ * `overdue` is absent on purpose: it is derived from `due_date`, never
+ * stored, so sending it as `?status=` yields an empty page that reads as
+ * "tidak ada tagihan" instead of "bukan status".
+ */
+const statusOptions = computed<FacetOption[]>(() =>
+  BIMBEL_BILL_STATUSES.map((s) => ({ key: s, label: t(bimbelBillStatusI18nKey(s)) })),
+);
+
+/**
+ * The chip shows the TRANSLATED status, the same string the row pills
+ * use. It used to bind `statusFilter` itself, which put the English wire
+ * word `unpaid` in front of an Indonesian admin.
+ */
+const statusChipValue = computed(() =>
+  statusFilter.value
+    ? t(bimbelBillStatusI18nKey(statusFilter.value))
+    : t('tutoring2.common.all'),
+);
+
+/**
+ * The picker emits a bare string; `statusFilter` is the narrower
+ * `'' | BimbelBillStatus`. Narrow here rather than casting in the
+ * template, so an option key that stops being a real status fails CLOSED
+ * to "Semua" instead of asking the server for a word it never stores.
+ */
+function applyStatusFilter(v: string): void {
+  statusFilter.value = (BIMBEL_BILL_STATUSES as readonly string[]).includes(v)
+    ? (v as BimbelBillStatus)
+    : '';
+}
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -181,20 +269,31 @@ function formatRupiah(n: number | null | undefined): string {
   return n != null ? `Rp ${n.toLocaleString('id-ID')}` : '—';
 }
 
+/**
+ * The Status column's display state.
+ *
+ * `due_date` is deliberately NOT passed. `bimbelBillDisplayStatus` would
+ * otherwise relabel an unsettled past-due row `overdue`, and this column
+ * is the wire status the chip above filters on — a row reading
+ * "Menunggak" while the admin has just filtered to "Belum lunas" would
+ * contradict the control that produced it. Menunggak is already the KPI
+ * tile's job. Routing through the shared map is still what makes the
+ * chip and this column agree word for word, and an unrecognised status
+ * falls back rather than being echoed raw.
+ */
+function billDisplayStatus(status: string) {
+  return bimbelBillDisplayStatus({ status });
+}
+
 function billStatusTone(status: string): StatusBadgeTone {
-  switch (status) {
-    case 'paid': return 'success';
-    case 'unpaid': return 'warning';
-    case 'pending': return 'warning';
-    case 'partial': return 'warning';
-    default: return 'neutral';
-  }
+  return bimbelBillStatusTone(billDisplayStatus(status));
 }
 
 function billStatusLabel(status: string): string {
-  // Keep raw values for now; upstream i18n mapping can happen in a
-  // future MR once product locks the copy.
-  return status.toUpperCase();
+  // Was `status.toUpperCase()` — the English wire word, shouted. The
+  // copy is locked now and lives in `tutoring2.status.*`, read through
+  // the one helper the wali and siswa bill screens also read.
+  return t(bimbelBillStatusI18nKey(billDisplayStatus(status)));
 }
 </script>
 
@@ -220,10 +319,10 @@ function billStatusLabel(status: string): string {
         />
         <AppFilterChip
           :label="t('tutoring2.common.status')"
-          :value="statusFilter || t('tutoring2.common.all')"
+          :value="statusChipValue"
           icon-name="circle-check"
           :active="!!statusFilter"
-          @click="statusFilter = statusFilter ? '' : 'unpaid'"
+          @click="showStatusPicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.period')"
@@ -325,6 +424,19 @@ function billStatusLabel(status: string): string {
       clearable
       @apply="(v) => { monthFilter = v; }"
       @close="showMonthPicker = false"
+    />
+
+    <!-- Status picker. Same rule as the Periode one above: it writes
+         `statusFilter` and nothing else, so the single watcher does the
+         one reload. `all-label` is the row that clears back to "Semua". -->
+    <FilterFacetPickerModal
+      v-if="showStatusPicker"
+      :title="t('tutoring2.common.status')"
+      :options="statusOptions"
+      :selected="statusFilter"
+      :all-label="t('tutoring2.common.all')"
+      @close="showStatusPicker = false"
+      @apply="applyStatusFilter"
     />
   </div>
 </template>
