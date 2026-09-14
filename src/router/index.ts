@@ -1567,7 +1567,15 @@ const routes: RouteRecordRaw[] = [
       // create form, not to a detail for a session whose id is the
       // literal string "new". Vue Router ranks a static segment above a
       // param regardless of declaration order, so this ordering is for
-      // the human — `route-names-resolve.spec.ts` pins the behaviour.
+      // the human.
+      //
+      // This block used to say `route-names-resolve.spec.ts` pinned that
+      // behaviour. It does not, and never did: that guard only checks
+      // that every `{ name }` a view pushes is registered, and never
+      // calls `router.resolve()` on a path — so nothing in the tree
+      // would have failed if a literal HAD been swallowed by a param.
+      // `material-routes-resolve.spec.ts` now does it for the materials
+      // tree; the sessions tree is still uncovered.
       //
       // ── Why this route carries no `meta.ability` ──
       //
