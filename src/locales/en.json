@@ -8288,6 +8288,9 @@
         "noPermissionDesc": "Parent accounts do not currently have permission to list vouchers. Ask the tutoring admin for a voucher code, or to enable access.",
         "kpiCountedSuffix": "{count} vouchers counted",
         "quotaUnlimitedUnknown": "No usage limit"
+      },
+      "switchChild": {
+        "action": "Switch child"
       }
     },
     "preferences": {

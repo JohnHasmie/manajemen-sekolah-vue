@@ -72,6 +72,7 @@ import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
+import ParentSwitchChildLink from '@/components/feature/tutoring/ParentSwitchChildLink.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { TutoringLeaderboardService } from '@/services/tutoring2/leaderboard';
@@ -323,7 +324,11 @@ function podiumMedalClass(rank: number): string {
       :kicker="t('tutoring2.parent.home.subtitle')"
       :title="pageTitle"
       :meta="metaLabel"
-    />
+    >
+      <template #meta-extra>
+        <ParentSwitchChildLink />
+      </template>
+    </BrandPageHeader>
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 

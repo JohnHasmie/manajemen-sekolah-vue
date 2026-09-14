@@ -17,7 +17,12 @@ import { useRoute, useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import {
+  deriveBimbelChildren,
+  type BimbelChildRow,
+} from '@/lib/bimbel-parent-children';
 import { bimbelStudentLabel } from '@/lib/bimbel-session-label';
+import { resolveParentTutoring2Target } from '@/router/parent-tutoring2-targets';
 import {
   TutoringBimbelService,
   type BimbelEnrollment,
@@ -41,25 +46,15 @@ const route = useRoute();
  * so an unchecked value would let a crafted link bounce a wali into any
  * named route in the app. Anything unrecognised falls back to the
  * historical destination, which also keeps existing links working.
+ *
+ * The table itself moved to `@/router/parent-tutoring2-targets` when the
+ * "Ganti anak" link shipped: that link needs the SAME pairs read in
+ * reverse (route name → `?target=`) so switching child returns the wali
+ * to the screen they were on. Two copies would eventually disagree.
  */
-const TARGETS: Record<string, string> = {
-  attendance: 'parent.tutoring2.attendance',
-  vouchers: 'parent.tutoring2.vouchers',
-  progress: 'parent.tutoring2.progress',
-  activities: 'parent.tutoring2.activities',
-  assessments: 'parent.tutoring2.assessments',
-  sessions: 'parent.tutoring2.sessions',
-  // Added with the sidebar repoint: the wali "Peringkat" menu item
-  // routes here whenever no child is active, and an absent key would
-  // have silently fallen through to `attendance` — landing the wali on
-  // Kehadiran after they clicked Peringkat.
-  leaderboard: 'parent.tutoring2.leaderboard',
-};
-
-const targetRouteName = computed(() => {
-  const key = String(route.query.target ?? '');
-  return TARGETS[key] ?? TARGETS.attendance;
-});
+const targetRouteName = computed(() =>
+  resolveParentTutoring2Target(route.query.target),
+);
 
 // MVP: derive children from unique student_id in enrollments — parent
 // only sees rows whose students they are linked to (backend enforces).
@@ -68,45 +63,23 @@ const { state, reload } = useDataRefresh(async () => {
   return items;
 });
 
-interface ChildRow {
-  student_id: string;
-  /**
-   * The sibling ParentTutoring2HomeView has copied this off the same
-   * `listEnrollments` payload since it shipped; this screen dropped it,
-   * so the two parent screens disagreed about the child's own name.
-   */
-  student_name?: string | null;
-  active_count: number;
-}
-
-const children = computed<ChildRow[]>(() => {
-  const items = (state.value.status === 'content' ? state.value.data : []) as BimbelEnrollment[];
-  const byStudent = new Map<string, ChildRow>();
-  for (const e of items) {
-    const row = byStudent.get(e.student_id) ?? {
-      student_id: e.student_id,
-      active_count: 0,
-    };
-    /**
-     * Outside the `??`, so it runs on the EXISTING row too. A child's
-     * enrollments are not uniform: `whenLoaded` omits `student_name`
-     * per row, so the first enrollment can be nameless while the second
-     * carries the name. Copying the name only when the row is created
-     * would leave every child with more than one programme showing an
-     * id fragment whenever their first row happened to be the unnamed
-     * one — a named sibling next to an unnamed one, on the same list.
-     *
-     * A name already taken is never overwritten (first non-blank wins,
-     * matching TutorTutoring2StudentDetailView's `find`), and the trim
-     * is what makes `"   "` count as still-unnamed rather than as an
-     * answer.
-     */
-    if (!String(row.student_name ?? '').trim()) row.student_name = e.student_name;
-    if (e.status === 'active' || e.status === 'trial') row.active_count += 1;
-    byStudent.set(e.student_id, row);
-  }
-  return [...byStudent.values()];
-});
+/**
+ * `deriveBimbelChildren` is shared with `useBimbelChildren`, which is
+ * what decides whether the "Ganti anak" link appears on the per-child
+ * screens. The link must only show when this list has more than one row,
+ * so the count and the list have to come from one derivation — a second
+ * copy could offer a switcher that opens a one-item picker.
+ *
+ * It also carries `student_name`, which the sibling
+ * ParentTutoring2HomeView has copied off the same `listEnrollments`
+ * payload since it shipped; this screen dropped it, so the two parent
+ * screens disagreed about the child's own name.
+ */
+const children = computed<BimbelChildRow[]>(() =>
+  deriveBimbelChildren(
+    (state.value.status === 'content' ? state.value.data : []) as BimbelEnrollment[],
+  ),
+);
 
 function openChild(studentId: string) {
   router.push({ name: targetRouteName.value, params: { studentId } });

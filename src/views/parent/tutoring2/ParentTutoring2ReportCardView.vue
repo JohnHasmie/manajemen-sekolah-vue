@@ -44,6 +44,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
+import ParentSwitchChildLink from '@/components/feature/tutoring/ParentSwitchChildLink.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Button from '@/components/ui/Button.vue';
 
@@ -66,7 +67,11 @@ function openProgress() {
       role="parent"
       :kicker="t('tutoring2.parent.home.subtitle')"
       :title="t('tutoring2.parent.reportCard.title')"
-    />
+    >
+      <template #meta-extra>
+        <ParentSwitchChildLink />
+      </template>
+    </BrandPageHeader>
 
     <section class="rounded-3xl border border-amber-100 bg-amber-50/60 p-md">
       <h2 class="text-sm font-bold text-amber-900">

@@ -38,6 +38,7 @@
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import Tutoring2StudentScores from '@/components/tutoring2/Tutoring2StudentScores.vue';
+import ParentSwitchChildLink from '@/components/feature/tutoring/ParentSwitchChildLink.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 
 const { t } = useI18n();
@@ -61,7 +62,11 @@ const studentId = String(route.params.studentId ?? '');
             ? t('tutoring2.common.loading')
             : t('tutoring2.parent.progress.meta', { count })
         "
-      />
+      >
+        <template #meta-extra>
+          <ParentSwitchChildLink />
+        </template>
+      </BrandPageHeader>
     </template>
   </Tutoring2StudentScores>
 </template>

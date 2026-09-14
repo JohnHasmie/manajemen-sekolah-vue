@@ -44,6 +44,7 @@ import AsyncView from '@/components/data/AsyncView.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
+import ParentSwitchChildLink from '@/components/feature/tutoring/ParentSwitchChildLink.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
@@ -196,7 +197,11 @@ function presenceTone(row: StudentAttendanceRow): StatusBadgeTone {
       :kicker="t('tutoring2.parent.home.subtitle')"
       :title="t('tutoring2.parent.attendance.title')"
       :meta="metaLabel"
-    />
+    >
+      <template #meta-extra>
+        <ParentSwitchChildLink />
+      </template>
+    </BrandPageHeader>
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 

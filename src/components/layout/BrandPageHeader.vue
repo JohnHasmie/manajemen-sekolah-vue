@@ -19,6 +19,12 @@
   Slots:
     - default      — right-side action cluster (filter buttons,
                      view-toggle, etc.). Stays inline with the title.
+    - meta-extra   — extra line directly UNDER `meta`, inside the title
+                     column. For a short piece of context that has to be
+                     interactive and therefore cannot be the plain-string
+                     `meta` prop — the wali "Ganti anak" link is the
+                     first user. Renders even when `meta` is unset, so a
+                     page without a meta line still gets it.
     - role-toggle  — `<RoleToggleChipRow>` placed under the title row.
                      Optional; only rendered when supplied.
 -->
@@ -118,6 +124,7 @@ const shadowStyle = computed(() => ({
         <p v-if="meta" class="text-[12px] text-white/85 mt-1">
           {{ meta }}
         </p>
+        <slot name="meta-extra" />
       </div>
       <div class="flex items-center gap-2 flex-shrink-0">
         <slot />

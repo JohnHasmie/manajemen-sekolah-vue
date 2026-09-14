@@ -66,6 +66,7 @@ import SegmentedControl, {
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
+import ParentSwitchChildLink from '@/components/feature/tutoring/ParentSwitchChildLink.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Button from '@/components/ui/Button.vue';
 import FormField, { type FormFieldOption } from '@/components/ui/FormField.vue';
@@ -449,7 +450,11 @@ const metaLabel = computed(() => {
       :kicker="t('tutoring2.parent.home.subtitle')"
       :title="t('tutoring2.parent.vouchers.title')"
       :meta="metaLabel"
-    />
+    >
+      <template #meta-extra>
+        <ParentSwitchChildLink />
+      </template>
+    </BrandPageHeader>
 
     <!--
       Ability wall — see the header block. Without `tutoring.voucher.view`

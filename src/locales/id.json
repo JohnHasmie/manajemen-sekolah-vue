@@ -6846,6 +6846,9 @@
         "noPermissionDesc": "Akun wali belum memiliki izin melihat daftar voucher. Minta kode voucher ke admin bimbel, atau hubungi admin untuk mengaktifkan akses.",
         "kpiCountedSuffix": "{count} kupon terdata",
         "quotaUnlimitedUnknown": "Tanpa batas pemakaian"
+      },
+      "switchChild": {
+        "action": "Ganti anak"
       }
     },
     "student": {

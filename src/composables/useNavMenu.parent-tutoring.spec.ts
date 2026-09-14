@@ -31,6 +31,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import router from '@/router';
+import { PARENT_TUTORING2_TARGETS } from '@/router/parent-tutoring2-targets';
 
 /**
  * Everything `PermissionCatalog::parentTutoringDefaults()` grants that
@@ -241,18 +242,16 @@ describe('wali bimbel sidebar', () => {
       // allow-list and falls back to `attendance` for anything it does
       // not recognise. An unlisted token is therefore NOT an error the
       // wali can see: they click "Peringkat", pick a child, and land on
-      // Kehadiran. Read from the view's source rather than restated
-      // here, so deleting a target fails this test.
-      const source = readFileSync(
-        join(process.cwd(), 'src/views/parent/tutoring2/ParentTutoring2PickChildView.vue'),
-        'utf8',
-      );
-      const block = source.slice(
-        source.indexOf('const TARGETS'),
-        source.indexOf('const targetRouteName'),
-      );
-      const allowed = new Set([...block.matchAll(/^\s{2}(\w+):/gm)].map((m) => m[1]));
-      expect(allowed.size, 'failed to parse the TARGETS allow-list').toBeGreaterThan(3);
+      // Kehadiran.
+      //
+      // This used to slice the table out of the view's SOURCE between two
+      // marker strings. It broke the moment the table moved to its own
+      // module for the "Ganti anak" link to read in reverse — and it
+      // broke LOUDLY only because of the size assertion below it, which
+      // is the sort of guard a text-scraping test needs and usually does
+      // not have. Importing the map is what that scrape was approximating.
+      const allowed = new Set(Object.keys(PARENT_TUTORING2_TARGETS));
+      expect(allowed.size, 'the allow-list should not be empty').toBeGreaterThan(3);
 
       const unknown = (await parentNavPaths())
         .filter((to) => to.includes('?target='))
