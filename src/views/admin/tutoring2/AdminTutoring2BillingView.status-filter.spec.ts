@@ -35,7 +35,7 @@
  *    are caught.
  */
 // @ts-nocheck — vitest types optional in this workspace
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
 import { createPinia, setActivePinia } from 'pinia';
@@ -82,6 +82,29 @@ const BILLS = [
     due_date: '2026-03-12',
     amount: 300_000,
     status: 'pending',
+  },
+  // `partial` and `paid` exist here so a test can actually OBSERVE them.
+  // Without these rows no assertion could distinguish "Lunas filters to
+  // paid" from "Lunas filters to partial" — the label list would be
+  // byte-identical either way. Their absence, not the click indices, was
+  // the real reason two of the four statuses went unpinned.
+  {
+    id: 'bill-3',
+    student_id: 'st-3',
+    student_name: 'Sari',
+    source_type: 'TUTORING_MONTHLY',
+    due_date: '2026-03-14',
+    amount: 450_000,
+    status: 'partial',
+  },
+  {
+    id: 'bill-4',
+    student_id: 'st-4',
+    student_name: 'Yoga',
+    source_type: 'TUTORING_MONTHLY',
+    due_date: '2026-03-16',
+    amount: 600_000,
+    status: 'paid',
   },
 ];
 
@@ -156,6 +179,17 @@ const lastListArg = () => listCalls().at(-1)[0];
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Pin "now" the way the sibling month-filter spec does. The fixtures are
+  // dated March 2026 and every past-due assertion here depends on today
+  // being after them — true against the real clock, but true by accident.
+  // Pinning makes the overdue-ness a property of the test rather than of
+  // the day it runs, and stops a future fixture edit from silently
+  // flipping a passing assertion.
+  vi.setSystemTime(new Date(2026, 8, 15, 12, 0, 0)); // 15 Sep 2026, LOCAL
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe('Keuangan bimbel · Status chip', () => {
@@ -209,6 +243,41 @@ describe('Keuangan bimbel · Status chip', () => {
     expect(optionLabels(w)).not.toContain('Menunggak');
   });
 
+  /**
+   * Every option pinned LABEL-to-WIRE, one row at a time.
+   *
+   * The label-list assertion above proves the four words RENDER. It cannot
+   * prove each word SENDS the status it names: swap two keys while
+   * building `statusOptions` and the rendered list stays byte-identical,
+   * so "Lunas" quietly asks the server for `partial`. A control that reads
+   * one thing and filters another is worse than a dead one, because the
+   * reader believes the number it shows them.
+   *
+   * Only clicking each row and reading the outgoing query catches that,
+   * and only the `partial`/`paid` fixture rows make the last two
+   * observable at all.
+   */
+  it.each([
+    ['Belum lunas', 'unpaid'],
+    ['Menunggu verifikasi', 'pending'],
+    ['Bayar sebagian', 'partial'],
+    ['Lunas', 'paid'],
+  ])('option "%s" asks the server for status=%s', async (label, wire) => {
+    const w = await mountView();
+    await statusChip(w).trigger('click');
+
+    const row = optionRows(w).find((b) => b.text().trim() === label);
+    expect(row, `no picker row labelled "${label}"`).toBeTruthy();
+    await row!.trigger('click');
+    await flushPromises();
+
+    expect(lastListArg().status).toBe(wire);
+    // …the chip reports the state it just applied…
+    expect(statusChip(w).props('value')).toBe(label);
+    // …and the table narrows to exactly that status.
+    expect(pillTexts(w)).toEqual([label]);
+  });
+
   it('reaches "pending" — the status the toggle could never produce', async () => {
     const w = await mountView();
 
@@ -254,7 +323,7 @@ describe('Keuangan bimbel · Status chip', () => {
 
   it('narrows the table, and the row pills read the same words as the chip', async () => {
     const w = await mountView();
-    expect(pillTexts(w)).toEqual(['Belum lunas', 'Menunggu verifikasi']);
+    expect(pillTexts(w)).toEqual(['Belum lunas', 'Menunggu verifikasi', 'Bayar sebagian', 'Lunas']);
 
     await statusChip(w).trigger('click');
     await optionRows(w)[2].trigger('click');
@@ -295,7 +364,7 @@ describe('Keuangan bimbel · Status chip', () => {
     // `where('status', '')` and match nothing.
     expect(lastListArg().status).toBeUndefined();
     expect(statusChip(w).props('value')).toBe('Semua');
-    expect(pillTexts(w)).toEqual(['Belum lunas', 'Menunggu verifikasi']);
+    expect(pillTexts(w)).toEqual(['Belum lunas', 'Menunggu verifikasi', 'Bayar sebagian', 'Lunas']);
     expect(listCalls()).toHaveLength(3);
   });
 
