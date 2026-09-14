@@ -15,8 +15,18 @@
   Group scope: the endpoint is `GET /learning-groups/{groupId}/activities`
   so we need a group id to load anything. The tutor sees only groups
   they can access (via `/learning-groups` scoped by the active-role
-  token). The picker defaults to the first group; the toolbar chip
-  cycles.
+  token). The chip defaults to the first group and opens a
+  <FilterFacetPickerModal> listing every group the tutor can reach.
+
+  ── Why the chips open a picker ──
+
+  Both chips were wired to a `cycle*()` handler: one press advanced to
+  the next value and nothing ever listed the options. That is the
+  defect a tutor reported on the Jadwal screen — <AppFilterChip> has no
+  menu of its own. It bit hardest here, because the GROUP chip cycled
+  over however many groups the tutor has: reaching the tenth meant nine
+  presses, each one firing a fresh request for a group nobody wanted to
+  see.
 
   Ability gates:
     - `tutoring.activity.view`   render list + read a single activity
@@ -29,6 +39,9 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
 import AppRichTextEditor from '@/components/ui/AppRichTextEditor.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
@@ -63,6 +76,9 @@ const groups = ref<BimbelLearningGroup[]>([]);
 const activeGroupId = ref<string>('');
 const kindFilter = ref<'' | ActivityKind>('');
 const search = ref('');
+
+const showGroupPicker = ref(false);
+const showKindPicker = ref(false);
 
 async function loadGroups() {
   try {
@@ -133,19 +149,14 @@ function kindLabel(k: ActivityKind | string): string {
   }
 }
 
-// ── Group + kind chip cycles ─────────────────────────────────────
-function cycleGroup() {
-  if (groups.value.length === 0) return;
-  const i = groups.value.findIndex((g) => g.id === activeGroupId.value);
-  const next = groups.value[(i + 1) % groups.value.length];
-  activeGroupId.value = next.id;
-}
+// ── Filter facets ────────────────────────────────────────────────
+const groupOptions = computed<FacetOption[]>(() =>
+  groups.value.map((g) => ({ key: g.id, label: g.name })),
+);
 
-function cycleKind() {
-  const order: Array<'' | ActivityKind> = ['', ...ACTIVITY_KINDS];
-  const i = order.indexOf(kindFilter.value);
-  kindFilter.value = order[(i + 1) % order.length];
-}
+const kindOptions = computed<FacetOption[]>(() =>
+  ACTIVITY_KINDS.map((value) => ({ key: value, label: kindLabel(value) })),
+);
 
 const activeGroupLabel = computed(() => {
   const g = groups.value.find((g) => g.id === activeGroupId.value);
@@ -155,6 +166,24 @@ const activeGroupLabel = computed(() => {
 const kindChipValue = computed(() =>
   kindFilter.value ? kindLabel(kindFilter.value) : t('tutoring2.common.all'),
 );
+
+/**
+ * The group picker hides its "Semua" reset: the endpoint is
+ * `/learning-groups/{groupId}/activities`, so no request means "all
+ * groups" — clearing the id would load nothing at all, and a reset row
+ * that empties the screen is the dead control this change exists to
+ * remove. An empty pick is therefore ignored.
+ */
+function applyGroupFilter(value: string) {
+  if (value) activeGroupId.value = value;
+}
+
+/** The picker emits a bare string; `kindFilter` is a narrower union. */
+function applyKindFilter(value: string) {
+  kindFilter.value = (ACTIVITY_KINDS as string[]).includes(value)
+    ? (value as ActivityKind)
+    : '';
+}
 
 // ── Compose panel ────────────────────────────────────────────────
 const composeOpen = ref(false);
@@ -299,14 +328,16 @@ function formatDue(iso?: string | null): string {
           :value="activeGroupLabel"
           icon-name="layers"
           :active="!!activeGroupId"
-          @click="cycleGroup"
+          :disabled="groupOptions.length === 0"
+          :title="groupOptions.length === 0 ? t('tutoring2.common.filterNoOptions') : undefined"
+          @click="showGroupPicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.kind')"
           :value="kindChipValue"
           icon-name="tag"
           :active="!!kindFilter"
-          @click="cycleKind"
+          @click="showKindPicker = true"
         />
       </template>
     </PageFilterToolbar>
@@ -487,4 +518,25 @@ function formatDue(iso?: string | null): string {
       </div>
     </div>
   </div>
+
+  <!-- Per-facet pickers. Each writes its ref; the existing watcher on
+       [activeGroupId, kindFilter] does the reload. -->
+  <FilterFacetPickerModal
+    v-if="showGroupPicker"
+    :title="t('tutoring2.common.group')"
+    :options="groupOptions"
+    :selected="activeGroupId"
+    hide-all-reset
+    @close="showGroupPicker = false"
+    @apply="applyGroupFilter"
+  />
+  <FilterFacetPickerModal
+    v-if="showKindPicker"
+    :title="t('tutoring2.common.kind')"
+    :options="kindOptions"
+    :selected="kindFilter"
+    :all-label="t('tutoring2.common.all')"
+    @close="showKindPicker = false"
+    @apply="applyKindFilter"
+  />
 </template>

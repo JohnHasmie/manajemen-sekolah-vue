@@ -14,11 +14,34 @@
   all of their students were up to date. Removed rather than wired: the
   tutor role holds no `tutoring.bill.*` ability, and the bills endpoint
   403s anyone without one, so no query could fill it.
-    3. PageFilterToolbar + AppFilterChip — Status + Program
+    3. PageFilterToolbar + AppFilterChip — Status + Program, each
+       opening a <FilterFacetPickerModal>
     4. AsyncView → rounded-3xl surface with divide-y student rows
+
+  ── The two filter chips ──
+
+  Status shipped as a blind six-step cycle: one press advanced to the
+  next value in a hardcoded order and nothing ever listed what the
+  options were. Same defect a tutor reported on the Jadwal screen —
+  <AppFilterChip> has no menu of its own, so a chip that needs a real
+  choice must open a <FilterFacetPickerModal>.
+
+  Program was worse than blind: it was NOMINAL. `programFilter` was
+  never sent to the server and never read by any predicate — it sat in
+  the `watch` list, so pressing the chip refetched exactly the same
+  rows, lit the chip up as "Tersambung", and fired a toast admitting
+  "MVP: nominal". A control that reports a filter it does not apply is
+  worse than an absent one.
+
+  It is now real, and real from data already on the wire:
+  `BimbelEnrollment` carries `program_id` AND `program_name`, and
+  `listEnrollments` accepts `program_id`. The option list comes from one
+  unfiltered fetch on mount (`loadProgramOptions`) rather than from the
+  filtered list — deriving options from rows the filter already narrowed
+  would leave a tutor unable to switch programs once they picked one.
 -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useDebounceFn } from '@vueuse/core';
@@ -26,6 +49,9 @@ import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -33,7 +59,6 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { bimbelStudentLabel } from '@/lib/bimbel-session-label';
-import { useToast } from '@/composables/useToast';
 import {
   TutoringBimbelService,
   type BimbelEnrollment,
@@ -44,11 +69,28 @@ import type { StatusBadgeTone } from '@/types/status-badge';
 
 const { t } = useI18n();
 const router = useRouter();
-const toast = useToast();
+
+type EnrollmentStatus = BimbelEnrollment['status'];
+
+/**
+ * Every status `/tutoring-v2/enrollments` accepts, in lifecycle order.
+ * Typed as the wire union so a status added to `BimbelEnrollment`
+ * without being added here fails the type-check.
+ */
+const ENROLLMENT_STATUSES: EnrollmentStatus[] = [
+  'trial',
+  'active',
+  'paused',
+  'graduated',
+  'withdrawn',
+];
 
 const search = ref('');
-const statusFilter = ref<string>(''); // '' | 'active' | 'trial' | 'paused' | 'withdrawn' | 'graduated'
-const programFilter = ref<string>(''); // nominal — '' | 'linked'
+const statusFilter = ref<'' | EnrollmentStatus>('');
+const programFilter = ref<string>(''); // '' = Semua, else a program_id
+
+const showStatusPicker = ref(false);
+const showProgramPicker = ref(false);
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -60,9 +102,48 @@ const { state, reload } = useDataRefresh(async () => {
   const { items } = await TutoringBimbelService.listEnrollments({
     per_page: 200,
     status: statusFilter.value || undefined,
+    program_id: programFilter.value || undefined,
   });
   return items;
 });
+
+/**
+ * Program options, from ONE unfiltered fetch.
+ *
+ * Deliberately not derived from `enrollments` above: once a program is
+ * picked that list contains only that program, so the picker would
+ * collapse to a single row and the tutor could never switch. Failures
+ * are swallowed to an empty list — the chip then renders disabled with
+ * `filterNoOptions`, which is honest, where a thrown error would take
+ * the whole screen down over a secondary control.
+ */
+const programOptions = ref<FacetOption[]>([]);
+
+async function loadProgramOptions() {
+  try {
+    const { items } = await TutoringBimbelService.listEnrollments({
+      per_page: 200,
+    });
+    const byId = new Map<string, string>();
+    for (const e of items) {
+      if (!e.program_id) continue;
+      const existing = byId.get(e.program_id);
+      // First non-blank name wins: `whenLoaded` omits `program_name`
+      // per row, so an unnamed first row must not block a later named
+      // one — the same absent-≠-unnamed rule the student name uses.
+      if (!existing || !existing.trim()) {
+        byId.set(e.program_id, String(e.program_name ?? '').trim());
+      }
+    }
+    programOptions.value = Array.from(byId.entries())
+      .map(([key, label]) => ({ key, label: label || key.slice(0, 8) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  } catch {
+    programOptions.value = [];
+  }
+}
+
+onMounted(loadProgramOptions);
 
 watch([debouncedSearch, statusFilter, programFilter], () => reload());
 
@@ -197,43 +278,37 @@ function openStudent(row: StudentRow) {
   });
 }
 
-function toggleStatus() {
-  const cycle: Array<'' | 'active' | 'trial' | 'paused' | 'withdrawn' | 'graduated'> = [
-    '',
-    'active',
-    'trial',
-    'paused',
-    'withdrawn',
-    'graduated',
-  ];
-  const idx = cycle.indexOf(statusFilter.value as (typeof cycle)[number]);
-  statusFilter.value = cycle[(idx + 1) % cycle.length];
+const statusOptions = computed<FacetOption[]>(() =>
+  ENROLLMENT_STATUSES.map((value) => ({
+    key: value,
+    label: t(`tutoring2.status.${value}`),
+  })),
+);
+
+/** Label for the current selection — never the raw wire enum or a uuid. */
+function chipValue(selected: string, options: FacetOption[]): string {
+  if (!selected) return t('tutoring2.common.all');
+  return options.find((o) => o.key === selected)?.label ?? selected.slice(0, 8);
 }
 
-function toggleProgram() {
-  programFilter.value = programFilter.value ? '' : 'linked';
-  if (programFilter.value === 'linked') {
-    // TODO i18n key: 'Filter program tersambung — MVP: nominal'
-    toast.info('Filter program tersambung — MVP: nominal');
-  }
-}
+const statusChipLabel = computed(() =>
+  chipValue(statusFilter.value, statusOptions.value),
+);
 
-const statusChipLabel = computed(() => {
-  switch (statusFilter.value) {
-    case 'active':
-      return t('tutoring2.status.active');
-    case 'trial':
-      return t('tutoring2.status.trial');
-    case 'paused':
-      return t('tutoring2.status.paused');
-    case 'withdrawn':
-      return t('tutoring2.status.withdrawn');
-    case 'graduated':
-      return t('tutoring2.status.graduated');
-    default:
-      return t('tutoring2.common.all');
-  }
-});
+const programChipLabel = computed(() =>
+  chipValue(programFilter.value, programOptions.value),
+);
+
+/**
+ * The picker emits a bare string; `statusFilter` is a narrower union.
+ * Narrowing here means a key that stops being a valid status fails the
+ * type-check instead of reaching the query.
+ */
+function applyStatusFilter(value: string) {
+  statusFilter.value = (ENROLLMENT_STATUSES as string[]).includes(value)
+    ? (value as EnrollmentStatus)
+    : '';
+}
 
 const headerMeta = computed(() =>
   state.value.status === 'content' || state.value.status === 'empty'
@@ -260,14 +335,16 @@ const headerMeta = computed(() =>
           :value="statusChipLabel"
           icon-name="circle-check"
           :active="!!statusFilter"
-          @click="toggleStatus"
+          @click="showStatusPicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.program')"
-          :value="programFilter ? t('tutoring2.common.connected') : t('tutoring2.common.all')"
+          :value="programChipLabel"
           icon-name="book"
           :active="!!programFilter"
-          @click="toggleProgram"
+          :disabled="programOptions.length === 0"
+          :title="programOptions.length === 0 ? t('tutoring2.common.filterNoOptions') : undefined"
+          @click="showProgramPicker = true"
         />
       </template>
     </PageFilterToolbar>
@@ -315,4 +392,25 @@ const headerMeta = computed(() =>
       </template>
     </AsyncView>
   </div>
+
+  <!-- Per-facet pickers. Each writes its ref; the existing watcher on
+       [search, status, program] does the reload, so nothing calls it here. -->
+  <FilterFacetPickerModal
+    v-if="showStatusPicker"
+    :title="t('tutoring2.common.status')"
+    :options="statusOptions"
+    :selected="statusFilter"
+    :all-label="t('tutoring2.common.all')"
+    @close="showStatusPicker = false"
+    @apply="applyStatusFilter"
+  />
+  <FilterFacetPickerModal
+    v-if="showProgramPicker"
+    :title="t('tutoring2.common.program')"
+    :options="programOptions"
+    :selected="programFilter"
+    :all-label="t('tutoring2.common.all')"
+    @close="showProgramPicker = false"
+    @apply="(v) => { programFilter = v; }"
+  />
 </template>

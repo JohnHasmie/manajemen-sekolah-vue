@@ -6594,6 +6594,13 @@
     "assessmentFilterHint": "This report card already summarizes UTS + UAS achievement. For individual {label} scores, open the Grade Book."
   },
   "tutoring2": {
+    "materialKind": {
+      "PDF": "PDF",
+      "VIDEO": "Video",
+      "DOC": "Document",
+      "IMAGE": "Image",
+      "LINK": "Link"
+    },
     "tutor": {
       "materialUpload": {
         "saved": "Material saved.",
@@ -7878,6 +7885,8 @@
       }
     },
     "common": {
+      "next7Days": "Next 7 days",
+      "next30Days": "Next 30 days",
       "connected": "Connected",
       "reschedule": "Reschedule",
       "total": "Total",

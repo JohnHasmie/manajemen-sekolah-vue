@@ -18,16 +18,37 @@
   It now reads the real index. `file_url` is a SHORT-LIVED signed link
   for anything uploaded through the app (the bucket rejects unsigned
   reads) — open it, never cache or store it.
+
+  ── The two filter chips ──
+
+  Both were blind toggles with no menu behind them, the same defect a
+  tutor reported on the Jadwal screen. They now open a
+  <FilterFacetPickerModal>, and each also had a real bug underneath:
+
+  • PROGRAM sent a NAME where the API wants an ID. `nextProgramFilter()`
+    set the ref to `contentItems[0].program_name` and the query passed
+    that straight into `program_id`, so the server was asked to match a
+    uuid column against "Intensif UTBK" — no row could ever come back.
+    The client-side predicate then compared the same ref against
+    `program_name`, so the two layers disagreed about what the value
+    even was. It is a program_id now, end to end, and the options carry
+    the NAME as their label. Only the first loaded material's program
+    was reachable before; every program is now.
+
+  • TYPE offered three of the five `MaterialKind` values. LINK and IMAGE
+    are values the API returns and accepts, and no number of presses
+    could ask for either. The list is built from MATERIAL_KINDS.
 -->
 <script setup lang="ts">
-// TODO WEB-4+ add TutoringBimbelService.{listMaterials,createMaterial,deleteMaterial}
-// once BE-8 exposes /tutoring-v2/materials. MVP renders a static sample.
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -36,19 +57,26 @@ import TutoringMaterialRow from '@/components/tutoring/TutoringMaterialRow.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
 import { MaterialsService } from '@/services/tutoring2/materials';
-import type { Material } from '@/types/tutoring2/material';
+import type { Material, MaterialKind } from '@/types/tutoring2/material';
 
 const { t } = useI18n();
 const router = useRouter();
 const toast = useToast();
 
-// Static sample so the shape reads before BE-8 lands. Kept realistic so
-// KPI counts and filter chips exercise every branch.
+/**
+ * Every kind `/tutoring-v2/materials` stores and its `kind` parameter
+ * accepts. Typed as the wire union so a kind added to `MaterialKind`
+ * without being added here fails the type-check — which is exactly how
+ * LINK and IMAGE came to be missing from the old three-step toggle.
+ */
+const MATERIAL_KINDS: MaterialKind[] = ['PDF', 'VIDEO', 'DOC', 'IMAGE', 'LINK'];
 
-// Filters — nominal MVP toggles. Once the real API lands these will
-// funnel into query params like the admin screens do.
-const programFilter = ref<string>(''); // '' = Semua
-const kindFilter = ref<'' | 'pdf' | 'video' | 'doc'>('');
+// '' = Semua. `programFilter` holds a program_id, NOT a program name.
+const programFilter = ref<string>('');
+const kindFilter = ref<'' | MaterialKind>('');
+
+const showProgramPicker = ref(false);
+const showKindPicker = ref(false);
 
 const { state, reload } = useDataRefresh<Material[]>(async () => {
   // Filters are sent to the server rather than applied to a page of
@@ -56,7 +84,7 @@ const { state, reload } = useDataRefresh<Material[]>(async () => {
   // to be loaded.
   const { items } = await MaterialsService.list({
     program_id: programFilter.value || undefined,
-    kind: kindFilter.value ? kindFilter.value.toUpperCase() : undefined,
+    kind: kindFilter.value || undefined,
     per_page: 100,
   });
   return items;
@@ -68,24 +96,35 @@ const contentItems = computed<Material[]>(() =>
   state.value.status === 'content' ? (state.value.data as Material[]) : [],
 );
 
+/**
+ * True when a material belongs to `kind`.
+ *
+ * `m.kind` is the answer whenever the server sent one. The mime sniff
+ * stays as a FALLBACK for the three kinds a mime type can attest to,
+ * because rows uploaded before `kind` was stored carry an empty one —
+ * dropping the sniff would hide those rows from every filter. It is a
+ * fallback and not an additional test: a row that already declares
+ * `kind: 'LINK'` is a link, whatever its mime says.
+ */
+function materialIsKind(m: Material, kind: MaterialKind): boolean {
+  const declared = String(m.kind ?? '').toUpperCase();
+  if (declared) return declared === kind || (kind === 'DOC' && declared === 'DOCX');
+  const mime = String(m.file_mime ?? '').toLowerCase();
+  if (kind === 'PDF') return mime.includes('pdf');
+  if (kind === 'VIDEO') return mime.startsWith('video/');
+  if (kind === 'IMAGE') return mime.startsWith('image/');
+  if (kind === 'DOC') return mime.includes('word') || mime.includes('officedocument.word');
+  // LINK has no mime to sniff — an externally hosted URL carries none.
+  return false;
+}
+
 const filtered = computed<Material[]>(() => {
   return contentItems.value.filter((m) => {
-    if (programFilter.value && m.program_name !== programFilter.value) return false;
-    if (kindFilter.value === 'pdf') {
-      const isPdf = (m.file_mime ?? '').toLowerCase().includes('pdf')
-        || (m.kind ?? '').toUpperCase() === 'PDF';
-      if (!isPdf) return false;
-    } else if (kindFilter.value === 'video') {
-      const isVideo = (m.file_mime ?? '').toLowerCase().startsWith('video/')
-        || (m.kind ?? '').toUpperCase() === 'VIDEO';
-      if (!isVideo) return false;
-    } else if (kindFilter.value === 'doc') {
-      const mime = (m.file_mime ?? '').toLowerCase();
-      const kind = (m.kind ?? '').toUpperCase();
-      const isDoc = mime.includes('word') || mime.includes('officedocument.word')
-        || kind === 'DOC' || kind === 'DOCX';
-      if (!isDoc) return false;
-    }
+    // program_id, not program_name: `programFilter` is an id and the
+    // server already filtered on it — this only keeps the client honest
+    // if a stale page is still on screen.
+    if (programFilter.value && m.program_id !== programFilter.value) return false;
+    if (kindFilter.value && !materialIsKind(m, kindFilter.value)) return false;
     return true;
   });
 });
@@ -115,20 +154,65 @@ const headerMeta = computed(() =>
   t('tutoring2.tutor.materials.meta', { count: contentItems.value.length }),
 );
 
-function nextProgramFilter(): string {
-  // Cycle: '' → first program in the sample → '' again.
-  if (programFilter.value) return '';
-  const first = contentItems.value[0]?.program_name ?? '';
-  return first;
+// ── Filter facets ───────────────────────────────────────
+/**
+ * Program options, from ONE unfiltered fetch.
+ *
+ * Not derived from `contentItems`: once a program is picked the list
+ * holds only that program, so the picker would collapse to one row and
+ * the tutor could never switch — which is precisely what the old
+ * `contentItems[0]` cycle did. Failures leave the list empty and the
+ * chip disabled rather than taking the screen down.
+ */
+const programOptions = ref<FacetOption[]>([]);
+
+async function loadProgramOptions() {
+  try {
+    const { items } = await MaterialsService.list({ per_page: 100 });
+    const byId = new Map<string, string>();
+    for (const m of items) {
+      if (!m.program_id) continue;
+      const existing = byId.get(m.program_id);
+      if (!existing || !existing.trim()) {
+        byId.set(m.program_id, String(m.program_name ?? '').trim());
+      }
+    }
+    programOptions.value = Array.from(byId.entries())
+      .map(([key, label]) => ({ key, label: label || key.slice(0, 8) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  } catch {
+    programOptions.value = [];
+  }
 }
 
-function nextKindFilter(): '' | 'pdf' | 'video' | 'doc' {
-  switch (kindFilter.value) {
-    case '': return 'pdf';
-    case 'pdf': return 'video';
-    case 'video': return 'doc';
-    default: return '';
-  }
+onMounted(loadProgramOptions);
+
+const kindOptions = computed<FacetOption[]>(() =>
+  MATERIAL_KINDS.map((value) => ({
+    key: value,
+    label: t(`tutoring2.materialKind.${value}`),
+  })),
+);
+
+/** Label for the current selection — never a raw uuid. */
+function chipValue(selected: string, options: FacetOption[]): string {
+  if (!selected) return t('tutoring2.common.all');
+  return options.find((o) => o.key === selected)?.label ?? selected.slice(0, 8);
+}
+
+const programChipValue = computed(() =>
+  chipValue(programFilter.value, programOptions.value),
+);
+
+const kindChipValue = computed(() =>
+  chipValue(kindFilter.value, kindOptions.value),
+);
+
+/** The picker emits a bare string; `kindFilter` is a narrower union. */
+function applyKindFilter(value: string) {
+  kindFilter.value = (MATERIAL_KINDS as string[]).includes(value)
+    ? (value as MaterialKind)
+    : '';
 }
 
 /**
@@ -177,17 +261,19 @@ function goUpload() {
       <template #chips>
         <AppFilterChip
           :label="t('tutoring2.common.program')"
-          :value="programFilter || t('tutoring2.common.all')"
+          :value="programChipValue"
           icon-name="book"
           :active="!!programFilter"
-          @click="programFilter = nextProgramFilter()"
+          :disabled="programOptions.length === 0"
+          :title="programOptions.length === 0 ? t('tutoring2.common.filterNoOptions') : undefined"
+          @click="showProgramPicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.type')"
-          :value="kindFilter ? kindFilter.toUpperCase() : t('tutoring2.common.all')"
+          :value="kindChipValue"
           icon-name="filter"
           :active="!!kindFilter"
-          @click="kindFilter = nextKindFilter()"
+          @click="showKindPicker = true"
         />
       </template>
     </PageFilterToolbar>
@@ -227,4 +313,25 @@ function goUpload() {
       <span aria-hidden="true">+</span> {{ t('tutoring2.tutor.materials.uploadCta') }}
     </button>
   </div>
+
+  <!-- Per-facet pickers. Each writes its ref; the existing watcher on
+       [program, kind] does the reload, so nothing calls it here. -->
+  <FilterFacetPickerModal
+    v-if="showProgramPicker"
+    :title="t('tutoring2.common.program')"
+    :options="programOptions"
+    :selected="programFilter"
+    :all-label="t('tutoring2.common.all')"
+    @close="showProgramPicker = false"
+    @apply="(v) => { programFilter = v; }"
+  />
+  <FilterFacetPickerModal
+    v-if="showKindPicker"
+    :title="t('tutoring2.common.type')"
+    :options="kindOptions"
+    :selected="kindFilter"
+    :all-label="t('tutoring2.common.all')"
+    @close="showKindPicker = false"
+    @apply="applyKindFilter"
+  />
 </template>

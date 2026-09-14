@@ -8,6 +8,18 @@
   table.
 
   Route: teacher/tutoring2/assessments
+
+  ── The two filter chips ──
+
+  Jenis and Status were both blind cycles inlined in the template —
+  press once, land on the next value, with nothing ever listing what
+  the values were. Same defect a tutor reported on the Jadwal screen;
+  <AppFilterChip> has no menu of its own, so each now opens a
+  <FilterFacetPickerModal>.
+
+  The chips also printed the RAW WIRE TOKEN as their value ("tryout",
+  "published"), because the old `:value` was the ref itself. Options
+  and chip alike now read through the same labelled list.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -17,6 +29,9 @@ import { useDebounceFn } from '@vueuse/core';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -35,9 +50,22 @@ const { t } = useI18n();
 const router = useRouter();
 
 // ─── Filter state ─────────────────────────────────────────────────
+type AssessmentKind = BimbelAssessment['kind'];
+type PublishFilter = '' | 'published' | 'draft';
+
+/**
+ * Every kind the `kind` parameter accepts. Typed as the wire union so a
+ * kind added to `BimbelAssessment` without being added here fails the
+ * type-check rather than quietly becoming unreachable.
+ */
+const ASSESSMENT_KINDS: AssessmentKind[] = ['tryout', 'latihan', 'kuis'];
+
 const search = ref('');
-const kindFilter = ref<'' | 'tryout' | 'latihan' | 'kuis'>('');
-const statusFilter = ref<'' | 'published' | 'draft'>('');
+const kindFilter = ref<'' | AssessmentKind>('');
+const statusFilter = ref<PublishFilter>('');
+
+const showKindPicker = ref(false);
+const showStatusPicker = ref(false);
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -144,6 +172,44 @@ function participantsLabel(a: BimbelAssessment): string | null {
     ? t('tutoring2.common.metaParticipants', { count: a.scores_count })
     : null;
 }
+// ─── Filter facets ────────────────────────────────────────────────
+const kindOptions = computed<FacetOption[]>(() => [
+  { key: 'tryout', label: t('tutoring2.common.kindTryout') },
+  { key: 'latihan', label: t('tutoring2.common.kindLatihan') },
+  { key: 'kuis', label: t('tutoring2.common.kindKuis') },
+]);
+
+/**
+ * `published` is a BOOLEAN on the wire, so these two keys are the
+ * client's spelling of `published: true` and `published: false` — the
+ * loader above maps them. "Semua" is neither, and drops the parameter.
+ */
+const statusOptions = computed<FacetOption[]>(() => [
+  { key: 'published', label: t('tutoring2.status.published') },
+  { key: 'draft', label: t('tutoring2.status.draft') },
+]);
+
+/** Label for the current selection — never the raw wire token. */
+function chipValue(selected: string, options: FacetOption[]): string {
+  if (!selected) return t('tutoring2.common.all');
+  return options.find((o) => o.key === selected)?.label ?? selected;
+}
+
+const kindChipValue = computed(() => chipValue(kindFilter.value, kindOptions.value));
+const statusChipValue = computed(() =>
+  chipValue(statusFilter.value, statusOptions.value),
+);
+
+/** The picker emits a bare string; both refs are narrower unions. */
+function applyKindFilter(value: string) {
+  kindFilter.value = (ASSESSMENT_KINDS as string[]).includes(value)
+    ? (value as AssessmentKind)
+    : '';
+}
+
+function applyStatusFilter(value: string) {
+  statusFilter.value = value === 'published' || value === 'draft' ? value : '';
+}
 </script>
 
 <template>
@@ -161,17 +227,17 @@ function participantsLabel(a: BimbelAssessment): string | null {
       <template #chips>
         <AppFilterChip
           :label="t('tutoring2.common.kind')"
-          :value="kindFilter ? kindFilter : t('tutoring2.common.all')"
+          :value="kindChipValue"
           icon-name="clipboard-list"
           :active="!!kindFilter"
-          @click="kindFilter = kindFilter === '' ? 'tryout' : kindFilter === 'tryout' ? 'latihan' : kindFilter === 'latihan' ? 'kuis' : ''"
+          @click="showKindPicker = true"
         />
         <AppFilterChip
           :label="t('tutoring2.common.status')"
-          :value="statusFilter ? statusFilter : t('tutoring2.common.all')"
+          :value="statusChipValue"
           icon-name="check-circle"
           :active="!!statusFilter"
-          @click="statusFilter = statusFilter === '' ? 'published' : statusFilter === 'published' ? 'draft' : ''"
+          @click="showStatusPicker = true"
         />
       </template>
     </PageFilterToolbar>
@@ -230,4 +296,25 @@ function participantsLabel(a: BimbelAssessment): string | null {
       <span aria-hidden="true">+</span> {{ t('tutoring2.tutor.assessments.newCta') }}
     </router-link>
   </div>
+
+  <!-- Per-facet pickers. Each writes its ref; the existing watcher on
+       [search, kind, status] does the reload. -->
+  <FilterFacetPickerModal
+    v-if="showKindPicker"
+    :title="t('tutoring2.common.kind')"
+    :options="kindOptions"
+    :selected="kindFilter"
+    :all-label="t('tutoring2.common.all')"
+    @close="showKindPicker = false"
+    @apply="applyKindFilter"
+  />
+  <FilterFacetPickerModal
+    v-if="showStatusPicker"
+    :title="t('tutoring2.common.status')"
+    :options="statusOptions"
+    :selected="statusFilter"
+    :all-label="t('tutoring2.common.all')"
+    @close="showStatusPicker = false"
+    @apply="applyStatusFilter"
+  />
 </template>

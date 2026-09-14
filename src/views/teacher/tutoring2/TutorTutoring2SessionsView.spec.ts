@@ -23,7 +23,15 @@ import { createPinia, setActivePinia } from 'pinia';
 import SessionsView from './TutorTutoring2SessionsView.vue';
 import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
 
-vi.mock('@/services/tutoring-bimbel.service', () => ({
+/**
+ * PARTIAL mock. The module's value exports come through
+ * `importOriginal` — the view builds its status picker from
+ * BIMBEL_SESSION_STATUSES, and a total mock would leave that undefined
+ * at mount and fail every test here for a reason unrelated to what they
+ * assert.
+ */
+vi.mock('@/services/tutoring-bimbel.service', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
   TutoringBimbelService: { listSessions: vi.fn() },
 }));
 vi.mock('vue-router', () => ({

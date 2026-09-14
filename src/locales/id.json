@@ -6594,6 +6594,13 @@
     "assessmentFilterHint": "Rapor ini sudah merangkum capaian UTS + UAS. Untuk skor per ujian {label}, buka Buku Nilai."
   },
   "tutoring2": {
+    "materialKind": {
+      "PDF": "PDF",
+      "VIDEO": "Video",
+      "DOC": "Dokumen",
+      "IMAGE": "Gambar",
+      "LINK": "Tautan"
+    },
     "parent": {
       "reportCard": {
         "unavailableTitle": "Rapor belum tersedia",
@@ -7006,6 +7013,8 @@
       }
     },
     "common": {
+      "next7Days": "7 hari ke depan",
+      "next30Days": "30 hari ke depan",
       "student_": "Wali",
       "specialty": "Spesialisasi",
       "group": "Kelompok",
