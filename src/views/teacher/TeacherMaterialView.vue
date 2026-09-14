@@ -986,19 +986,27 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
         <AppFilterChip
           :label="t('tutor.sekolah.material.chipGrade')"
           :value="gradeLevel ? t('tutor.sekolah.material.classPrefix', { grade: gradeLevel }) : t('tutor.sekolah.material.allGrades')"
-          :is-active="!!gradeLevel"
+          :active="!!gradeLevel"
           @click="showGradePicker = true"
         />
         <AppFilterChip
           :label="t('tutor.sekolah.material.chipSubject')"
           :value="activeSubject?.name ?? t('tutor.sekolah.material.pickSubject')"
-          :is-active="!!subjectId"
+          :active="!!subjectId"
           @click="showSubjectPicker = true"
         />
+        <!--
+          `active` is unconditionally true here, unlike the Kelas/Mapel chips above.
+          Semester has no "Semua" state: it is a closed ganjil/genap toggle seeded to
+          'genap' (see `const semester` in the setup block) and sent to the API on every
+          load, so a concrete filter value is ALWAYS applied. `:active="true"` is the
+          honest expression of that, not a copy-paste slip -- please do not "fix" it into
+          a condition. Same pattern as the tutoring2 leaderboard toggle chips.
+        -->
         <AppFilterChip
           :label="t('tutor.sekolah.material.chipSemester')"
           :value="semester === 'ganjil' ? t('tutor.sekolah.material.semester1') : t('tutor.sekolah.material.semester2')"
-          :is-active="true"
+          :active="true"
           @click="semester = semester === 'ganjil' ? 'genap' : 'ganjil'"
         />
       </template>

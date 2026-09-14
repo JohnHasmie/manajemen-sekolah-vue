@@ -329,13 +329,13 @@ function progressBarTone(pct: number) {
           v-if="!isWaliMode"
           :label="t('tutor.sekolah.gradeRecap.chipClass')"
           :value="activeClass?.name ?? t('tutor.sekolah.gradeRecap.allClasses')"
-          :is-active="!!classFilter"
+          :active="!!classFilter"
           @click="showClassPicker = true"
         />
         <AppFilterChip
           :label="t('tutor.sekolah.gradeRecap.chipSubject')"
           :value="activeSubject?.name ?? t('tutor.sekolah.gradeRecap.allSubjects')"
-          :is-active="!!subjectFilter"
+          :active="!!subjectFilter"
           @click="showSubjectPicker = true"
         />
       </template>
