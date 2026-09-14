@@ -229,10 +229,9 @@ describe('Keuangan bimbel · Periode chip', () => {
     expect(listCalls()).toHaveLength(2);
   });
 
-  it('leaves the Sumber and Status chips exactly as they were', async () => {
-    // Those two carry a DIFFERENT defect (enum filters stuck on one
-    // value) and are tracked separately. This MR must not have quietly
-    // rewritten them.
+  it('leaves the Sumber chip exactly as it was', async () => {
+    // Sumber still carries the enum-toggle defect and is tracked
+    // separately. This MR must not have quietly rewritten it.
     const w = await mountView();
     const labels = w.findAllComponents(AppFilterChip).map((c) => c.props('label'));
     expect(labels).toEqual(['Sumber', 'Status', 'Periode']);
@@ -242,9 +241,13 @@ describe('Keuangan bimbel · Periode chip', () => {
     await flushPromises();
     expect(lastListArg().source_type).toBe('TUTORING_MONTHLY');
 
+    // Status used to be the same toggle and this line asserted it wrote
+    // `unpaid`. It is a per-facet picker now, so a click opens a menu
+    // and touches no filter; its contract lives in
+    // AdminTutoring2BillingView.status-filter.spec.ts.
     const status = w.findAllComponents(AppFilterChip)[1];
     await status.trigger('click');
     await flushPromises();
-    expect(lastListArg().status).toBe('unpaid');
+    expect(lastListArg().status).toBeUndefined();
   });
 });
