@@ -76,7 +76,26 @@ vi.mock('@/composables/useMe', () => ({
 }));
 
 const push = vi.fn();
-const replace = vi.fn();
+
+/**
+ * A FAITHFUL `router.replace`: it writes the new query back into the
+ * reactive route, exactly as the real router does.
+ *
+ * This matters more than it looks. `clearDateFilter()` strips `?date=`
+ * via `router.replace`, and the view watches `() => route.query.date`.
+ * With an inert `vi.fn()` the second half of that loop never runs, so
+ * every assertion about what happens AFTER the URL changes is silently
+ * unreachable — including the guard that decides whether the period chip
+ * survives a day being cleared. An inert mock does not make such a test
+ * fail; it makes it untestable, which is worse, because it reads as
+ * covered.
+ */
+const replace = vi.fn((to?: { query?: Record<string, unknown> }) => {
+  const next = to?.query ?? {};
+  for (const k of Object.keys(routeQuery)) delete routeQuery[k];
+  Object.assign(routeQuery, next);
+  return Promise.resolve();
+});
 
 // REACTIVE, because the view watches `() => route.query.date`. A plain
 // object would never notify, and the deep-link tests below would be
