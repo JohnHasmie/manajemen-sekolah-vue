@@ -97,10 +97,19 @@ export const SubmissionsService = {
   },
 
   /**
-   * POST /submissions/{id}/grade — the backend GradeSubmissionRequest
-   * only whitelists `score` today, so `feedback` is stripped on the
-   * server. We still send it so the day BE adds a `feedback` column
-   * this is source-compatible.
+   * POST /submissions/{id}/grade — persists the score AND the tutor's
+   * "Umpan balik" note.
+   *
+   * The note used to be dropped here without a word: `GradeSubmissionRequest`
+   * validated `score` alone, the controller spreads `validated()` into the
+   * action, and the response was still 200 — so the client had no way to
+   * tell a save from a discard. The request, the action, the column and
+   * the resource were all fixed together; sending `feedback` now means
+   * something.
+   *
+   * The key is always sent, `null` included, because an absent key means
+   * "leave the stored note alone" server-side and a tutor clearing the
+   * textarea means the opposite.
    */
   async grade(submissionId: string, payload: SubmissionGradePayload): Promise<Submission> {
     const r = await api.post<OneEnvelope<Submission>>(

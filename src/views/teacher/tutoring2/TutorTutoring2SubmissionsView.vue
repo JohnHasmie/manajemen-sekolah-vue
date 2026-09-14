@@ -6,13 +6,24 @@
 
   Loads submissions for an activity, shows student name, submitted
   timestamp, an attachment link when present, and inline editable
-  score + client-only feedback field. Save fires POST
-  /submissions/{id}/grade — optimistic update on the row + toast on
-  success. A bulk-grade toolbar pre-fills empty grade inputs with the
-  same value ("Berikan nilai yang sama").
+  score + "Umpan balik" note. Save fires POST /submissions/{id}/grade —
+  optimistic update on the row + toast on success. A bulk-grade toolbar
+  pre-fills empty grade inputs with the same value ("Berikan nilai yang
+  sama").
 
-  Ability: `tutoring.score.manage` is checked before render — falls
-  back to a soft empty state if the tutor is view-only.
+  Both editable fields are seeded FROM the loaded row and written back
+  FROM the grade response. The note used to be neither: it was hard-set
+  to '' on load and left untouched on save, so a tutor's words could not
+  survive a refresh even once the server started storing them. A field
+  the screen never reads back is indistinguishable, from the tutor's
+  chair, from a field that did not save.
+
+  Ability: `tutoring.activity.manage` — the key the backend's grade
+  route actually authorizes on, not the `tutoring.score.manage` the
+  WEB-13 brief named (see the note by `canGrade`). A view-only tutor
+  gets disabled inputs and a disabled Simpan, now with the greyed fill
+  to say so: they were styled identically to editable ones, so typing
+  into them simply did nothing.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
@@ -65,7 +76,9 @@ const { state, reload } = useDataRefresh(async () => {
     rows: list.items.map<SubmissionRow>((s) => ({
       ...s,
       _scoreInput: s.score ?? null,
-      _feedbackInput: '',
+      // Seeded, not blanked. This line WAS `''`, which is how a saved
+      // note vanished on every reload.
+      _feedbackInput: s.feedback ?? '',
       _dirty: false,
       _saving: false,
     })),
@@ -154,16 +167,24 @@ async function saveRow(row: SubmissionRow) {
   row._saving = true;
   const previousStatus = row.status;
   const previousScore = row.score;
+  const previousFeedback = row.feedback;
   // Optimistic: reflect the change immediately.
   row.status = 'graded';
   row.score = row._scoreInput;
+  row.feedback = row._feedbackInput || null;
   try {
     const updated = await SubmissionsService.grade(row.id, {
       score: row._scoreInput,
+      // Always send the key: absent means "leave the note alone"
+      // server-side, and an emptied textarea means the opposite.
       feedback: row._feedbackInput || null,
     });
     row.status = updated.status;
     row.score = updated.score ?? null;
+    // The server trims and is the canonical copy — adopt it, or the next
+    // save diffs against text that was never stored.
+    row.feedback = updated.feedback ?? null;
+    row._feedbackInput = updated.feedback ?? '';
     row.graded_at = updated.graded_at ?? row.graded_at;
     row._dirty = false;
     toast.success(t('tutoring2.tutor.submissions.saved'));
@@ -171,6 +192,7 @@ async function saveRow(row: SubmissionRow) {
     // Rollback optimistic update.
     row.status = previousStatus;
     row.score = previousScore;
+    row.feedback = previousFeedback;
     toast.error((e as Error).message || t('tutoring2.tutor.submissions.saveError'));
   } finally {
     row._saving = false;
@@ -268,11 +290,20 @@ function goBack() {
                   <th class="px-4 py-3">{{ t('tutoring2.tutor.submissions.attachment') }}</th>
                   <th class="px-4 py-3 w-32">{{ t('tutoring2.common.maxScore') }}</th>
                   <th class="px-4 py-3">{{ t('tutoring2.tutor.submissions.feedback') }}</th>
-                  <th class="px-4 py-3 w-24"></th>
+                  <!-- Named, and pinned. This cell used to be empty and
+                       scrolled away with its Simpan button on any window
+                       narrow enough to overflow the table — which is how
+                       "tidak ada tombol simpan" happened with a working
+                       button on screen. -->
+                  <th
+                    class="px-4 py-3 w-24 sticky right-0 bg-slate-50 border-l border-slate-200"
+                  >
+                    {{ t('tutoring2.common.actions') }}
+                  </th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                <tr v-for="row in rows" :key="row.id" class="hover:bg-slate-50">
+                <tr v-for="row in rows" :key="row.id" class="bg-white hover:bg-slate-50">
                   <td class="px-4 py-3 min-w-[160px]">
                     <p class="font-bold text-slate-900 truncate">{{ bimbelStudentLabel(row) }}</p>
                     <p v-if="row.body" class="text-2xs text-slate-500 truncate max-w-xs">
@@ -303,7 +334,7 @@ function goBack() {
                       type="number"
                       min="0"
                       :max="activity?.max_points ?? 1000"
-                      class="w-24 rounded-xl border border-slate-200 px-2 py-1.5 text-sm focus:border-brand-cobalt focus:outline-none focus:ring-2 focus:ring-brand-cobalt/20"
+                      class="w-24 rounded-xl border border-slate-200 px-2 py-1.5 text-sm focus:border-brand-cobalt focus:outline-none focus:ring-2 focus:ring-brand-cobalt/20 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
                       :disabled="!canGrade"
                       @input="onScoreInput(row, ($event.target as HTMLInputElement).value)"
                     />
@@ -313,13 +344,15 @@ function goBack() {
                     <textarea
                       :value="row._feedbackInput"
                       rows="1"
-                      class="w-full rounded-xl border border-slate-200 px-2 py-1.5 text-sm focus:border-brand-cobalt focus:outline-none focus:ring-2 focus:ring-brand-cobalt/20"
+                      class="w-full rounded-xl border border-slate-200 px-2 py-1.5 text-sm focus:border-brand-cobalt focus:outline-none focus:ring-2 focus:ring-brand-cobalt/20 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
                       :placeholder="t('tutoring2.tutor.submissions.feedbackPlaceholder')"
                       :disabled="!canGrade"
                       @input="onFeedbackInput(row, ($event.target as HTMLTextAreaElement).value)"
                     />
                   </td>
-                  <td class="px-4 py-3">
+                  <td
+                    class="px-4 py-3 sticky right-0 bg-inherit border-l border-slate-100"
+                  >
                     <Button
                       variant="primary"
                       size="sm"
