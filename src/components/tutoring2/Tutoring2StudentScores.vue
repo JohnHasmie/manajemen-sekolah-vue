@@ -87,6 +87,9 @@ import { useI18n } from 'vue-i18n';
 import AsyncView from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -198,11 +201,24 @@ const visiblePoints = computed<ScorePoint[]>(() =>
     : allPoints.value.filter((p) => p.programId === programFilter.value),
 );
 
-function cycleProgram() {
-  const order = ['', ...programs.value.map((p) => p.id)];
-  const i = order.indexOf(programFilter.value);
-  programFilter.value = order[(i + 1) % order.length] ?? '';
-}
+/**
+ * The chip opens a picker rather than cycling.
+ *
+ * Every program WAS reachable by pressing repeatedly, so this is not an
+ * unreachable-option fix — it is the same complaint that brought the
+ * tutor's Jadwal chips here: nothing ever LISTED what could be picked.
+ * <AppFilterChip> has no menu of its own, so a chip that offers a real
+ * choice has to open <FilterFacetPickerModal>.
+ *
+ * This component is shared — it renders on the tutor, admin and wali
+ * score screens — so the toolbar only appears at all when the student
+ * has more than one program (`v-if="programs.length > 1"` below).
+ */
+const showProgramPicker = ref(false);
+
+const programOptions = computed<FacetOption[]>(() =>
+  programs.value.map((p) => ({ key: p.id, label: p.name })),
+);
 
 const programChipValue = computed(() => {
   if (programFilter.value === '') return t('tutoring2.common.all');
@@ -386,7 +402,7 @@ defineExpose({ reload });
           :value="programChipValue"
           icon-name="book"
           :active="programFilter !== ''"
-          @click="cycleProgram()"
+          @click="showProgramPicker = true"
         />
       </template>
     </PageFilterToolbar>
@@ -503,4 +519,14 @@ defineExpose({ reload });
       </template>
     </AsyncView>
   </div>
+
+  <FilterFacetPickerModal
+    v-if="showProgramPicker"
+    :title="t('tutoring2.common.program')"
+    :options="programOptions"
+    :selected="programFilter"
+    :all-label="t('tutoring2.common.all')"
+    @close="showProgramPicker = false"
+    @apply="(v) => { programFilter = v; }"
+  />
 </template>

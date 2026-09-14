@@ -208,7 +208,7 @@ function makeI18n() {
 /**
  * Stubs mirror each component's real contract closely enough to assert
  * through: the KPI strip exposes its values, the badge its label, and
- * the chip emits click so the program filter can be cycled.
+ * the chip emits click so the program picker can be opened.
  */
 async function mountView() {
   setActivePinia(createPinia());
@@ -235,6 +235,11 @@ async function mountView() {
           template:
             '<button data-testid="chip" @click="$emit(\'click\')">{{ value }}</button>',
         },
+        // The chip opens a <FilterFacetPickerModal> now instead of
+        // cycling. The picker itself is mounted for real; only Modal's
+        // teleporting shell is replaced, so the option rows asserted
+        // below are the rows a wali clicks.
+        Modal: { template: '<div class="modal"><slot /></div>' },
         AsyncView: {
           props: ['state'],
           template:
@@ -362,10 +367,18 @@ describe('wali progress screen — payload rendering', () => {
     expect(w.find('polyline').attributes('points').split(' ')).toHaveLength(2);
   });
 
-  it('filters to one programme when the chip is cycled', async () => {
+  it('filters to one programme when it is picked', async () => {
     const w = await mountView();
-    // '' → pr-1 on the first click.
+    // The chip opens a list; it no longer advances a hidden cycle.
     await w.find('[data-testid="chip"]').trigger('click');
+    const options = w.findAll('.modal button');
+    expect(options.map((b) => b.text())).toEqual([
+      'Semua',
+      'Intensif UTBK',
+      'Reguler SMP',
+    ]);
+
+    await options.find((b) => b.text() === 'Intensif UTBK').trigger('click');
     await flushPromises();
 
     const titles = rows(w).map((r) => r.find('p').text());
