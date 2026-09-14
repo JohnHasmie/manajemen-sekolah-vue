@@ -28,10 +28,27 @@
   presses, each one firing a fresh request for a group nobody wanted to
   see.
 
+  ── Where a row goes ──
+
+  The text block is a <button> that pushes
+  `teacher.tutoring2.activity-detail`. It used to be an inert <div>: the
+  four buttons in the strip below it were the only live targets in the
+  row, so tapping the title, a badge or the due date did nothing, which
+  is exactly what the product owner reported ("ketika di klik list
+  kegiatannya seharusnya memunculkan detail kegiatan tersebut").
+
   Ability gates:
-    - `tutoring.activity.view`   render list + read a single activity
-    - `tutoring.activity.manage` compose / edit / publish / delete
-  (Both keys live on tutor bimbel defaults per BE-7.)
+    - `tutoring.activity.view`   `ActivityController::index` and `::show`
+      both authorize on this key. It is on the DETAIL route's
+      `meta.ability`; this list route carries no gate, which predates
+      this change and is left alone — widening a gate is a separate
+      decision from adding one.
+    - `tutoring.activity.manage` compose / edit / publish / delete,
+      enforced in-component through `canManage` below.
+  (Both keys live on tutor bimbel defaults per BE-7, so a default tutor
+  passes either check; the real tutor-vs-admin boundary is the server's
+  own group scope in `ResolvesTutoringReadScope`, which the client
+  cannot compute from `/me`.)
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -55,6 +72,7 @@ import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
 import { useMeStore } from '@/stores/me';
 import { toLocalYmd } from '@/lib/local-date';
+import { activityKindLabel } from '@/lib/bimbel-activity-kind';
 import { ActivitiesService } from '@/services/tutoring2/activities';
 import { TutoringBimbelService, type BimbelLearningGroup } from '@/services/tutoring-bimbel.service';
 import type {
@@ -136,17 +154,13 @@ const kpiCards = computed<KpiCard[]>(() => {
 });
 
 // ── Kind labelling ───────────────────────────────────────────────
+// The ladder itself moved to `@/lib/bimbel-activity-kind` when the
+// detail screen started rendering the same badge. Two copies of a
+// switch over the same enum is how four `groupLabel()` functions drifted
+// apart in this very feature; a row disagreeing with the detail it opens
+// about what kind of activity it is would be the same defect.
 function kindLabel(k: ActivityKind | string): string {
-  switch (k) {
-    case 'tugas':
-      return t('tutoring2.tutor.activities.kindTugas');
-    case 'kuis':
-      return t('tutoring2.tutor.activities.kindKuis');
-    case 'materi_baca':
-      return t('tutoring2.tutor.activities.kindMateriBaca');
-    default:
-      return String(k);
-  }
+  return activityKindLabel(k, t);
 }
 
 // ── Filter facets ────────────────────────────────────────────────
@@ -301,6 +315,23 @@ function openSubmissions(a: Activity) {
   router.push({ name: 'teacher.tutoring2.submissions', query: { activity_id: a.id } });
 }
 
+/**
+ * Open the activity. Reported verbatim by the product owner: "ketika di
+ * klik list kegiatannya seharusnya memunculkan detail kegiatan
+ * tersebut" — and it did not, because the `<li>` carried no handler at
+ * all. The four buttons underneath were the only live targets in the
+ * row, so tapping the title, the badges or the due date did nothing.
+ *
+ * `params`, not `query`, and the id is passed whole — the detail screen
+ * re-fetches by id rather than being handed the row object, so a
+ * deleted or out-of-scope activity 404s honestly instead of rendering a
+ * stale copy. See the detail view's docblock for why the round trip is
+ * worth making when the two payloads are field-identical.
+ */
+function openDetail(a: Activity) {
+  router.push({ name: 'teacher.tutoring2.activity-detail', params: { id: a.id } });
+}
+
 function formatDue(iso?: string | null): string {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -357,24 +388,47 @@ function formatDue(iso?: string | null): string {
         <div v-else class="rounded-3xl border border-slate-100 bg-white shadow-sm">
           <ul class="divide-y divide-slate-100">
             <li v-for="a in filteredActivities" :key="a.id" class="p-4 space-y-2">
-              <div class="flex items-start gap-3">
-                <div class="min-w-0 flex-1 space-y-1">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <StatusBadge :label="kindLabel(a.kind)" tone="info" uppercase />
-                    <StatusBadge
-                      :label="a.published_at ? t('tutoring2.status.published') : t('tutoring2.status.draft')"
-                      :tone="a.published_at ? 'success' : 'neutral'"
-                      uppercase
-                    />
+              <!-- The whole text block is the affordance, not just a
+                   link on the title: the reported gesture is "klik list
+                   kegiatannya". A real <button> rather than a @click on
+                   the <li>, so Enter/Space and the focus ring come for
+                   free instead of being re-implemented with tabindex +
+                   @keydown.
+
+                   `inline-flex` is deliberately NOT in this class list.
+                   TutorTutoring2ActivitiesView.filters.spec.ts selects
+                   the two filter chips with `button.inline-flex`, and a
+                   row carrying that class would silently enter the
+                   NodeList and shift every chip index. -->
+              <button
+                type="button"
+                data-testid="activity-row"
+                :aria-label="t('tutoring2.tutor.activities.openDetailAria', { title: a.title })"
+                class="w-full text-left rounded-2xl -m-1 p-1 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cobalt/40"
+                @click="openDetail(a)"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="min-w-0 flex-1 space-y-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <StatusBadge :label="kindLabel(a.kind)" tone="info" uppercase />
+                      <StatusBadge
+                        :label="a.published_at ? t('tutoring2.status.published') : t('tutoring2.status.draft')"
+                        :tone="a.published_at ? 'success' : 'neutral'"
+                        uppercase
+                      />
+                    </div>
+                    <p class="text-sm font-bold text-slate-900 truncate">{{ a.title }}</p>
+                    <p class="text-2xs text-slate-500">
+                      {{ t('tutoring2.tutor.activities.dueLabel') }}: {{ formatDue(a.due_at) }}
+                      <span class="mx-1">·</span>
+                      {{ t('tutoring2.tutor.activities.submissionsCount', { n: a.submissions_count ?? 0 }) }}
+                    </p>
                   </div>
-                  <p class="text-sm font-bold text-slate-900 truncate">{{ a.title }}</p>
-                  <p class="text-2xs text-slate-500">
-                    {{ t('tutoring2.tutor.activities.dueLabel') }}: {{ formatDue(a.due_at) }}
-                    <span class="mx-1">·</span>
-                    {{ t('tutoring2.tutor.activities.submissionsCount', { n: a.submissions_count ?? 0 }) }}
-                  </p>
+                  <span class="shrink-0 self-center text-slate-300" aria-hidden="true">
+                    <NavIcon name="chevron-right" :size="18" />
+                  </span>
                 </div>
-              </div>
+              </button>
               <div class="flex items-center gap-2 flex-wrap">
                 <Button variant="secondary" size="sm" @click="openSubmissions(a)">
                   <NavIcon name="inbox" :size="14" />

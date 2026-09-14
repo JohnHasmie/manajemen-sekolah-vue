@@ -6700,7 +6700,8 @@
         "loadGroupsError": "Failed to load groups",
         "noGroupSelected": "Pick a group first",
         "titleRequired": "Activity title is required",
-        "noManageAbility": "You don't have permission to manage activities"
+        "noManageAbility": "You don't have permission to manage activities",
+        "openDetailAria": "Open activity detail for {title}"
       },
       "home": {
         "kpiScoresPending": "Scores pending",
@@ -6945,6 +6946,14 @@
         "submitOk": "Withdrawal request submitted.",
         "errAmountZero": "The amount must be greater than 0.",
         "errBelowMin": "Minimum amount is {amount}."
+      },
+      "activityDetail": {
+        "title": "Activity detail",
+        "notFound": "Activity not found",
+        "notFoundHint": "This activity may have been deleted, or it belongs to a group you do not teach.",
+        "notPublishedYet": "Not published yet",
+        "noDescription": "No instructions have been written for this activity yet.",
+        "submissionsLabel": "Submissions"
       }
     },
     "bills": {

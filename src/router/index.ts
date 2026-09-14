@@ -1883,6 +1883,49 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
       },
       {
+        // ── Why this sits directly under its list, and what it could
+        //    have swallowed ──
+        //
+        // Nothing, as it happens. Every `teacher/tutoring2/*` path in
+        // this file was enumerated before choosing the shape: the only
+        // second segments under `activities/` anywhere in the router are
+        // this one and `parent/tutoring2/activities/:studentId`, which
+        // lives under a different first segment and cannot collide.
+        // There is no `activities/new` or `activities/recurring` for a
+        // `:id` to eat — unlike `sessions/`, `assessments/` and
+        // `materials/`, which all do carry a literal `new` sibling.
+        //
+        // It would not matter if there were: Vue Router ranks a STATIC
+        // segment above a param regardless of declaration order, and
+        // this repo already ships proof — `teacher/tutoring2/sessions/:id`
+        // is declared ~220 lines BEFORE `teacher/tutoring2/sessions/new`
+        // and `sessions/recurring`, and both literals resolve to their
+        // own screens in production. Declaration order only breaks ties
+        // between equal scores. The adjacency below is therefore for the
+        // human reader, and `tutoring2-activity-detail-route.spec.ts`
+        // pins the resolution of BOTH paths against the real router so
+        // the claim is asserted rather than asserted-in-a-comment.
+        //
+        // ── Why `ability` is present here and absent on the list ──
+        //
+        // It mirrors the server. `ActivityController::show` opens with
+        // `$this->authorize('tutoring.activity.view')`, so a caller
+        // without that key gets a 403 — bouncing them to their home
+        // beats an error card. Both `adminTutoringDefaults()` and
+        // `tutorTutoringDefaults()` grant it, so nobody entitled to the
+        // screen is hidden from it. The list route's missing gate is
+        // pre-existing and left alone deliberately: widening a gate is a
+        // separate decision from adding one.
+        path: 'teacher/tutoring2/activities/:id',
+        name: 'teacher.tutoring2.activity-detail',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2ActivityDetailView.vue'),
+        meta: {
+          role: 'teacher' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.activity.view',
+        },
+      },
+      {
         path: 'teacher/tutoring2/submissions',
         name: 'teacher.tutoring2.submissions',
         component: () => import('@/views/teacher/tutoring2/TutorTutoring2SubmissionsView.vue'),

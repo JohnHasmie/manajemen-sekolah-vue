@@ -8101,7 +8101,8 @@
         "loadGroupsError": "Gagal memuat kelompok",
         "noGroupSelected": "Pilih kelompok terlebih dahulu",
         "titleRequired": "Judul aktivitas wajib diisi",
-        "noManageAbility": "Anda tidak punya izin untuk mengelola aktivitas"
+        "noManageAbility": "Anda tidak punya izin untuk mengelola aktivitas",
+        "openDetailAria": "Buka detail kegiatan {title}"
       },
       "profile": {
         "languageDesc": "Indonesia (default)",
@@ -8302,6 +8303,14 @@
         "submitOk": "Pengajuan pencairan terkirim.",
         "errAmountZero": "Nominal pengajuan harus lebih dari 0.",
         "errBelowMin": "Nominal minimal {amount}."
+      },
+      "activityDetail": {
+        "title": "Detail Kegiatan",
+        "notFound": "Kegiatan tidak ditemukan",
+        "notFoundHint": "Kegiatan ini mungkin sudah dihapus, atau bukan milik kelompok yang Anda ampu.",
+        "notPublishedYet": "Belum diterbitkan",
+        "noDescription": "Belum ada instruksi untuk kegiatan ini.",
+        "submissionsLabel": "Pengumpulan"
       }
     },
     "preferences": {
