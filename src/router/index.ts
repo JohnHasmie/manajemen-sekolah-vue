@@ -1837,6 +1837,34 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/teacher/tutoring2/TutorTutoring2MaterialUploadView.vue'),
         meta: { role: 'teacher' satisfies Role, needs: 'tutoring-module' },
       },
+      // Declared AFTER the `materials/new` literal above on purpose.
+      // Vue Router ranks a static segment over a param regardless of
+      // declaration order, so `/teacher/tutoring2/materials/new` keeps
+      // resolving to the upload screen either way — this ordering is for
+      // the human reader, matching `admin/tutoring2/sessions/:id`.
+      //
+      // `materials/new` is the ONLY literal under this path: the router
+      // declares exactly four routes containing "materials"
+      // (`teacher/materials`, `teacher/tutoring2/materials`,
+      // `teacher/tutoring2/materials/new`, `student/tutoring2/materials`),
+      // and the other two sit under different prefixes.
+      //
+      // `ability` mirrors the server: `MaterialController@show` opens
+      // with `authorize('tutoring.material.view')`, which every tutor,
+      // student and parent holds by default. The WRITE keys
+      // (`tutoring.material.manage`, gating update/destroy) are checked
+      // inside the screen, not here — a tutor who may read but not edit
+      // must still reach the page.
+      {
+        path: 'teacher/tutoring2/materials/:id',
+        name: 'teacher.tutoring2.material-detail',
+        component: () => import('@/views/teacher/tutoring2/TutorTutoring2MaterialDetailView.vue'),
+        meta: {
+          role: 'teacher' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.material.view',
+        },
+      },
       {
         path: 'teacher/tutoring2/students',
         name: 'teacher.tutoring2.students',

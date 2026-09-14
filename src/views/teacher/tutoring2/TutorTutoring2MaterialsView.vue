@@ -56,20 +56,13 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import TutoringMaterialRow from '@/components/tutoring/TutoringMaterialRow.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
+import { MATERIAL_KINDS, materialKindLabel } from '@/lib/material-kind';
 import { MaterialsService } from '@/services/tutoring2/materials';
 import type { Material, MaterialKind } from '@/types/tutoring2/material';
 
 const { t } = useI18n();
 const router = useRouter();
 const toast = useToast();
-
-/**
- * Every kind `/tutoring-v2/materials` stores and its `kind` parameter
- * accepts. Typed as the wire union so a kind added to `MaterialKind`
- * without being added here fails the type-check — which is exactly how
- * LINK and IMAGE came to be missing from the old three-step toggle.
- */
-const MATERIAL_KINDS: MaterialKind[] = ['PDF', 'VIDEO', 'DOC', 'IMAGE', 'LINK'];
 
 // '' = Semua. `programFilter` holds a program_id, NOT a program name.
 const programFilter = ref<string>('');
@@ -190,7 +183,7 @@ onMounted(loadProgramOptions);
 const kindOptions = computed<FacetOption[]>(() =>
   MATERIAL_KINDS.map((value) => ({
     key: value,
-    label: t(`tutoring2.materialKind.${value}`),
+    label: materialKindLabel(value, t),
   })),
 );
 
@@ -228,8 +221,25 @@ function openFile(material: Material) {
   window.open(material.file_url, '_blank', 'noopener');
 }
 
+/** The row's explicit "Unduh" shortcut still goes straight to the file. */
 const onDownload = openFile;
-const onOpen = openFile;
+
+/**
+ * A row press opens the DETAIL, not the file.
+ *
+ * `onOpen` used to be `openFile` — the two were literally the same
+ * function — so pressing a material's title threw the tutor out of the
+ * app into a storage-bucket URL, with no way to read the description,
+ * see which group it belongs to, or notice a typo in the title. The
+ * detail screen comes first; the file is one press further in, where it
+ * can be labelled for what it actually is.
+ */
+function onOpen(material: Material) {
+  router.push({
+    name: 'teacher.tutoring2.material-detail',
+    params: { id: material.id },
+  });
+}
 
 async function onDelete(material: Material) {
   try {
@@ -283,10 +293,9 @@ function goUpload() {
       loading-variant="list"
       :loading-rows="4"
       :empty-title="t('tutoring2.tutor.materials.emptyTitle')"
-      empty-description="Unggah materi pertama lewat tombol di kanan bawah."
+      :empty-description="t('tutoring2.tutor.materials.emptyDescription')"
       @retry="reload"
     >
-      <!-- TODO i18n key: empty-description for tutor materials -->
       <template #default>
         <!-- TutoringMaterialRow already carries its own rounded surface,
              so the list is a plain stack — no outer wrapper card. -->

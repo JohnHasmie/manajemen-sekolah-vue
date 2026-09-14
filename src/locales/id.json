@@ -8049,7 +8049,8 @@
         "title": "Materi",
         "kpiPdf": "PDF",
         "kpiTotal": "Total materi",
-        "emptyTitle": "Belum ada materi"
+        "emptyTitle": "Belum ada materi",
+        "emptyDescription": "Unggah materi pertama lewat tombol di kanan bawah."
       },
       "sessionDetail": {
         "info": "Informasi sesi",
@@ -8311,6 +8312,22 @@
         "notPublishedYet": "Belum diterbitkan",
         "noDescription": "Belum ada instruksi untuk kegiatan ini.",
         "submissionsLabel": "Pengumpulan"
+      },
+      "materialDetail": {
+        "title": "Detail materi",
+        "notFound": "Materi tidak ditemukan",
+        "notFoundHint": "Materi mungkin sudah dihapus, atau bukan milik kelompok maupun program yang Anda ampu.",
+        "linkLabel": "Tautan",
+        "openLink": "Buka tautan",
+        "openFile": "Buka berkas",
+        "download": "Unduh",
+        "downloadFallback": "Berkas dibuka di tab baru — simpan dari sana.",
+        "noSource": "Materi ini belum punya berkas maupun tautan.",
+        "uploadedBy": "Diunggah oleh",
+        "createdAt": "Dibuat",
+        "published": "Terbit",
+        "draft": "Draf",
+        "draftHint": "Materi ini masih draf, jadi siswa dan wali belum bisa melihatnya."
       }
     },
     "preferences": {

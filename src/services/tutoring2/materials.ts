@@ -31,6 +31,25 @@ export const MaterialsService = {
   },
 
   /**
+   * One material, by id — `GET /tutoring-v2/materials/{id}`.
+   *
+   * Not a client-side `find` over a page of `list()`: `show` applies the
+   * same read scope as the index BEFORE `findOrFail`, so an id outside
+   * this tutor's groups and programmes 404s instead of being quietly
+   * absent from a page. It also eager-loads the group, the programme and
+   * the uploader, which the list rows may not carry.
+   *
+   * And it is the ONLY way to obtain a usable `file_url`: the backend
+   * re-signs the stored path on every read with a 30-minute window, so a
+   * cached one goes dead. Re-read the material rather than keeping the
+   * URL.
+   */
+  async show(id: string): Promise<Material> {
+    const r = await api.get<OneEnvelope<Material>>(`/tutoring-v2/materials/${id}`);
+    return r.data.data;
+  },
+
+  /**
    * Step 1 of 2. Stores the file and returns the reference plus its
    * metadata; nothing is visible to anyone until create() runs.
    *

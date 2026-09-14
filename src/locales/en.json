@@ -6624,7 +6624,8 @@
         "kpiTotal": "Total materials",
         "title": "Materials",
         "emptyTitle": "No materials yet",
-        "meta": "{count} materials"
+        "meta": "{count} materials",
+        "emptyDescription": "Upload your first material with the button at the bottom right."
       },
       "students": {
         "kpiTrial": "Trial",
@@ -6954,6 +6955,22 @@
         "notPublishedYet": "Not published yet",
         "noDescription": "No instructions have been written for this activity yet.",
         "submissionsLabel": "Submissions"
+      },
+      "materialDetail": {
+        "title": "Material detail",
+        "notFound": "Material not found",
+        "notFoundHint": "The material may have been removed, or it does not belong to a group or programme you teach.",
+        "linkLabel": "Link",
+        "openLink": "Open link",
+        "openFile": "Open file",
+        "download": "Download",
+        "downloadFallback": "The file opened in a new tab — save it from there.",
+        "noSource": "This material has no file and no link yet.",
+        "uploadedBy": "Uploaded by",
+        "createdAt": "Created",
+        "published": "Published",
+        "draft": "Draft",
+        "draftHint": "This material is still a draft, so students and parents cannot see it yet."
       }
     },
     "bills": {
