@@ -953,13 +953,13 @@ function pickSubject(id: string) {
         <AppFilterChip
           label="Kelas"
           :value="activeClass?.name ?? 'Semua kelas'"
-          :is-active="!!classFilter"
+          :active="!!classFilter"
           @click="showClassPicker = true"
         />
         <AppFilterChip
           label="Mapel"
           :value="activeSubject?.name ?? 'Semua mapel'"
-          :is-active="!!subjectFilter"
+          :active="!!subjectFilter"
           @click="showSubjectPicker = true"
         />
       </template>

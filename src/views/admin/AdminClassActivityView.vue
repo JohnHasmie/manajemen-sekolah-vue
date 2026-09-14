@@ -366,19 +366,19 @@ function exportCsv() {
         <AppFilterChip
           :label="$t('admin.classActivity.filterClass')"
           :value="activeClass?.name ?? $t('admin.classActivity.allClasses')"
-          :is-active="!!classFilter"
+          :active="!!classFilter"
           @click="showClassPicker = true"
         />
         <AppFilterChip
           :label="$t('admin.classActivity.filterSubject')"
           :value="activeSubject?.name ?? $t('admin.classActivity.allSubjects')"
-          :is-active="!!subjectFilter"
+          :active="!!subjectFilter"
           @click="showSubjectPicker = true"
         />
         <AppFilterChip
           :label="$t('admin.classActivity.filterTeacher')"
           :value="activeTeacher?.name ?? $t('admin.classActivity.allTeachers')"
-          :is-active="!!teacherFilter"
+          :active="!!teacherFilter"
           @click="showTeacherPicker = true"
         />
         <button
