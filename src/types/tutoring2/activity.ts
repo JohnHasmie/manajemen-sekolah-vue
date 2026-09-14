@@ -78,11 +78,14 @@ export type SubmissionStatus = 'draft' | 'submitted' | 'graded';
  * One row in the tutor Submissions grader table.
  *
  * The endpoint eager-loads `enrollment.student:id,name,student_number`
- * so `student_name` + `student_id` land alongside the FK. There is
- * NO `feedback` column on the backend today — the grade endpoint only
- * accepts `score`. If BE later adds a `feedback` column, extend this
- * DTO + the payload; the UI already reserves a textarea for it, but
- * it stays client-only until the wire ships.
+ * so `student_name` + `student_id` land alongside the FK.
+ *
+ * `feedback` used to be described here as client-only, and it was — the
+ * grade endpoint validated `score` alone, so the textarea's contents
+ * were POSTed and thrown away behind a 200. It is now a real column
+ * (`bimbel_activity_submissions.feedback`), returned on every read, and
+ * a consumer that renders the note must seed itself from THIS field
+ * rather than starting blank.
  */
 export interface Submission {
   id: string;
@@ -96,6 +99,8 @@ export interface Submission {
   body?: string | null;
   attachment_url?: string | null;
   score?: number | null;
+  /** Tutor's "Umpan balik" note — null when they never wrote one. */
+  feedback?: string | null;
   graded_by_user_id?: string | null;
   submitted_at?: string | null;
   graded_at?: string | null;
@@ -104,14 +109,17 @@ export interface Submission {
 }
 
 /**
- * Payload accepted by POST /submissions/{id}/grade — only `score` is
- * on the wire. `feedback` is a client-side field only (see the note on
- * `Submission.body` above); we still ship it as an optional field on
- * this payload so the day BE adds a column, this stays source-compatible.
+ * Payload accepted by POST /submissions/{id}/grade. Both fields are on
+ * the wire and both are persisted.
+ *
+ * The two nulls mean different things and the server tells them apart:
+ * an ABSENT `feedback` key leaves the stored note untouched, while an
+ * explicit `null` erases it. The grader screen always sends the key, so
+ * emptying the textarea genuinely clears the note.
  */
 export interface SubmissionGradePayload {
   score: number | null;
-  /** Client-side only for now — see the Submission DTO comment. */
+  /** Omit to leave the stored note alone; `null` to clear it. */
   feedback?: string | null;
 }
 
