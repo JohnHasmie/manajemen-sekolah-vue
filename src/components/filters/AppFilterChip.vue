@@ -6,6 +6,7 @@
   Tone determines the icon-square color.
 -->
 <script setup lang="ts">
+import { useAttrs, watchEffect } from 'vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 withDefaults(
@@ -24,6 +25,68 @@ withDefaults(
 );
 
 defineEmits<{ click: [] }>();
+
+/**
+ * Dev-only misspelled-prop guard.
+ *
+ * This component has a single root <button> and does not set
+ * `inheritAttrs: false`, so ANY attribute it does not declare silently
+ * falls through to the DOM. That is how ten call sites came to pass
+ * `:is-active` instead of `:active`: Vue never matched it as a prop,
+ * the real `active` stayed at its `false` default, and every one of
+ * those chips rendered inert grey while its filter was applied. Nothing
+ * failed — not the type-check, not the tests, not the build.
+ *
+ * `vue-tsc` cannot see this as the repo is configured: there is no
+ * `vueCompilerOptions` anywhere, so Volar's `checkUnknownProps`
+ * defaults to false and an undeclared attribute is legal by design
+ * (indistinguishable from deliberate fall-through). Turning that flag
+ * on is the stronger, repo-wide fix and is tracked separately; it costs
+ * 62 errors across 40 files to get green first. Until then this guard
+ * gives the one component with ~127 call sites a fast local signal.
+ *
+ * Stripped from production entirely: Vite replaces `import.meta.env.DEV`
+ * with `false`, so the whole block is dead-code-eliminated.
+ */
+if (import.meta.env.DEV) {
+  const attrs = useAttrs();
+
+  const DECLARED = ['label', 'value', 'iconName', 'tone', 'disabled', 'active'];
+
+  /**
+   * Attributes that are LEGITIMATELY passed through to the root button
+   * and must never warn. `title` is load-bearing: 15 call sites use it
+   * for a native tooltip today, and a guard that cries wolf gets
+   * switched off. Event listeners arrive camelised (`onKeydown`), every
+   * other attribute under its authored name (`data-testid`, `is-active`).
+   */
+  const ALLOWED =
+    /^(?:class|style|id|title|role|tabindex|slot|key|ref)$|^(?:data|aria)-|^on[A-Z]/;
+
+  const camelize = (s: string) => s.replace(/-(\w)/g, (_, c: string) => c.toUpperCase());
+  const warned = new Set<string>();
+
+  watchEffect(() => {
+    for (const name of Object.keys(attrs)) {
+      if (ALLOWED.test(name) || warned.has(name)) continue;
+      warned.add(name);
+
+      // Did-you-mean: the common slip is an is-/has- prefix, so a
+      // containment match on the normalised names finds it reliably.
+      const norm = camelize(name).toLowerCase();
+      const guess = DECLARED.find(
+        (p) => norm.includes(p.toLowerCase()) || p.toLowerCase().includes(norm),
+      );
+
+      console.warn(
+        `[AppFilterChip] Unknown prop "${name}" — it is NOT a declared prop, so it ` +
+          `falls through to the DOM as a plain attribute and does nothing.` +
+          (guess ? ` Did you mean ":${guess}"?` : '') +
+          ` Declared props: ${DECLARED.join(', ')}.`,
+      );
+    }
+  });
+}
 </script>
 
 <template>
