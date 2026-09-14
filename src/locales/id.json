@@ -6990,7 +6990,9 @@
       "closed": "Ditutup",
       "in_progress": "Berlangsung",
       "passed": "Tuntas",
-      "failed": "Belum tuntas"
+      "failed": "Belum tuntas",
+      "pending": "Menunggu verifikasi",
+      "partial": "Bayar sebagian"
     },
     "bills": {
       "detail": {

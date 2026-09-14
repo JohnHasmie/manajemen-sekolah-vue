@@ -8034,7 +8034,9 @@
       "closed": "Closed",
       "in_progress": "In progress",
       "passed": "Passed",
-      "failed": "Below KKM"
+      "failed": "Below KKM",
+      "pending": "Awaiting verification",
+      "partial": "Partially paid"
     },
     "parent": {
       "pay": {

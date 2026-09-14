@@ -5,8 +5,9 @@
   the list to the wali's own children via `tutoring.bill.view_own`.
 
   Two modes, one route:
-  * No `?billId=` query → payment INBOX. Lists unpaid + overdue bills
-    across all children. Each row taps into the detail mode.
+  * No `?billId=` query → payment INBOX. Lists every OUTSTANDING bill
+    across all children — outstanding meaning "not paid", the same rule
+    the server's own `/bills/summary` uses. Each row taps into detail.
   * `?billId=X` present → payment DETAIL. Fetches the single bill via
     `getBill` and renders summary (child + amount + due + status) plus
     a "Bayar sekarang" CTA. The CTA stubs a toast — real gateway is
@@ -32,6 +33,14 @@ import type { StatusBadgeTone } from '@/types/status-badge';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
 import {
+  bimbelBillDisplayStatus,
+  bimbelBillStatusI18nKey,
+  bimbelBillStatusTone,
+  isBimbelBillOverdue,
+  outstandingBimbelBills,
+  type BimbelBillDisplayStatus,
+} from '@/lib/bimbel-bill-rules';
+import {
   TutoringBimbelService,
   type BimbelBill,
 } from '@/services/tutoring-bimbel.service';
@@ -54,7 +63,7 @@ const billIdFromQuery = computed<string | null>(() => {
 
 interface PayBundle {
   mode: 'list' | 'detail';
-  bills: BimbelBill[];      // list mode: unpaid bills; detail mode: [bill]
+  bills: BimbelBill[];      // list mode: outstanding bills; detail: [bill]
   focused?: BimbelBill;     // detail mode only
   /**
    * Where to send the money. Null when the tenant has configured no
@@ -86,10 +95,26 @@ const { state, reload } = useDataRefresh<PayBundle | null>(async () => {
     return { mode: 'detail', bills: [focused], focused, paymentAccount };
   }
 
+  // NO `status:` filter. `BillController::index` matches the parameter
+  // EXACTLY against one value with no whitelist, so `status: 'unpaid'`
+  // silently dropped `pending` (the wali uploaded a transfer receipt and
+  // is waiting for an admin to verify it) and `partial`. On this screen
+  // — an aggregate ACROSS CHILDREN whose child list is derived from the
+  // bills themselves — that did not drop a row, it dropped the whole
+  // CHILD: a wali with two children, one of whom had only `pending`
+  // bills, read "1 anak". The page comes back unfiltered now and
+  // `bimbel-bill-rules` decides, so this inbox and the server's own
+  // `/bills/summary` (`whereNotIn('status', ['paid'])`) agree.
+  //
+  // `per_page` goes 50 → 100 (the server's hard cap) for exactly that
+  // reason: paid bills now occupy slots in the page we filter, where
+  // before the server excluded them for us. Same truncation risk as
+  // before, one page deeper.
   const [{ items }, paymentAccount] = await Promise.all([
-    TutoringBimbelService.listBills({ status: 'unpaid', per_page: 50 }),
+    TutoringBimbelService.listBills({ per_page: 100 }),
     accountPromise,
   ]);
+  const outstanding = outstandingBimbelBills(items);
 
   // `null`, not an object with an empty `bills` array. useDataRefresh
   // decides `status: 'empty'` via isEmpty(), which recognises only
@@ -97,9 +122,9 @@ const { state, reload } = useDataRefresh<PayBundle | null>(async () => {
   // binds :state straight into <AsyncView>, so a wali with nothing
   // outstanding would get a blank panel instead of "tidak ada tagihan".
   // (Third view in this surface to hit that; see useDataRefresh.spec.ts.)
-  if (items.length === 0) return null;
+  if (outstanding.length === 0) return null;
 
-  return { mode: 'list', bills: items, paymentAccount };
+  return { mode: 'list', bills: outstanding, paymentAccount };
 });
 
 // Re-fetch when the query flips between "no id" and a specific id.
@@ -113,21 +138,18 @@ const bundle = computed<PayBundle | null>(() =>
 const bills = computed<BimbelBill[]>(() => bundle.value?.bills ?? []);
 const focused = computed<BimbelBill | null>(() => bundle.value?.focused ?? null);
 
-type EffectiveStatus = 'unpaid' | 'paid' | 'overdue' | 'pending' | 'partial';
-function effectiveStatus(b: BimbelBill): EffectiveStatus {
-  if (b.status === 'paid') return 'paid';
-  if (b.status === 'pending' || b.status === 'partial') {
-    return b.status as EffectiveStatus;
-  }
-  if (b.due_date) {
-    const dueMs = new Date(b.due_date).getTime();
-    if (!Number.isNaN(dueMs) && dueMs < Date.now()) return 'overdue';
-  }
-  return 'unpaid';
-}
+/**
+ * Was a private copy of the status→display rule, with two faults the
+ * shared module fixes. It ranked `pending`/`partial` ABOVE the due-date
+ * check, so a bill three weeks late read "Belum lunas" as long as a
+ * receipt had been uploaded; and it compared `new Date(due_date)`
+ * against `Date.now()`, which is a UTC midnight and so called a bill
+ * overdue seven hours early in WIB.
+ */
+const effectiveStatus = bimbelBillDisplayStatus;
 
 const overdueCount = computed(
-  () => bills.value.filter((b) => effectiveStatus(b) === 'overdue').length,
+  () => bills.value.filter((b) => isBimbelBillOverdue(b)).length,
 );
 const totalDue = computed(() =>
   bills.value.reduce((acc, b) => acc + (b.amount ?? 0), 0),
@@ -183,32 +205,19 @@ function sourceLabel(b: BimbelBill): string {
   }
 }
 
-function statusLabel(s: EffectiveStatus): string {
-  switch (s) {
-    case 'paid':
-      return t('tutoring2.status.paid');
-    case 'overdue':
-      return t('tutoring2.status.overdue');
-    case 'pending':
-    case 'partial':
-    case 'unpaid':
-    default:
-      return t('tutoring2.status.unpaid');
-  }
+/**
+ * Both used to collapse `pending` and `partial` onto the `unpaid` copy,
+ * which was harmless only while the server filter made those two
+ * unreachable here. Now that they arrive, a wali who has already
+ * uploaded a receipt would have been told "BELUM LUNAS" — so the two
+ * words get their own label and their own tone, from the shared map.
+ */
+function statusLabel(s: BimbelBillDisplayStatus): string {
+  return t(bimbelBillStatusI18nKey(s));
 }
 
-function statusTone(s: EffectiveStatus): StatusBadgeTone {
-  switch (s) {
-    case 'paid':
-      return 'success';
-    case 'overdue':
-      return 'danger';
-    case 'pending':
-    case 'partial':
-    case 'unpaid':
-    default:
-      return 'warning';
-  }
+function statusTone(s: BimbelBillDisplayStatus): StatusBadgeTone {
+  return bimbelBillStatusTone(s);
 }
 
 function openDetail(b: BimbelBill) {

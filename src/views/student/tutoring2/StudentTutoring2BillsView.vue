@@ -29,6 +29,15 @@ import StatusBadge from '@/components/ui/StatusBadge.vue';
 import type { StatusBadgeTone } from '@/types/status-badge';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import {
+  bimbelBillDisplayStatus,
+  bimbelBillStatusI18nKey,
+  bimbelBillStatusTone,
+  isBimbelBillOverdue,
+  isBimbelBillPaid,
+  outstandingBimbelBills,
+  type BimbelBillDisplayStatus,
+} from '@/lib/bimbel-bill-rules';
+import {
   TutoringBimbelService,
   type BimbelBill,
 } from '@/services/tutoring-bimbel.service';
@@ -45,32 +54,20 @@ const bills = computed<BimbelBill[]>(() =>
   state.value.status === 'content' ? (state.value.data as BimbelBill[]) : [],
 );
 
-// Effective status = raw status + client-side "overdue" derivation.
-// BE keeps status limited to unpaid|pending|partial|paid; overdue is
-// UI-only (unpaid past due_date). Kept as a computed row-level tag.
-type EffectiveStatus = 'unpaid' | 'paid' | 'overdue' | 'pending' | 'partial';
-function effectiveStatus(b: BimbelBill): EffectiveStatus {
-  if (b.status === 'paid') return 'paid';
-  if (b.status === 'pending' || b.status === 'partial') {
-    return b.status as EffectiveStatus;
-  }
-  // unpaid — check overdue.
-  if (b.due_date) {
-    const dueMs = new Date(b.due_date).getTime();
-    if (!Number.isNaN(dueMs) && dueMs < Date.now()) return 'overdue';
-  }
-  return 'unpaid';
-}
+/**
+ * Was a hand-written copy of the same status→display rule the wali
+ * inbox carried, with the same two faults: it returned early on
+ * `pending`/`partial` so a bill weeks late still read as merely
+ * awaiting verification, and it compared `new Date(due_date)` against
+ * `Date.now()` — a UTC midnight, which calls a bill overdue seven hours
+ * early in WIB. Both now come from `lib/bimbel-bill-rules`, which is
+ * also where the wali screens read them, so the two cannot drift.
+ */
+const effectiveStatus = bimbelBillDisplayStatus;
 
-const unpaidBills = computed(() =>
-  bills.value.filter((b) => effectiveStatus(b) !== 'paid'),
-);
-const paidBills = computed(() =>
-  bills.value.filter((b) => effectiveStatus(b) === 'paid'),
-);
-const overdueBills = computed(() =>
-  bills.value.filter((b) => effectiveStatus(b) === 'overdue'),
-);
+const outstandingBills = computed(() => outstandingBimbelBills(bills.value));
+const paidBills = computed(() => bills.value.filter((b) => isBimbelBillPaid(b.status)));
+const overdueBills = computed(() => bills.value.filter((b) => isBimbelBillOverdue(b)));
 
 const totalTertagih = computed(() =>
   bills.value.reduce((acc, b) => acc + (b.amount ?? 0), 0),
@@ -101,8 +98,8 @@ const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'clock',
     label: t('tutoring2.student.bills.kpiOutstanding'),
-    value: String(unpaidBills.value.length),
-    tone: unpaidBills.value.length > 0 ? 'amber' : undefined,
+    value: String(outstandingBills.value.length),
+    tone: outstandingBills.value.length > 0 ? 'amber' : undefined,
   },
 ]);
 
@@ -125,32 +122,17 @@ function sourceLabel(b: BimbelBill): string {
   }
 }
 
-function statusLabel(s: EffectiveStatus): string {
-  switch (s) {
-    case 'paid':
-      return t('tutoring2.status.paid');
-    case 'overdue':
-      return t('tutoring2.status.overdue');
-    case 'pending':
-    case 'partial':
-    case 'unpaid':
-    default:
-      return t('tutoring2.status.unpaid');
-  }
+/**
+ * `pending` and `partial` used to collapse onto the `unpaid` copy and
+ * its tone, so a student whose guardian had already transferred was
+ * told "BELUM LUNAS". Both now come from the shared map.
+ */
+function statusLabel(s: BimbelBillDisplayStatus): string {
+  return t(bimbelBillStatusI18nKey(s));
 }
 
-function statusTone(s: EffectiveStatus): StatusBadgeTone {
-  switch (s) {
-    case 'paid':
-      return 'success';
-    case 'overdue':
-      return 'danger';
-    case 'pending':
-    case 'partial':
-    case 'unpaid':
-    default:
-      return 'warning';
-  }
+function statusTone(s: BimbelBillDisplayStatus): StatusBadgeTone {
+  return bimbelBillStatusTone(s);
 }
 
 function openDetail(billId: string) {
@@ -165,7 +147,7 @@ function openDetail(billId: string) {
       role="student"
       :kicker="t('tutoring2.common.roleStudent')"
       :title="t('tutoring2.student.bills.title')"
-      :meta="state.status === 'content' ? t('tutoring2.student.bills.meta', { count: unpaidBills.length }) : t('tutoring2.common.loading')"
+      :meta="state.status === 'content' ? t('tutoring2.student.bills.meta', { count: outstandingBills.length }) : t('tutoring2.common.loading')"
     />
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
@@ -182,12 +164,12 @@ function openDetail(billId: string) {
         <div class="space-y-md">
           <!-- Pending (unpaid + overdue + pending + partial) -->
           <section
-            v-if="unpaidBills.length"
+            v-if="outstandingBills.length"
             class="rounded-3xl border border-slate-100 bg-white shadow-sm"
           >
             <ul class="divide-y divide-slate-100">
               <li
-                v-for="row in unpaidBills"
+                v-for="row in outstandingBills"
                 :key="row.id"
                 class="flex items-center gap-3 px-4 py-3"
               >

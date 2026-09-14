@@ -53,7 +53,9 @@
   3. BILL STATUS IS A CLOSED ENUM NOW. v1 statuses were free text, so
      the legacy view ran a `/unpaid|pending|due|overdue|belum/i` regex
      over them. v2 bills carry `unpaid | pending | partial | paid`, so
-     we ask the server for `status=unpaid` and drop the regex.
+     the regex is gone — but note that the replacement `status=unpaid`
+     was NARROWER than the regex it replaced, which had matched
+     `pending` too. See the fetch below.
 
   4. LEAD STATUS IS LOWERCASE. v1 filtered `status: 'TRIAL'`; the v2
      `LeadStatus` enum is lowercase `trial`.
@@ -84,6 +86,7 @@ import KpiStripCards, { type KpiCard } from '@/components/feature/KpiStripCards.
 import NavIcon from '@/components/feature/NavIcon.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { outstandingBimbelBills } from '@/lib/bimbel-bill-rules';
 import { formatRupiah } from '@/lib/format';
 import {
   TutoringBimbelService,
@@ -107,7 +110,7 @@ interface DashboardPayload {
   stats: AdminDashboardStats;
   feed: AdminActivityEvent[];
   groups: BimbelLearningGroup[];
-  unpaidBills: BimbelBill[];
+  outstandingBills: BimbelBill[];
   trialLeads: BimbelLead[];
 }
 
@@ -132,9 +135,14 @@ const { state, reload } = useDataRefresh<DashboardPayload>(async () => {
       items: [],
       pagination: undefined,
     }),
-    // v2 bill statuses are a closed enum — ask the server for `unpaid`
-    // instead of regex-matching free text the way v1 had to.
-    optional(TutoringBimbelService.listBills({ per_page: 50, status: 'unpaid' }), {
+    // NO `status:` filter — see `lib/bimbel-bill-rules`. This panel is
+    // "Tagihan tertunggak", and the TOTAL printed at the top of it is
+    // `stats.billing.menunggak`, which the server computes as
+    // `whereNotIn('status', ['paid'])`. Asking for the single word
+    // `unpaid` made the ROWS a strictly narrower set than their own
+    // total: a tenant whose arrears were all awaiting verification saw
+    // a rupiah figure over "Tidak ada tagihan tertunggak."
+    optional(TutoringBimbelService.listBills({ per_page: 100 }), {
       items: [],
       pagination: undefined,
     }),
@@ -148,7 +156,7 @@ const { state, reload } = useDataRefresh<DashboardPayload>(async () => {
     stats,
     feed: activity.items,
     groups: groups.items,
-    unpaidBills: bills.items,
+    outstandingBills: outstandingBimbelBills(bills.items),
     trialLeads: leads.items,
   };
 });
@@ -169,8 +177,8 @@ const groupsWithoutTutor = computed(() => groups.value.filter((g) => !g.tutor_id
 const attentionGroup = computed(() => groupsWithoutTutor.value[0] ?? null);
 
 /** Soonest-due first; bills with no due date sink to the bottom. */
-const unpaidBills = computed<BimbelBill[]>(() =>
-  [...(payload.value?.unpaidBills ?? [])].sort((a, b) => dueSortKey(a) - dueSortKey(b)),
+const outstandingBills = computed<BimbelBill[]>(() =>
+  [...(payload.value?.outstandingBills ?? [])].sort((a, b) => dueSortKey(a) - dueSortKey(b)),
 );
 
 function dueSortKey(bill: BimbelBill): number {
@@ -453,7 +461,7 @@ function goGroupDetail(group: BimbelLearningGroup | null): void {
                 <h2 class="mb-2 text-sm font-bold text-slate-900">
                   {{ t('tutoring2.admin.dashboard.unpaidBills') }}
                 </h2>
-                <p v-if="unpaidBills.length === 0" class="py-3 text-center text-2xs text-slate-400">
+                <p v-if="outstandingBills.length === 0" class="py-3 text-center text-2xs text-slate-400">
                   {{ t('tutoring2.admin.dashboard.noUnpaidBills') }}
                 </p>
                 <template v-else>
@@ -468,7 +476,7 @@ function goGroupDetail(group: BimbelLearningGroup | null): void {
                     </span>
                   </div>
                   <button
-                    v-for="b in unpaidBills.slice(0, 3)"
+                    v-for="b in outstandingBills.slice(0, 3)"
                     :key="b.id"
                     type="button"
                     class="flex w-full items-center gap-2.5 border-b border-slate-100 py-2 text-left last:border-0 hover:bg-slate-50"

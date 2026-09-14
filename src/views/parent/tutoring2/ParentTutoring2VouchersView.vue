@@ -75,6 +75,7 @@ import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useToast } from '@/composables/useToast';
 import { isCounted, countOrDash, EM_DASH } from '@/lib/absent-vs-zero';
+import { outstandingBimbelBills } from '@/lib/bimbel-bill-rules';
 import { toLocalYmd } from '@/lib/local-date';
 import { useAuthStore } from '@/stores/auth';
 import { VouchersService } from '@/services/tutoring2/vouchers';
@@ -120,12 +121,22 @@ const { state, reload } = useDataRefresh<VoucherBundle>(async () => {
           (r) => r.items,
         )
       : Promise.resolve<BimbelEnrollment[]>([]),
+    // NO `status:` filter — see `lib/bimbel-bill-rules`. These bills are
+    // the REDEEM TARGETS a voucher can be applied to, and the KPI above
+    // them reads "Tagihan terbuka". `BillController::index` matches the
+    // parameter exactly against one value, so `status: 'unpaid'` hid
+    // every bill awaiting verification: a wali who had uploaded a
+    // receipt could not apply a voucher to the very bill it was for, and
+    // the picker read as though there were nothing to redeem against.
+    // `RedeemVoucherAction` guards the voucher (active / in-window /
+    // under cap / not already used on this enrollment) and imposes no
+    // bill-status condition of its own, so the only rule to apply here
+    // is the shared one: not paid.
     sid
       ? TutoringBimbelService.listBills({
           student_id: sid,
-          status: 'unpaid',
-          per_page: 50,
-        }).then((r) => r.items)
+          per_page: 100,
+        }).then((r) => outstandingBimbelBills(r.items))
       : Promise.resolve<BimbelBill[]>([]),
   ]);
   return { vouchers, enrollments, bills };
@@ -143,7 +154,7 @@ const bundle = computed<VoucherBundle | null>(() =>
 
 const vouchers = computed<BimbelVoucher[]>(() => bundle.value?.vouchers ?? []);
 const enrollments = computed<BimbelEnrollment[]>(() => bundle.value?.enrollments ?? []);
-const unpaidBills = computed<BimbelBill[]>(() => bundle.value?.bills ?? []);
+const outstandingBills = computed<BimbelBill[]>(() => bundle.value?.bills ?? []);
 
 const childName = computed<string | null>(
   () => enrollments.value.find((e) => e.student_name)?.student_name ?? null,
@@ -278,7 +289,7 @@ const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'file-text',
     label: t('tutoring2.parent.vouchers.kpiOpenBills'),
-    value: String(unpaidBills.value.length),
+    value: String(outstandingBills.value.length),
   },
 ]);
 
@@ -375,7 +386,7 @@ const enrollmentOptions = computed<FormFieldOption[]>(() =>
 );
 
 const billOptions = computed<FormFieldOption[]>(() =>
-  unpaidBills.value.map((b) => ({
+  outstandingBills.value.map((b) => ({
     value: b.id,
     label: `${b.payment_type_name ?? t('tutoring2.common.amount')} · ${rupiah(b.amount)}${
       b.due_date ? ` · ${b.due_date}` : ''
@@ -400,7 +411,7 @@ function openRedeem(v: BimbelVoucher) {
   redeemEnrollmentId.value =
     enrollments.value.length === 1 ? (enrollments.value[0]?.id ?? '') : '';
   redeemBillId.value =
-    unpaidBills.value.length === 1 ? (unpaidBills.value[0]?.id ?? '') : '';
+    outstandingBills.value.length === 1 ? (outstandingBills.value[0]?.id ?? '') : '';
   redeemError.value = null;
 }
 
