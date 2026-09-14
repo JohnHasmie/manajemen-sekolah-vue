@@ -84,6 +84,42 @@
   value would otherwise reach the API as a filter nothing can match and
   render as "no sessions" — a lie about the data instead of a visibly
   ignored parameter.
+
+  ── The Periode chip, and why it needed a precedence rule ────────────
+
+  `periodFilter` was the last fabricated control on this screen, and it
+  was worse than inert: it cycled Semua → Minggu ini → Bulan ini, lit
+  itself up, and sat in the reload watcher — so every press fired a
+  refetch and the list visibly re-rendered, with the same rows, because
+  the value was never passed to `listSessions`. Its own author labelled
+  it `// nominal, UI-only`. A control that reloads and changes nothing
+  is not a dead button; it is a button that lies about having filtered.
+
+  Wiring it is not the one-liner it is on the Kehadiran screen, because
+  this screen already has a date control. `listSessions` has exactly ONE
+  pair of date keys (`from`/`to`) and `SessionController::index` honours
+  no others, so a period and a day cannot both be expressed at once —
+  there is no `period` param to fall back on. The rule, kept visible in
+  the UI rather than hidden in the query:
+
+    • A specific DAY wins while it is set. It is the narrower statement,
+      it arrived from elsewhere (the report drill-in), and the context
+      bar below announces it.
+    • Choosing a period CLEARS the day and strips `?date=` off the URL —
+      through `clearDateFilter()`, the same function the context bar's
+      button calls. One clearing path, not two subtly different ones.
+    • A day arriving from the URL resets the period chip to "Semua", so
+      the chip can never claim a window that is not being applied.
+
+  So exactly one date scope is in force at any moment, and the chip and
+  the context bar always agree about which. Only `week` and `month` are
+  offered: a "Hari ini" option would be a second way to say `dateFilter`
+  and re-open the ambiguity this rule closes.
+
+  The window arithmetic itself is `dateRangeForFacet()` in
+  `lib/local-date`, shared with AdminTutoring2AttendanceView — same
+  exclusive `to`, same local-calendar steps, one definition of "minggu
+  ini" for both screens.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -103,7 +139,13 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
-import { addDays, formatYmdLabel, isValidYmd } from '@/lib/local-date';
+import {
+  addDays,
+  dateRangeForFacet,
+  formatYmdLabel,
+  isValidYmd,
+  type DateRangeFacet,
+} from '@/lib/local-date';
 import {
   BIMBEL_SESSION_STATUSES,
   TutoringBimbelService,
@@ -186,6 +228,11 @@ watch(
   () => route.query.date,
   () => {
     dateFilter.value = readDateQuery();
+    // A day arriving from the URL takes over the date scope, so the
+    // period chip must stop claiming a window that is no longer being
+    // applied. Without this the chip could read "Bulan ini" over a
+    // list showing exactly one day.
+    if (dateFilter.value) periodFilter.value = '';
   },
 );
 
@@ -195,7 +242,15 @@ const search = ref('');
 const statusFilter = ref<'' | BimbelSessionStatus>('');
 const groupFilter = ref<string>('');  // '' | learning_group_id
 const tutorFilter = ref<string>('');  // '' | tutor_id
-const periodFilter = ref<'all' | 'week' | 'month'>('all'); // nominal, UI-only
+/**
+ * The RANGE facet, distinct from `dateFilter` above, which is a single
+ * DAY. `''` = "Semua", matching the chips beside it.
+ *
+ * Only `'week'` and `'month'` are offered: "Hari ini" would be a second
+ * way to say `dateFilter`, and two controls writing the same day is the
+ * ambiguity the precedence below exists to avoid.
+ */
+const periodFilter = ref<'' | Exclude<DateRangeFacet, 'today'>>('');
 
 const debouncedSearch = ref('');
 const applyDebounced = useDebounceFn((v: string) => {
@@ -203,15 +258,35 @@ const applyDebounced = useDebounceFn((v: string) => {
 }, 300);
 watch(search, (v) => applyDebounced(v));
 
+/**
+ * ONE effective date scope at a time — see the docblock above.
+ *
+ * A specific DAY wins while it is set: it is the narrower statement,
+ * and it is the one the reader did not choose on this screen (it
+ * arrived from Laporan Aktivitas, and the context bar below says so).
+ * Picking a period clears the day, so in practice the two are never
+ * both set — this order is the belt to that braces, and it keeps the
+ * `?date=` drill-in byte-for-byte what it was.
+ */
+const dateParams = computed<{ from?: string; to?: string }>(() => {
+  if (dateFilter.value) {
+    // [D, D+1) — `to` is exclusive server-side (`starts_at < to`).
+    return { from: dateFilter.value, to: addDays(dateFilter.value, 1) };
+  }
+  // Same exclusive bound, same local-calendar arithmetic, one window
+  // wider. Shared with the Kehadiran screen so the two cannot disagree.
+  return dateRangeForFacet(periodFilter.value) ?? {};
+});
+
 const { state, reload } = useDataRefresh(async () => {
   const { items } = await TutoringBimbelService.listSessions({
     per_page: 100,
     status: statusFilter.value || undefined,
     learning_group_id: groupFilter.value || undefined,
     tutor_id: tutorFilter.value || undefined,
-    // [D, D+1) — `to` is exclusive server-side (`starts_at < to`).
-    from: dateFilter.value || undefined,
-    to: dateFilter.value ? addDays(dateFilter.value, 1) : undefined,
+    // Spread, never two `|| undefined` keys: "Semua" on BOTH date
+    // controls must send no date params at all.
+    ...dateParams.value,
   });
   return items;
 });
@@ -226,6 +301,19 @@ const tutors = ref<Tutor[]>([]);
 const showStatusPicker = ref(false);
 const showGroupPicker = ref(false);
 const showTutorPicker = ref(false);
+const showPeriodPicker = ref(false);
+
+/**
+ * The period windows, worded the way `dateRangeForFacet` applies them:
+ * the Monday-start week / calendar month the reader is currently in.
+ * A `computed`, so switching app language relabels the open picker.
+ *
+ * The keys are English wire-ish tokens; only the labels are translated.
+ */
+const periodOptions = computed<FacetOption[]>(() => [
+  { key: 'week', label: t('tutoring2.common.thisWeek') },
+  { key: 'month', label: t('tutoring2.common.thisMonth') },
+]);
 
 /**
  * Every lifecycle state, labelled. Built from BIMBEL_SESSION_STATUSES so
@@ -341,6 +429,22 @@ function applyStatusFilter(v: string) {
     ? (v as BimbelSessionStatus)
     : '';
 }
+
+/**
+ * Same narrowing contract as `applyStatusFilter`, plus the one thing
+ * that makes this chip different from every other on the screen:
+ * choosing a period is choosing a DIFFERENT date scope, so it drops the
+ * single-day filter — through `clearDateFilter()`, the function the
+ * context bar already calls, so the URL is stripped exactly once and in
+ * exactly one way. A second, subtly different clearing here is how
+ * `?date=` would survive on the URL and silently re-apply on refresh.
+ *
+ * Both refs change inside one tick, so the watcher above reloads ONCE.
+ */
+function applyPeriodFilter(v: string) {
+  periodFilter.value = v === 'week' || v === 'month' ? v : '';
+  if (periodFilter.value && dateFilter.value) clearDateFilter();
+}
 </script>
 
 <template>
@@ -383,10 +487,10 @@ function applyStatusFilter(v: string) {
         />
         <AppFilterChip
           :label="t('tutoring2.common.period')"
-          :value="periodFilter === 'all' ? t('tutoring2.common.all') : periodFilter === 'week' ? t('tutoring2.common.thisWeek') : t('tutoring2.common.thisMonth')"
+          :value="chipValue(periodFilter, periodOptions)"
           icon-name="calendar"
-          :active="periodFilter !== 'all'"
-          @click="periodFilter = periodFilter === 'all' ? 'week' : periodFilter === 'week' ? 'month' : 'all'"
+          :active="!!periodFilter"
+          @click="showPeriodPicker = true"
         />
       </template>
     </PageFilterToolbar>
@@ -515,6 +619,15 @@ function applyStatusFilter(v: string) {
       :all-label="t('tutoring2.common.all')"
       @close="showTutorPicker = false"
       @apply="(v) => { tutorFilter = v; }"
+    />
+    <FilterFacetPickerModal
+      v-if="showPeriodPicker"
+      :title="t('tutoring2.common.period')"
+      :options="periodOptions"
+      :selected="periodFilter"
+      :all-label="t('tutoring2.common.all')"
+      @close="showPeriodPicker = false"
+      @apply="applyPeriodFilter"
     />
   </div>
 </template>

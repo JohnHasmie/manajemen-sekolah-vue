@@ -120,6 +120,109 @@ export function formatYmdLabel(ymd: string, localeTag = 'id-ID'): string {
 }
 
 /* ------------------------------------------------------------------ *
+ * Named date-range facets ("Hari ini" / "Minggu ini" / "Bulan ini")
+ *
+ * ── Why this lives here and not in the two views that use it ────────
+ *
+ * Both admin bimbel screens (Kehadiran and Jadwal sesi) offer a date
+ * chip over the SAME endpoint. Computing "this week" twice, once per
+ * screen, is how this codebase ended up with four `groupLabel()`
+ * functions that had drifted apart — and a date drift is worse than a
+ * label drift, because the two screens would then disagree about which
+ * sessions happened this week while both looked right.
+ *
+ * ── The upper bound is EXCLUSIVE, and that is not a preference ──────
+ *
+ * `GET /tutoring-v2/sessions` filters with
+ *
+ *     ->when($request->filled('from'), … where('starts_at', '>=', from))
+ *     ->when($request->filled('to'),   … where('starts_at', '<',  to))
+ *
+ * (SessionController::index). `from` is INCLUSIVE (`>=`), `to` is
+ * EXCLUSIVE (`<`). `starts_at` is a datetime cast, so a bare
+ * `YYYY-MM-DD` bound is coerced to that day's MIDNIGHT: passing the
+ * last day of the range as `to` would drop that whole day's sessions,
+ * silently, and nothing on screen would say so. `to` is therefore
+ * always the day AFTER the last day the reader asked for.
+ *
+ * CAUTION for future callers: the sibling report endpoints
+ * (`/tutoring-v2/admin/reports/*`, AdminReportController::boundedRange)
+ * use the same two wire keys with the OPPOSITE convention —
+ * `Carbon::parse($to)->endOfDay()`, i.e. inclusive. A report caller
+ * must pass `addDays(range.to, -1)`, not `range.to`.
+ *
+ * ── Local calendar only ─────────────────────────────────────────────
+ *
+ * Every step goes through `toLocalYmd`/`addDays`. The tempting
+ * `new Date().toISOString().slice(0, 10)` reads the UTC day, so for a
+ * WIB (UTC+7) admin opening the app before 07:00 "Hari ini" would ask
+ * for YESTERDAY — the MTs Muhammadiyah Surakarta bug, one screen over.
+ *
+ * ── The week starts on MONDAY ───────────────────────────────────────
+ *
+ * Matching every other admin/teacher surface in the app (the attendance
+ * report windows, `mondayOfWeek()` in AdminAttendanceOverviewCard, and
+ * the `(getDay() + 6) % 7` anchoring in SessionsCalendar). Indonesia
+ * treats Monday as the start of the week.
+ * ------------------------------------------------------------------ */
+
+/** The named windows a date facet chip can offer. `''` = no filter. */
+export type DateRangeFacet = 'today' | 'week' | 'month';
+
+export interface DateRange {
+  /** Inclusive lower bound, `YYYY-MM-DD`. */
+  from: string;
+  /**
+   * EXCLUSIVE upper bound, `YYYY-MM-DD` — the day AFTER the last day in
+   * the range, because the sessions endpoint filters `starts_at < to`.
+   */
+  to: string;
+}
+
+/**
+ * The half-open `[from, to)` window a named date facet stands for.
+ *
+ * Returns `null` for `''` (the "Semua" reset) and for a malformed
+ * anchor, which callers spread as "no date params at all" rather than
+ * as a filter nothing can match.
+ *
+ *   dateRangeForFacet('today', '2026-09-09')  → { from: '2026-09-09', to: '2026-09-10' }
+ *   dateRangeForFacet('week',  '2026-09-09')  → { from: '2026-09-07', to: '2026-09-14' }  (Mon–Sun)
+ *   dateRangeForFacet('month', '2026-09-09')  → { from: '2026-09-01', to: '2026-10-01' }
+ *
+ * @param facet  the window; `''` means "no filter".
+ * @param anchor the day the window is computed around, `YYYY-MM-DD`.
+ *               Defaults to the caller's LOCAL today.
+ */
+export function dateRangeForFacet(
+  facet: '' | DateRangeFacet,
+  anchor: string = toLocalYmd(),
+): DateRange | null {
+  if (!facet || !isValidYmd(anchor)) return null;
+
+  if (facet === 'today') {
+    // [D, D+1): one day, exclusive end.
+    return { from: anchor, to: addDays(anchor, 1) };
+  }
+
+  const [y, m, d] = anchor.split('-').map(Number);
+
+  if (facet === 'week') {
+    // JS getDay(): Sun=0, Mon=1, …, Sat=6 — Indonesia treats Mon as the
+    // start, so Sunday walks back six days rather than staying put.
+    const dow = new Date(y, m - 1, d).getDay();
+    const from = addDays(anchor, dow === 0 ? -6 : 1 - dow);
+    // Mon..Sun inclusive is [Mon, Mon+7) once the end is exclusive.
+    return { from, to: addDays(from, 7) };
+  }
+
+  // 'month' — the whole calendar month the anchor falls in. Both bounds
+  // are built from LOCAL components; `new Date(y, m, 1)` is the first of
+  // the NEXT month and rolls the year over on its own in December.
+  return { from: toLocalYmd(new Date(y, m - 1, 1)), to: toLocalYmd(new Date(y, m, 1)) };
+}
+
+/* ------------------------------------------------------------------ *
  * `YYYY-MM` month arithmetic
  *
  * Added with the Safari month-picker fix. `<input type="month">` has no

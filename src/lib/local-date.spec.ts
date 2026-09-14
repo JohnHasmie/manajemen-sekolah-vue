@@ -299,3 +299,186 @@ describe('formatYmdLabel', () => {
     expect(formatYmdLabel('2026-09-09', 'id-ID')).toBe('9 September 2026');
   });
 });
+
+/* ------------------------------------------------------------------ *
+ * `dateRangeForFacet` — the shared window behind the two admin bimbel
+ * date chips (Kehadiran "Tanggal", Jadwal sesi "Periode").
+ *
+ * Both chips shipped as fabricated controls: they lit up, they sat in
+ * the reload watcher so pressing one fired an identical refetch (the
+ * list visibly reshuffled as though it had worked), and neither value
+ * ever reached a query. Wiring them needs exactly one arithmetic, and
+ * it lives here rather than twice in two views so the two screens
+ * cannot come to disagree about which sessions are "this week".
+ *
+ * The two invariants this block locks:
+ *
+ *   1. `to` is EXCLUSIVE — the day AFTER the last day of the window.
+ *      `SessionController::index` filters `starts_at < to` on a
+ *      datetime column, so a `to` equal to the last day is coerced to
+ *      that day's midnight and drops the whole final day. Every window
+ *      below therefore asserts BOTH bounds, never just `from`.
+ *   2. Every bound is a LOCAL calendar day. Two of the cases below
+ *      assert the `toISOString().slice(0, 10)` trap explicitly before
+ *      asserting the helper, so they cannot pass for the wrong reason.
+ * ------------------------------------------------------------------ */
+import { dateRangeForFacet } from './local-date';
+
+describe('dateRangeForFacet', () => {
+  it('returns null for the "Semua" reset — no filter, not an empty one', () => {
+    // The caller spreads `null` as "send no date params at all". A
+    // `{ from: '', to: '' }` here would reach the API as a filter
+    // nothing can match and render as "no sessions" — a lie about the
+    // data rather than an absent filter.
+    expect(dateRangeForFacet('', '2026-09-09')).toBeNull();
+  });
+
+  it('returns null for a malformed anchor rather than inventing a window', () => {
+    expect(dateRangeForFacet('week', '2026-9-9')).toBeNull();
+    expect(dateRangeForFacet('month', 'kemarin')).toBeNull();
+    expect(dateRangeForFacet('today', '')).toBeNull();
+  });
+
+  it('"today" is the half-open [D, D+1) — the exclusive bound the API wants', () => {
+    expect(dateRangeForFacet('today', '2026-09-09')).toEqual({
+      from: '2026-09-09',
+      to: '2026-09-10',
+    });
+  });
+
+  it('"today" carries month and year boundaries', () => {
+    expect(dateRangeForFacet('today', '2026-09-30').to).toBe('2026-10-01');
+    expect(dateRangeForFacet('today', '2026-12-31')).toEqual({
+      from: '2026-12-31',
+      to: '2027-01-01',
+    });
+  });
+
+  it('"week" runs Monday → Sunday, ending on the FOLLOWING Monday', () => {
+    // 2026-09-09 is a Wednesday; its week is Mon 7 Sep – Sun 13 Sep.
+    expect(new Date(2026, 8, 9).getDay()).toBe(3); // premise: Wednesday
+    expect(dateRangeForFacet('week', '2026-09-09')).toEqual({
+      from: '2026-09-07',
+      to: '2026-09-14',
+    });
+  });
+
+  it('"week" treats SUNDAY as the last day of the week, not the first', () => {
+    // The off-by-a-week trap: JS getDay() calls Sunday 0, so the naive
+    // `-getDay()` walks a Sunday reader forward into next week's Monday
+    // and hides the six days they are actually looking at.
+    expect(new Date(2026, 8, 13).getDay()).toBe(0); // premise: Sunday
+    expect(dateRangeForFacet('week', '2026-09-13')).toEqual({
+      from: '2026-09-07',
+      to: '2026-09-14',
+    });
+  });
+
+  it('"week" on a Monday starts that same day', () => {
+    expect(new Date(2026, 8, 7).getDay()).toBe(1); // premise: Monday
+    expect(dateRangeForFacet('week', '2026-09-07')).toEqual({
+      from: '2026-09-07',
+      to: '2026-09-14',
+    });
+  });
+
+  it('"week" spans a month and a year boundary intact', () => {
+    // Mon 28 Sep – Sun 4 Oct.
+    expect(dateRangeForFacet('week', '2026-09-30')).toEqual({
+      from: '2026-09-28',
+      to: '2026-10-05',
+    });
+    // Mon 28 Dec 2026 – Sun 3 Jan 2027.
+    expect(dateRangeForFacet('week', '2026-12-31')).toEqual({
+      from: '2026-12-28',
+      to: '2027-01-04',
+    });
+  });
+
+  it('"month" is the whole calendar month, ending on the 1st of the next', () => {
+    expect(dateRangeForFacet('month', '2026-09-09')).toEqual({
+      from: '2026-09-01',
+      to: '2026-10-01',
+    });
+    // The last day of the month must still be INSIDE the window: `to`
+    // is 1 Oct, so 30 Sep is matched. A `to` of '2026-09-30' would drop
+    // it, which is the whole reason the bound is exclusive.
+    expect(dateRangeForFacet('month', '2026-09-30').to).toBe('2026-10-01');
+  });
+
+  it('"month" rolls the year over in December', () => {
+    expect(dateRangeForFacet('month', '2026-12-15')).toEqual({
+      from: '2026-12-01',
+      to: '2027-01-01',
+    });
+  });
+
+  it('"month" gets February right in a leap year and out of one', () => {
+    expect(dateRangeForFacet('month', '2024-02-10')).toEqual({
+      from: '2024-02-01',
+      to: '2024-03-01',
+    });
+    expect(dateRangeForFacet('month', '2026-02-10')).toEqual({
+      from: '2026-02-01',
+      to: '2026-03-01',
+    });
+  });
+
+  it('defaults the anchor to the caller\'s LOCAL today, never the UTC one', () => {
+    const REAL_TZ = process.env.TZ;
+    process.env.TZ = 'Asia/Jakarta';
+    vi.useFakeTimers();
+    try {
+      // 2026-09-08T22:30Z === 2026-09-09 05:30 WIB. This is the exact
+      // window — the first 7 hours of any WIB day — in which
+      // `new Date().toISOString().slice(0, 10)` names YESTERDAY, so an
+      // admin opening "Hari ini" before 07:00 would be shown the 8th.
+      vi.setSystemTime(new Date('2026-09-08T22:30:00Z'));
+
+      // Premise + the trap, asserted before the conclusion.
+      expect(new Date().getTimezoneOffset()).toBe(-420);
+      expect(new Date().toISOString().slice(0, 10)).toBe('2026-09-08'); // buggy
+      expect(toLocalYmd()).toBe('2026-09-09'); // correct
+
+      expect(dateRangeForFacet('today')).toEqual({
+        from: '2026-09-09',
+        to: '2026-09-10',
+      });
+      // And the wider windows are anchored on that same local day.
+      expect(dateRangeForFacet('week')).toEqual({
+        from: '2026-09-07',
+        to: '2026-09-14',
+      });
+      expect(dateRangeForFacet('month')).toEqual({
+        from: '2026-09-01',
+        to: '2026-10-01',
+      });
+    } finally {
+      vi.useRealTimers();
+      process.env.TZ = REAL_TZ;
+    }
+  });
+
+  it('is correct in a NEGATIVE offset too', () => {
+    const REAL_TZ = process.env.TZ;
+    process.env.TZ = 'America/New_York'; // UTC-4 in September
+    vi.useFakeTimers();
+    try {
+      // 2026-09-10T01:30Z === 2026-09-09 21:30 in New York. Here the
+      // UTC slice runs AHEAD, naming tomorrow.
+      vi.setSystemTime(new Date('2026-09-10T01:30:00Z'));
+
+      expect(new Date().getTimezoneOffset()).toBe(240);
+      expect(new Date().toISOString().slice(0, 10)).toBe('2026-09-10'); // buggy
+      expect(toLocalYmd()).toBe('2026-09-09'); // correct
+
+      expect(dateRangeForFacet('today')).toEqual({
+        from: '2026-09-09',
+        to: '2026-09-10',
+      });
+    } finally {
+      vi.useRealTimers();
+      process.env.TZ = REAL_TZ;
+    }
+  });
+});
