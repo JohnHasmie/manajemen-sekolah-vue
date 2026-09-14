@@ -12,6 +12,7 @@ import type {
   Material,
   MaterialCreatePayload,
   MaterialListParams,
+  MaterialUpdatePayload,
   MaterialUploadResult,
 } from '@/types/tutoring2/material';
 
@@ -69,6 +70,38 @@ export const MaterialsService = {
   /** Step 2 of 2 — pass `file_url` straight from uploadFile(), or an external URL. */
   async create(payload: MaterialCreatePayload): Promise<Material> {
     const r = await api.post<OneEnvelope<Material>>('/tutoring-v2/materials', payload);
+    return r.data.data;
+  },
+
+  /**
+   * `PUT /tutoring-v2/materials/{id}`.
+   *
+   * The payload type is built from the FormRequest rules — see
+   * `MaterialUpdatePayload`. Two things about it are worth keeping in
+   * mind at the call site:
+   *
+   * 1. NEVER send back a `file_url` that came out of a GET. On READ the
+   *    backend replaces the stored value with a resolved URL: a storage
+   *    path is signed for 30 minutes against the bucket. On WRITE the
+   *    column takes whatever arrives, and `Material::fileUrl()`
+   *    afterwards sees a value already starting with `https://` and
+   *    passes it through untouched, forever. Round-tripping a GET
+   *    payload therefore stores an expiring URL permanently and loses
+   *    the real disk key — a dead link half an hour later. The only
+   *    legitimate `file_url` to send is a fresh PATH from
+   *    `uploadFile()`.
+   *
+   * 2. The response is NOT interchangeable with `show()`. The controller
+   *    returns the Action's `fresh()` with no eager loads, and
+   *    `learning_group_name` / `program_name` / `uploaded_by_name` are
+   *    `whenLoaded`, so they are ABSENT from it rather than null. Re-read
+   *    with `show()` instead of splicing this into a rendered row.
+   */
+  async update(id: string, payload: MaterialUpdatePayload): Promise<Material> {
+    const r = await api.put<OneEnvelope<Material>>(
+      `/tutoring-v2/materials/${id}`,
+      payload,
+    );
     return r.data.data;
   },
 

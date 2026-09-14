@@ -7,28 +7,46 @@
   logic follows the shared card idiom (tinted 8×8 rounded-xl icon
   square + title + meta) so it slots into any list view.
 
-  Delete is soft-gated by `canDelete` (only tutor role uses it); the
-  parent decides. The row emits raw events — no side-effects here.
+  Delete and edit are soft-gated by `canDelete` / `canEdit` (only the
+  tutor role uses either); the parent decides, because the server
+  authorizes both writes on `tutoring.material.manage`. The row emits raw
+  events — no side-effects here.
+
+  The three button labels were hardcoded Indonesian; they go through
+  `t()` now, and the file action's label follows whether the row is an
+  uploaded file or a pasted link, because "Unduh" on a link is a control
+  that describes something it cannot do.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { materialIsExternalLink } from '@/lib/material-kind';
 import type { Material } from '@/types/tutoring2/material';
 
 const props = withDefaults(
   defineProps<{
     material: Material;
-    /** Controls the delete button visibility. Only 'tutor' typically. */
+    /** Controls the delete/edit button visibility. Only 'tutor' typically. */
     role?: 'tutor' | 'student' | 'parent';
     canDelete?: boolean;
+    /**
+     * Gate for the edit button. The parent decides: the server
+     * authorizes `PUT /materials/{id}` on `tutoring.material.manage`, so
+     * a caller without that key must not be offered the control at all.
+     */
+    canEdit?: boolean;
   }>(),
-  { role: 'student', canDelete: false },
+  { role: 'student', canDelete: false, canEdit: false },
 );
 
 const emit = defineEmits<{
   open: [Material];
   download: [Material];
+  edit: [Material];
   delete: [Material];
 }>();
+
+const { t } = useI18n();
 
 /**
  * Icon derived from mime → kind → filename extension, in that order of
@@ -61,6 +79,17 @@ const sizeLabel = computed<string | null>(() => {
 });
 
 const canDownload = computed(() => Boolean(props.material.file_url));
+
+/**
+ * "Unduh" is a lie on an externally hosted link — there is nothing for
+ * this app to save, and the press just opens the target. The label
+ * follows what the row actually holds; `materialIsExternalLink()` owns
+ * the rule and the reasoning about why `file_url` cannot answer it.
+ */
+const isLink = computed(() => materialIsExternalLink(props.material));
+const sourceActionLabel = computed(() =>
+  isLink.value ? t('tutoring2.common.open') : t('tutoring2.common.download'),
+);
 </script>
 
 <template>
@@ -90,17 +119,24 @@ const canDownload = computed(() => Boolean(props.material.file_url));
       <button
         v-if="canDownload"
         type="button"
-        :aria-label="`Unduh ${material.title}`"
+        :aria-label="`${sourceActionLabel} ${material.title}`"
         class="rounded-lg border-0.5 border-tutoring-border-soft px-2 py-1.5 text-xs font-bold text-tutoring-text-mid hover:text-tutoring-text-hi"
         @click="emit('download', material)"
-      >Unduh</button>
+      >{{ sourceActionLabel }}</button>
+      <button
+        v-if="canEdit && role === 'tutor'"
+        type="button"
+        :aria-label="`${t('tutoring2.common.edit')} ${material.title}`"
+        class="rounded-lg border-0.5 border-tutoring-border-soft px-2 py-1.5 text-xs font-bold text-tutoring-text-mid hover:text-tutoring-text-hi"
+        @click="emit('edit', material)"
+      >{{ t('tutoring2.common.edit') }}</button>
       <button
         v-if="canDelete && role === 'tutor'"
         type="button"
-        :aria-label="`Hapus ${material.title}`"
+        :aria-label="`${t('tutoring2.common.delete')} ${material.title}`"
         class="rounded-lg border-0.5 border-danger/40 px-2 py-1.5 text-xs font-bold text-danger hover:bg-danger-soft"
         @click="emit('delete', material)"
-      >Hapus</button>
+      >{{ t('tutoring2.common.delete') }}</button>
     </div>
   </div>
 </template>

@@ -52,6 +52,45 @@ export interface MaterialUploadResult {
   file_mime: string;
 }
 
+/**
+ * What `PUT /tutoring-v2/materials/{id}` accepts.
+ *
+ * Built from `UpdateMaterialRequest::rules()`, NOT from the fields
+ * `MaterialResource` returns — the two sets differ by ten keys, and a
+ * key absent from `rules()` is dropped silently while the request still
+ * answers 200. `UpdateMaterialAction` then applies its own allowlist
+ * over the same seven names, so BOTH layers have to change before a new
+ * field can be written.
+ *
+ * The rules, verbatim:
+ *
+ *   'title'       => ['sometimes', 'string', 'min:3', 'max:200'],
+ *   'description' => ['sometimes', 'nullable', 'string', 'max:4000'],
+ *   'file_url'    => ['sometimes', 'string', 'max:1000'],
+ *   'file_name'   => ['sometimes', 'nullable', 'string', 'max:255'],
+ *   'file_size'   => ['sometimes', 'nullable', 'integer', 'min:0'],
+ *   'file_mime'   => ['sometimes', 'nullable', 'string', 'max:100'],
+ *   'kind'        => ['sometimes', 'string', 'max:16'],
+ *
+ * NOT writable at all, however readable they look on a GET:
+ * `learning_group_id`, `program_id`, `uploaded_by_user_id`,
+ * `published_at`, and the timestamps. A material cannot be moved between
+ * groups or programmes after creation, and nothing on any endpoint
+ * writes `published_at`.
+ *
+ * The four `file_*` keys ARE accepted, and the edit form deliberately
+ * does not send them — see the note on `MaterialsService.update()`.
+ */
+export interface MaterialUpdatePayload {
+  title?: string;
+  description?: string | null;
+  file_url?: string;
+  file_name?: string | null;
+  file_size?: number | null;
+  file_mime?: string | null;
+  kind?: string;
+}
+
 export interface MaterialCreatePayload {
   /** One of these two is required by the API. */
   learning_group_id?: string | null;

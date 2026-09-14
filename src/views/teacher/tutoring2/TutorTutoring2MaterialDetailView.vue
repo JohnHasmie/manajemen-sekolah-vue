@@ -36,17 +36,23 @@
   anchor would navigate instead of saving, silently. See `downloadFile()`.
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import AsyncView from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
+import Button from '@/components/ui/Button.vue';
+import Modal from '@/components/ui/Modal.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
 import {
+  MATERIAL_KINDS,
   materialIsExternalLink,
   materialKindLabel,
+  normalizeMaterialKind,
 } from '@/lib/material-kind';
 import { MaterialsService } from '@/services/tutoring2/materials';
 import type { Material } from '@/types/tutoring2/material';
@@ -54,6 +60,7 @@ import type { Material } from '@/types/tutoring2/material';
 const { t } = useI18n();
 const route = useRoute();
 const toast = useToast();
+const { can } = useMe();
 
 const materialId = computed<string>(() => String(route.params.id));
 
@@ -188,6 +195,138 @@ async function downloadFile() {
   }
 }
 
+/**
+ * ── Who may change a material ──
+ *
+ * `MaterialController@update` and `@destroy` both open with
+ * `authorize('tutoring.material.manage')`, and that key is read off the
+ * /me snapshot through `useMe().can`, which the backend scopes to the
+ * ACTIVE ROLE via `X-Active-Role` — never `roles[].permission_keys`,
+ * which is unscoped and exists only for the role switcher.
+ *
+ * Hidden rather than disabled-with-a-reason, which is the opposite of
+ * what the session detail does two files over, and the difference is
+ * deliberate. There, `tutoring.session.manage` is absent from the tutor
+ * DEFAULTS, so every tutor on a stock tenant sees the control and the
+ * explanation is the useful part. Here `tutoring.material.manage` IS in
+ * `tutorTutoringDefaults()`: a tutor missing it is one whose centre took
+ * it away on purpose, and a permanently dead button explaining a
+ * deliberate revocation is just noise on every visit.
+ *
+ * The ability alone is not the whole gate either way. `update` re-applies
+ * the read scope before `findOrFail`, so a material outside this tutor's
+ * groups and programmes answers 404 — never 403 — and the catch below
+ * surfaces that message as-is rather than guessing at it.
+ */
+const canManageMaterial = computed(() => can('tutoring.material.manage'));
+
+const editOpen = ref(false);
+const saving = ref(false);
+const editForm = ref<{ title: string; description: string; kind: string }>({
+  title: '',
+  description: '',
+  kind: 'PDF',
+});
+
+/**
+ * The kind picker offers the canonical vocabulary. A row already
+ * carrying a drifted value (the upload form writes `IMG` where the wire
+ * value is `IMAGE`) is shown as an extra option labelled with its raw
+ * value, so opening the form does not silently re-file the material
+ * under something else the moment it is saved.
+ */
+const editKindOptions = computed<Array<{ value: string; label: string }>>(() => {
+  const options = MATERIAL_KINDS.map((value) => ({
+    value: value as string,
+    label: materialKindLabel(value, t),
+  }));
+  const current = editForm.value.kind;
+  if (current && !options.some((o) => o.value === current)) {
+    options.push({ value: current, label: materialKindLabel(current, t) });
+  }
+  return options;
+});
+
+/** Mirrors `'title' => [..., 'min:3', 'max:200']` so the 422 never happens. */
+const canSave = computed(() => {
+  const title = editForm.value.title.trim();
+  return (
+    !saving.value &&
+    title.length >= 3 &&
+    title.length <= 200 &&
+    editForm.value.description.length <= 4000
+  );
+});
+
+function openEdit() {
+  const m = material.value;
+  if (!m || !canManageMaterial.value) return;
+  editForm.value = {
+    title: m.title,
+    description: m.description ?? '',
+    // Keep the stored value when it is outside the vocabulary rather
+    // than normalising it to something the tutor never chose.
+    kind: normalizeMaterialKind(m.kind) ?? String(m.kind ?? ''),
+  };
+  editOpen.value = true;
+}
+
+/**
+ * Save the three fields this form owns — and only those.
+ *
+ * `UpdateMaterialRequest::rules()` also accepts `file_url`, `file_name`,
+ * `file_size` and `file_mime`, and they are left out ON PURPOSE. The
+ * `file_url` a GET hands back is a URL signed against the storage bucket
+ * for thirty minutes; writing it back would store the expiring URL
+ * permanently and throw away the disk key behind it, leaving a dead link
+ * half an hour later. Replacing a file means a real upload
+ * (`POST /materials/upload`) and the fresh PATH it returns, which is the
+ * upload screen's job, not this dialog's.
+ *
+ * `learning_group_id` and `program_id` are not in `rules()` at all, so
+ * they are not offered either: sending them would answer 200 and change
+ * nothing, which is the worst possible outcome for a form.
+ *
+ * The reload afterwards is not a formality. `update` returns the
+ * Action's `fresh()` with no eager loads, and the three `*_name` fields
+ * are `whenLoaded` — they are ABSENT from that response, so splicing it
+ * into the rendered material would blank the group, programme and
+ * uploader lines. `show()` loads them.
+ */
+async function submitEdit() {
+  const m = material.value;
+  if (!m || !canSave.value) return;
+
+  saving.value = true;
+  try {
+    await MaterialsService.update(m.id, {
+      title: editForm.value.title.trim(),
+      description: editForm.value.description.trim() || null,
+      kind: editForm.value.kind,
+    });
+    editOpen.value = false;
+    toast.success(t('tutoring2.tutor.materialDetail.saved'));
+    await reload();
+  } catch (e) {
+    // The server owns the rules and answers 404 for a material outside
+    // this tutor's scope. Surfacing its message beats inventing one.
+    toast.error((e as Error).message || t('tutoring2.common.saveFailed'));
+  } finally {
+    saving.value = false;
+  }
+}
+
+/**
+ * The list row's "Ubah" arrives as `?edit=1`, so that button really does
+ * edit rather than merely navigating to a screen with an edit button on
+ * it. Read once, after the first load resolves — `openEdit()` needs the
+ * material to prefill from.
+ */
+watch(material, (m, previous) => {
+  if (!m || previous || String(route.query.edit ?? '') !== '1') return;
+  openEdit();
+});
+
 const headerMeta = computed(() =>
   material.value ? kindText.value : t('tutoring2.common.loading'),
 );
@@ -306,6 +445,15 @@ const ACTION_SECONDARY = `${ACTION_BASE} border border-slate-300 text-slate-700 
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
+            <!-- Hidden, not disabled, for a tutor whose centre revoked
+                 `tutoring.material.manage` — see `canManageMaterial`. -->
+            <Button
+              v-if="canManageMaterial"
+              variant="secondary"
+              data-testid="material-edit"
+              @click="openEdit"
+            >{{ t('tutoring2.common.edit') }}</Button>
+
             <!-- LINK: one control, and it is an anchor so the target is
                  visible in the status bar before the press. `noopener
                  noreferrer` because the host is a stranger. -->
@@ -354,5 +502,75 @@ const ACTION_SECONDARY = `${ACTION_BASE} border border-slate-300 text-slate-700 
         </template>
       </template>
     </AsyncView>
+
+    <!-- Title, description and kind — the whole of what the form owns.
+         The file, the group and the programme are shown read-only in the
+         card above because the API either refuses them or would accept
+         them and quietly do the wrong thing; `submitEdit()` carries the
+         reasoning. -->
+    <Modal
+      v-if="editOpen"
+      size="md"
+      testid="material-edit-modal"
+      :title="t('tutoring2.tutor.materialDetail.editTitle')"
+      @close="editOpen = false"
+    >
+      <div class="space-y-md">
+        <label class="block space-y-1.5">
+          <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">
+            {{ t('tutoring2.common.title') }}
+          </span>
+          <input
+            v-model="editForm.title"
+            data-testid="material-edit-title"
+            type="text"
+            maxlength="200"
+            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-brand-cobalt focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+          />
+        </label>
+
+        <label class="block space-y-1.5">
+          <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">
+            {{ t('tutoring2.common.description') }}
+          </span>
+          <textarea
+            v-model="editForm.description"
+            data-testid="material-edit-description"
+            rows="4"
+            maxlength="4000"
+            class="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-brand-cobalt focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+          />
+        </label>
+
+        <label class="block space-y-1.5">
+          <span class="text-2xs font-bold uppercase tracking-wide text-slate-500">
+            {{ t('tutoring2.common.kind') }}
+          </span>
+          <select
+            v-model="editForm.kind"
+            data-testid="material-edit-kind"
+            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-brand-cobalt focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+          >
+            <option v-for="opt in editKindOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </label>
+
+        <p
+          data-testid="material-edit-readonly-note"
+          class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-2xs text-slate-600"
+        >{{ t('tutoring2.tutor.materialDetail.editReadOnlyNote') }}</p>
+      </div>
+
+      <BottomSheetFooter
+        :primary-label="t('tutoring2.common.save')"
+        :secondary-label="t('tutoring2.common.cancel')"
+        :primary-loading="saving"
+        :primary-disabled="!canSave"
+        @primary="submitEdit"
+        @secondary="editOpen = false"
+      />
+    </Modal>
   </div>
 </template>

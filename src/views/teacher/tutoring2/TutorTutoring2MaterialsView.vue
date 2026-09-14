@@ -55,6 +55,7 @@ import KpiStripCards, {
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import TutoringMaterialRow from '@/components/tutoring/TutoringMaterialRow.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
 import { MATERIAL_KINDS, materialKindLabel } from '@/lib/material-kind';
 import { MaterialsService } from '@/services/tutoring2/materials';
@@ -241,6 +242,30 @@ function onOpen(material: Material) {
   });
 }
 
+/**
+ * Ubah — the affordance the product owner reported missing.
+ *
+ * Gated on the key the server actually enforces:
+ * `MaterialController@update` and `@destroy` both open with
+ * `authorize('tutoring.material.manage')`. Read off the /me snapshot via
+ * `useMe().can`, which the backend scopes to the ACTIVE role through
+ * `X-Active-Role` — never `roles[].permission_keys`, which is unscoped.
+ *
+ * It carries `?edit=1` so the button edits instead of merely landing on
+ * a screen that has an edit button: the detail view opens its form once
+ * the material it prefills from has loaded.
+ */
+const { can } = useMe();
+const canManageMaterial = computed(() => can('tutoring.material.manage'));
+
+function onEdit(material: Material) {
+  router.push({
+    name: 'teacher.tutoring2.material-detail',
+    params: { id: material.id },
+    query: { edit: '1' },
+  });
+}
+
 async function onDelete(material: Material) {
   try {
     await MaterialsService.destroy(material.id);
@@ -305,8 +330,10 @@ function goUpload() {
             :key="m.id"
             :material="m"
             role="tutor"
-            :can-delete="true"
+            :can-delete="canManageMaterial"
+            :can-edit="canManageMaterial"
             @download="onDownload"
+            @edit="onEdit"
             @delete="onDelete"
             @open="onOpen"
           />

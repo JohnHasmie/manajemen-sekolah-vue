@@ -27,6 +27,7 @@ import TutoringMaterialRow from '@/components/tutoring/TutoringMaterialRow.vue';
 
 const routerMock = vi.hoisted(() => ({ push: vi.fn() }));
 const serviceMock = vi.hoisted(() => ({ list: vi.fn(), destroy: vi.fn() }));
+const abilityMock = vi.hoisted(() => ({ can: vi.fn(() => true) }));
 
 vi.mock('@/services/tutoring2/materials', () => ({
   MaterialsService: {
@@ -43,6 +44,9 @@ vi.mock('@/composables/useAcademicYearWatcher', () => ({
 }));
 vi.mock('@/composables/useToast', () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
+}));
+vi.mock('@/composables/useMe', () => ({
+  useMe: () => ({ can: abilityMock.can, canAny: () => true }),
 }));
 
 const OPENED: string[] = [];
@@ -75,7 +79,11 @@ const ROWS = [
 const messages = {
   id: {
     tutoring2: {
-      common: { all: 'Semua', program: 'Program', type: 'Tipe', roleTutor: 'Tutor', filterNoOptions: 'Tidak ada pilihan', error: 'Gagal' },
+      common: {
+        all: 'Semua', program: 'Program', type: 'Tipe', roleTutor: 'Tutor',
+        filterNoOptions: 'Tidak ada pilihan', error: 'Gagal',
+        open: 'Buka', download: 'Unduh', edit: 'Ubah', delete: 'Hapus',
+      },
       materialKind: { PDF: 'PDF', VIDEO: 'Video', DOC: 'Dokumen', IMAGE: 'Gambar', LINK: 'Tautan' },
       tutor: {
         materials: {
@@ -133,6 +141,7 @@ function titleButton(w, title: string) {
 describe('TutorTutoring2MaterialsView — pressing a material', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    abilityMock.can.mockImplementation(() => true);
     OPENED.length = 0;
     // Records what would have left the app. The old implementation
     // called this on a title press; the new one must not.
@@ -190,5 +199,58 @@ describe('TutorTutoring2MaterialsView — pressing a material', () => {
     await row.find('[aria-label="Unduh Ringkasan Vektor"]').trigger('click');
 
     expect(OPENED).toEqual(['https://bucket.example/signed/vektor.pdf?sig=abc']);
+  });
+
+  it('offers "Ubah" on a row and carries ?edit=1 so the button really edits', async () => {
+    const w = await mountView();
+
+    const row = w
+      .findAllComponents(TutoringMaterialRow)
+      .find((r) => r.props('material').id === 'mat-42');
+    await row.find('[aria-label="Ubah Soal Latihan Bab 2"]').trigger('click');
+
+    expect(routerMock.push).toHaveBeenCalledWith({
+      name: 'teacher.tutoring2.material-detail',
+      params: { id: 'mat-42' },
+      query: { edit: '1' },
+    });
+  });
+
+  it('offers neither Ubah nor Hapus without tutoring.material.manage', async () => {
+    // Both writes authorize on that one key server-side, so a tutor
+    // whose centre revoked it must see no control that would 403.
+    abilityMock.can.mockImplementation((key: string) => key !== 'tutoring.material.manage');
+
+    const w = await mountView();
+
+    expect(w.find('[aria-label="Ubah Ringkasan Vektor"]').exists()).toBe(false);
+    expect(w.find('[aria-label="Hapus Ringkasan Vektor"]').exists()).toBe(false);
+    // The read side is untouched.
+    expect(w.find('[aria-label="Unduh Ringkasan Vektor"]').exists()).toBe(true);
+  });
+
+  it('labels the row action "Buka" for a pasted link, not "Unduh"', async () => {
+    // Nothing for this app to save — the bytes live on someone else's
+    // host. The null file_name/file_size/file_mime triple is what
+    // identifies it; `kind` says PDF because the upload form has no LINK
+    // chip.
+    serviceMock.list.mockImplementation(async () => ({
+      items: [
+        makeMaterial({
+          id: 'mat-link',
+          title: 'Video pembahasan',
+          file_url: 'https://drive.google.com/file/d/xyz/view',
+          file_name: null,
+          file_size: null,
+          file_mime: null,
+        }),
+      ],
+      pagination: undefined,
+    }));
+
+    const w = await mountView();
+
+    expect(w.find('[aria-label="Buka Video pembahasan"]').exists()).toBe(true);
+    expect(w.find('[aria-label="Unduh Video pembahasan"]').exists()).toBe(false);
   });
 });
