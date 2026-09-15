@@ -7119,7 +7119,9 @@
       "student": "Siswa",
       "metaAssessments": "{count} penilaian",
       "noKkm": "Tanpa KKM",
-      "billNote": "Keterangan"
+      "billNote": "Keterangan",
+      "open": "Buka",
+      "download": "Unduh"
     },
     "studentScores": {
       "meta": "{count} penilaian dinilai",
@@ -8327,7 +8329,11 @@
         "createdAt": "Dibuat",
         "published": "Terbit",
         "draft": "Draf",
-        "draftHint": "Materi ini masih draf, jadi siswa dan wali belum bisa melihatnya."
+        "draftHint": "Materi ini masih draf, jadi siswa dan wali belum bisa melihatnya.",
+        "editTitle": "Ubah materi",
+        "saved": "Perubahan materi tersimpan.",
+        "editReadOnlyNote": "Berkas, kelompok, dan program tidak bisa diubah di sini. Unggah materi baru bila berkasnya berganti.",
+        "downloadBlocked": "Peramban memblokir tab baru, jadi berkasnya belum terbuka. Izinkan popup untuk situs ini, atau pakai tombol \"Buka berkas\"."
       }
     },
     "preferences": {

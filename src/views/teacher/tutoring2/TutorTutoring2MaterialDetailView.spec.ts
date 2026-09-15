@@ -135,6 +135,8 @@ const messages = {
           openFile: 'Buka berkas',
           download: 'Unduh',
           downloadFallback: 'Berkas dibuka di tab baru — simpan dari sana.',
+          downloadBlocked:
+            'Peramban memblokir tab baru, jadi berkasnya belum terbuka. Izinkan popup untuk situs ini, atau pakai tombol "Buka berkas".',
           noSource: 'Materi ini belum punya berkas maupun tautan.',
           uploadedBy: 'Diunggah oleh',
           createdAt: 'Dibuat',
@@ -321,6 +323,32 @@ describe('TutorTutoring2MaterialDetailView — opening and downloading a FILE', 
     await flushPromises();
 
     expect(FETCHED).toEqual([SIGNED_URL]);
+    expect(OPENED).toEqual([SIGNED_URL]);
+    // The default `window.open` stub returns null — a BLOCKED popup — so
+    // the honest message here is the blocked one. An earlier version of
+    // this test asserted "dibuka di tab baru" against that same null:
+    // it asserted a claim the harness was simultaneously proving false.
+    // Splitting the two outcomes is the whole point of this pair.
+    expect(TOASTS.map((x) => x.msg)).toContain(
+      'Peramban memblokir tab baru, jadi berkasnya belum terbuka. Izinkan popup untuk situs ini, atau pakai tombol "Buka berkas".',
+    );
+  });
+
+  it('says the file opened ONLY when a tab actually opened', async () => {
+    vi.stubGlobal('fetch', async (url: string) => {
+      FETCHED.push(String(url));
+      throw new TypeError('Failed to fetch');
+    });
+    // A permitted popup: window.open returns a handle rather than null.
+    vi.spyOn(window, 'open').mockImplementation((url) => {
+      OPENED.push(String(url));
+      return {} as Window;
+    });
+
+    const w = await mountView();
+    await w.get('[data-testid="material-download"]').trigger('click');
+    await flushPromises();
+
     expect(OPENED).toEqual([SIGNED_URL]);
     expect(TOASTS.map((x) => x.msg)).toContain(
       'Berkas dibuka di tab baru — simpan dari sana.',

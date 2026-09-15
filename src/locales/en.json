@@ -6970,7 +6970,11 @@
         "createdAt": "Created",
         "published": "Published",
         "draft": "Draft",
-        "draftHint": "This material is still a draft, so students and parents cannot see it yet."
+        "draftHint": "This material is still a draft, so students and parents cannot see it yet.",
+        "editTitle": "Edit material",
+        "saved": "Material changes saved.",
+        "editReadOnlyNote": "The file, group and programme cannot be changed here. Upload a new material if the file changes.",
+        "downloadBlocked": "Your browser blocked the new tab, so the file did not open. Allow pop-ups for this site, or use \"Open file\"."
       }
     },
     "bills": {
@@ -8017,7 +8021,9 @@
       "thisMonth": "This month",
       "thisWeek": "This week",
       "noKkm": "No KKM",
-      "billNote": "Note"
+      "billNote": "Note",
+      "open": "Open",
+      "download": "Download"
     },
     "studentScores": {
       "meta": "{count} assessments graded",

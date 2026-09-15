@@ -121,8 +121,13 @@ function formatDateTime(iso: string | null | undefined): string {
  * storage bucket, or whatever host a tutor pasted), and without it that
  * page gets a handle on `window.opener`.
  */
-function openInNewTab(url: string) {
-  window.open(url, '_blank', 'noopener');
+function openInNewTab(url: string): boolean {
+  // Returns whether a tab actually opened. A blocked popup returns null,
+  // and the caller must NOT then claim a tab was opened — the tutor would
+  // go hunting for a tab that does not exist while the toast says the
+  // file is waiting in it. Saying "nothing happened" is worse news and
+  // better information.
+  return window.open(url, '_blank', 'noopener') != null;
 }
 
 const downloading = ref(false);
@@ -166,8 +171,14 @@ async function downloadFile() {
   } catch {
     // Cross-origin refusal, an expired signature, or a host that will
     // not be read programmatically. Opening it still works.
-    openInNewTab(url);
-    toast.info(t('tutoring2.tutor.materialDetail.downloadFallback'));
+    // This is the path almost every real download takes: the bucket is a
+    // foreign origin with no CORS configured, so `fetch` refuses. Tell the
+    // truth about which of the two outcomes actually happened.
+    if (openInNewTab(url)) {
+      toast.info(t('tutoring2.tutor.materialDetail.downloadFallback'));
+    } else {
+      toast.error(t('tutoring2.tutor.materialDetail.downloadBlocked'));
+    }
   } finally {
     if (objectUrl) {
       const done = objectUrl;
