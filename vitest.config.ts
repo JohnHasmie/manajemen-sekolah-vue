@@ -5,11 +5,10 @@ import { defineConfig } from 'vitest/config';
 /**
  * Kept separate from `vite.config.ts` on purpose.
  *
- * The build config carries a `plugins: [vue()]` entry and a `server`
- * block that the test runner has no use for, and folding a `test` key
- * into it would mean every future build change has to be considered for
- * its effect on the suite as well. Nothing here mounts a component, so
- * the Vue plugin is genuinely not needed.
+ * The build config carries a `server` block that the test runner has no
+ * use for, and folding a `test` key into it would mean every future
+ * build change has to be considered for its effect on the suite as
+ * well.
  *
  * Twelve `.spec.ts` files had been sitting in this repo importing
  * `vitest` — a dependency that was never installed — so not one of them
@@ -26,19 +25,22 @@ export default defineConfig({
     // jsdom rather than node: some specs reach for `localStorage` and
     // `document` (the lazy-chunk recovery helper, for one).
     environment: 'jsdom',
+    // Pin the zone the suite reads dates in. Without this, every
+    // rendered timestamp assertion is really an assertion about the
+    // machine that ran it: a spec that expects "14.30" for a
+    // `+07:00` instant passes on a WIB laptop and fails on a
+    // UTC CI box — or, far worse, a component that formats via
+    // `toISOString()` passes CI and ships the wrong time to every
+    // user. Asia/Jakarta is where this product's readers are, so the
+    // suite reads the clock the way they do.
+    env: { TZ: 'Asia/Jakarta' },
     include: ['src/**/*.{spec,test}.ts'],
-    // VIEW specs mount `.vue` SFCs (unlike this repo's pattern of
-    // pure-logic specs) and this config deliberately omits
-    // `@vitejs/plugin-vue`, so they cannot run here. Migrating them to
-    // logic-only specs — or adding a Vue-enabled sub-config — is still
-    // an open follow-up.
-    //
-    // `src/services/tutoring2/**` was excluded alongside them and should
-    // not have been: not one service spec imports a `.vue` file. The
-    // over-broad glob kept 11 files / 64 passing tests out of CI. Keep
-    // this list scoped to what genuinely cannot run — an exclusion that
-    // silently disables working tests is worse than a failing one,
-    // because nothing ever reports it.
+    // Keep this list scoped to what genuinely cannot run — an exclusion
+    // that silently disables working tests is worse than a failing one,
+    // because nothing ever reports it. `src/services/tutoring2/**` and
+    // the view specs were both excluded here once and should not have
+    // been: the over-broad glob kept 11 files / 64 passing tests out of
+    // CI, and `plugins: [vue()]` above means mounting an SFC works.
     exclude: [
       '**/node_modules/**',
       '**/dist/**',

@@ -43,8 +43,26 @@ export interface TutoringScoreRow {
   /** Numeric mark 0..maxScore; null = unentered. */
   score: number | null;
   notes?: string | null;
-  /** Client-side dirty flag drives the pending-save UI. */
-  dirty?: boolean;
+  /**
+   * ISO instant: when a tutor last SUBMITTED this mark, or null/absent
+   * on a row nobody has scored.
+   *
+   * This is the honest "last changed" stamp, not `updated_at`.
+   * `UpsertScoresAction` puts `'marked_at' => now()` in the values array
+   * of `Score::updateOrCreate`, so it is rewritten on re-mark as well as
+   * on first mark; `updated_at` is a generic row-touch column that the
+   * demo seeder and the v1→v2 backfill also move, independently of any
+   * tutor.
+   *
+   * The wire has carried it since WEB-2 (`ScoreResource`); this type
+   * simply dropped it, which is why the entry list had no way to say a
+   * row was already scored.
+   *
+   * There is deliberately no `marked_by` here. The backend emits it as
+   * a raw `users.id` uuid with no name resolution, and a uuid on screen
+   * is not an author — render a name or nothing.
+   */
+  marked_at?: string | null;
 }
 
 /**

@@ -2,9 +2,23 @@
   TutorTutoring2ScoresView.vue — Input skor per asesmen (WEB-4).
 
   Wraps the WEB-2 `TutoringScoreEntryList` component end-to-end: loads
-  the assessment's score rows from the greenfield backend, holds the
-  row list locally for optimistic updates with a dirty flag, saves
-  dirty rows via bulk-upsert.
+  the assessment's score rows from the greenfield backend and saves the
+  changed ones via bulk-upsert.
+
+  `rows` here is the SERVER's answer, verbatim. The in-progress edits
+  live in the component's own draft, which diffs against this array —
+  so "has anything changed?" is a comparison against what was loaded,
+  never a flag that flipped when a key was pressed.
+
+  ── "Kenapa tidak ada edit skor?" ───────────────────────────────────
+
+  There was never anything to add: the input is not locked once a score
+  exists and the endpoint is an upsert, so a correction has always been
+  one keystroke. What was missing was any sign of it — nothing said a
+  row had been scored, when it was last changed, or whether Save had
+  work to do. That is what the entry list now renders. The fix was an
+  affordance, not a new capability, and deliberately NOT an Edit button
+  (which would have added a step to a correction that needs none).
 
   Route: /teacher/tutoring2/assessments/:id/scores where `id` is the
   assessment id.
@@ -65,22 +79,17 @@ const { state, reload } = useDataRefresh(async () => {
 
 watch(state, (s) => {
   if (s.status === 'content' || s.status === 'empty') {
-    const data = (s as { status: string; data?: TutoringScoreRow[] }).data ?? [];
-    // Reset dirty flags on reload — server state is now the truth.
-    rows.value = data.map((r) => ({ ...r, dirty: false }));
+    // Straight from the server, unannotated. These rows ARE the
+    // baseline `TutoringScoreEntryList` diffs its draft against, so
+    // anything we stamped on here would be compared against itself.
+    rows.value = (s as { status: string; data?: TutoringScoreRow[] }).data ?? [];
   }
 });
-
-function onUpdateScore(payload: { enrollment_id: string; score: number | null }) {
-  const idx = rows.value.findIndex((r) => r.enrollment_id === payload.enrollment_id);
-  if (idx >= 0) {
-    rows.value[idx] = { ...rows.value[idx], score: payload.score, dirty: true };
-  }
-}
 
 async function onSaveDirty(dirtyRows: TutoringScoreRow[]) {
   if (saving.value || dirtyRows.length === 0) return;
   saving.value = true;
+  const count = dirtyRows.length;
   try {
     await TutoringBimbelService.upsertScores(
       assessmentId.value,
@@ -90,7 +99,13 @@ async function onSaveDirty(dirtyRows: TutoringScoreRow[]) {
         notes: r.notes ?? null,
       })),
     );
-    toast.success(t('tutoring2.tutor.scores.saved'));
+    toast.success(t('tutoring2.tutor.scores.saved', { count }));
+    // Refetch rather than merge the POST response: the upsert reply is
+    // built from `$row->fresh()` with no eager-loaded enrollment, so
+    // `ScoreResource` omits student_id/student_name/student_number
+    // entirely. Spreading it over the list would blank every name. The
+    // reload is also what brings back the refreshed `marked_at` the row
+    // badges render.
     reload();
   } catch (e) {
     toast.error(t('tutoring2.tutor.scores.saveFailed', { msg: (e as Error).message }));
@@ -141,7 +156,6 @@ const metaLabel = computed(() =>
           :kkm="kkm"
           :loading="state.status === 'loading'"
           :saving="saving"
-          @update:score="onUpdateScore"
           @save-dirty="onSaveDirty"
         />
       </template>

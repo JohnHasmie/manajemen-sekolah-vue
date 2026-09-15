@@ -6724,7 +6724,7 @@
         "searchPh": "Search assessments…"
       },
       "scores": {
-        "saved": "Scores saved",
+        "saved": "{count} scores updated",
         "saveFailed": "Failed to save scores: {msg}",
         "title": "Input scores",
         "emptyTitle": "No participants yet",
@@ -8349,6 +8349,19 @@
       "titleSelf": "My ranking",
       "selfLabel": "Your ranking",
       "selfBadge": "You"
+    },
+    "scoreEntry": {
+      "listTitle": "Scores · {count} students",
+      "kkmLine": "Pass mark {kkm} · max {max}",
+      "maxLine": "Max {max}",
+      "nis": "Student ID {number}",
+      "inputLabel": "Score for {name}",
+      "scoredBadge": "Scored",
+      "lastChanged": "Last changed {at}",
+      "noChanges": "No changes yet",
+      "pendingChanges": "{count} scores not saved",
+      "save": "Save",
+      "saving": "Saving…"
     }
   },
   "role": {

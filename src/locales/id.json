@@ -8150,7 +8150,7 @@
       "scores": {
         "meta": "{count} siswa",
         "title": "Input skor",
-        "saved": "Skor tersimpan",
+        "saved": "{count} skor diperbarui",
         "saveFailed": "Gagal menyimpan skor: {msg}",
         "emptyTitle": "Belum ada peserta"
       },
@@ -8349,6 +8349,19 @@
       "titleSelf": "Peringkat saya",
       "selfLabel": "Peringkat Anda",
       "selfBadge": "Saya"
+    },
+    "scoreEntry": {
+      "listTitle": "Nilai · {count} siswa",
+      "kkmLine": "KKM {kkm} · maksimum {max}",
+      "maxLine": "Maksimum {max}",
+      "nis": "NIS {number}",
+      "inputLabel": "Skor untuk {name}",
+      "scoredBadge": "Sudah dinilai",
+      "lastChanged": "Terakhir diubah {at}",
+      "noChanges": "Belum ada perubahan",
+      "pendingChanges": "{count} skor belum disimpan",
+      "save": "Simpan",
+      "saving": "Menyimpan…"
     }
   },
   "role": {
