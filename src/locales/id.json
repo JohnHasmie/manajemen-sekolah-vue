@@ -8088,7 +8088,9 @@
         "kpiPdf": "PDF",
         "kpiTotal": "Total materi",
         "emptyTitle": "Belum ada materi",
-        "emptyDescription": "Unggah materi pertama lewat tombol di kanan bawah."
+        "emptyDescription": "Unggah materi pertama lewat tombol di kanan bawah.",
+        "sharedBadge": "Terkirim ke wali",
+        "notSharedBadge": "Belum dikirim"
       },
       "sessionDetail": {
         "info": "Informasi sesi",
@@ -8363,13 +8365,19 @@
         "noSource": "Materi ini belum punya berkas maupun tautan.",
         "uploadedBy": "Diunggah oleh",
         "createdAt": "Dibuat",
-        "published": "Terbit",
-        "draft": "Draf",
-        "draftHint": "Materi ini masih draf, jadi siswa dan wali belum bisa melihatnya.",
+        "draftHint": "Materi ini belum dikirim, jadi hanya Anda yang bisa melihatnya — wali dan siswa tidak. Tekan \"Kirim ke wali\" bila materi sudah siap dibagikan.",
         "editTitle": "Ubah materi",
         "saved": "Perubahan materi tersimpan.",
         "editReadOnlyNote": "Berkas, kelompok, dan program tidak bisa diubah di sini. Unggah materi baru bila berkasnya berganti.",
-        "downloadBlocked": "Peramban memblokir tab baru, jadi berkasnya belum terbuka. Izinkan popup untuk situs ini, atau pakai tombol \"Buka berkas\"."
+        "downloadBlocked": "Peramban memblokir tab baru, jadi berkasnya belum terbuka. Izinkan popup untuk situs ini, atau pakai tombol \"Buka berkas\".",
+        "shared": "Terkirim ke wali",
+        "notShared": "Belum dikirim",
+        "sendToGuardian": "Kirim ke wali",
+        "withdrawFromGuardian": "Tarik dari wali",
+        "sentAt": "Dikirim",
+        "sharedHint": "Materi ini sudah dikirim, jadi wali dan siswa di kelompok terkait bisa membukanya. Tekan \"Tarik dari wali\" bila perlu disembunyikan lagi.",
+        "sendSuccess": "Materi dikirim ke wali.",
+        "withdrawSuccess": "Materi ditarik dari wali. Wali dan siswa tidak bisa membukanya lagi."
       }
     },
     "preferences": {
