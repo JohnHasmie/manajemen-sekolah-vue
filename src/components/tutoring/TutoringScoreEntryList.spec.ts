@@ -47,6 +47,21 @@ const SCORED = {
   marked_at: MARKED_AT,
 };
 
+/**
+ * Scored ZERO. A real mark in a try-out, and the one value a truthy
+ * check (`saved?.score ? …` instead of `!= null`) would silently
+ * misreport as never-scored.
+ */
+const SCORED_ZERO = {
+  enrollment_id: 'en-zero',
+  student_id: 'st-3',
+  student_name: 'Rangga Adi',
+  student_number: '2026-003',
+  score: 0,
+  notes: null,
+  marked_at: MARKED_AT,
+};
+
 /** Never scored: no mark, and therefore no stamp. */
 const UNSCORED = {
   enrollment_id: 'en-blank',
@@ -198,6 +213,42 @@ describe('TutoringScoreEntryList — Save is gated on a real change', () => {
   it('ignores an out-of-range keystroke entirely', async () => {
     const w = mountList();
     await type(w, 'en-scored', '140');
+    expect(isDisabled(w)).toBe(true);
+  });
+
+  it('puts the box back to the last valid value after a rejected keystroke', async () => {
+    // Dropping the value from the draft is not enough on its own: no
+    // reactive dep changes, so Vue never re-patches the field and the
+    // rejected text would sit on screen while the save bar says
+    // "Belum ada perubahan". The bar is unconditional now, so it would
+    // be vouching for a value the component does not hold.
+    const w = mountList();
+    const input = w.get('[data-testid="score-input-en-scored"]')
+      .element as HTMLInputElement;
+
+    await type(w, 'en-scored', '140');
+
+    expect(input.value).toBe('80');
+    expect(isDisabled(w)).toBe(true);
+    expect(w.get('[data-testid="score-clean-label"]').exists()).toBe(true);
+  });
+
+  it('treats a saved 0 as SCORED, not as never-marked', async () => {
+    // Zero is a real mark. `isScored` must stay `!= null`; a truthy
+    // refactor reads 0 as unscored and the badge, the stamp and the
+    // below-KKM flag all silently vanish for that student.
+    const w = mountList([SCORED_ZERO, UNSCORED]);
+
+    expect(w.find('[data-testid="score-badge-en-zero"]').exists()).toBe(true);
+    expect(w.find('[data-testid="score-badge-en-blank"]').exists()).toBe(false);
+    const input = w.get('[data-testid="score-input-en-zero"]')
+      .element as HTMLInputElement;
+    expect(input.value).toBe('0');
+  });
+
+  it('a saved 0 retyped as 0 is not a change', async () => {
+    const w = mountList([SCORED_ZERO, UNSCORED]);
+    await type(w, 'en-zero', '0');
     expect(isDisabled(w)).toBe(true);
   });
 

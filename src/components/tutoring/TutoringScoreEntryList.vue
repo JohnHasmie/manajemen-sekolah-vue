@@ -135,18 +135,29 @@ function belowKkm(row: TutoringScoreRow): boolean {
   return row.score < props.kkm;
 }
 
-function onInput(row: TutoringScoreRow, raw: string) {
+function onInput(row: TutoringScoreRow, el: HTMLInputElement) {
   const idx = draft.value.findIndex((r) => r.enrollment_id === row.enrollment_id);
   if (idx < 0) return;
-  const trimmed = raw.trim();
+  const trimmed = el.value.trim();
   if (trimmed === '') {
     draft.value[idx] = { ...draft.value[idx], score: null };
     return;
   }
   const parsed = Number(trimmed);
   if (Number.isNaN(parsed) || parsed < 0 || parsed > props.maxScore) {
-    // Silently drop invalid input — the draft keeps its last valid
-    // value, so nothing downstream ever sees an out-of-range score.
+    // Reject the keystroke AND put the box back to the last valid value.
+    //
+    // Dropping it from the draft alone is not enough: no reactive dep
+    // changes, so Vue never re-patches the field and the rejected text
+    // stays on screen. The tutor would then see "140" in the box, a
+    // greyed-out Simpan, and a bar reading "Belum ada perubahan" — three
+    // signals, one of them false, describing a value the component does
+    // not hold. That footer is unconditional now, so it VOUCHES for the
+    // divergence rather than staying quiet about it the way the old
+    // `v-if` did. Undoing the text keeps the screen and the draft
+    // saying the same thing.
+    const kept = draft.value[idx].score;
+    el.value = kept == null ? '' : String(kept);
     return;
   }
   draft.value[idx] = { ...draft.value[idx], score: parsed };
@@ -220,7 +231,7 @@ function onInput(row: TutoringScoreRow, raw: string) {
               : 'border-tutoring-border-soft bg-tutoring-panel text-tutoring-text-hi',
           ]"
           :disabled="loading || saving"
-          @input="(e) => onInput(row, (e.target as HTMLInputElement).value)"
+          @input="(e) => onInput(row, e.target as HTMLInputElement)"
         >
       </li>
     </ul>
