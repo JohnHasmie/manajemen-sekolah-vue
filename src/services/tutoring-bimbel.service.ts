@@ -337,6 +337,22 @@ export interface BimbelBill {
    * the enrollment hook or the monthly cron carry none.
    */
   description?: string | null;
+  /**
+   * How and when the bill was actually settled, read off the VERIFIED
+   * payment row rather than off the bill.
+   *
+   * `BillResource` emits both through `whenLoaded('payments')`, and
+   * `BillController::index` and `::show` eager-load `payments` with the
+   * same `whereNotNull('verified_at')` constraint — so these arrive on
+   * the list page as well as on the detail. They were missing from this
+   * interface entirely, which is why no screen has ever rendered them.
+   *
+   * Optional rather than nullable-required because `whenLoaded` drops
+   * the key outright for a caller that reached a bill without the eager
+   * load: absent means "not asked for", null means "not paid".
+   */
+  paid_at?: string | null;
+  payment_method?: string | null;
   reminder_count?: number;
   last_reminded_at?: string | null;
   created_at?: string;

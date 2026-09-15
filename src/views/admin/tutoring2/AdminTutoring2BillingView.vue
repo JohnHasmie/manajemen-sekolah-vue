@@ -96,16 +96,21 @@ import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import Button from '@/components/ui/Button.vue';
+import Modal from '@/components/ui/Modal.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import AdminTutoring2BillCreateSheet from './AdminTutoring2BillCreateSheet.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
+import { useToast } from '@/composables/useToast';
+import { extractError } from '@/lib/api-error';
 import { formatYmLabel } from '@/lib/local-date';
 import {
   BIMBEL_BILL_STATUSES,
   bimbelBillDisplayStatus,
   bimbelBillStatusI18nKey,
   bimbelBillStatusTone,
+  isBimbelBillPaid,
   type BimbelBillStatus,
 } from '@/lib/bimbel-bill-rules';
 import {
@@ -117,6 +122,7 @@ import type { StatusBadgeTone } from '@/types/status-badge';
 
 const { t, locale } = useI18n();
 const { can } = useMe();
+const toast = useToast();
 
 /**
  * `tutoring.bill.create` — the ability `BillController::store`
@@ -295,6 +301,166 @@ function billStatusLabel(status: string): string {
   // the one helper the wali and siswa bill screens also read.
   return t(bimbelBillStatusI18nKey(billDisplayStatus(status)));
 }
+
+// ─── Detail sheet ───────────────────────────────────────────────────
+
+/**
+ * `tutoring.bill.mark_paid` — the ability `BillController::markPaid`
+ * itself authorizes, which is a DIFFERENT key again from the
+ * `tutoring.bill.view` that lets a caller read this list and from the
+ * `tutoring.bill.create` the CTA above is gated on. A read-only finance
+ * tier holds the first and not this one; offering them the button would
+ * offer them a 403.
+ *
+ * Read through `useMe().can()`, which the backend scopes to the role
+ * named by `X-Active-Role`. Never `roles[].permission_keys`: that list
+ * is unscoped and exists only to drive the role switcher, so an account
+ * that is admin at one tenant would read as admin at every tenant.
+ * Fails closed while `/me` is unloaded.
+ */
+const canMarkBillPaid = computed(() => can('tutoring.bill.mark_paid'));
+
+/**
+ * The bill whose sheet is open, or null.
+ *
+ * Seeded from the list row so the sheet paints instantly, then replaced
+ * by the `show` payload — the same "open, then refresh from server
+ * truth" shape `TutorTutoring2EarningsView.openRequestDetail` uses.
+ *
+ * Worth being precise about WHY the refetch earns its keep here, because
+ * `BillController::index` and `::show` eager-load exactly the same
+ * relations and `BillResource` is the same serialiser, so the two
+ * payloads have the SAME SHAPE — the detail carries no extra fields. It
+ * is FRESHNESS, not shape: this list is a snapshot taken when the page
+ * loaded, and the status is the one thing on it that another admin (or
+ * the wali uploading a receipt, or the verification path in Finance) can
+ * flip underneath it. Marking a bill paid off a stale row is the write
+ * this screen must not make.
+ */
+const activeBill = ref<BimbelBill | null>(null);
+const detailLoading = ref(false);
+const markingPaid = ref(false);
+
+async function openBillDetail(row: BimbelBill): Promise<void> {
+  activeBill.value = row;
+  detailLoading.value = true;
+  try {
+    activeBill.value = await TutoringBimbelService.getBill(row.id);
+  } catch {
+    // Keep the list row on screen rather than emptying the sheet. A
+    // blank sheet on a flaky fetch reads exactly like the inert-row bug
+    // this control exists to fix, and the row is still honest.
+  } finally {
+    detailLoading.value = false;
+  }
+}
+
+function closeBillDetail(): void {
+  activeBill.value = null;
+  markingPaid.value = false;
+}
+
+/**
+ * Whether to offer the settle control at all.
+ *
+ * Three conditions, and the paid one is not cosmetic: `markPaid` takes a
+ * lock and returns EARLY for a bill already at `paid`, so the button's
+ * only possible outcome there is a silent no-op that looks like a
+ * failure to the admin who pressed it.
+ */
+const canSettleActiveBill = computed(
+  () => !!activeBill.value
+    && canMarkBillPaid.value
+    && !isBimbelBillPaid(activeBill.value.status),
+);
+
+async function markActiveBillPaid(): Promise<void> {
+  const bill = activeBill.value;
+  // Belt-and-braces beside the template's `v-if`: a sheet left open
+  // across a role switch must not be able to post.
+  if (!bill || !canSettleActiveBill.value) return;
+
+  markingPaid.value = true;
+  try {
+    // An EMPTY body, on purpose. All four `MarkBillPaidRequest` rules
+    // are `nullable`, and the controller fills every blank from the
+    // bill itself — `amount` ← `$bill->amount`, `payment_method` ←
+    // `'manual_transfer'`, `payment_date` ← today. Asking an admin to
+    // retype figures the server already holds is how they get mistyped,
+    // and a key outside those four would be dropped by `validated()`
+    // with no error anywhere.
+    activeBill.value = await TutoringBimbelService.markBillPaid(bill.id, {});
+    toast.success(t('tutoring2.admin.billing.markPaidDone'));
+    // Both halves of the bundle, in one pass: the four KPI tiles come
+    // from `getBillsSummary`, NOT from the rows, so reloading only the
+    // list would leave "Terbayar" reading the pre-payment figure until
+    // the admin navigated away.
+    await reload();
+  } catch (e) {
+    toast.error(extractError(e) ?? t('tutoring2.common.actionFailed'));
+  } finally {
+    markingPaid.value = false;
+  }
+}
+
+/** Em-dash for anything the wire did not send. Never a guess. */
+function orDash(value: string | number | null | undefined): string {
+  return value != null && value !== '' ? String(value) : '—';
+}
+
+interface BillDetailRow {
+  key: string;
+  label: string;
+  value: string;
+}
+
+/** What the bill IS. */
+const detailBillRows = computed<BillDetailRow[]>(() => {
+  const b = activeBill.value;
+  if (!b) return [];
+  return [
+    {
+      key: 'student',
+      label: t('tutoring2.common.student'),
+      // Names, not ids — `BillResource` already carries the name.
+      // truncateId stays only as the fallback for a row without one.
+      value: orDash(b.student_name ?? truncateId(b.student_id)),
+    },
+    { key: 'student_number', label: t('tutoring2.admin.billing.studentNumber'), value: orDash(b.student_number) },
+    { key: 'source', label: t('tutoring2.common.source'), value: orDash(b.source_label ?? b.source_type) },
+    { key: 'payment_type', label: t('tutoring2.admin.billing.paymentType'), value: orDash(b.payment_type_name) },
+    { key: 'amount', label: t('tutoring2.common.amount'), value: formatRupiah(b.amount) },
+    { key: 'due_date', label: t('tutoring2.common.dueDate'), value: orDash(b.due_date) },
+    {
+      key: 'month',
+      label: t('tutoring2.common.period'),
+      value: b.month ? formatYmLabel(b.month, localeTag.value) : '—',
+    },
+    { key: 'description', label: t('tutoring2.admin.billing.note'), value: orDash(b.description) },
+  ];
+});
+
+/**
+ * How and when it was settled.
+ *
+ * Both rows are listed whether or not they happened: "Dibayar pada —"
+ * is the honest reading of an unsettled bill, and hiding them would make
+ * a paid bill and an unpaid one look structurally identical.
+ *
+ * These two keys come off the VERIFIED payment row, not off the bill —
+ * `BillResource` reads them through `settledPayment()`, which tests
+ * `verified_at` rather than any status word. Nothing on web rendered
+ * them before; they were missing from the `BimbelBill` interface
+ * entirely.
+ */
+const detailPaymentRows = computed<BillDetailRow[]>(() => {
+  const b = activeBill.value;
+  if (!b) return [];
+  return [
+    { key: 'paid_at', label: t('tutoring2.admin.billing.paidAt'), value: orDash(b.paid_at) },
+    { key: 'payment_method', label: t('tutoring2.admin.billing.paymentMethod'), value: orDash(b.payment_method) },
+  ];
+});
 </script>
 
 <template>
@@ -355,10 +521,24 @@ function billStatusLabel(status: string): string {
               </tr>
             </thead>
             <tbody>
+              <!-- Row click opens the detail. This table had no `@click`
+                   at all — the rows were inert, which is the defect
+                   reported from prod: the tagihan could not be opened
+                   and its status could not be changed from anywhere on
+                   web. Keyboard-reachable (`tabindex` + Enter/Space)
+                   because a `<tr>` is not focusable on its own and the
+                   row is the only affordance into the sheet. -->
               <tr
                 v-for="b in billsList"
                 :key="b.id"
-                class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
+                data-testid="bill-row"
+                tabindex="0"
+                role="button"
+                :aria-label="t('tutoring2.admin.billing.openDetail')"
+                class="cursor-pointer border-b border-slate-100 last:border-0 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-cobalt"
+                @click="openBillDetail(b)"
+                @keydown.enter.prevent="openBillDetail(b)"
+                @keydown.space.prevent="openBillDetail(b)"
               >
                 <td class="px-4 py-3">
                   <div class="font-semibold text-slate-900">{{ b.student_name ?? truncateId(b.student_id) }}</div>
@@ -411,6 +591,98 @@ function billStatusLabel(status: string): string {
       @close="showCreateSheet = false"
       @saved="reload"
     />
+
+    <!-- Bill detail. Opened by the row above, populated by
+         `GET /tutoring-v2/bills/{id}`. The settle control inside is the
+         ONLY write on this surface and carries its own ability gate —
+         reading a bill and settling it are different keys server-side,
+         so they are different keys here too. -->
+    <Modal
+      v-if="activeBill"
+      testid="bill-detail"
+      :title="t('tutoring2.admin.billing.detailTitle')"
+      :subtitle="activeBill.student_name ?? truncateId(activeBill.student_id)"
+      size="md"
+      @close="closeBillDetail"
+    >
+      <div class="space-y-4">
+        <div class="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4">
+          <div>
+            <p class="text-xs text-slate-500">{{ t('tutoring2.common.amount') }}</p>
+            <p data-testid="bill-detail-amount" class="text-lg font-bold tabular-nums">
+              {{ formatRupiah(activeBill.amount) }}
+            </p>
+          </div>
+          <StatusBadge
+            :label="billStatusLabel(activeBill.status)"
+            :tone="billStatusTone(activeBill.status)"
+            uppercase
+          />
+        </div>
+
+        <section class="space-y-2">
+          <h3 class="px-1 text-2xs font-bold uppercase tracking-widest text-slate-400">
+            {{ t('tutoring2.admin.billing.detailSection') }}
+          </h3>
+          <div class="divide-y divide-slate-100 rounded-2xl border border-slate-200">
+            <div
+              v-for="row in detailBillRows"
+              :key="row.key"
+              :data-testid="`bill-detail-${row.key}`"
+              class="flex items-start justify-between gap-3 px-3 py-2.5"
+            >
+              <span class="flex-shrink-0 text-xs text-slate-500">{{ row.label }}</span>
+              <span class="min-w-0 flex-1 break-words text-right text-xs font-bold text-slate-900">
+                {{ row.value }}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section class="space-y-2">
+          <h3 class="px-1 text-2xs font-bold uppercase tracking-widest text-slate-400">
+            {{ t('tutoring2.admin.billing.paymentSection') }}
+          </h3>
+          <div class="divide-y divide-slate-100 rounded-2xl border border-slate-200">
+            <div
+              v-for="row in detailPaymentRows"
+              :key="row.key"
+              :data-testid="`bill-detail-${row.key}`"
+              class="flex items-start justify-between gap-3 px-3 py-2.5"
+            >
+              <span class="flex-shrink-0 text-xs text-slate-500">{{ row.label }}</span>
+              <span class="min-w-0 flex-1 break-words text-right text-xs font-bold text-slate-900">
+                {{ row.value }}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <p v-if="detailLoading" data-testid="bill-detail-loading" class="text-xs text-slate-400">
+          {{ t('tutoring2.common.loading') }}
+        </p>
+
+        <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+          <Button data-testid="bill-detail-close" variant="ghost" type="button" @click="closeBillDetail">
+            {{ t('tutoring2.admin.billing.close') }}
+          </Button>
+          <!-- Hidden outright without `tutoring.bill.mark_paid`, and
+               hidden on a bill already settled — `markPaid` returns
+               early inside its lock for one of those, so the press
+               would do nothing at all. -->
+          <Button
+            v-if="canSettleActiveBill"
+            data-testid="bill-detail-mark-paid"
+            variant="primary"
+            type="button"
+            :loading="markingPaid"
+            @click="markActiveBillPaid"
+          >
+            {{ t('tutoring2.admin.billing.markPaid') }}
+          </Button>
+        </div>
+      </div>
+    </Modal>
 
     <!-- Periode picker. It only writes `monthFilter`; the existing
          watcher on [search, status, source, month] does the reload, so

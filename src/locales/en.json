@@ -7257,7 +7257,19 @@
         "emptyDesc": "No bills yet. Bills are raised automatically by enrolment and monthly billing, or create one with the Create bill button.",
         "kpiBilled": "Billed",
         "emptyTitle": "No bills yet",
-        "searchPh": "Search students…"
+        "searchPh": "Search students…",
+        "detailTitle": "Bill detail",
+        "detailSection": "Bill details",
+        "paymentSection": "Payment",
+        "openDetail": "Open bill detail",
+        "studentNumber": "Student number",
+        "paymentType": "Payment type",
+        "note": "Note",
+        "paidAt": "Paid on",
+        "paymentMethod": "Payment method",
+        "markPaid": "Mark as paid",
+        "markPaidDone": "Bill marked as paid.",
+        "close": "Close"
       },
       "payoutSettings": {
         "title": "Payout Settings",

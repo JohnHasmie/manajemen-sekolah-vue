@@ -7391,7 +7391,19 @@
         "searchPh": "Cari siswa…",
         "emptyDesc": "Belum ada tagihan. Tagihan terbit otomatis dari pendaftaran dan tagihan bulanan, atau buat satu lewat tombol Buat tagihan.",
         "kpiBilled": "Tertagih",
-        "newCta": "Buat tagihan"
+        "newCta": "Buat tagihan",
+        "detailTitle": "Detail tagihan",
+        "detailSection": "Rincian tagihan",
+        "paymentSection": "Pembayaran",
+        "openDetail": "Buka detail tagihan",
+        "studentNumber": "Nomor induk",
+        "paymentType": "Jenis pembayaran",
+        "note": "Keterangan",
+        "paidAt": "Dibayar pada",
+        "paymentMethod": "Metode pembayaran",
+        "markPaid": "Tandai lunas",
+        "markPaidDone": "Tagihan ditandai lunas.",
+        "close": "Tutup"
       },
       "tutorDetail": {
         "tabGroups": "Kelompok",
