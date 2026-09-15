@@ -32,9 +32,45 @@ const props = withDefaults(
     filterMode?: 'all' | 'unmarked';
     /** Whether to render the "Simpan" footer button. Off for read-only viewers. */
     canSave?: boolean;
+    /**
+     * Whether pressing the footer button will ALSO close the session.
+     *
+     * The button used to read "Simpan & tandai selesai" unconditionally
+     * while the parent only ever saved marks, so the session stayed
+     * `scheduled` and the sessions list kept deriving "Terlewat". The
+     * parent now really does close the session — but only when the
+     * signed-in role holds `tutoring.session.manage`, which
+     * `PermissionCatalog::tutorTutoringDefaults()` does NOT grant by
+     * default. When it is absent the label must drop back to plain
+     * "Simpan" rather than promise a second effect that cannot happen.
+     */
+    canComplete?: boolean;
+    /**
+     * Plain-Indonesian explanation of why this button will not close the
+     * session, or `null` when it will. Rendered next to the button so the
+     * tutor is told before pressing, not by a 403 afterwards.
+     */
+    completeNotice?: string | null;
   }>(),
-  { loading: false, saving: false, search: '', filterMode: 'all', canSave: true },
+  {
+    loading: false,
+    saving: false,
+    search: '',
+    filterMode: 'all',
+    canSave: true,
+    canComplete: true,
+    completeNotice: null,
+  },
 );
+
+/**
+ * The label is a PROMISE about what the click does. It names the second
+ * effect only when the second effect is actually going to be attempted.
+ */
+const saveLabel = computed(() => {
+  if (props.saving) return 'Menyimpan…';
+  return props.canComplete ? 'Simpan & tandai selesai' : 'Simpan';
+});
 
 const emit = defineEmits<{
   'update:row': [{ enrollment_id: string; status: AttendanceStatus; notes?: string }];
@@ -128,14 +164,22 @@ function alertToneClass(tone: TutoringAttendanceRow['alert_tone']): string {
 
     <footer
       v-if="canSave"
-      class="flex items-center justify-end gap-2 border-t-0.5 border-tutoring-border-soft px-4 py-3"
+      class="flex flex-wrap items-center justify-end gap-2 border-t-0.5 border-tutoring-border-soft px-4 py-3"
     >
+      <p
+        v-if="completeNotice"
+        id="roster-complete-notice"
+        data-testid="roster-complete-notice"
+        class="min-w-0 flex-1 text-2xs text-tutoring-text-mid"
+      >{{ completeNotice }}</p>
       <button
         type="button"
+        data-testid="roster-save"
         class="rounded-lg bg-[#21afe6] px-4 py-1.5 text-sm font-bold text-white transition hover:bg-[#1a8fbe] disabled:opacity-60"
         :disabled="loading || saving"
+        :aria-describedby="completeNotice ? 'roster-complete-notice' : undefined"
         @click="emit('save')"
-      >{{ saving ? 'Menyimpan…' : 'Simpan & tandai selesai' }}</button>
+      >{{ saveLabel }}</button>
     </footer>
   </section>
 </template>

@@ -8029,7 +8029,9 @@
         "title": "Presensi sesi",
         "saved": "Presensi tersimpan ({count} siswa)",
         "saveFailed": "Gagal menyimpan presensi: {msg}",
-        "emptyTitle": "Sesi belum punya siswa"
+        "emptyTitle": "Sesi belum punya siswa",
+        "savedAndCompleted": "Presensi tersimpan ({count} siswa) dan sesi ditandai selesai",
+        "savedNotCompleted": "Presensi tersimpan ({count} siswa), tetapi sesi belum bisa ditandai selesai: {msg}"
       },
       "assessmentCreate": {
         "title": "Buat try-out",

@@ -6755,7 +6755,9 @@
         "saveFailed": "Failed to save attendance: {msg}",
         "title": "Session attendance",
         "emptyTitle": "Session has no students",
-        "meta": "{count} students enrolled"
+        "meta": "{count} students enrolled",
+        "savedAndCompleted": "Attendance saved ({count} students) and the session was marked done",
+        "savedNotCompleted": "Attendance saved ({count} students), but the session could not be marked done: {msg}"
       },
       "groupAnnouncements": {
         "title": "Announcements",
