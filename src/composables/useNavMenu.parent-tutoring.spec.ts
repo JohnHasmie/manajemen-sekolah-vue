@@ -286,10 +286,23 @@ describe('wali bimbel sidebar', () => {
     /**
      * Rapor renders an amber "no rapor exists yet" notice whose only
      * control forwards to Perkembangan nilai — there is no rapor
-     * endpoint. Daftar program 403s for a default wali (it needs
-     * `tutoring.program.view` / `.package.view` / `.enrollment.manage`,
-     * none of which `parentTutoringDefaults()` grants) and is an ACTION
+     * endpoint. Daftar program 403s for a default wali and is an ACTION
      * reached from the More tiles, not a place.
+     *
+     * Be precise about WHICH ability does the refusing, because the
+     * obvious guess is wrong: `parentTutoringDefaults()` DOES grant
+     * `tutoring.program.view` (PermissionCatalog.php:1122 — the wali is
+     * meant to browse the catalogue), and the WALI_DEFAULT_ABILITIES
+     * fixture at the top of this file lists it. What 403s is the rest of
+     * the wizard: `tutoring.package.view` (PackageController@index) and
+     * `tutoring.enrollment.manage` (EnrollmentController@store), neither
+     * of which the wali holds.
+     *
+     * An earlier version of this docblock said all three were ungranted.
+     * The verdict was right and the reason was wrong — which is worse than
+     * it sounds, because someone re-reading this to justify a Daftar
+     * Program row would conclude the wali cannot see programmes at all,
+     * when in fact only the package step needs re-gating.
      *
      * A sidebar row is a standing promise that a destination exists.
      * Neither of these can keep it, so neither gets one — and this test
