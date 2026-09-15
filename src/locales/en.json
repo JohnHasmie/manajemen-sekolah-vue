@@ -7674,7 +7674,23 @@
         "submissionsCount": "{count} submissions",
         "thAvgScore": "Average",
         "thAssessmentsTaken": "Assessments taken",
-        "addStudentCta": "+ Add student"
+        "addStudentCta": "+ Add student",
+        "editTutorCta": "Change tutor"
+      },
+      "groupTutor": {
+        "title": "Group tutor",
+        "subtitle": "Choose the tutor who teaches {group}.",
+        "label": "Tutor",
+        "placeholder": "No tutor",
+        "currentUnnamed": "Current tutor",
+        "submit": "Save tutor",
+        "loading": "Loading tutors…",
+        "none": "No active tutors in this tutoring centre yet.",
+        "failed": "Could not load the tutor list. Try again later.",
+        "truncated": "Showing the first 100 tutors only.",
+        "unassignHint": "Choose \"No tutor\" to detach the tutor from this group.",
+        "success": "Group tutor updated.",
+        "errorGeneric": "Could not update the group tutor."
       },
       "programDetail": {
         "kicker": "Program detail",
@@ -7724,7 +7740,13 @@
         "errName": "Group name must be at least 3 characters.",
         "errProgram": "Choose a program first.",
         "success": "Group created.",
-        "errorGeneric": "Could not create the group."
+        "errorGeneric": "Could not create the group.",
+        "tutorLabel": "Tutor (optional)",
+        "tutorPh": "Not assigned yet",
+        "tutorsLoading": "Loading tutors…",
+        "tutorsNone": "No active tutors yet. You can still create the group without one.",
+        "tutorsFailed": "Could not load the tutor list. You can still create the group without one.",
+        "tutorsTruncated": "Showing the first 100 tutors only."
       },
       "sessionDetail": {
         "title": "Session detail",

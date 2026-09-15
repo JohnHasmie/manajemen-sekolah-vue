@@ -72,9 +72,22 @@
   `EnrollmentController::store` authorizes, so an admin without it sees
   no button rather than one that 403s.
 
-  "Ubah" is still not ported. Group editing lives behind
-  `PUT /tutoring-v2/learning-groups/{id}`
-  (`TutoringBimbelService.updateGroup`) and remains a separate MR.
+  "Ubah" is now ported for exactly ONE field: the TUTOR.
+  `UpdateLearningGroupRequest` has always accepted
+  `tutor_id => ['sometimes','nullable','uuid']`, and this view rendered
+  `tutor_name` in the header meta with no way to change it — so a group
+  that arrived without a tutor could never be given one from the web
+  app. "Ubah tutor" opens
+  <AdminTutoring2GroupTutorSheet>, which PUTs that single key; the
+  button is `v-if`-gated on `tutoring.group.manage`, the key
+  `LearningGroupController::update` authorizes, so an admin without it
+  sees no button rather than one that 403s.
+
+  A FULL group edit form (name / term_id / capacity / room / status)
+  remains a separate MR — `capacity` alone carries two server-side
+  domain guards whose 422s need their own handling. The tutor field was
+  split out ahead of it because it is the one whose absence left a
+  fact about the group unrecordable, not merely uneditable.
 
   ── PARTIAL-FAILURE POLICY ───────────────────────────────────────────
   The group header is the page; if it fails, the page fails. The four
@@ -112,6 +125,7 @@ import {
   bimbelSessionStatusTone,
 } from '@/lib/bimbel-session-status';
 import AdminTutoring2GroupAddStudentSheet from './AdminTutoring2GroupAddStudentSheet.vue';
+import AdminTutoring2GroupTutorSheet from './AdminTutoring2GroupTutorSheet.vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -125,6 +139,14 @@ const { can } = useMe();
  * unloaded, so the CTA is withheld rather than offered.
  */
 const canAddStudent = computed(() => can('tutoring.enrollment.manage'));
+
+/**
+ * `tutoring.group.manage` — the key `LearningGroupController::update`
+ * authorizes, and a THIRD key again from the two above. Read off the
+ * `/me` abilities snapshot (scoped by `X-Active-Role`), never off
+ * `roles[].permission_keys`. Fails closed while `/me` is unloaded.
+ */
+const canManageGroup = computed(() => can('tutoring.group.manage'));
 
 const groupId = computed(() => String(route.params.groupId ?? ''));
 
@@ -383,6 +405,33 @@ function openAddStudent(): void {
 function onStudentAdded(): void {
   reload();
 }
+
+// ── Ubah tutor ─────────────────────────────────────────────────────
+// Same shape as "Tambah siswa" above: `v-if`-gated on open so the form
+// state is fresh every time, and the CTA is withheld entirely without
+// the ability rather than rendered and refused.
+
+const tutorSheetOpen = ref(false);
+
+function openTutorSheet(): void {
+  if (!canManageGroup.value) return;
+  tutorSheetOpen.value = true;
+}
+
+/**
+ * ONE reload, not two — the same rule the add-student path documents.
+ * The sheet emits `saved` and then `close`, and only `saved` refetches.
+ *
+ * It reloads rather than patching `group` in place because the header
+ * meta reads `tutor_name`, which the PUT's own `LearningGroupResource`
+ * only carries when the relation happens to be loaded — `reload()`
+ * re-runs `getGroup`, whose controller eager-loads `tutor:id,name`, so
+ * the header shows the new tutor's NAME instead of falling back to
+ * "Belum ada tutor" on a row that now has one.
+ */
+function onTutorSaved(): void {
+  reload();
+}
 </script>
 
 <template>
@@ -408,6 +457,22 @@ function onStudentAdded(): void {
         :tone="groupStatus.tone"
         uppercase
       />
+      <!--
+        The tutor is already named in `headerMeta` right above, so the
+        control that changes it belongs here rather than buried in a
+        tab. Hidden — not disabled — without `tutoring.group.manage`,
+        and withheld until the group has actually loaded, since the
+        sheet seeds its picker from `group.tutor_id`.
+      -->
+      <button
+        v-if="canManageGroup && group"
+        type="button"
+        data-testid="group-detail-edit-tutor"
+        class="rounded-xl border border-white/40 px-3 py-1.5 text-2xs font-bold text-white transition hover:bg-white/15"
+        @click="openTutorSheet"
+      >
+        {{ t('tutoring2.admin.groupDetail.editTutorCta') }}
+      </button>
     </BrandPageHeader>
 
     <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
@@ -620,6 +685,15 @@ function onStudentAdded(): void {
       :roster="roster"
       @close="addStudentOpen = false"
       @saved="onStudentAdded"
+    />
+
+    <!-- Gated a second time and on `group` besides — the sheet seeds
+         its picker from `group.tutor_id` and PUTs to `group.id`. -->
+    <AdminTutoring2GroupTutorSheet
+      v-if="tutorSheetOpen && canManageGroup && group"
+      :group="group"
+      @close="tutorSheetOpen = false"
+      @saved="onTutorSaved"
     />
   </div>
 </template>

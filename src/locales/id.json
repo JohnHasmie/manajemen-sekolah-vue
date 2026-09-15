@@ -7836,7 +7836,23 @@
         "submissionsCount": "{count} pengumpulan",
         "thAvgScore": "Rata-rata",
         "thAssessmentsTaken": "Penilaian diikuti",
-        "addStudentCta": "+ Tambah siswa"
+        "addStudentCta": "+ Tambah siswa",
+        "editTutorCta": "Ubah tutor"
+      },
+      "groupTutor": {
+        "title": "Tutor kelompok",
+        "subtitle": "Tentukan tutor yang mengajar {group}.",
+        "label": "Tutor",
+        "placeholder": "Tanpa tutor",
+        "currentUnnamed": "Tutor saat ini",
+        "submit": "Simpan tutor",
+        "loading": "Memuat daftar tutor…",
+        "none": "Belum ada tutor aktif di bimbel ini.",
+        "failed": "Daftar tutor tidak bisa dimuat. Coba lagi nanti.",
+        "truncated": "Daftar dibatasi 100 tutor pertama.",
+        "unassignHint": "Pilih \"Tanpa tutor\" untuk melepas tutor dari kelompok ini.",
+        "success": "Tutor kelompok diperbarui.",
+        "errorGeneric": "Gagal memperbarui tutor kelompok."
       },
       "programDetail": {
         "kicker": "Detail program",
@@ -7886,7 +7902,13 @@
         "errName": "Nama kelompok minimal 3 karakter.",
         "errProgram": "Pilih program terlebih dahulu.",
         "success": "Kelompok dibuat.",
-        "errorGeneric": "Gagal membuat kelompok."
+        "errorGeneric": "Gagal membuat kelompok.",
+        "tutorLabel": "Tutor (opsional)",
+        "tutorPh": "Belum ditentukan",
+        "tutorsLoading": "Memuat daftar tutor…",
+        "tutorsNone": "Belum ada tutor aktif. Kelompok tetap bisa dibuat tanpa tutor.",
+        "tutorsFailed": "Daftar tutor tidak bisa dimuat. Kelompok tetap bisa dibuat tanpa tutor.",
+        "tutorsTruncated": "Daftar dibatasi 100 tutor pertama."
       },
       "sessionDetail": {
         "title": "Detail Sesi",
