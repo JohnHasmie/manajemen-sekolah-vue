@@ -373,6 +373,7 @@ describe('wali bimbel sidebar', () => {
     it.each([
       ['tutoring.announcement.view', '/parent/tutoring2/announcements'],
       ['tutoring.session.view', `/parent/tutoring2/sessions/${CHILD_ID}`],
+      ['tutoring.material.view', '/parent/tutoring2/materials'],
     ])('hides the %s row from a wali without the key', async (ability, path) => {
       // This menu used to return straight out of `useNavMenu` without
       // `applyGates`, so the one `ability` it declared was inert: the

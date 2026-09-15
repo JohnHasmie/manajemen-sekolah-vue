@@ -6856,6 +6856,18 @@
       },
       "switchChild": {
         "action": "Ganti anak"
+      },
+      "materials": {
+        "title": "Bahan Ajar",
+        "meta": "{count} bahan ajar dikirim tutor",
+        "emptyTitle": "Belum ada bahan ajar yang dikirim",
+        "emptyDesc": "Bahan ajar yang dikirim tutor untuk anak Anda akan muncul di sini.",
+        "countLabel": "{count} bahan ajar",
+        "ungroupedLabel": "Bahan ajar lainnya",
+        "noFile": "Bahan ajar ini tidak punya berkas.",
+        "openBlocked": "Tab baru diblokir browser. Izinkan pop-up untuk situs ini, lalu coba lagi.",
+        "downloadFallback": "Berkas dibuka di tab baru karena tidak bisa diunduh langsung.",
+        "downloadBlocked": "Berkas tidak bisa diunduh maupun dibuka. Izinkan pop-up untuk situs ini, lalu coba lagi."
       }
     },
     "student": {

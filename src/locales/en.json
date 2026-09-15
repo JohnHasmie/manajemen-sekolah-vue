@@ -8378,6 +8378,18 @@
       },
       "switchChild": {
         "action": "Switch child"
+      },
+      "materials": {
+        "title": "Materials",
+        "meta": "{count} materials sent by tutors",
+        "emptyTitle": "No materials sent yet",
+        "emptyDesc": "Materials your tutor sends for your child will appear here.",
+        "countLabel": "{count} materials",
+        "ungroupedLabel": "Other materials",
+        "noFile": "This material has no file.",
+        "openBlocked": "Your browser blocked the new tab. Allow pop-ups for this site and try again.",
+        "downloadFallback": "The file opened in a new tab because it could not be downloaded directly.",
+        "downloadBlocked": "The file could not be downloaded or opened. Allow pop-ups for this site and try again."
       }
     },
     "preferences": {

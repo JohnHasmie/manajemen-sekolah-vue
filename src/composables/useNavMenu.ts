@@ -1406,6 +1406,33 @@ function parentTutoringNav(activeChildId: string): NavSection[] {
         { to: at('progress'), labelKey: 'tutoring.nav.progress', icon: 'bar-chart' },
         { to: at('leaderboard'), labelKey: 'tutoring.nav.leaderboard', icon: 'check-square' },
         {
+          // "Bahan Ajar" — the read side of the tutor's "Kirim ke wali".
+          // Tutors could send materials; wali had no screen listing what
+          // arrived, so every send landed somewhere nobody could look.
+          //
+          // Child-agnostic like Pengumuman below, and for a stronger
+          // reason than convenience: `/tutoring-v2/materials` takes no
+          // student filter at all, and the wali read scope is a UNION of
+          // the children's groups OR their programmes — a
+          // programme-pinned material belongs to no single child's
+          // group, so a per-child row would hide it. The screen buckets
+          // by group/programme name instead, which is what a wali with
+          // two anak actually needs to tell them apart.
+          to: '/parent/tutoring2/materials',
+          labelKey: 'tutoring.nav.materials',
+          // `book-open`, not `folder`: NavIcon has no `folder` glyph, and
+          // an unknown name falls through to a hollow circle — which is
+          // exactly how the Prestasi surfaces shipped visible "O"
+          // placeholders. Not `book` either (the tutor materials row uses
+          // it), because Aktivitas already carries `book` in THIS menu.
+          icon: 'book-open',
+          // Mirrors `parent.tutoring2.materials` meta.ability. Granted by
+          // `PermissionCatalog::parentTutoringDefaults()`, but a tenant
+          // may revoke it through the RBAC picker — the catalog is a
+          // seed, not a ceiling.
+          ability: 'tutoring.material.view',
+        },
+        {
           // WEB-12 wali entry — greenfield BE-22 wali-facing feed of
           // published announcements across every enrolled child's
           // group. Path is child-agnostic (feed derives children from

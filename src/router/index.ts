@@ -2334,6 +2334,28 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'parent' satisfies Role, needs: 'tutoring-module' },
       },
       {
+        // Wali "Bahan Ajar" — the read side of the tutor's "Kirim ke
+        // wali". Published materials only; the server applies
+        // `whereNotNull('published_at')` to any caller without
+        // `tutoring.material.manage`, which a wali never holds.
+        //
+        // PARAM-FREE on purpose, unlike the `/:studentId` siblings:
+        // `/tutoring-v2/materials` has no student filter, and the wali
+        // read scope is `group IN (children's groups) OR program IN
+        // (children's programmes)` — so narrowing by one child would
+        // hide every programme-pinned material. Same call Tagihan and
+        // Riwayat made. Reasoning in full in the view's docblock and
+        // pinned by `parent-materials-route.spec.ts`.
+        path: 'parent/tutoring2/materials',
+        name: 'parent.tutoring2.materials',
+        component: () => import('@/views/parent/tutoring2/ParentTutoring2MaterialsView.vue'),
+        meta: {
+          role: 'parent' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.material.view',
+        },
+      },
+      {
         // WEB-12: wali read-only feed of announcements for enrolled
         // child(ren)'s groups (BE-22, published-only). Task brief calls
         // for route name `parent.tutoring2.announcements`; kept the
