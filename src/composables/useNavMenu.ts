@@ -868,6 +868,31 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
         labelKey: 'tutoring.nav.sessions',
         icon: 'calendar',
       },
+      {
+        // Admin recurring sessions. The series form shipped on the
+        // TUTOR menu only, but the endpoint behind it
+        // (`POST /tutoring-v2/sessions/recurring`) authorizes on
+        // `tutoring.session.manage` — an `adminTutoringDefaults()` key
+        // that `tutorTutoringDefaults()` does not grant. So a default
+        // bimbel tenant had the screen exactly where it 403s and
+        // nowhere it works. This is the row that fixes that.
+        //
+        // Gated on the same key for the same reason the tutor row is:
+        // a staff tier without it would get a form whose submit is
+        // refused. The gate reads the role-scoped `abilities` list from
+        // `GET /me` (via `auth.hasAbility` → `useMeStore().snapshot`),
+        // NOT `roles[].permission_keys`.
+        // `refresh-cw`, not the `calendar` the tutor row uses: this row
+        // sits directly under "Sesi" in the admin menu and a second
+        // identical calendar glyph would read as a duplicate. Both
+        // names are checked against NavIcon.vue's list: an unknown name
+        // hits its `v-else` and renders a bare CIRCLE, so a typo here
+        // ships a wrong-but-plausible glyph rather than failing.
+        to: '/admin/tutoring2/sessions/recurring',
+        labelKey: 'tutoring.nav.recurring',
+        icon: 'refresh-cw',
+        ability: 'tutoring.session.manage',
+      },
       // removed CLEAN-2: no greenfield yet — track in project_bimbel_greenfield_rebuild
       // (was: /admin/tutoring/session-reminders — session reminders
       // feature not yet re-implemented on greenfield).

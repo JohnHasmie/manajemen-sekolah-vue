@@ -1,12 +1,48 @@
 <!--
-  TutorTutoring2RecurringSessionsView.vue — generate a weekly-recurring
+  Tutoring2RecurringSessionsView.vue — generate a weekly-recurring
   series of bimbel sessions (CLEAN-2 Phase 2 · greenfield replacement
   for `teacher/tutoring/TutorRecurringSessionsView.vue`).
 
-  Route: /teacher/tutoring2/sessions/recurring
+  Routes:
+    /teacher/tutoring2/sessions/recurring  (tutor)
+    /admin/tutoring2/sessions/recurring    (admin bimbel)
   Endpoints:
     GET  /tutoring-v2/learning-groups     — the group picker
     POST /tutoring-v2/sessions/recurring  — fan out the series
+
+  ── Why ONE view for both roles ──
+
+  Was `TutorTutoring2RecurringSessionsView` under `views/teacher/`.
+  The admin had NO recurring surface at all: the only way to schedule a
+  weekly series was the tutor screen, and — see the gate note below —
+  `tutoring.session.manage` is an ADMIN key, so on a default tenant the
+  series form existed only where nobody could submit it.
+
+  This is the same consolidation `Tutoring2CreateSessionView` already
+  uses for its tutor/admin pair, and for the same reason: the second
+  copy is where the drift starts. The `previewCount` day walk and the
+  `parseLocalYmd` / `toLocalYmd` local-date handling below are exactly
+  the code a duplicate would fork, and a UTC round-trip reintroduced in
+  one copy is the WIB off-by-one-day bug coming back.
+
+  Nothing about the form is role-specific:
+
+    - the group picker narrows SERVER-side
+      (`LearningGroupController::index` via `ResolvesTutoringReadScope`),
+      so a tutor is handed the groups they teach and an admin the whole
+      tenant — one control, two correct answers, no client-side filter;
+    - `tutor_id` is not sent by either role. It is an OPTIONAL field on
+      StoreRecurringSessionsRequest and CreateRecurringSessionsAction
+      defaults it to `$group->tutor_id`, which is the right answer for
+      a tutor scheduling their own class AND for an admin scheduling on
+      a group's behalf. An admin "pick a tutor" control is deliberately
+      NOT added here: it would be a second source of truth for a field
+      the group already owns, and it is not what the admin one-off
+      create screen does either.
+
+  Role-dependent parts are confined to `roleKicker` / the empty-state
+  description; `BrandPageHeader` falls back to the auth store's active
+  role when no `role` prop is passed, so the gradient tints itself.
 
   CONTRACT DIFFERENCES vs the legacy v1 view — read before touching:
 
@@ -54,14 +90,21 @@
   `tutorTutoringDefaults()`, whose session half is `session.view` +
   `session.mark_attendance` — bimbel session lifecycle is an admin
   scheduling act by design. So on a default tenant this form 403s for
-  the very role it was written for.
+  the very role it was originally written for, and succeeds for the
+  admin route added alongside it.
 
   Until that was noticed, useNavMenu listed this route in the tutor
   menu with no gate at all, so every tutor on every bimbel tenant could
   fill in the whole series form and have the submit refused. Both the
-  nav row and the route now carry `ability: 'tutoring.session.manage'`,
-  which also means a tenant that grants the key to its tutor role gets
-  the screen back with no code change.
+  tutor nav row and BOTH routes carry
+  `ability: 'tutoring.session.manage'`, which also means a tenant that
+  grants the key to its tutor role keeps the tutor screen with no code
+  change — the permission catalog is a seed, not a ceiling.
+
+  The tutor route and its nav row are deliberately LEFT IN PLACE by
+  this change. Retiring the tutor entry point is a separate, later
+  decision; removing it in the same change that adds the admin one
+  would open a window with no recurring surface at all.
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -78,17 +121,43 @@ import {
   TutoringBimbelService,
   type BimbelLearningGroup,
 } from '@/services/tutoring-bimbel.service';
+import { useAuthStore } from '@/stores/auth';
 
 const { t } = useI18n();
 const router = useRouter();
 const toast = useToast();
+const auth = useAuthStore();
+
+// ─── Role adaptation ──────────────────────────────────────────────
+//
+// The only two things that differ between the tutor and the admin
+// entry point. Everything below this block is shared verbatim.
+const isAdmin = computed(() => auth.activeRole === 'admin');
+
+const roleKicker = computed(() =>
+  isAdmin.value ? t('tutoring2.common.roleAdmin') : t('tutoring2.common.roleTutor'),
+);
+
+/**
+ * "Only active groups can take a series" is the right advice for a
+ * tutor with nothing to pick and nonsense for the admin who would BE
+ * the person who activates a group — they are one screen away from
+ * creating it themselves. Same split, same key, as the one-off create
+ * view's empty state.
+ */
+const emptyDesc = computed(() =>
+  isAdmin.value
+    ? t('tutoring2.admin.schedule.createEmptyDesc')
+    : t('tutoring2.tutor.recurringSessions.emptyDesc'),
+);
 
 // ─── Group picker ─────────────────────────────────────────────────
 // Same scope note as Tutoring2CreateSessionView: the v2 group index
 // DOES narrow to the caller server-side (`ResolvesTutoringReadScope`),
-// so a tutor is handed only the groups they teach. Do not layer a
-// client-side "my groups" filter on top — no v2 route hands the client
-// its own `teachers.id` to compare against, and it is not needed.
+// so a tutor is handed only the groups they teach and an admin the
+// tenant's active groups. Do not layer a client-side "my groups"
+// filter on top — no v2 route hands the client its own `teachers.id`
+// to compare against, and it is not needed.
 // See `docs/CLEAN-2-V2-GAPS.md` §G1.
 const { state, reload } = useDataRefresh(async () => {
   const { items } = await TutoringBimbelService.listGroups({
@@ -252,9 +321,11 @@ const inputCls =
 
 <template>
   <div class="space-y-md pb-24">
+    <!-- No `role` prop: BrandPageHeader falls back to the auth store's
+         active role, so the gradient tints itself for whichever role
+         reached this route. -->
     <BrandPageHeader
-      role="teacher"
-      :kicker="t('tutoring2.common.roleTutor')"
+      :kicker="roleKicker"
       :title="t('tutoring2.tutor.recurringSessions.title')"
       :meta="t('tutoring2.tutor.recurringSessions.meta')"
     />
@@ -264,11 +335,12 @@ const inputCls =
       loading-variant="cards"
       :loading-rows="3"
       :empty-title="t('tutoring2.tutor.recurringSessions.emptyTitle')"
-      :empty-description="t('tutoring2.tutor.recurringSessions.emptyDesc')"
+      :empty-description="emptyDesc"
       @retry="reload"
     >
       <template #default>
         <form
+          data-testid="recurring-sessions-form"
           class="rounded-3xl border border-slate-100 bg-white shadow-sm p-5 space-y-4"
           @submit.prevent="submit"
         >

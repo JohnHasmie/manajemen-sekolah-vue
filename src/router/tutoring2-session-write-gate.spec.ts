@@ -4,11 +4,11 @@
  *
  * ── Why this guard exists ──
  *
- * Two tutor screens post to endpoints that authorize on
- * `tutoring.session.manage`:
+ * Two screens post to endpoints that authorize on
+ * `tutoring.session.manage`, each now on a tutor AND an admin route:
  *
- *   Tutoring2CreateSessionView          → POST /tutoring-v2/sessions
- *   TutorTutoring2RecurringSessionsView → POST /tutoring-v2/sessions/recurring
+ *   Tutoring2CreateSessionView       → POST /tutoring-v2/sessions
+ *   Tutoring2RecurringSessionsView   → POST /tutoring-v2/sessions/recurring
  *
  * (`SessionController::store` / `::storeRecurring`, both
  * `$this->authorize('tutoring.session.manage')`.)
@@ -65,6 +65,7 @@ const SESSION_WRITE_ROUTES = [
   'teacher.tutoring2.session-create',
   'teacher.tutoring2.sessions-recurring',
   'admin.tutoring2.session-create',
+  'admin.tutoring2.sessions-recurring',
 ] as const;
 
 // ── useNavMenu test doubles ───────────────────────────────────────

@@ -1558,6 +1558,41 @@ const routes: RouteRecordRaw[] = [
           ability: 'tutoring.session.manage',
         },
       },
+      // Admin recurring sessions — the weekly-series twin of the
+      // one-off create route above, and the admin's first entry point
+      // into it. `POST /tutoring-v2/sessions/recurring` authorizes on
+      // `tutoring.session.manage`, which `adminTutoringDefaults()`
+      // grants and `tutorTutoringDefaults()` does not, so the series
+      // form previously existed ONLY on the tutor route, where a
+      // default tenant's submit is refused.
+      //
+      // Same component as `teacher.tutoring2.sessions-recurring`,
+      // tinted by `meta.role` — not a copy.
+      //
+      // Ability-gated like its `sessions/new` sibling: this is a write
+      // form end to end (there is nothing to read on it), so bouncing a
+      // staff tier without the key beats rendering a form the server
+      // will refuse. That is the same reasoning that keeps
+      // `sessions/:id` below UNgated — that one is a read surface.
+      //
+      // Declared BEFORE `sessions/:id` so the two cannot be confused by
+      // a reader. Vue Router ranks a static segment above a param
+      // regardless of declaration order, so this ordering is for the
+      // human — and `tutoring2-admin-session-routes.spec.ts` pins BOTH
+      // directions (literal and id) against the real router rather than
+      // leaving that as a comment. Before this route existed, that spec
+      // showed `/admin/tutoring2/sessions/recurring` resolving to the
+      // DETAIL screen with an id of the literal string "recurring".
+      {
+        path: 'admin/tutoring2/sessions/recurring',
+        name: 'admin.tutoring2.sessions-recurring',
+        component: () => import('@/views/tutoring2/Tutoring2RecurringSessionsView.vue'),
+        meta: {
+          role: 'admin' satisfies Role,
+          needs: 'tutoring-module',
+          ability: 'tutoring.session.manage',
+        },
+      },
       // Admin session detail — the destination of a row click on the
       // schedule list above, which had no way into a detail at all
       // ("list sesinya belum ada detail sesi dan edit sesi").
@@ -2100,7 +2135,12 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'teacher/tutoring2/sessions/recurring',
         name: 'teacher.tutoring2.sessions-recurring',
-        component: () => import('@/views/teacher/tutoring2/TutorTutoring2RecurringSessionsView.vue'),
+        // Shared with `admin.tutoring2.sessions-recurring` — the view
+        // moved to `views/tutoring2/` when the admin route landed, the
+        // same consolidation `Tutoring2CreateSessionView` uses. This
+        // tutor route is deliberately KEPT: retiring it is a separate,
+        // later decision.
+        component: () => import('@/views/tutoring2/Tutoring2RecurringSessionsView.vue'),
         meta: {
           role: 'teacher' satisfies Role,
           needs: 'tutoring-module',
