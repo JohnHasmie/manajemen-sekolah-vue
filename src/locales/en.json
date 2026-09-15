@@ -7059,7 +7059,11 @@
         "redemptionsEmptyTitle": "No redemptions yet",
         "redemptionsEmptyDesc": "The log will appear when the first voucher is redeemed.",
         "redemptionsHint": "Per-voucher redemption log endpoint is pending; showing a summary per voucher for now.",
-        "kpiCountedSuffix": "{count} vouchers counted"
+        "kpiCountedSuffix": "{count} vouchers counted",
+        "colRecipients": "Recipients",
+        "recipientsGeneral": "General promo",
+        "recipientsPersonal": "Personal · {count} students",
+        "recipientsManage": "Manage voucher recipients"
       },
       "groups": {
         "kindPrivate": "1-on-1",
@@ -7838,6 +7842,33 @@
         "errBillingMode": "Choose a billing mode first.",
         "success": "Student added to the group.",
         "errorGeneric": "Could not add the student. Please try again."
+      },
+      "voucherRecipients": {
+        "title": "Voucher recipients",
+        "subtitle": "Code {code}",
+        "natureGeneral": "General promo — anyone holding the code can use it.",
+        "naturePersonal": "Personal voucher — only the {count} students below can use it.",
+        "empty": "No recipients yet. This voucher is still a general promo.",
+        "loadError": "Could not load the voucher recipients. Try again.",
+        "removeLastWarning": "This is the last recipient. Removing it turns the voucher back into a general promo — anyone who knows the code can use it, up to the redemption cap.",
+        "addTitle": "Add recipients",
+        "searchLabel": "Search students",
+        "searchPh": "Name / student number / guardian…",
+        "studentPh": "Pick a student",
+        "studentsNone": "No students left to add.",
+        "studentsError": "Could not load the student list. You may not have access to student data.",
+        "studentsTruncated": "Showing only the first {count} students. Use the search box to find others.",
+        "firstRecipientWarning": "This voucher is still a general promo. Adding the first recipient makes it personal: from then on only the students listed here can use it, including when an admin redeems it on a family's behalf.",
+        "attachSubmit": "Save recipients",
+        "attachSuccess": "{count} recipients added.",
+        "attachNoop": "That student is already a recipient.",
+        "attachFailed": "Could not add the recipients. Try again.",
+        "detachSuccess": "Recipient removed from the voucher.",
+        "detachNoop": "That student is not a recipient of this voucher.",
+        "detachFailed": "Could not remove the recipient. Try again.",
+        "readOnlyNote": "You can only view this list. Changing recipients requires the voucher management permission.",
+        "snapshotAbsent": "The table row does not carry a recipient count yet; this panel is authoritative.",
+        "unnamed": "Unnamed"
       }
     },
     "student": {

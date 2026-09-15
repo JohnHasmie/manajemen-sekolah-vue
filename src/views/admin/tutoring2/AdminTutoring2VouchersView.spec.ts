@@ -79,12 +79,21 @@ vi.mock('@/services/tutoring2/vouchers', () => ({
 // Flippable so the `tutoring.voucher.manage` gate on the row controls can
 // be exercised without re-importing the SFC (which would hand the
 // component a different VouchersService instance than the one stubbed
-// above). `hasAbility` is the app-wide gate and reads /me abilities for
-// the ACTIVE role — never `roles[].permission_keys`.
+// above). `useMe().can` reads the `abilities` array from `GET /me`,
+// which is SCOPED BY THE ACTIVE ROLE — never `roles[].permission_keys`,
+// which is unscoped and exists only for the role switcher.
+//
+// (Was a `@/stores/auth` mock of `hasAbility`. The view now reads the
+// composable directly, matching the sibling tutoring2 admin views; the
+// underlying source is the same /me snapshot either way.)
 const abilities = vi.hoisted(() => ({ granted: new Set<string>() }));
 
-vi.mock('@/stores/auth', () => ({
-  useAuthStore: () => ({ hasAbility: (p: string) => abilities.granted.has(p) }),
+vi.mock('@/composables/useMe', () => ({
+  useMe: () => ({
+    can: (p: string) => abilities.granted.has(p),
+    canAny: (list: Iterable<string>) =>
+      [...list].some((p) => abilities.granted.has(p)),
+  }),
 }));
 
 vi.mock('@/composables/useAcademicYearWatcher', () => ({
@@ -177,7 +186,7 @@ async function mountVouchers(items) {
   return w;
 }
 
-/** Column order: Kode, Diskon, Berlaku, Penggunaan, Status, Aksi. */
+/** Column order: Kode, Diskon, Berlaku, Penggunaan, Penerima, Status, Aksi. */
 const USES_CELL = 3;
 /** Tile order: aktif, kadaluarsa, terpakai, sisa kuota. */
 const USED_TILE = 2;
@@ -390,7 +399,11 @@ import { VOUCHER_STATUS } from '@/types/tutoring2/voucher';
  * alone. Asserting only "absent on an active voucher" is satisfied just
  * as well by a screen with no such button anywhere.
  */
-const ACTIONS_CELL = 5;
+// Column order: Kode(0), Diskon(1), Berlaku(2), Terpakai(3),
+// Penerima(4), Status(5), Aksi(6). "Penerima" was appended after
+// "Terpakai" precisely so USES_CELL above kept its index; this one had
+// to move.
+const ACTIONS_CELL = 6;
 
 function actionCell(w, row = 0) {
   return w.findAll('[data-testid="async"] tbody tr')[row].findAll('td')[

@@ -7327,7 +7327,11 @@
         "redemptionsEmptyTitle": "Belum ada penggunaan",
         "redemptionsEmptyDesc": "Log akan muncul saat voucher pertama diredeem.",
         "redemptionsHint": "Endpoint log per-voucher menyusul; sementara ini menampilkan ringkasan per voucher.",
-        "kpiCountedSuffix": "{count} kupon terdata"
+        "kpiCountedSuffix": "{count} kupon terdata",
+        "colRecipients": "Penerima",
+        "recipientsGeneral": "Promo umum",
+        "recipientsPersonal": "Personal · {count} siswa",
+        "recipientsManage": "Kelola penerima voucher"
       },
       "reports": {
         "meta": "{count} baris",
@@ -8004,6 +8008,33 @@
         "errBillingMode": "Pilih mode tagihan terlebih dahulu.",
         "success": "Siswa ditambahkan ke kelompok.",
         "errorGeneric": "Gagal menambahkan siswa. Coba lagi."
+      },
+      "voucherRecipients": {
+        "title": "Penerima voucher",
+        "subtitle": "Kode {code}",
+        "natureGeneral": "Promo umum — siapa pun yang punya kodenya bisa memakainya.",
+        "naturePersonal": "Voucher personal — hanya {count} siswa di bawah ini yang bisa memakainya.",
+        "empty": "Belum ada penerima. Voucher ini masih promo umum.",
+        "loadError": "Gagal memuat penerima voucher. Coba lagi.",
+        "removeLastWarning": "Ini penerima terakhir. Menghapusnya membuat voucher kembali menjadi promo umum — siapa pun yang tahu kodenya bisa memakainya, sebatas kuota penggunaan.",
+        "addTitle": "Tambah penerima",
+        "searchLabel": "Cari siswa",
+        "searchPh": "Nama / NIS / nama wali…",
+        "studentPh": "Pilih siswa",
+        "studentsNone": "Tidak ada siswa yang bisa ditambahkan.",
+        "studentsError": "Gagal memuat daftar siswa. Anda mungkin tidak punya akses ke data siswa.",
+        "studentsTruncated": "Baru {count} siswa pertama yang ditampilkan. Pakai kotak cari untuk menemukan siswa lain.",
+        "firstRecipientWarning": "Voucher ini masih promo umum. Menambahkan penerima pertama membuatnya personal: mulai saat itu hanya siswa di daftar ini yang bisa memakainya, termasuk saat admin menukarkannya untuk keluarga.",
+        "attachSubmit": "Simpan penerima",
+        "attachSuccess": "{count} penerima ditambahkan.",
+        "attachNoop": "Siswa tersebut sudah terdaftar sebagai penerima.",
+        "attachFailed": "Gagal menambahkan penerima. Coba lagi.",
+        "detachSuccess": "Penerima dihapus dari voucher.",
+        "detachNoop": "Siswa tersebut bukan penerima voucher ini.",
+        "detachFailed": "Gagal menghapus penerima. Coba lagi.",
+        "readOnlyNote": "Anda hanya bisa melihat daftar ini. Mengubah penerima butuh hak kelola voucher.",
+        "snapshotAbsent": "Baris di tabel belum membawa jumlah penerima; daftar di panel ini yang berlaku.",
+        "unnamed": "Tanpa nama"
       }
     },
     "tutor": {

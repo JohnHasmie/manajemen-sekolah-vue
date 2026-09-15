@@ -8,10 +8,33 @@
     - FAB → create voucher (ability-gated)
     - Segmented control tabs: "Vouchers" | "Log Penggunaan"
 
-  Ability gates via useAuthStore().hasAbility (no `useAbility` composable
-  exists in this repo — the auth-store getter is the app-wide pattern).
+  Ability gates via `useMe().can(...)` — the `abilities` array from
+  `GET /me`, which is SCOPED BY THE ACTIVE ROLE (`X-Active-Role`). Never
+  `roles[].permission_keys`, which is unscoped and exists only to feed
+  the role switcher. The sibling tutoring2 admin views (GroupDetail,
+  Schedule, PayoutRequests, …) all read the same composable.
   Route-guard `needs: 'tutoring-module' + ability: tutoring.voucher.view`
   is set in the router.
+
+  ── RECIPIENT TARGETING ─────────────────────────────────────────────
+
+  A voucher used to be a code plus a quota and NO OWNER, which is why
+  wali were never shown a voucher list at all. It can now name STUDENTS
+  (not users — redemption is per-student via `enrollment_id`, so aiming
+  at an account would sit coarser than the guard enforcing it).
+
+  Two consequences on this screen:
+
+    · A "Penerima" column, because a general promo and a personal one
+      are handed out differently and an admin who cannot tell them apart
+      gives out the wrong code. Rendered off `is_targeted` /
+      `recipient_count`, both `isset`-gated server-side, so ABSENT is
+      kept distinct from a real 0 — see `@/lib/absent-vs-zero`.
+    · The cell is the control: clicking it opens
+      AdminTutoring2VoucherRecipientsSheet. It lives there rather than in
+      the Aksi cell because the read and the writes authorize DIFFERENT
+      keys — `tutoring.voucher.view` opens the panel, and only
+      `tutoring.voucher.manage` gets the add/remove controls inside it.
 -->
 <script setup lang="ts">
 import { computed, reactive, ref, toRaw, watch } from 'vue';
@@ -27,9 +50,10 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import MoneyInput from '@/components/ui/MoneyInput.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import { useDataRefresh } from '@/composables/useDataRefresh';
+import { useMe } from '@/composables/useMe';
 import { countOrDash, EM_DASH, isCounted } from '@/lib/absent-vs-zero';
 import { toLocalYmd } from '@/lib/local-date';
-import { useAuthStore } from '@/stores/auth';
+import AdminTutoring2VoucherRecipientsSheet from './AdminTutoring2VoucherRecipientsSheet.vue';
 import { VouchersService } from '@/services/tutoring2/vouchers';
 import { VOUCHER_STATUS } from '@/types/tutoring2/voucher';
 import type {
@@ -41,10 +65,30 @@ import type {
 import type { StatusBadgeTone } from '@/types/status-badge';
 
 const { t } = useI18n();
-const auth = useAuthStore();
+const { can } = useMe();
 
-const canManage = computed(() => auth.hasAbility('tutoring.voucher.manage'));
-const canRedeem = computed(() => auth.hasAbility('tutoring.voucher.redeem'));
+/**
+ * One gate per ENDPOINT, not one gate per screen.
+ *
+ * `VoucherController` authorizes four different keys and they are not a
+ * strict/relaxed family:
+ *
+ *   tutoring.voucher.view     → index / show / recipients (the READ of
+ *                               who a promo is aimed at)
+ *   tutoring.voucher.manage   → store / update / archive / attach /
+ *                               detach recipients
+ *   tutoring.voucher.redeem   → redeem
+ *   tutoring.voucher.view_own → the WALI list (`/vouchers/my`) — never
+ *                               this screen, and deliberately not a
+ *                               filtered version of it
+ *
+ * `canViewRecipients` is therefore `.view` and not `.manage`: read-only
+ * staff are entitled to see who holds a promo, they simply cannot change
+ * it. Collapsing the pair would hide a list they are allowed to read.
+ */
+const canManage = computed(() => can('tutoring.voucher.manage'));
+const canRedeem = computed(() => can('tutoring.voucher.redeem'));
+const canViewRecipients = computed(() => can('tutoring.voucher.view'));
 
 // ─── Tabs (Vouchers / Log Penggunaan) ─────────────────────────────
 type TabKey = 'list' | 'redemptions';
@@ -235,6 +279,81 @@ function usesLabel(v: BimbelVoucher): string {
   const used = countOrDash(v.redemption_count);
   const max = v.max_redemptions;
   return max == null ? `${used} / ${UNLIMITED}` : `${used} / ${max}`;
+}
+
+// ─── General vs personal ──────────────────────────────────────────
+//
+// The whole point of recipient targeting: a code shown as an ordinary
+// promo but silently redeemable by only three students would be a
+// control that lies, and so would the reverse.
+
+/**
+ * True when this row is a PERSONAL voucher — someone was explicitly
+ * named on it.
+ *
+ * Branches on the server-DERIVED `is_targeted` and falls back to the
+ * count it is derived from. They cannot disagree (`VoucherResource`
+ * computes the flag from the number in the same `isset` gate), so the
+ * fallback exists only for a payload that carried one and not the other.
+ * `null` means the server said nothing at all — see `recipientsLabel`.
+ */
+function isTargeted(v: BimbelVoucher): boolean | null {
+  if (typeof v.is_targeted === 'boolean') return v.is_targeted;
+  if (isCounted(v.recipient_count)) return v.recipient_count > 0;
+  return null;
+}
+
+/**
+ * ABSENT IS NOT "UMUM" here, and that is the trap this helper exists to
+ * avoid. A voucher whose payload carries no `recipient_count` has NOT
+ * told us it is a general promo — labelling it one would invite an admin
+ * to circulate a code that may in fact be reserved for three families.
+ * An em-dash says "unknown"; only a real, reported 0 says "umum".
+ */
+function recipientsLabel(v: BimbelVoucher): string {
+  const targeted = isTargeted(v);
+  if (targeted === null) return EM_DASH;
+  if (!targeted) return t('tutoring2.admin.vouchers.recipientsGeneral');
+  return t('tutoring2.admin.vouchers.recipientsPersonal', {
+    count: v.recipient_count ?? 0,
+  });
+}
+
+function recipientsTone(v: BimbelVoucher): string {
+  const targeted = isTargeted(v);
+  if (targeted === null) return 'bg-slate-50 text-slate-400';
+  return targeted
+    ? 'bg-brand-cobalt/10 text-brand-cobalt'
+    : 'bg-slate-100 text-slate-600';
+}
+
+// ─── Recipient sheet ──────────────────────────────────────────────
+
+/** The voucher whose recipients are open; `null` = sheet closed. */
+const recipientsTarget = ref<BimbelVoucher | null>(null);
+
+function openRecipients(v: BimbelVoucher) {
+  // Gated on the key `VoucherController::recipients` itself authorizes,
+  // not on `.manage` — a read-only viewer may open this panel.
+  if (!canViewRecipients.value) return;
+  recipientsTarget.value = v;
+}
+
+function closeRecipients() {
+  recipientsTarget.value = null;
+}
+
+/**
+ * An attach or detach just landed, so `recipient_count` / `is_targeted`
+ * on EVERY row of the loaded page is now potentially stale — the sheet
+ * hands back one refreshed voucher, but splicing a single row into
+ * `useDataRefresh`'s state would leave the KPI strip computing over a
+ * mixture of pre- and post-write numbers. Reload the page instead: an
+ * admin write is rare, and a list that cannot be trusted is worse than
+ * one extra request.
+ */
+async function onRecipientsChanged() {
+  await reload();
 }
 
 // ─── Create / Edit sheet ──────────────────────────────────────────
@@ -509,6 +628,10 @@ async function unarchiveVoucher(v: BimbelVoucher) {
                   <th class="px-4 py-3 font-bold">{{ t('tutoring2.admin.vouchers.colDiscount') }}</th>
                   <th class="px-4 py-3 font-bold">{{ t('tutoring2.admin.vouchers.colValidRange') }}</th>
                   <th class="px-4 py-3 font-bold">{{ t('tutoring2.admin.vouchers.colUses') }}</th>
+                  <!-- Inserted AFTER "Terpakai" on purpose: the sibling
+                       spec addresses cells positionally, and appending
+                       here leaves the earlier indices untouched. -->
+                  <th class="px-4 py-3 font-bold">{{ t('tutoring2.admin.vouchers.colRecipients') }}</th>
                   <th class="px-4 py-3 font-bold">{{ t('tutoring2.common.status') }}</th>
                   <th class="px-4 py-3 font-bold text-right">{{ t('tutoring2.admin.vouchers.colActions') }}</th>
                 </tr>
@@ -526,6 +649,33 @@ async function unarchiveVoucher(v: BimbelVoucher) {
                   <td class="px-4 py-3 text-slate-700 font-semibold">{{ discountLabel(v) }}</td>
                   <td class="px-4 py-3 text-slate-600">{{ validRange(v) }}</td>
                   <td class="px-4 py-3 text-slate-600">{{ usesLabel(v) }}</td>
+                  <!--
+                    The cell IS the control. Kept out of the Aksi cell
+                    because opening it needs only `tutoring.voucher.view`
+                    — the same key that let the admin onto this screen —
+                    while everything in that cell needs `.manage`.
+                  -->
+                  <td class="px-4 py-3">
+                    <button
+                      v-if="canViewRecipients"
+                      type="button"
+                      data-testid="recipients-cell-button"
+                      :title="t('tutoring2.admin.vouchers.recipientsManage')"
+                      class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold transition-opacity hover:opacity-80"
+                      :class="recipientsTone(v)"
+                      @click="openRecipients(v)"
+                    >
+                      {{ recipientsLabel(v) }}
+                    </button>
+                    <span
+                      v-else
+                      data-testid="recipients-cell-static"
+                      class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold"
+                      :class="recipientsTone(v)"
+                    >
+                      {{ recipientsLabel(v) }}
+                    </span>
+                  </td>
                   <td class="px-4 py-3">
                     <StatusBadge
                       :label="statusLabel(v)"
@@ -768,9 +918,24 @@ async function unarchiveVoucher(v: BimbelVoucher) {
     </div>
 
     <!--
+      Recipient targeting. Mounted at the ROOT of the view, never inside
+      the create/edit sheet: `FormSheet` IS a `Modal`, so a second one
+      nested in it would stack two `Teleport to="body"` overlays at the
+      same z-index with two ESC handlers. Only one of the two can be
+      open at a time here, so nothing stacks.
+    -->
+    <AdminTutoring2VoucherRecipientsSheet
+      v-if="recipientsTarget"
+      :voucher="recipientsTarget"
+      :can-manage="canManage"
+      @close="closeRecipients"
+      @changed="onRecipientsChanged"
+    />
+
+    <!--
       Hidden ability marker — kept so an accidental teardown of the
-      `useAuthStore` import in a future refactor breaks the template
-      compile rather than silently disabling the redeem gate.
+      `useMe` import in a future refactor breaks the template compile
+      rather than silently disabling the redeem gate.
     -->
     <span v-if="canRedeem" class="sr-only">redeem-enabled</span>
   </div>

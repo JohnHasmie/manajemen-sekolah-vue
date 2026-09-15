@@ -60,6 +60,33 @@ export interface BimbelVoucher {
    * an untouched voucher; use `@/lib/absent-vs-zero`.
    */
   redemption_count?: number;
+  /**
+   * How many students this voucher is PERSONALLY aimed at.
+   *
+   * Emitted only when the caller ran `Voucher::withRecipientCount()` —
+   * `VoucherController`'s index / show / store / update / archive and
+   * both recipient writes all do, so every admin-facing payload carries
+   * it. `myIndex` (the wali list) deliberately does NOT: the number
+   * counts the other families the same promo reached.
+   *
+   * ABSENT IS NOT ZERO here, and the difference is load-bearing rather
+   * than cosmetic: a real `0` means "general promo, anyone with the code
+   * may spend it", while an absent key means the server said nothing.
+   * Rendering the second as the first would label an untargeted voucher
+   * and a silent one identically. Read it through `@/lib/absent-vs-zero`.
+   */
+  recipient_count?: number;
+  /**
+   * Derived server-side from `recipient_count > 0` — never a second
+   * query, so it cannot disagree with the number beside it. It is the
+   * same predicate `Voucher::isTargeted()` enforces on the redeem path,
+   * which is why the screens branch on THIS rather than recomputing:
+   * a row reading "Promo umum" must not describe a voucher the server
+   * will refuse for everyone but three students.
+   *
+   * Absent whenever `recipient_count` is absent (same `isset` gate).
+   */
+  is_targeted?: boolean;
   /** YYYY-MM-DD (backend emits toDateString()). null = no lower bound. */
   valid_from?: string | null;
   /** YYYY-MM-DD. null = no upper bound. */
@@ -113,4 +140,61 @@ export interface BimbelVoucherRedemption {
     value: number;
   } | null;
   created_at?: string;
+}
+
+
+/**
+ * One named recipient of a personal voucher — a row of
+ * `GET /tutoring-v2/vouchers/{id}/recipients`
+ * (`VoucherRecipientResource`).
+ *
+ * A RECIPIENT IS A STUDENT, NOT A USER OR A WALI. That is a deliberate
+ * backend decision, not an implementation detail the client may round
+ * off: redemption is already per-student via `enrollment_id`, so aiming
+ * a voucher at a user account would sit COARSER than the guard enforcing
+ * it — a wali with two children could then discount the wrong child's
+ * bill. Every picker on this surface therefore chooses students.
+ *
+ * `student_name` / `student_number` are denormalised labels the backend
+ * eager-loads, so the admin screen never resolves uuids itself. Both are
+ * `whenLoaded`-gated server-side, hence optional here.
+ */
+export interface BimbelVoucherRecipient {
+  id: string;
+  voucher_id: string;
+  student_id: string;
+  student_name?: string | null;
+  student_number?: string | null;
+  created_at?: string;
+}
+
+/**
+ * Body of `POST /tutoring-v2/vouchers/{id}/recipients`, matching
+ * `AttachVoucherRecipientsRequest` exactly:
+ *
+ *   student_ids    required | array | min:1 | max:500
+ *   student_ids.*  required | uuid  | distinct
+ *
+ * `required` + `min:1` means AN EMPTY ARRAY IS A 422, not a way to clear
+ * the list — detaching is its own verb. Callers must refuse to submit an
+ * empty selection rather than sending one and reading the rejection.
+ */
+export interface VoucherAttachRecipientsPayload {
+  student_ids: string[];
+}
+
+/**
+ * What both recipient WRITES hand back: the refreshed voucher row (so a
+ * caller can splice it straight into its table with the new
+ * `recipient_count` / `is_targeted` already on it) plus the count of
+ * rows the operation actually changed, which arrives under `meta`.
+ *
+ * Both writes are IDEMPOTENT server-side, so the count can legitimately
+ * be 0 — re-attaching an existing recipient, or detaching someone who
+ * was never one. That is a success, not a failure.
+ */
+export interface VoucherRecipientMutationResult {
+  voucher: BimbelVoucher;
+  /** `meta.attached_count` on attach, `meta.detached_count` on detach. */
+  changedCount: number;
 }
