@@ -105,6 +105,65 @@ export const MaterialsService = {
     return r.data.data;
   },
 
+  /**
+   * "Kirim ke wali" — `POST /tutoring-v2/materials/{id}/publish`.
+   *
+   * ── Why this exists ──
+   *
+   * `CreateMaterialAction` never sets `published_at`, so a material is
+   * born a DRAFT, and `MaterialController@index` hides drafts from any
+   * caller without `tutoring.material.manage`:
+   *
+   *     ->when(! $canManage, fn ($b) => $b->whereNotNull('published_at'))
+   *
+   * The draft default is deliberate — a tutor's own lesson prep should
+   * not appear in a parent's app the moment it is uploaded. But until
+   * these two routes shipped there was no way to lift it, so the
+   * practical outcome was that no wali and no siswa could see a single
+   * teaching material, ever.
+   *
+   * ── Why a verb and not a flag on update() ──
+   *
+   * `published_at` is absent from `UpdateMaterialRequest::rules()`, and
+   * `UpdateMaterialAction` applies its own allowlist over the same seven
+   * names. Sending it through `update()` answers 200 and changes
+   * nothing. Both layers would have to change; neither did.
+   *
+   * ── The response IS renderable ──
+   *
+   * Unlike `update()`, whose response drops the eager loads, the
+   * controller re-`load()`s `learningGroup`, `program` and `uploadedBy`
+   * before wrapping, so `learning_group_name` and its siblings are
+   * present here. Callers may still prefer a `show()` re-read when a
+   * fresh signed `file_url` matters.
+   *
+   * Authorizes `tutoring.material.manage`. Idempotent — sending an
+   * already-sent material is a no-op, not a 422.
+   */
+  async publish(id: string): Promise<Material> {
+    const r = await api.post<OneEnvelope<Material>>(
+      `/tutoring-v2/materials/${id}/publish`,
+      {},
+    );
+    return r.data.data;
+  },
+
+  /**
+   * "Tarik dari wali" — `POST /tutoring-v2/materials/{id}/unpublish`.
+   *
+   * Clears `published_at`, so the material drops out of the wali and
+   * siswa index again and goes back to being visible only to callers
+   * holding `tutoring.material.manage`. Same authorization, and
+   * idempotent in this direction too.
+   */
+  async unpublish(id: string): Promise<Material> {
+    const r = await api.post<OneEnvelope<Material>>(
+      `/tutoring-v2/materials/${id}/unpublish`,
+      {},
+    );
+    return r.data.data;
+  },
+
   async destroy(id: string): Promise<void> {
     await api.delete(`/tutoring-v2/materials/${id}`);
   },

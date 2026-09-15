@@ -16,6 +16,11 @@
   `t()` now, and the file action's label follows whether the row is an
   uploaded file or a pasted link, because "Unduh" on a link is a control
   that describes something it cannot do.
+
+  Tutor rows also carry a "Terkirim ke wali" / "Belum dikirim" pill.
+  Materials are created as drafts and stay invisible to wali and siswa
+  until sent, so without it a tutor scanning the list cannot tell which
+  of their materials anyone else can actually open.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
@@ -90,6 +95,22 @@ const isLink = computed(() => materialIsExternalLink(props.material));
 const sourceActionLabel = computed(() =>
   isLink.value ? t('tutoring2.common.open') : t('tutoring2.common.download'),
 );
+
+/**
+ * Sudah dikirim ke wali, atau masih milik tutor sendiri?
+ *
+ * Read from the server's `is_published` boolean, NOT re-derived as
+ * `Boolean(published_at)`: the server owns what "sent" means, and a row
+ * that quietly disagrees with it would tell a tutor the wrong thing
+ * about who can read their material.
+ *
+ * Shown to the TUTOR only. A student or parent reaching this row is
+ * seeing a material precisely because it was already sent — the index
+ * filters unsent rows out for them — so the badge would be a constant
+ * "Terkirim" on every row, which is noise rather than information.
+ */
+const isSharedWithGuardians = computed(() => props.material.is_published === true);
+const showShareState = computed(() => props.role === 'tutor');
 </script>
 
 <template>
@@ -112,6 +133,22 @@ const sourceActionLabel = computed(() =>
         <span v-if="material.program_name && sizeLabel"> · </span>
         <span v-if="sizeLabel">{{ sizeLabel }}</span>
         <span v-if="!material.program_name && !sizeLabel">{{ kindLabel.toLowerCase() }}</span>
+      </p>
+      <!-- Which materials can wali actually open? Answerable from the
+           list, without opening each one. An unsent material is private
+           to this tutor, and that is worth saying on the row rather than
+           leaving it to be discovered on the detail screen. -->
+      <p
+        v-if="showShareState"
+        data-testid="material-share-state"
+        class="mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-3xs font-bold"
+        :class="isSharedWithGuardians
+          ? 'bg-emerald-50 text-emerald-700'
+          : 'bg-amber-50 text-amber-700'"
+      >
+        {{ isSharedWithGuardians
+          ? t('tutoring2.tutor.materials.sharedBadge')
+          : t('tutoring2.tutor.materials.notSharedBadge') }}
       </p>
     </button>
 

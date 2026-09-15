@@ -29,8 +29,23 @@ export interface Material {
   kind: MaterialKind | string;
   uploaded_by_user_id: string | null;
   uploaded_by_name?: string | null;
-  /** Null while draft — students only see published materials. */
+  /**
+   * When the material was sent to the families. Null while it is still
+   * a draft. Useful for rendering "Dikirim <tanggal>" — but NOT for
+   * deciding the state: read `is_published` for that.
+   */
   published_at: string | null;
+  /**
+   * Whether wali and siswa can see this material.
+   *
+   * The state, spelled by the server, and the only thing a client should
+   * branch on. Deriving it from `Boolean(published_at)` re-implements a
+   * server decision in every screen and drifts the moment the backend
+   * changes what "sent" means; `MaterialResource` added this field
+   * alongside the timestamp for exactly that reason, mirroring
+   * `GroupAnnouncement`.
+   */
+  is_published: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -75,8 +90,14 @@ export interface MaterialUploadResult {
  * NOT writable at all, however readable they look on a GET:
  * `learning_group_id`, `program_id`, `uploaded_by_user_id`,
  * `published_at`, and the timestamps. A material cannot be moved between
- * groups or programmes after creation, and nothing on any endpoint
- * writes `published_at`.
+ * groups or programmes after creation.
+ *
+ * `published_at` is not writable THROUGH THIS PAYLOAD, which is not the
+ * same as not writable at all — it used to be, and the note here said
+ * so. `POST /materials/{id}/publish` and `/unpublish` own that column
+ * now (see `MaterialsService.publish`). Sending `published_at` in an
+ * update still does nothing, silently, so the two verbs are the only
+ * way.
  *
  * The four `file_*` keys ARE accepted, and the edit form deliberately
  * does not send them — see the note on `MaterialsService.update()`.

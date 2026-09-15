@@ -79,6 +79,7 @@ function makeMaterial(o = {}) {
     uploaded_by_user_id: 'u-9',
     uploaded_by_name: 'Bu Sinta',
     published_at: null,
+    is_published: false,
     created_at: '2026-08-20T09:00:00+07:00',
     updated_at: '2026-08-20T09:00:00+07:00',
     ...o,
@@ -140,9 +141,15 @@ const messages = {
           noSource: 'Materi ini belum punya berkas maupun tautan.',
           uploadedBy: 'Diunggah oleh',
           createdAt: 'Dibuat',
-          published: 'Terbit',
-          draft: 'Draf',
-          draftHint: 'Materi ini masih draf.',
+          shared: 'Terkirim ke wali',
+          notShared: 'Belum dikirim',
+          draftHint: 'Materi ini belum dikirim — hanya Anda yang bisa melihatnya.',
+          sharedHint: 'Wali dan siswa bisa membukanya.',
+          sendToGuardian: 'Kirim ke wali',
+          withdrawFromGuardian: 'Tarik dari wali',
+          sentAt: 'Dikirim',
+          sendSuccess: 'Materi dikirim ke wali.',
+          withdrawSuccess: 'Materi ditarik dari wali.',
         },
       },
     },
@@ -236,10 +243,13 @@ describe('TutorTutoring2MaterialDetailView — loading one material', () => {
     );
   });
 
-  it('shows an unpublished material as a draft, with the reason', async () => {
+  it('shows an unsent material as private to the tutor, with the reason', async () => {
     const w = await mountView();
-    expect(w.get('[data-testid="material-publication"]').text()).toBe('Draf');
+    // The badge answers "who can open this", which is the tutor's
+    // actual question — "Draf" named a lifecycle bucket instead.
+    expect(w.get('[data-testid="material-publication"]').text()).toBe('Belum dikirim');
     expect(w.find('[data-testid="material-draft-notice"]').exists()).toBe(true);
+    expect(w.get('[data-testid="material-draft-notice"]').text()).toContain('hanya Anda');
   });
 
   it('renders the ERROR branch for an out-of-scope or deleted id, not a blank screen', async () => {

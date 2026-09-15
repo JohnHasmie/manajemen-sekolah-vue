@@ -19,6 +19,21 @@
   title has a typo. The product owner asked for the detail FIRST; the
   file is one press further in, where it can be labelled honestly.
 
+  ── "Kirim ke wali" ──
+
+  Materials are created as DRAFTS — `CreateMaterialAction` does not set
+  `published_at` — and `MaterialController@index` hides drafts from
+  anyone without `tutoring.material.manage`. That default is on purpose:
+  a tutor's own lesson prep should not land in a parent's app the moment
+  it is uploaded.
+
+  What was missing was the other half. With no publish route and no
+  control, the draft default was permanent, so no wali and no siswa had
+  ever seen a single teaching material. This screen now carries the
+  send/withdraw pair, and — just as importantly — says in words which of
+  the two states a material is in, because a tutor relying on the
+  privacy of an unsent material has to be able to see that it is unsent.
+
   ── Opening the thing, honestly ──
 
   A LINK and an uploaded FILE are indistinguishable by `file_url`:
@@ -101,12 +116,23 @@ const sizeLabel = computed<string | null>(() => {
 });
 
 /**
- * `published_at` is surfaced because it decides whether this material
- * exists for anyone but its author: `MaterialController@index` and
- * `@show` hide unpublished rows from students and parents. Read-only —
- * the API has no writer for the column on any endpoint.
+ * Has this material been sent to the families?
+ *
+ * Read from the `is_published` BOOLEAN the resource sends, never
+ * re-derived as `Boolean(published_at)`. The two can disagree — the
+ * server owns what "sent" means, and a client that recomputes it from a
+ * nullable timestamp is one backend change away from showing a tutor
+ * the wrong answer about who can see their material. That is not a
+ * cosmetic drift: it is the difference between "only I can see this"
+ * and "every parent in the group can".
+ *
+ * The state matters because it decides whether this material exists for
+ * anyone but its author. `MaterialController@index` filters
+ * `->when(! $canManage, …whereNotNull('published_at'))` and `@show`
+ * refuses an unsent row to anyone without `tutoring.material.manage`,
+ * so an unsent material is genuinely private to the tutor.
  */
-const isPublished = computed(() => Boolean(material.value?.published_at));
+const isPublished = computed(() => material.value?.is_published === true);
 
 function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -198,11 +224,15 @@ async function downloadFile() {
 /**
  * ── Who may change a material ──
  *
- * `MaterialController@update` and `@destroy` both open with
- * `authorize('tutoring.material.manage')`, and that key is read off the
- * /me snapshot through `useMe().can`, which the backend scopes to the
- * ACTIVE ROLE via `X-Active-Role` — never `roles[].permission_keys`,
- * which is unscoped and exists only for the role switcher.
+ * `MaterialController@update`, `@destroy`, `@publish` and `@unpublish`
+ * all open with `authorize('tutoring.material.manage')`, and that key is
+ * read off the /me snapshot through `useMe().can`, which the backend
+ * scopes to the ACTIVE ROLE via `X-Active-Role` — never
+ * `roles[].permission_keys`, which is unscoped and exists only for the
+ * role switcher.
+ *
+ * The same key therefore gates BOTH the edit affordance and "Kirim ke
+ * wali" below.
  *
  * Hidden rather than disabled-with-a-reason, which is the opposite of
  * what the session detail does two files over, and the difference is
@@ -219,6 +249,57 @@ async function downloadFile() {
  * surfaces that message as-is rather than guessing at it.
  */
 const canManageMaterial = computed(() => can('tutoring.material.manage'));
+
+/**
+ * ── "Kirim ke wali" ──
+ *
+ * The control this screen shipped without, and the reason no wali or
+ * siswa had ever seen a teaching material: materials are created as
+ * drafts on purpose (lesson prep is not for parents), and until
+ * `POST /materials/{id}/publish` existed nothing could lift that.
+ *
+ * Deliberately NOT behind a confirm dialog. The action is reversible in
+ * one press — "Tarik dari wali" clears the column again — and a
+ * confirmation on every send would tax the common, correct action to
+ * guard against a mistake that costs one more press to undo.
+ *
+ * Both directions re-read through `reload()` rather than splicing the
+ * response in. The response is renderable (the controller re-`load()`s
+ * the three relations, unlike `update`), but `file_url` is re-signed per
+ * read and the badge must never be able to disagree with the server
+ * about who can see this material.
+ */
+const sharing = ref(false);
+
+async function setSharedWithGuardians(next: boolean) {
+  const m = material.value;
+  if (!m || sharing.value || !canManageMaterial.value) return;
+
+  sharing.value = true;
+  try {
+    if (next) {
+      await MaterialsService.publish(m.id);
+    } else {
+      await MaterialsService.unpublish(m.id);
+    }
+    toast.success(
+      t(
+        next
+          ? 'tutoring2.tutor.materialDetail.sendSuccess'
+          : 'tutoring2.tutor.materialDetail.withdrawSuccess',
+      ),
+    );
+    await reload();
+  } catch (e) {
+    // `writableMaterialOrFail` re-applies the read scope before
+    // findOrFail, so a material outside this tutor's groups and
+    // programmes answers 404, never 403. The server's message beats a
+    // guess, and nothing on screen claims the send landed.
+    toast.error((e as Error).message || t('tutoring2.common.saveFailed'));
+  } finally {
+    sharing.value = false;
+  }
+}
 
 const editOpen = ref(false);
 const saving = ref(false);
@@ -369,13 +450,21 @@ const ACTION_SECONDARY = `${ACTION_BASE} border border-slate-300 text-slate-700 
                   class="mt-1 text-base font-bold text-slate-900 break-words"
                 >{{ material.title }}</h2>
               </div>
+              <!-- The label names the AUDIENCE, not a publishing
+                   state. "Terbit"/"Draf" told a tutor which lifecycle
+                   bucket a row sat in; what they actually need to know
+                   is whether a parent can open it.
+
+                   `uppercase` is dropped with the rename: it suited a
+                   one-word status, but "TERKIRIM KE WALI" set in
+                   text-3xs tracking-wider is markedly harder to read
+                   than the sentence-case phrase. -->
               <StatusBadge
                 data-testid="material-publication"
                 :label="isPublished
-                  ? t('tutoring2.tutor.materialDetail.published')
-                  : t('tutoring2.tutor.materialDetail.draft')"
+                  ? t('tutoring2.tutor.materialDetail.shared')
+                  : t('tutoring2.tutor.materialDetail.notShared')"
                 :tone="isPublished ? 'success' : 'neutral'"
-                uppercase
               />
             </div>
 
@@ -441,12 +530,48 @@ const ACTION_SECONDARY = `${ACTION_BASE} border border-slate-300 text-slate-700 
                 </dt>
                 <dd class="flex-1 text-slate-900">{{ formatDateTime(material.created_at) }}</dd>
               </div>
+
+              <!-- Only once it has actually been sent. `published_at` is
+                   the instant, which is precisely what the resource
+                   keeps it around for — `is_published` above decides
+                   WHETHER, this says WHEN. -->
+              <div v-if="isPublished" class="flex items-start gap-3 py-2">
+                <dt class="w-28 shrink-0 text-2xs font-bold uppercase tracking-wide text-slate-400">
+                  {{ t('tutoring2.tutor.materialDetail.sentAt') }}
+                </dt>
+                <dd data-testid="material-sent-at" class="flex-1 text-slate-900">
+                  {{ formatDateTime(material.published_at) }}
+                </dd>
+              </div>
             </dl>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
             <!-- Hidden, not disabled, for a tutor whose centre revoked
                  `tutoring.material.manage` — see `canManageMaterial`. -->
+            <!-- "Kirim ke wali" leads the row: it is the action that
+                 decides whether this material exists for anyone but its
+                 author, and it outranks editing a title. Only the
+                 direction that is actually available is rendered —
+                 offering both would leave a tutor guessing which one
+                 they are currently in. -->
+            <button
+              v-if="canManageMaterial && !isPublished"
+              type="button"
+              data-testid="material-send-to-guardian"
+              :class="ACTION_PRIMARY"
+              :disabled="sharing"
+              @click="setSharedWithGuardians(true)"
+            >{{ t('tutoring2.tutor.materialDetail.sendToGuardian') }}</button>
+            <button
+              v-if="canManageMaterial && isPublished"
+              type="button"
+              data-testid="material-withdraw-from-guardian"
+              :class="ACTION_SECONDARY"
+              :disabled="sharing"
+              @click="setSharedWithGuardians(false)"
+            >{{ t('tutoring2.tutor.materialDetail.withdrawFromGuardian') }}</button>
+
             <Button
               v-if="canManageMaterial"
               variant="secondary"
@@ -491,6 +616,11 @@ const ACTION_SECONDARY = `${ACTION_BASE} border border-slate-300 text-slate-700 
             >{{ t('tutoring2.tutor.materialDetail.noSource') }}</p>
           </div>
 
+          <!-- Both states get a sentence, because "nothing is shown"
+               is not a state a tutor can read. The draft notice is the
+               important one: the privacy it describes is the entire
+               reason materials are created unsent, and a tutor who does
+               not know their prep is private cannot rely on it. -->
           <div
             v-if="!isPublished"
             data-testid="material-draft-notice"
@@ -498,6 +628,14 @@ const ACTION_SECONDARY = `${ACTION_BASE} border border-slate-300 text-slate-700 
           >
             <span aria-hidden="true">&#9432;</span>
             <p>{{ t('tutoring2.tutor.materialDetail.draftHint') }}</p>
+          </div>
+          <div
+            v-else
+            data-testid="material-shared-notice"
+            class="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs text-emerald-800"
+          >
+            <span aria-hidden="true">&#9432;</span>
+            <p>{{ t('tutoring2.tutor.materialDetail.sharedHint') }}</p>
           </div>
         </template>
       </template>

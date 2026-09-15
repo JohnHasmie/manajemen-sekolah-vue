@@ -6625,7 +6625,9 @@
         "title": "Materials",
         "emptyTitle": "No materials yet",
         "meta": "{count} materials",
-        "emptyDescription": "Upload your first material with the button at the bottom right."
+        "emptyDescription": "Upload your first material with the button at the bottom right.",
+        "sharedBadge": "Shared with guardians",
+        "notSharedBadge": "Not sent yet"
       },
       "students": {
         "kpiTrial": "Trial",
@@ -6970,13 +6972,19 @@
         "noSource": "This material has no file and no link yet.",
         "uploadedBy": "Uploaded by",
         "createdAt": "Created",
-        "published": "Published",
-        "draft": "Draft",
-        "draftHint": "This material is still a draft, so students and parents cannot see it yet.",
+        "draftHint": "This material has not been sent, so only you can see it — guardians and students cannot. Press \"Send to guardians\" once it is ready to share.",
         "editTitle": "Edit material",
         "saved": "Material changes saved.",
         "editReadOnlyNote": "The file, group and programme cannot be changed here. Upload a new material if the file changes.",
-        "downloadBlocked": "Your browser blocked the new tab, so the file did not open. Allow pop-ups for this site, or use \"Open file\"."
+        "downloadBlocked": "Your browser blocked the new tab, so the file did not open. Allow pop-ups for this site, or use \"Open file\".",
+        "shared": "Shared with guardians",
+        "notShared": "Not sent yet",
+        "sendToGuardian": "Send to guardians",
+        "withdrawFromGuardian": "Withdraw from guardians",
+        "sentAt": "Sent",
+        "sharedHint": "This material has been sent, so guardians and students in the related group can open it. Press \"Withdraw from guardians\" to hide it again.",
+        "sendSuccess": "Material sent to guardians.",
+        "withdrawSuccess": "Material withdrawn from guardians. Guardians and students can no longer open it."
       }
     },
     "bills": {
