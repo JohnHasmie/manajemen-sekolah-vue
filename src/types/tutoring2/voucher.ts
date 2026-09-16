@@ -54,10 +54,16 @@ export interface BimbelVoucher {
   /** null = unlimited redemptions. */
   max_redemptions?: number | null;
   /**
-   * Only populated when the backend eager-loaded the redemptions
-   * relation — which `VoucherController::index` does NOT, so every row
-   * on the vouchers list arrives without this key. `?? 0` would report
-   * an untouched voucher; use `@/lib/absent-vs-zero`.
+   * How many times the voucher has been redeemed. Emitted only when the
+   * caller ran `Voucher::withRedemptionCount()` — `VoucherController`'s
+   * admin paths (index / show / store / update / archive) all do.
+   *
+   * `myIndex` — the WALI list, `GET /vouchers/my` — does NOT, so every
+   * row on a parent's own voucher list arrives without this key. That is
+   * the normal state of the field on that screen, not a degraded one.
+   *
+   * `?? 0` would report an untouched voucher when it may be nearly
+   * spent; use `@/lib/absent-vs-zero`.
    */
   redemption_count?: number;
   /**
@@ -104,6 +110,27 @@ export interface VoucherListParams {
   /** BE controller reads `code` (case-insensitive contains). We expose it as `search` too so callers can be idiomatic. */
   code?: string;
   search?: string;
+}
+
+/**
+ * Query for the WALI list, `GET /tutoring-v2/vouchers/my`.
+ *
+ * DELIBERATELY NARROWER THAN `VoucherListParams`, and the omissions are
+ * the point rather than an oversight. `VoucherController::myIndex` reads
+ * `per_page` and nothing else: it has no `status` branch (it pins
+ * `active` itself, because a wali cannot spend an archived code) and no
+ * `code` search. Re-using the admin params type here would let a call
+ * site pass filters the server silently ignores — a control that lies —
+ * and would invite someone to "add the missing filter" to a query whose
+ * whole safety property is that the caller cannot steer it.
+ *
+ * Scope comes from the RECIPIENT GRANT and the caller's own children,
+ * resolved server-side. There is no student_id to send and none to
+ * forge.
+ */
+export interface VoucherMineListParams {
+  page?: number;
+  per_page?: number;
 }
 
 export interface VoucherCreatePayload {

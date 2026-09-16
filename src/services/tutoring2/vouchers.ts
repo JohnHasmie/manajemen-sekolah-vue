@@ -18,6 +18,7 @@ import type {
   VoucherAttachRecipientsPayload,
   VoucherCreatePayload,
   VoucherListParams,
+  VoucherMineListParams,
   VoucherRecipientMutationResult,
   VoucherRedeemPayload,
   VoucherUpdatePayload,
@@ -63,6 +64,52 @@ export const VouchersService = {
     const r = await api.get<ListEnvelope<BimbelVoucher>>(
       '/tutoring-v2/vouchers',
       { params: buildListParams(params) },
+    );
+    return { items: r.data.data, pagination: r.data.meta };
+  },
+
+  /**
+   * "Voucher saya" — the WALI list, `GET /tutoring-v2/vouchers/my`
+   * (`VoucherController::myIndex`), gated on `tutoring.voucher.view_own`.
+   *
+   * NOT A FILTERED `list()`. The two methods answer different questions
+   * and are not a strict/relaxed pair:
+   *
+   *   list()     → `tutoring.voucher.view`, the TENANT-WIDE set, every
+   *                code in the lembaga, general promos included. Admin
+   *                tier. A wali calling it gets 403 — and if they ever
+   *                did not, it would hand every parent every promo code.
+   *   listMine() → `tutoring.voucher.view_own`. The query STARTS from
+   *                `bimbel_voucher_recipients` rows naming a student the
+   *                caller owns, so an untargeted promo has no row to
+   *                match and cannot appear here at all, and neither can
+   *                another family's personal voucher.
+   *
+   * Scope is therefore structural, not a filter this client applies or
+   * could relax. There is no student_id parameter to send — the server
+   * resolves the caller's children itself (both `students.user_id` and
+   * `students.guardian_email`) — and callers must NOT re-filter the
+   * result client-side as though it were the tenant list narrowed down.
+   *
+   * The rows carry NEITHER `redemption_count` NOR `recipient_count`:
+   * `myIndex` loads neither aggregate, and `VoucherResource` omits an
+   * absent key rather than emitting null. The second omission is
+   * deliberate — it counts the other families the same promo reached.
+   * Read both through `@/lib/absent-vs-zero`; `?? 0` here would tell a
+   * wali a code was untouched when it may be nearly spent.
+   *
+   * Only `active` vouchers come back (archived ones cannot be redeemed,
+   * so listing them would offer a code that cannot be spent). Expiry and
+   * quota are NOT applied server-side, so the calendar window still has
+   * to be read from `valid_from` / `valid_until` by the caller.
+   */
+  async listMine(params: VoucherMineListParams = {}) {
+    const query: Record<string, unknown> = {};
+    if (params.page != null) query.page = params.page;
+    if (params.per_page != null) query.per_page = params.per_page;
+    const r = await api.get<ListEnvelope<BimbelVoucher>>(
+      '/tutoring-v2/vouchers/my',
+      { params: query },
     );
     return { items: r.data.data, pagination: r.data.meta };
   },

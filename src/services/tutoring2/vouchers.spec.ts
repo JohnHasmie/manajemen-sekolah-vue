@@ -55,6 +55,65 @@ describe('VouchersService', () => {
     expect(res.pagination?.total).toBe(1);
   });
 
+  /**
+   * `listMine()` is the WALI list and hits a DIFFERENT path to `list()`.
+   *
+   * The path is the assertion. `/tutoring-v2/vouchers` authorizes
+   * `tutoring.voucher.view` and returns every code in the lembaga;
+   * `/tutoring-v2/vouchers/my` authorizes `tutoring.voucher.view_own`
+   * and starts from the recipient grant. Pointing this method at the
+   * first one would be a leak that no shape assertion would catch — the
+   * envelope is identical.
+   */
+  it('listMine() reads /vouchers/my, not the tenant-wide list', async () => {
+    (api.get as any).mockResolvedValueOnce({
+      data: {
+        data: [
+          {
+            id: 'v9',
+            school_id: 's1',
+            code: 'PRIBADI25',
+            kind: 'percent',
+            value: 25,
+            status: 'active',
+          },
+        ],
+        meta: { current_page: 1, last_page: 1, per_page: 100, total: 1 },
+      },
+    });
+
+    const res = await VouchersService.listMine({ per_page: 100 });
+
+    expect(api.get).toHaveBeenCalledWith('/tutoring-v2/vouchers/my', {
+      params: { per_page: 100 },
+    });
+    expect(api.get).not.toHaveBeenCalledWith(
+      '/tutoring-v2/vouchers',
+      expect.anything(),
+    );
+    expect(res.items[0].code).toBe('PRIBADI25');
+    expect(res.pagination?.total).toBe(1);
+  });
+
+  /**
+   * `myIndex` reads `per_page` and nothing else — it pins `status` to
+   * `active` itself and has no `code` search. Forwarding a filter the
+   * server ignores would be a control that lies, so the method sends
+   * only what the endpoint reads.
+   */
+  it('listMine() sends no params when given none', async () => {
+    (api.get as any).mockResolvedValueOnce({ data: { data: [] } });
+
+    const res = await VouchersService.listMine();
+
+    expect(api.get).toHaveBeenCalledWith('/tutoring-v2/vouchers/my', {
+      params: {},
+    });
+    // An empty list is a real answer — "you have no vouchers" — not a
+    // failure to load.
+    expect(res.items).toEqual([]);
+  });
+
   it('create() POSTs the payload as-is + returns the unwrapped voucher', async () => {
     (api.post as any).mockResolvedValueOnce({
       data: {

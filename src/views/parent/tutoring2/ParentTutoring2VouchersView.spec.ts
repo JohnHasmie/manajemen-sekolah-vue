@@ -1,11 +1,13 @@
 /**
  * ParentTutoring2VouchersView — voucher usage must not be invented.
  *
- * The wali wallet read `redemption_count ?? 0` in three places, and
- * `VoucherResource` emits that field through `whenLoaded('redemptions')`
- * while NO controller in the Tutoring module eager-loads the relation.
- * The key is therefore absent from every voucher on every response —
- * list and show alike — so:
+ * The wali wallet read `redemption_count ?? 0` in three places, and the
+ * key never reaches this screen: `VoucherController::myIndex` — the
+ * `/vouchers/my` list this view now reads — deliberately does not load
+ * the aggregate, so `VoucherResource` omits it rather than sending null.
+ * (The admin paths DO send it, via `withRedemptionCount()`; that is a
+ * different payload, and the gap between the two is the reason this
+ * suite exists.) With the key absent:
  *
  *   • the "Terpakai" KPI read 0 for every wallet;
  *   • every card read "Terpakai 0 dari 50", telling a parent a code was
@@ -27,7 +29,7 @@ import { VouchersService } from '@/services/tutoring2/vouchers';
 import { TutoringBimbelService } from '@/services/tutoring-bimbel.service';
 
 vi.mock('@/services/tutoring2/vouchers', () => ({
-  VouchersService: { list: vi.fn(), redeem: vi.fn() },
+  VouchersService: { list: vi.fn(), listMine: vi.fn(), redeem: vi.fn() },
 }));
 
 vi.mock('@/services/tutoring-bimbel.service', () => ({
@@ -105,7 +107,10 @@ function makeI18n() {
 
 async function mountView(vouchers) {
   setActivePinia(createPinia());
-  (VouchersService.list as any).mockResolvedValue({ items: vouchers });
+  // `listMine` — the wali list, `GET /vouchers/my`. See
+  // ParentTutoring2VouchersView.mine.spec.ts for why the screen must
+  // never call the tenant-wide `list`.
+  (VouchersService.listMine as any).mockResolvedValue({ items: vouchers });
   (TutoringBimbelService.listEnrollments as any).mockResolvedValue({ items: [] });
   (TutoringBimbelService.listBills as any).mockResolvedValue({ items: [] });
 

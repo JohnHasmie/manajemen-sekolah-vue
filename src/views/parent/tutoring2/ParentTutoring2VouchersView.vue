@@ -5,7 +5,7 @@
 
   Route: /parent/tutoring2/vouchers/:studentId
   Endpoints:
-    GET  /tutoring-v2/vouchers                 — the tenant's vouchers
+    GET  /tutoring-v2/vouchers/my              — the wali's OWN vouchers
     GET  /tutoring-v2/enrollments?student_id=… — redemption target
     GET  /tutoring-v2/bills?student_id=…       — redemption target
     POST /tutoring-v2/vouchers/{id}/redeem     — apply to a bill
@@ -31,29 +31,37 @@
      this view is child-scoped: `:studentId` selects whose enrollments
      and unpaid bills fill the redeem sheet.
 
-  ⚠️ V2 ABILITY GAP (verified against PermissionCatalog::
-     parentTutoringDefaults() + VoucherController):
+  4. THE LIST IS THE WALI'S OWN, AND THAT IS THE WHOLE SECURITY MODEL
+     HERE (verified against PermissionCatalog::parentTutoringDefaults(),
+     VoucherController and routes/api.php, not assumed):
 
-     - GET  /tutoring-v2/vouchers        gates on `tutoring.voucher.view`
-     - POST /tutoring-v2/vouchers/{id}/redeem gates on
-                                         `tutoring.voucher.redeem`
+     - GET  /tutoring-v2/vouchers      → `tutoring.voucher.view`
+     - GET  /tutoring-v2/vouchers/my   → `tutoring.voucher.view_own`
+     - POST /tutoring-v2/vouchers/{id}/redeem
+                                       → `tutoring.voucher.redeem`
 
-     The wali default set holds `.redeem` but NOT `.view` — so a parent
-     can redeem a voucher they cannot list. The legacy v1
-     TutoringVoucherController had no `authorize()` call at all, which is
-     why the old screen rendered for a parent.
+     This screen previously read the FIRST of those. That was the only
+     wali-visible voucher list the backend had, and it is the TENANT-WIDE
+     one, so the wali default set withheld `.view` and the screen could
+     do nothing but explain its own absence. The header here used to end:
+     "a parent can redeem a voucher they cannot list." That is no longer
+     true for a TARGETED voucher, and the reason is worth keeping rather
+     than deleting.
 
-     We do not paper over this: when `.view` is missing the list is not
-     requested (a guaranteed 403) and the view explains why.
+     The refusal was never about parents. It was that a voucher had NO
+     OWNER — a code and a quota — so there was no property to narrow a
+     list by, and any list at all was the tenant list. Recipient rows
+     (`bimbel_voucher_recipients`) supply the missing owner, so the
+     narrow question is now answerable. `myIndex` starts FROM the
+     recipient grant, intersected with the caller's own children: a
+     general promo has no recipient row and so cannot appear here at all,
+     and neither can another family's personal voucher.
 
-     Backend fix — note that HALF of this ask has been refused upstream.
-     PermissionCatalog now documents the omission as DELIBERATE: vouchers
-     carry no per-student targeting, so granting a flat
-     `tutoring.voucher.view` would hand every parent every promo code.
-     Do not re-propose it. The still-open option is a scoped `_view_own`
-     twin returning only vouchers valid for the caller's children, which
-     that reasoning does not foreclose.
-     See `docs/CLEAN-2-V2-GAPS.md` §G5.
+     `.view` is STILL withheld and still means the tenant-wide list. Do
+     not "widen" this screen back to it, and do not treat `.view_own` as
+     a filtered `.view` — they answer different questions. Gate on
+     `.view_own`; a general promo is still something a wali learns by
+     being told the code, and redeeming it is still `.redeem`.
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -96,8 +104,16 @@ const auth = useAuthStore();
 const studentId = computed(() => String(route.params.studentId ?? ''));
 
 // Gated on `/me` abilities (X-Active-Role-scoped), never on
-// roles[].permission_keys.
-const canViewVouchers = computed(() => auth.hasAbility('tutoring.voucher.view'));
+// roles[].permission_keys. `auth.hasAbility` resolves
+// `useMeStore().snapshot.abilities`, which IS that set — the same source
+// `useMe().can()` reads in the sibling admin views. One idiom per file:
+// this one uses `hasAbility` throughout.
+//
+// `.view_own`, NOT the tenant-wide `.view`. See the header block: they
+// are different questions, and this screen may only ask the narrow one.
+const canViewOwnVouchers = computed(() =>
+  auth.hasAbility('tutoring.voucher.view_own'),
+);
 const canRedeem = computed(() => auth.hasAbility('tutoring.voucher.redeem'));
 
 // ── Data ──────────────────────────────────────────────────────────
@@ -109,12 +125,19 @@ interface VoucherBundle {
 
 const { state, reload } = useDataRefresh<VoucherBundle>(async () => {
   const sid = studentId.value;
-  // Fetch the full voucher set (no `status` filter) so the History tab
-  // can be derived client-side — the BE index filters one status at a
-  // time and we want both buckets in one round trip.
+  // `listMine`, NEVER `list`. `list` is the tenant-wide admin read and
+  // would hand this parent every promo code in the lembaga; `listMine`
+  // is scoped server-side by the recipient grant.
+  //
+  // No filter beyond the page size, and that restraint is deliberate:
+  // `myIndex` reads `per_page` and nothing else, and the scope it
+  // applies is not a parameter this client supplies. The Tersedia /
+  // Riwayat split below is derived client-side from the calendar window
+  // — the server pins `status=active` itself and imposes no date
+  // condition, so one round trip fills both buckets.
   const [vouchers, enrollments, bills] = await Promise.all([
-    canViewVouchers.value
-      ? VouchersService.list({ per_page: 100 }).then((r) => r.items)
+    canViewOwnVouchers.value
+      ? VouchersService.listMine({ per_page: 100 }).then((r) => r.items)
       : Promise.resolve<BimbelVoucher[]>([]),
     sid
       ? TutoringBimbelService.listEnrollments({ student_id: sid, per_page: 50 }).then(
@@ -175,14 +198,15 @@ function isNotYetValid(v: BimbelVoucher): boolean {
 /**
  * Quota exhausted — a VERDICT, so an unknown count must not produce one.
  *
- * `VoucherResource` emits `redemption_count` through
- * `whenLoaded('redemptions')` and no controller eager-loads that
- * relation, so the key is absent from every voucher the wire carries.
- * `?? 0` happened to land on the safe answer here (false), but it landed
- * there by arithmetic accident rather than by intent, and the next
- * person tightening this predicate would have had nothing to read. Say
- * it outright: with no count we cannot conclude the quota is spent, so
- * the voucher stays listed and `POST /vouchers/{id}/redeem` — which
+ * `VoucherResource` now gates `redemption_count` on the ATTRIBUTE
+ * (`isset`), and the admin paths set it via `withRedemptionCount()` —
+ * but `myIndex` deliberately does not, so the key is still absent from
+ * every voucher THIS screen receives. The reason changed; the reading
+ * did not, and that is exactly why the predicate must not assume either
+ * way. `?? 0` happened to land on the safe answer here (false), but it
+ * landed there by arithmetic accident rather than by intent. Say it
+ * outright: with no count we cannot conclude the quota is spent, so the
+ * voucher stays listed and `POST /vouchers/{id}/redeem` — which
  * re-checks the real cap server-side — remains the authority.
  */
 function isQuotaUsedUp(v: BimbelVoucher): boolean {
@@ -243,9 +267,11 @@ const visibleVouchers = computed<BimbelVoucher[]>(() =>
  *   • no vouchers at all      → 0. Nothing has been redeemed, and that
  *                               is knowledge, not silence. An empty
  *                               collection has a real sum.
- *   • vouchers, none counted  → "—". The server withheld the field
- *                               (`whenLoaded('redemptions')`), so any
- *                               number here would be invented.
+ *   • vouchers, none counted  → "—". `myIndex` does not load the
+ *                               aggregate, so the key never reaches this
+ *                               screen and any number here would be
+ *                               invented. This is the NORMAL case for a
+ *                               wali, not a degraded one.
  *   • some counted            → their sum, with `suffix` naming the
  *                               subset so a partial total never passes
  *                               itself off as the whole wallet.
@@ -468,11 +494,17 @@ const metaLabel = computed(() => {
     </BrandPageHeader>
 
     <!--
-      Ability wall — see the header block. Without `tutoring.voucher.view`
-      the list request is a guaranteed 403, so we never fire it.
+      Ability wall — see the header block. Without
+      `tutoring.voucher.view_own` the `/vouchers/my` request is a
+      guaranteed 403, so we never fire it.
+
+      This is NOT the empty state and must not read like one: "no
+      permission" and "no vouchers yet" are different facts, and after
+      recipient targeting shipped the second is the common one. An empty
+      list gets AsyncView's empty branch below.
     -->
     <div
-      v-if="!canViewVouchers"
+      v-if="!canViewOwnVouchers"
       class="rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-sm"
     >
       <p class="text-sm font-bold text-slate-900">
@@ -487,6 +519,17 @@ const metaLabel = computed(() => {
       <KpiStripCards :cards="kpiCards" :loading="state.status === 'loading'" />
 
       <SegmentedControl v-model="tab" :options="tabOptions" />
+
+      <!--
+        Says out loud what the endpoint enforces: this list is what was
+        aimed at THIS family, not the lembaga's promo catalogue. Without
+        it a short list reads as a missing one, and a wali who has heard
+        of a general promo from another parent would think the screen was
+        hiding it rather than that it was never theirs to see.
+      -->
+      <p class="px-1 text-2xs text-slate-500">
+        {{ t('tutoring2.parent.vouchers.scopeNote') }}
+      </p>
 
       <AsyncView
         :state="state"
