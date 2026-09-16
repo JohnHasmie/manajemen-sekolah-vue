@@ -7420,7 +7420,13 @@
         "paymentMethod": "Metode pembayaran",
         "markPaid": "Tandai lunas",
         "markPaidDone": "Tagihan ditandai lunas.",
-        "close": "Tutup"
+        "close": "Tutup",
+        "revertPaid": "Kembalikan ke belum lunas",
+        "revertPaidConfirmTitle": "Kembalikan ke belum lunas?",
+        "revertPaidConfirmMsg": "Tagihan ini kembali berstatus belum lunas. Pembayarannya tidak dihapus, tetapi dicatat sebagai dibatalkan sehingga tidak lagi dihitung sebagai uang masuk.",
+        "revertPaidGuardianNotified": "Wali sudah diberi tahu bahwa tagihan ini lunas.",
+        "revertPaidGuardianCallback": "Pemberitahuan itu tidak bisa ditarik — hubungi wali langsung.",
+        "revertPaidDone": "Tagihan dikembalikan ke belum lunas."
       },
       "tutorDetail": {
         "tabGroups": "Kelompok",

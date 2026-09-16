@@ -7281,7 +7281,13 @@
         "paymentMethod": "Payment method",
         "markPaid": "Mark as paid",
         "markPaidDone": "Bill marked as paid.",
-        "close": "Close"
+        "close": "Close",
+        "revertPaid": "Revert to unpaid",
+        "revertPaidConfirmTitle": "Revert to unpaid?",
+        "revertPaidConfirmMsg": "This bill goes back to unpaid. The payment is not deleted, but is recorded as cancelled so it no longer counts as money received.",
+        "revertPaidGuardianNotified": "The guardian was already told this bill was paid.",
+        "revertPaidGuardianCallback": "That message cannot be unsent — call the guardian directly.",
+        "revertPaidDone": "Bill reverted to unpaid."
       },
       "payoutSettings": {
         "title": "Payout Settings",

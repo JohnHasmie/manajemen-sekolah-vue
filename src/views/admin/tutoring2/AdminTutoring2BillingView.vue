@@ -32,6 +32,37 @@
   from rather than telling admins to press a button, and now that the
   button works it names it as an option instead.
 
+  ── "Tandai lunas" NOW HAS A WAY BACK ─────────────────────────────────
+
+  The detail sheet shipped with the forward move only. An admin who
+  settled the wrong row — two siblings on the same program look alike in
+  this table — had no control anywhere on web to undo it: the money
+  stayed counted in "Terbayar" and the repair was a developer in tinker.
+
+  `POST /tutoring-v2/bills/{id}/revert-paid` (BillController::revertPaid)
+  landed server-side with no client. It authorizes
+  `tutoring.bill.mark_paid`, the SAME ability as the forward move, so the
+  two controls are gated on the same key here too.
+
+  The revert and the settle control are MUTUALLY EXCLUSIVE by
+  construction — one is gated on `isBimbelBillPaid`, the other on its
+  negation — because rendering both would ask the admin which of two
+  contradictory facts about one bill is true.
+
+  It confirms first, through the app's `useConfirm` dialog, which is the
+  one place on this screen where a confirmation earns its keep rather
+  than being ceremony: the action moves money out of "received", and the
+  entire reason the endpoint exists is that someone mis-clicked.
+
+  The confirmation's `impact` card carries the guardian warning, and ONLY
+  when `guardian_notified` is true. `revertPaid` deliberately sends the
+  wali nothing — a "tagihan lunas" message cannot be unsent and an
+  automatic "pembayaran dibatalkan" could alarm a family when the cause
+  was an admin slip — so the correction is a phone call a human makes,
+  and the dialog is the only place the admin learns one is owed. On a
+  bill the family never heard about, no warning renders at all: a warning
+  shown every time is a warning admins learn to click past.
+
   ── The Periode chip ──────────────────────────────────────────────────
 
   It now opens <MonthPickerModal>, the same chip → per-facet-modal shape
@@ -100,6 +131,7 @@ import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import AdminTutoring2BillCreateSheet from './AdminTutoring2BillCreateSheet.vue';
+import { useConfirm } from '@/composables/useConfirm';
 import { useDataRefresh } from '@/composables/useDataRefresh';
 import { useMe } from '@/composables/useMe';
 import { useToast } from '@/composables/useToast';
@@ -122,6 +154,7 @@ import type { StatusBadgeTone } from '@/types/status-badge';
 
 const { t, locale } = useI18n();
 const { can } = useMe();
+const { confirm } = useConfirm();
 const toast = useToast();
 
 /**
@@ -340,6 +373,7 @@ const canMarkBillPaid = computed(() => can('tutoring.bill.mark_paid'));
 const activeBill = ref<BimbelBill | null>(null);
 const detailLoading = ref(false);
 const markingPaid = ref(false);
+const revertingPaid = ref(false);
 
 async function openBillDetail(row: BimbelBill): Promise<void> {
   activeBill.value = row;
@@ -358,6 +392,7 @@ async function openBillDetail(row: BimbelBill): Promise<void> {
 function closeBillDetail(): void {
   activeBill.value = null;
   markingPaid.value = false;
+  revertingPaid.value = false;
 }
 
 /**
@@ -400,6 +435,100 @@ async function markActiveBillPaid(): Promise<void> {
     toast.error(extractError(e) ?? t('tutoring2.common.actionFailed'));
   } finally {
     markingPaid.value = false;
+  }
+}
+
+/**
+ * Whether to offer the way BACK OUT of mark-paid.
+ *
+ * The exact mirror of `canSettleActiveBill`, and the two are mutually
+ * exclusive by construction: `isBimbelBillPaid` gates one on its truth
+ * and the other on its negation, so the sheet never shows "Tandai lunas"
+ * and "Kembalikan ke belum lunas" as live actions at once. Rendering
+ * both would ask the admin which of two contradictory facts about the
+ * same bill is true.
+ *
+ * The paid condition is not cosmetic: `revertPaid` re-reads under its
+ * lock and returns EARLY for a bill that is not `paid`, so the button's
+ * only possible outcome there is a silent no-op that reads as a failure.
+ *
+ * SAME ABILITY as marking paid, deliberately — `BillController::
+ * revertPaid` authorizes `tutoring.bill.mark_paid` itself. A stricter
+ * key would have shipped dead (no role holds one until a grant
+ * migration lands), and the person trusted to create the money record is
+ * the person who has to be able to withdraw their own mis-click.
+ */
+const canRevertActiveBill = computed(
+  () => !!activeBill.value
+    && canMarkBillPaid.value
+    && isBimbelBillPaid(activeBill.value.status),
+);
+
+/**
+ * The consequences card for the confirmation, or [] for none.
+ *
+ * Rendered ONLY when the wali was actually told. `revertPaid` sends the
+ * family nothing on purpose — the "tagihan lunas" message cannot be
+ * unsent, and auto-firing "pembayaran dibatalkan" could alarm a family
+ * when the real cause was an admin mis-click — so the correction is a
+ * phone call a human has to make, and this is the only place the admin
+ * is told one is owed.
+ *
+ * `=== true` rather than truthiness: `guardian_notified` is optional on
+ * the wire shape, and an absent key means "the server did not say",
+ * which is not the same claim as "the family was told". Warning on a
+ * missing key would be a fabricated warning, and a warning that shows on
+ * every revert is one admins learn to click past.
+ */
+const revertImpactLines = computed<string[]>(() =>
+  activeBill.value?.guardian_notified === true
+    ? [
+      t('tutoring2.admin.billing.revertPaidGuardianNotified'),
+      t('tutoring2.admin.billing.revertPaidGuardianCallback'),
+    ]
+    : [],
+);
+
+/**
+ * Undo a mark-paid.
+ *
+ * CONFIRMS FIRST, and this is the one place on the screen where that
+ * earns its keep rather than being ceremony: the action moves money out
+ * of "Terbayar", and the entire reason the endpoint exists is that
+ * someone settled the wrong row. A control built for mis-clicks must not
+ * itself be one click wide.
+ */
+async function revertActiveBillPaid(): Promise<void> {
+  const bill = activeBill.value;
+  // Belt-and-braces beside the template's `v-if`: a sheet left open
+  // across a role switch must not be able to post.
+  if (!bill || !canRevertActiveBill.value) return;
+
+  const ok = await confirm({
+    title: t('tutoring2.admin.billing.revertPaidConfirmTitle'),
+    message: t('tutoring2.admin.billing.revertPaidConfirmMsg'),
+    confirmLabel: t('tutoring2.admin.billing.revertPaid'),
+    danger: true,
+    impact: revertImpactLines.value,
+  });
+  if (!ok) return;
+
+  revertingPaid.value = true;
+  try {
+    // No body. The controller reads nothing off the request — the bill
+    // goes to `unpaid` and every verified payment on it is voided, both
+    // decided server-side.
+    activeBill.value = await TutoringBimbelService.revertBillPaid(bill.id);
+    toast.success(t('tutoring2.admin.billing.revertPaidDone'));
+    // Both halves of the bundle, same reason as mark-paid: the four KPI
+    // tiles come from `getBillsSummary`, NOT from the rows, so reloading
+    // only the list would leave "Terbayar" still counting money the
+    // tenant has just declared it never received.
+    await reload();
+  } catch (e) {
+    toast.error(extractError(e) ?? t('tutoring2.common.actionFailed'));
+  } finally {
+    revertingPaid.value = false;
   }
 }
 
@@ -679,6 +808,24 @@ const detailPaymentRows = computed<BillDetailRow[]>(() => {
             @click="markActiveBillPaid"
           >
             {{ t('tutoring2.admin.billing.markPaid') }}
+          </Button>
+          <!-- The way back out, and the exact mirror of the control
+               above: `canRevertActiveBill` is gated on the bill BEING
+               paid where that one is gated on its not being, so the two
+               can never both be live. Same `tutoring.bill.mark_paid`
+               key, because that is the ability
+               `BillController::revertPaid` itself authorizes. It
+               confirms before posting — the whole reason the endpoint
+               exists is a mis-click, so the undo must not be one. -->
+          <Button
+            v-if="canRevertActiveBill"
+            data-testid="bill-detail-revert-paid"
+            variant="danger"
+            type="button"
+            :loading="revertingPaid"
+            @click="revertActiveBillPaid"
+          >
+            {{ t('tutoring2.admin.billing.revertPaid') }}
           </Button>
         </div>
       </div>

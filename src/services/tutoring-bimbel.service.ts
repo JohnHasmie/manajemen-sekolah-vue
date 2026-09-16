@@ -353,6 +353,27 @@ export interface BimbelBill {
    */
   paid_at?: string | null;
   payment_method?: string | null;
+  /**
+   * Whether the wali was already told this bill is settled.
+   *
+   * `BillResource` derives it from the `paid_email_sent_at` /
+   * `paid_wa_sent_at` stamps that `SendBillPaidNotificationAction`
+   * writes, and emits it UNCONDITIONALLY (no `whenLoaded`), so it is on
+   * index and show alike.
+   *
+   * It exists for exactly one reader: the revert-paid confirmation.
+   * `BillController::revertPaid` deliberately dispatches NOTHING to the
+   * family — a "tagihan lunas" message cannot be unsent and an automatic
+   * "pembayaran dibatalkan" could alarm a family when the cause was an
+   * admin mis-click — so the follow-up is a phone call a human makes,
+   * and this flag is how the admin knows whether one is owed.
+   *
+   * Optional rather than required so an older payload without the key
+   * reads as "unknown" and the warning stays unrendered. A warning
+   * invented from a missing key would be a fabricated one.
+   */
+  guardian_notified?: boolean;
+  guardian_notified_at?: string | null;
   reminder_count?: number;
   last_reminded_at?: string | null;
   created_at?: string;
@@ -716,6 +737,22 @@ export const TutoringBimbelService = {
   },
   async markBillPaid(id: string, payload: { amount?: number; payment_method?: string; payment_date?: string; admin_notes?: string } = {}) {
     const r = await api.post<OneEnvelope<BimbelBill>>(`/tutoring-v2/bills/${id}/mark-paid`, payload);
+    return r.data.data;
+  },
+  /**
+   * The way back out of mark-paid.
+   *
+   * NO BODY. `BillController::revertPaid` takes a bare `Request` and
+   * reads nothing off it — the bill goes to `unpaid` and every verified
+   * payment standing on it is voided, both derived server-side. It
+   * authorizes `tutoring.bill.mark_paid`, the SAME key as the forward
+   * move, so the client gate is the same key too.
+   *
+   * Idempotent: a bill that is already not paid comes back 200 and
+   * unchanged rather than erroring, so a double-click is harmless.
+   */
+  async revertBillPaid(id: string) {
+    const r = await api.post<OneEnvelope<BimbelBill>>(`/tutoring-v2/bills/${id}/revert-paid`, {});
     return r.data.data;
   },
   async resendBill(id: string) {
